@@ -51,7 +51,7 @@ export const QueueServiceStep: React.FC<QueueServiceStepProps> = ({
           Qual serviço você quer hoje?
         </h2>
         <p className={`text-sm mt-1.5 leading-relaxed ${colors.textMuted}`}>
-          A espera usa o tempo deste serviço.
+          O tempo de espera é calculado com base na duração dos serviços.
         </p>
       </div>
 
@@ -88,7 +88,9 @@ export const QueueServiceStep: React.FC<QueueServiceStepProps> = ({
       <div className="space-y-2.5">
         {visible.length === 0 ? (
           <p className={`text-sm py-8 text-center ${colors.textMuted}`}>
-            Nenhum serviço nesta categoria.
+            {services.length === 0
+              ? 'Nenhum serviço disponível no momento. Fale com a equipe no balcão.'
+              : 'Nenhum serviço nesta categoria.'}
           </p>
         ) : (
           visible.map((service) => {
@@ -125,7 +127,7 @@ export const QueueServiceStep: React.FC<QueueServiceStepProps> = ({
                     }`}
                     aria-hidden="true"
                   >
-                    <Check className="w-3.5 h-3.5" />
+                    {selected && <Check className="w-3.5 h-3.5" />}
                   </span>
                 </div>
               </button>

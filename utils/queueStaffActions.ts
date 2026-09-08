@@ -2,9 +2,10 @@ import type { QueuePaymentStatus, QueueStatus } from '@/types/queue';
 
 export type QueueStaffPrimaryId = 'start' | 'close';
 export type QueueStaffSecondaryId = 'call';
+export type QueueStaffTertiaryId = 'no_show' | 'requeue';
 
 export interface QueueStaffAction {
-  id: QueueStaffPrimaryId | QueueStaffSecondaryId;
+  id: QueueStaffPrimaryId | QueueStaffSecondaryId | QueueStaffTertiaryId;
   label: string;
 }
 
@@ -17,9 +18,9 @@ export function queuePaymentBadge(status?: QueuePaymentStatus | null): QueuePaym
   if (status === 'paid') return { label: 'Pago', variant: 'success' };
   if (status === 'membership') return { label: 'Clube', variant: 'accent' };
   if (status === 'awaiting_confirmation') {
-    return { label: 'Aguardando confirmação e pagamento', variant: 'warning' };
+    return { label: 'Aguardando pagamento', variant: 'warning' };
   }
-  return { label: 'Pagar no balcão', variant: 'neutral' };
+  return { label: 'Pagamento no balcão', variant: 'neutral' };
 }
 
 export function queueStaffActions(input: {
@@ -28,14 +29,17 @@ export function queueStaffActions(input: {
 }): {
   primary: QueueStaffAction | null;
   secondary: QueueStaffAction | null;
+  tertiary: QueueStaffAction[];
   showConfirmPay: boolean;
   showCancelPay: boolean;
 } {
   const awaitingPay = input.paymentStatus === 'awaiting_confirmation';
+  const noShow: QueueStaffAction = { id: 'no_show', label: 'Não compareceu' };
   if (input.status === 'waiting') {
     return {
       primary: { id: 'start', label: 'Iniciar atendimento' },
       secondary: { id: 'call', label: 'Chamar cliente' },
+      tertiary: [noShow],
       showConfirmPay: awaitingPay,
       showCancelPay: awaitingPay,
     };
@@ -44,6 +48,7 @@ export function queueStaffActions(input: {
     return {
       primary: { id: 'start', label: 'Iniciar atendimento' },
       secondary: null,
+      tertiary: [{ id: 'requeue', label: 'Voltar para a fila' }, noShow],
       showConfirmPay: awaitingPay,
       showCancelPay: awaitingPay,
     };
@@ -52,6 +57,7 @@ export function queueStaffActions(input: {
     return {
       primary: { id: 'close', label: 'Fechar comanda' },
       secondary: null,
+      tertiary: [],
       showConfirmPay: awaitingPay,
       showCancelPay: awaitingPay,
     };
@@ -59,6 +65,7 @@ export function queueStaffActions(input: {
   return {
     primary: null,
     secondary: null,
+    tertiary: [],
     showConfirmPay: false,
     showCancelPay: false,
   };

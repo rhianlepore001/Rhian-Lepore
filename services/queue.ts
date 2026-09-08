@@ -16,6 +16,7 @@ import {
   type QueuePublicBoard,
   type QueueRecord,
   type QueueStatus,
+  type QueueTicketItem,
   type UpdateQueueStatusInput,
 } from '@/types/queue';
 
@@ -136,6 +137,51 @@ export function isActiveQueueStatus(status: QueueStatus): boolean {
   return status === 'waiting' || status === 'calling' || status === 'serving';
 }
 
+const QUEUE_QR_VISIT_KEY = (slug: string) => `queue_qr_visit_${slug}`;
+
+/** Marca, só para esta sessão do navegador, que o cliente chegou pelo QR desta casa. */
+export function markQueueQrVisit(slug: string): void {
+  writeStorage(typeof sessionStorage === 'undefined' ? undefined : sessionStorage, QUEUE_QR_VISIT_KEY(slug), '1');
+}
+
+export function hasQueueQrVisit(slug: string | null | undefined): boolean {
+  if (!slug) return false;
+  return readStorage(typeof sessionStorage === 'undefined' ? undefined : sessionStorage, QUEUE_QR_VISIT_KEY(slug)) === '1';
+}
+
+const RECENT_CLOSED_WINDOW_MS = 12 * 60 * 60 * 1000;
+
+/**
+ * Senha encerrada recentemente (concluída / não compareceu). Usa janela fixa de 12h
+ * em vez de "hoje" para não depender do fuso do aparelho vs. do servidor.
+ */
+export function isRecentClosedQueueEntry(entry: QueueRecord, now = new Date()): boolean {
+  if (entry.status !== 'completed' && entry.status !== 'no_show') return false;
+  const joined = Date.parse(entry.joined_at);
+  if (Number.isNaN(joined)) return false;
+  const elapsed = now.getTime() - joined;
+  return elapsed >= 0 && elapsed <= RECENT_CLOSED_WINDOW_MS;
+}
+
+/** O telefone já tem uma senha ativa nesta casa; `entry` é a senha existente (já guardada localmente). */
+export class QueueAlreadyActiveError extends Error {
+  constructor(readonly entry: QueueRecord) {
+    super('Você já está nesta fila.');
+    this.name = 'QueueAlreadyActiveError';
+  }
+}
+
+export class QueueLookupError extends Error {
+  constructor(message: string, readonly cause?: unknown) {
+    super(message);
+    this.name = 'QueueLookupError';
+  }
+}
+
+function isQueueEntryNotFound(error: unknown): boolean {
+  return error instanceof Error && error.message === 'Queue entry not found';
+}
+
 function parseQueueRecord(entry: unknown): QueueRecord | null {
   const parsed = queueEntrySchema.safeParse(entry);
   return parsed.success ? parsed.data : null;
@@ -154,25 +200,32 @@ export function isAlreadyInQueueError(error: unknown): boolean {
   return text.includes('já está na fila') || text.includes('ja esta na fila');
 }
 
-export function queueJoinUserMessage(error: unknown, fallback = 'Não foi possível entrar na fila. Tente de novo ou avise no balcão.'): string {
+export function queueJoinUserMessage(error: unknown, fallback = 'Não foi possível entrar na fila. Tente de novo ou fale com a equipe no balcão.'): string {
   const text = rpcErrorText(error);
   const lower = text.toLowerCase();
-  if (isAlreadyInQueueError(error)) return 'Você já está nesta fila. Vamos abrir sua senha.';
+  if (isAlreadyInQueueError(error)) return 'Este número já tem uma senha ativa nesta fila. Fale com a equipe no balcão para localizá-la.';
+  if (lower.includes('servico obrigatorio') || lower.includes('serviço obrigatório')) {
+    return 'Escolha um serviço para continuar.';
+  }
   if (lower.includes('servico invalido') || lower.includes('serviço inválido')) {
-    return 'Este serviço não está disponível. Escolha outro e tente de novo.';
+    return 'Este serviço não está mais disponível. Escolha outro e tente de novo.';
   }
   if (lower.includes('fila indisponivel') || lower.includes('fila indisponível')) {
-    return 'A fila está fechada no momento. Avise no balcão.';
+    return 'A fila não está aberta no momento. Fale com a equipe no balcão.';
   }
   if (lower.includes('qr de colaborador') || lower.includes('qr nao esta ativo') || lower.includes('qr não está ativo')) {
-    return 'Este QR não está ativo. Peça o QR da casa.';
+    return 'Este QR Code não está mais ativo. Use o QR Code geral do estabelecimento.';
   }
-  if (lower.includes('assinatura')) return 'Sua assinatura não cobre este serviço agora.';
+  if (lower.includes('limite de usos')) return 'Sua assinatura já atingiu o limite de usos deste mês.';
+  if (lower.includes('assinatura')) return 'Sua assinatura não cobre este serviço. Escolha outra forma de pagamento.';
   if (lower.includes('schema cache') || lower.includes('could not find the function')) {
-    return 'A fila está instável neste momento. Tente de novo em instantes.';
+    return 'A fila está temporariamente indisponível. Tente de novo em instantes.';
   }
   if (lower.includes('estabelecimento sem link') || lower.includes('nao encontrado') || lower.includes('não encontrado')) {
     return 'Não encontramos este estabelecimento.';
+  }
+  if (lower.includes('tenant nao encontrado') || lower.includes('usuario autenticado')) {
+    return 'Sua sessão expirou. Entre de novo na sua conta.';
   }
   return fallback;
 }
@@ -212,11 +265,23 @@ export async function resolveClientQueueEntry(input: {
     candidates.push(proof);
   }
 
+  // Senha de hoje já encerrada (concluída / não compareceu): só é devolvida se
+  // não houver nenhuma senha ativa, para o cliente ver o desfecho em vez de "fora da fila".
+  let recentClosed: QueueRecord | null = null;
+  // Falha de rede/RPC não pode virar "você não está na fila": propagamos se nada respondeu.
+  let lastFailure: unknown = null;
+
   for (const candidate of candidates) {
     try {
       const byId = await fetchQueueEntry(candidate.entryId, candidate.phone);
       if (byId.business_id !== input.businessId) continue;
       if (!isActiveQueueStatus(byId.status)) {
+        if (isRecentClosedQueueEntry(byId)) {
+          if (!recentClosed || Date.parse(byId.joined_at) > Date.parse(recentClosed.joined_at)) {
+            recentClosed = byId;
+          }
+          continue;
+        }
         if (ticket?.entryId === byId.id) clearQueueTicket(input.businessId);
         continue;
       }
@@ -227,26 +292,33 @@ export async function resolveClientQueueEntry(input: {
         slug,
       });
       return byId;
-    } catch {
-      // tenta o próximo candidato
+    } catch (error) {
+      if (!isQueueEntryNotFound(error)) lastFailure = error;
     }
   }
 
-  if (!lookupPhone) return null;
-
-  try {
-    const active = await findActiveQueueEntryByPhone(input.businessId, lookupPhone);
-    if (!active) return null;
-    storeQueueTicket({
-      businessId: input.businessId,
-      entryId: active.id,
-      phone: lookupPhone,
-      slug,
-    });
-    return active;
-  } catch {
-    return null;
+  if (lookupPhone) {
+    try {
+      const active = await findActiveQueueEntryByPhone(input.businessId, lookupPhone);
+      if (active) {
+        storeQueueTicket({
+          businessId: input.businessId,
+          entryId: active.id,
+          phone: lookupPhone,
+          slug,
+        });
+        return active;
+      }
+    } catch (error) {
+      lastFailure = error;
+    }
   }
+
+  if (recentClosed) return recentClosed;
+  if (lastFailure) {
+    throw new QueueLookupError('Não foi possível consultar sua senha.', lastFailure);
+  }
+  return null;
 }
 
 function rememberJoinedEntry(slug: string, entry: QueueRecord, phone: string): QueueRecord {
@@ -278,21 +350,24 @@ export async function joinQueue(input: JoinQueueInput): Promise<QueueRecord> {
     parsed = joinQueueInputSchema.parse(input);
   } catch (error) {
     if (error instanceof ZodError) {
-      throw new Error('Confira o serviço e seus dados e tente de novo.');
+      throw new Error('Confira o serviço e os seus dados e tente de novo.');
     }
     throw error;
   }
   const slug = parsed.slug ?? await fetchBusinessSlug(parsed.businessId);
   if (!slug) {
-    throw new Error('Estabelecimento sem link público.');
+    throw new Error('Este estabelecimento ainda não ativou a fila digital.');
   }
 
   try {
     const duplicate = await findActiveQueueEntryByPhone(parsed.businessId, parsed.clientPhone);
     if (duplicate) {
-      return rememberJoinedEntry(slug, duplicate, parsed.clientPhone);
+      // Não fingimos que a nova escolha (serviço / Pix) foi registrada: quem chama decide
+      // como avisar e abre a senha existente.
+      throw new QueueAlreadyActiveError(rememberJoinedEntry(slug, duplicate, parsed.clientPhone));
     }
-  } catch {
+  } catch (error) {
+    if (error instanceof QueueAlreadyActiveError) throw error;
     // Dedup é best-effort: a RPC de join ainda valida unicidade.
   }
 
@@ -312,8 +387,9 @@ export async function joinQueue(input: JoinQueueInput): Promise<QueueRecord> {
     if (isAlreadyInQueueError(error)) {
       try {
         const existing = await findActiveQueueEntryByPhone(parsed.businessId, parsed.clientPhone);
-        if (existing) return rememberJoinedEntry(slug, existing, parsed.clientPhone);
-      } catch {
+        if (existing) throw new QueueAlreadyActiveError(rememberJoinedEntry(slug, existing, parsed.clientPhone));
+      } catch (lookupError) {
+        if (lookupError instanceof QueueAlreadyActiveError) throw lookupError;
         // segue o erro original abaixo
       }
     }
@@ -334,7 +410,7 @@ export async function joinQueue(input: JoinQueueInput): Promise<QueueRecord> {
   const payload = data && typeof data === 'object' ? data as { id?: string } : null;
   const joinedId = payload?.id;
   if (!joinedId) {
-    throw new Error('Não foi possível confirmar sua senha. Avise no balcão.');
+    throw new Error('Não foi possível confirmar sua senha. Fale com a equipe no balcão.');
   }
   return rememberJoinedEntry(slug, fallbackJoinedRecord(parsed, joinedId), parsed.clientPhone);
 }
@@ -344,7 +420,7 @@ export async function addManualQueueEntry(input: ManualQueueInput): Promise<Queu
   const duplicate = await findActiveQueueEntryByPhone(parsed.businessId, parsed.clientPhone);
 
   if (duplicate) {
-    throw new Error('Este telefone já está na fila.');
+    throw new Error(`Este telefone já está na fila (${duplicate.client_name}).`);
   }
 
   const { data, error } = await supabase.rpc('add_manual_queue_entry', {
@@ -355,7 +431,9 @@ export async function addManualQueueEntry(input: ManualQueueInput): Promise<Queu
     p_payment_method: parsed.paymentMethod ?? 'cash',
   });
 
-  if (error) throw error;
+  if (error) {
+    throw new Error(queueJoinUserMessage(error, 'Não foi possível adicionar o cliente à fila. Tente de novo.'));
+  }
   const created = await findActiveQueueEntryByPhone(parsed.businessId, parsed.clientPhone);
   if (created) return created;
 
@@ -462,8 +540,11 @@ export async function cancelQueuePayment(entryId: string) {
   if (error) throw error;
 }
 
-export async function closeQueueTicket(entryId: string) {
-  const { error } = await supabase.rpc('close_queue_ticket', { p_entry_id: entryId });
+export async function closeQueueTicket(entryId: string, items: QueueTicketItem[] = []) {
+  const { error } = await supabase.rpc('close_queue_ticket', {
+    p_entry_id: entryId,
+    p_items: items.length > 0 ? items : null,
+  });
   if (error) throw error;
 }
 

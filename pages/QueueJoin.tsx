@@ -10,7 +10,14 @@ import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { usePublicClientMembership, usePublicPixConfig } from '../hooks/useMemberships';
 import { detectPixKeyType, generatePixPayload, validatePixKey } from '../lib/pix-generator';
 import { generatePixTxid } from '../lib/pix-txid';
-import { joinQueue, queueJoinUserMessage } from '../services/queue';
+import {
+  findActiveQueueEntryByPhone,
+  joinQueue,
+  markQueueQrVisit,
+  QueueAlreadyActiveError,
+  queueJoinUserMessage,
+  storeQueueTicket,
+} from '../services/queue';
 import { isQueueIdentityPhoneValid } from '../utils/queueIdentity';
 import { logger } from '../utils/Logger';
 import {
@@ -90,11 +97,50 @@ export const QueueJoin: React.FC = () => {
   });
 
   useEffect(() => {
+    if (slug) markQueueQrVisit(slug);
+  }, [slug]);
+
+  useEffect(() => {
     if (!business) return;
     document.documentElement.setAttribute('data-theme', isBeauty ? 'beauty' : 'barber');
     document.documentElement.setAttribute('data-mode', isBeauty ? 'light' : 'dark');
     hydrateFromStorage(business.id);
   }, [business, hydrateFromStorage, isBeauty]);
+
+  const openExistingTicket = React.useCallback((entryId: string, entryPhone: string) => {
+    if (!business || !slug) return;
+    storeQueueTicket({ businessId: business.id, entryId, phone: entryPhone, slug });
+    showToast('Você já está nesta fila. Abrindo sua senha.', 'info');
+    navigate(`/minha-area/${slug}?tab=fila`, { replace: true });
+  }, [business, navigate, showToast, slug]);
+
+  // Quem já tem senha ativa não escolhe serviço/pagamento de novo: vai direto acompanhar.
+  const redirectIfAlreadyInQueue = React.useCallback(async (lookupPhone: string): Promise<boolean> => {
+    if (!business || !lookupPhone) return false;
+    try {
+      const active = await findActiveQueueEntryByPhone(business.id, lookupPhone);
+      if (!active) return false;
+      openExistingTicket(active.id, lookupPhone);
+      return true;
+    } catch {
+      // O join no servidor continua barrando duplicidade; aqui só avisamos que a checagem falhou.
+      showToast('Não foi possível verificar se você já tem uma senha. Se tiver, a equipe pode localizá-la no balcão.', 'info');
+      return false;
+    }
+  }, [business, openExistingTicket, showToast]);
+
+  // Uma checagem por telefone/negócio; depois que a pessoa entra pela própria tela, não há o que redirecionar.
+  const sessionPhone = sessionClient?.phone ?? null;
+  const businessId = business?.id ?? null;
+  const activeCheckRef = React.useRef<string | null>(null);
+  const joinedRef = React.useRef(false);
+  useEffect(() => {
+    if (!sessionPhone || !businessId || joinedRef.current) return;
+    const key = `${businessId}:${sessionPhone}`;
+    if (activeCheckRef.current === key) return;
+    activeCheckRef.current = key;
+    void redirectIfAlreadyInQueue(sessionPhone);
+  }, [businessId, redirectIfAlreadyInQueue, sessionPhone]);
 
   useEffect(() => {
     const load = async () => {
@@ -162,20 +208,21 @@ export const QueueJoin: React.FC = () => {
       return;
     }
     if (!isQueueIdentityPhoneValid(phone, region)) {
-      const message = 'Informe um WhatsApp válido.';
+      const message = 'Informe um número de WhatsApp válido.';
       setIdentityError(message);
       showToast(message, 'error');
       return;
     }
     setIdentitySubmitting(true);
     try {
+      if (await redirectIfAlreadyInQueue(phone)) return;
       const existing = await login(phone, business.id);
       if (existing) {
         setStep('pay');
         return;
       }
       if (!name.trim()) {
-        const message = 'Informe seu nome.';
+        const message = 'Primeira visita? Informe seu nome para continuar.';
         setIdentityError(message);
         showToast(message, 'error');
         return;
@@ -207,12 +254,13 @@ export const QueueJoin: React.FC = () => {
     }
 
     if (payMethod === 'pix' && (!pixBrCode || !pixTxid)) {
-      showToast('Não foi possível gerar o Pix. Tente pagar no balcão.', 'error');
+      showToast('Não foi possível gerar o Pix agora. Escolha pagar no balcão.', 'error');
       return;
     }
 
     setSubmitting(true);
     setJoinError('');
+    joinedRef.current = true;
     try {
       await joinQueue({
         businessId: business.id,
@@ -226,8 +274,13 @@ export const QueueJoin: React.FC = () => {
         txid: payMethod === 'pix' ? pixTxid : undefined,
         mbwayPhone: payMethod === 'mbway' ? pixConfig?.mbway_phone ?? undefined : undefined,
       });
-      navigate(`/minha-area/${slug}?tab=fila`);
+      navigate(`/minha-area/${slug}?tab=fila`, { replace: true });
     } catch (error) {
+      if (error instanceof QueueAlreadyActiveError) {
+        openExistingTicket(error.entry.id, clientPhone);
+        return;
+      }
+      joinedRef.current = false;
       logger.error('QueueJoin join failed', error);
       const message = queueJoinUserMessage(error);
       setJoinError(message);
@@ -247,16 +300,27 @@ export const QueueJoin: React.FC = () => {
 
   if (!business) {
     return (
-      <div className={`min-h-screen ${colors.bg} ${colors.text} flex items-center justify-center p-6 text-center`}>
-        Estabelecimento não encontrado.
+      <div className={`min-h-screen ${colors.bg} ${colors.text} flex flex-col items-center justify-center p-6 text-center gap-2`}>
+        <p className={`text-lg font-semibold ${font.heading}`}>Não encontramos este estabelecimento</p>
+        <p className={`text-sm ${colors.textSecondary}`}>Confira o link ou peça um novo QR Code no balcão.</p>
       </div>
     );
   }
 
   if (preSelectedPro && proActive === false) {
     return (
-      <div className={`min-h-screen ${colors.bg} ${colors.text} flex items-center justify-center p-6 text-center`}>
-        Este QR não está ativo. Peça o QR da casa.
+      <div className={`min-h-screen ${colors.bg} ${colors.text} flex flex-col items-center justify-center p-6 text-center gap-4`}>
+        <div className="space-y-2">
+          <p className={`text-lg font-semibold ${font.heading}`}>Este QR Code não está mais ativo</p>
+          <p className={`text-sm ${colors.textSecondary}`}>
+            O profissional deste QR não está atendendo hoje. Use o QR Code geral do estabelecimento.
+          </p>
+        </div>
+        {slug && (
+          <Button variant="primary" className="min-h-[48px]" onClick={() => navigate(`/queue/${slug}`)}>
+            Entrar na fila geral
+          </Button>
+        )}
       </div>
     );
   }
@@ -272,8 +336,8 @@ export const QueueJoin: React.FC = () => {
           </h1>
           <p className={`text-sm md:text-base leading-relaxed ${colors.textSecondary}`}>
             {preSelectedPro && lockedProName
-              ? `Fila de ${lockedProName}. Escolha o serviço e acompanhe no celular.`
-              : 'Fila digital. Escolha o serviço e acompanhe sua vez no celular.'}
+              ? `Fila de ${lockedProName}. Escolha o serviço e acompanhe sua vez pelo celular.`
+              : 'Escolha o serviço, entre na fila e acompanhe sua vez pelo celular.'}
           </p>
           <ol className="flex items-center gap-2 pt-1" aria-label="Passos para entrar na fila">
             {STEPS.map((item, index) => {
@@ -317,10 +381,10 @@ export const QueueJoin: React.FC = () => {
           >
             <div>
               <h2 className={`text-xl md:text-[22px] font-semibold tracking-tight ${font.heading}`}>
-                Como te chamamos?
+                Seus dados
               </h2>
               <p className={`text-sm mt-1.5 leading-relaxed ${colors.textMuted}`}>
-                O WhatsApp guarda sua senha nesta casa.
+                Usamos seu WhatsApp para identificar sua senha. Se já for cliente, basta o número.
               </p>
             </div>
             <div className={`p-4 md:p-5 space-y-4 ${radius.card} border ${colors.card} ${colors.border}`}>
@@ -334,8 +398,9 @@ export const QueueJoin: React.FC = () => {
                 label="Nome"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder="Seu nome"
+                placeholder="Como quer ser chamado"
                 autoComplete="name"
+                hint="Obrigatório apenas na primeira visita."
                 forceTheme={themeOverride}
               />
               {identityError && (

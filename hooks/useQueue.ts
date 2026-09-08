@@ -16,6 +16,7 @@ import {
   updateQueueSettings,
   updateQueueStatus,
 } from '@/services/queue';
+import type { QueueRecord, QueueTicketItem } from '@/types/queue';
 
 export function useJoinQueue() {
   return useMutation({
@@ -31,13 +32,42 @@ export function useAddManualQueueEntry() {
   });
 }
 
+type UpdateQueueStatusInput = Parameters<typeof updateQueueStatus>[0];
+
+export function applyOptimisticQueueStatus(
+  entries: QueueRecord[] | undefined,
+  input: UpdateQueueStatusInput,
+  now = new Date().toISOString(),
+): QueueRecord[] | undefined {
+  if (!entries) return entries;
+  return entries.map((entry) => {
+    if (entry.id !== input.entryId) return entry;
+    const next: QueueRecord = { ...entry, status: input.status };
+    if (input.status === 'calling') next.called_at = now;
+    if (input.status === 'serving') next.serving_at = now;
+    if (input.status === 'waiting') next.called_at = null;
+    return next;
+  });
+}
+
 export function useUpdateQueueStatus() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ['queue', 'status'],
     mutationFn: updateQueueStatus,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['queue', 'entries'] });
+    // Atualização otimista: o gestor vê o card mudar no toque, sem esperar o refetch.
+    onMutate: async (input) => {
+      const key = ['queue', 'entries', input.businessId];
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<QueueRecord[]>(key);
+      queryClient.setQueryData<QueueRecord[]>(key, (current) => applyOptimisticQueueStatus(current, input));
+      return { previous, key };
+    },
+    onError: (_error, _input, context) => {
+      if (context?.previous) queryClient.setQueryData(context.key, context.previous);
+    },
+    onSettled: (_data, _error, input) => {
+      queryClient.invalidateQueries({ queryKey: ['queue', 'entries', input.businessId] });
     },
   });
 }
@@ -59,6 +89,11 @@ export function useQueueEntries(businessId: string) {
     queryFn: () => fetchQueueEntries(businessId),
     enabled: !!businessId,
     staleTime: 0,
+    // Fallback ao realtime: garante que entradas pelo QR apareçam mesmo se a
+    // assinatura cair ou a publication não estiver configurada.
+    refetchInterval: 10_000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -106,7 +141,7 @@ export function useCloseQueueTicket() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ['queue', 'close'],
-    mutationFn: closeQueueTicket,
+    mutationFn: (input: { entryId: string; items?: QueueTicketItem[] }) => closeQueueTicket(input.entryId, input.items),
     onSuccess: () => invalidateQueue(queryClient),
   });
 }

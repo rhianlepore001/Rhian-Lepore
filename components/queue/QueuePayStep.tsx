@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Check } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { PixDisplay } from '@/components/membership/PixDisplay';
@@ -42,7 +42,22 @@ export const QueuePayStep: React.FC<QueuePayStepProps> = ({
   pixTxid,
 }) => {
   const { colors, accent, font, radius } = useBrutalTheme({ override: themeOverride });
-  const options = queuePayOptions({ canUseMembership, region });
+  const digitalAvailable = region === 'PT'
+    ? Boolean(pixConfig?.mbway_phone)
+    : Boolean(pixConfig?.pix_key_value && pixConfig?.pix_key_type);
+  const options = queuePayOptions({ canUseMembership, region, digitalAvailable });
+
+  // Sem escolha ainda: assinatura quando disponível, senão balcão. Evita CTA travado
+  // quando só existe uma opção. Se a escolhida deixou de existir (ex.: Pix sem chave), volta ao balcão.
+  useEffect(() => {
+    if (!selected) {
+      onSelect(canUseMembership ? 'membership' : 'cash');
+      return;
+    }
+    if (!options.some((option) => option.id === selected)) {
+      onSelect('cash');
+    }
+  }, [canUseMembership, onSelect, options, selected]);
 
   return (
     <div className="space-y-6">
@@ -51,7 +66,7 @@ export const QueuePayStep: React.FC<QueuePayStepProps> = ({
           Como prefere pagar?
         </h2>
         <p className={`text-sm mt-1.5 leading-relaxed ${colors.textMuted}`}>
-          Sua senha na fila fica reservada em seguida.
+          Escolha a forma de pagamento para confirmar sua entrada na fila.
         </p>
       </div>
 
@@ -88,7 +103,7 @@ export const QueuePayStep: React.FC<QueuePayStepProps> = ({
                   }`}
                   aria-hidden="true"
                 >
-                  <Check className="w-3.5 h-3.5" />
+                  {active && <Check className="w-3.5 h-3.5" />}
                 </span>
                 <span className="min-w-0">
                   <p className={`font-semibold ${colors.text}`}>{option.label}</p>
@@ -110,7 +125,9 @@ export const QueuePayStep: React.FC<QueuePayStepProps> = ({
             amountCents={amountCents}
             txid={pixTxid}
           />
-          <p className={`text-sm ${colors.textSecondary}`}>Pague e aguarde a confirmação da equipe.</p>
+          <p className={`text-sm ${colors.textSecondary}`}>
+            Você entra na fila agora. A equipe confirma o pagamento assim que receber.
+          </p>
         </div>
       )}
 
@@ -121,7 +138,9 @@ export const QueuePayStep: React.FC<QueuePayStepProps> = ({
             holderName={pixConfig.mbway_holder_name}
             amountCents={amountCents}
           />
-          <p className={`text-sm ${colors.textSecondary}`}>Pague e aguarde a confirmação da equipe.</p>
+          <p className={`text-sm ${colors.textSecondary}`}>
+            Você entra na fila agora. A equipe confirma o pagamento assim que receber.
+          </p>
         </div>
       )}
 
@@ -139,7 +158,7 @@ export const QueuePayStep: React.FC<QueuePayStepProps> = ({
           loading={submitting}
           onClick={onConfirm}
         >
-          {submitting ? 'Entrando na fila…' : 'Entrar na fila'}
+          {submitting ? 'Confirmando…' : 'Confirmar e entrar na fila'}
         </Button>
         {onBack && (
           <button

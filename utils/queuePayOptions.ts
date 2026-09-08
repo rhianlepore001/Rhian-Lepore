@@ -12,35 +12,42 @@ export interface QueuePayOption {
 export function queuePayOptions(input: {
   canUseMembership: boolean;
   region: Region;
+  /** Chave Pix / número MB WAY configurados pelo estabelecimento. Sem isso a opção digital não aparece. */
+  digitalAvailable?: boolean;
 }): QueuePayOption[] {
   const digital = clubDigitalMethod(input.region);
+  const digitalAvailable = input.digitalAvailable ?? true;
   const options: QueuePayOption[] = [];
 
   if (input.canUseMembership) {
     options.push({
       id: 'membership',
-      label: 'Usar assinatura',
-      description: 'Este serviço está incluído no seu plano.',
+      label: 'Usar minha assinatura',
+      description: 'Este serviço está incluído no seu plano. Sem cobrança adicional.',
     });
   }
 
   options.push({
     id: 'cash',
     label: 'Pagar no balcão',
-    description: 'Você paga ao finalizar o atendimento.',
+    description: digital === 'pix'
+      ? 'Dinheiro, cartão ou Pix na hora, ao final do atendimento.'
+      : 'Dinheiro, cartão ou MB WAY na hora, ao final do atendimento.',
   });
+
+  if (!digitalAvailable) return options;
 
   if (digital === 'pix') {
     options.push({
       id: 'pix',
-      label: 'Pagar com Pix',
-      description: 'Você entra na fila agora. O pagamento será confirmado pela equipe.',
+      label: 'Pagar agora com Pix',
+      description: 'Copie o código e pague pelo app do banco. A equipe confirma o recebimento.',
     });
   } else {
     options.push({
       id: 'mbway',
-      label: 'Pagar com MB WAY',
-      description: 'Você entra na fila agora. O pagamento será confirmado pela equipe.',
+      label: 'Pagar agora com MB WAY',
+      description: 'Envie pelo MB WAY para o número indicado. A equipe confirma o recebimento.',
     });
   }
 

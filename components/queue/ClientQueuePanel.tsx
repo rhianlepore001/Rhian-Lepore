@@ -208,21 +208,24 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
   return (
     <article className={`rounded-2xl border overflow-hidden ${surfaceClass}`} aria-live="polite">
       <div className="p-5 space-y-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h2 className={`text-xl font-bold leading-tight ${titleClass}`}>{headline.title}</h2>
-            {headline.subtitle && (
-              <p className="text-sm text-theme-textSecondary mt-1.5 leading-relaxed">{headline.subtitle}</p>
-            )}
-          </div>
+        <div className="space-y-2">
           {!isClosed && (
-            <Badge variant={payBadge.variant} className="shrink-0 text-xs px-2.5 py-1 rounded-full font-semibold">
-              {payBadge.label}
-            </Badge>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-theme-textMuted">
+                {isCalling ? 'Sua senha foi chamada' : isServing ? 'Atendimento em andamento' : 'Sua senha'}
+              </p>
+              <Badge variant={payBadge.variant} className="shrink-0 text-xs px-2.5 py-1 rounded-full font-semibold">
+                {payBadge.label}
+              </Badge>
+            </div>
+          )}
+          <h2 className={`text-2xl font-bold leading-tight ${titleClass}`}>{headline.title}</h2>
+          {headline.subtitle && (
+            <p className="text-sm text-theme-textSecondary leading-relaxed">{headline.subtitle}</p>
           )}
         </div>
 
-        {metaParts.length > 0 && (
+        {!isClosed && metaParts.length > 0 && (
           <p className="text-sm text-theme-textSecondary">{metaParts.join(' · ')}</p>
         )}
 

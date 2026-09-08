@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Input, Modal, Select, useToast } from '@/components/ui';
 import { PhoneInput } from '@/components/PhoneInput';
+import { useBrutalTheme } from '@/hooks/useBrutalTheme';
 import { addManualQueueEntry } from '@/services/queue';
 import type { QueueMode } from '@/types/queue';
 import type { ServiceItem } from '@/types/serviceSettings';
@@ -34,6 +35,7 @@ export const QueueManualAddSheet: React.FC<QueueManualAddSheetProps> = ({
   onAdded,
 }) => {
   const { showToast } = useToast();
+  const { classes } = useBrutalTheme();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [serviceId, setServiceId] = useState('');
@@ -110,8 +112,8 @@ export const QueueManualAddSheet: React.FC<QueueManualAddSheetProps> = ({
           placeholder="Nome do cliente"
           autoComplete="off"
         />
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-theme-textSecondary">Telefone</label>
+        <div>
+          <span className={`${classes.label} block mb-1.5`}>Telefone</span>
           <PhoneInput value={phone} onChange={setPhone} defaultRegion={region} />
         </div>
         <Select

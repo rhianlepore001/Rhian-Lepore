@@ -343,7 +343,7 @@ export const QueueManagement: React.FC = () => {
         open={!!noShowEntry}
         title="Remover da fila?"
         message={noShowEntry
-          ? `${noShowEntry.client_name} será marcado como não compareceu e sai da fila. Para voltar, ele precisa pegar uma nova senha.`
+          ? `${noShowEntry.client_name} sai da fila como "não compareceu". Para voltar, precisa pegar uma nova senha pelo QR Code.`
           : ''}
         confirmLabel="Remover da fila"
         cancelLabel="Manter"

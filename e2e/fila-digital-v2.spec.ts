@@ -77,7 +77,9 @@ async function mockQueuePublicApis(page: Page) {
       }]);
     }
     if (url.includes('find_active_queue_entry_by_phone')) {
-      if (bump('find_active') === 1) {
+      bump('find_active');
+      // Antes de entrar não há senha ativa (a tela consulta mais de uma vez); depois do join, há.
+      if (!calls.join_queue_entry) {
         return fulfillRpc(route, []);
       }
       return fulfillRpc(route, [{
@@ -92,6 +94,7 @@ async function mockQueuePublicApis(page: Page) {
       }]);
     }
     if (url.includes('join_queue_entry')) {
+      bump('join_queue_entry');
       return fulfillRpc(route, { id: 'queue-e2e', business_id: PROFILE.id });
     }
     if (url.includes('get_queue_public_board')) {

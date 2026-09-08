@@ -45,6 +45,10 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
 }) => {
   const { showToast } = useToast();
   const alreadyPaid = entry?.payment_status === 'paid' || entry?.payment_status === 'membership';
+  // Pix/MB WAY enviado pelo cliente e ainda não confirmado: cobrar o total no balcão agora
+  // cobraria duas vezes. O gestor confirma ou cancela o pagamento no card antes de fechar.
+  const pendingDigital = entry?.payment_status === 'awaiting_confirmation';
+  const pendingDigitalLabel = entry?.payment_method === 'mbway' ? 'MB WAY' : 'Pix';
   const [extras, setExtras] = useState<TicketLine[]>([]);
   const [products, setProducts] = useState<TicketLine[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethod | ''>('');
@@ -58,6 +62,7 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
   // Comanda reaberta volta com os itens guardados em "Deixar em aberto".
   // Chave serializada: o polling recria o array e não pode apagar o que o gestor está editando.
   const savedItemsKey = JSON.stringify(entry?.ticket_items ?? []);
+  const soloProfessionalId = teamMembers.length === 1 ? teamMembers[0].id : null;
   useEffect(() => {
     if (!open) return;
     const saved = JSON.parse(savedItemsKey) as NonNullable<QueueRecord['ticket_items']>;
@@ -68,8 +73,8 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
       .filter((item) => item.kind === 'product')
       .map((item, index) => ({ key: `saved-product-${index}`, id: item.id, name: item.name, price: item.price })));
     setPaymentMethod('');
-    setProfessionalId(teamMembers.length === 1 ? teamMembers[0].id : '');
-  }, [open, entry?.id, savedItemsKey, teamMembers]);
+    setProfessionalId(soloProfessionalId ?? '');
+  }, [open, entry?.id, savedItemsKey, soloProfessionalId]);
 
   const basePrice = (entry?.service_price_cents ?? 0) / 100;
   const serviceLabel = baseServiceName ?? 'Serviço';
@@ -115,11 +120,16 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
 
   const handleSettle = async () => {
     if (!entry) return;
+    if (pendingDigital) {
+      showToast(`Confirme ou cancele o ${pendingDigitalLabel} do cliente no card antes de fechar a comanda.`, 'error');
+      return;
+    }
     if (needsPaymentMethod && !paymentMethod) {
       showToast(alreadyPaid ? 'Informe como o cliente pagou os itens adicionados.' : 'Escolha como o cliente pagou.', 'error');
       return;
     }
     setSaving('settle');
+    let settled = false;
     try {
       const payload = buildQueueSettlePayload({
         entryId: entry.id,
@@ -132,16 +142,30 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
         alreadyPaid: alreadyPaid && !needsPaymentMethod,
       });
       await settleQueueTicket(payload);
-      await Promise.all(products.map((line) => sellProduct({
+      settled = true;
+      // Cada produto vira uma venda própria (baixa de estoque + lançamento no financeiro).
+      const sales = await Promise.allSettled(products.map((line) => sellProduct({
         productId: line.id,
         quantity: 1,
         professionalId: resolvedProfessionalId,
         paymentMethod: needsPaymentMethod ? paymentMethod || null : entry.payment_method,
       })));
-      showToast(`Atendimento de ${entry.client_name} finalizado.`, 'success');
+      const failed = products.filter((_, index) => sales[index].status === 'rejected');
+      if (failed.length > 0) {
+        showToast(
+          `Atendimento finalizado, mas a venda de ${failed.map((line) => line.name).join(', ')} não foi registrada. Lance em Produtos.`,
+          'error',
+        );
+      } else {
+        showToast(`Atendimento de ${entry.client_name} finalizado.`, 'success');
+      }
       onDone();
     } catch {
-      showToast('Não foi possível finalizar a comanda. Tente de novo.', 'error');
+      showToast(
+        settled ? 'Atendimento finalizado, mas houve um erro ao registrar os produtos.' : 'Não foi possível finalizar a comanda. Tente de novo.',
+        'error',
+      );
+      if (settled) onDone();
     } finally {
       setSaving(null);
     }
@@ -182,7 +206,12 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
         <div className="space-y-5">
           <div>
             <p className="font-bold text-theme-text">{entry.client_name}</p>
-            {alreadyPaid ? (
+            {pendingDigital ? (
+              <p className="text-sm mt-1 text-[var(--color-warning)]" role="alert">
+                O cliente escolheu pagar por {pendingDigitalLabel} e o pagamento ainda não foi confirmado.
+                Confirme ou cancele no card da senha antes de fechar a comanda.
+              </p>
+            ) : alreadyPaid ? (
               <p className="text-sm mt-1 text-theme-textSecondary">
                 {entry.payment_status === 'membership'
                   ? 'Serviço coberto pela assinatura. Adicione extras se houver e finalize.'
@@ -284,7 +313,7 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
               variant="primary"
               fullWidth
               loading={saving === 'settle'}
-              disabled={saving === 'close'}
+              disabled={saving === 'close' || pendingDigital}
               onClick={() => void handleSettle()}
             >
               {needsPaymentMethod ? `Receber ${formatCurrency(dueNow, region)} e finalizar` : 'Finalizar atendimento'}

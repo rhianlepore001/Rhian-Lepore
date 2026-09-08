@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
+import { Copy, Download, Printer } from 'lucide-react';
 import { Button, Modal, useToast } from '@/components/ui';
 import { Link } from 'react-router-dom';
 import { queueJoinUrl } from '@/utils/queueQr';
@@ -115,15 +116,20 @@ export const QueueQrSheet: React.FC<QueueQrSheetProps> = ({
               <div className="bg-white p-3 rounded-2xl flex justify-center">
                 <img src={image.src} alt={`QR Code da fila: ${image.label}`} className="w-48 h-48" />
               </div>
-              <p className="text-xs font-mono break-all text-theme-textSecondary">{image.url}</p>
-              <div className="grid grid-cols-3 gap-2">
-                <Button variant="secondary" className="min-h-[44px]" onClick={() => copyLink(image.url)}>
-                  Copiar link
+              <button
+                type="button"
+                onClick={() => void copyLink(image.url)}
+                className="w-full text-left flex items-center gap-2 min-h-[44px] rounded-lg text-xs text-theme-textSecondary hover:text-theme-text"
+                aria-label={`Copiar link da fila ${image.label}`}
+              >
+                <span className="font-mono break-all min-w-0">{image.url}</span>
+                <Copy className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant="secondary" className="min-h-[44px]" icon={<Download className="w-4 h-4" />} onClick={() => download(image.src, image.label)}>
+                  Baixar PNG
                 </Button>
-                <Button variant="secondary" className="min-h-[44px]" onClick={() => download(image.src, image.label)}>
-                  Baixar
-                </Button>
-                <Button variant="ghost" className="min-h-[44px]" onClick={() => window.print()}>
+                <Button variant="ghost" className="min-h-[44px]" icon={<Printer className="w-4 h-4" />} onClick={() => window.print()}>
                   Imprimir
                 </Button>
               </div>

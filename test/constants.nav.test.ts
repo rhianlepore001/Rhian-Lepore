@@ -17,11 +17,15 @@ describe('navegação do Clube (dono)', () => {
     expect(agendix?.group).toBe('Financeiro');
   });
 
-  it('expõe Clube no menu principal só para dono', () => {
-    const clube = NAVIGATION_ITEMS.find((item) => item.path === '/clube/assinantes');
-    expect(clube?.name).toBe('Clube');
-    expect(clube?.ownerOnly).toBe(true);
-    expect(clube?.group).toBe('Crescimento');
+  it('expõe Equipe no menu principal só para dono, sem confundir com Ajustes', () => {
+    const equipe = NAVIGATION_ITEMS.find((item) => item.path === '/configuracoes/equipe');
+    const ajustes = NAVIGATION_ITEMS.find((item) => item.path === '/configuracoes');
+    expect(equipe?.name).toBe('Equipe');
+    expect(equipe?.ownerOnly).toBe(true);
+    expect(equipe?.group).toBe('Operação');
+    expect(ajustes?.name).toBe('Ajustes');
+    expect(findActiveSettingsItem(NAVIGATION_ITEMS, '/configuracoes/equipe')?.name).toBe('Equipe');
+    expect(findActiveSettingsItem(NAVIGATION_ITEMS, '/configuracoes/geral')?.name).toBe('Ajustes');
   });
 
   it('mantém abas Planos, Pix e Assinantes', () => {

@@ -7,6 +7,7 @@ import {
   X,
   User,
   Users,
+  UserCog,
   Package,
   TrendingUp,
   Clock,
@@ -18,6 +19,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
+import { findActiveSettingsItem } from '../constants';
 
 interface MoreOptionsDrawerProps {
   onClose: () => void;
@@ -118,6 +120,7 @@ export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose })
     { name: 'Início', icon: LayoutDashboard, path: '/' },
     { name: 'Agenda', icon: Clock, path: '/agenda' },
     { name: 'Clientes', icon: Users, path: '/clientes', ownerOnly: true },
+    { name: 'Equipe', icon: UserCog, path: '/configuracoes/equipe', ownerOnly: true },
     { name: 'Financeiro', icon: DollarSign, path: '/financeiro', ownerOnly: true },
     { name: 'Produtos', icon: Package, path: '/produtos', ownerOnly: true },
     { name: 'Fila Digital', icon: Users, path: '/fila', ownerOnly: false },
@@ -127,9 +130,9 @@ export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose })
   ];
 
   const visibleItems = menuItems.filter((item) => !item.ownerOnly || !isStaff);
+  const activeItem = findActiveSettingsItem(visibleItems, location.pathname);
 
-  const isActive = (path: string) =>
-    location.pathname === path || (path !== '/' && location.pathname.startsWith(path));
+  const isActive = (path: string) => activeItem?.path === path;
 
   if (!isRendered) return null;
 

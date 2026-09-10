@@ -29,6 +29,7 @@ export const teamMemberSchema = z.object({
   created_at: z.string().nullable().optional(),
   updated_at: z.string().nullable().optional(),
   is_owner: z.boolean().default(false),
+  deleted_at: z.string().nullable().optional(),
 });
 
 export const teamMemberInputSchema = z.object({

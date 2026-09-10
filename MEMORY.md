@@ -49,6 +49,11 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Equipe no menu + exclusão de profissional (10 Set 2026):**
+  - Item **Equipe** no sidebar desktop e no menu mobile (Mais), apontando para `/#/configuracoes/equipe`.
+  - Excluir profissional não fazia nada quando havia agendamento/financeiro vinculado (FK sem `ON DELETE`). Agora usa exclusão lógica (`deleted_at` + `active=false`); o dono não pode ser removido.
+  - Gates: typecheck, lint, build, 586 testes.
+
 - **Fila digital — histórico, chamada instantânea, dashboard/financeiro (10 Set 2026):**
   - Broadcast `queue:<business_id>` (trigger + policy em `realtime.messages`) para o cliente ver o **Chamar** na hora, com som/vibração. Poll continua como fallback.
   - Painel do cliente: tempo **estimado** (soma de quem está à frente, não a duração do próprio serviço).

@@ -258,6 +258,7 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
                     <Edit2 className={`w-4 h-4 ${accent.text}`} />
                     Perfil
                 </button>
+                {!member.is_owner && (
                 <button
                     type="button"
                     onClick={(e) => {
@@ -270,6 +271,7 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
                 >
                     <Trash2 className="w-4 h-4" />
                 </button>
+                )}
             </div>
         </div>
     );

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { NAVIGATION_ITEMS } from '../constants';
+import { NAVIGATION_ITEMS, findActiveSettingsItem } from '../constants';
 import { TrendingUp, X, LogOut } from 'lucide-react';
 import { useUI } from '../contexts/UIContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -29,8 +29,10 @@ export const Sidebar: React.FC = () => {
     closeSidebar();
   };
 
+  const activeItem = findActiveSettingsItem(visibleItems, location.pathname);
+
   const renderLink = (path: string, Icon: React.ElementType, label: string) => {
-    const isActive = location.pathname === path || (path !== '/' && location.pathname.startsWith(path));
+    const isActive = activeItem?.path === path;
 
     return (
       <Link

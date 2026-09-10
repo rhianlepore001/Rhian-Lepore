@@ -52,10 +52,65 @@ function xAxisTicks(data: CashflowDayPoint[]): string[] {
   if (n <= 8) return data.map((d) => d.name);
   const step = n <= 16 ? 2 : n <= 24 ? 3 : 5;
   const ticks: string[] = [];
-  data.forEach((d, i) => {
-    if (i === 0 || i === n - 1 || (i + 1) % step === 0) ticks.push(d.name);
-  });
-  return Array.from(new Set(ticks));
+  for (let i = 0; i < n; i += step) ticks.push(data[i].name);
+  const last = data[n - 1].name;
+  if (ticks[ticks.length - 1] !== last) {
+    const prev = Number(ticks[ticks.length - 1]);
+    const lastN = Number(last);
+    if (Number.isFinite(prev) && Number.isFinite(lastN) && lastN - prev < Math.ceil(step / 2)) {
+      ticks[ticks.length - 1] = last;
+    } else {
+      ticks.push(last);
+    }
+  }
+  return ticks;
+}
+
+type DualBarShapeProps = {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  payload?: CashflowDayPoint & { maxValue: number };
+  revenueFill: string;
+  expenseFill: string;
+};
+
+function DualCashflowBar({
+  x = 0,
+  y = 0,
+  width = 0,
+  height = 0,
+  payload,
+  revenueFill,
+  expenseFill,
+}: DualBarShapeProps) {
+  if (!payload?.maxValue || width <= 0 || height <= 0) return null;
+
+  const scale = height / payload.maxValue;
+  const hIn = payload.receita > 0 ? Math.max(payload.receita * scale, 3) : 0;
+  const hOut = payload.despesas > 0 ? Math.max(payload.despesas * scale, 3) : 0;
+  const hasIn = hIn > 0;
+  const hasOut = hOut > 0;
+
+  if (hasIn && hasOut) {
+    const gap = width >= 12 ? 2 : 1;
+    const barW = Math.max(4, (width - gap) / 2);
+    const rx = Math.min(3, barW / 2);
+    return (
+      <g>
+        <rect x={x} y={y + height - hIn} width={barW} height={hIn} rx={rx} ry={rx} fill={revenueFill} />
+        <rect x={x + barW + gap} y={y + height - hOut} width={barW} height={hOut} rx={rx} ry={rx} fill={expenseFill} />
+      </g>
+    );
+  }
+
+  const barW = Math.max(6, width * 0.82);
+  const x0 = x + (width - barW) / 2;
+  const h = hasIn ? hIn : hOut;
+  const fill = hasIn ? revenueFill : expenseFill;
+  const rx = Math.min(4, barW / 2);
+  return <rect x={x0} y={y + height - h} width={barW} height={h} rx={rx} ry={rx} fill={fill} />;
 }
 
 function CashflowTooltip({
@@ -169,6 +224,14 @@ export const FinanceCashflowChart: React.FC<FinanceCashflowChartProps> = ({
   );
 
   const ticks = useMemo(() => xAxisTicks(data), [data]);
+  const plotData = useMemo(
+    () =>
+      data.map((d) => ({
+        ...d,
+        maxValue: Math.max(d.receita || 0, d.despesas || 0),
+      })),
+    [data],
+  );
 
   const theme = useMemo(
     () => ({
@@ -227,10 +290,9 @@ export const FinanceCashflowChart: React.FC<FinanceCashflowChartProps> = ({
       >
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
-            data={data}
-            margin={{ top: 8, right: 4, left: 0, bottom: 0 }}
-            barCategoryGap="22%"
-            barGap={2}
+            data={plotData}
+            margin={{ top: 8, right: 6, left: 0, bottom: 0 }}
+            barCategoryGap={4}
             accessibilityLayer
           >
             <defs>
@@ -274,19 +336,15 @@ export const FinanceCashflowChart: React.FC<FinanceCashflowChartProps> = ({
               allowEscapeViewBox={{ x: true, y: false }}
             />
             <Bar
-              dataKey="receita"
-              name="Entradas"
-              fill={`url(#${revenueFillId})`}
-              radius={[4, 4, 0, 0]}
-              maxBarSize={14}
-              isAnimationActive={false}
-            />
-            <Bar
-              dataKey="despesas"
-              name="Saídas"
-              fill={`url(#${expenseFillId})`}
-              radius={[4, 4, 0, 0]}
-              maxBarSize={14}
+              dataKey="maxValue"
+              name="Movimento"
+              shape={(props) => (
+                <DualCashflowBar
+                  {...props}
+                  revenueFill={`url(#${revenueFillId})`}
+                  expenseFill={`url(#${expenseFillId})`}
+                />
+              )}
               isAnimationActive={false}
             />
           </BarChart>

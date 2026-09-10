@@ -124,6 +124,10 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
       showToast(`Confirme ou cancele o ${pendingDigitalLabel} do cliente no card antes de fechar a comanda.`, 'error');
       return;
     }
+    if (askProfessional && !resolvedProfessionalId) {
+      showToast('Informe quem atendeu para o histórico e a comissão ficarem certos.', 'error');
+      return;
+    }
     if (needsPaymentMethod && !paymentMethod) {
       showToast(alreadyPaid ? 'Informe como o cliente pagou os itens adicionados.' : 'Escolha como o cliente pagou.', 'error');
       return;
@@ -252,7 +256,7 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Select
-              label="Adicionar serviço"
+              label="Adicionar serviço extra"
               placeholder="Escolher serviço"
               value=""
               options={services.filter((service) => service.active).map((service) => ({
@@ -290,7 +294,7 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
           {askProfessional && (
             <Select
               label="Quem atendeu"
-              placeholder="Escolher profissional (opcional)"
+              placeholder="Escolher profissional"
               value={professionalId}
               options={teamMembers.map((member) => ({ value: member.id, label: member.name }))}
               onChange={(event) => setProfessionalId(event.target.value)}

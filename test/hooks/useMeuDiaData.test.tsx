@@ -64,6 +64,7 @@ describe('useMeuDiaData', () => {
                 return {
                     select: vi.fn().mockReturnThis(),
                     eq: vi.fn().mockReturnThis(),
+                    neq: vi.fn().mockReturnThis(),
                     gte: vi.fn().mockReturnThis(),
                     lte: vi.fn().mockReturnThis(),
                     in: vi.fn().mockReturnThis(),
@@ -110,6 +111,7 @@ describe('useMeuDiaData', () => {
                 return {
                     select: vi.fn().mockReturnThis(),
                     eq: vi.fn().mockReturnThis(),
+                    neq: vi.fn().mockReturnThis(),
                     gte: vi.fn().mockReturnThis(),
                     lte: vi.fn().mockReturnThis(),
                     order: vi.fn().mockResolvedValue({ data: mockTodayAppointments, error: null }),

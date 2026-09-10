@@ -19,6 +19,7 @@ export interface QueueClientHeadlineInput {
   firstName?: string | null;
   etaMinutes?: number | null;
   professionalName?: string | null;
+  remainingLateMinutes?: number | null;
 }
 
 export interface QueueClientHeadline {
@@ -35,6 +36,12 @@ export function queueClientHeadline(input: QueueClientHeadlineInput): QueueClien
   const name = input.firstName?.trim() || null;
 
   if (input.status === 'calling') {
+    if (input.remainingLateMinutes != null && input.remainingLateMinutes <= 0) {
+      return {
+        title: 'O prazo para chegar acabou',
+        subtitle: 'Fale com a equipe no balcão agora. Sua senha foi chamada, mas o tempo de tolerância esgotou.',
+      };
+    }
     return {
       title: name ? `${name}, é a sua vez!` : 'É a sua vez!',
       subtitle: input.professionalName

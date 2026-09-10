@@ -117,10 +117,10 @@ export function useBusinessSlug(businessId: string) {
   });
 }
 
-export function useQueueTeamMembers(businessId: string) {
+export function useQueueTeamMembers(businessId: string, includeInactive = false) {
   return useQuery({
-    queryKey: ['queue', 'team-members', businessId],
-    queryFn: () => fetchQueueTeamMembers(businessId),
+    queryKey: ['queue', 'team-members', businessId, includeInactive ? 'all' : 'active'],
+    queryFn: () => fetchQueueTeamMembers(businessId, { includeInactive }),
     enabled: !!businessId,
     staleTime: 5 * 60 * 1000,
   });

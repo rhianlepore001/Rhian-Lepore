@@ -167,16 +167,18 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
   const people = board.data?.people ?? [];
   const payBadge = queueClientPaymentBadge(board.data?.paymentStatus ?? entry.payment_status);
 
+  const lateLeft = isCalling ? remainingLateMinutes(board.data?.calledAt ?? entry.called_at, settings?.lateMinutes ?? 10) : null;
+  const lateExpired = isCalling && lateLeft != null && lateLeft <= 0;
   const headline = queueClientHeadline({
     status,
     position,
     firstName,
     etaMinutes,
     professionalName,
+    remainingLateMinutes: lateLeft,
   });
   const estimatedWaitLabel = isWaiting ? formatQueueEstimatedWait(etaMinutes) : null;
 
-  const lateLeft = isCalling ? remainingLateMinutes(board.data?.calledAt ?? entry.called_at, settings?.lateMinutes ?? 10) : null;
   const ruleLine = queueClientRuleLine({
     status,
     allowLeave: settings?.allowLeave,
@@ -187,17 +189,21 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
   const waitedMin = isWaiting ? minutesSince(entry.joined_at) : null;
   const peopleAhead = typeof position === 'number' && position > 1 ? position - 1 : 0;
 
-  const surfaceClass = isCalling
-    ? 'border-[var(--color-success-border)] bg-[var(--color-success-bg)]'
-    : isServing
-      ? 'border-[var(--color-info-border)] bg-[var(--color-info-bg)]'
-      : 'border-theme-border bg-theme-card';
+  const surfaceClass = lateExpired
+    ? 'border-[var(--color-warning-border)] bg-[var(--color-warning-bg)]'
+    : isCalling
+      ? 'border-[var(--color-success-border)] bg-[var(--color-success-bg)]'
+      : isServing
+        ? 'border-[var(--color-info-border)] bg-[var(--color-info-bg)]'
+        : 'border-theme-border bg-theme-card';
 
-  const titleClass = isCalling
-    ? 'text-[var(--color-success)]'
-    : isServing
-      ? 'text-[var(--color-info)]'
-      : 'text-theme-text';
+  const titleClass = lateExpired
+    ? 'text-[var(--color-warning)]'
+    : isCalling
+      ? 'text-[var(--color-success)]'
+      : isServing
+        ? 'text-[var(--color-info)]'
+        : 'text-theme-text';
 
   const visiblePeople = people.slice(0, MAX_PEOPLE_VISIBLE);
   const hiddenPeople = Math.max(0, people.length - visiblePeople.length);
@@ -230,7 +236,7 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
           {!isClosed && (
             <div className="flex items-center justify-between gap-3">
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-textMuted">
-                {isCalling ? 'Chamada' : isServing ? 'Atendimento' : 'Sua senha'}
+                {lateExpired ? 'Prazo esgotado' : isCalling ? 'Chamada' : isServing ? 'Atendimento' : 'Sua senha'}
               </p>
               <Badge variant={payBadge.variant} className="shrink-0 text-xs px-2.5 py-1 rounded-full font-semibold">
                 {payBadge.label}
@@ -241,7 +247,18 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
             {headline.title}
           </h2>
           {headline.subtitle && (
-            <p className="text-sm text-theme-textSecondary leading-relaxed">{headline.subtitle}</p>
+            <p className={`text-sm leading-relaxed ${lateExpired ? 'text-[var(--color-warning)] font-medium' : 'text-theme-textSecondary'}`}>
+              {headline.subtitle}
+            </p>
+          )}
+          {lateExpired && (
+            <div
+              role="alert"
+              className="rounded-2xl border border-[var(--color-warning-border)] bg-theme-surface px-4 py-3 text-sm text-theme-text"
+            >
+              A chamada continua visível para a equipe, mas o seu prazo de chegar já acabou.
+              Não fique esperando neste ecrã — fale no balcão.
+            </div>
           )}
         </div>
 
@@ -333,26 +350,15 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
           </Link>
         )}
 
-        {status === 'completed' && (bookHref || (cameFromQr && joinHref)) && (
+        {status === 'completed' && bookHref && (
           <div className="flex flex-col gap-2">
-            {cameFromQr && joinHref && (
-              <Link
-                to={joinHref}
-                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl bg-theme-accent px-4 text-sm font-semibold text-[var(--color-on-accent)]"
-              >
-                <QrCode className="w-4 h-4" />
-                Pegar outra senha
-              </Link>
-            )}
-            {bookHref && (
-              <Link
-                to={bookHref}
-                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl border border-theme-border bg-theme-surface px-4 text-sm font-semibold text-theme-text"
-              >
-                <CalendarPlus className="w-4 h-4" />
-                Agendar a próxima visita
-              </Link>
-            )}
+            <Link
+              to={bookHref}
+              className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl bg-theme-accent px-4 text-sm font-semibold text-[var(--color-on-accent)]"
+            >
+              <CalendarPlus className="w-4 h-4" />
+              Iniciar agendamento
+            </Link>
           </div>
         )}
       </div>

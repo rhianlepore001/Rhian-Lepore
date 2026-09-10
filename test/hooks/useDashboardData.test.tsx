@@ -69,6 +69,7 @@ describe('useDashboardData', () => {
                 return {
                     select: vi.fn().mockReturnThis(),
                     eq: vi.fn().mockReturnThis(),
+                    neq: vi.fn().mockReturnThis(),
                     gte: vi.fn().mockReturnThis(),
                     lte: vi.fn().mockResolvedValue({ data: [{ price: 50 }], error: null }),
                     order: vi.fn().mockReturnThis(),

@@ -46,7 +46,7 @@ export const QueueHistory: React.FC = () => {
   });
 
   const { data: entries = [], isLoading, refetch } = useQueueHistory(tenantId, day);
-  const { data: teamMembers = [] } = useQueueTeamMembers(tenantId);
+  const { data: teamMembers = [] } = useQueueTeamMembers(tenantId, true);
   const { data: services = [] } = useQuery({
     queryKey: ['queue', 'services', tenantId],
     queryFn: () => fetchServices(tenantId),
@@ -158,7 +158,7 @@ export const QueueHistory: React.FC = () => {
             {(entries as QueueRecord[]).map((entry) => {
               const professionalName = entry.professional_id
                 ? professionalNames.get(entry.professional_id) ?? '—'
-                : 'Qualquer profissional';
+                : 'Profissional não informado';
               const serviceName = entry.service_id ? serviceNames.get(entry.service_id) ?? 'Serviço' : 'Serviço';
               return (
                 <article key={entry.id} className="rounded-2xl border border-theme-border bg-theme-card p-4 space-y-3">

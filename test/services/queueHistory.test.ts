@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseQueueRealtimeEvent } from '@/hooks/useQueueRealtime';
+import { parseQueueRealtimeEvent } from '@/utils/queueRealtime';
 import { summarizeQueueHistory } from '@/services/queue';
 import { formatQueueClock, queueHistoryStatusLabel } from '@/utils/queueHistoryCopy';
 import type { QueueRecord } from '@/types/queue';

@@ -14,6 +14,7 @@ export async function fetchTeamMembers(companyId: string): Promise<TeamMember[]>
     .from('team_members')
     .select('*')
     .eq('user_id', companyId)
+    .is('deleted_at', null)
     .order('is_owner', { ascending: false })
     .order('name', { ascending: true });
 
@@ -72,13 +73,25 @@ export async function deleteTeamMember(
   memberId: string,
   companyId: string,
 ): Promise<void> {
-  const { error } = await supabase
+  const now = new Date().toISOString();
+  const { data, error } = await supabase
     .from('team_members')
-    .delete()
+    .update({
+      deleted_at: now,
+      active: false,
+      updated_at: now,
+    })
     .eq('id', memberId)
-    .eq('user_id', companyId);
+    .eq('user_id', companyId)
+    .eq('is_owner', false)
+    .is('deleted_at', null)
+    .select('id')
+    .maybeSingle();
 
   if (error) throw error;
+  if (!data) {
+    throw new Error('OWNER_OR_MISSING_TEAM_MEMBER');
+  }
 }
 
 function generateSlug(name: string): string {

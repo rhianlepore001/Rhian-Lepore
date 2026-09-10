@@ -13,6 +13,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { TeamMemberCard, type CommissionDraft } from '../../components/TeamMemberCard';
 import { TeamMemberForm } from '../../components/TeamMemberForm';
 import { supabase } from '../../lib/supabase';
+import { mapError, formatUserFacingError } from '../../utils/mapError';
 
 export const TeamSettings: React.FC = () => {
     const { companyId } = useAuth();
@@ -48,6 +49,11 @@ export const TeamSettings: React.FC = () => {
     }));
 
     const handleDelete = (id: string) => {
+        const member = cardMembers.find((item) => item.id === id);
+        if (member?.is_owner) {
+            showToast('O perfil do dono não pode ser excluído.', 'warning');
+            return;
+        }
         setPendingDeleteId(id);
     };
 
@@ -56,8 +62,11 @@ export const TeamSettings: React.FC = () => {
         try {
             await deleteMemberMutation.mutateAsync(pendingDeleteId);
             showToast('Profissional excluído.', 'success');
-        } catch {
-            showToast('Não foi possível excluir o profissional. Tente de novo.', 'error');
+        } catch (error) {
+            const message = error instanceof Error && error.message === 'OWNER_OR_MISSING_TEAM_MEMBER'
+                ? 'Não foi possível excluir este profissional. O dono não pode ser removido.'
+                : formatUserFacingError(mapError(error, 'Não foi possível excluir o profissional. Tente de novo.'));
+            showToast(message, 'error');
         } finally {
             setPendingDeleteId(null);
         }

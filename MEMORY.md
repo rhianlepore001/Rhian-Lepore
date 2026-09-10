@@ -49,13 +49,19 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Equipe no menu + exclusão de profissional (10 Set 2026):**
+  - PR #63 → `main`. Item **Equipe** no sidebar desktop e no menu mobile (Mais), apontando para `/#/configuracoes/equipe`.
+  - Excluir profissional não fazia nada quando havia agendamento/financeiro vinculado (FK sem `ON DELETE`). Agora usa exclusão lógica (`deleted_at` + `active=false`); o dono não pode ser removido.
+  - Gates: typecheck, lint, build, 586 testes. Deploy Vercel no push `main`.
+
 - **Fila digital — polish pagamento, prazo, histórico e agenda (10 Set 2026):**
-  - Pix/MB WAY: mostra número/chave da casa e o botão **Já paguei** (não entra na fila no mesmo toque).
+  - PR #62 → `main`. Pix/MB WAY: mostra número/chave da casa e o botão **Já paguei** (não entra na fila no mesmo toque).
   - Chamada com prazo esgotado: título e alerta no cartão, não só no rodapé.
   - `settle_queue_ticket` grava `professional_id` na senha e `appointments.origin='queue'` para não aparecer na grade/histórico da Agenda.
   - Pós-atendimento no cliente: só **Iniciar agendamento** (sem pegar outra senha).
   - Checkout: rótulo **Adicionar serviço extra**.
   - Migration `20260910190000_queue_settle_origin_professional.sql`.
+  - Deploy Vercel no push `main`.
 
 - **Fila digital — histórico, chamada instantânea, dashboard/financeiro (10 Set 2026):**
   - Broadcast `queue:<business_id>` (trigger + policy em `realtime.messages`) para o cliente ver o **Chamar** na hora, com som/vibração. Poll continua como fallback.

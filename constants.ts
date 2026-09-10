@@ -1,6 +1,6 @@
 
 import { Appointment, Client, FinanceRecord } from './types';
-import { LucideIcon, Bell, LayoutDashboard, Calendar, Users, Settings, DollarSign, Package, CreditCard, Clock, Shield, Trash2, ClipboardList, ShieldAlert, TrendingUp, Crown } from 'lucide-react';
+import { LucideIcon, Bell, LayoutDashboard, Calendar, Users, UserCog, Settings, DollarSign, Package, CreditCard, Clock, Shield, Trash2, ClipboardList, ShieldAlert, TrendingUp, Crown } from 'lucide-react';
 
 export function isPathActive(pathname: string, itemPath: string, exact = false): boolean {
   if (itemPath === '/') return pathname === '/';
@@ -25,6 +25,7 @@ export const NAVIGATION_ITEMS = [
   { name: 'Agenda', icon: Calendar, path: '/agenda', ownerOnly: false, group: 'Operação' },
   { name: 'Fila Digital', icon: Clock, path: '/fila', ownerOnly: false, group: 'Operação' },
   { name: 'Clientes', icon: Users, path: '/clientes', ownerOnly: true, group: 'Operação' },
+  { name: 'Equipe', icon: UserCog, path: '/configuracoes/equipe', ownerOnly: true, group: 'Operação' },
   { name: 'Produtos', icon: Package, path: '/produtos', ownerOnly: false, group: 'Operação' },
   { name: 'Financeiro', icon: DollarSign, path: '/financeiro', ownerOnly: true, group: 'Crescimento' },
   { name: 'Análises', icon: TrendingUp, path: '/insights', ownerOnly: true, group: 'Crescimento' },

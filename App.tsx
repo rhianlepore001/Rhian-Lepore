@@ -44,6 +44,7 @@ const ProfessionalPortfolio = React.lazy(() => import('./pages/ProfessionalPortf
 const QueueJoin = React.lazy(() => import('./pages/QueueJoin').then(module => ({ default: module.QueueJoin })));
 const QueueStatus = React.lazy(() => import('./pages/QueueStatus').then(module => ({ default: module.QueueStatus })));
 const QueueManagement = React.lazy(() => import('./pages/QueueManagement').then(module => ({ default: module.QueueManagement })));
+const QueueHistory = React.lazy(() => import('./pages/QueueHistory').then(module => ({ default: module.QueueHistory })));
 const ClientArea = React.lazy(() => import('./pages/ClientArea').then(module => ({ default: module.ClientArea })));
 const ForgotPassword = React.lazy(() => import('./pages/ForgotPassword').then(module => ({ default: module.ForgotPassword })));
 const UpdatePassword = React.lazy(() => import('./pages/UpdatePassword').then(module => ({ default: module.UpdatePassword })));
@@ -219,6 +220,7 @@ const AppRoutes: React.FC = () => {
           <Route path="/" element={<Dashboard />} />
           <Route path="/agenda" element={<Agenda />} />
           <Route path="/fila" element={<QueueManagement />} />
+          <Route path="/fila/historico" element={<QueueHistory />} />
           <Route path="/clientes" element={<OwnerRouteGuard><Clients /></OwnerRouteGuard>} />
           <Route path="/clientes/:id" element={<OwnerRouteGuard><ClientCRM /></OwnerRouteGuard>} />
           <Route path="/produtos" element={<Products />} />

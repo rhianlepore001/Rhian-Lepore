@@ -51,7 +51,7 @@ export const NextAppointmentHero: React.FC<NextAppointmentHeroProps> = ({
             </div>
             <div className="min-w-0">
               <h2 className={`font-heading text-lg font-bold ${colors.text}`}>
-                Nenhum atendimento na fila
+                Nenhum agendamento hoje
               </h2>
               <p className={`mt-1 text-sm ${colors.textSecondary} text-pretty`}>
                 Sua agenda de hoje está livre. Que tal preencher um horário?

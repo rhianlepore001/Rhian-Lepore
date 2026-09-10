@@ -18,6 +18,7 @@ import { combineDateAndTime, formatLocalDateString, getTodayDateString } from '.
 import { logger } from '../utils/Logger';
 import { mapError, formatUserFacingError } from '../utils/mapError';
 import { fetchFinanceStats, filterStaffTransactions, mapFinanceTransaction } from '../services/finance';
+import { fetchQueueCompletedCount } from '../services/queue';
 import { useMonthlyHistory, useFinanceDropdowns, useDeleteFinanceTransaction, useMarkExpenseAsPaid, useCreateFinanceRecord } from '../hooks/useFinance';
 import { useTenantLocale } from '../hooks/useTenantLocale';
 
@@ -101,7 +102,8 @@ const [searchParams, setSearchParams] = useSearchParams();
     growth: 0,
     previousMonthRevenue: 0,
     revenueByMethod: { pix: 0, mbway: 0, dinheiro: 0, cartao: 0 },
-    pendingExpenses: 0
+    pendingExpenses: 0,
+    queueServed: 0,
   });
   const [chartData, setChartData] = useState<any[]>([]);
   const [showFilterModal, setShowFilterModal] = useState(false);
@@ -249,6 +251,18 @@ useEffect(() => {
           ? ((data.revenue - prevData.revenue) / prevData.revenue) * 100
           : 0;
 
+        let queueServed = 0;
+        try {
+          queueServed = await fetchQueueCompletedCount({
+            businessId: queryUserId,
+            startDate: startDateParam,
+            endDate: endDateParam,
+            professionalId: isStaff ? teamMemberId : null,
+          });
+        } catch {
+          queueServed = 0;
+        }
+
         setSummary({
           revenue: data.revenue || 0,
           expenses: data.expenses || 0,
@@ -257,7 +271,8 @@ useEffect(() => {
           growth: growth || 0,
           previousMonthRevenue: prevData?.revenue || 0,
           revenueByMethod: data.revenue_by_method || { pix: 0, mbway: 0, dinheiro: 0, cartao: 0 },
-          pendingExpenses: data.pendingExpenses || 0
+          pendingExpenses: data.pendingExpenses || 0,
+          queueServed,
         });
 
         const formattedTransactions = (data.transactions || []).map(mapFinanceTransaction);
@@ -304,7 +319,8 @@ useEffect(() => {
             growth: 0,
             previousMonthRevenue: 0,
             revenueByMethod: { pix: 0, mbway: 0, dinheiro: 0, cartao: 0 },
-            pendingExpenses: 0
+            pendingExpenses: 0,
+            queueServed,
           });
           return;
         }
@@ -631,7 +647,7 @@ useEffect(() => {
             />
           ) : (
           <>
-          <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <FinanceKpi
               icon={<TrendingUp className="h-4 w-4" />}
               title={isStaff ? 'Meu giro' : 'Receita'}
@@ -674,6 +690,17 @@ useEffect(() => {
                 iconClass={iconClass}
               />
             )}
+            <FinanceKpi
+              icon={<Users className="h-4 w-4" />}
+              title="Fila digital"
+              value={String(summary.queueServed)}
+              subtitle={
+                summary.queueServed === 1
+                  ? `1 cliente atendido em ${periodLabel}`
+                  : `Clientes atendidos na fila em ${periodLabel}`
+              }
+              iconClass={iconClass}
+            />
           </section>
 
           {!isStaff && (

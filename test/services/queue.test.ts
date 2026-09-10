@@ -380,6 +380,39 @@ describe('queue service', () => {
     expect(board).not.toHaveProperty('etaPeople');
   });
 
+  it('usa 1 cadeira quando o board vem com zero (dono sozinho)', () => {
+    const board = hydrateQueuePublicBoard({
+      entryId: 'b',
+      status: 'waiting',
+      paymentStatus: 'unpaid',
+      serviceName: 'Corte',
+      position: 2,
+      etaMinutes: null,
+      people: [{ position: 1, firstName: 'Ana', isYou: false }],
+      settings: { allowLeave: true, lateMinutes: 10 },
+      calledAt: null,
+      queueMode: 'shared',
+      chairs: 0,
+      etaPeople: [
+        {
+          id: 'a',
+          joinedAt: '2026-09-06T11:00:00.000Z',
+          durationMinutes: 30,
+          status: 'waiting',
+          professionalId: null,
+        },
+        {
+          id: 'b',
+          joinedAt: '2026-09-06T11:01:00.000Z',
+          durationMinutes: 40,
+          status: 'waiting',
+          professionalId: null,
+        },
+      ],
+    });
+    expect(board.etaMinutes).toBe(30);
+  });
+
   it('cria entrada manual via RPC do tenant autenticado', async () => {
     (supabase.rpc as any)
       .mockResolvedValueOnce({ data: [], error: null })

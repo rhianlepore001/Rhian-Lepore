@@ -485,8 +485,9 @@ function asEtaPeople(value: unknown): QueueEtaPerson[] {
     if (status !== 'waiting' && status !== 'calling' && status !== 'serving') return [];
     const id = String(person.id ?? '');
     const joinedAt = String(person.joinedAt ?? '');
-    const durationMinutes = Number(person.durationMinutes ?? 0);
-    if (!id || !joinedAt || !Number.isFinite(durationMinutes) || durationMinutes <= 0) return [];
+    const rawDuration = Number(person.durationMinutes ?? 30);
+    const durationMinutes = Number.isFinite(rawDuration) && rawDuration > 0 ? rawDuration : 30;
+    if (!id || !joinedAt) return [];
     return [{
       id,
       joinedAt,
@@ -501,13 +502,15 @@ function asEtaPeople(value: unknown): QueueEtaPerson[] {
 export function hydrateQueuePublicBoard(raw: unknown): QueuePublicBoard {
   const record = (raw && typeof raw === 'object') ? raw as Record<string, unknown> : {};
   const etaPeople = asEtaPeople(record.etaPeople);
-  const chairs = Number(record.chairs ?? 0);
+  const rawChairs = Number(record.chairs ?? 0);
+  // Sem colaborador ativo cadastrado ainda existe quem atende: o próprio dono.
+  const chairs = Number.isFinite(rawChairs) && rawChairs > 0 ? rawChairs : 1;
   const mode = (record.queueMode === 'per_professional' ? 'per_professional' : 'shared') as QueueMode;
   const entryId = String(record.entryId ?? '');
   const etaMinutes = etaPeople.length > 0 && entryId
     ? calcQueueEtaMinutes({
       mode,
-      chairs: Number.isFinite(chairs) ? chairs : 0,
+      chairs,
       nowMs: Date.now(),
       targetId: entryId,
       people: etaPeople,
@@ -595,6 +598,77 @@ export async function fetchQueueEntries(businessId: string) {
 
   if (error) throw error;
   return data as QueueRecord[];
+}
+
+function startOfLocalDay(day: Date): Date {
+  const start = new Date(day);
+  start.setHours(0, 0, 0, 0);
+  return start;
+}
+
+export interface QueueHistorySummary {
+  entered: number;
+  completed: number;
+  serving: number;
+  waiting: number;
+  noShow: number;
+  cancelled: number;
+}
+
+export function summarizeQueueHistory(entries: QueueRecord[]): QueueHistorySummary {
+  return {
+    entered: entries.length,
+    completed: entries.filter((entry) => entry.status === 'completed').length,
+    serving: entries.filter((entry) => entry.status === 'serving').length,
+    waiting: entries.filter((entry) => entry.status === 'waiting' || entry.status === 'calling').length,
+    noShow: entries.filter((entry) => entry.status === 'no_show').length,
+    cancelled: entries.filter((entry) => entry.status === 'cancelled').length,
+  };
+}
+
+export async function fetchQueueHistory(businessId: string, day: Date): Promise<QueueRecord[]> {
+  const start = startOfLocalDay(day);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 1);
+
+  const { data, error } = await supabase
+    .from('queue_entries')
+    .select('*')
+    .eq('business_id', businessId)
+    .gte('joined_at', start.toISOString())
+    .lt('joined_at', end.toISOString())
+    .order('joined_at', { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []).flatMap((row) => {
+    const parsed = parseQueueRecord(row);
+    return parsed ? [parsed] : [];
+  });
+}
+
+export async function fetchQueueCompletedCount(input: {
+  businessId: string;
+  startDate: string;
+  endDate: string;
+  professionalId?: string | null;
+}): Promise<number> {
+  const start = `${input.startDate}T00:00:00`;
+  const end = `${input.endDate}T23:59:59`;
+  let query = supabase
+    .from('queue_entries')
+    .select('id', { count: 'exact', head: true })
+    .eq('business_id', input.businessId)
+    .eq('status', 'completed')
+    .gte('joined_at', start)
+    .lte('joined_at', end);
+
+  if (input.professionalId) {
+    query = query.eq('professional_id', input.professionalId);
+  }
+
+  const { count, error } = await query;
+  if (error) throw error;
+  return count ?? 0;
 }
 
 export async function fetchBusinessSlug(businessId: string): Promise<string | null> {

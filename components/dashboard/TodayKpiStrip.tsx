@@ -8,6 +8,7 @@ export interface TodayKpi {
   value: string;
   hint?: string;
   progress?: number | null;
+  actionLabel?: string;
   onClick?: () => void;
 }
 
@@ -68,6 +69,9 @@ export const TodayKpiStrip: React.FC<TodayKpiStripProps> = ({ items, loading = f
           )}
           {item.progress != null && item.progress >= 100 && (
             <p className={`mt-1 text-xs font-semibold ${status.success}`}>Meta atingida</p>
+          )}
+          {item.actionLabel && (
+            <p className={`mt-2 text-xs font-semibold ${accent.text}`}>{item.actionLabel}</p>
           )}
         </Card>
       ))}

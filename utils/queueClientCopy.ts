@@ -87,13 +87,17 @@ export function queueClientHeadline(input: QueueClientHeadlineInput): QueueClien
   }
 
   const ahead = position - 1;
-  const eta = input.etaMinutes != null && input.etaMinutes > 0
-    ? ` · cerca de ${input.etaMinutes} min`
-    : '';
   return {
     title: `Você é o ${formatOrdinalPosition(position)} da fila`,
-    subtitle: `${peopleAhead(ahead)}${eta}`,
+    subtitle: peopleAhead(ahead),
   };
+}
+
+/** Rótulo explícito: espera estimada (soma de quem está à frente), nunca o tempo do próprio serviço. */
+export function formatQueueEstimatedWait(etaMinutes: number | null | undefined): string | null {
+  if (etaMinutes == null) return null;
+  if (etaMinutes <= 0) return 'Tempo estimado: agora';
+  return `Tempo estimado: cerca de ${etaMinutes} min`;
 }
 
 export function queueClientRuleLine(input: {

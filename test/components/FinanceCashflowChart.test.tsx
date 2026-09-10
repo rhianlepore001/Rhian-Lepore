@@ -47,7 +47,8 @@ describe('FinanceCashflowChart', () => {
       ),
     );
     expect(screen.getByTestId('finance-cashflow-chart')).toBeInTheDocument();
-    expect(screen.getByText('Entradas')).toBeInTheDocument();
-    expect(screen.getByText('Saídas')).toBeInTheDocument();
+    expect(screen.getByTestId('finance-cashflow-totals')).toBeInTheDocument();
+    expect(screen.getAllByText('Entradas').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Saídas').length).toBeGreaterThan(0);
   });
 });

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Clock, Play, QrCode, Settings, UserPlus, Users, Receipt } from 'lucide-react';
+import { Clock, History, Play, QrCode, Settings, UserPlus, Users, Receipt } from 'lucide-react';
 import { Button, Card, PageHeader, SkeletonCard, useToast } from '@/components/ui';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -21,10 +22,12 @@ import {
   useUpdateQueueStatus,
 } from '@/hooks/useQueue';
 import { supabase } from '@/lib/supabase';
+import { useQueueRealtime } from '@/hooks/useQueueRealtime';
 import { fetchServices } from '@/services/serviceSettings';
 import type { QueueRecord } from '@/types/queue';
 
 export const QueueManagement: React.FC = () => {
+  const navigate = useNavigate();
   const { role, region, companyId, teamMemberId } = useAuth();
   const isStaff = role === 'staff';
   const { showToast } = useToast();
@@ -103,6 +106,10 @@ export const QueueManagement: React.FC = () => {
       supabase.removeChannel(channel);
     };
   }, [refetchEntries, tenantId]);
+
+  useQueueRealtime(tenantId, () => {
+    void refetchEntries();
+  });
 
   const playCallSound = () => {
     try {
@@ -220,11 +227,18 @@ export const QueueManagement: React.FC = () => {
             <Button variant="secondary" size="sm" icon={<QrCode className="w-4 h-4" />} onClick={() => setShowQr(true)}>
               QR Code
             </Button>
+            <Button variant="ghost" size="sm" icon={<History className="w-4 h-4" />} onClick={() => navigate('/fila/historico')}>
+              Histórico
+            </Button>
             <Button variant="ghost" size="sm" icon={<Settings className="w-4 h-4" />} onClick={() => setShowSettings(true)}>
               Ajustes
             </Button>
           </div>
-        ) : undefined}
+        ) : (
+          <Button variant="ghost" size="sm" icon={<History className="w-4 h-4" />} onClick={() => navigate('/fila/historico')}>
+            Histórico
+          </Button>
+        )}
         action={
           <Button variant="primary" size="sm" icon={<UserPlus className="w-4 h-4" />} onClick={() => setShowAdd(true)}>
             Adicionar cliente

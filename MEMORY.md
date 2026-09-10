@@ -49,6 +49,12 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Fila digital — histórico, chamada instantânea, dashboard/financeiro (10 Set 2026):**
+  - Broadcast `queue:<business_id>` (trigger + policy em `realtime.messages`) para o cliente ver o **Chamar** na hora, com som/vibração. Poll continua como fallback.
+  - Painel do cliente: tempo **estimado** (soma de quem está à frente, não a duração do próprio serviço).
+  - Histórico em `/#/fila/historico`. Financeiro: KPI **clientes atendidos na fila digital**. Dashboard: “Nenhum agendamento hoje” + card Fila com contador e “Ir para a fila”.
+  - Migration `20260910120000_queue_realtime_broadcast.sql` aplicada no remoto BARBER/Beauty OS.
+
 - **Fila do cliente vazia com gestor vendo a senha (6 Set 2026):**
   - Causa: RPC `find_active_queue_entry_by_phone` comparava `business_id` TEXT com UUID e falhava só no painel público.
   - Correção aplicada no banco + senha persistida no dispositivo para permanecer na fila sem reentrar.

@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { queueClientHeadline, queueClientPaymentBadge, queueClientRuleLine } from '@/utils/queueClientCopy';
+import { formatQueueEstimatedWait, queueClientHeadline, queueClientPaymentBadge, queueClientRuleLine } from '@/utils/queueClientCopy';
 
 describe('queueClientHeadline', () => {
-  it('mostra posição ordinal, pessoas à frente e estimativa', () => {
+  it('mostra posição ordinal e pessoas à frente', () => {
     const headline = queueClientHeadline({ status: 'waiting', position: 3, etaMinutes: 25 });
     expect(headline.title).toBe('Você é o 3º da fila');
-    expect(headline.subtitle).toBe('2 pessoas na sua frente · cerca de 25 min');
+    expect(headline.subtitle).toBe('2 pessoas na sua frente');
   });
 
   it('singular para uma pessoa e sem estimativa quando ETA é nulo', () => {
@@ -67,5 +67,13 @@ describe('queueClientPaymentBadge', () => {
     expect(queueClientPaymentBadge('membership').label).toBe('Assinatura');
     expect(queueClientPaymentBadge('awaiting_confirmation').label).toBe('Pagamento em confirmação');
     expect(queueClientPaymentBadge('unpaid').label).toBe('Pagamento no balcão');
+  });
+});
+
+describe('formatQueueEstimatedWait', () => {
+  it('deixa explícito que o tempo é estimado', () => {
+    expect(formatQueueEstimatedWait(45)).toBe('Tempo estimado: cerca de 45 min');
+    expect(formatQueueEstimatedWait(0)).toBe('Tempo estimado: agora');
+    expect(formatQueueEstimatedWait(null)).toBeNull();
   });
 });

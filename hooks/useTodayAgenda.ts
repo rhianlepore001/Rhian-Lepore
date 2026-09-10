@@ -41,14 +41,14 @@ export function useTodayAgenda() {
 }
 
 export function useQueueWaitingCount() {
-  const { user, companyId, role } = useAuth();
+  const { user, companyId } = useAuth();
   const businessId = companyId ?? user?.id;
-  const enabled = Boolean(businessId) && role !== 'staff';
+  const enabled = Boolean(businessId);
 
   return useQuery({
     queryKey: ['dashboard', 'queueWaiting', businessId],
     queryFn: () => dashboardService.fetchQueueWaitingCount(businessId!),
     enabled,
-    staleTime: 30 * 1000,
+    staleTime: 15 * 1000,
   });
 }

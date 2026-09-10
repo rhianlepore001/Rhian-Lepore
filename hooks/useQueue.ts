@@ -6,6 +6,7 @@ import {
   confirmQueuePayment,
   fetchBusinessSlug,
   fetchQueueEntries,
+  fetchQueueHistory,
   fetchQueueSettings,
   fetchQueueTeamMembers,
   fetchServiceById,
@@ -68,6 +69,8 @@ export function useUpdateQueueStatus() {
     },
     onSettled: (_data, _error, input) => {
       queryClient.invalidateQueries({ queryKey: ['queue', 'entries', input.businessId] });
+      queryClient.invalidateQueries({ queryKey: ['queue', 'history', input.businessId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'queueWaiting'] });
     },
   });
 }
@@ -89,11 +92,19 @@ export function useQueueEntries(businessId: string) {
     queryFn: () => fetchQueueEntries(businessId),
     enabled: !!businessId,
     staleTime: 0,
-    // Fallback ao realtime: garante que entradas pelo QR apareçam mesmo se a
-    // assinatura cair ou a publication não estiver configurada.
     refetchInterval: 10_000,
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: true,
+  });
+}
+
+export function useQueueHistory(businessId: string, day: Date) {
+  const dayKey = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
+  return useQuery({
+    queryKey: ['queue', 'history', businessId, dayKey],
+    queryFn: () => fetchQueueHistory(businessId, day),
+    enabled: !!businessId,
+    staleTime: 15_000,
   });
 }
 

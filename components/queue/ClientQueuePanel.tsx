@@ -1,16 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { Badge } from '@/components/ui';
 import { useQueueBoard } from '@/hooks/useQueueBoard';
+import { useQueueRealtime } from '@/hooks/useQueueRealtime';
 import {
   cancelQueueEntryPublic,
   clearQueueTicket,
   isActiveQueueStatus,
+  readQueueTicket,
   resolveClientQueueEntry,
 } from '@/services/queue';
 import { fetchPublicProfessionals } from '@/services/publicBooking';
-import { queueClientHeadline, queueClientPaymentBadge, queueClientRuleLine } from '@/utils/queueClientCopy';
+import {
+  formatQueueEstimatedWait,
+  queueClientHeadline,
+  queueClientPaymentBadge,
+  queueClientRuleLine,
+} from '@/utils/queueClientCopy';
+import { playQueueCallAlert } from '@/utils/queueCallAlert';
 import { formatElapsedMinutes, minutesSince, remainingLateMinutes } from '@/utils/queueTime';
 import { formatFirstName } from '@/utils/formatters';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -38,6 +46,7 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
   const [leaving, setLeaving] = useState(false);
   const [leaveError, setLeaveError] = useState('');
   const [, setTick] = useState(0);
+  const lastCallAlertRef = useRef<string | null>(null);
   const firstName = clientName ? formatFirstName(clientName) : '';
 
   const activeQuery = useQuery({
@@ -58,6 +67,19 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
   const lookupPhone = phone || entry?.client_phone || null;
   const board = useQueueBoard(isActive ? entry?.id : null, lookupPhone, entry?.status);
 
+  useQueueRealtime(businessId, (event) => {
+    void queryClient.invalidateQueries({ queryKey: ['queue', 'client-active', businessId] });
+    void queryClient.invalidateQueries({ queryKey: ['queue', 'board'] });
+
+    const ticket = readQueueTicket(businessId);
+    const isMine = ticket?.entryId === event.entryId || entry?.id === event.entryId;
+    if (!isMine || event.status !== 'calling') return;
+    const stamp = `${event.entryId}:${event.calledAt ?? event.at ?? 'calling'}`;
+    if (lastCallAlertRef.current === stamp) return;
+    lastCallAlertRef.current = stamp;
+    playQueueCallAlert();
+  });
+
   const professionalQuery = useQuery({
     queryKey: ['queue', 'public-professionals', businessId],
     queryFn: () => fetchPublicProfessionals(businessId),
@@ -69,7 +91,6 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
       ?.find((pro) => pro.id === entry.professional_id)?.name?.split(' ')[0] ?? null
     : null;
 
-  // Relógio local para "há X min" e contagem do prazo sem esperar o próximo poll.
   const isCallingNow = entry?.status === 'calling';
   useEffect(() => {
     if (!isActive) return;
@@ -82,7 +103,7 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
 
   if (activeQuery.isLoading) {
     return (
-      <div className="rounded-2xl border border-theme-border bg-theme-card p-5">
+      <div className="rounded-3xl border border-theme-border bg-theme-card p-6">
         <p className="text-sm text-theme-textSecondary">Buscando sua senha…</p>
       </div>
     );
@@ -90,16 +111,16 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
 
   if (activeQuery.isError && !entry) {
     return (
-      <div className="rounded-2xl border border-theme-border bg-theme-card p-5 space-y-4">
+      <div className="rounded-3xl border border-theme-border bg-theme-card p-6 space-y-4">
         <div>
-          <h2 className="text-base font-bold text-theme-text">Não conseguimos carregar sua senha</h2>
+          <h2 className="text-lg font-bold text-theme-text">Não conseguimos carregar sua senha</h2>
           <p className="text-sm text-theme-textSecondary mt-1">
             Verifique sua conexão e tente de novo. Sua posição na fila está guardada.
           </p>
         </div>
         <button
           type="button"
-          className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-theme-border bg-theme-surface px-4 text-sm font-semibold text-theme-text"
+          className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl border border-theme-border bg-theme-surface px-4 text-sm font-semibold text-theme-text"
           onClick={() => { void activeQuery.refetch(); }}
         >
           <RefreshCw className="w-4 h-4" />
@@ -111,9 +132,9 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
 
   if (!entry) {
     return (
-      <div className="rounded-2xl border border-theme-border bg-theme-card p-5 space-y-4">
+      <div className="rounded-3xl border border-theme-border bg-theme-card p-6 space-y-4">
         <div>
-          <h2 className="text-base font-bold text-theme-text">Você não está na fila</h2>
+          <h2 className="text-lg font-bold text-theme-text">Você não está na fila</h2>
           <p className="text-sm text-theme-textSecondary mt-1">
             {cameFromQr
               ? 'Sua senha anterior foi encerrada. Para entrar de novo, escolha o serviço abaixo.'
@@ -123,7 +144,7 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
         {cameFromQr && joinHref && (
           <Link
             to={joinHref}
-            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-theme-accent px-4 text-sm font-semibold text-[var(--color-on-accent)]"
+            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl bg-theme-accent px-4 text-sm font-semibold text-[var(--color-on-accent)]"
           >
             <QrCode className="w-4 h-4" />
             Entrar na fila
@@ -153,6 +174,7 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
     etaMinutes,
     professionalName,
   });
+  const estimatedWaitLabel = isWaiting ? formatQueueEstimatedWait(etaMinutes) : null;
 
   const lateLeft = isCalling ? remainingLateMinutes(board.data?.calledAt ?? entry.called_at, settings?.lateMinutes ?? 10) : null;
   const ruleLine = queueClientRuleLine({
@@ -163,12 +185,7 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
   });
 
   const waitedMin = isWaiting ? minutesSince(entry.joined_at) : null;
-  const metaParts = [
-    serviceName,
-    entry.duration_minutes ? `${entry.duration_minutes} min` : null,
-    !isClosed && professionalName && !isCalling && !isServing ? `com ${professionalName}` : null,
-    waitedMin != null && waitedMin > 0 ? `na fila há ${formatElapsedMinutes(waitedMin)}` : null,
-  ].filter(Boolean);
+  const peopleAhead = typeof position === 'number' && position > 1 ? position - 1 : 0;
 
   const surfaceClass = isCalling
     ? 'border-[var(--color-success-border)] bg-[var(--color-success-bg)]'
@@ -207,32 +224,78 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
   };
 
   return (
-    <article className={`rounded-2xl border overflow-hidden ${surfaceClass}`}>
-      <div className="p-5 space-y-4">
-        <div className="space-y-2" aria-live="polite" aria-atomic="true">
+    <article className={`rounded-3xl border overflow-hidden shadow-[var(--shadow-card)] ${surfaceClass}`}>
+      <div className="p-5 sm:p-6 space-y-5">
+        <div className="space-y-3" aria-live="polite" aria-atomic="true">
           {!isClosed && (
             <div className="flex items-center justify-between gap-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-theme-textMuted">
-                Sua senha
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-textMuted">
+                {isCalling ? 'Chamada' : isServing ? 'Atendimento' : 'Sua senha'}
               </p>
               <Badge variant={payBadge.variant} className="shrink-0 text-xs px-2.5 py-1 rounded-full font-semibold">
                 {payBadge.label}
               </Badge>
             </div>
           )}
-          <h2 className={`text-2xl font-bold leading-tight ${titleClass}`}>{headline.title}</h2>
+          <h2 className={`text-2xl sm:text-3xl font-black leading-tight tracking-tight ${titleClass}`}>
+            {headline.title}
+          </h2>
           {headline.subtitle && (
             <p className="text-sm text-theme-textSecondary leading-relaxed">{headline.subtitle}</p>
           )}
         </div>
 
-        {!isClosed && metaParts.length > 0 && (
-          <p className="text-sm text-theme-textSecondary">{metaParts.join(' · ')}</p>
+        {isWaiting && (
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-2xl border border-theme-border bg-theme-surface px-3 py-3">
+              <p className="text-xs font-bold uppercase tracking-wide text-theme-textMuted">Posição</p>
+              <p className="mt-1 font-mono text-2xl font-black tabular-nums text-theme-text">
+                {position == null ? '—' : position === 1 ? 'Próximo' : `${position}º`}
+              </p>
+              {peopleAhead > 0 && (
+                <p className="mt-0.5 text-xs text-theme-textSecondary">
+                  {peopleAhead === 1 ? '1 à frente' : `${peopleAhead} à frente`}
+                </p>
+              )}
+            </div>
+            <div className="rounded-2xl border border-theme-border bg-theme-surface px-3 py-3">
+              <p className="text-xs font-bold uppercase tracking-wide text-theme-textMuted">Tempo estimado</p>
+              <p className="mt-1 text-lg font-black leading-tight text-theme-text">
+                {etaMinutes == null
+                  ? 'Calculando…'
+                  : etaMinutes <= 0
+                    ? 'Agora'
+                    : `cerca de ${etaMinutes} min`}
+              </p>
+              <p className="mt-0.5 text-xs text-theme-textSecondary">
+                Soma de quem está à frente. Não é horário exato.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {estimatedWaitLabel && etaMinutes != null && etaMinutes > 0 && position != null && position <= 1 && (
+          <p className="text-sm font-semibold text-theme-text">{estimatedWaitLabel}</p>
+        )}
+
+        {!isClosed && (
+          <div className="rounded-2xl border border-theme-border/80 bg-theme-surface/80 px-4 py-3 space-y-1">
+            {serviceName && (
+              <p className="text-sm font-semibold text-theme-text">{serviceName}</p>
+            )}
+            <p className="text-xs text-theme-textSecondary">
+              {[
+                entry.duration_minutes ? `Serviço · ${entry.duration_minutes} min` : null,
+                professionalName && !isCalling && !isServing ? `com ${professionalName}` : null,
+                waitedMin != null && waitedMin > 0 ? `na fila há ${formatElapsedMinutes(waitedMin)}` : null,
+              ].filter(Boolean).join(' · ')}
+            </p>
+          </div>
         )}
 
         {showPeople && (
-          <div className="rounded-xl border border-theme-border bg-theme-surface px-4 py-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-theme-textMuted mb-2">Ordem da fila</p>
+          <div className="rounded-2xl border border-theme-border bg-theme-surface px-4 py-3">
+            <p className="text-xs font-bold uppercase tracking-wide text-theme-textMuted mb-2">Ordem da fila</p>
             <ol className="space-y-1.5">
               {visiblePeople.map((person) => (
                 <li
@@ -240,7 +303,7 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
                   className={`flex items-center gap-3 text-sm ${person.isYou ? 'font-bold text-theme-text' : 'text-theme-textSecondary'}`}
                 >
                   <span
-                    className={`inline-flex w-6 h-6 items-center justify-center rounded-full text-xs font-bold tabular-nums ${
+                    className={`inline-flex w-7 h-7 items-center justify-center rounded-full text-xs font-bold tabular-nums ${
                       person.isYou
                         ? 'bg-theme-accent text-[var(--color-on-accent)]'
                         : 'bg-theme-card border border-theme-border text-theme-textMuted'
@@ -252,7 +315,7 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
                 </li>
               ))}
               {hiddenPeople > 0 && (
-                <li className="text-xs text-theme-textMuted pl-9">
+                <li className="text-xs text-theme-textMuted pl-10">
                   e mais {hiddenPeople} {hiddenPeople === 1 ? 'pessoa' : 'pessoas'}
                 </li>
               )}
@@ -263,7 +326,7 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
         {(status === 'no_show' || status === 'cancelled') && cameFromQr && joinHref && (
           <Link
             to={joinHref}
-            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-theme-accent px-4 text-sm font-semibold text-[var(--color-on-accent)]"
+            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl bg-theme-accent px-4 text-sm font-semibold text-[var(--color-on-accent)]"
           >
             <QrCode className="w-4 h-4" />
             Entrar na fila de novo
@@ -275,7 +338,7 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
             {cameFromQr && joinHref && (
               <Link
                 to={joinHref}
-                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-theme-accent px-4 text-sm font-semibold text-[var(--color-on-accent)]"
+                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl bg-theme-accent px-4 text-sm font-semibold text-[var(--color-on-accent)]"
               >
                 <QrCode className="w-4 h-4" />
                 Pegar outra senha
@@ -284,7 +347,7 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
             {bookHref && (
               <Link
                 to={bookHref}
-                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-theme-border bg-theme-surface px-4 text-sm font-semibold text-theme-text"
+                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl border border-theme-border bg-theme-surface px-4 text-sm font-semibold text-theme-text"
               >
                 <CalendarPlus className="w-4 h-4" />
                 Agendar a próxima visita
@@ -295,7 +358,7 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
       </div>
 
       {(ruleLine || isWaiting || isCalling) && (
-        <div className="px-5 py-3 border-t border-theme-border flex items-center justify-between gap-3">
+        <div className="px-5 py-3.5 border-t border-theme-border flex items-center justify-between gap-3 bg-theme-surface/60">
           <p className="text-xs text-theme-textMuted leading-snug min-w-0">{ruleLine}</p>
           {(isWaiting || isCalling) && (
             <button

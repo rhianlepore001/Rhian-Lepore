@@ -22,6 +22,11 @@ const mockSupabaseClient = {
         single: vi.fn(() => Promise.resolve({ data: null, error: null })),
     })),
     rpc: vi.fn(() => Promise.resolve({ data: null, error: null })),
+    channel: vi.fn(() => ({
+        on: vi.fn().mockReturnThis(),
+        subscribe: vi.fn(() => 'SUBSCRIBED'),
+    })),
+    removeChannel: vi.fn(),
     storage: {
         from: vi.fn(() => ({
             upload: vi.fn(),

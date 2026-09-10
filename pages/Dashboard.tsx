@@ -200,9 +200,10 @@ export const Dashboard: React.FC = () => {
       },
       {
         id: 'queue',
-        label: 'Na fila',
+        label: 'Fila',
         value: String(queueWaiting),
-        hint: queueWaiting === 0 ? 'Fila vazia' : 'Aguardando',
+        hint: queueWaiting === 0 ? 'Ninguém aguardando' : queueWaiting === 1 ? '1 aguardando' : `${queueWaiting} aguardando`,
+        actionLabel: 'Ir para a fila',
         onClick: () => navigate('/fila'),
       },
       {
@@ -247,11 +248,12 @@ export const Dashboard: React.FC = () => {
         onClick: () => navigate('/meus-insights'),
       },
       {
-        id: 'agenda',
-        label: 'Na agenda',
-        value: String(agendaCount),
-        hint: 'Hoje',
-        onClick: () => navigate('/agenda'),
+        id: 'queue',
+        label: 'Fila',
+        value: String(queueWaiting),
+        hint: queueWaiting === 0 ? 'Ninguém aguardando' : queueWaiting === 1 ? '1 aguardando' : `${queueWaiting} aguardando`,
+        actionLabel: 'Ir para a fila',
+        onClick: () => navigate('/fila'),
       },
     ];
   }, [
@@ -259,7 +261,7 @@ export const Dashboard: React.FC = () => {
     pendingToday,
     staffEarnings,
     currencyRegion,
-    agendaCount,
+    queueWaiting,
     navigate,
   ]);
 

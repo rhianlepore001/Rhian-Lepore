@@ -702,12 +702,19 @@ useEffect(() => {
             </section>
           )}
 
-          <Card title={`Entradas e saídas — ${periodLabel}`}>
+          <Card
+            title="Entradas e saídas"
+            action={
+              <span className={`text-xs font-medium tabular-nums ${colors.textMuted}`}>{periodLabel}</span>
+            }
+            style={{ overflow: 'visible' }}
+          >
             <div className="w-full">
               <FinanceCashflowChart
                 data={chartData}
                 currencyRegion={currencyRegion}
-                height={240}
+                height={220}
+                periodLabel={periodLabel}
               />
             </div>
           </Card>

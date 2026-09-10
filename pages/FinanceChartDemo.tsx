@@ -3,11 +3,12 @@ import { FinanceCashflowChart } from '../components/finance/FinanceCashflowChart
 import { Card } from '../components/ui/Card';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 
-/** Preview público: gráfico com pico esparso (reproduz o bug do type=natural). */
+/** Preview público: mês esparso (pico isolado) — o caso real de uma barbearia. */
 const SPIKE_DATA = Array.from({ length: 31 }, (_, i) => {
   const day = String(i + 1).padStart(2, '0');
   if (i === 2) return { name: day, receita: 520, despesas: 180 };
-  if (i === 3) return { name: day, receita: 90, despesas: 40 };
+  if (i === 9) return { name: day, receita: 90, despesas: 40 };
+  if (i === 22) return { name: day, receita: 360, despesas: 0 };
   return { name: day, receita: 0, despesas: 0 };
 });
 
@@ -22,14 +23,23 @@ export const FinanceChartDemo: React.FC = () => {
             Preview · Finance Cashflow
           </p>
           <h1 className={`font-heading text-2xl font-bold ${colors.text}`}>
-            Entradas e saídas — Agosto 2026
+            Entradas e saídas
           </h1>
           <p className={`mt-1 text-sm ${colors.textSecondary}`}>
-            Série esparsa (pico no dia 03) — curva monotone sem overshoot abaixo de 0.
+            Barras agrupadas — lê o mês esparso sem interpolar picos fantasmas.
           </p>
         </div>
-        <Card>
-          <FinanceCashflowChart data={SPIKE_DATA} currencyRegion="PT" height={320} />
+        <Card
+          title="Entradas e saídas"
+          action={<span className={`text-xs font-medium ${colors.textMuted}`}>Setembro 2026</span>}
+          style={{ overflow: 'visible' }}
+        >
+          <FinanceCashflowChart
+            data={SPIKE_DATA}
+            currencyRegion="PT"
+            height={240}
+            periodLabel="Setembro 2026"
+          />
         </Card>
       </div>
     </div>

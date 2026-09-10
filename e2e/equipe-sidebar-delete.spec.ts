@@ -75,7 +75,13 @@ test.describe('Equipe no menu e exclusão de profissional', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`${BASE}/#/agenda`, { waitUntil: 'domcontentloaded' });
     await page.getByRole('button', { name: 'Mais opções' }).click();
-    await expect(page.getByRole('dialog', { name: 'Menu de navegação' }).getByText('Equipe', { exact: true })).toBeVisible({ timeout: 10_000 });
+    const mobileMenu = page.getByRole('dialog', { name: 'Menu de navegação' });
+    const mobileEquipe = mobileMenu.getByRole('button', { name: 'Equipe' });
+    await expect(mobileEquipe).toBeVisible({ timeout: 10_000 });
+    await expect.poll(async () => {
+      const box = await mobileEquipe.boundingBox();
+      return box !== null && box.x < 200;
+    }, { timeout: 5_000 }).toBe(true);
     await page.screenshot({
       path: path.join(ARTIFACTS, 'equipe-menu-mobile.png'),
       fullPage: false,

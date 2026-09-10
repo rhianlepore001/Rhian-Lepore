@@ -229,7 +229,8 @@ test.describe('Fila digital v2 — smoke mobile', () => {
     await expect(page.getByRole('heading', { name: 'Como prefere pagar?' })).toBeVisible();
     await page.getByRole('button', { name: /MB WAY — ver número/ }).click();
     await expect(page.getByTestId('queue-mbway-pay')).toBeVisible();
-    await expect(page.getByText('Barbearia QA')).toBeVisible();
+    await expect(page.getByTestId('queue-mbway-pay').getByText('Barbearia QA')).toBeVisible();
+    await expect(page.getByTestId('queue-mbway-pay').getByText('+351 912 345 678')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Já paguei — entrar na fila' })).toBeDisabled();
     await expect(page).toHaveURL(/queue\/barbearia-qa/);
     await expect(page.getByRole('button', { name: 'Já paguei — entrar na fila' })).toBeEnabled({ timeout: 3000 });

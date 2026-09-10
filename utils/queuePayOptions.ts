@@ -40,14 +40,14 @@ export function queuePayOptions(input: {
   if (digital === 'pix') {
     options.push({
       id: 'pix',
-      label: 'Pagar agora com Pix',
-      description: 'Copie o código e pague pelo app do banco. A equipe confirma o recebimento.',
+      label: 'Pix — ver chave para pagar',
+      description: 'Mostra o Pix do estabelecimento. Pague no app e depois confirme abaixo.',
     });
   } else {
     options.push({
       id: 'mbway',
-      label: 'Pagar agora com MB WAY',
-      description: 'Envie pelo MB WAY para o número indicado. A equipe confirma o recebimento.',
+      label: 'MB WAY — ver número para pagar',
+      description: 'Mostra o telemóvel da casa. Envie no MB WAY e depois confirme abaixo.',
     });
   }
 

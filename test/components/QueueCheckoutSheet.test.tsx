@@ -125,10 +125,28 @@ describe('QueueCheckoutSheet', () => {
     expect(sellProduct).not.toHaveBeenCalled();
   });
 
+  it('exige quem atendeu quando a senha não tem profissional', async () => {
+    render(
+      <QueueCheckoutSheet
+        {...baseProps}
+        loggedProfessionalId={null}
+        teamMembers={[{ id: 'pro-2', name: 'Ana' }, { id: 'pro-3', name: 'Bruno' }]}
+        entry={{ ...entry, professional_id: null, payment_status: 'paid' }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Finalizar atendimento' }));
+    await waitFor(() => expect(showToast).toHaveBeenCalledWith(
+      'Informe quem atendeu para o histórico e a comissão ficarem certos.',
+      'error',
+    ));
+    expect(settleQueueTicket).not.toHaveBeenCalled();
+  });
+
   it('deixar em aberto persiste os itens adicionados', async () => {
     render(<QueueCheckoutSheet {...baseProps} entry={entry} />);
 
-    fireEvent.change(screen.getByLabelText('Adicionar serviço'), { target: { value: 's-2' } });
+    fireEvent.change(screen.getByLabelText('Adicionar serviço extra'), { target: { value: 's-2' } });
     fireEvent.click(screen.getByRole('button', { name: /Deixar em aberto/ }));
 
     await waitFor(() => expect(closeQueueTicket).toHaveBeenCalledWith('q-1', [

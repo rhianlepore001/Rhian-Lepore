@@ -232,6 +232,7 @@ export const Agenda: React.FC = () => {
             .from('appointments')
             .select('*, clients(name)')
             .eq('user_id', effectiveUserId)
+            .neq('origin', 'queue')
             .gte('appointment_time', now)
             .in('status', ['Confirmed', 'Pending'])
             .order('appointment_time', { ascending: true });
@@ -388,6 +389,7 @@ export const Agenda: React.FC = () => {
             .from('appointments')
             .select('*, clients(name, id, phone)')
             .eq('user_id', effectiveUserId)
+            .neq('origin', 'queue')
             .gte('appointment_time', startOfDay.toISOString())
             .lte('appointment_time', endOfDay.toISOString())
             .in('status', ['Confirmed', 'Pending', 'Completed', 'Cancelled', 'NoShow']) // Agenda v2: todos os status visíveis na grade com cores
@@ -434,6 +436,7 @@ export const Agenda: React.FC = () => {
             .from('appointments')
             .select('*, clients(name, phone)')
             .eq('user_id', effectiveUserId)
+            .neq('origin', 'queue')
             .in('status', ['Confirmed', 'Pending'])
             .lt('appointment_time', now) // Agendamentos no passado
             .order('appointment_time', { ascending: false });
@@ -532,6 +535,7 @@ export const Agenda: React.FC = () => {
             .from('appointments')
             .select('*, clients(name)')
             .eq('user_id', effectiveUserId)
+            .neq('origin', 'queue')
             .gte('appointment_time', startOfMonth.toISOString())
             .lte('appointment_time', endOfMonth.toISOString())
             .in('status', ['Completed', 'Cancelled'])

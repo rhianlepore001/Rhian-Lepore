@@ -35,6 +35,7 @@ export interface Appointment {
   price: number;
   basePrice?: number;
   professional_id?: string;
+  origin?: 'agenda' | 'queue' | 'booking';
   notes?: string;
   user_id?: string;
   duration_minutes?: number;

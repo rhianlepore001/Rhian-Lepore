@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Check } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { PixDisplay } from '@/components/membership/PixDisplay';
@@ -24,6 +24,7 @@ interface QueuePayStepProps {
   joinError?: string;
   pixConfig?: PublicClubPaymentConfig | null;
   pixTxid?: string;
+  pixConfigLoading?: boolean;
 }
 
 export const QueuePayStep: React.FC<QueuePayStepProps> = ({
@@ -40,24 +41,45 @@ export const QueuePayStep: React.FC<QueuePayStepProps> = ({
   joinError,
   pixConfig,
   pixTxid,
+  pixConfigLoading = false,
 }) => {
   const { colors, accent, font, radius } = useBrutalTheme({ override: themeOverride });
   const digitalAvailable = region === 'PT'
     ? Boolean(pixConfig?.mbway_phone)
     : Boolean(pixConfig?.pix_key_value && pixConfig?.pix_key_type);
   const options = queuePayOptions({ canUseMembership, region, digitalAvailable });
+  const digitalSelected = selected === 'pix' || selected === 'mbway';
+  const digitalReady = selected === 'pix'
+    ? Boolean(pixConfig?.pix_key_value && pixConfig?.pix_key_type)
+    : selected === 'mbway'
+      ? Boolean(pixConfig?.mbway_phone)
+      : true;
+  const [confirmArmed, setConfirmArmed] = useState(!digitalSelected);
 
-  // Sem escolha ainda: assinatura quando disponível, senão balcão. Evita CTA travado
-  // quando só existe uma opção. Se a escolhida deixou de existir (ex.: Pix sem chave), volta ao balcão.
   useEffect(() => {
     if (!selected) {
       onSelect(canUseMembership ? 'membership' : 'cash');
       return;
     }
+    if (pixConfigLoading) return;
     if (!options.some((option) => option.id === selected)) {
       onSelect('cash');
     }
-  }, [canUseMembership, onSelect, options, selected]);
+  }, [canUseMembership, onSelect, options, pixConfigLoading, selected]);
+
+  useEffect(() => {
+    if (!digitalSelected) {
+      setConfirmArmed(true);
+      return;
+    }
+    setConfirmArmed(false);
+    const timer = window.setTimeout(() => setConfirmArmed(true), 650);
+    return () => window.clearTimeout(timer);
+  }, [digitalSelected, selected]);
+
+  const handleSelect = (id: QueuePayOptionId) => {
+    onSelect(id);
+  };
 
   return (
     <div className="space-y-6">
@@ -86,7 +108,7 @@ export const QueuePayStep: React.FC<QueuePayStepProps> = ({
             <button
               key={option.id}
               type="button"
-              onClick={() => onSelect(option.id)}
+              onClick={() => handleSelect(option.id)}
               aria-pressed={active}
               className={`w-full min-h-[64px] text-left px-4 py-3.5 ${radius.card} border transition-colors ${
                 active
@@ -115,8 +137,12 @@ export const QueuePayStep: React.FC<QueuePayStepProps> = ({
         })}
       </div>
 
+      {pixConfigLoading && (
+        <p className={`text-sm ${colors.textMuted}`}>Carregando dados de pagamento do estabelecimento…</p>
+      )}
+
       {selected === 'pix' && pixConfig?.pix_key_value && pixConfig.pix_key_type && (
-        <div className="space-y-2">
+        <div className="space-y-2" data-testid="queue-pix-pay">
           <PixDisplay
             pixKey={pixConfig.pix_key_value}
             pixKeyType={pixConfig.pix_key_type as PixKeyType}
@@ -126,20 +152,20 @@ export const QueuePayStep: React.FC<QueuePayStepProps> = ({
             txid={pixTxid}
           />
           <p className={`text-sm ${colors.textSecondary}`}>
-            Você entra na fila agora. A equipe confirma o pagamento assim que receber.
+            Pague pelo app do banco. Depois toque em Já paguei para entrar na fila. A equipe confirma o recebimento.
           </p>
         </div>
       )}
 
       {selected === 'mbway' && pixConfig?.mbway_phone && (
-        <div className="space-y-2">
+        <div className="space-y-2" data-testid="queue-mbway-pay">
           <MbwayDisplay
             phone={pixConfig.mbway_phone}
             holderName={pixConfig.mbway_holder_name}
             amountCents={amountCents}
           />
           <p className={`text-sm ${colors.textSecondary}`}>
-            Você entra na fila agora. A equipe confirma o pagamento assim que receber.
+            Envie o valor pelo MB WAY para o número acima. Depois toque em Já paguei para entrar na fila.
           </p>
         </div>
       )}
@@ -154,11 +180,15 @@ export const QueuePayStep: React.FC<QueuePayStepProps> = ({
         <Button
           variant="primary"
           className="w-full min-h-[48px]"
-          disabled={!selected || submitting}
+          disabled={!selected || submitting || (digitalSelected && (!digitalReady || !confirmArmed))}
           loading={submitting}
           onClick={onConfirm}
         >
-          {submitting ? 'Confirmando…' : 'Confirmar e entrar na fila'}
+          {submitting
+            ? 'Confirmando…'
+            : digitalSelected
+              ? 'Já paguei — entrar na fila'
+              : 'Confirmar e entrar na fila'}
         </Button>
         {onBack && (
           <button

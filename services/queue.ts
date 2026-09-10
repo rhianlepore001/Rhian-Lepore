@@ -682,15 +682,22 @@ export async function fetchBusinessSlug(businessId: string): Promise<string | nu
   return data?.business_slug ?? null;
 }
 
-export async function fetchQueueTeamMembers(businessId: string) {
-  const { data, error } = await supabase
+export async function fetchQueueTeamMembers(
+  businessId: string,
+  options?: { includeInactive?: boolean },
+) {
+  let query = supabase
     .from('team_members')
-    .select('id, name, commission_rate')
-    .eq('user_id', businessId)
-    .eq('active', true);
+    .select('id, name, commission_rate, active')
+    .eq('user_id', businessId);
 
+  if (!options?.includeInactive) {
+    query = query.eq('active', true);
+  }
+
+  const { data, error } = await query;
   if (error) throw error;
-  return data as { id: string; name: string; commission_rate?: number }[];
+  return data as { id: string; name: string; commission_rate?: number; active?: boolean }[];
 }
 
 export async function fetchServiceById(serviceId: string, businessId: string) {

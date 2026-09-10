@@ -29,6 +29,17 @@ describe('queueClientHeadline', () => {
     expect(headline.subtitle).toBe('João está esperando por você.');
   });
 
+  it('prazo esgotado deixa o aviso no título, não só no rodapé', () => {
+    const headline = queueClientHeadline({
+      status: 'calling',
+      position: null,
+      firstName: 'Letícia',
+      remainingLateMinutes: 0,
+    });
+    expect(headline.title).toBe('O prazo para chegar acabou');
+    expect(headline.subtitle).toMatch(/balcão/);
+  });
+
   it('estados encerrados explicam o desfecho', () => {
     expect(queueClientHeadline({ status: 'completed', position: null, firstName: 'Ana' }).subtitle)
       .toBe('Obrigado pela visita, Ana. Até a próxima!');

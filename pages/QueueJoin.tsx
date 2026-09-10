@@ -84,7 +84,7 @@ export const QueueJoin: React.FC = () => {
 
   const sessionClient = client && business && client.business_id === business.id ? client : null;
   const { data: membership } = usePublicClientMembership(business?.id ?? null, sessionClient?.phone ?? phone);
-  const { data: pixConfig } = usePublicPixConfig(business?.id ?? null);
+  const { data: pixConfig, isLoading: pixConfigLoading } = usePublicPixConfig(business?.id ?? null);
 
   const selectedService = services.find((service) => service.id === selectedServiceId);
   const discount = computeSubscriptionDiscount({
@@ -255,6 +255,10 @@ export const QueueJoin: React.FC = () => {
 
     if (payMethod === 'pix' && (!pixBrCode || !pixTxid)) {
       showToast('Não foi possível gerar o Pix agora. Escolha pagar no balcão.', 'error');
+      return;
+    }
+    if (payMethod === 'mbway' && !pixConfig?.mbway_phone) {
+      showToast('O MB WAY deste estabelecimento não está disponível. Escolha pagar no balcão.', 'error');
       return;
     }
 
@@ -442,6 +446,7 @@ export const QueueJoin: React.FC = () => {
             joinError={joinError}
             pixConfig={pixConfig}
             pixTxid={pixTxid}
+            pixConfigLoading={pixConfigLoading}
           />
         )}
       </div>

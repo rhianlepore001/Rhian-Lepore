@@ -270,6 +270,7 @@ export async function fetchTodayAppointments(
     .from('appointments')
     .select('*, clients(name)')
     .eq('user_id', ownerId)
+    .neq('origin', 'queue')
     .gte('appointment_time', start)
     .lte('appointment_time', end)
     .order('appointment_time', { ascending: true });
@@ -289,6 +290,7 @@ export async function fetchTodayAppointmentsForProfessional(
     .select('*, clients(name)')
     .eq('user_id', ownerId)
     .eq('professional_id', professionalId)
+    .neq('origin', 'queue')
     .gte('appointment_time', start)
     .lte('appointment_time', end)
     .order('appointment_time', { ascending: true });

@@ -1,8 +1,9 @@
 import { useAuth } from '../contexts/AuthContext';
 import { parseDate } from '../utils/date';
+import { resolvePlanEntitlements } from '../utils/planEntitlements';
 
 export const useSubscription = () => {
-    const { subscriptionStatus, trialEndsAt, isSubscriptionActive, loading } = useAuth();
+    const { subscriptionStatus, subscriptionPlan, trialEndsAt, isSubscriptionActive, loading } = useAuth();
 
     const getTrialDaysRemaining = () => {
         if (subscriptionStatus !== 'trial' || !trialEndsAt) return 0;
@@ -18,13 +19,20 @@ export const useSubscription = () => {
         return Math.max(0, diffDays);
     };
 
+    const isTrial = subscriptionStatus === 'trial';
+
     return {
         subscriptionStatus,
+        subscriptionPlan,
         trialEndsAt,
         isSubscriptionActive,
         trialDaysRemaining: getTrialDaysRemaining(),
         isLoading: loading,
-        isTrial: subscriptionStatus === 'trial',
-        isExpired: !isSubscriptionActive && !loading
+        isTrial,
+        isExpired: !isSubscriptionActive && !loading,
+        entitlements: resolvePlanEntitlements({
+            subscriptionPlan,
+            isTrial: isTrial && isSubscriptionActive,
+        }),
     };
 };

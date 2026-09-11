@@ -42,7 +42,7 @@ export const PaywallModal: React.FC = () => {
                 </h2>
 
                 <p className={`text-sm md:text-base mb-8 max-w-sm mx-auto ${colors.textSecondary}`}>
-                    Esperamos que você tenha aproveitado esses 7 dias! Assine agora para continuar usando todas as ferramentas e não perder seus agendamentos.
+                    Assine para continuar com a agenda, a fila digital e o caixa do dia.
                 </p>
 
                 <div className="space-y-4">

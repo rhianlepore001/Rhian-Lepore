@@ -4,6 +4,7 @@ import { NAVIGATION_ITEMS, findActiveSettingsItem } from '../constants';
 import { TrendingUp, X, LogOut } from 'lucide-react';
 import { useUI } from '../contexts/UIContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useSubscription } from '../hooks/useSubscription';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -14,12 +15,17 @@ export const Sidebar: React.FC = () => {
   const { logout, role } = useAuth();
 
   const isStaff = role === 'staff';
+  const { entitlements } = useSubscription();
   const { accent, colors, classes } = useBrutalTheme();
   const { mode } = useTheme();
   const isLight = mode === 'light';
 
   // Filtra itens de navegação com base no role do usuário
-  const visibleItems = NAVIGATION_ITEMS.filter(item => !item.ownerOnly || !isStaff);
+  const visibleItems = NAVIGATION_ITEMS.filter((item) => {
+    if (item.ownerOnly && isStaff) return false;
+    if (item.equipeOnly && !entitlements.hasClub) return false;
+    return true;
+  });
 
   const goTo = (path: string) => {
     // Navega primeiro — closeSidebar setState não deve atrasar a troca de rota

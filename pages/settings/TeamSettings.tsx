@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
+import { useSubscription } from '../../hooks/useSubscription';
 import { useTeamMembers, useDeleteTeamMember } from '../../hooks/useTeam';
 import { useBusinessSettings } from '../../hooks/useSettings';
 import { useQueryClient } from '@tanstack/react-query';
@@ -14,9 +15,12 @@ import { TeamMemberCard, type CommissionDraft } from '../../components/TeamMembe
 import { TeamMemberForm } from '../../components/TeamMemberForm';
 import { supabase } from '../../lib/supabase';
 import { mapError, formatUserFacingError } from '../../utils/mapError';
+import { canAddProfessional } from '../../utils/planEntitlements';
+import { AGENDIX_PLAN_COPY } from '../../constants/agendixPlans';
 
 export const TeamSettings: React.FC = () => {
     const { companyId } = useAuth();
+    const { entitlements } = useSubscription();
     const { accent, colors, classes } = useBrutalTheme();
     const queryClient = useQueryClient();
     const { data: members = [], isLoading: loading } = useTeamMembers();
@@ -169,6 +173,19 @@ export const TeamSettings: React.FC = () => {
 
     const owners = cardMembers.filter(m => m.is_owner);
     const staff = cardMembers.filter(m => !m.is_owner);
+    const atSeatLimit = !canAddProfessional(entitlements.maxProfessionals, cardMembers.length);
+    const seatLimitCopy = entitlements.plan === 'solo'
+        ? AGENDIX_PLAN_COPY.soloSeatLimit
+        : AGENDIX_PLAN_COPY.equipeSeatLimit;
+
+    const openAddMember = () => {
+        if (atSeatLimit) {
+            showToast(seatLimitCopy, 'warning');
+            return;
+        }
+        setEditingMember(null);
+        setIsModalOpen(true);
+    };
 
     return (
         <SettingsLayout>
@@ -186,14 +203,17 @@ export const TeamSettings: React.FC = () => {
                         id="btn-add-team-member"
                         className="shrink-0 self-start sm:self-auto min-h-[44px]"
                         icon={<Plus className="w-5 h-5" />}
-                        onClick={() => {
-                            setEditingMember(null);
-                            setIsModalOpen(true);
-                        }}
+                        onClick={openAddMember}
                     >
                         Adicionar profissional
                     </Button>
                 </div>
+
+                {atSeatLimit && (
+                    <p className={`text-sm ${colors.textSecondary}`}>
+                        {seatLimitCopy}
+                    </p>
+                )}
 
                 {loading ? (
                     <div className="flex items-center justify-center py-20">
@@ -212,7 +232,7 @@ export const TeamSettings: React.FC = () => {
                         </p>
                         <button
                             type="button"
-                            onClick={() => setIsModalOpen(true)}
+                            onClick={openAddMember}
                             className={`px-8 py-4 ${colors.inputBg} hover:bg-white/[0.08] ${colors.text} font-heading uppercase text-sm tracking-widest rounded-2xl transition-all border ${colors.border}`}
                         >
                             Cadastrar primeiro perfil

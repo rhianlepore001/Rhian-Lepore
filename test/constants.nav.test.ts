@@ -38,6 +38,15 @@ describe('navegação do Clube (dono)', () => {
     expect(findActiveSettingsItem(SETTINGS_ITEMS, '/configuracoes/clube/pix')?.label).toBe('Clube');
   });
 
+  it('marca Clube e Análises como exclusivos do plano Equipe', () => {
+    const clube = NAVIGATION_ITEMS.find((item) => item.path === '/clube/assinantes');
+    const analises = NAVIGATION_ITEMS.find((item) => item.path === '/insights');
+    const settingsClube = SETTINGS_ITEMS.find((item) => item.path === '/configuracoes/clube');
+    expect(clube?.equipeOnly).toBe(true);
+    expect(analises?.equipeOnly).toBe(true);
+    expect(settingsClube?.equipeOnly).toBe(true);
+  });
+
   it('não confunde Ajustes com a rota pública /clube/:slug', () => {
     expect(isPathActive('/clube/minha-barbearia', '/clube/assinantes')).toBe(false);
   });

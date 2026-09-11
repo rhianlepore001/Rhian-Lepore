@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useSubscription } from '../hooks/useSubscription';
 import { SETTINGS_ITEMS, SettingsItem, findActiveSettingsItem, isPathActive } from '../constants';
 import { useAppTour } from '../hooks/useAppTour';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
@@ -161,13 +162,14 @@ const MobileSettingsRail: React.FC<{
 
 export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
   const { role, isDev } = useAuth();
+  const { entitlements } = useSubscription();
   const location = useLocation();
   useAppTour();
   const { accent, colors } = useBrutalTheme();
 
   const menuItems = role === 'staff'
     ? SETTINGS_ITEMS.filter((item) => item.path === '/configuracoes/servicos')
-    : SETTINGS_ITEMS.filter((item) => isDev || !item.devOnly);
+    : SETTINGS_ITEMS.filter((item) => (isDev || !item.devOnly) && (entitlements.hasClub || !item.equipeOnly));
 
   const currentPage = findActiveSettingsItem(menuItems, location.pathname);
   const currentPageTitle = currentPage?.label || 'Configurações';

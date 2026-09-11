@@ -5,6 +5,7 @@ import { parseDate } from '../utils/date';
 import { resolveIsDev } from '../utils/devAccess';
 import { applyPublicAuthTheme } from '../utils/publicAuthTheme';
 import { normalizeRegion } from '../utils/formatters';
+import { AGENDIX_TRIAL_DAYS, parseAgendixPlan, type AgendixPlanId } from '../constants/agendixPlans';
 
 export type UserType = 'barber' | 'beauty';
 export type Region = 'BR' | 'PT';
@@ -19,6 +20,7 @@ interface AuthContextType {
   avatarUrl: string | null;
   tutorialCompleted: boolean;
   subscriptionStatus: 'trial' | 'active' | 'past_due' | 'canceled' | 'subscriber';
+  subscriptionPlan: AgendixPlanId | null;
   trialEndsAt: string | null;
   isSubscriptionActive: boolean;
   role: 'owner' | 'staff';
@@ -57,6 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [tutorialCompleted, setTutorialCompleted] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<'trial' | 'active' | 'past_due' | 'canceled' | 'subscriber'>('trial');
+  const [subscriptionPlan, setSubscriptionPlan] = useState<AgendixPlanId | null>(null);
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
   const [role, setRole] = useState<'owner' | 'staff'>('owner');
   const [companyId, setCompanyId] = useState<string | null>(null);
@@ -99,12 +102,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
           const { data: ownerProfile } = await supabase
             .from('profiles')
-            .select('subscription_status, trial_ends_at, user_type, business_name, region')
+            .select('subscription_status, subscription_plan, trial_ends_at, user_type, business_name, region')
             .eq('id', profile.company_id)
             .single();
 
           if (ownerProfile) {
             setSubscriptionStatus((ownerProfile.subscription_status as any) || 'trial');
+            setSubscriptionPlan(parseAgendixPlan(ownerProfile.subscription_plan));
             setTrialEndsAt(ownerProfile.trial_ends_at || null);
             // Herda o userType, businessName e região/moeda do dono — chamada única, sem flicker
             setUserType(ownerProfile.user_type as UserType || 'barber');
@@ -114,6 +118,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Dono não encontrado (conta desativada/excluída): bloquear acesso do staff órfão
             setUserType(profile.user_type as UserType || 'barber');
             setSubscriptionStatus('canceled');
+            setSubscriptionPlan(null);
             setTrialEndsAt(null);
           }
 
@@ -139,6 +144,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
           setTutorialCompleted(onboardingProgress?.is_completed ?? profile.tutorial_completed ?? false);
           setSubscriptionStatus((profile.subscription_status as any) || 'trial');
+          setSubscriptionPlan(parseAgendixPlan(profile.subscription_plan));
           setTrialEndsAt(profile.trial_ends_at || null);
           setTeamMemberId(null);
         }
@@ -196,6 +202,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setAvatarUrl(null);
         setTutorialCompleted(false);
         setSubscriptionStatus('trial');
+        setSubscriptionPlan(null);
         setTrialEndsAt(null);
         setRole('owner');
         setCompanyId(null);
@@ -239,6 +246,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAvatarUrl(null);
     setTutorialCompleted(false);
     setSubscriptionStatus('trial');
+    setSubscriptionPlan(null);
     setTrialEndsAt(null);
     setRole('owner');
     setCompanyId(null);
@@ -328,7 +336,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               email: data.email,
               tutorial_completed: false,
               subscription_status: 'trial',
-              trial_ends_at: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(), // 10 dias de teste (posicionamento v1)
+              trial_ends_at: new Date(Date.now() + AGENDIX_TRIAL_DAYS * 24 * 60 * 60 * 1000).toISOString(),
               role: data.companyId ? 'staff' : 'owner',
               company_id: data.companyId || authData.user.id,
               aios_enabled: true
@@ -347,6 +355,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setBusinessName(data.businessName);
         setFullName(data.fullName);
         setTutorialCompleted(false);
+        setSubscriptionPlan(null);
 
         if (!data.companyId) {
           const { error: onboardingError } = await supabase.rpc('upsert_onboarding_progress', {
@@ -470,6 +479,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     avatarUrl,
     tutorialCompleted,
     subscriptionStatus,
+    subscriptionPlan,
     trialEndsAt,
     isSubscriptionActive: subscriptionStatus === 'active' || subscriptionStatus === 'subscriber' || (
       subscriptionStatus === 'trial' &&
@@ -500,6 +510,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     avatarUrl,
     tutorialCompleted,
     subscriptionStatus,
+    subscriptionPlan,
     trialEndsAt,
     role,
     companyId,

@@ -20,7 +20,16 @@ export const CLUB_OWNER_NAV = [
   { id: 'assinantes', label: 'Assinantes', path: '/clube/assinantes' },
 ] as const;
 
-export const NAVIGATION_ITEMS = [
+export interface NavigationItem {
+  name: string;
+  icon: LucideIcon;
+  path: string;
+  ownerOnly: boolean;
+  group: string;
+  equipeOnly?: boolean;
+}
+
+export const NAVIGATION_ITEMS: NavigationItem[] = [
   { name: 'Início', icon: LayoutDashboard, path: '/', ownerOnly: false, group: 'Operação' },
   { name: 'Agenda', icon: Calendar, path: '/agenda', ownerOnly: false, group: 'Operação' },
   { name: 'Fila Digital', icon: Clock, path: '/fila', ownerOnly: false, group: 'Operação' },
@@ -28,8 +37,8 @@ export const NAVIGATION_ITEMS = [
   { name: 'Equipe', icon: UserCog, path: '/configuracoes/equipe', ownerOnly: true, group: 'Operação' },
   { name: 'Produtos', icon: Package, path: '/produtos', ownerOnly: false, group: 'Operação' },
   { name: 'Financeiro', icon: DollarSign, path: '/financeiro', ownerOnly: true, group: 'Crescimento' },
-  { name: 'Análises', icon: TrendingUp, path: '/insights', ownerOnly: true, group: 'Crescimento' },
-  { name: 'Clube', icon: Crown, path: '/clube/assinantes', ownerOnly: true, group: 'Crescimento' },
+  { name: 'Análises', icon: TrendingUp, path: '/insights', ownerOnly: true, group: 'Crescimento', equipeOnly: true },
+  { name: 'Clube', icon: Crown, path: '/clube/assinantes', ownerOnly: true, group: 'Crescimento', equipeOnly: true },
   { name: 'Ajustes', icon: Settings, path: '/configuracoes', ownerOnly: true, group: 'Sistema' },
 ];
 
@@ -38,6 +47,7 @@ export interface SettingsItem {
   path: string;
   icon: LucideIcon;
   devOnly?: boolean;
+  equipeOnly?: boolean;
   group: 'Negócio' | 'Financeiro' | 'Conta' | 'Sistema';
 }
 
@@ -46,7 +56,7 @@ export const SETTINGS_ITEMS: SettingsItem[] = [
   { label: 'Agendamento', path: '/configuracoes/agendamento', icon: Calendar, group: 'Negócio' },
   { label: 'Equipe e Comissões', path: '/configuracoes/equipe', icon: Users, group: 'Negócio' },
   { label: 'Serviços', path: '/configuracoes/servicos', icon: Package, group: 'Negócio' },
-  { label: 'Clube', path: '/configuracoes/clube', icon: Crown, group: 'Negócio' },
+  { label: 'Clube', path: '/configuracoes/clube', icon: Crown, group: 'Negócio', equipeOnly: true },
   { label: 'Plano AgendiX', path: '/configuracoes/assinatura', icon: CreditCard, group: 'Financeiro' },
   { label: 'Notificações', path: '/configuracoes/notificacoes', icon: Bell, group: 'Conta' },
   { label: 'Segurança', path: '/configuracoes/seguranca', icon: Shield, group: 'Conta' },

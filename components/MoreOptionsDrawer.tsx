@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useSubscription } from '../hooks/useSubscription';
 import { useUI } from '../contexts/UIContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { findActiveSettingsItem } from '../constants';
@@ -30,12 +31,14 @@ interface MenuItem {
   icon: React.ElementType;
   path: string;
   ownerOnly?: boolean;
+  equipeOnly?: boolean;
 }
 
 export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { logout, fullName, businessName, avatarUrl, role } = useAuth();
+  const { entitlements } = useSubscription();
   const { setModalOpen } = useUI();
   const { colors, accent, classes } = useBrutalTheme();
   const isStaff = role === 'staff';
@@ -124,12 +127,16 @@ export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose })
     { name: 'Financeiro', icon: DollarSign, path: '/financeiro', ownerOnly: true },
     { name: 'Produtos', icon: Package, path: '/produtos', ownerOnly: true },
     { name: 'Fila Digital', icon: Users, path: '/fila', ownerOnly: false },
-    { name: 'Insights', icon: TrendingUp, path: '/insights', ownerOnly: true },
-    { name: 'Clube', icon: Crown, path: '/clube/assinantes', ownerOnly: true },
+    { name: 'Insights', icon: TrendingUp, path: '/insights', ownerOnly: true, equipeOnly: true },
+    { name: 'Clube', icon: Crown, path: '/clube/assinantes', ownerOnly: true, equipeOnly: true },
     { name: 'Ajustes', icon: Settings, path: '/configuracoes', ownerOnly: true },
   ];
 
-  const visibleItems = menuItems.filter((item) => !item.ownerOnly || !isStaff);
+  const visibleItems = menuItems.filter((item) => {
+    if (item.ownerOnly && isStaff) return false;
+    if (item.equipeOnly && !entitlements.hasClub) return false;
+    return true;
+  });
   const activeItem = findActiveSettingsItem(visibleItems, location.pathname);
 
   const isActive = (path: string) => activeItem?.path === path;

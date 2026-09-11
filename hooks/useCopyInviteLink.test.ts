@@ -42,7 +42,7 @@ describe('useCopyInviteLink', () => {
             useCopyInviteLink({ memberId: 'member-uuid-9', recipientName: 'Lucas' })
         );
         expect(result.current.inviteLink).toBe(
-            'https://app.example.com/#/register?company=owner-uuid-123&member=member-uuid-9'
+            'https://app.example.com/#/invite/owner-uuid-123/member-uuid-9'
         );
         expect(result.current.inviteText).toContain('integrar a equipe');
         expect(result.current.inviteText).toContain('Lucas');

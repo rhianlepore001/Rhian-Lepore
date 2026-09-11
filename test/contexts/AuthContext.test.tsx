@@ -138,6 +138,7 @@ describe('AuthContext', () => {
             const query = {
                 select: vi.fn().mockReturnThis(),
                 eq: vi.fn().mockReturnThis(),
+                is: vi.fn().mockReturnThis(),
                 single: vi.fn().mockImplementation(() => {
                     if (table === 'profiles' && query.eq.mock.calls.some((call: unknown[]) => call[1] === 'owner-123')) {
                         return Promise.resolve({
@@ -366,7 +367,6 @@ describe('AuthContext', () => {
     it('vincula staff_user_id em team_member pré-cadastrado (sem duplicar)', async () => {
         const mockUser = { id: 'staff-existing', email: 'existing@example.com' };
         const insertedTeamMembers: any[] = [];
-        const updatedTeamMembers: any[] = [];
 
         (supabase.auth.getSession as any).mockResolvedValue({ data: { session: null }, error: null });
         (supabase.auth.signUp as any).mockResolvedValue({
@@ -392,13 +392,18 @@ describe('AuthContext', () => {
                 if (table === 'team_members') insertedTeamMembers.push(...rows);
                 return Promise.resolve({ data: null, error: null });
             });
-            (queryChain as any).update = vi.fn().mockImplementation((updates) => {
-                if (table === 'team_members') updatedTeamMembers.push(updates);
-                return queryChain;
-            });
+            (queryChain as any).update = vi.fn().mockReturnValue(queryChain);
             return queryChain;
         });
-        (supabase.rpc as any).mockResolvedValue({ data: null, error: null });
+        (supabase.rpc as any).mockImplementation((name: string) => {
+            if (name === 'accept_staff_invite') {
+                return Promise.resolve({
+                    data: [{ id: 'pre-cadastrado-uuid', name: 'Lucas Oliveira' }],
+                    error: null,
+                });
+            }
+            return Promise.resolve({ data: null, error: null });
+        });
 
         const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -417,10 +422,12 @@ describe('AuthContext', () => {
         });
 
         expect(registerResult.error).toBeNull();
-        // Pré-cadastro achado → UPDATE (sem INSERT, sem duplicar)
+        // Pré-cadastro achado → RPC de aceite (sem INSERT, sem duplicar)
         expect(insertedTeamMembers).toHaveLength(0);
-        expect(updatedTeamMembers).toHaveLength(1);
-        expect(updatedTeamMembers[0]).toEqual({ staff_user_id: mockUser.id });
+        expect(supabase.rpc).toHaveBeenCalledWith('accept_staff_invite', {
+            p_company_id: 'owner-123',
+            p_member_id: 'pre-cadastrado-uuid',
+        });
     });
 
     it('marks owner onboarding as completed in onboarding_progress', async () => {
@@ -522,6 +529,7 @@ describe('AuthContext', () => {
             const query = {
                 select: vi.fn().mockReturnThis(),
                 eq: table === 'profiles' ? eqProfile : vi.fn().mockReturnThis(),
+                is: vi.fn().mockReturnThis(),
                 update: table === 'profiles' ? updateProfile : vi.fn().mockReturnThis(),
                 single: vi.fn().mockImplementation(() => {
                     if (table === 'profiles' && query.eq.mock.calls.some((call: unknown[]) => call[1] === 'owner-123')) {

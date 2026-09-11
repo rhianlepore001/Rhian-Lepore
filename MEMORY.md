@@ -49,6 +49,13 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Recadastro de colaborador + convite travado (11 Set 2026):**
+  - Excluir e cadastrar de novo falhava com "Esse registro já existe" (UNIQUE global em `team_members.slug` sobrevivia ao soft delete).
+  - Convite do profissional ficava em "Validando convite…" (RPC sem try/finally, sessão auth podia travar a chamada, link com `?a&b` quebrava no WhatsApp, e o aceite falhava em silêncio no RLS).
+  - Correção: unique parcial só em slug ativo; restore do registro excluído; RPC pública com timeout; link `/#/invite/:company/:member`; `accept_staff_invite`.
+  - Migration `20260911120000_team_soft_delete_invite.sql` aplicada no remoto BARBER/Beauty OS.
+  - Gates: typecheck, lint, build, 602 testes.
+
 - **Equipe no menu + exclusão de profissional (10 Set 2026):**
   - PR #63 → `main`. Item **Equipe** no sidebar desktop e no menu mobile (Mais), apontando para `/#/configuracoes/equipe`.
   - Excluir profissional não fazia nada quando havia agendamento/financeiro vinculado (FK sem `ON DELETE`). Agora usa exclusão lógica (`deleted_at` + `active=false`); o dono não pode ser removido.

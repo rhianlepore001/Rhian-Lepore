@@ -58,7 +58,7 @@ describe('SubscriptionSettings', () => {
     expect(screen.getByText(AGENDIX_PLANS.equipe.audience)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Assinar Solo' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Assinar Equipe' })).toBeInTheDocument();
-    expect(screen.getByText('Walk-in entra pelo QR, vê a vez e pode pagar no Pix')).toBeInTheDocument();
+    expect(screen.getByText('Quem chega sem hora entra pelo QR, vê a vez e pode pagar no Pix')).toBeInTheDocument();
     expect(screen.getByText('Clube: o cliente paga mensal, você ganha recorrência')).toBeInTheDocument();
     expect(screen.queryByText(/stripe/i)).not.toBeInTheDocument();
     expect(screen.getByText(AGENDIX_PLAN_COPY.footer)).toBeInTheDocument();

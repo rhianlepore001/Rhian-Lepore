@@ -119,7 +119,7 @@ test.describe('Planos AgendiX — Solo e Equipe', () => {
     await expect(page.getByText('Para quem tem 2 a 5 profissionais.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Assinar Solo' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Assinar Equipe' })).toBeVisible();
-    await expect(page.getByText('Walk-in entra pelo QR, vê a vez e pode pagar no Pix')).toBeVisible();
+    await expect(page.getByText('Quem chega sem hora entra pelo QR, vê a vez e pode pagar no Pix')).toBeVisible();
     await expect(page.getByText(/Stripe/i)).toHaveCount(0);
 
     await page.screenshot({

@@ -22,21 +22,22 @@ export interface AIOSDiagnostic {
 }
 
 export const useAIOSDiagnostic = () => {
-    const { user, aiosEnabled } = useAuth();
+    const { user, companyId, aiosEnabled } = useAuth();
     const [diagnostic, setDiagnostic] = useState<AIOSDiagnostic | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     const fetchDiagnostic = async () => {
         // Só executa quando aiosEnabled é explicitamente true
-        if (!user || aiosEnabled !== true) {
+        const tenantId = companyId ?? user?.id;
+        if (!tenantId || aiosEnabled !== true) {
             setLoading(false);
             return;
         }
 
         try {
             const { data, error } = await supabase.rpc('get_aios_diagnostic', {
-                p_establishment_id: user.id
+                p_establishment_id: tenantId
             });
 
             if (error) throw error;
@@ -71,7 +72,7 @@ export const useAIOSDiagnostic = () => {
 
     useEffect(() => {
         fetchDiagnostic();
-    }, [user, aiosEnabled]);
+    }, [user, companyId, aiosEnabled]);
 
     return { diagnostic, loading, error, refetch: fetchDiagnostic, logCampaignActivity };
 };

@@ -89,6 +89,7 @@ describe('QueueManualAddSheet', () => {
     const { onAdded } = renderSheet();
 
     await waitFor(() => expect(listActiveClientsForPicker).toHaveBeenCalledWith('biz-001'));
+    await waitFor(() => expect(screen.getByText('Buscar por nome ou telefone')).toBeInTheDocument());
     await user.click(screen.getByText('Buscar por nome ou telefone'));
     await user.click(screen.getByText('Tales Furtado'));
     await user.selectOptions(screen.getByLabelText('Serviço'), 'svc-corte');
@@ -109,7 +110,7 @@ describe('QueueManualAddSheet', () => {
       'https://agendixstudio.com/#/minha-area/barbearia-qa?tab=fila',
     );
     expect(screen.getByRole('button', { name: 'Enviar no WhatsApp' })).toBeInTheDocument();
-    expect(screen.getByText(/libera a senha automaticamente/)).toBeInTheDocument();
+    expect(screen.getByText(/informa o mesmo WhatsApp e vê a posição na fila/)).toBeInTheDocument();
   });
 
   it('walk-in cadastra no CRM e também gera o link', async () => {
@@ -133,6 +134,7 @@ describe('QueueManualAddSheet', () => {
     renderSheet();
 
     await waitFor(() => expect(listActiveClientsForPicker).toHaveBeenCalled());
+    await waitFor(() => expect(screen.getByText('Buscar por nome ou telefone')).toBeInTheDocument());
     await user.click(screen.getByText('Buscar por nome ou telefone'));
     await user.click(screen.getByText('Sem Telefone'));
     await user.selectOptions(screen.getByLabelText('Serviço'), 'svc-corte');

@@ -1,6 +1,6 @@
 # SPEC: Entrada manual na fila com lista e link
 
-**Status:** in_progress
+**Status:** done
 **Criado:** 2026-09-11
 **Prioridade:** alta
 
@@ -55,8 +55,8 @@ Se o cliente **ainda não tem Minha Área**, o mesmo link pede o WhatsApp. Com a
 
 ## Done when
 
-- [ ] Gestor escolhe cliente da lista ou walk-in
-- [ ] Após adicionar, aparece link copiável + WhatsApp
-- [ ] Cliente sem Minha Área recupera a senha pelo WhatsApp
-- [ ] Testes unitários + Playwright
-- [ ] typecheck, lint, build, test
+- [x] Gestor escolhe cliente da lista ou walk-in
+- [x] Após adicionar, aparece link copiável + WhatsApp
+- [x] Cliente sem Minha Área recupera a senha pelo WhatsApp
+- [x] Testes unitários + Playwright
+- [x] typecheck, lint, build, test

@@ -23,6 +23,6 @@ export function buildQueueTrackingMessage(input: {
     'Acompanhe sua senha neste link:',
     input.url,
     '',
-    'Se for a primeira vez, informe o mesmo WhatsApp usado no balcão.',
+    'Se for a primeira vez, informe o mesmo WhatsApp usado no balcão e veja a posição na fila.',
   ].join('\n');
 }

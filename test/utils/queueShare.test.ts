@@ -26,6 +26,6 @@ describe('queueShare', () => {
     expect(message).toContain('Olá, Tales!');
     expect(message).toContain('Barbearia QA');
     expect(message).toContain('https://agendixstudio.com/#/minha-area/barbearia-qa?tab=fila');
-    expect(message).toContain('mesmo WhatsApp usado no balcão');
+    expect(message).toContain('mesmo WhatsApp usado no balcão e veja a posição na fila');
   });
 });

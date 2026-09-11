@@ -223,8 +223,8 @@ export const ClientArea: React.FC = () => {
             }
 
             setGateStep('register');
-        } catch {
-            setGateError('Erro ao verificar. Tente novamente.');
+        } catch (error) {
+            setGateError(error instanceof Error ? error.message : 'Erro ao verificar. Tente novamente.');
         } finally {
             setGateSubmitting(false);
         }

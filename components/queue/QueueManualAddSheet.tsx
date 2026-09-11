@@ -89,7 +89,7 @@ export const QueueManualAddSheet: React.FC<QueueManualAddSheetProps> = ({
   const [addedName, setAddedName] = useState('');
   const [addedPhone, setAddedPhone] = useState('');
 
-  const { data: clients = [], isError: clientsError } = useQuery({
+  const { data: clients = [], isError: clientsError, isLoading: clientsLoading } = useQuery({
     queryKey: ['queue', 'picker-clients', companyId],
     queryFn: () => listActiveClientsForPicker(companyId),
     enabled: open && Boolean(companyId),
@@ -163,6 +163,12 @@ export const QueueManualAddSheet: React.FC<QueueManualAddSheetProps> = ({
 
   const handleSource = (next: ClientSource) => {
     setSource(next);
+    if (next === 'walkin' && selectedClient) {
+      setName(selectedClient.name);
+      setPhone(selectedClient.phone || '');
+      setSelectedClientId('');
+      return;
+    }
     setSelectedClientId('');
     setName('');
     setPhone('');
@@ -239,6 +245,7 @@ export const QueueManualAddSheet: React.FC<QueueManualAddSheetProps> = ({
       onClose={handleClose}
       title={step === 'done' ? 'Cliente na fila' : 'Adicionar cliente à fila'}
       size="md"
+      preventClose={saving}
     >
       {step === 'done' ? (
         <div className="space-y-4" data-testid="queue-manual-success">
@@ -275,7 +282,7 @@ export const QueueManualAddSheet: React.FC<QueueManualAddSheetProps> = ({
                 </Button>
               </div>
               <p className="text-sm text-theme-textSecondary">
-                Se ainda não tiver Minha Área, o link pede o mesmo WhatsApp e libera a senha automaticamente.
+                Ao abrir, o cliente informa o mesmo WhatsApp e vê a posição na fila.
               </p>
               {whatsappHref && (
                 <Button
@@ -341,7 +348,9 @@ export const QueueManualAddSheet: React.FC<QueueManualAddSheetProps> = ({
 
           {source === 'list' ? (
             <div className="space-y-3">
-              {clientsError ? (
+              {clientsLoading ? (
+                <p className="text-sm text-theme-textSecondary">Carregando sua lista...</p>
+              ) : clientsError ? (
                 <p className="text-sm text-theme-textSecondary">
                   Não foi possível carregar a lista. Use a opção sem cadastro.
                 </p>
@@ -364,7 +373,7 @@ export const QueueManualAddSheet: React.FC<QueueManualAddSheetProps> = ({
                   Este cliente não tem telefone. Complete o cadastro ou adicione como walk-in.
                 </p>
               )}
-              {clients.length === 0 && !clientsError && (
+              {clients.length === 0 && !clientsError && !clientsLoading && (
                 <p className="text-sm text-theme-textSecondary">
                   Ainda não há clientes na lista. Use sem cadastro para o primeiro.
                 </p>

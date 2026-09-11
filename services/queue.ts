@@ -425,22 +425,29 @@ export async function joinQueue(input: JoinQueueInput): Promise<QueueRecord> {
 }
 
 export async function findNameToOpenPublicArea(businessId: string, phone: string): Promise<string | null> {
+  let queueFailed = false;
   try {
     const queue = await findActiveQueueEntryByPhone(businessId, phone);
     const queueName = queue?.client_name?.trim();
     if (queueName) return queueName;
   } catch {
-    // Senha não bloqueia o fallback do agendamento.
+    queueFailed = true;
   }
 
   const { data, error } = await supabase.rpc('get_active_booking_by_phone', {
     p_phone: phone,
     p_business_id: businessId,
   });
-  if (error) return null;
-  const row = Array.isArray(data) ? data[0] : data;
-  const bookingName = (row as { customer_name?: string } | null | undefined)?.customer_name?.trim();
-  return bookingName || null;
+  if (!error) {
+    const row = Array.isArray(data) ? data[0] : data;
+    const bookingName = (row as { customer_name?: string } | null | undefined)?.customer_name?.trim();
+    if (bookingName) return bookingName;
+  }
+
+  if (queueFailed || error) {
+    throw new Error('Não foi possível verificar sua senha. Tente de novo.');
+  }
+  return null;
 }
 
 export async function addManualQueueEntry(input: ManualQueueInput): Promise<QueueRecord> {

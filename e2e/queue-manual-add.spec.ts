@@ -100,6 +100,7 @@ test.describe('Fila — entrada manual e link', () => {
 
     await expect(page.getByRole('heading', { name: 'Adicionar cliente à fila' })).toBeVisible({ timeout: 20_000 });
     await expect(page.getByTestId('queue-source-list')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByText('Buscar por nome ou telefone')).toBeVisible();
     await page.getByText('Buscar por nome ou telefone').click();
     await page.getByText('Tales Furtado').click();
     await page.getByLabel('Serviço').selectOption('svc-corte');
@@ -110,7 +111,7 @@ test.describe('Fila — entrada manual e link', () => {
     await expect(page.getByText('Tales Furtado entrou na fila.')).toBeVisible();
     await expect(page.getByTestId('queue-tracking-url')).toHaveValue(/minha-area\/barbearia-qa\?tab=fila/);
     await expect(page.getByRole('button', { name: 'Enviar no WhatsApp' })).toBeVisible();
-    await expect(page.getByText(/libera a senha automaticamente/)).toBeVisible();
+    await expect(page.getByText(/informa o mesmo WhatsApp e vê a posição na fila/)).toBeVisible();
   });
 
   test('walk-in também mostra o link no final', async ({ page }) => {

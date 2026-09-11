@@ -500,6 +500,15 @@ describe('queue service', () => {
     });
   });
 
+  it('nao trata falha de consulta como cliente sem cadastro', async () => {
+    (supabase.rpc as any)
+      .mockResolvedValueOnce({ data: null, error: { message: 'timeout' } })
+      .mockResolvedValueOnce({ data: null, error: { message: 'timeout' } });
+
+    await expect(findNameToOpenPublicArea('business-001', '11900000000'))
+      .rejects.toThrow('Não foi possível verificar sua senha. Tente de novo.');
+  });
+
   it('atualiza status somente pela RPC', async () => {
     await updateQueueStatus({
       entryId: 'queue-001',

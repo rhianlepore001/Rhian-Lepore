@@ -49,6 +49,12 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Planos Solo / Equipe — MVP (11 Set 2026):**
+  - PR #64 (`cursor/planos-assinatura-mvp-eccf`). Dois planos: Solo (1 profissional) e Equipe (até 5). Agenda + fila nos dois; Clube, análises e comissões só no Equipe. Trial com tudo liberado.
+  - Copy de decisão na tela Plano AgendiX; `subscription_plan` no perfil (`solo` | `equipe`). Legado ativo sem plano = Equipe.
+  - Gates locais 11 Set 2026: typecheck, lint, build, 598 testes, coverage. CI GitHub + preview Vercel verdes no PR.
+  - ⚠️ Migration `20260911140000_subscription_plan.sql` ainda precisa ser aplicada no banco remoto para gravar o plano escolhido.
+
 - **Equipe no menu + exclusão de profissional (10 Set 2026):**
   - PR #63 → `main`. Item **Equipe** no sidebar desktop e no menu mobile (Mais), apontando para `/#/configuracoes/equipe`.
   - Excluir profissional não fazia nada quando havia agendamento/financeiro vinculado (FK sem `ON DELETE`). Agora usa exclusão lógica (`deleted_at` + `active=false`); o dono não pode ser removido.

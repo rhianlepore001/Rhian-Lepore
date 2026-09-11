@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams, useParams } from 'react-router-dom';
 import { Check, Eye, EyeOff } from 'lucide-react';
 import { useAuth, UserType, Region } from '../contexts/AuthContext';
 import { useBrutalTheme, ThemeVariant } from '../hooks/useBrutalTheme';
@@ -11,11 +10,22 @@ import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { mapError, formatUserFacingError } from '../utils/mapError';
 import { getBusinessCopy } from '../utils/businessCopy';
+import { fetchStaffInvite, parseStaffInviteParams } from '../services/staffInvite';
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
   const [searchParams] = useSearchParams();
+  const invitePathParams = useParams<{ companyId?: string; memberId?: string }>();
+  const parsedInvite = parseStaffInviteParams({
+    pathname: invitePathParams.companyId
+      ? `/invite/${invitePathParams.companyId}/${invitePathParams.memberId ?? ''}`
+      : undefined,
+    search: searchParams.toString() ? `?${searchParams.toString()}` : window.location.search,
+    hash: typeof window !== 'undefined' ? window.location.hash : '',
+  });
+  const companyIdFromUrl = invitePathParams.companyId || parsedInvite.companyId;
+  const memberIdFromUrl = invitePathParams.memberId || parsedInvite.memberId;
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -32,12 +42,10 @@ export const Register: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteLoading, setInviteLoading] = useState(() => !!(invitePathParams.companyId || parsedInvite.companyId));
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [nameLocked, setNameLocked] = useState(false);
 
-  const companyIdFromUrl = searchParams.get('company');
-  const memberIdFromUrl = searchParams.get('member');
   const isInvitedStaff = !!companyIdFromUrl;
   const { isBeauty, colors, accent, font, radius, classes } = useBrutalTheme({ override: userType as ThemeVariant });
   const copy = getBusinessCopy(userType);
@@ -66,56 +74,36 @@ export const Register: React.FC = () => {
     setInviteError(null);
 
     const loadInvite = async () => {
-      if (memberIdFromUrl) {
-        const { data, error: rpcError } = await supabase.rpc('get_team_member_for_invite', {
-          p_company_id: companyIdFromUrl,
-          p_member_id: memberIdFromUrl,
-        });
+      try {
+        const result = await fetchStaffInvite(companyIdFromUrl, memberIdFromUrl);
         if (cancelled) return;
 
-        if (rpcError) {
-          console.error('get_team_member_for_invite', rpcError);
-          setInviteError(mapError(rpcError, 'Não foi possível validar o convite.').message);
-          setInviteLoading(false);
+        if (result.status === 'ready') {
+          setFullName(String(result.member.name || ''));
+          setNameLocked(true);
+          setMemberRole(String(result.member.role || ''));
+          if (result.member.user_type === 'barber' || result.member.user_type === 'beauty') {
+            setUserType(result.member.user_type as UserType);
+          }
+          if (result.member.business_name) setOwnerBusinessName(result.member.business_name);
+          setInviteError(null);
           return;
         }
 
-        const row = Array.isArray(data) ? data[0] : data;
-        if (!row) {
-          setInviteError('Convite inválido ou profissional não encontrado.');
-          setInviteLoading(false);
-          return;
-        }
-        if (row.staff_user_id) {
-          setInviteError('Este convite já foi utilizado.');
-          setInviteLoading(false);
-          return;
+        if (result.status === 'incomplete') {
+          if (result.company?.user_type === 'barber' || result.company?.user_type === 'beauty') {
+            setUserType(result.company.user_type as UserType);
+          }
+          if (result.company?.business_name) setOwnerBusinessName(result.company.business_name);
         }
 
-        setFullName(String(row.name || ''));
-        setNameLocked(true);
-        setMemberRole(String(row.role || ''));
-        if (row.user_type === 'barber' || row.user_type === 'beauty') {
-          setUserType(row.user_type as UserType);
-        }
-        if (row.business_name) setOwnerBusinessName(row.business_name);
-        setInviteLoading(false);
-        return;
+        setInviteError(result.message);
+      } catch (error: unknown) {
+        if (cancelled) return;
+        setInviteError(mapError(error, 'Não foi possível validar o convite.').message);
+      } finally {
+        if (!cancelled) setInviteLoading(false);
       }
-
-      // Convites novos exigem member_id (nome definido pelo gestor).
-      // Links antigos sem member ainda abrem a empresa, mas pedem um convite atualizado.
-      const { data } = await supabase.rpc('get_company_for_invite', { p_company_id: companyIdFromUrl });
-      if (cancelled) return;
-      const row = Array.isArray(data) ? data[0] : data;
-      if (row?.user_type === 'barber' || row?.user_type === 'beauty') {
-        setUserType(row.user_type as UserType);
-      }
-      if (row?.business_name) setOwnerBusinessName(row.business_name);
-      setInviteError(
-        'Este link está incompleto. Peça ao gestor o convite gerado ao cadastrar seu perfil na equipe.'
-      );
-      setInviteLoading(false);
     };
 
     void loadInvite();

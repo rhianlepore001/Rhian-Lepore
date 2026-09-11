@@ -123,6 +123,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .select('id')
             .eq('staff_user_id', userId)
             .eq('user_id', profile.company_id)
+            .is('deleted_at', null)
             .maybeSingle();
 
           setTeamMemberId(teamMember?.id || null);
@@ -363,61 +364,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (data.companyId) {
           const trimmedName = data.fullName.trim();
 
-          // 1. Preferir vínculo pelo member_id do convite (domínio do gestor)
           if (data.teamMemberId) {
-            const { data: byId, error: byIdError } = await supabase
-              .from('team_members')
-              .select('id, name, staff_user_id')
-              .eq('id', data.teamMemberId)
-              .eq('user_id', data.companyId)
-              .maybeSingle();
+            const { data: linked, error: linkError } = await supabase.rpc('accept_staff_invite', {
+              p_company_id: data.companyId,
+              p_member_id: data.teamMemberId,
+            });
 
-            if (byIdError) {
-              console.error('Erro ao buscar team_member do convite:', byIdError);
-            } else if (byId?.staff_user_id) {
-              return { error: new Error('Este convite já foi utilizado.') };
-            } else if (byId?.id) {
-              const { error: linkError } = await supabase
-                .from('team_members')
-                .update({ staff_user_id: authData.user.id })
-                .eq('id', byId.id)
-                .is('staff_user_id', null);
+            if (linkError) {
+              console.error('Erro ao vincular team_member do convite:', linkError);
+              return { error: linkError };
+            }
 
-              if (linkError) {
-                console.error('Erro ao vincular team_member do convite:', linkError);
-                return { error: linkError };
-              }
-
-              if (byId.name) {
-                setFullName(byId.name);
-                await supabase
-                  .from('profiles')
-                  .update({ full_name: byId.name })
-                  .eq('id', authData.user.id);
-              }
-            } else {
-              return { error: new Error('Convite inválido ou profissional não encontrado.') };
+            const linkedRow = Array.isArray(linked) ? linked[0] : linked;
+            if (linkedRow?.name) {
+              setFullName(linkedRow.name);
+              await supabase
+                .from('profiles')
+                .update({ full_name: linkedRow.name })
+                .eq('id', authData.user.id);
             }
           } else {
-            // 2. Legacy: vincular por nome (convites antigos sem member_id)
+            // Legacy: vincular por nome (convites antigos sem member_id)
             const namePattern = trimmedName.replace(/[\\%_]/g, (char) => `\\${char}`);
             const { data: existing } = await supabase
               .from('team_members')
               .select('id')
               .eq('user_id', data.companyId)
               .is('staff_user_id', null)
+              .is('deleted_at', null)
               .ilike('name', namePattern)
               .limit(1)
               .maybeSingle();
 
             if (existing?.id) {
-              const { error: linkError } = await supabase
-                .from('team_members')
-                .update({ staff_user_id: authData.user.id })
-                .eq('id', existing.id);
+              const { data: linked, error: linkError } = await supabase.rpc('accept_staff_invite', {
+                p_company_id: data.companyId,
+                p_member_id: existing.id,
+              });
 
               if (linkError) {
                 console.error('Erro ao vincular team_member pré-cadastrado:', linkError);
+                return { error: linkError };
+              }
+
+              const linkedRow = Array.isArray(linked) ? linked[0] : linked;
+              if (linkedRow?.name) {
+                setFullName(linkedRow.name);
               }
             } else {
               const { error: teamError } = await supabase

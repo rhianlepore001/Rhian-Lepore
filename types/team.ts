@@ -25,6 +25,7 @@ export const teamMemberSchema = z.object({
     ),
   commission_payment_day: z.number().int().min(0).max(31).nullable().optional(),
   cpf: z.string().nullable().optional(),
+  specialties: z.array(z.string()).optional(),
   staff_user_id: uuidSchema.nullable().optional(),
   created_at: z.string().nullable().optional(),
   updated_at: z.string().nullable().optional(),
@@ -43,6 +44,9 @@ export const teamMemberInputSchema = z.object({
   commission_percent: z.number().min(0).max(100).nullable().optional(),
   commission_payment_frequency: commissionPaymentFrequencySchema.nullable().optional(),
   commission_payment_day: z.number().int().min(0).max(31).nullable().optional(),
+  cpf: z.string().trim().nullable().optional(),
+  specialties: z.array(z.string()).optional(),
+  is_owner: z.boolean().optional(),
 });
 
 export const teamMemberUpdateSchema = teamMemberInputSchema.partial();

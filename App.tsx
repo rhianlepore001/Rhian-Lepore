@@ -172,6 +172,7 @@ const AppRoutes: React.FC = () => {
       <Suspense fallback={<LoadingFull />}>
       <Routes>
         {/* Public / Standalone Routes */}
+        <Route path="/invite/:companyId/:memberId" element={<Register />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/termos" element={<Legal />} />

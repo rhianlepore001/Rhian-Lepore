@@ -11,3 +11,12 @@ if (!supabaseUrl || !supabaseKey) {
 }
 
 export const supabase = createClient(supabaseUrl!, supabaseKey!);
+
+/** Cliente sem sessão persistida — RPCs públicas (convite) não esperam refresh de auth. */
+export const supabasePublic = createClient(supabaseUrl!, supabaseKey!, {
+    auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+    },
+});

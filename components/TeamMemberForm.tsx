@@ -9,6 +9,7 @@ import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useBusinessCopy } from '../hooks/useBusinessCopy';
 import { useCopyInviteLink } from '../hooks/useCopyInviteLink';
 import { mapError } from '../utils/mapError';
+import { createTeamMember, updateTeamMember, generateSlug } from '../services/team';
 
 interface TeamMemberFormProps {
     initialData?: any;
@@ -27,7 +28,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     onSave,
     isOwnerForm = false
 }) => {
-    const { user, fullName, avatarUrl, businessName } = useAuth();
+    const { user, companyId, fullName, avatarUrl, businessName } = useAuth();
     const { showToast } = useToast();
     const { colors, accent, font } = useBrutalTheme();
     const { rolePlaceholder } = useBusinessCopy();
@@ -85,12 +86,18 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
         if (!user) return;
         setLoading(true);
 
+        const tenantId = companyId || user.id;
+        if (!tenantId) {
+            setLoading(false);
+            return;
+        }
+
         try {
             let photoUrl = photoPreview;
 
             if (photoFile) {
                 const fileExt = photoFile.name.split('.').pop();
-                const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+                const fileName = `${tenantId}/${Date.now()}.${fileExt}`;
 
                 const { error: uploadError } = await supabase.storage
                     .from('team_photos')
@@ -110,64 +117,46 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                 }
             }
 
-            const teamMemberData: Record<string, unknown> = {
-                user_id: user.id,
+            const teamMemberData = {
                 name: name.trim(),
                 role: role.trim(),
-                slug: slug.trim() || name.toLowerCase().trim().replace(/[^a-z0-9]/g, '-'),
-                bio: bio.trim(),
+                slug: slug.trim() || generateSlug(name),
+                bio: bio.trim() || null,
                 active,
                 photo_url: photoUrl,
                 is_owner: isOwner,
                 specialties: specialties.split(',').map(s => s.trim()).filter(Boolean),
-                cpf: cpf.trim() || null
+                cpf: cpf.trim() || null,
+                ...(initialData?.id ? {} : { commission_rate: 0, commission_percent: 0 }),
             };
 
-            // Comissão só é configurada em Equipe → Comissão (não no formulário de perfil).
-            // Em criação, inicia em 0; em edição, preserva a taxa já salva.
-            if (!initialData?.id) {
-                teamMemberData.commission_rate = 0;
-                teamMemberData.commission_percent = 0;
-            }
+            let savedId = initialData?.id as string | undefined;
 
             if (initialData?.id) {
-                const { error: updateError } = await supabase
-                    .from('team_members')
-                    .update(teamMemberData)
-                    .eq('id', initialData.id)
-                    .eq('user_id', user.id);
-                if (updateError) throw updateError;
-
-                window.dispatchEvent(new CustomEvent('setup-step-completed', { detail: { stepId: 'team' } }));
-                onSave();
-
-                if (!isOwner && !initialData.staff_user_id) {
-                    setCreatedMemberId(initialData.id);
-                    setStep('invite');
-                } else {
-                    onClose();
-                }
+                await updateTeamMember(initialData.id, tenantId, teamMemberData);
             } else {
-                const { data: inserted, error: insertError } = await supabase
-                    .from('team_members')
-                    .insert(teamMemberData)
-                    .select('id')
-                    .single();
-                if (insertError) throw insertError;
+                const inserted = await createTeamMember(tenantId, teamMemberData);
+                savedId = inserted.id;
+            }
 
-                window.dispatchEvent(new CustomEvent('setup-step-completed', { detail: { stepId: 'team' } }));
-                onSave();
+            window.dispatchEvent(new CustomEvent('setup-step-completed', { detail: { stepId: 'team' } }));
+            onSave();
 
-                if (!isOwner && inserted?.id) {
-                    setCreatedMemberId(inserted.id);
-                    setStep('invite');
-                } else {
-                    onClose();
-                }
+            if (!isOwner && savedId && !initialData?.staff_user_id) {
+                setCreatedMemberId(savedId);
+                setStep('invite');
+            } else {
+                onClose();
             }
         } catch (error: unknown) {
             console.error('Error saving team member:', error);
-            showToast(mapError(error, 'Não foi possível salvar o profissional. Tente de novo.').message, 'error');
+            const code = error && typeof error === 'object' && 'code' in error
+                ? String((error as { code?: string }).code)
+                : '';
+            const message = code === '23505'
+                ? 'Já existe um profissional ativo com este link. Altere o slug.'
+                : mapError(error, 'Não foi possível salvar o profissional. Tente de novo.').message;
+            showToast(message, 'error');
         } finally {
             setLoading(false);
         }

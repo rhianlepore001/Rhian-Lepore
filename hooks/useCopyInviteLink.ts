@@ -21,16 +21,20 @@ const isMobile = (): boolean => {
 };
 
 export function buildStaffInviteLink(ownerId: string, memberId?: string | null): string {
-    const base = `${window.location.origin}/#/register?company=${ownerId}`;
-    return memberId ? `${base}&member=${memberId}` : base;
+    const origin = window.location.origin;
+    if (memberId) {
+        return `${origin}/#/invite/${encodeURIComponent(ownerId)}/${encodeURIComponent(memberId)}`;
+    }
+    return `${origin}/#/register?company=${encodeURIComponent(ownerId)}`;
 }
 
 export function useCopyInviteLink(opts: UseCopyInviteLinkOptions = {}): UseCopyInviteLinkResult {
-    const { user, businessName } = useAuth();
+    const { user, companyId, businessName } = useAuth();
     const [copied, setCopied] = useState(false);
+    const tenantId = companyId || user?.id;
 
-    const inviteLink = user
-        ? buildStaffInviteLink(user.id, opts.memberId)
+    const inviteLink = tenantId
+        ? buildStaffInviteLink(tenantId, opts.memberId)
         : '';
 
     const inviteText = opts.customText

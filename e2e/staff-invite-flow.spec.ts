@@ -71,7 +71,7 @@ test.describe('Convite de colaborador — domínio do gestor', () => {
     });
 
     const inviteUrl = (await inviteModal.getByTestId('invite-link').innerText()).trim();
-    expect(inviteUrl).toMatch(/\/#\/register\?company=[0-9a-f-]+&member=[0-9a-f-]+/i);
+        expect(inviteUrl).toMatch(/\/#\/invite\/[0-9a-f-]+\/[0-9a-f-]+/i);
 
     await inviteModal.getByTestId('invite-modal-close').click();
 

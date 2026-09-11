@@ -13,6 +13,8 @@ import { DynamicBranding } from './components/DynamicBranding';
 import { DevBugButton } from './components/DevBugButton';
 import { HashRouterSync } from './components/HashRouterSync';
 import { getBusinessCopy, resolveBusinessTheme } from './utils/businessCopy';
+import { useSubscription } from './hooks/useSubscription';
+import { AGENDIX_PLAN_COPY } from './constants/agendixPlans';
 
 
 // Lazy Load Pages
@@ -156,6 +158,31 @@ const OwnerRouteGuard = ({ children }: { children: React.ReactElement }) => {
   return children;
 };
 
+const EquipeFeatureGuard = ({
+  children,
+  feature,
+}: {
+  children: React.ReactElement;
+  feature: 'club' | 'insights';
+}) => {
+  const { isAuthenticated, loading } = useAuth();
+  const { entitlements, isLoading } = useSubscription();
+
+  if (loading || isLoading) return <LoadingFull />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+
+  const allowed = feature === 'club' ? entitlements.hasClub : entitlements.hasInsights;
+  if (!allowed) {
+    sessionStorage.setItem(
+      'ownerRouteToast',
+      feature === 'club' ? AGENDIX_PLAN_COPY.equipeUpgradeClub : AGENDIX_PLAN_COPY.equipeUpgradeInsights,
+    );
+    return <Navigate to="/configuracoes/assinatura" replace />;
+  }
+
+  return children;
+};
+
 const AppRoutes: React.FC = () => {
   // Detect if user arrived with recovery tokens and redirect to update-password
   React.useEffect(() => {
@@ -225,7 +252,7 @@ const AppRoutes: React.FC = () => {
           <Route path="/clientes/:id" element={<OwnerRouteGuard><ClientCRM /></OwnerRouteGuard>} />
           <Route path="/produtos" element={<Products />} />
           <Route path="/financeiro" element={<Finance />} />
-          <Route path="/insights" element={<OwnerRouteGuard><Reports /></OwnerRouteGuard>} />
+          <Route path="/insights" element={<OwnerRouteGuard><EquipeFeatureGuard feature="insights"><Reports /></EquipeFeatureGuard></OwnerRouteGuard>} />
           <Route path="/meus-insights" element={<StaffInsights />} />
 
           {/* Settings Routes */}
@@ -237,9 +264,9 @@ const AppRoutes: React.FC = () => {
           <Route path="/configuracoes/comissoes" element={<Navigate to="/configuracoes/equipe" replace />} />
           <Route path="/configuracoes/financeiro" element={<Navigate to="/configuracoes/equipe" replace />} />
           <Route path="/configuracoes/assinatura" element={<OwnerRouteGuard><SubscriptionSettings /></OwnerRouteGuard>} />
-          <Route path="/configuracoes/clube" element={<OwnerRouteGuard><MembershipPlansSettings /></OwnerRouteGuard>} />
-          <Route path="/configuracoes/clube/pix" element={<OwnerRouteGuard><MembershipSettings /></OwnerRouteGuard>} />
-          <Route path="/clube/assinantes" element={<OwnerRouteGuard><MembersList /></OwnerRouteGuard>} />
+          <Route path="/configuracoes/clube" element={<OwnerRouteGuard><EquipeFeatureGuard feature="club"><MembershipPlansSettings /></EquipeFeatureGuard></OwnerRouteGuard>} />
+          <Route path="/configuracoes/clube/pix" element={<OwnerRouteGuard><EquipeFeatureGuard feature="club"><MembershipSettings /></EquipeFeatureGuard></OwnerRouteGuard>} />
+          <Route path="/clube/assinantes" element={<OwnerRouteGuard><EquipeFeatureGuard feature="club"><MembersList /></EquipeFeatureGuard></OwnerRouteGuard>} />
           <Route path="/configuracoes/auditoria" element={<DevRouteGuard><AuditLogs /></DevRouteGuard>} />
           <Route path="/configuracoes/lixeira" element={<DevRouteGuard><RecycleBin /></DevRouteGuard>} />
           <Route path="/configuracoes/seguranca" element={<OwnerRouteGuard><SecuritySettings /></OwnerRouteGuard>} />

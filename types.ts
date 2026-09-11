@@ -150,6 +150,7 @@ export interface Profile {
   business_slug?: string;
   tutorial_completed: boolean;
   subscription_status: 'trial' | 'active' | 'past_due' | 'canceled';
+  subscription_plan?: 'solo' | 'equipe' | null;
   trial_ends_at?: string;
   monthly_goal?: number;
   role?: 'owner' | 'staff';

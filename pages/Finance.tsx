@@ -6,6 +6,7 @@ import { Button, Modal, Table, Badge, ConfirmModal, useToast, ErrorState, Skelet
 import type { TableColumn } from '@/components/ui';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
+import { useSubscription } from '../hooks/useSubscription';
 import { Wallet, TrendingUp, TrendingDown, Calendar, Download, Filter, Users, History, Trash2, Plus, Check, Smartphone, Banknote, CreditCard, User, Clock, Scissors } from 'lucide-react';
 import { FinanceCashflowChart } from '../components/finance/FinanceCashflowChart';
 import { AIAssistantButton } from '../components/HelpButtons';
@@ -90,7 +91,8 @@ const FinanceKpi: React.FC<FinanceKpiProps> = ({
 
 export const Finance: React.FC = () => {
   const { user, region, role, companyId, teamMemberId } = useAuth();
-const [searchParams, setSearchParams] = useSearchParams();
+  const { entitlements } = useSubscription();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -191,12 +193,17 @@ useEffect(() => {
       return;
     }
 
+    if (!entitlements.hasCommissions && activeTab === 'commissions') {
+      setActiveTab('overview');
+      return;
+    }
+
     if (activeTab === 'overview') {
       fetchFinanceData();
     } else if (activeTab === 'history') {
       refetchMonthlyHistory();
     }
-  }, [activeTab, selectedMonth, selectedYear, user, isStaff]);
+  }, [activeTab, selectedMonth, selectedYear, user, isStaff, entitlements.hasCommissions]);
 
   useEffect(() => {
     const isNewQuery = searchParams.get('new') === 'true';
@@ -611,7 +618,9 @@ useEffect(() => {
         tabs={[
           { id: 'overview', label: isStaff ? 'Meu Financeiro' : 'Visão Geral', icon: <Calendar className="w-3.5 h-3.5" /> },
           ...(!isStaff ? [
-            { id: 'commissions', label: 'Comissões', icon: <Users className="w-3.5 h-3.5" /> },
+            ...(entitlements.hasCommissions
+              ? [{ id: 'commissions', label: 'Comissões', icon: <Users className="w-3.5 h-3.5" /> }]
+              : []),
             { id: 'history', label: 'Histórico', icon: <History className="w-3.5 h-3.5" /> },
           ] : []),
         ]}

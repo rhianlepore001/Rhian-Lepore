@@ -40,7 +40,7 @@ serve(async (req) => {
             throw new Error("User not found");
         }
 
-        const { priceId, successUrl, cancelUrl, mode = "subscription" } = await req.json();
+        const { priceId, planId, successUrl, cancelUrl, mode = "subscription" } = await req.json();
 
         if (!priceId) {
             throw new Error("Price ID is required");
@@ -100,6 +100,7 @@ serve(async (req) => {
             allow_promotion_codes: true,
             metadata: {
                 supabase_user_id: user.id,
+                plan: typeof planId === "string" ? planId : "",
             },
         });
 

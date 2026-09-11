@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useAlerts } from '../contexts/AlertsContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
+import { useSubscription } from '../hooks/useSubscription';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useMembershipStats } from '../hooks/useMemberships';
 import { useTodayAgenda, useQueueWaitingCount } from '../hooks/useTodayAgenda';
@@ -35,6 +36,7 @@ const GoalSettingsModal = lazy(() =>
 
 export const Dashboard: React.FC = () => {
   const { role, user, fullName, companyId } = useAuth();
+  const { entitlements } = useSubscription();
   const { alerts } = useAlerts();
   const navigate = useNavigate();
   const isStaff = role === 'staff';
@@ -327,6 +329,7 @@ export const Dashboard: React.FC = () => {
           {!isStaff && <SetupCopilot />}
 
           {!isStaff &&
+            entitlements.hasClub &&
             clubStats &&
             (clubStats.totalActive > 0 || clubStats.totalPending > 0) && (
               <Card
@@ -384,7 +387,7 @@ export const Dashboard: React.FC = () => {
         <div className="space-y-4">
           <AttentionInbox items={attentionItems} />
 
-          {!isStaff && (
+          {!isStaff && entitlements.hasInsights && (
             <Card variant="outlined">
               <div className="mb-3 flex items-center justify-between gap-2">
                 <h2 className={`text-sm font-semibold ${colors.text}`}>Oportunidades</h2>
@@ -461,13 +464,15 @@ export const Dashboard: React.FC = () => {
                   </p>
                 </>
               )}
-              <button
-                type="button"
-                onClick={() => navigate('/insights')}
-                className={`mt-3 min-h-[44px] text-sm font-semibold ${accent.text}`}
-              >
-                Meta do mês e saúde em Insights →
-              </button>
+              {entitlements.hasInsights && (
+                <button
+                  type="button"
+                  onClick={() => navigate('/insights')}
+                  className={`mt-3 min-h-[44px] text-sm font-semibold ${accent.text}`}
+                >
+                  Meta do mês e saúde em Insights →
+                </button>
+              )}
             </Card>
           )}
 

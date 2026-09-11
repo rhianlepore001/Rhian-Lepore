@@ -5,79 +5,53 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { useSubscription } from '../../hooks/useSubscription';
 import { mapError } from '../../utils/mapError';
+import {
+    AGENDIX_PLAN_COMPARISON,
+    AGENDIX_PLAN_COPY,
+    AGENDIX_PLANS,
+    getPlanCta,
+    type AgendixCurrency,
+    type AgendixPlanId,
+} from '../../constants/agendixPlans';
 
-
-import { Check, Zap, Calendar, ShieldCheck, CreditCard, Loader2 } from 'lucide-react';
+import { Check, Zap, Calendar, CreditCard, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 export const SubscriptionSettings: React.FC = () => {
-    const { businessName, region } = useAuth();
-    const { subscriptionStatus, trialDaysRemaining, isSubscriptionActive, isTrial } = useSubscription();
+    const { businessName, region, user } = useAuth();
+    const {
+        subscriptionStatus,
+        subscriptionPlan,
+        trialDaysRemaining,
+        isSubscriptionActive,
+        isTrial,
+    } = useSubscription();
     const { isBeauty, colors, accent, radius, status } = useBrutalTheme();
-    // Auto-detect currency based on region
-    const currency = region === 'PT' ? 'EUR' : 'BRL';
-    const [loading, setLoading] = useState<string | null>(null);
+    const currency: AgendixCurrency = region === 'PT' ? 'EUR' : 'BRL';
+    const [loading, setLoading] = useState<AgendixPlanId | null>(null);
     const { showToast } = useToast();
 
-    // Pricing Configuration
-    const pricing = {
-        BRL: {
-            solo: { price: 'R$ 34,90', value: 34.90, priceId: 'price_1SmKO0PUPmLLh2qEwaMMPA6i' },
-            team: { price: 'R$ 59,90', value: 59.90, priceId: 'price_1SmKQPPUPmLLh2qEwY9lvQki' }
-        },
-        EUR: {
-            solo: { price: '€ 9,90', value: 9.90, priceId: 'price_1SmKQPPUPmLLh2qEtjjlg2S1' },
-            team: { price: '€ 19,90', value: 19.90, priceId: 'price_1SmKQPPUPmLLh2qEomuqHXvt' }
-        }
-    };
+    const planIds: AgendixPlanId[] = ['solo', 'equipe'];
 
-    const plans = [
-        {
-            id: 'solo',
-            name: 'Plano Solo',
-            price: pricing[currency].solo.price,
-            period: '/mês',
-            description: 'Ideal para profissionais autônomos.',
-            features: [
-                'Agenda Ilimitada',
-                'Gestão de Clientes',
-                'Página de Agendamento Online',
-                'Relatórios Básicos',
-                'Suporte via WhatsApp'
-            ],
-            recommended: !isBeauty,
-            priceId: pricing[currency].solo.priceId
-        },
-        {
-            id: 'team',
-            name: 'Plano Equipe',
-            price: pricing[currency].team.price,
-            period: '/mês',
-            description: 'Para estabelecimentos com equipe.',
-            features: [
-                'Tudo do Plano Solo',
-                'Múltiplos Profissionais',
-                'Gestão de Comissões',
-                'Relatórios Avançados',
-                'Clube de Assinatura',
-                'Prioridade no Suporte'
-            ],
-            recommended: isBeauty,
-            priceId: pricing[currency].team.priceId
-        }
-    ];
-
-    const handleSubscribe = async (planId: string, priceId: string) => {
+    const handleSubscribe = async (planId: AgendixPlanId, priceId: string) => {
         try {
             setLoading(planId);
+
+            if (user?.id) {
+                await supabase
+                    .from('profiles')
+                    .update({ subscription_plan: planId })
+                    .eq('id', user.id);
+            }
 
             const { data, error } = await supabase.functions.invoke('create-checkout-session', {
                 body: {
                     priceId,
+                    planId,
                     successUrl: `${window.location.origin}/#/?session_id={CHECKOUT_SESSION_ID}`,
                     cancelUrl: `${window.location.href}`,
-                    mode: 'subscription'
-                }
+                    mode: 'subscription',
+                },
             });
 
             if (error) throw error;
@@ -101,17 +75,17 @@ export const SubscriptionSettings: React.FC = () => {
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 md:mb-12">
                     <div>
                         <h1 className={`text-2xl md:text-3xl font-heading ${colors.text} uppercase mb-2`}>
-                            Plano AgendiX
+                            {AGENDIX_PLAN_COPY.pageTitle}
                         </h1>
                         <p className={`text-sm md:text-base ${colors.textSecondary}`}>
-                            Este é o plano do sistema AgendiX — não o clube de assinatura dos seus clientes.
+                            {AGENDIX_PLAN_COPY.pageSubtitle}
+                        </p>
+                        <p className={`text-xs md:text-sm mt-2 ${colors.textMuted}`}>
+                            {AGENDIX_PLAN_COPY.pageHint}
                         </p>
                     </div>
-
-
                 </div>
 
-                {/* Status Atual */}
                 <div className={`p-6 mb-8 transition-all ${colors.card} border ${colors.border} ${radius.card}`}>
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <div className="flex items-center gap-4">
@@ -140,74 +114,103 @@ export const SubscriptionSettings: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Planos */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {plans.map((plan) => (
-                        <Card
-                            key={plan.id}
-                            forceTheme={isBeauty ? 'beauty' : 'barber'}
-                            className={`flex flex-col h-full relative overflow-hidden ${plan.recommended ? 'ring-2 ring-[var(--color-accent)]' : ''}`}
-                        >
-                            {plan.recommended && (
-                                <div className="absolute top-4 right-[-35px] rotate-45 px-10 py-1 text-xs font-black uppercase tracking-tighter bg-theme-accent text-[var(--color-on-accent)]">
-                                    Recomendado
-                                </div>
-                            )}
+                    {planIds.map((planId) => {
+                        const plan = AGENDIX_PLANS[planId];
+                        const price = plan.pricing[currency];
+                        const cta = getPlanCta(planId, {
+                            isTrial,
+                            isSubscriptionActive,
+                            currentPlan: subscriptionPlan,
+                        });
+                        const isEquipe = planId === 'equipe';
 
-                            <div className="mb-6">
-                                <h4 className={`text-xl font-heading ${colors.text} uppercase mb-1`}>{plan.name}</h4>
-                                <p className={`${colors.textSecondary} text-sm`}>{plan.description}</p>
-                            </div>
-
-                            <div className="mb-8">
-                                <div className="flex items-baseline gap-1">
-                                    <span className={`text-4xl font-black ${colors.text}`}>{plan.price}</span>
-                                    <span className={`${colors.textMuted} text-sm`}>{plan.period}</span>
-                                </div>
-                                <div className={`text-xs ${colors.textMuted} mt-1 font-mono`}>
-                                    {currency === 'EUR' ? 'Cobrança em Euro' : 'Cobrança em Reais'}
-                                </div>
-                            </div>
-
-                            <div className="space-y-4 mb-8 flex-1">
-                                {plan.features.map((feature, idx) => (
-                                    <div key={idx} className="flex items-start gap-3">
-                                        <Check className="w-5 h-5 flex-shrink-0 mt-0.5 text-theme-accent" />
-                                        <span className={`${colors.textSecondary} text-sm`}>{feature}</span>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <Button
+                        return (
+                            <Card
+                                key={plan.id}
                                 forceTheme={isBeauty ? 'beauty' : 'barber'}
-                                variant={plan.recommended ? 'primary' : 'ghost'}
-                                onClick={() => handleSubscribe(plan.id, plan.priceId)}
-                                className="w-full"
-                                disabled={loading !== null}
+                                className="flex flex-col h-full relative overflow-hidden"
                             >
-                                {loading === plan.id ? (
-                                    <Loader2 className="w-4 h-4 animate-spin mx-auto" />
-                                ) : (
-                                    isTrial ? 'Começar Assinatura' : 'Alterar Plano'
-                                )}
-                            </Button>
-                        </Card>
-                    ))}
+                                <div className="mb-6">
+                                    <h4 className={`text-xl font-heading ${colors.text} uppercase mb-1`}>{plan.name}</h4>
+                                    <p className={`${colors.textSecondary} text-sm`}>{plan.audience}</p>
+                                </div>
+
+                                <div className="mb-8">
+                                    <div className="flex items-baseline gap-1">
+                                        <span className={`text-4xl font-black ${colors.text}`}>{price.label}</span>
+                                        <span className={`${colors.textMuted} text-sm`}>/mês</span>
+                                    </div>
+                                    <div className={`text-xs ${colors.textMuted} mt-1`}>
+                                        {currency === 'EUR' ? 'Cobrança em euro' : 'Cobrança em reais'}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4 mb-8 flex-1">
+                                    {plan.features.map((feature) => (
+                                        <div key={feature} className="flex items-start gap-3">
+                                            <Check className="w-5 h-5 flex-shrink-0 mt-0.5 text-theme-accent" />
+                                            <span className={`${colors.textSecondary} text-sm`}>{feature}</span>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <Button
+                                    forceTheme={isBeauty ? 'beauty' : 'barber'}
+                                    variant={isEquipe ? 'primary' : 'ghost'}
+                                    onClick={() => handleSubscribe(plan.id, price.priceId)}
+                                    className="w-full"
+                                    disabled={cta.disabled || loading !== null}
+                                >
+                                    {loading === plan.id ? (
+                                        <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                                    ) : (
+                                        cta.label
+                                    )}
+                                </Button>
+                            </Card>
+                        );
+                    })}
                 </div>
 
-                {/* Footer Info */}
+                <div className={`mt-10 overflow-x-auto border ${colors.border} ${radius.card}`}>
+                    <table className="w-full min-w-[28rem] text-sm">
+                        <caption className={`text-left px-4 py-3 ${colors.textSecondary}`}>
+                            Comparativo dos planos
+                        </caption>
+                        <thead>
+                            <tr className={`${colors.card} border-b ${colors.border}`}>
+                                <th className={`text-left font-semibold px-4 py-3 ${colors.text}`}>Benefício</th>
+                                <th className={`text-left font-semibold px-4 py-3 ${colors.text}`}>Solo</th>
+                                <th className={`text-left font-semibold px-4 py-3 ${colors.text}`}>Equipe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {AGENDIX_PLAN_COMPARISON.map((row) => (
+                                <tr key={row.label} className={`border-t ${colors.divider}`}>
+                                    <td className={`px-4 py-3 ${colors.text}`}>{row.label}</td>
+                                    <td className={`px-4 py-3 ${colors.textSecondary}`}>{row.solo}</td>
+                                    <td className={`px-4 py-3 ${colors.textSecondary}`}>{row.equipe}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+
                 <div className={`mt-12 text-center ${colors.textMuted}`}>
-                    <div className="flex items-center justify-center gap-6 mb-4">
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 mb-3">
                         <div className="flex items-center gap-2 text-xs uppercase font-mono">
-                            <ShieldCheck className="w-4 h-4" /> Pagamento Seguro via Stripe
+                            <CreditCard className="w-4 h-4" /> Pagamento seguro
                         </div>
                         <div className="flex items-center gap-2 text-xs uppercase font-mono">
-                            <CreditCard className="w-4 h-4" /> Cancele a qualquer momento
+                            {AGENDIX_PLAN_COPY.footer}
                         </div>
                     </div>
+                    <p className="text-xs max-w-lg mx-auto">
+                        {AGENDIX_PLAN_COPY.footerHint}
+                    </p>
                 </div>
             </div>
         </SettingsLayout>
     );
 };
-

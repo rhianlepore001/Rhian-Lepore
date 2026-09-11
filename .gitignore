@@ -126,6 +126,8 @@ screenshots*/
 auto-*.png
 relatorio/
 impeccable/
+!.claude/skills/impeccable/
+!.claude/skills/impeccable/**
 
 
 

@@ -49,6 +49,7 @@ const ClientArea = React.lazy(() => import('./pages/ClientArea').then(module => 
 const ForgotPassword = React.lazy(() => import('./pages/ForgotPassword').then(module => ({ default: module.ForgotPassword })));
 const UpdatePassword = React.lazy(() => import('./pages/UpdatePassword').then(module => ({ default: module.UpdatePassword })));
 const PlaywrightBugReporterDemo = React.lazy(() => import('./pages/PlaywrightBugReporterDemo').then(module => ({ default: module.PlaywrightBugReporterDemo })));
+const PlaywrightQueueManualAddDemo = React.lazy(() => import('./pages/PlaywrightQueueManualAddDemo').then(module => ({ default: module.PlaywrightQueueManualAddDemo })));
 const DesignReviewDemo = React.lazy(() => import('./pages/DesignReviewDemo').then(module => ({ default: module.DesignReviewDemo })));
 const JoinClub = React.lazy(() => import('./pages/JoinClub').then(module => ({ default: module.JoinClub })));
 const ClubDemo = React.lazy(() => import('./pages/ClubDemo').then(module => ({ default: module.ClubDemo })));
@@ -186,6 +187,18 @@ const AppRoutes: React.FC = () => {
             ) : (
               <DevRouteGuard>
                 <PlaywrightBugReporterDemo />
+              </DevRouteGuard>
+            )
+          }
+        />
+        <Route
+          path="/playwright-queue-manual-add"
+          element={
+            import.meta.env.DEV ? (
+              <PlaywrightQueueManualAddDemo />
+            ) : (
+              <DevRouteGuard>
+                <PlaywrightQueueManualAddDemo />
               </DevRouteGuard>
             )
           }

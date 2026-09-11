@@ -2,10 +2,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   calcLoyaltyTier,
   createClient,
+  ensureClientFromQueue,
   daysUntilBirthday,
   enrichClients,
   filterEnrichedClients,
   findClientByPhone,
+  listActiveClientsForPicker,
   formatVisitAgo,
   getVipClientIds,
   isBirthdaySoon,
@@ -180,6 +182,36 @@ describe('crm service', () => {
       source: 'manual',
       loyalty_tier: 'Bronze',
     }));
+  });
+
+  it('lista clientes ativos para o picker da fila', async () => {
+    const orderMock = vi.fn().mockResolvedValue({
+      data: [
+        { id: 'c1', name: 'Ana', phone: '1199999' },
+        { id: 'c2', name: '', phone: null },
+      ],
+      error: null,
+    });
+    (supabase.from as ReturnType<typeof vi.fn>).mockReturnValueOnce({
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          neq: vi.fn(() => ({ order: orderMock })),
+        })),
+      })),
+    });
+
+    const result = await listActiveClientsForPicker('company-001');
+    expect(result).toEqual([{ id: 'c1', name: 'Ana', phone: '1199999' }]);
+  });
+
+  it('nao cria cliente no CRM se o telefone ja existe', async () => {
+    notMock.mockResolvedValue({
+      data: [{ id: 'client-001', user_id: 'company-001', name: 'Joao', phone: '11987654321' }],
+      error: null,
+    });
+
+    await ensureClientFromQueue('company-001', 'Joao', '11987654321');
+    expect(insertMock).not.toHaveBeenCalled();
   });
 });
 

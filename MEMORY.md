@@ -49,6 +49,12 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Fila — lista de clientes + link de acompanhamento (11 Set 2026):**
+  - Branch `cursor/fila-manual-add-share-37be` · PR #66.
+  - Modal Adicionar à fila: **Da minha lista** (CRM) ou **Sem cadastro** (walk-in). No sucesso, link `/#/minha-area/{slug}?tab=fila` para copiar/WhatsApp.
+  - Cliente sem Minha Área: o mesmo WhatsApp da senha cria a sessão pública, sem formulário extra. Falha de consulta não vira cadastro novo.
+  - Eval: APROVAR COM RESSALVAS (7,4). Validator: ENTREGUE. Playwright 3/3. Gates: typecheck, lint, build, 601 testes.
+
 - **Equipe no menu + exclusão de profissional (10 Set 2026):**
   - PR #63 → `main`. Item **Equipe** no sidebar desktop e no menu mobile (Mais), apontando para `/#/configuracoes/equipe`.
   - Excluir profissional não fazia nada quando havia agendamento/financeiro vinculado (FK sem `ON DELETE`). Agora usa exclusão lógica (`deleted_at` + `active=false`); o dono não pode ser removido.

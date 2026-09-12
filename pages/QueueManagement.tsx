@@ -28,7 +28,7 @@ import type { QueueRecord } from '@/types/queue';
 
 export const QueueManagement: React.FC = () => {
   const navigate = useNavigate();
-  const { role, region, companyId, teamMemberId } = useAuth();
+  const { role, region, companyId, teamMemberId, businessName } = useAuth();
   const isStaff = role === 'staff';
   const { showToast } = useToast();
   const tenantId = companyId ?? '';
@@ -370,13 +370,14 @@ export const QueueManagement: React.FC = () => {
       <QueueManualAddSheet
         open={showAdd}
         companyId={tenantId}
+        slug={businessSlug ?? null}
+        businessName={businessName}
         region={region === 'PT' ? 'PT' : 'BR'}
         mode={mode}
         services={services}
         teamMembers={teamMembers}
         onClose={() => setShowAdd(false)}
         onAdded={() => {
-          setShowAdd(false);
           void refetchEntries();
         }}
       />

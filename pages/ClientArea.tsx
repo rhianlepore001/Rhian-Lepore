@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { ClientQueuePanel } from '../components/queue/ClientQueuePanel';
-import { hasQueueQrVisit } from '../services/queue';
+import { findNameToOpenPublicArea, hasQueueQrVisit } from '../services/queue';
 import { supabase } from '../lib/supabase';
 import { usePublicClient } from '../contexts/PublicClientContext';
 import { useBusinessProfileBySlug, useBusinessSettings } from '../hooks/usePublicBooking';
@@ -211,14 +211,10 @@ export const ClientArea: React.FC = () => {
             const found = await login(phone, business.id);
             if (found) return;
 
-            const { data: bookingRows } = await supabase.rpc('get_active_booking_by_phone', {
-                p_phone: phone,
-                p_business_id: business.id,
-            });
-            const activeBooking = bookingRows?.[0] as { customer_name?: string } | undefined;
-            if (activeBooking?.customer_name) {
+            const recoveredName = await findNameToOpenPublicArea(business.id, phone);
+            if (recoveredName) {
                 const recovered = await register({
-                    name: activeBooking.customer_name,
+                    name: recoveredName,
                     phone,
                     photo_url: null,
                     business_id: business.id,
@@ -227,8 +223,8 @@ export const ClientArea: React.FC = () => {
             }
 
             setGateStep('register');
-        } catch {
-            setGateError('Erro ao verificar. Tente novamente.');
+        } catch (error) {
+            setGateError(error instanceof Error ? error.message : 'Erro ao verificar. Tente novamente.');
         } finally {
             setGateSubmitting(false);
         }

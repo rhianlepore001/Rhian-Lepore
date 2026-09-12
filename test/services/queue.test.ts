@@ -4,6 +4,7 @@ import {
   calcEstimatedWaitMinutes,
   confirmQueuePayment,
   findActiveQueueEntryByPhone,
+  findNameToOpenPublicArea,
   finishQueueEntry,
   hydrateQueuePublicBoard,
   isCallingExpired,
@@ -441,6 +442,71 @@ describe('queue service', () => {
       p_client_phone: '11988888888',
     }));
     expect(insertMock).not.toHaveBeenCalled();
+  });
+
+  it('nao bloqueia entrada manual se a busca de duplicata falhar', async () => {
+    (supabase.rpc as any)
+      .mockResolvedValueOnce({ data: null, error: { message: 'timeout' } })
+      .mockResolvedValueOnce({ data: { id: 'queue-003' }, error: null })
+      .mockResolvedValueOnce({
+        data: [{
+          id: 'queue-003',
+          business_id: 'business-001',
+          client_name: 'Maria',
+          client_phone: '11988888888',
+          status: 'waiting',
+          joined_at: '2026-05-30T10:00:00.000Z',
+        }],
+        error: null,
+      });
+
+    await addManualQueueEntry({
+      businessId: 'business-001',
+      clientName: 'Maria',
+      clientPhone: '11988888888',
+      serviceId: 'service-001',
+    });
+
+    expect(supabase.rpc).toHaveBeenCalledWith('add_manual_queue_entry', expect.objectContaining({
+      p_client_name: 'Maria',
+    }));
+  });
+
+  it('recupera o nome da senha ativa para abrir a Minha Area', async () => {
+    (supabase.rpc as any).mockResolvedValueOnce({
+      data: [{
+        id: 'queue-001',
+        business_id: 'business-001',
+        client_name: 'Tales Furtado',
+        client_phone: '11939064172',
+        status: 'waiting',
+        joined_at: '2026-09-11T10:00:00.000Z',
+      }],
+      error: null,
+    });
+
+    await expect(findNameToOpenPublicArea('business-001', '11939064172')).resolves.toBe('Tales Furtado');
+  });
+
+  it('cai no agendamento se nao houver senha na fila', async () => {
+    (supabase.rpc as any)
+      .mockResolvedValueOnce({ data: [], error: null })
+      .mockResolvedValueOnce({ data: [{ customer_name: 'Joana' }], error: null });
+
+    await expect(findNameToOpenPublicArea('business-001', '11900000000')).resolves.toBe('Joana');
+    expect(supabase.rpc).toHaveBeenCalledWith('get_active_booking_by_phone', {
+      p_phone: '11900000000',
+      p_business_id: 'business-001',
+    });
+  });
+
+  it('nao trata falha de consulta como cliente sem cadastro', async () => {
+    (supabase.rpc as any)
+      .mockResolvedValueOnce({ data: null, error: { message: 'timeout' } })
+      .mockResolvedValueOnce({ data: null, error: { message: 'timeout' } });
+
+    await expect(findNameToOpenPublicArea('business-001', '11900000000'))
+      .rejects.toThrow('Não foi possível verificar sua senha. Tente de novo.');
   });
 
   it('atualiza status somente pela RPC', async () => {

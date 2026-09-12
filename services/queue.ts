@@ -197,7 +197,10 @@ function rpcErrorText(error: unknown): string {
 
 export function isAlreadyInQueueError(error: unknown): boolean {
   const text = rpcErrorText(error).toLowerCase();
-  return text.includes('já está na fila') || text.includes('ja esta na fila');
+  return text.includes('já está na fila')
+    || text.includes('ja esta na fila')
+    || text.includes('duplicate key')
+    || text.includes('uq_queue_active_phone');
 }
 
 export function queueJoinUserMessage(error: unknown, fallback = 'Não foi possível entrar na fila. Tente de novo ou fale com a equipe no balcão.'): string {
@@ -213,8 +216,14 @@ export function queueJoinUserMessage(error: unknown, fallback = 'Não foi possí
   if (lower.includes('fila indisponivel') || lower.includes('fila indisponível')) {
     return 'A fila não está aberta no momento. Fale com a equipe no balcão.';
   }
-  if (lower.includes('qr de colaborador') || lower.includes('qr nao esta ativo') || lower.includes('qr não está ativo')) {
+  if (lower.includes('qr de colaborador obrigatorio') || lower.includes('qr de colaborador obrigatório')) {
+    return 'Escolha em qual fila o cliente vai entrar.';
+  }
+  if (lower.includes('qr nao esta ativo') || lower.includes('qr não está ativo')) {
     return 'Este QR Code não está mais ativo. Use o QR Code geral do estabelecimento.';
+  }
+  if (lower.includes('invalid input syntax') && lower.includes('uuid')) {
+    return 'Este serviço não está mais disponível. Escolha outro e tente de novo.';
   }
   if (lower.includes('limite de usos')) return 'Sua assinatura já atingiu o limite de usos deste mês.';
   if (lower.includes('assinatura')) return 'Sua assinatura não cobre este serviço. Escolha outra forma de pagamento.';
@@ -415,12 +424,50 @@ export async function joinQueue(input: JoinQueueInput): Promise<QueueRecord> {
   return rememberJoinedEntry(slug, fallbackJoinedRecord(parsed, joinedId), parsed.clientPhone);
 }
 
-export async function addManualQueueEntry(input: ManualQueueInput): Promise<QueueRecord> {
-  const parsed = manualQueueInputSchema.parse(input);
-  const duplicate = await findActiveQueueEntryByPhone(parsed.businessId, parsed.clientPhone);
+export async function findNameToOpenPublicArea(businessId: string, phone: string): Promise<string | null> {
+  let queueFailed = false;
+  try {
+    const queue = await findActiveQueueEntryByPhone(businessId, phone);
+    const queueName = queue?.client_name?.trim();
+    if (queueName) return queueName;
+  } catch {
+    queueFailed = true;
+  }
 
-  if (duplicate) {
-    throw new Error(`Este telefone já está na fila (${duplicate.client_name}).`);
+  const { data, error } = await supabase.rpc('get_active_booking_by_phone', {
+    p_phone: phone,
+    p_business_id: businessId,
+  });
+  if (!error) {
+    const row = Array.isArray(data) ? data[0] : data;
+    const bookingName = (row as { customer_name?: string } | null | undefined)?.customer_name?.trim();
+    if (bookingName) return bookingName;
+  }
+
+  if (queueFailed || error) {
+    throw new Error('Não foi possível verificar sua senha. Tente de novo.');
+  }
+  return null;
+}
+
+export async function addManualQueueEntry(input: ManualQueueInput): Promise<QueueRecord> {
+  let parsed: ManualQueueInput;
+  try {
+    parsed = manualQueueInputSchema.parse(input);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      throw new Error('Confira nome, telefone e serviço e tente de novo.');
+    }
+    throw error;
+  }
+
+  try {
+    const duplicate = await findActiveQueueEntryByPhone(parsed.businessId, parsed.clientPhone);
+    if (duplicate) {
+      throw new Error(`Este telefone já está na fila (${duplicate.client_name}).`);
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('já está na fila')) throw error;
   }
 
   const { data, error } = await supabase.rpc('add_manual_queue_entry', {

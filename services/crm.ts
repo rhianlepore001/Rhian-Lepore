@@ -219,6 +219,48 @@ export function filterEnrichedClients(
   });
 }
 
+export interface QueuePickerClient {
+  id: string;
+  name: string;
+  phone: string | null;
+}
+
+export async function listActiveClientsForPicker(companyId: string): Promise<QueuePickerClient[]> {
+  if (!companyId) return [];
+
+  const { data, error } = await supabase
+    .from('clients')
+    .select('id, name, phone')
+    .eq('user_id', companyId)
+    .neq('is_active', false)
+    .order('name', { ascending: true });
+
+  if (error) throw error;
+
+  return (data ?? [])
+    .filter((row): row is { id: string; name: string; phone: string | null } => Boolean(row?.id && row?.name))
+    .map((row) => ({
+      id: row.id,
+      name: row.name,
+      phone: row.phone ?? null,
+    }));
+}
+
+export async function ensureClientFromQueue(companyId: string, name: string, phone: string): Promise<void> {
+  try {
+    const existing = await findClientByPhone(companyId, phone);
+    if (existing) return;
+    await createClient({
+      companyId,
+      name,
+      phone,
+      source: 'queue_manual',
+    });
+  } catch {
+    // Cadastro no CRM não pode barrar quem já entrou na fila.
+  }
+}
+
 export async function createClient(input: CreateClientInput): Promise<void> {
   const parsed = createClientInputSchema.parse(input);
 

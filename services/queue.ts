@@ -475,7 +475,7 @@ export async function addManualQueueEntry(input: ManualQueueInput): Promise<Queu
     p_client_phone: parsed.clientPhone,
     p_service_id: parsed.serviceId ?? null,
     p_professional_id: parsed.professionalId ?? null,
-    p_payment_method: parsed.paymentMethod ?? 'cash',
+    p_payment_method: parsed.paymentMethod ?? null,
   });
 
   if (error) {

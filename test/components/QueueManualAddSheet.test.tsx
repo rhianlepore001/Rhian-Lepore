@@ -93,15 +93,15 @@ describe('QueueManualAddSheet', () => {
     await user.click(screen.getByText('Buscar por nome ou telefone'));
     await user.click(screen.getByText('Tales Furtado'));
     await user.selectOptions(screen.getByLabelText('Serviço'), 'svc-corte');
-    await user.selectOptions(screen.getByLabelText('Forma de pagamento'), 'pix');
+    expect(screen.queryByLabelText('Forma de pagamento')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Adicionar à fila' }));
 
     await waitFor(() => expect(addManualQueueEntry).toHaveBeenCalledWith(expect.objectContaining({
       clientName: 'Tales Furtado',
       clientPhone: '11939064172',
       serviceId: 'svc-corte',
-      paymentMethod: 'pix',
     })));
+    expect((addManualQueueEntry as ReturnType<typeof vi.fn>).mock.calls[0][0]).not.toHaveProperty('paymentMethod');
     expect(ensureClientFromQueue).not.toHaveBeenCalled();
     expect(onAdded).toHaveBeenCalled();
     const success = await screen.findByTestId('queue-manual-success');
@@ -121,7 +121,6 @@ describe('QueueManualAddSheet', () => {
     await user.type(screen.getByLabelText('Nome'), 'Maria Nova');
     await user.type(screen.getByPlaceholderText('(99) 99999-9999'), '11988887777');
     await user.selectOptions(screen.getByLabelText('Serviço'), 'svc-corte');
-    await user.selectOptions(screen.getByLabelText('Forma de pagamento'), 'cash');
     await user.click(screen.getByRole('button', { name: 'Adicionar à fila' }));
 
     await waitFor(() => expect(addManualQueueEntry).toHaveBeenCalled());
@@ -138,7 +137,6 @@ describe('QueueManualAddSheet', () => {
     await user.click(screen.getByText('Buscar por nome ou telefone'));
     await user.click(screen.getByText('Sem Telefone'));
     await user.selectOptions(screen.getByLabelText('Serviço'), 'svc-corte');
-    await user.selectOptions(screen.getByLabelText('Forma de pagamento'), 'pix');
     await user.click(screen.getByRole('button', { name: 'Adicionar à fila' }));
 
     expect(addManualQueueEntry).not.toHaveBeenCalled();

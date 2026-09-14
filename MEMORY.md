@@ -49,10 +49,11 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
-- **Fila — modal sem forma de pagamento (13 Set 2026):**
-  - Branch `cursor/fila-modal-sem-pagamento-0e8b`.
+- **Fila — modal sem forma de pagamento (14 Set 2026):**
+  - PR #67 → `main`. Deploy Vercel no push `main`.
   - “Adicionar cliente à fila” não pede pagamento: a cobrança fica no checkout ao finalizar o atendimento.
   - Entrada manual envia `payment_method` nulo (status `unpaid`) em vez de default `cash`.
+  - Gates: typecheck, lint, build, 602 testes. CI verde no PR.
 
 - **Fila — lista de clientes + link de acompanhamento (11 Set 2026):**
   - Branch `cursor/fila-manual-add-share-37be` · PR #66.

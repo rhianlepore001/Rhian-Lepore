@@ -104,7 +104,7 @@ test.describe('Fila — entrada manual e link', () => {
     await page.getByText('Buscar por nome ou telefone').click();
     await page.getByText('Tales Furtado').click();
     await page.getByLabel('Serviço').selectOption('svc-corte');
-    await page.getByLabel('Forma de pagamento').selectOption('pix');
+    await expect(page.getByLabel('Forma de pagamento')).toHaveCount(0);
     await page.getByRole('button', { name: 'Adicionar à fila' }).click();
 
     await expect(page.getByTestId('queue-manual-success')).toBeVisible();
@@ -125,7 +125,6 @@ test.describe('Fila — entrada manual e link', () => {
     const phone = page.locator('input[type="tel"], input[inputmode="numeric"]').first();
     await phone.fill('11988887777');
     await page.getByLabel('Serviço').selectOption('svc-corte');
-    await page.getByLabel('Forma de pagamento').selectOption('cash');
     await page.getByRole('button', { name: 'Adicionar à fila' }).click();
 
     await expect(page.getByTestId('queue-manual-success')).toBeVisible();

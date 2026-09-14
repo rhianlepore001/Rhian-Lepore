@@ -9,7 +9,6 @@ import { ensureClientFromQueue, listActiveClientsForPicker } from '@/services/cr
 import { addManualQueueEntry, queueJoinUserMessage } from '@/services/queue';
 import type { QueueMode } from '@/types/queue';
 import type { ServiceItem } from '@/types/serviceSettings';
-import type { CheckoutPaymentMethod } from '@/types/scheduling';
 import { buildWhatsAppLink, formatCurrency, formatPhone, type Region } from '@/utils/formatters';
 import {
   buildQueueTrackingMessage,
@@ -83,7 +82,6 @@ export const QueueManualAddSheet: React.FC<QueueManualAddSheetProps> = ({
   const [phone, setPhone] = useState('');
   const [serviceId, setServiceId] = useState('');
   const [professionalId, setProfessionalId] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethod | ''>('');
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const [addedName, setAddedName] = useState('');
@@ -95,20 +93,6 @@ export const QueueManualAddSheet: React.FC<QueueManualAddSheetProps> = ({
     enabled: open && Boolean(companyId),
     staleTime: 30_000,
   });
-
-  const paymentOptions = region === 'PT'
-    ? [
-      { value: 'cash', label: 'Dinheiro' },
-      { value: 'mbway', label: 'MB WAY' },
-      { value: 'debit', label: 'Débito' },
-      { value: 'credit', label: 'Crédito' },
-    ]
-    : [
-      { value: 'pix', label: 'Pix' },
-      { value: 'cash', label: 'Dinheiro' },
-      { value: 'debit', label: 'Débito' },
-      { value: 'credit', label: 'Crédito' },
-    ];
 
   const selectedClient = useMemo(
     () => clients.find((client) => client.id === selectedClientId) ?? null,
@@ -132,7 +116,6 @@ export const QueueManualAddSheet: React.FC<QueueManualAddSheetProps> = ({
     setPhone('');
     setServiceId('');
     setProfessionalId('');
-    setPaymentMethod('');
     setCopied(false);
     setAddedName('');
     setAddedPhone('');
@@ -147,7 +130,6 @@ export const QueueManualAddSheet: React.FC<QueueManualAddSheetProps> = ({
     setPhone('');
     setServiceId('');
     setProfessionalId('');
-    setPaymentMethod('');
     setCopied(false);
     setAddedName('');
     setAddedPhone('');
@@ -181,17 +163,13 @@ export const QueueManualAddSheet: React.FC<QueueManualAddSheetProps> = ({
       showToast(
         source === 'list' && selectedClient && !selectedClient.phone
           ? 'Este cliente não tem telefone cadastrado. Complete o cadastro ou use a opção sem cadastro.'
-          : 'Preencha cliente, serviço e forma de pagamento.',
+          : 'Preencha cliente e serviço.',
         'error',
       );
       return;
     }
     if (mode === 'per_professional' && !professionalId) {
       showToast('Escolha em qual fila o cliente vai entrar.', 'error');
-      return;
-    }
-    if (!paymentMethod) {
-      showToast('Informe como o cliente vai pagar.', 'error');
       return;
     }
     setSaving(true);
@@ -202,7 +180,6 @@ export const QueueManualAddSheet: React.FC<QueueManualAddSheetProps> = ({
         clientPhone,
         serviceId,
         professionalId: professionalId || null,
-        paymentMethod,
       });
       if (source === 'walkin') {
         void ensureClientFromQueue(companyId, clientName, clientPhone);
@@ -414,13 +391,6 @@ export const QueueManualAddSheet: React.FC<QueueManualAddSheetProps> = ({
               onChange={(event) => setProfessionalId(event.target.value)}
             />
           )}
-          <Select
-            label="Forma de pagamento"
-            placeholder="Como o cliente vai pagar"
-            value={paymentMethod}
-            options={paymentOptions}
-            onChange={(event) => setPaymentMethod(event.target.value as CheckoutPaymentMethod)}
-          />
           <Button variant="primary" fullWidth loading={saving} onClick={() => void handleSubmit()}>
             Adicionar à fila
           </Button>

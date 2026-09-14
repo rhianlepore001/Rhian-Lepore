@@ -440,6 +440,7 @@ describe('queue service', () => {
     expect(supabase.rpc).toHaveBeenCalledWith('add_manual_queue_entry', expect.objectContaining({
       p_client_name: 'Maria',
       p_client_phone: '11988888888',
+      p_payment_method: null,
     }));
     expect(insertMock).not.toHaveBeenCalled();
   });

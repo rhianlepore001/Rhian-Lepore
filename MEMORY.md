@@ -9,6 +9,12 @@
 
 ---
 
+## 📋 Inventário landing / seed / prints (15 Set 2026)
+
+Read-only. Relatório em `docs/landing-mvp-inventario.md`. **Não** mergear `feat/landing-publica-nichos` (210 commits atrás). Código novo da LP sempre a partir de `main`. Assets reutilizáveis: vídeos em `public/landing/videos/` nessa feat (cherry-pick de arquivo). Trial no produto = **10 dias**; 20 dias é decisão futura + copy. Sem sales page na main hoje (`/` → login).
+
+---
+
 ## 🎨 Design System v1.1 — F0–F4 CONCLUÍDAS (12 Jul 2026, branch `design/ds-v1.1-polish`)
 
 Auditoria de design (`design-audit.md` + `dashboard-proposal.html` + `components-showcase.html`) implementada em 4 commits (F0–F3):

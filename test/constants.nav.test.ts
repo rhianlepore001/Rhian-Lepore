@@ -3,7 +3,9 @@ import {
   CLUB_OWNER_NAV,
   NAVIGATION_ITEMS,
   SETTINGS_ITEMS,
+  TRIAL_DAYS,
   findActiveSettingsItem,
+  getTrialEndsAt,
   isPathActive,
 } from '@/constants';
 
@@ -40,5 +42,13 @@ describe('navegação do Clube (dono)', () => {
 
   it('não confunde Ajustes com a rota pública /clube/:slug', () => {
     expect(isPathActive('/clube/minha-barbearia', '/clube/assinantes')).toBe(false);
+  });
+});
+
+describe('trial do produto AgendiX', () => {
+  it('dura 20 dias e calcula trial_ends_at a partir disso', () => {
+    expect(TRIAL_DAYS).toBe(20);
+    const from = Date.UTC(2026, 8, 15);
+    expect(getTrialEndsAt(from)).toBe(new Date(from + 20 * 24 * 60 * 60 * 1000).toISOString());
   });
 });

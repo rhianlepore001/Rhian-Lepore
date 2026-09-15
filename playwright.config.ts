@@ -44,7 +44,7 @@ export default defineConfig({
     {
       // Os specs legados rodam sem storageState (sem login)
       name: 'chromium-legacy',
-      testIgnore: /auth\.setup\.ts|sprint5-audit\.spec\.ts/,
+      testIgnore: /auth\.setup\.ts|sprint5-audit\.spec\.ts|visual-critique/,
       use: {
         browserName: 'chromium',
         viewport: { width: 1440, height: 900 },

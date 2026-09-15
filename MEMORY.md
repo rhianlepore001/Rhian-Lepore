@@ -53,6 +53,15 @@ Script isolado em `scripts/demo-seed/` + doc `docs/demo-seed.md`. Dois tenants f
 
 ## 🛠️ Trabalho recente
 
+- **Crítica visual Playwright (15 Set 2026):**
+  - `npm run visual:critique` captura PNGs em 1280×800 e 390×844 em `artifacts/visual-critique/` (gitignored).
+  - Docs: `e2e/visual-critique/README.md` + `CRITIQUE.template.md`. Sem secrets; auth via env/storageState; landing `/` pulada se for só redirect.
+  - Não constrói landing de marketing.
+- **Trial do produto: 10 → 20 dias (15 Set 2026):**
+  - Constante única `TRIAL_DAYS` em `constants.ts`; cadastro grava `trial_ends_at` com 20 dias.
+  - Copy de Login, Termos e paywall alinhada a 20 dias. Stripe checkout não define `trial_period_days` (trial é local).
+  - Contas já existentes não são estendidas.
+
 - **Fila — modal sem forma de pagamento (14 Set 2026):**
   - PR #67 → `main`. Deploy Vercel no push `main`.
   - “Adicionar cliente à fila” não pede pagamento: a cobrança fica no checkout ao finalizar o atendimento.

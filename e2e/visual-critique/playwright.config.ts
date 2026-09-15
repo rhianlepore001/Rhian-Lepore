@@ -4,8 +4,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-loadEnv({ path: path.join(root, '.env') });
-loadEnv({ path: path.join(root, '.env.local') });
+loadEnv({ path: path.join(root, '.env'), quiet: true });
+loadEnv({ path: path.join(root, '.env.local'), quiet: true });
 
 const baseURL = process.env.E2E_BASE_URL || 'http://localhost:3000';
 

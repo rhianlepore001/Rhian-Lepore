@@ -12,8 +12,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-loadEnv({ path: path.join(ROOT, '.env') });
-loadEnv({ path: path.join(ROOT, '.env.local') });
+loadEnv({ path: path.join(ROOT, '.env'), quiet: true });
+loadEnv({ path: path.join(ROOT, '.env.local'), quiet: true });
 
 const BASE = process.env.E2E_BASE_URL || 'http://localhost:3000';
 const OUT_DIR = path.join(ROOT, 'artifacts/visual-critique');
@@ -174,6 +174,15 @@ function hashOf(url: string): string {
   }
 }
 
+async function waitUntilNotLoading(page: Page): Promise<void> {
+  const loc = page.getByText(/preparando os horários|preparando tudo para você/i);
+  await loc.first().waitFor({ timeout: 4000 }).catch(() => undefined);
+  if ((await loc.count()) > 0) {
+    await loc.first().waitFor({ state: 'hidden', timeout: 25000 }).catch(() => undefined);
+  }
+  await page.waitForTimeout(500);
+}
+
 async function settle(page: Page): Promise<void> {
   await page.waitForLoadState('domcontentloaded');
   try {
@@ -239,6 +248,7 @@ async function gotoHash(page: Page, hashPath: string): Promise<void> {
   const url = hashPath.startsWith('http') ? hashPath : `${BASE}${hashPath.startsWith('/') ? hashPath : `/${hashPath}`}`;
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   await settle(page);
+  await waitUntilNotLoading(page);
 }
 
 async function looksLikeLogin(page: Page): Promise<boolean> {

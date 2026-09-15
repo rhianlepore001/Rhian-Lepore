@@ -13,7 +13,8 @@ npx playwright install chromium
 # 2) Credenciais só em .env / .env.local (gitignored) — nunca no código
 set -a && source .env.local 2>/dev/null || source .env 2>/dev/null; set +a
 
-# 3) Captura (sobe `npm run dev` se a base for localhost)
+# 3) Captura (sobe `npm run dev` se a base for localhost).
+#    Local exige as mesmas VITE_SUPABASE_* do app (`.env.local`).
 npm run visual:critique
 ```
 

@@ -1,5 +1,7 @@
 # Setup do ambiente de teste — 1 mês de dados sintéticos
 
+> **Landing / prints:** não use este script. Ele alimenta `bob.teste@gmail.com` e não fecha slug/financeiro/clube/fila v2. Use [`docs/demo-seed.md`](../../docs/demo-seed.md).
+
 Antes de rodar a auditoria com os agentes especialistas, você precisa de um tenant com densidade de dados realista. Sem isso, o agente não consegue testar cenários como "agendamento no passado", "comissão de barbeiro que faltou", "fila com ciclo completo".
 
 ## O que o script cria

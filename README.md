@@ -20,6 +20,15 @@ VITE_SUPABASE_ANON_KEY=
 VITE_OPENROUTER_API_KEY=
 ```
 
+## Seed demo (prints)
+
+Tenants fictícios isolados (barber + beauty), sem misturar dado real: [`docs/demo-seed.md`](docs/demo-seed.md).
+
+```bash
+npm run seed:demo
+# escrita: npm run seed:demo -- --apply --confirm=SEED_DEMO_TENANTS
+```
+
 ## Comandos
 
 ```bash

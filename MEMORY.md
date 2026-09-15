@@ -53,6 +53,9 @@ Script isolado em `scripts/demo-seed/` + doc `docs/demo-seed.md`. Dois tenants f
 
 ## 🛠️ Trabalho recente
 
+- **Backup pré-landing infra (15 Set 2026):**
+  - Tag anotada e branch `backup/pre-landing-infra-20260915` apontam para `77baa9fa37b8c16a263fb4e3b41e47bdc369741a` (`main` antes de #69/#71/#72).
+  - Seed demo **não** aplicado neste run (sem `SUPABASE_SERVICE_ROLE_KEY` / `DEMO_SEED_PASSWORD` no ambiente).
 - **Crítica visual Playwright (15 Set 2026):**
   - `npm run visual:critique` captura PNGs em 1280×800 e 390×844 em `artifacts/visual-critique/` (gitignored).
   - Docs: `e2e/visual-critique/README.md` + `CRITIQUE.template.md`. Sem secrets; auth via env/storageState; landing `/` pulada se for só redirect.

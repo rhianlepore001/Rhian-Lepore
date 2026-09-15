@@ -48,6 +48,7 @@ describe('Login page', () => {
     });
     expect(localStorage.getItem('agendix_color_mode')).toBe('light');
     expect(screen.getByTestId('category-barber')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /criar conta — 20 dias grátis/i })).toBeInTheDocument();
   });
 
   it('shows, focuses and scrolls to the error message when login fails', async () => {

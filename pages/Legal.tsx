@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
+import { TRIAL_DAYS } from '../constants';
 
 const SECTION_CLASS = 'space-y-2';
 const H2_CLASS = 'font-heading text-xl font-bold tracking-tight';
@@ -22,7 +23,7 @@ export const Legal: React.FC = () => {
                 <h1 className="font-heading text-3xl font-bold tracking-tight mb-2">
                     {isPrivacy ? 'Política de Privacidade' : 'Termos de Uso'}
                 </h1>
-                <p className="text-xs text-[var(--color-text-muted)] mb-10">Última atualização: julho de 2026</p>
+                <p className="text-xs text-[var(--color-text-muted)] mb-10">Última atualização: setembro de 2026</p>
 
                 {isPrivacy ? (
                     <div className="space-y-8">
@@ -74,7 +75,7 @@ export const Legal: React.FC = () => {
                         <section className={SECTION_CLASS}>
                             <h2 className={H2_CLASS}>3. Assinatura e teste</h2>
                             <p className={P_CLASS}>
-                                Novas contas têm 10 dias de teste grátis. Após o período, o uso continuado requer
+                                Novas contas têm {TRIAL_DAYS} dias de teste grátis. Após o período, o uso continuado requer
                                 assinatura ativa. Cancelamentos podem ser feitos a qualquer momento nas configurações.
                             </p>
                         </section>

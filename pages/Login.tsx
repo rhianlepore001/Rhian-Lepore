@@ -12,6 +12,7 @@ import { getBusinessCopy } from '../utils/businessCopy';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { applyPublicAuthTheme } from '../utils/publicAuthTheme';
+import { TRIAL_DAYS } from '../constants';
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
@@ -191,7 +192,7 @@ export const Login: React.FC = () => {
                             to="/register"
                             className="w-full flex items-center justify-center py-3.5 rounded-xl border border-[var(--color-text)]/15 hover:border-[var(--color-text)]/25 text-[var(--color-text)] text-sm font-mono uppercase tracking-widest transition-all duration-200 bg-[var(--color-card-hover)] hover:bg-[var(--color-card-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]"
                         >
-                            Criar conta — 10 dias grátis
+                            Criar conta — {TRIAL_DAYS} dias grátis
                         </Link>
                     </div>
                 </div>

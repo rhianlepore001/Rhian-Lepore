@@ -49,6 +49,11 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Trial do produto: 10 → 20 dias (15 Set 2026):**
+  - Constante única `TRIAL_DAYS` em `constants.ts`; cadastro grava `trial_ends_at` com 20 dias.
+  - Copy de Login, Termos e paywall alinhada a 20 dias. Stripe checkout não define `trial_period_days` (trial é local).
+  - Contas já existentes não são estendidas.
+
 - **Fila — modal sem forma de pagamento (14 Set 2026):**
   - PR #67 → `main`. Deploy Vercel no push `main`.
   - “Adicionar cliente à fila” não pede pagamento: a cobrança fica no checkout ao finalizar o atendimento.

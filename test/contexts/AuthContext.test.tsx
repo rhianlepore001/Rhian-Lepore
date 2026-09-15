@@ -3,6 +3,7 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import React from 'react';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { TRIAL_DAYS } from '@/constants';
 
 // Helper para envolver hooks com o provider
 const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -281,6 +282,9 @@ describe('AuthContext', () => {
             subscription_status: 'trial',
             aios_enabled: true,
         });
+        const trialMs = new Date(insertedProfiles[0].trial_ends_at).getTime() - Date.now();
+        const expectedMs = TRIAL_DAYS * 24 * 60 * 60 * 1000;
+        expect(Math.abs(trialMs - expectedMs)).toBeLessThan(5_000);
         expect(supabase.rpc).toHaveBeenCalledWith('upsert_onboarding_progress', {
             p_company_id: mockUser.id,
             p_current_step: 1,

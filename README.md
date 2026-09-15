@@ -28,6 +28,7 @@ npm run build        # produção (saída em dist/)
 npm run lint         # ESLint (falha em warnings)
 npm run typecheck    # TypeScript check
 npm test             # testes com Vitest
+npm run seed:demo    # dry-run do seed DEMO (prints). Ver docs/demo-seed.md
 ```
 
 ## Stack

@@ -2,6 +2,8 @@
 
 Antes de rodar a auditoria com os agentes especialistas, você precisa de um tenant com densidade de dados realista. Sem isso, o agente não consegue testar cenários como "agendamento no passado", "comissão de barbeiro que faltou", "fila com ciclo completo".
 
+Para **prints da landing** (dois tenants DEMO isolados, slug, financeiro, clube, fila v2), use `scripts/seed-demo.mjs` — ver `docs/demo-seed.md`. Este seed legado não fecha esse checklist e não deve rodar “na conta que aparecer” em produção.
+
 ## O que o script cria
 
 | Item | Quantidade | Configuração |

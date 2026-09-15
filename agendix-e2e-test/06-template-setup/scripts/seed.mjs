@@ -2,6 +2,10 @@
 // Popula o tenant da conta de teste com 1 mês de dados sintéticos
 // (4 colaboradores, 50 clientes, 150 agendamentos, fila, NPS).
 //
+// ⚠ NÃO é o seed de prints da landing. Esse está em scripts/seed-demo.mjs
+//   (docs/demo-seed.md). Este arquivo hardcoded bob.teste@gmail.com e NÃO
+//   fecha slug, financeiro, clube, fila v2 nem public_bookings.
+//
 // USO:
 //   1. cd /root/projetos/Rhian-Lepore
 //   2. Confirme que .env.local tem VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY

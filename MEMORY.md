@@ -49,6 +49,10 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Seed DEMO isolado para prints da landing (15 Set 2026):**
+  - Tooling em `scripts/seed-demo.mjs` + `docs/demo-seed.md`. Dois tenants fictícios (barber + beauty), e-mails `agendix.demo.*@example.com`.
+  - Dry-run por padrão; escrita só com confirm; não mexe em tenant real. VM do agente não aplica no banco (sem service role local).
+
 - **Fila — modal sem forma de pagamento (14 Set 2026):**
   - PR #67 → `main`. Deploy Vercel no push `main`.
   - “Adicionar cliente à fila” não pede pagamento: a cobrança fica no checkout ao finalizar o atendimento.

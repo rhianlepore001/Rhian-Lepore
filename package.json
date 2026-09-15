@@ -14,7 +14,8 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "backup": "node scripts/backup-supabase.js"
+    "backup": "node scripts/backup-supabase.js",
+    "visual:critique": "playwright test --config e2e/visual-critique/playwright.config.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

@@ -139,3 +139,6 @@ e2e/.auth/
 
 # Local visual QA screenshots
 screenshot_*.webp
+
+# Playwright visual critique (PNGs + CRITIQUE preenchido — podem ter PII)
+artifacts/visual-critique/

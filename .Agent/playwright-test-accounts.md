@@ -39,6 +39,7 @@ Base URL: `E2E_BASE_URL` (default `http://localhost:3000`).
 set -a && source .env && set +a
 npm run dev   # em outro terminal, porta 3000
 npx playwright test --project=chromium   # ou script de auditoria visual
+npm run visual:critique                  # PNGs 1280×800 + 390×844 → artifacts/visual-critique/
 ```
 
 Login manual no browser: `#/login` → e-mail/senha do gestor ou colaborador.

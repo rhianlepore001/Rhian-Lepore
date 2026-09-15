@@ -49,6 +49,10 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Crítica visual Playwright (15 Set 2026):**
+  - `npm run visual:critique` captura PNGs em 1280×800 e 390×844 em `artifacts/visual-critique/` (gitignored).
+  - Docs: `e2e/visual-critique/README.md` + `CRITIQUE.template.md`. Sem secrets; auth via env/storageState; landing `/` pulada se for só redirect.
+  - Não constrói landing de marketing.
 - **Trial do produto: 10 → 20 dias (15 Set 2026):**
   - Constante única `TRIAL_DAYS` em `constants.ts`; cadastro grava `trial_ends_at` com 20 dias.
   - Copy de Login, Termos e paywall alinhada a 20 dias. Stripe checkout não define `trial_period_days` (trial é local).

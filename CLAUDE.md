@@ -21,6 +21,7 @@ npm run build        # build produção
 npm run lint         # ESLint (strict — falha em warnings)
 npm run typecheck    # TypeScript check
 npm test             # Vitest
+npm run visual:critique  # PNGs desktop+mobile → artifacts/visual-critique/
 ```
 
 ---
@@ -86,6 +87,7 @@ specs/
 - **Novo componente:** criar em `components/`, importar onde usar
 - **Mudança no banco:** criar migration em `supabase/migrations/`
 - **Nova spec de feature:** usar template em `specs/_template.md`
+- **Crítica visual:** `npm run visual:critique` → PNGs em `artifacts/visual-critique/` (gitignored) + template `e2e/visual-critique/CRITIQUE.template.md`. Ver `e2e/visual-critique/README.md`.
 
 ---
 

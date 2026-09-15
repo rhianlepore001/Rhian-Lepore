@@ -151,6 +151,8 @@ Duas metades: pixel e número. As duas são obrigatórias — pixel sozinho gera
 
 ### 7.1 Captura visual (Playwright, você mesmo)
 
+Para uma matriz rápida (login/gateway, landing se existir, book, produto autenticado) em **1280×800** e **390×844**, use `npm run visual:critique` (`e2e/visual-critique/README.md`). A matriz desta fase continua a de baixo (4 temas × 1440).
+
 Matriz: **4 combinações de tema** (`barber×dark`, `barber×light`, `beauty×dark`, `beauty×light`) × **superfícies do §7.3** × **2 viewports** (390×844 prioritário, 1440×900 secundário).
 
 Regras de captura: mesmo seed, mesmo estado, nomes determinísticos `docs/ux-pro/shots/<tema>-<modo>/<rota>-<viewport>.png`. Capture também os estados transversais: modal aberto, toast visível, lista vazia, skeleton em carregamento, formulário com erro de validação.

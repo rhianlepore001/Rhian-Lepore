@@ -23,6 +23,8 @@ agendix-e2e-test/
 └── assets/                   # screenshots, vídeos, exports
 ```
 
+Captura rápida de PNGs (1280×800 + 390×844) para crítica pontual: `npm run visual:critique` — docs em `e2e/visual-critique/README.md`. Não substitui os loops desta pasta.
+
 ## Como rodar (resumo)
 
 1. Leia `00-planejamento/LOOP-MANIFESTO.md` — define o que é cada loop, como você intervém, e os gates de saída.

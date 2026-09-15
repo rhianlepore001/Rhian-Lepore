@@ -49,6 +49,11 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 
 ## 🛠️ Trabalho recente
 
+- **Crítica visual Playwright (15 Set 2026):**
+  - `npm run visual:critique` captura PNGs em 1280×800 e 390×844 em `artifacts/visual-critique/` (gitignored).
+  - Docs: `e2e/visual-critique/README.md` + `CRITIQUE.template.md`. Sem secrets; auth via env/storageState; landing `/` pulada se for só redirect.
+  - Não altera trial (10 dias) nem constrói landing de marketing.
+
 - **Fila — modal sem forma de pagamento (14 Set 2026):**
   - PR #67 → `main`. Deploy Vercel no push `main`.
   - “Adicionar cliente à fila” não pede pagamento: a cobrança fica no checkout ao finalizar o atendimento.

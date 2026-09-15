@@ -47,6 +47,10 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 - HashRouter (`/#/rota`); páginas com `React.lazy()` dentro de `<Suspense>`.
 - IA via OpenRouter (`VITE_OPENROUTER_API_KEY`) — opcional/pós-MVP; ausência degrada sem quebrar.
 
+## 🧪 Seed demo para prints da landing (15 Set 2026)
+
+Script isolado em `scripts/demo-seed/` + doc `docs/demo-seed.md`. Dois tenants fictícios (`DEMO · Barbearia Corte Fino` e `DEMO · Studio Aurora`), e-mails `agendix.demo.barber|beauty@example.com`. Dry-run por padrão; `--apply` exige frase de confirmação; banco remoto exige `--allow-remote` + env. O seed **não** foi executado em produção por este agente (sem service role / senha no workspace). Não muda trial nem landing.
+
 ## 🛠️ Trabalho recente
 
 - **Fila — modal sem forma de pagamento (14 Set 2026):**

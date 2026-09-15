@@ -12,6 +12,8 @@
     "lint:design": "node scripts/check-design-debt.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest",
+    "seed:demo": "node scripts/demo-seed/seed-demo.mjs",
+    "seed:demo:purge": "node scripts/demo-seed/purge-demo.mjs",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "backup": "node scripts/backup-supabase.js"

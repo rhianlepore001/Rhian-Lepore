@@ -1,3 +1,7 @@
+// ⚠️ LANDING / PRINTS: não use este arquivo.
+// Ele alimenta bob.teste@gmail.com e não fecha slug/clube/financeiro/fila v2.
+// Use: docs/demo-seed.md  →  node scripts/demo-seed/seed-demo.mjs
+//
 // scripts/seed.mjs
 // Popula o tenant da conta de teste com 1 mês de dados sintéticos
 // (4 colaboradores, 50 clientes, 150 agendamentos, fila, NPS).

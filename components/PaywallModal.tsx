@@ -6,6 +6,7 @@ import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { Modal } from './ui/Modal';
 import { Button } from './ui/Button';
 import { Lock, Sparkles, LogOut, ArrowRight } from 'lucide-react';
+import { TRIAL_DAYS } from '../utils/trial';
 
 export const PaywallModal: React.FC = () => {
     const { isExpired, isLoading } = useSubscription();
@@ -42,7 +43,7 @@ export const PaywallModal: React.FC = () => {
                 </h2>
 
                 <p className={`text-sm md:text-base mb-8 max-w-sm mx-auto ${colors.textSecondary}`}>
-                    Esperamos que você tenha aproveitado esses 7 dias! Assine agora para continuar usando todas as ferramentas e não perder seus agendamentos.
+                    Esperamos que você tenha aproveitado esses {TRIAL_DAYS} dias! Assine agora para continuar usando todas as ferramentas e não perder seus agendamentos.
                 </p>
 
                 <div className="space-y-4">

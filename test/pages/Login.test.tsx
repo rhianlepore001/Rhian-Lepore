@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { Login } from '@/pages/Login';
+import { TRIAL_DAYS } from '@/utils/trial';
 
 const loginMock = vi.fn();
 
@@ -48,6 +49,9 @@ describe('Login page', () => {
     });
     expect(localStorage.getItem('agendix_color_mode')).toBe('light');
     expect(screen.getByTestId('category-barber')).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: new RegExp(`criar conta — ${TRIAL_DAYS} dias grátis`, 'i') })
+    ).toBeInTheDocument();
   });
 
   it('shows, focuses and scrolls to the error message when login fails', async () => {

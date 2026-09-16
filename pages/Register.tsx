@@ -11,6 +11,7 @@ import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { mapError, formatUserFacingError } from '../utils/mapError';
 import { getBusinessCopy } from '../utils/businessCopy';
+import { TRIAL_DAYS } from '../constants';
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -358,7 +359,7 @@ export const Register: React.FC = () => {
           <div className={`px-8 py-6 border-b border-[var(--color-border)] ${isBeauty ? 'bg-[var(--color-card)]/90 backdrop-blur-xl' : 'bg-[var(--color-card)]'}`}>
             <h1 className="font-heading text-2xl text-[var(--color-text)] uppercase tracking-tight">Crie sua conta</h1>
             <p className={`font-mono text-xs uppercase tracking-[0.1em] mt-1.5 ${accent.text}/60`}>
-              {subtitle}
+              {subtitle} · {TRIAL_DAYS} dias grátis
             </p>
           </div>
 

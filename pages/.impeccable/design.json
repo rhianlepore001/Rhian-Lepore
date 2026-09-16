@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-16T07:12:00Z",
+  "title": "Design System: AgendiX Marketing",
+  "extensions": {
+    "colorMeta": {
+      "paper": { "role": "neutral", "displayName": "Cartolina", "canonical": "#E9E4D8" },
+      "paper-2": { "role": "neutral", "displayName": "Papel claro", "canonical": "#F4EFE6" },
+      "ink": { "role": "primary", "displayName": "Carvão", "canonical": "#241F1A" },
+      "ink-soft": { "role": "neutral", "displayName": "Tinta suave", "canonical": "#5A534A" },
+      "rule": { "role": "neutral", "displayName": "Filete", "canonical": "#C9C1B4" },
+      "on-accent": { "role": "neutral", "displayName": "Tinta no carvão", "canonical": "#F4EFE6" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "H1 da vitrine. Archivo 800 stretch 62%." },
+      "heading": { "displayName": "Heading", "purpose": "H2. Archivo 800 stretch 70%." },
+      "body": { "displayName": "Body", "purpose": "Atkinson Hyperlegible 1.0625rem." }
+    },
+    "shadows": [
+      { "name": "shot", "value": "6px 10px 18px color-mix(in srgb, #241F1A 16%, transparent)", "purpose": "Print grampeado na ficha." }
+    ],
+    "breakpoints": [
+      { "name": "lp-desktop", "value": "860px" },
+      { "name": "lp-wide", "value": "1100px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "CTA carvão da vitrine. Texto papel."
+    }
+  ]
+}

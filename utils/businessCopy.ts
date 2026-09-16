@@ -56,7 +56,7 @@ const BARBER_COPY: BusinessCopy = {
 const BEAUTY_COPY: BusinessCopy = {
   segmentLabel: 'Salão de Beleza',
   segmentLabelShort: 'Salão',
-  segmentLabelPlural: 'Salões & Studios',
+  segmentLabelPlural: 'Salões de beleza',
   businessNoun: 'salão',
   ownerOfBusiness: 'dono do salão',
   establishmentFallback: 'Salão',

@@ -183,7 +183,6 @@ export const Landing: React.FC = () => {
               </div>
               <figcaption>
                 {LANDING.shots[0].caption}
-                <br />
                 <a href={LANDING.shots[0].href} rel="noreferrer noopener" target="_blank">{LANDING.shots[0].hrefLabel}</a>
               </figcaption>
             </figure>
@@ -243,8 +242,8 @@ export const Landing: React.FC = () => {
                     <span className="ax-lp-callout">{shot.callout}</span>
                   </div>
                   <figcaption>
+                    <span className="ax-lp-callout">{shot.callout}</span>
                     {shot.caption}
-                    <br />
                     <a href={shot.href} rel="noreferrer noopener" target="_blank">{shot.hrefLabel}</a>
                   </figcaption>
                 </figure>

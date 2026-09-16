@@ -336,12 +336,10 @@
 }
 
 .ax-lp-callout {
-  position: absolute;
-  left: 0.75rem;
-  bottom: 0.75rem;
-  z-index: 1;
-  max-width: 18ch;
-  padding: 0.4rem 0.65rem;
+  display: inline-block;
+  margin: 0 0 0.45rem;
+  max-width: 22ch;
+  padding: 0.28rem 0.55rem;
   background: var(--ax-gold);
   color: var(--ax-on-gold);
   font-family: var(--ax-sans);
@@ -354,6 +352,9 @@
   padding: 0.9rem 1rem 1.05rem;
   font-size: 0.9375rem;
   color: var(--ax-sand-dim);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .ax-lp-shot a {
@@ -395,7 +396,7 @@
 
 .ax-lp-section {
   padding: clamp(3rem, 7vw, 5.5rem) 0;
-  scroll-margin-top: calc(var(--ax-nav) + 0.75rem);
+  scroll-margin-top: calc(var(--ax-nav) + 1.25rem);
 }
 
 .ax-lp-problem {
@@ -403,7 +404,7 @@
 }
 
 .ax-lp-benefits {
-  padding-top: clamp(1.25rem, 3vw, 2rem);
+  padding-top: clamp(2.75rem, 5vw, 4.25rem);
 }
 
 .ax-lp-section h2 {
@@ -522,6 +523,16 @@
 .ax-lp-niche-body p {
   margin: 0 0 1.1rem;
   color: var(--ax-sand-dim);
+}
+
+.ax-lp-niche-beauty .ax-lp-btn-gold {
+  background: var(--ax-orchid);
+  color: var(--ax-beauty);
+}
+
+.ax-lp-niche-beauty .ax-lp-btn-gold:hover,
+.ax-lp-niche-beauty .ax-lp-btn-gold:focus-visible {
+  background: #d4c8ff;
 }
 
 .ax-lp-compare {
@@ -792,7 +803,7 @@
   }
 
   .ax-lp-plans {
-    padding-bottom: 4.25rem;
+    padding-bottom: 6.5rem;
   }
 
   .ax-lp main {

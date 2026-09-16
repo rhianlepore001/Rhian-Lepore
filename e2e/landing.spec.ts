@@ -19,6 +19,10 @@ async function viewShot(page: import('@playwright/test').Page, name: string) {
   return file;
 }
 
+async function scrollSection(page: import('@playwright/test').Page, selector: string) {
+  await page.locator(selector).evaluate((el) => el.scrollIntoView({ block: 'start' }));
+}
+
 test.describe('Landing de marketing', () => {
   test('anônimo em / vê a landing, não o login, com trial de 20 dias', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
@@ -31,13 +35,13 @@ test.describe('Landing de marketing', () => {
     await expect(page.getByTestId('marketing-landing')).toContainText('R$ 59,90');
     await expect(page.getByTestId('category-barber')).toHaveCount(0);
     await viewShot(page, 'landing-hero-desktop');
-    await page.locator('#beneficios').scrollIntoViewIfNeeded();
+    await scrollSection(page, '#beneficios');
     await viewShot(page, 'landing-pillars-desktop');
-    await page.locator('#produto').scrollIntoViewIfNeeded();
+    await scrollSection(page, '#produto');
     await viewShot(page, 'landing-product-desktop');
-    await page.locator('.ax-lp-niche-row').scrollIntoViewIfNeeded();
+    await scrollSection(page, '.ax-lp-niche-row');
     await viewShot(page, 'landing-niches-desktop');
-    await page.locator('#preco').scrollIntoViewIfNeeded();
+    await scrollSection(page, '#preco');
     await viewShot(page, 'landing-pricing-desktop');
     await shot(page, 'landing-desktop');
 
@@ -54,7 +58,7 @@ test.describe('Landing de marketing', () => {
     await expect(page.getByTestId('marketing-landing')).toBeVisible({ timeout: 20_000 });
     await page.evaluate(() => document.fonts.ready);
     await viewShot(page, 'landing-hero-mobile');
-    await page.locator('#preco').scrollIntoViewIfNeeded();
+    await scrollSection(page, '#preco');
     await viewShot(page, 'landing-pricing-mobile');
     await shot(page, 'landing-mobile');
 

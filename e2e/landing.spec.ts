@@ -12,6 +12,13 @@ async function shot(page: import('@playwright/test').Page, name: string) {
   return file;
 }
 
+async function viewShot(page: import('@playwright/test').Page, name: string) {
+  fs.mkdirSync(ARTIFACTS, { recursive: true });
+  const file = path.join(ARTIFACTS, `${name}.png`);
+  await page.screenshot({ path: file, fullPage: false });
+  return file;
+}
+
 test.describe('Landing de marketing', () => {
   test('anônimo em / vê a landing, não o login, com trial de 20 dias', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
@@ -22,6 +29,15 @@ test.describe('Landing de marketing', () => {
     await expect(page.getByTestId('marketing-landing')).toContainText('R$ 34,90');
     await expect(page.getByTestId('marketing-landing')).toContainText('R$ 59,90');
     await expect(page.getByTestId('category-barber')).toHaveCount(0);
+    await viewShot(page, 'landing-hero-desktop');
+    await page.locator('#beneficios').scrollIntoViewIfNeeded();
+    await viewShot(page, 'landing-pillars-desktop');
+    await page.locator('#produto').scrollIntoViewIfNeeded();
+    await viewShot(page, 'landing-product-desktop');
+    await page.locator('.ax-lp-niche-row').scrollIntoViewIfNeeded();
+    await viewShot(page, 'landing-niches-desktop');
+    await page.locator('#preco').scrollIntoViewIfNeeded();
+    await viewShot(page, 'landing-pricing-desktop');
     await shot(page, 'landing-desktop');
 
     const cta = page.getByRole('link', { name: /testar 20 dias/i }).first();
@@ -35,6 +51,9 @@ test.describe('Landing de marketing', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`${BASE}/#/`, { waitUntil: 'domcontentloaded' });
     await expect(page.getByTestId('marketing-landing')).toBeVisible({ timeout: 20_000 });
+    await viewShot(page, 'landing-hero-mobile');
+    await page.locator('#preco').scrollIntoViewIfNeeded();
+    await viewShot(page, 'landing-pricing-mobile');
     await shot(page, 'landing-mobile');
 
     await page.goto(`${BASE}/#/login`, { waitUntil: 'domcontentloaded' });

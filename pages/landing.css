@@ -257,8 +257,10 @@ html[data-lp="marketing"] body {
   letter-spacing: -0.03em;
   text-transform: none;
   margin: 0 0 1.35rem;
-  max-width: 14ch;
+  max-width: 16ch;
   color: var(--ax-ink);
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--ax-rule);
 }
 
 .ax-lp-lede {
@@ -342,15 +344,15 @@ html[data-lp="marketing"] body {
 
 .ax-lp-staple {
   position: absolute;
-  top: 0.42rem;
+  top: 0.55rem;
   left: 50%;
   z-index: 2;
-  width: 1.15rem;
-  height: 0.4rem;
-  margin-left: -0.57rem;
-  border: 1.4px solid color-mix(in srgb, var(--ax-ink) 52%, var(--ax-rule));
-  border-radius: 1px;
-  background: color-mix(in srgb, var(--ax-paper-2) 55%, #9a9084);
+  width: 1.7rem;
+  height: 0.55rem;
+  margin-left: -0.85rem;
+  border: 1.4px solid color-mix(in srgb, var(--ax-ink) 45%, var(--ax-rule));
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--ax-paper-2) 42%, var(--ax-ink-soft));
   box-shadow: 0 1px 1px color-mix(in srgb, var(--ax-ink) 22%, transparent);
   transform: rotate(-11deg);
 }
@@ -366,48 +368,34 @@ html[data-lp="marketing"] body {
   align-items: start;
 }
 
-.ax-lp-hero-proof .ax-lp-shot-copy,
-.ax-lp-hero-proof figcaption a {
-  display: none;
-}
-
 .ax-lp-hero-proof figcaption {
   padding: 0.55rem 0.65rem 0.7rem;
 }
 
-.ax-lp-hero-proof .ax-lp-callout {
-  margin: 0;
+.ax-lp-hero-proof .ax-lp-shot-copy {
+  font-family: var(--ax-display);
+  font-stretch: 62%;
+  font-weight: 800;
+  color: var(--ax-ink);
 }
 
 .ax-lp-shot img {
   width: 100%;
-  aspect-ratio: 16 / 11;
+  aspect-ratio: 4 / 5;
   object-fit: cover;
-  object-position: top center;
+  object-position: center 32%;
 }
 
 .ax-lp-product .ax-lp-shot img {
-  aspect-ratio: 16 / 11;
-  max-height: 22rem;
+  aspect-ratio: 3 / 4;
+  max-height: 28rem;
+  object-position: center 28%;
 }
 
 .ax-lp-hero-proof .ax-lp-shot img {
-  aspect-ratio: 4 / 3;
-  max-height: 9.75rem;
-}
-
-.ax-lp-callout {
-  display: inline-block;
-  margin: 0 0 0.45rem;
-  max-width: 28ch;
-  padding: 0;
-  background: none;
-  color: var(--ax-ink);
-  font-family: var(--ax-display);
-  font-stretch: 62%;
-  font-size: var(--ax-fs-meta);
-  font-weight: 800;
-  line-height: 1.25;
+  aspect-ratio: 4 / 5;
+  max-height: 13.5rem;
+  object-position: center 32%;
 }
 
 .ax-lp-shot figcaption {
@@ -807,7 +795,31 @@ html[data-lp="marketing"] body {
 
 @media (max-width: 859px) {
   .ax-lp-hero {
-    padding-bottom: 2.75rem;
+    padding-top: 1.5rem;
+    padding-bottom: 2.25rem;
+  }
+
+  .ax-lp-lede {
+    margin-bottom: 1.1rem;
+  }
+
+  .ax-lp-hero .ax-lp-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.45rem;
+  }
+
+  .ax-lp-hero .ax-lp-btn-ink {
+    width: 100%;
+  }
+
+  .ax-lp-hero .ax-lp-btn-ghost {
+    width: max-content;
+    border-color: transparent;
+    min-height: 44px;
+    padding-inline: 0;
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
   }
 
   .ax-lp-hero-proof .ax-lp-shot:nth-child(2) {
@@ -853,7 +865,7 @@ html[data-lp="marketing"] body {
   }
 
   .ax-lp-hero-proof .ax-lp-shot img {
-    max-height: 14.5rem;
+    max-height: 16.5rem;
   }
 
   .ax-lp-facts ul {
@@ -892,12 +904,11 @@ html[data-lp="marketing"] body {
 
 @media (min-width: 1100px) {
   .ax-lp-hero-proof .ax-lp-shot img {
-    max-height: 16.5rem;
+    max-height: 18rem;
   }
 
   .ax-lp-product .ax-lp-shot img {
-    aspect-ratio: 16 / 10;
-    max-height: 22rem;
+    max-height: 30rem;
   }
 }
 

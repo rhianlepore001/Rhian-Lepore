@@ -33,7 +33,7 @@ OWN-WORLD: Cartolina crua `#E9E4D8`, carvão `#241F1A` como tinta e único acent
 
 STORY: Entende que é agenda com link para barbearia e salão; crê porque vê o booking demo; age em Testar 20 dias.
 
-FIRST VIEWPORT: Nav no papel. Esquerda: H1, olho, CTA carvão + ghost. Direita: dois prints DEMO em shingle (Corte Fino + Aurora), grampeados na ficha. Sem vídeo, sem ouro, sem picker de nicho.
+FIRST VIEWPORT: Nav no papel. Esquerda: H1 “a casa crescer”, olho (barbearia e salão), CTA carvão full-width no mobile + âncora “como funciona”. Direita: dois prints DEMO em shingle 4:5, recorte na grelha de serviços (não no header do app), grampeados na ficha. Sem vídeo, sem ouro, sem picker de nicho.
 
 FORM: Ficha do cliente no balcão (grounded 6, seed `0cd85edb`). Raises: uma ação (detector), preços tabulares (ikeda), fotos legendadas (busytown), prints em shingle (mook), assimetria (raku), arco-crease (curved paper).
 

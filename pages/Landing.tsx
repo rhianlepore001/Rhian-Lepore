@@ -33,12 +33,20 @@ function useLandingChrome(): void {
   useEffect(() => {
     const html = document.documentElement;
     html.setAttribute('data-lp', 'marketing');
+    const previousTheme = html.getAttribute('data-theme');
+    const previousMode = html.getAttribute('data-mode');
+    html.removeAttribute('data-theme');
+    html.removeAttribute('data-mode');
     const theme = document.querySelector('meta[name="theme-color"]');
-    const previousTheme = theme?.getAttribute('content') ?? '';
+    const previousThemeColor = theme?.getAttribute('content') ?? '';
     theme?.setAttribute('content', '#E9E4D8');
     return () => {
       html.removeAttribute('data-lp');
-      if (theme && previousTheme) theme.setAttribute('content', previousTheme);
+      if (previousTheme) html.setAttribute('data-theme', previousTheme);
+      else html.removeAttribute('data-theme');
+      if (previousMode) html.setAttribute('data-mode', previousMode);
+      else html.removeAttribute('data-mode');
+      if (theme && previousThemeColor) theme.setAttribute('content', previousThemeColor);
     };
   }, []);
 }
@@ -71,10 +79,12 @@ function ShotFigure({
   shot,
   index,
   eager = false,
+  compact = false,
 }: {
   shot: LandingShot;
   index: number;
   eager?: boolean;
+  compact?: boolean;
 }): React.ReactElement {
   return (
     <figure className={`ax-lp-shot${index === 1 ? ' ax-lp-shot-shift' : ''}`}>
@@ -91,9 +101,10 @@ function ShotFigure({
         />
       </div>
       <figcaption>
-        <span className="ax-lp-callout">{shot.callout}</span>
-        <span className="ax-lp-shot-copy">{shot.caption}</span>
-        <a href={shot.href} rel="noreferrer noopener" target="_blank">{shot.hrefLabel}</a>
+        <span className="ax-lp-shot-copy">{compact ? shot.heroLabel : shot.caption}</span>
+        {compact ? null : (
+          <a href={shot.href} rel="noreferrer noopener" target="_blank">{shot.hrefLabel}</a>
+        )}
       </figcaption>
     </figure>
   );
@@ -114,6 +125,15 @@ export const Landing: React.FC = () => {
     return () => {
       document.body.style.overflow = '';
     };
+  }, [menuOpen]);
+
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMenuOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, [menuOpen]);
 
   useEffect(() => {
@@ -219,6 +239,7 @@ export const Landing: React.FC = () => {
             <div>
               <h1>
                 {LANDING.h1[0]}
+                {' '}
                 <br />
                 {LANDING.h1[1]}
               </h1>
@@ -235,7 +256,7 @@ export const Landing: React.FC = () => {
 
             <div className="ax-lp-hero-proof">
               {LANDING.shots.map((shot, index) => (
-                <ShotFigure key={`hero-${shot.src}`} shot={shot} index={index} eager />
+                <ShotFigure key={`hero-${shot.src}`} shot={shot} index={index} eager compact />
               ))}
             </div>
           </div>

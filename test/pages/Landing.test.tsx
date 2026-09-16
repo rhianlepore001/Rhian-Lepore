@@ -27,7 +27,9 @@ describe('Landing de marketing', () => {
     expect(equipe).toHaveTextContent('R$ 59,90');
     expect(screen.queryByText(/10 dias/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/\+40%/)).not.toBeInTheDocument();
-    expect(screen.getAllByText('Serviço, preço e clube').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Serviço, preço e clube/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Barbearia').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Salão').length).toBeGreaterThan(0);
     expect(screen.getAllByAltText(/Barbearia Corte Fino/i).length).toBeGreaterThan(0);
     expect(screen.getAllByAltText(/Studio Aurora/i).length).toBeGreaterThan(0);
     expect(screen.getByRole('heading', { name: 'Agendar' })).toBeInTheDocument();

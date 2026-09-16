@@ -102,7 +102,7 @@ Medida do corpo ~58ch. Mais espaço acima do H2 do que abaixo. Hero assimétrico
 
 ## Elevation & Depth
 
-Quase plano. A foto do produto tem uma sombra deslocada (foto sobre cartolina). Sem glass, sem halo de acento.
+Quase plano. A foto do produto tem sombra deslocada com blur (foto sobre cartolina), não bloco sem blur. Sem glass, sem halo de acento.
 
 ## Shapes
 

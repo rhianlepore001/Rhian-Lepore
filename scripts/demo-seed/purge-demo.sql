@@ -67,3 +67,20 @@ BEGIN
 
   RAISE NOTICE 'Linhas public.* dos tenants demo removidas. Apague auth.users no Dashboard (Authentication > Users) com os mesmos e-mails.';
 END $$;
+
+-- 3) Auth (opcional, só com acesso ao schema auth — ex. MCP execute_sql).
+--    Rode DEPOIS do bloco 2. Nunca apague e-mail fora do padrão demo.
+-- DELETE FROM auth.identities
+-- WHERE user_id IN (
+--   SELECT id FROM auth.users
+--   WHERE email IN (
+--       'agendix.demo.barber@example.com',
+--       'agendix.demo.beauty@example.com'
+--     )
+-- );
+-- DELETE FROM auth.users
+-- WHERE email IN (
+--     'agendix.demo.barber@example.com',
+--     'agendix.demo.beauty@example.com'
+--   )
+--   AND COALESCE(raw_app_meta_data->>'source', '') = 'agendix-demo-seed';

@@ -98,7 +98,7 @@ Archivo condensada (800) no display — cabeçalho de ficha, não cartaz industr
 
 ## Layout
 
-Medida do corpo ~58ch. Mais espaço acima do H2 do que abaixo. Hero assimétrico (texto + print). Pilares em stack tipográfico, não grid de ícones. Preço em duas colunas iguais; no mobile o sticky some quando `#preco` entra.
+Medida do corpo ~58ch. Mais espaço acima do H2 do que abaixo. Hero assimétrico: texto + **dois prints DEMO em shingle** (barbearia e salão na primeira dobra). Pilares em stack tipográfico, não grid de ícones. Preço em duas colunas iguais; no mobile o sticky some no hero e quando `#preco`/`#trial`/`#comecar` entram.
 
 ## Elevation & Depth
 

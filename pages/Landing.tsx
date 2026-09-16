@@ -65,10 +65,44 @@ function prefersReducedMotion(): boolean {
   return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
+type LandingShot = (typeof LANDING.shots)[number];
+
+function ShotFigure({
+  shot,
+  index,
+  eager = false,
+}: {
+  shot: LandingShot;
+  index: number;
+  eager?: boolean;
+}): React.ReactElement {
+  return (
+    <figure className={`ax-lp-shot${index === 1 ? ' ax-lp-shot-shift' : ''}`}>
+      <div className="ax-lp-shot-frame">
+        <span className="ax-lp-staple" aria-hidden="true" />
+        <img
+          src={shot.src}
+          alt={shot.alt}
+          width={720}
+          height={780}
+          loading={eager ? 'eager' : 'lazy'}
+          decoding="async"
+          fetchPriority={eager && index === 0 ? 'high' : 'auto'}
+        />
+      </div>
+      <figcaption>
+        <span className="ax-lp-callout">{shot.callout}</span>
+        <span className="ax-lp-shot-copy">{shot.caption}</span>
+        <a href={shot.href} rel="noreferrer noopener" target="_blank">{shot.hrefLabel}</a>
+      </figcaption>
+    </figure>
+  );
+}
+
 export const Landing: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [currency, setCurrency] = useState<PricingCurrency>('BRL');
-  const [stickyAway, setStickyAway] = useState(false);
+  const [stickyAway, setStickyAway] = useState(true);
   const menuId = useId();
 
   useLandingFonts();
@@ -84,23 +118,35 @@ export const Landing: React.FC = () => {
 
   useEffect(() => {
     if (typeof IntersectionObserver === 'undefined') return undefined;
-    const ids = ['preco', 'trial', 'comecar'];
-    const nodes = ids
+    const hideIds = ['preco', 'trial', 'comecar'];
+    const hideNodes = hideIds
       .map((id) => document.getElementById(id))
       .filter((node): node is HTMLElement => Boolean(node));
-    if (!nodes.length) return undefined;
+    const hero = document.querySelector('.ax-lp-hero');
     const visible = new Set<string>();
+    const sync = () => {
+      const heroCovering = visible.has('hero');
+      const sectionCovering = hideIds.some((id) => visible.has(id));
+      setStickyAway(heroCovering || sectionCovering);
+    };
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) visible.add(entry.target.id);
-          else visible.delete(entry.target.id);
+          const key = entry.target.id || (entry.target.classList.contains('ax-lp-hero') ? 'hero' : '');
+          if (!key) return;
+          if (entry.isIntersecting) visible.add(key);
+          else visible.delete(key);
         });
-        setStickyAway(visible.size > 0);
+        sync();
       },
       { threshold: 0.12, rootMargin: '0px 0px -18% 0px' },
     );
-    nodes.forEach((node) => observer.observe(node));
+    hideNodes.forEach((node) => observer.observe(node));
+    if (hero) {
+      visible.add('hero');
+      observer.observe(hero);
+    }
+    sync();
     return () => observer.disconnect();
   }, []);
 
@@ -187,15 +233,11 @@ export const Landing: React.FC = () => {
               </div>
             </div>
 
-            <figure className="ax-lp-shot ax-lp-shot-hero">
-              <div className="ax-lp-shot-frame">
-                <img src={LANDING.shots[0].src} alt={LANDING.shots[0].alt} width={720} height={780} />
-              </div>
-              <figcaption>
-                {LANDING.shots[0].caption}
-                <a href={LANDING.shots[0].href} rel="noreferrer noopener" target="_blank">{LANDING.shots[0].hrefLabel}</a>
-              </figcaption>
-            </figure>
+            <div className="ax-lp-hero-proof">
+              {LANDING.shots.map((shot, index) => (
+                <ShotFigure key={`hero-${shot.src}`} shot={shot} index={index} eager />
+              ))}
+            </div>
           </div>
         </section>
 
@@ -241,16 +283,7 @@ export const Landing: React.FC = () => {
             <h2>{LANDING.productIntro}</h2>
             <div className="ax-lp-product-grid">
               {LANDING.shots.map((shot, index) => (
-                <figure className={`ax-lp-shot${index === 1 ? ' ax-lp-shot-shift' : ''}`} key={shot.src}>
-                  <div className="ax-lp-shot-frame">
-                    <img src={shot.src} alt={shot.alt} width={960} height={780} />
-                  </div>
-                  <figcaption>
-                    <span className="ax-lp-callout">{shot.callout}</span>
-                    {shot.caption}
-                    <a href={shot.href} rel="noreferrer noopener" target="_blank">{shot.hrefLabel}</a>
-                  </figcaption>
-                </figure>
+                <ShotFigure key={shot.src} shot={shot} index={index} />
               ))}
             </div>
           </div>
@@ -341,6 +374,11 @@ export const Landing: React.FC = () => {
                       <li key={feature}>{feature}</li>
                     ))}
                   </ul>
+                  <div className="ax-lp-actions ax-lp-actions-late">
+                    <Link className="ax-lp-btn ax-lp-btn-ink ax-lp-btn-full" to={registerPath()}>
+                      {LANDING.ctaTrial}
+                    </Link>
+                  </div>
                 </article>
               ))}
             </div>

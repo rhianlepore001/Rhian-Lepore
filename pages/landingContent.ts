@@ -43,9 +43,9 @@ export const LANDING = {
   ctaLogin: 'Entrar',
   facts: [
     `${TRIAL_DAYS} dias de teste. Cadastro sem cartão.`,
+    'Solo R$ 34,90. Equipe R$ 59,90. Depois do teste.',
     'Barbearias e salões. O mesmo produto.',
-    'Brasil no Pix. Portugal no MB WAY.',
-    'Sem aplicativo nativo. O cliente usa o navegador.',
+    'Brasil no Pix. Portugal no MB WAY. Sem aplicativo nativo.',
   ],
   problemLead: 'A casa cresce no WhatsApp e fura na agenda.',
   problemBody:

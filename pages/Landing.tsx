@@ -159,7 +159,7 @@ export const Landing: React.FC = () => {
         });
         sync();
       },
-      { threshold: 0.12, rootMargin: '0px 0px -18% 0px' },
+      { threshold: 0, rootMargin: '0px 0px -8% 0px' },
     );
     hideNodes.forEach((node) => observer.observe(node));
     if (hero) {

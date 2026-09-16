@@ -457,10 +457,11 @@ html[data-lp="marketing"] body {
 
 .ax-lp-section h2 {
   font-family: var(--ax-display);
-  font-stretch: 62%;
+  font-stretch: 70%;
   font-size: var(--ax-fs-h2);
   line-height: 0.96;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
+  word-spacing: 0.04em;
   margin: 0 0 1.5rem;
   max-width: 14ch;
   font-weight: 800;

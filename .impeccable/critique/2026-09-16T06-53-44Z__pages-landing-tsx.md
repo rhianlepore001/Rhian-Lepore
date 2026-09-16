@@ -4,6 +4,7 @@ target_fingerprint: "sha256:f868784940953c0a6cbe9d39b00cdb61f7192320479869e7b0cc
 target_path: /workspace/pages/Landing.tsx
 timestamp: 2026-09-16T06-53-44Z
 slug: pages-landing-tsx
+closed: true
 ---
 # Critique — pages/Landing.tsx (marketing LP)
 

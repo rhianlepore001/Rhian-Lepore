@@ -19,8 +19,9 @@ typography:
     letterSpacing: "-0.03em"
   heading:
     fontFamily: "Archivo, sans-serif"
-    fontWeight: 700
+    fontWeight: 800
     fontSize: "clamp(2.125rem, 5.4vw, 3.25rem)"
+    letterSpacing: "-0.02em"
   pillar:
     fontFamily: "Archivo, sans-serif"
     fontWeight: 800

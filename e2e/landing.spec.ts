@@ -24,6 +24,7 @@ test.describe('Landing de marketing', () => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto(`${BASE}/#/`, { waitUntil: 'domcontentloaded' });
     await expect(page.getByTestId('marketing-landing')).toBeVisible({ timeout: 20_000 });
+    await page.evaluate(() => document.fonts.ready);
     await expect(page.getByRole('heading', { level: 1 })).toContainText(/agenda que faz/i);
     await expect(page.getByText(/20 dias/i).first()).toBeVisible();
     await expect(page.getByTestId('marketing-landing')).toContainText('R$ 34,90');
@@ -51,6 +52,7 @@ test.describe('Landing de marketing', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`${BASE}/#/`, { waitUntil: 'domcontentloaded' });
     await expect(page.getByTestId('marketing-landing')).toBeVisible({ timeout: 20_000 });
+    await page.evaluate(() => document.fonts.ready);
     await viewShot(page, 'landing-hero-mobile');
     await page.locator('#preco').scrollIntoViewIfNeeded();
     await viewShot(page, 'landing-pricing-mobile');

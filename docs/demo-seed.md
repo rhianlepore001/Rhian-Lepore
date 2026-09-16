@@ -116,7 +116,35 @@ O purge **exige** service role no `--apply` (remove `auth.users`). Sem isso, use
 
 ## Este ambiente (cloud agent)
 
-O seed **não** foi executado contra produção daqui: não há `SUPABASE_SERVICE_ROLE_KEY` nem `DEMO_SEED_PASSWORD` no workspace. Staging `AgendiX Staging` está INACTIVE. Um humano com service role (ou contas já criadas) deve rodar os comandos acima no `.env` correto.
+**Aplicado em 16 Set 2026** no projeto **BARBER/Beauty OS** (`lcqwrngscsziysyfhpfj`):
+
+| Tema | E-mail | Slug | Auth user |
+|---|---|---|---|
+| barber | `agendix.demo.barber@example.com` | `demo-barbearia-corte-fino` | `7baee43b-a3b0-4d96-b566-62bc88224f5c` |
+| beauty | `agendix.demo.beauty@example.com` | `demo-studio-aurora` | `9fe035ca-df62-492c-959c-f0e25a08c195` |
+
+Como (sem colar `service_role` no chat):
+
+1. MCP Supabase `execute_sql` criou `auth.users` + `auth.identities` só para esses e-mails (senha bcrypt, e-mail confirmado). O trigger `on_auth_user_created` gerou `profiles` + `business_settings`.
+2. `node scripts/demo-seed/seed-demo.mjs --apply --confirm=SEED_DEMO_TENANTS --allow-remote` rodou com `VITE_SUPABASE_ANON_KEY` + login nos e-mails demo (sem service role no env).
+3. `DEMO_SEED_PASSWORD` **não** estava no workspace: gerada neste run (≥12). Guardar no Cloud Agent environment como secret `DEMO_SEED_PASSWORD`. **Não** está no git nem neste doc.
+
+Rotas públicas (HashRouter) — RPC `get_public_profile_by_slug` resolve como `anon`:
+
+- `/#/book/demo-barbearia-corte-fino` e `/#/book/demo-studio-aurora`
+- `/#/queue/{slug}` · `/#/clube/{slug}` · `/#/minha-area/{slug}`
+
+`--refresh` na manhã dos prints: a agenda “de hoje” envelhece. Staging `AgendiX Staging` continua INACTIVE.
+
+### Recriar auth via MCP (se os users sumirem)
+
+Não imprimir senha. Gere o hash bcrypt localmente e rode um `DO` que:
+
+- só aceita e-mail `agendix.demo.(barber|beauty)@…` e `business_name` `DEMO ·%`
+- faz `INSERT` em `auth.users` + `auth.identities` (`email` em identities é coluna **gerada** — não inserir)
+- `instance_id = 00000000-0000-0000-0000-000000000000`
+
+Depois rode o `seed-demo.mjs` com `--apply` como acima.
 
 ## Schema (tenant)
 

@@ -107,6 +107,7 @@ async function upsertProfile(client, spec, userId, { dryRun }) {
     role: 'owner',
     company_id: userId,
     public_booking_enabled: true,
+    enable_professional_selection: true,
     booking_lead_time_hours: 2,
     max_bookings_per_day: 24,
     tutorial_completed: true,
@@ -626,7 +627,10 @@ async function seedTenant({ spec, admin, newAnon, password, url, serviceKey, dry
       }
     }
   } else if (dryRun) {
-    userId = `dry-run-${spec.key}`;
+    // UUID dummy: products.company_id é uuid; "dry-run-barber" quebra o SELECT no dry-run remoto.
+    userId = spec.key === 'beauty'
+      ? '11111111-1111-4111-8111-111111111112'
+      : '11111111-1111-4111-8111-111111111111';
     writer = admin || newAnon();
   } else {
     log('  sem service role: login no e-mail demo já cadastrado');

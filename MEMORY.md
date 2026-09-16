@@ -47,15 +47,20 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 - HashRouter (`/#/rota`); páginas com `React.lazy()` dentro de `<Suspense>`.
 - IA via OpenRouter (`VITE_OPENROUTER_API_KEY`) — opcional/pós-MVP; ausência degrada sem quebrar.
 
-## 🧪 Seed demo para prints da landing (15 Set 2026)
+## 🧪 Seed demo para prints da landing (16 Set 2026)
 
-Script isolado em `scripts/demo-seed/` + doc `docs/demo-seed.md`. Dois tenants fictícios (`DEMO · Barbearia Corte Fino` e `DEMO · Studio Aurora`), e-mails `agendix.demo.barber|beauty@example.com`. Dry-run por padrão; `--apply` exige frase de confirmação; banco remoto exige `--allow-remote` + env. O seed **não** foi executado em produção por este agente (sem service role / senha no workspace). Não muda trial nem landing.
+Script isolado em `scripts/demo-seed/` + doc `docs/demo-seed.md`. Dois tenants fictícios (`DEMO · Barbearia Corte Fino` e `DEMO · Studio Aurora`), e-mails `agendix.demo.barber|beauty@example.com`. Dry-run por padrão; `--apply` exige frase de confirmação; banco remoto exige `--allow-remote` + env. Não muda trial nem landing.
+
+**Aplicado no BARBER/Beauty OS** (`lcqwrngscsziysyfhpfj`) em 16 Set 2026: Auth via MCP SQL (sem service role no chat) + `seed-demo.mjs --apply`. Slugs públicos `demo-barbearia-corte-fino` e `demo-studio-aurora`. `DEMO_SEED_PASSWORD` gerada neste run — Rhian deve gravar no Cloud Agent secrets (valor não versionado). Purge: `purge-demo.mjs` / `purge-demo.sql`.
 
 ## 🛠️ Trabalho recente
 
+- **Seed demo aplicado (16 Set 2026):**
+  - Tenants `agendix.demo.barber@example.com` / `agendix.demo.beauty@example.com` no projeto BARBER/Beauty OS.
+  - Auth criado via MCP `execute_sql`; dados via `scripts/demo-seed/seed-demo.mjs` (login anon). Sem service role no chat.
+  - Pendência humana: secret `DEMO_SEED_PASSWORD` no Cloud Agent environment (já gerada; não está no repo).
 - **Backup pré-landing infra (15 Set 2026):**
   - Tag anotada e branch `backup/pre-landing-infra-20260915` apontam para `77baa9fa37b8c16a263fb4e3b41e47bdc369741a` (`main` antes de #69/#71/#72).
-  - Seed demo **não** aplicado neste run (sem `SUPABASE_SERVICE_ROLE_KEY` / `DEMO_SEED_PASSWORD` no ambiente).
 - **Crítica visual Playwright (15 Set 2026):**
   - `npm run visual:critique` captura PNGs em 1280×800 e 390×844 em `artifacts/visual-critique/` (gitignored).
   - Docs: `e2e/visual-critique/README.md` + `CRITIQUE.template.md`. Sem secrets; auth via env/storageState; landing `/` pulada se for só redirect.

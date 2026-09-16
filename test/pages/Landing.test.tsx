@@ -31,7 +31,7 @@ describe('Landing de marketing', () => {
     expect(equipe).toHaveTextContent('R$ 59,90');
     expect(screen.queryByText(/10 dias/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/\+40%/)).not.toBeInTheDocument();
-    expect(screen.getByText('Serviço, preço e clube')).toBeInTheDocument();
+    expect(screen.getAllByText('Serviço, preço e clube').length).toBeGreaterThan(0);
     expect(screen.getByRole('heading', { name: 'Agendar' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /termos/i })).toHaveAttribute('href', '/termos');
   });

@@ -239,7 +239,6 @@ export const Landing: React.FC = () => {
                 <figure className="ax-lp-shot" key={shot.src}>
                   <div className="ax-lp-shot-frame">
                     <img src={shot.src} alt={shot.alt} width={960} height={780} />
-                    <span className="ax-lp-callout">{shot.callout}</span>
                   </div>
                   <figcaption>
                     <span className="ax-lp-callout">{shot.callout}</span>

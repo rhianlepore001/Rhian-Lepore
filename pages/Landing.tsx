@@ -165,18 +165,14 @@ export const Landing: React.FC = () => {
               </div>
             </div>
 
-            <div className="ax-lp-shots">
-              {LANDING.shots.map((shot) => (
-                <figure className="ax-lp-shot" key={shot.src}>
-                  <img src={shot.src} alt={shot.alt} width={720} height={900} />
-                  <figcaption>
-                    {shot.caption}
-                    <br />
-                    <a href={shot.href} rel="noreferrer noopener" target="_blank">{shot.hrefLabel}</a>
-                  </figcaption>
-                </figure>
-              ))}
-            </div>
+            <figure className="ax-lp-shot ax-lp-shot-hero">
+              <img src={LANDING.shots[0].src} alt={LANDING.shots[0].alt} width={720} height={780} />
+              <figcaption>
+                {LANDING.shots[0].caption}
+                <br />
+                <a href={LANDING.shots[0].href} rel="noreferrer noopener" target="_blank">{LANDING.shots[0].hrefLabel}</a>
+              </figcaption>
+            </figure>
           </div>
         </section>
 
@@ -218,18 +214,20 @@ export const Landing: React.FC = () => {
           <div className="ax-lp-wrap">
             <h2>{LANDING.productIntro}</h2>
             <div className="ax-lp-product-grid">
+              {LANDING.shots.map((shot) => (
+                <figure className="ax-lp-shot" key={shot.src}>
+                  <img src={shot.src} alt={shot.alt} width={960} height={780} />
+                  <figcaption>
+                    {shot.caption}
+                    <br />
+                    <a href={shot.href} rel="noreferrer noopener" target="_blank">{shot.hrefLabel}</a>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+            <div className="ax-lp-product-grid ax-lp-niche-row">
               {LANDING.niches.map((niche) => (
                 <article className={`ax-lp-niche ax-lp-niche-${niche.id}`} key={niche.id}>
-                  <div className="ax-lp-niche-media" aria-hidden="true">
-                    {reduceMotion ? (
-                      <img src={niche.poster} alt="" />
-                    ) : (
-                      <video autoPlay muted loop playsInline poster={niche.poster}>
-                        <source src={niche.videoWebm} type="video/webm" />
-                        <source src={niche.videoMp4} type="video/mp4" />
-                      </video>
-                    )}
-                  </div>
                   <div className="ax-lp-niche-body">
                     <h3>{niche.title}</h3>
                     <p>{niche.body}</p>
@@ -237,14 +235,6 @@ export const Landing: React.FC = () => {
                       <Link className="ax-lp-btn ax-lp-btn-gold" to={registerPath(niche.id)}>
                         Testar {TRIAL_DAYS} dias
                       </Link>
-                      <a
-                        className="ax-lp-btn ax-lp-btn-ghost"
-                        href={niche.id === 'barber' ? LANDING.shots[0].href : LANDING.shots[1].href}
-                        rel="noreferrer noopener"
-                        target="_blank"
-                      >
-                        {niche.id === 'barber' ? LANDING.shots[0].hrefLabel : LANDING.shots[1].hrefLabel}
-                      </a>
                     </div>
                   </div>
                 </article>
@@ -326,7 +316,7 @@ export const Landing: React.FC = () => {
             </div>
             <div className="ax-lp-plans">
               {LANDING.plans.map((plan) => (
-                <article className="ax-lp-plan" key={plan.id}>
+                <article className={`ax-lp-plan${plan.id === 'team' ? ' ax-lp-plan-team' : ''}`} key={plan.id}>
                   <h3>{plan.name}</h3>
                   <p className="ax-lp-price">
                     {plan.id === 'solo' ? prices.solo : prices.team}

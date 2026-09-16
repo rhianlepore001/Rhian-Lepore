@@ -139,7 +139,7 @@ export const LANDING = {
       body: 'Confirma, cobra, põe na fila, vende produto, acerta comissão.',
     },
   ],
-  trialLead: `Os ${TRIAL_DAYS} dias vêm com o produto, não com um recorte.`,
+  trialLead: `Vinte dias com o produto inteiro.`,
   trialIncludes: [
     'Agenda e checkout do atendimento',
     'Link público de agendamento',

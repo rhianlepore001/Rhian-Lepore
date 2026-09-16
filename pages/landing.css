@@ -331,6 +331,11 @@
   object-position: top center;
 }
 
+.ax-lp-product .ax-lp-shot img {
+  aspect-ratio: 16 / 11;
+  max-height: 22rem;
+}
+
 .ax-lp-shot-hero img {
   max-height: 26rem;
 }
@@ -349,9 +354,12 @@
 }
 
 .ax-lp-shot figcaption {
+  position: relative;
+  z-index: 1;
   padding: 0.9rem 1rem 1.05rem;
   font-size: 0.9375rem;
   color: var(--ax-sand-dim);
+  background: var(--ax-ink-2);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -867,8 +875,13 @@
     grid-template-columns: 1fr 1fr;
   }
 
-  .ax-lp-shot img {
+  .ax-lp-shot-hero img {
     aspect-ratio: 16 / 13;
+  }
+
+  .ax-lp-product .ax-lp-shot img {
+    aspect-ratio: 16 / 10;
+    max-height: 22rem;
   }
 }
 

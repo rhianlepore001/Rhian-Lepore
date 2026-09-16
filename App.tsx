@@ -17,6 +17,7 @@ import { getBusinessCopy, resolveBusinessTheme } from './utils/businessCopy';
 
 // Lazy Load Pages
 const Dashboard = React.lazy(() => import('./pages/Dashboard').then(module => ({ default: module.Dashboard })));
+const Landing = React.lazy(() => import('./pages/Landing').then(module => ({ default: module.Landing })));
 const ClientCRM = React.lazy(() => import('./pages/ClientCRM').then(module => ({ default: module.ClientCRM })));
 const Finance = React.lazy(() => import('./pages/Finance').then(module => ({ default: module.Finance })));
 const Register = React.lazy(() => import('./pages/Register').then(module => ({ default: module.Register })));
@@ -118,6 +119,41 @@ const ProtectedLayout = () => {
   );
 };
 
+const HomeRoute = () => {
+  const { isAuthenticated, loading, tutorialCompleted, role } = useAuth();
+
+  if (loading) {
+    return <LoadingFull />;
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <ErrorBoundary>
+        <Suspense fallback={<LoadingFull />}>
+          <Landing />
+        </Suspense>
+      </ErrorBoundary>
+    );
+  }
+
+  if (!tutorialCompleted) {
+    if (role === 'staff') {
+      return <Navigate to="/staff-onboarding" replace />;
+    }
+    return <Navigate to="/onboarding-wizard" replace />;
+  }
+
+  return (
+    <Layout>
+      <ErrorBoundary>
+        <Suspense fallback={<LoadingFull />}>
+          <Dashboard />
+        </Suspense>
+      </ErrorBoundary>
+    </Layout>
+  );
+};
+
 // Wrapper for authenticated routes that DO NOT need the Sidebar (like Onboarding)
 const RequireAuth = ({ children }: { children: React.ReactElement }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -173,6 +209,7 @@ const AppRoutes: React.FC = () => {
       <Suspense fallback={<LoadingFull />}>
       <Routes>
         {/* Public / Standalone Routes */}
+        <Route path="/" element={<HomeRoute />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/termos" element={<Legal />} />
@@ -230,7 +267,6 @@ const AppRoutes: React.FC = () => {
 
         {/* Authenticated Routes */}
         <Route element={<ProtectedLayout />}>
-          <Route path="/" element={<Dashboard />} />
           <Route path="/agenda" element={<Agenda />} />
           <Route path="/fila" element={<QueueManagement />} />
           <Route path="/fila/historico" element={<QueueHistory />} />

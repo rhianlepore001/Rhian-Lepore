@@ -47,7 +47,8 @@ describe('Login page', () => {
       expect(document.documentElement.getAttribute('data-mode')).toBe('dark');
     });
     expect(localStorage.getItem('agendix_color_mode')).toBe('light');
-    expect(screen.getByTestId('category-barber')).toBeInTheDocument();
+    expect(screen.getByTestId('category-barber')).toHaveTextContent(/barbearias/i);
+    expect(screen.getByTestId('category-beauty')).toHaveTextContent(/salões de beleza/i);
     expect(screen.getByRole('link', { name: /criar conta — 20 dias grátis/i })).toBeInTheDocument();
   });
 

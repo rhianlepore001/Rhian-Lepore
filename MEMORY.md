@@ -53,13 +53,13 @@ Script isolado em `scripts/demo-seed/` + doc `docs/demo-seed.md`. Dois tenants f
 
 ## 🛠️ Trabalho recente
 
+- **Landing de marketing (16 Set 2026):** anônimo em `/` / `/#/` vê sales page (trial 20 dias, preços Solo/Equipe, prints reais de booking). Logado, `/` continua o Dashboard. Gateway de login: card beauty usa “Salões de beleza” (não mais o rótulo de barbearias). Vídeos cherry-pick de `feat/landing-publica-nichos` (assets only).
 - **Backup pré-landing infra (15 Set 2026):**
   - Tag anotada e branch `backup/pre-landing-infra-20260915` apontam para `77baa9fa37b8c16a263fb4e3b41e47bdc369741a` (`main` antes de #69/#71/#72).
   - Seed demo **não** aplicado neste run (sem `SUPABASE_SERVICE_ROLE_KEY` / `DEMO_SEED_PASSWORD` no ambiente).
 - **Crítica visual Playwright (15 Set 2026):**
   - `npm run visual:critique` captura PNGs em 1280×800 e 390×844 em `artifacts/visual-critique/` (gitignored).
-  - Docs: `e2e/visual-critique/README.md` + `CRITIQUE.template.md`. Sem secrets; auth via env/storageState; landing `/` pulada se for só redirect.
-  - Não constrói landing de marketing.
+  - Docs: `e2e/visual-critique/README.md` + `CRITIQUE.template.md`. Sem secrets; auth via env/storageState. Anônimo em `/` agora é a landing de marketing.
 - **Trial do produto: 10 → 20 dias (15 Set 2026):**
   - Constante única `TRIAL_DAYS` em `constants.ts`; cadastro grava `trial_ends_at` com 20 dias.
   - Copy de Login, Termos e paywall alinhada a 20 dias. Stripe checkout não define `trial_period_days` (trial é local).

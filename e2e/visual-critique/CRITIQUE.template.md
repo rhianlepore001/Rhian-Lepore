@@ -12,7 +12,7 @@ Preencha **depois** de `npm run visual:critique`. Olhe os PNGs em `artifacts/vis
 | PNGs | `artifacts/visual-critique/{desktop,mobile}/` |
 | MANIFEST | `artifacts/visual-critique/MANIFEST.json` |
 
-Produto: SaaS de gestão para barbearias e salões (BR+PT). HashRouter (`/#/rota`). Temas `barber` (dark industrial) e `beauty` (claro elegante). Trial **real: 10 dias** — não sugerir mudar o prazo.
+Produto: SaaS de gestão para barbearias e salões (BR+PT). HashRouter (`/#/rota`). Temas `barber` (dark industrial) e `beauty` (claro elegante). Trial **real: 20 dias** — não sugerir mudar o prazo.
 
 Não construa landing de marketing nesta crítica. Não commite PNGs (podem ter PII). Não invente feature que o produto não tem.
 
@@ -68,20 +68,20 @@ Anti-referências do produto (`PRODUCT.md`): planilha Excel com cor; dashboard S
 
 ## Honestidade de claims
 
-Fonte da verdade: trial = **10 dias** (`pages/Login.tsx` "Criar conta — 10 dias grátis", `AuthContext` 10 dias, `pages/Legal.tsx`). **Não alterar o prazo.** Feature prometida tem que existir na UI capturada.
+Fonte da verdade: trial = **20 dias** (`constants.ts` `TRIAL_DAYS`, `pages/Login.tsx` "Criar conta — 20 dias grátis", `AuthContext`, `pages/Legal.tsx`). **Não alterar o prazo.** Feature prometida tem que existir na UI capturada.
 
 Cole aqui as linhas de `artifacts/visual-critique/claims.json` (gerado na captura) e confronte:
 
 | Claim na UI | Onde (PNG / rota) | Verdade no produto? | Veredito |
 |---|---|---|---|
-| 10 dias grátis | login-gateway | sim, 10 dias | ok / inflado / falso |
+| 20 dias grátis | login-gateway / landing | sim, 20 dias | ok / inflado / falso |
 | 14 dias / outro prazo | | | |
 | Lista de features (agenda, fila, CRM, financeiro, clube, IA) | | cada uma existe de verdade? | |
 | "O sistema que trabalha enquanto você atende" | gateway | entrega isso na 1ª tela logada? | |
 
 Regras:
 
-- "14 dias" contra config de 10 = **claim falso** (já foi P2-UI08).
+- "14 dias" ou "10 dias" contra config de 20 = **claim falso**.
 - Feature no marketing/gateway que some no produto logado = **desonesto**.
 - IA é pós-MVP: vender IA na captura pública sem a feature na jornada = **desonesto**.
 
@@ -121,7 +121,7 @@ O barbeiro usa o celular entre um corte e outro. Olhe `mobile/*.png`:
 ## O que pular / o que não fazer
 
 - Não construir a landing de marketing.
-- Não mudar trial de 10 dias.
+- Não mudar trial de 20 dias.
 - Não commitar `artifacts/visual-critique/` nem storageState (`e2e/.auth/`).
 - Telas autenticadas SKIPPED sem `DEMO_*` / `E2E_OWNER_*` / storageState: registre o gap; não invente o layout de memória.
 

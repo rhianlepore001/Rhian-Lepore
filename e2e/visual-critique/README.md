@@ -69,7 +69,7 @@ Públicas (sempre tentadas):
 |---|---|---|
 | `login-gateway` | `/#/login` | Escolha Barbearia / Studio |
 | `login-form` | `/#/login` após `category-barber` | Form e-mail/senha; **não** preenche senha no shot |
-| `landing` | `/` e `/#/` | Hoje o root autenticado é o Dashboard; sem sessão o `ProtectedLayout` manda para `/#/login`. Se for só redirect, o shot é pulado (não falha). |
+| `landing` | `/` e `/#/` | Anônimo vê a landing de marketing. Logado, `/#/` continua o Dashboard. |
 | `book` | `/#/book/$DEMO_SLUG` | Só com slug. Página indisponível ainda é capturada (útil). |
 
 Autenticadas (placeholders — só capturam com storageState ou credenciais env):
@@ -89,7 +89,7 @@ Sem sessão, o spec **passa** e escreve `SKIPPED.md` com o comando para completa
 ## O que o agente faz com os PNGs
 
 1. Preencher `artifacts/visual-critique/CRITIQUE.md` (template versionado: `CRITIQUE.template.md`).
-2. Nota 1–10 por superfície; blockers P0; checklist de AI-slop; confrontar claims (trial **10 dias**, features).
+2. Nota 1–10 por superfície; blockers P0; checklist de AI-slop; confrontar claims (trial **20 dias**, features).
 3. Olhar mobile primeiro (persona barbeiro).
 4. Não mudar trial. Não desenhar landing. Não versionar PNG com PII de produção.
 

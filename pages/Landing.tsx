@@ -56,6 +56,7 @@ export const Landing: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [currency, setCurrency] = useState<PricingCurrency>('BRL');
   const [reduceMotion, setReduceMotion] = useState(false);
+  const [stickyAway, setStickyAway] = useState(false);
   const menuId = useId();
 
   useLandingFonts();
@@ -72,6 +73,17 @@ export const Landing: React.FC = () => {
       document.body.style.overflow = '';
     };
   }, [menuOpen]);
+
+  useEffect(() => {
+    const close = document.getElementById('comecar');
+    if (!close || typeof IntersectionObserver === 'undefined') return undefined;
+    const observer = new IntersectionObserver(
+      ([entry]) => setStickyAway(entry.isIntersecting),
+      { threshold: 0.35 },
+    );
+    observer.observe(close);
+    return () => observer.disconnect();
+  }, []);
 
   const scrollTo = useCallback((id: string) => {
     setMenuOpen(false);
@@ -166,7 +178,9 @@ export const Landing: React.FC = () => {
             </div>
 
             <figure className="ax-lp-shot ax-lp-shot-hero">
-              <img src={LANDING.shots[0].src} alt={LANDING.shots[0].alt} width={720} height={780} />
+              <div className="ax-lp-shot-frame">
+                <img src={LANDING.shots[0].src} alt={LANDING.shots[0].alt} width={720} height={780} />
+              </div>
               <figcaption>
                 {LANDING.shots[0].caption}
                 <br />
@@ -178,13 +192,16 @@ export const Landing: React.FC = () => {
 
         <section className="ax-lp-facts" aria-label="O que o produto entrega">
           <ul className="ax-lp-wrap">
-            {LANDING.facts.map((fact) => (
-              <li key={fact}>{fact}</li>
+            {LANDING.facts.map((fact, index) => (
+              <li key={fact}>
+                <span aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+                {fact}
+              </li>
             ))}
           </ul>
         </section>
 
-        <section className="ax-lp-section" id="problema">
+        <section className="ax-lp-section ax-lp-problem" id="problema">
           <div className="ax-lp-wrap ax-lp-split">
             <div>
               <h2>{LANDING.problemLead}</h2>
@@ -196,7 +213,7 @@ export const Landing: React.FC = () => {
           </div>
         </section>
 
-        <section className="ax-lp-section" id="beneficios">
+        <section className="ax-lp-section ax-lp-benefits" id="beneficios">
           <div className="ax-lp-wrap">
             <h2>Como a agenda cresce</h2>
             <div className="ax-lp-pillars">
@@ -204,6 +221,11 @@ export const Landing: React.FC = () => {
                 <article className="ax-lp-pillar" key={pillar.title}>
                   <h3>{pillar.title}</h3>
                   <p>{pillar.body}</p>
+                  <ul>
+                    {pillar.points.map((point) => (
+                      <li key={point}>{point}</li>
+                    ))}
+                  </ul>
                 </article>
               ))}
             </div>
@@ -216,7 +238,10 @@ export const Landing: React.FC = () => {
             <div className="ax-lp-product-grid">
               {LANDING.shots.map((shot) => (
                 <figure className="ax-lp-shot" key={shot.src}>
-                  <img src={shot.src} alt={shot.alt} width={960} height={780} />
+                  <div className="ax-lp-shot-frame">
+                    <img src={shot.src} alt={shot.alt} width={960} height={780} />
+                    <span className="ax-lp-callout">{shot.callout}</span>
+                  </div>
                   <figcaption>
                     {shot.caption}
                     <br />
@@ -228,6 +253,16 @@ export const Landing: React.FC = () => {
             <div className="ax-lp-product-grid ax-lp-niche-row">
               {LANDING.niches.map((niche) => (
                 <article className={`ax-lp-niche ax-lp-niche-${niche.id}`} key={niche.id}>
+                  <div className="ax-lp-niche-media" aria-hidden="true">
+                    {reduceMotion ? (
+                      <img src={niche.poster} alt="" />
+                    ) : (
+                      <video autoPlay muted loop playsInline poster={niche.poster}>
+                        <source src={niche.videoWebm} type="video/webm" />
+                        <source src={niche.videoMp4} type="video/mp4" />
+                      </video>
+                    )}
+                  </div>
                   <div className="ax-lp-niche-body">
                     <h3>{niche.title}</h3>
                     <p>{niche.body}</p>
@@ -259,7 +294,7 @@ export const Landing: React.FC = () => {
                   {LANDING.vsErp.items.map((item) => <li key={item}>{item}</li>)}
                 </ul>
               </article>
-              <article>
+              <article className="ax-lp-compare-us">
                 <h3>{LANDING.vsUs.title}</h3>
                 <ul>
                   {LANDING.vsUs.items.map((item) => <li key={item}>{item}</li>)}
@@ -370,7 +405,11 @@ export const Landing: React.FC = () => {
         </nav>
       </footer>
 
-      <Link className="ax-lp-btn ax-lp-btn-gold ax-lp-sticky ax-lp-btn-full" to={registerPath()}>
+      <Link
+        className={`ax-lp-btn ax-lp-btn-gold ax-lp-sticky ax-lp-btn-full${stickyAway || menuOpen ? ' is-away' : ''}`}
+        to={registerPath()}
+        tabIndex={stickyAway || menuOpen ? -1 : undefined}
+      >
         {LANDING.ctaTrial}
       </Link>
 

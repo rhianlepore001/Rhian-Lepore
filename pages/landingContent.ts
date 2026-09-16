@@ -56,14 +56,17 @@ export const LANDING = {
     {
       title: 'Agendar',
       body: 'Link público com a cara da casa, agenda por profissional e fila digital para quem chega sem hora marcada.',
+      points: ['Link público', 'Agenda por profissional', 'Fila digital'],
     },
     {
       title: 'Crescer',
       body: 'CRM da casa, clube com Pix ou MB WAY, produto no meio do atendimento. O próximo horário deixa de depender só da memória.',
+      points: ['CRM da casa', 'Clube Pix ou MB WAY', 'Produto no atendimento'],
     },
     {
       title: 'Fechar o dia',
       body: 'Checkout no fim do serviço, financeiro, comissões da equipe e análises do que ocupou a grade.',
+      points: ['Checkout do serviço', 'Financeiro e comissões', 'Análises da grade'],
     },
   ],
   productIntro: 'Dois temas. A mesma agenda.',
@@ -90,6 +93,7 @@ export const LANDING = {
       src: '/landing/shots/book-barber.png',
       alt: 'Agendamento público da DEMO Barbearia Corte Fino: serviços, preços e clube no tema escuro.',
       caption: 'Barbearia Corte Fino. Serviço, preço, clube. Tudo no link.',
+      callout: 'Serviço, preço e clube',
       href: DEMO_BOOK.barber.href,
       hrefLabel: DEMO_BOOK.barber.label,
     },
@@ -97,6 +101,7 @@ export const LANDING = {
       src: '/landing/shots/book-beauty.png',
       alt: 'Agendamento público da DEMO Studio Aurora: serviços de salão e clube no tema claro.',
       caption: 'Studio Aurora. O mesmo fluxo, visual de salão.',
+      callout: 'O mesmo fluxo, outro visual',
       href: DEMO_BOOK.beauty.href,
       hrefLabel: DEMO_BOOK.beauty.label,
     },

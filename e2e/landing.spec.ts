@@ -39,8 +39,6 @@ test.describe('Landing de marketing', () => {
     await viewShot(page, 'landing-pillars-desktop');
     await scrollSection(page, '#produto');
     await viewShot(page, 'landing-product-desktop');
-    await scrollSection(page, '.ax-lp-niche-row');
-    await viewShot(page, 'landing-niches-desktop');
     await scrollSection(page, '#preco');
     await viewShot(page, 'landing-pricing-desktop');
     await shot(page, 'landing-desktop');

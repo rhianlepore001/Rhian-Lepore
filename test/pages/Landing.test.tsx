@@ -5,10 +5,6 @@ import { MemoryRouter } from 'react-router-dom';
 import { Landing } from '@/pages/Landing';
 import { TRIAL_DAYS } from '@/constants';
 
-vi.mock('@/utils/publicAuthTheme', () => ({
-  applyPublicAuthTheme: vi.fn(),
-}));
-
 describe('Landing de marketing', () => {
   beforeEach(() => {
     window.scrollTo = vi.fn();
@@ -34,6 +30,9 @@ describe('Landing de marketing', () => {
     expect(screen.getAllByText('Serviço, preço e clube').length).toBeGreaterThan(0);
     expect(screen.getByRole('heading', { name: 'Agendar' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /termos/i })).toHaveAttribute('href', '/termos');
+    expect(screen.queryByRole('link', { name: /testar como barbearia/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /testar como salão/i })).not.toBeInTheDocument();
+    expect(document.documentElement.getAttribute('data-lp')).toBe('marketing');
   });
 
   it('troca preço para euro e leva o CTA ao cadastro', async () => {

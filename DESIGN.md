@@ -161,6 +161,8 @@ components:
     height: "auto"
 ---
 
+> **Marketing landing:** a vitrine anônima (`pages/Landing.tsx`) **não** usa este sistema barber/beauty. Marca universal em `pages/DESIGN.md` (papel + carvão).
+
 # Design System: AgendiX
 
 ## 1. Overview

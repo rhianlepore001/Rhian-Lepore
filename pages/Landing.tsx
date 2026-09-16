@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useId, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { TRIAL_DAYS } from '../constants';
-import { applyPublicAuthTheme } from '../utils/publicAuthTheme';
 import {
   LANDING,
   LOGIN_PATH,
@@ -12,7 +11,7 @@ import {
 import './landing.css';
 
 const FONT_HREF =
-  'https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap';
+  'https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62,700;0,62,800;0,100,400;0,100,600;0,100,700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap';
 
 function useLandingFonts(): void {
   useEffect(() => {
@@ -27,6 +26,20 @@ function useLandingFonts(): void {
     link.rel = 'stylesheet';
     link.href = FONT_HREF;
     document.head.append(preconnect, link);
+  }, []);
+}
+
+function useLandingChrome(): void {
+  useEffect(() => {
+    const html = document.documentElement;
+    html.setAttribute('data-lp', 'marketing');
+    const theme = document.querySelector('meta[name="theme-color"]');
+    const previousTheme = theme?.getAttribute('content') ?? '';
+    theme?.setAttribute('content', '#E9E4D8');
+    return () => {
+      html.removeAttribute('data-lp');
+      if (theme && previousTheme) theme.setAttribute('content', previousTheme);
+    };
   }, []);
 }
 
@@ -55,17 +68,12 @@ function prefersReducedMotion(): boolean {
 export const Landing: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [currency, setCurrency] = useState<PricingCurrency>('BRL');
-  const [reduceMotion, setReduceMotion] = useState(false);
   const [stickyAway, setStickyAway] = useState(false);
   const menuId = useId();
 
   useLandingFonts();
+  useLandingChrome();
   useSeo();
-
-  useEffect(() => {
-    applyPublicAuthTheme();
-    setReduceMotion(prefersReducedMotion());
-  }, []);
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : '';
@@ -75,13 +83,24 @@ export const Landing: React.FC = () => {
   }, [menuOpen]);
 
   useEffect(() => {
-    const close = document.getElementById('comecar');
-    if (!close || typeof IntersectionObserver === 'undefined') return undefined;
+    if (typeof IntersectionObserver === 'undefined') return undefined;
+    const ids = ['preco', 'trial', 'comecar'];
+    const nodes = ids
+      .map((id) => document.getElementById(id))
+      .filter((node): node is HTMLElement => Boolean(node));
+    if (!nodes.length) return undefined;
+    const visible = new Set<string>();
     const observer = new IntersectionObserver(
-      ([entry]) => setStickyAway(entry.isIntersecting),
-      { threshold: 0.35 },
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) visible.add(entry.target.id);
+          else visible.delete(entry.target.id);
+        });
+        setStickyAway(visible.size > 0);
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -18% 0px' },
     );
-    observer.observe(close);
+    nodes.forEach((node) => observer.observe(node));
     return () => observer.disconnect();
   }, []);
 
@@ -104,7 +123,7 @@ export const Landing: React.FC = () => {
 
       <header className="ax-lp-nav">
         <button type="button" className="ax-lp-brand" onClick={() => scrollTo('conteudo')}>
-          <img src="/logo-agendix-icon.png" alt="" width={32} height={32} />
+          <img src="/logo-agendix-light.png" alt="" width={32} height={32} />
           <span>AgendiX</span>
         </button>
 
@@ -116,7 +135,7 @@ export const Landing: React.FC = () => {
           <Link to={LOGIN_PATH}>{LANDING.ctaLogin}</Link>
         </nav>
 
-        <Link className="ax-lp-btn ax-lp-btn-gold ax-lp-nav-cta" to={registerPath()}>
+        <Link className="ax-lp-btn ax-lp-btn-ink ax-lp-nav-cta" to={registerPath()}>
           {LANDING.ctaTrial}
         </Link>
 
@@ -140,35 +159,26 @@ export const Landing: React.FC = () => {
         <button type="button" onClick={() => scrollTo('preco')}>Preço</button>
         <button type="button" onClick={() => scrollTo('faq')}>FAQ</button>
         <Link to={LOGIN_PATH} onClick={() => setMenuOpen(false)}>{LANDING.ctaLogin}</Link>
-        <Link className="ax-lp-btn ax-lp-btn-gold" to={registerPath()} onClick={() => setMenuOpen(false)}>
+        <Link className="ax-lp-btn ax-lp-btn-ink" to={registerPath()} onClick={() => setMenuOpen(false)}>
           {LANDING.ctaTrial}
         </Link>
       </div>
 
       <main id="conteudo">
         <section className="ax-lp-hero">
-          <div className="ax-lp-hero-media" aria-hidden="true">
-            {reduceMotion ? (
-              <img src="/landing/videos/loop-hero-poster.webp" alt="" />
-            ) : (
-              <video autoPlay muted loop playsInline poster="/landing/videos/loop-hero-poster.webp">
-                <source src="/landing/videos/loop-hero-720.webm" type="video/webm" />
-                <source src="/landing/videos/loop-hero-720.mp4" type="video/mp4" />
-              </video>
-            )}
-            <div className="ax-lp-hero-wash" />
-          </div>
-
+          <svg className="ax-lp-crease" viewBox="0 0 1200 420" aria-hidden="true" focusable="false">
+            <path d="M-20 310 C 220 40, 520 40, 1180 280" />
+          </svg>
           <div className="ax-lp-wrap ax-lp-hero-grid">
             <div>
               <h1>
                 {LANDING.h1[0]}
                 <br />
-                <em>{LANDING.h1[1]}</em>
+                {LANDING.h1[1]}
               </h1>
               <p className="ax-lp-lede">{LANDING.sub}</p>
               <div className="ax-lp-actions">
-                <Link className="ax-lp-btn ax-lp-btn-gold" to={registerPath()}>
+                <Link className="ax-lp-btn ax-lp-btn-ink" to={registerPath()}>
                   {LANDING.ctaTrial}
                 </Link>
                 <button type="button" className="ax-lp-btn ax-lp-btn-ghost" onClick={() => scrollTo('como-funciona')}>
@@ -191,20 +201,15 @@ export const Landing: React.FC = () => {
 
         <section className="ax-lp-facts" aria-label="O que o produto entrega">
           <ul className="ax-lp-wrap">
-            {LANDING.facts.map((fact, index) => (
-              <li key={fact}>
-                <span aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
-                {fact}
-              </li>
+            {LANDING.facts.map((fact) => (
+              <li key={fact}>{fact}</li>
             ))}
           </ul>
         </section>
 
         <section className="ax-lp-section ax-lp-problem" id="problema">
           <div className="ax-lp-wrap ax-lp-split">
-            <div>
-              <h2>{LANDING.problemLead}</h2>
-            </div>
+            <h2>{LANDING.problemLead}</h2>
             <div>
               <p className="ax-lp-copy">{LANDING.problemBody}</p>
               <p className="ax-lp-copy">{LANDING.promise}</p>
@@ -235,8 +240,8 @@ export const Landing: React.FC = () => {
           <div className="ax-lp-wrap">
             <h2>{LANDING.productIntro}</h2>
             <div className="ax-lp-product-grid">
-              {LANDING.shots.map((shot) => (
-                <figure className="ax-lp-shot" key={shot.src}>
+              {LANDING.shots.map((shot, index) => (
+                <figure className={`ax-lp-shot${index === 1 ? ' ax-lp-shot-shift' : ''}`} key={shot.src}>
                   <div className="ax-lp-shot-frame">
                     <img src={shot.src} alt={shot.alt} width={960} height={780} />
                   </div>
@@ -246,31 +251,6 @@ export const Landing: React.FC = () => {
                     <a href={shot.href} rel="noreferrer noopener" target="_blank">{shot.hrefLabel}</a>
                   </figcaption>
                 </figure>
-              ))}
-            </div>
-            <div className="ax-lp-product-grid ax-lp-niche-row">
-              {LANDING.niches.map((niche) => (
-                <article className={`ax-lp-niche ax-lp-niche-${niche.id}`} key={niche.id}>
-                  <div className="ax-lp-niche-media" aria-hidden="true">
-                    {reduceMotion ? (
-                      <img src={niche.poster} alt="" />
-                    ) : (
-                      <video autoPlay muted loop playsInline poster={niche.poster}>
-                        <source src={niche.videoWebm} type="video/webm" />
-                        <source src={niche.videoMp4} type="video/mp4" />
-                      </video>
-                    )}
-                  </div>
-                  <div className="ax-lp-niche-body">
-                    <h3>{niche.title}</h3>
-                    <p>{niche.body}</p>
-                    <div className="ax-lp-actions">
-                      <Link className="ax-lp-btn ax-lp-btn-gold" to={registerPath(niche.id)}>
-                        Testar {TRIAL_DAYS} dias
-                      </Link>
-                    </div>
-                  </div>
-                </article>
               ))}
             </div>
           </div>
@@ -329,14 +309,14 @@ export const Landing: React.FC = () => {
             </ul>
             <p className="ax-lp-note">{LANDING.trialNote}</p>
             <div className="ax-lp-actions ax-lp-actions-late">
-              <Link className="ax-lp-btn ax-lp-btn-gold" to={registerPath()}>
+              <Link className="ax-lp-btn ax-lp-btn-ink" to={registerPath()}>
                 {LANDING.ctaTrial}
               </Link>
             </div>
           </div>
         </section>
 
-        <section className="ax-lp-section" id="preco">
+        <section className="ax-lp-section ax-lp-pricing" id="preco">
           <div className="ax-lp-wrap">
             <h2>{LANDING.pricingLead}</h2>
             <div className="ax-lp-currency" role="group" aria-label="Moeda">
@@ -383,11 +363,8 @@ export const Landing: React.FC = () => {
           <div className="ax-lp-wrap">
             <h2>{LANDING.closeLead}</h2>
             <div className="ax-lp-actions">
-              <Link className="ax-lp-btn ax-lp-btn-gold" to={registerPath('barber')}>
-                Testar como barbearia
-              </Link>
-              <Link className="ax-lp-btn ax-lp-btn-ghost" to={registerPath('beauty')}>
-                Testar como salão
+              <Link className="ax-lp-btn ax-lp-btn-ink" to={registerPath()}>
+                {LANDING.ctaTrial}
               </Link>
             </div>
           </div>
@@ -404,7 +381,7 @@ export const Landing: React.FC = () => {
       </footer>
 
       <Link
-        className={`ax-lp-btn ax-lp-btn-gold ax-lp-sticky ax-lp-btn-full${stickyAway || menuOpen ? ' is-away' : ''}`}
+        className={`ax-lp-btn ax-lp-btn-ink ax-lp-sticky ax-lp-btn-full${stickyAway || menuOpen ? ' is-away' : ''}`}
         to={registerPath()}
         tabIndex={stickyAway || menuOpen ? -1 : undefined}
       >

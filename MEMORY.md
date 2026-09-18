@@ -60,7 +60,7 @@ Script isolado em `scripts/demo-seed/` + doc `docs/demo-seed.md`. Dois tenants f
   - Campo “Link Personalizado (Slug)” saiu do formulário Novo Profissional; slug continua gerado automaticamente.
   - Cadastro de colaborador não chama mais UPDATE em `team_members` (RLS do dono); usa RPC `complete_staff_invite`. Login tenta `relink_staff_if_unbound` se a Agenda estiver órfã.
   - `onAuthStateChange` adia o fetch do perfil (evita deadlock do `signUp` → spinner infinito). Submit do cadastro sempre libera o loading.
-  - Gateway de login: card beauty usa “Salões & Studios”, não “Barbearias”.
+  - Gateway de login: card de cima “Barbearias”; card de baixo “Salão de Beleza” (não duplica BARBEARIAS).
   - Migrations `20260918000001_purge_staff_auth_on_delete.sql` e `20260918000002_complete_staff_invite.sql` aplicadas no remoto BARBER/Beauty OS.
   - Gates: typecheck, lint, build, 625 testes.
 

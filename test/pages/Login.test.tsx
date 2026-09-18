@@ -47,9 +47,12 @@ describe('Login page', () => {
       expect(document.documentElement.getAttribute('data-mode')).toBe('dark');
     });
     expect(localStorage.getItem('agendix_color_mode')).toBe('light');
-    expect(screen.getByTestId('category-barber')).toBeInTheDocument();
-    expect(screen.getByTestId('category-barber')).toHaveTextContent(/barbearias/i);
-    expect(screen.getByTestId('category-beauty')).toHaveTextContent(/salões/i);
+    const barberCard = screen.getByTestId('category-barber');
+    const beautyCard = screen.getByTestId('category-beauty');
+    expect(barberCard).toHaveTextContent(/barbearias/i);
+    expect(barberCard).not.toHaveTextContent(/salão/i);
+    expect(beautyCard).toHaveTextContent(/salão de beleza/i);
+    expect(beautyCard).not.toHaveTextContent(/barbearias/i);
     expect(screen.getByRole('link', { name: /criar conta — 20 dias grátis/i })).toBeInTheDocument();
   });
 

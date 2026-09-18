@@ -144,7 +144,7 @@ export const Login: React.FC = () => {
                     >
                         <button
                             data-testid="category-beauty"
-                            aria-label="Acessar painel para salões e spas"
+                            aria-label="Acessar painel para salões de beleza"
                             onClick={() => handleSelectSegment('beauty')}
                             className="group relative h-72 md:h-96 w-full rounded-2xl md:rounded-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]"
                         >
@@ -163,7 +163,7 @@ export const Login: React.FC = () => {
 
                             <div className="absolute inset-0 flex flex-col items-center justify-end pb-10 md:pb-12 z-10 px-6 text-center">
                                 <h2 className="font-heading text-3xl md:text-4xl text-[var(--color-text)] uppercase tracking-tight mb-3 group-hover:text-theme-accent transition-colors duration-300">
-                                    {beautyGatewayCopy.segmentLabelPlural}
+                                    {beautyGatewayCopy.segmentLabel}
                                 </h2>
                                 {/* Traço horizontal com animação de crescer */}
                                 <div className="w-0 h-[1px] bg-theme-accent/60 group-hover:w-16 transition-all duration-500 mb-5" />

@@ -1,67 +1,49 @@
-# Relatório orquestrador — esqueleto A+B+C+F
+# Relatório orquestrador — esqueleto A+B+C+E+F
 
 Campanha simulada 30 dias · AgendiX · 2026-09-18  
-Fontes: A permissões · B inventário · C gestor-barbeiro · **F clientes públicos**.  
-**D (recepção) e E (3 staff): TBD.** Não relançar A/B/C/F. Plano E2E final + backlog só após D+E.
+Fontes: A · B · C · **E 3 barbeiros** · F clientes.  
+**D recepção: TBD.** Não relançar A/B/C/E/F. Plano E2E final + backlog P0 **só após D**.
 
 ---
 
-## 1. Vereditos fechados
+## 1. Vereditos
 
 | Questão | Resultado | Canônico |
 |---|---|---|
-| Colaborador aceita booking online? | **FAIL** | CAM-001, CAM-002 (C-10 = dupe). **Fora de F.** |
-| Colaborador vê cliente na fila? | **PASS** | CAM-003 |
-| Recepcionista ≠ barbeiro em ACL? | **Não** | CAM-004 |
-| Submit público | INSERT `pending` + `get_active_booking_by_phone`. Sem RPC `create_public_booking`. | CAM-014 |
-| Copy pós-submit | “AGENDAMENTO CONFIRMADO” com DB `pending` | CAM-013 |
-| Trial | 20 dias | CAM-011 |
-| OTP Minha Área | **Não** (telefone/localStorage) | CAM-018 |
+| Colaborador aceita booking online? | **FAIL** | CAM-001 (E-01..E-05); CAM-002 (E-06) |
+| Colaborador vê/opera fila? | **PASS** | CAM-003 (E-11: call/serve/checkout) |
+| Recepcionista ≠ barbeiro ACL? | **Não** | CAM-004 (E-07, E-D15 C3≡C1) |
+| Staff conclui na Agenda? | **FAIL** (toast dono) | CAM-020; fila checkout OK |
+| Add manual fila staff | UI mostra; SPEC F4 não | CAM-021 |
+| Copy sucesso book | “CONFIRMADO” vs `pending` | CAM-013 |
+| INSERT público | sem lock / sem revalidar slot | CAM-014 |
+| Cancel Minha Área | UPDATE direto, falha silenciosa | CAM-016 |
 
 ---
 
-## 2. Superfícies (B) + cliente (F)
+## 2. Três jornadas (D ainda vazio)
 
-Público vivo: `/#/book/:slug` · `/#/queue/:slug` · `/#/minha-area/:slug` · `/#/clube/:slug`.
-
-**Não testar como feature:** CAM-006–010 (placeholders / landing / audit dev).  
-**Reusar Playwright:** `ciclo-de-receita` (aceite = dono), `fila-digital-v2`, `queue-manual-add`, `club-capture`.
-
----
-
-## 3. Jornada dono (C) vs cliente (F)
-
-| Quem | Dias / IDs | Ligação |
+| Quem | Matriz | Ligação |
 |---|---|---|
-| Owner | C D1–D30 | Aceita pending (D15); fila QR lado casa (D19) |
-| Cliente | **F-C-01..30** (não são os C-01 do dono) | Submit pending; card “Aguardando” até o dono aceitar |
-| Recepção | D TBD | |
-| 3 barbeiros | E TBD | |
+| Owner | C D1–D30 | Aceita pending; QR fila |
+| C1 ‖ C2 ‖ C3 | **E-D1..30** | Q1 FAIL / Q2 PASS / negativos |
+| Cliente | F-C-01..30 | INSERT pending |
+| Recepção | **D TBD** | não duplicar E-D15 ACL |
 
 ---
 
-## 4. Achados canônicos
+## 3. Canônicos
 
-CAM-001…012 = A+B+C.  
-CAM-013…019 = F (F-09, F-06/07, F-08, F-15, F-10/19, F-16, F-14).  
-Tabela completa: [`MATRIX.md`](./MATRIX.md).
+CAM-001…019 = A+B+C+F.  
+CAM-020 E-09 · CAM-021 E-10 · CAM-022 E-14.  
+Tabela: [`MATRIX.md`](./MATRIX.md).
 
-Backlog **ainda não priorizado em ranking único** — falta D+E.
-
----
-
-## 5. TBD
-
-| Pacote | Persona | Ao chegar |
-|---|---|---|
-| D | Recepcionista | Walk-in, add fila, CRM bloqueado |
-| E | 3 barbeiros | CAM-001 prova runtime, insights, filtro agenda |
-| **Final** | orquestrador | Plano E2E 30d consolidado + backlog P0→note |
+**Rascunho P0** (reordenar com D): CAM-001, CAM-013, CAM-014, CAM-016.
 
 ---
 
-## 6. GO / NO-GO
+## 4. GO / NO-GO
 
 **NO-GO** autenticado sem credenciais.  
-GO parcial anônimo: book + fila + copy CAM-013 se o slug existir.  
-Desenho fechado: ACL (A) + mapa (B) + mês dono (C) + mês cliente (F).
+GO parcial anônimo: book + CAM-013.  
+Desenho fechado: ACL, mapa, dono, 3 staff, cliente. Falta **balcão (D)**.

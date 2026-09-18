@@ -665,7 +665,7 @@ describe('AuthContext', () => {
                 return Promise.resolve({ data: true, error: null });
             }
             if (name === 'complete_staff_invite') {
-                return Promise.resolve({ data: 'member-1', error: null });
+                return Promise.resolve({ data: 'member-new-reinvite', error: null });
             }
             return Promise.resolve({ data: null, error: null });
         });
@@ -683,23 +683,80 @@ describe('AuthContext', () => {
                 region: 'BR',
                 phone: '',
                 companyId: 'owner-123',
-                teamMemberId: 'member-1',
+                teamMemberId: 'member-new-reinvite',
             });
         });
 
         expect(supabase.rpc).toHaveBeenCalledWith('release_staff_email_for_reinvite', {
             p_company_id: 'owner-123',
-            p_member_id: 'member-1',
+            p_member_id: 'member-new-reinvite',
             p_email: 'recepcao@example.com',
         });
         expect(supabase.auth.signUp).toHaveBeenCalledTimes(2);
         expect(registerResult.error).toBeNull();
         expect(supabase.rpc).toHaveBeenCalledWith('complete_staff_invite', {
             p_company_id: 'owner-123',
-            p_member_id: 'member-1',
+            p_member_id: 'member-new-reinvite',
             p_birth_date: null,
         });
-        expect(result.current.teamMemberId).toBe('member-1');
+        expect(supabase.rpc).not.toHaveBeenCalledWith(
+            'complete_staff_invite',
+            expect.objectContaining({ p_member_id: 'member-old-deleted' }),
+        );
+        expect(result.current.teamMemberId).toBe('member-new-reinvite');
+    });
+
+    it('após purge do Auth, o mesmo e-mail cadastra no member_id novo e não no excluído', async () => {
+        const mockUser = { id: 'staff-reinvite', email: 'e2e.colab@example.com' };
+        const deletedMemberId = '11111111-1111-4111-8111-111111111111';
+        const newMemberId = '33333333-3333-4333-8333-333333333333';
+
+        (supabase.auth.getSession as any).mockResolvedValue({ data: { session: null }, error: null });
+        (supabase.auth.signUp as any).mockResolvedValue({
+            data: { user: mockUser, session: { user: mockUser } },
+            error: null,
+        });
+        (supabase.rpc as any).mockImplementation((name: string, args?: { p_member_id?: string }) => {
+            if (name === 'complete_staff_invite') {
+                return Promise.resolve({ data: args?.p_member_id ?? newMemberId, error: null });
+            }
+            return Promise.resolve({ data: null, error: null });
+        });
+
+        const { result } = renderHook(() => useAuth(), { wrapper });
+
+        let registerResult;
+        await act(async () => {
+            registerResult = await result.current.register({
+                email: 'e2e.colab@example.com',
+                password: 'Password123!',
+                fullName: 'E2E Bob Colab',
+                businessName: 'DEMO Barbearia',
+                userType: 'barber',
+                region: 'BR',
+                phone: '',
+                companyId: 'owner-123',
+                teamMemberId: newMemberId,
+                birthDate: '1993-06-06',
+            });
+        });
+
+        expect(registerResult.error).toBeNull();
+        expect(supabase.rpc).not.toHaveBeenCalledWith(
+            'release_staff_email_for_reinvite',
+            expect.anything(),
+        );
+        expect(supabase.rpc).toHaveBeenCalledWith('complete_staff_invite', {
+            p_company_id: 'owner-123',
+            p_member_id: newMemberId,
+            p_birth_date: '1993-06-06',
+        });
+        expect(supabase.rpc).not.toHaveBeenCalledWith(
+            'complete_staff_invite',
+            expect.objectContaining({ p_member_id: deletedMemberId }),
+        );
+        expect(result.current.role).toBe('staff');
+        expect(result.current.teamMemberId).toBe(newMemberId);
     });
 
     it('envia role staff e company_id no metadata do signUp do convite', async () => {

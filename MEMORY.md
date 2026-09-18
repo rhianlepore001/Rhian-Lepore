@@ -63,6 +63,7 @@ Script isolado em `scripts/demo-seed/` + doc `docs/demo-seed.md`. Dois tenants f
   - Gateway de login: card de cima “Barbearias”; card de baixo “Salão de Beleza” (não duplica BARBEARIAS).
   - Migrations `20260918000001_purge_staff_auth_on_delete.sql` e `20260918000002_complete_staff_invite.sql` aplicadas no remoto BARBER/Beauty OS.
   - Gates: typecheck, lint, build, 625 testes.
+  - Regressão: excluir colaborador (`delete_staff_collaborator`) e cadastrar o mesmo e-mail no `member_id` do convite novo — não no row excluído.
 
 
 

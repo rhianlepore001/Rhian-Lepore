@@ -93,4 +93,31 @@ describe('Register page', () => {
       });
     });
   }, 10000);
+
+  it('convite novo envia o member_id da URL — vínculo no profissional reconvidado', async () => {
+    registerMock.mockResolvedValue({ error: null });
+
+    render(
+      <MemoryRouter initialEntries={['/register?company=owner-1&member=member-new-reinvite']}>
+        <Register />
+      </MemoryRouter>
+    );
+
+    await screen.findByLabelText(/e-mail \(gmail\)/i);
+    await userEvent.type(screen.getByLabelText(/e-mail \(gmail\)/i), 'e2e.colab@example.com');
+    await userEvent.type(screen.getByLabelText(/data de nascimento/i), '1993-06-06');
+    await userEvent.type(screen.getByLabelText('Senha'), 'Password123!');
+    await userEvent.type(screen.getByLabelText('Confirmar senha'), 'Password123!');
+    await userEvent.click(screen.getByRole('button', { name: /criar minha conta/i }));
+
+    await waitFor(() => {
+      expect(registerMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email: 'e2e.colab@example.com',
+          companyId: 'owner-1',
+          teamMemberId: 'member-new-reinvite',
+        }),
+      );
+    });
+  }, 10000);
 });

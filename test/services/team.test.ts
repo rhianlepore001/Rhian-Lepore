@@ -57,6 +57,20 @@ describe('team service', () => {
     });
   });
 
+  it('exclusão do colaborador antigo não mexe no member_id do reconvite', async () => {
+    const newMemberId = '33333333-3333-4333-8333-333333333333';
+
+    await deleteTeamMember(memberId, companyId);
+
+    expect(supabase.rpc).toHaveBeenCalledTimes(1);
+    expect(supabase.rpc).toHaveBeenCalledWith('delete_staff_collaborator', {
+      p_member_id: memberId,
+    });
+    expect(supabase.rpc).not.toHaveBeenCalledWith('delete_staff_collaborator', {
+      p_member_id: newMemberId,
+    });
+  });
+
   it('falha se o profissional for dono ou já estiver excluído', async () => {
     mocks.rpc.mockResolvedValue({
       data: null,

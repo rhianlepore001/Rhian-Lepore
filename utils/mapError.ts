@@ -29,7 +29,7 @@ const CODE_MAP: Record<string, string> = {
   permission_denied: 'Você não tem permissão para essa ação.',
   invalid_login: 'E-mail ou senha incorretos. Verifique e tente de novo.',
   rate_limit_login: 'Muitas tentativas de login. Por segurança, aguarde 1 minuto.',
-  user_already_exists: 'Este e-mail já está cadastrado. Faça login ou use outro e-mail.',
+  user_already_exists: 'Este e-mail já tem conta. Faça login ou use outro e-mail.',
 
   // Postgres
   '23505': 'Esse registro já existe.',
@@ -94,6 +94,8 @@ export function mapError(error: unknown, fallback: string): UserFacingError {
 
 /** Combina message + código em uma única string para toasts simples. */
 export function formatUserFacingError(err: UserFacingError): string {
+  // E-mail duplicado: o marcador curto (#useralre) não ajuda o usuário.
+  if (err.code === '#useralre') return err.message;
   return `${err.message} (${err.code})`;
 }
 

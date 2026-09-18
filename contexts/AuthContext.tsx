@@ -327,6 +327,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       let { data: authData, error: authError } = await supabase.auth.signUp(signUpPayload);
 
       if (authError && isEmailTakenError(authError) && data.companyId && data.teamMemberId) {
+        const existing = await supabase.auth.signInWithPassword({
+          email: data.email,
+          password: data.password,
+        });
+
+        if (!existing?.error && existing?.data?.user) {
+          const { data: claimedId, error: claimError } = await supabase.rpc('complete_staff_invite', {
+            p_company_id: data.companyId,
+            p_member_id: data.teamMemberId,
+            p_birth_date: data.birthDate || null,
+          });
+          if (!claimError) {
+            setCompanyId(data.companyId);
+            setRole('staff');
+            setUserType(data.userType);
+            setRegion(normalizeRegion(data.region));
+            setBusinessName(data.businessName);
+            setFullName(data.fullName);
+            setTutorialCompleted(false);
+            setTeamMemberId(claimedId || data.teamMemberId);
+            return { error: null };
+          }
+          await supabase.auth.signOut();
+        }
+
         const { data: released } = await supabase.rpc('release_staff_email_for_reinvite', {
           p_company_id: data.companyId,
           p_member_id: data.teamMemberId,

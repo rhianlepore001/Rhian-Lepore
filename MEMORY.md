@@ -54,7 +54,8 @@ Script isolado em `scripts/demo-seed/` + doc `docs/demo-seed.md`. Dois tenants f
 ## 🛠️ Trabalho recente
 
 - **Convite da equipe — e-mail duplicado, scroll, exclusão, spinner e Agenda órfã (18 Set 2026):**
-  - Cadastro (owner e convite) mostra “Este e-mail já está cadastrado” em vez de `#useralreadyexists`.
+  - Cadastro (owner e convite) mostra “Este e-mail já tem conta” — sem `#useralre`.
+  - Reconvite dirty: se o Auth órfão ainda existe, tenta login com a senha do form e vincula o member novo; se a senha não bate, `release_staff_email_for_reinvite` + signUp.
   - Banner de erro em login/cadastro/recuperar/nova senha rola para o centro da tela no mobile.
   - Excluir colaborador faz soft-delete em `team_members` e remove a conta Auth (não o dono), liberando o e-mail. Convite novo tenta limpar órfão antigo (`release_staff_email_for_reinvite`).
   - Campo “Link Personalizado (Slug)” saiu do formulário Novo Profissional; slug continua gerado automaticamente.

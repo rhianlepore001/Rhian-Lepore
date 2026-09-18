@@ -637,6 +637,10 @@ describe('AuthContext', () => {
                 data: { user: mockUser, session: { user: mockUser } },
                 error: null,
             });
+        (supabase.auth.signInWithPassword as any).mockResolvedValue({
+            data: { user: null, session: null },
+            error: { message: 'Invalid login credentials' },
+        });
         (supabase.from as any).mockImplementation((table: string) => {
             const queryChain: any = {
                 select: vi.fn().mockReturnThis(),
@@ -704,6 +708,63 @@ describe('AuthContext', () => {
             expect.objectContaining({ p_member_id: 'member-old-deleted' }),
         );
         expect(result.current.teamMemberId).toBe('member-new-reinvite');
+    });
+
+    it('se o Auth órfão ainda existe, entra com a senha e vincula o member_id novo', async () => {
+        const mockUser = { id: '78052ac0-f285-4419-9434-bfcf52f35cae', email: 'e2e.bob.colab.reinvite.20260918@gmail.com' };
+        const newMemberId = 'dff1d15d-8595-432d-b1e3-de3fdc467764';
+
+        (supabase.auth.getSession as any).mockResolvedValue({ data: { session: null }, error: null });
+        (supabase.auth.signUp as any).mockResolvedValue({
+            data: { user: null },
+            error: { code: 'user_already_exists', message: 'User already registered' },
+        });
+        (supabase.auth.signInWithPassword as any).mockResolvedValue({
+            data: { user: mockUser, session: { user: mockUser } },
+            error: null,
+        });
+        (supabase.rpc as any).mockImplementation((name: string, args?: { p_member_id?: string }) => {
+            if (name === 'complete_staff_invite') {
+                return Promise.resolve({ data: args?.p_member_id ?? newMemberId, error: null });
+            }
+            return Promise.resolve({ data: null, error: null });
+        });
+
+        const { result } = renderHook(() => useAuth(), { wrapper });
+
+        let registerResult;
+        await act(async () => {
+            registerResult = await result.current.register({
+                email: 'e2e.bob.colab.reinvite.20260918@gmail.com',
+                password: 'Password123!',
+                fullName: 'E2E Bob Colab 2',
+                businessName: 'DEMO · Barbearia Corte Fino',
+                userType: 'barber',
+                region: 'BR',
+                phone: '',
+                companyId: '7baee43b-a3b0-4d96-b566-62bc88224f5c',
+                teamMemberId: newMemberId,
+                birthDate: '1990-01-01',
+            });
+        });
+
+        expect(registerResult.error).toBeNull();
+        expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
+            email: 'e2e.bob.colab.reinvite.20260918@gmail.com',
+            password: 'Password123!',
+        });
+        expect(supabase.rpc).toHaveBeenCalledWith('complete_staff_invite', {
+            p_company_id: '7baee43b-a3b0-4d96-b566-62bc88224f5c',
+            p_member_id: newMemberId,
+            p_birth_date: '1990-01-01',
+        });
+        expect(supabase.rpc).not.toHaveBeenCalledWith(
+            'release_staff_email_for_reinvite',
+            expect.anything(),
+        );
+        expect(supabase.auth.signUp).toHaveBeenCalledTimes(1);
+        expect(result.current.role).toBe('staff');
+        expect(result.current.teamMemberId).toBe(newMemberId);
     });
 
     it('após purge do Auth, o mesmo e-mail cadastra no member_id novo e não no excluído', async () => {

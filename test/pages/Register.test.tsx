@@ -57,8 +57,9 @@ describe('Register page', () => {
     await userEvent.click(screen.getByRole('button', { name: /finalizar cadastro/i }));
 
     const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent('e-mail já está cadastrado');
+    expect(alert).toHaveTextContent('e-mail já tem conta');
     expect(alert).not.toHaveTextContent('User already registered');
+    expect(alert).not.toHaveTextContent('#useralre');
 
     await waitFor(() => {
       expect(Element.prototype.scrollIntoView).toHaveBeenCalledWith({

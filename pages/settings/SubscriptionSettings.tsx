@@ -9,33 +9,23 @@ import { mapError } from '../../utils/mapError';
 
 import { Check, Zap, Calendar, ShieldCheck, CreditCard, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { getPlanPricing, regionToPlanCurrency } from '../../utils/planPricing';
 
 export const SubscriptionSettings: React.FC = () => {
     const { businessName, region } = useAuth();
     const { subscriptionStatus, trialDaysRemaining, isSubscriptionActive, isTrial } = useSubscription();
     const { isBeauty, colors, accent, radius, status } = useBrutalTheme();
-    // Auto-detect currency based on region
-    const currency = region === 'PT' ? 'EUR' : 'BRL';
+    const currency = regionToPlanCurrency(region);
     const [loading, setLoading] = useState<string | null>(null);
     const { showToast } = useToast();
 
-    // Pricing Configuration
-    const pricing = {
-        BRL: {
-            solo: { price: 'R$ 34,90', value: 34.90, priceId: 'price_1SmKO0PUPmLLh2qEwaMMPA6i' },
-            team: { price: 'R$ 59,90', value: 59.90, priceId: 'price_1SmKQPPUPmLLh2qEwY9lvQki' }
-        },
-        EUR: {
-            solo: { price: '€ 9,90', value: 9.90, priceId: 'price_1SmKQPPUPmLLh2qEtjjlg2S1' },
-            team: { price: '€ 19,90', value: 19.90, priceId: 'price_1SmKQPPUPmLLh2qEomuqHXvt' }
-        }
-    };
+    const pricing = getPlanPricing(currency);
 
     const plans = [
         {
             id: 'solo',
             name: 'Plano Solo',
-            price: pricing[currency].solo.price,
+            price: pricing.solo.price,
             period: '/mês',
             description: 'Ideal para profissionais autônomos.',
             features: [
@@ -46,12 +36,12 @@ export const SubscriptionSettings: React.FC = () => {
                 'Suporte via WhatsApp'
             ],
             recommended: !isBeauty,
-            priceId: pricing[currency].solo.priceId
+            priceId: pricing.solo.priceId
         },
         {
             id: 'team',
             name: 'Plano Equipe',
-            price: pricing[currency].team.price,
+            price: pricing.team.price,
             period: '/mês',
             description: 'Para estabelecimentos com equipe.',
             features: [
@@ -63,7 +53,7 @@ export const SubscriptionSettings: React.FC = () => {
                 'Prioridade no Suporte'
             ],
             recommended: isBeauty,
-            priceId: pricing[currency].team.priceId
+            priceId: pricing.team.priceId
         }
     ];
 

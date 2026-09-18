@@ -320,6 +320,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             region: data.region,
             role: data.companyId ? 'staff' : 'owner',
             company_id: data.companyId || undefined,
+            team_member_id: data.companyId ? data.teamMemberId || undefined : undefined,
           }
         }
       };

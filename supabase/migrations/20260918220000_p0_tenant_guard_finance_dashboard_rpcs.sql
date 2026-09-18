@@ -41,7 +41,7 @@ DECLARE
   v_body text;
   v_stmt text;
   v_names text[];
-  v_types oid[];
+  v_type_names text[];
 BEGIN
   v_unsafe := p_func_name || '__tenant_unsafe';
 
@@ -56,7 +56,10 @@ BEGIN
       pg_get_function_identity_arguments(p.oid) AS ident,
       oidvectortypes(p.proargtypes) AS type_list,
       pg_get_function_arguments(p.oid) AS args_full,
-      pg_get_function_result(p.oid) AS result
+      pg_get_function_result(p.oid) AS result,
+      (SELECT array_agg(format_type(t, NULL) ORDER BY ord)
+         FROM unnest(p.proargtypes::oid[]) WITH ORDINALITY AS u(t, ord)
+      ) AS argtype_names
     FROM pg_proc p
     JOIN pg_namespace n ON n.oid = p.pronamespace
     WHERE n.nspname = 'public'
@@ -77,7 +80,7 @@ BEGIN
     END IF;
 
     v_names := r.proargnames;
-    v_types := r.argtypes;
+    v_type_names := r.argtype_names;
     v_tenant_idx := NULL;
 
     IF v_names IS NOT NULL THEN
@@ -104,7 +107,7 @@ BEGIN
         v_call := v_call || ', ';
       END IF;
       IF v_i = v_tenant_idx THEN
-        v_argtype := format_type(v_types[v_i], NULL);
+        v_argtype := v_type_names[v_i];
         v_call := v_call || format('v_auth_company_id::%s', v_argtype);
       ELSE
         v_call := v_call || format('%I', v_names[v_i]);
@@ -208,7 +211,7 @@ BEGIN
      ) IS NULL THEN
     PERFORM public.__agendix_install_tenant_wrapper(
       'get_finance_stats',
-      'p_user_id text, p_start_date text, p_end_date text'
+      'text, text, text'
     );
   ELSIF to_regprocedure(
           'public.get_finance_stats(text, text, text)'

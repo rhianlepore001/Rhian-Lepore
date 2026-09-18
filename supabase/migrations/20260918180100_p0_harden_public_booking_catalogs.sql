@@ -83,8 +83,7 @@ AS $$
         'duration_minutes', s.duration_minutes,
         'category_id', s.category_id,
         'image_url', s.image_url,
-        'active', s.active,
-        'display_order', s.display_order
+        'active', s.active
       )
       ORDER BY s.price ASC
     ),
@@ -121,7 +120,8 @@ AS $$
   )
   FROM public.team_members tm
   WHERE tm.user_id::text = p_business_id::text
-    AND tm.active = true;
+    AND tm.active = true
+    AND tm.deleted_at IS NULL;
 $$;
 
 CREATE OR REPLACE FUNCTION public.get_public_gallery_catalog(p_business_id UUID)

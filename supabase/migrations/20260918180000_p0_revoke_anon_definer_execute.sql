@@ -9,8 +9,9 @@
 
 -- --------------------------------------------------------------------------
 -- a) Default privileges: funções novas no schema public não herdam EXECUTE
---    para PUBLIC/anon. Vale para o role atual (postgres no CLI) e, se
---    existirem, postgres + supabase_admin (dashboard / platform).
+--    para PUBLIC/anon. Só role atual (MCP/CLI) + postgres.
+--    NÃO alterar default privileges de supabase_admin: o role do MCP
+--    recebe permission denied.
 -- --------------------------------------------------------------------------
 
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
@@ -18,16 +19,6 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public
 
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
   REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC, anon;
-
-DO $$
-BEGIN
-  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'supabase_admin') THEN
-    EXECUTE $sql$
-      ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public
-        REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC, anon
-    $sql$;
-  END IF;
-END $$;
 
 -- --------------------------------------------------------------------------
 -- b) DEFINER existentes: REVOKE anon/PUBLIC, depois GRANT só na allowlist.

@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { isMissingRpcError } from '@/utils/supabaseRpc';
 import {
   assignProfessionalInputSchema,
   cancelAppointmentInputSchema,
@@ -297,14 +298,18 @@ export async function fetchFutureAppointmentsForModal(
 }
 
 export async function fetchPendingPublicBookings(businessId: string) {
-  const { data, error } = await supabase
+  const { data, error } = await supabase.rpc('list_company_pending_public_bookings');
+  if (!error) return data ?? [];
+  if (!isMissingRpcError(error)) throw error;
+
+  const { data: rows, error: queryError } = await supabase
     .from('public_bookings')
     .select('*')
     .eq('business_id', businessId)
     .eq('status', 'pending')
     .order('appointment_time');
-  if (error) throw error;
-  return data ?? [];
+  if (queryError) throw queryError;
+  return rows ?? [];
 }
 
 export async function deleteAppointmentWithFinance(input: DeleteAppointmentInput): Promise<void> {

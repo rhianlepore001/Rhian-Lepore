@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import type { PublicClient } from '@/types';
 import { formatPhone } from '@/utils/formatters';
+import { isMissingRpcError } from '@/utils/supabaseRpc';
 import {
   createAcceptedAppointmentInputSchema,
   submitPublicBookingInputSchema,
@@ -8,6 +9,11 @@ import {
   type PublicBookingRecord,
   type SubmitPublicBookingInput,
 } from '@/types/publicBooking';
+
+function firstRpcRow<T>(data: T[] | T | null | undefined): T | null {
+  if (Array.isArray(data)) return data[0] ?? null;
+  return data ?? null;
+}
 
 export async function upsertPublicClientSession(params: {
   businessId: string;
@@ -166,22 +172,41 @@ export async function submitPublicBooking(input: SubmitPublicBookingInput): Prom
     return updatedBooking as PublicBookingRecord;
   }
 
-  const { error: insertError } = await supabase
-    .from('public_bookings')
-    .insert({
-      business_id: parsed.businessId,
-      customer_name: parsed.customerName,
-      customer_phone: parsed.customerPhone,
-      service_ids: parsed.serviceIds,
-      professional_id: parsed.professionalId,
-      appointment_time: parsed.appointmentTime,
-      total_price: parsed.totalPrice,
-      status: 'pending',
-      duration_minutes: parsed.durationMinutes,
-      product_lines: parsed.productLines ?? [],
-    });
+  const rpcArgs = {
+    p_business_id: parsed.businessId,
+    p_customer_name: parsed.customerName,
+    p_customer_phone: parsed.customerPhone,
+    p_service_ids: parsed.serviceIds,
+    p_professional_id: parsed.professionalId,
+    p_appointment_time: parsed.appointmentTime,
+    p_total_price: parsed.totalPrice,
+    p_duration_minutes: parsed.durationMinutes,
+    p_product_lines: parsed.productLines ?? [],
+  };
 
-  if (insertError) throw insertError;
+  const { data: rpcRows, error: rpcError } = await supabase.rpc('create_public_booking', rpcArgs);
+  let created = firstRpcRow(rpcRows) as PublicBookingRecord | null;
+
+  if (rpcError) {
+    if (!isMissingRpcError(rpcError)) throw rpcError;
+
+    const { error: insertError } = await supabase
+      .from('public_bookings')
+      .insert({
+        business_id: parsed.businessId,
+        customer_name: parsed.customerName,
+        customer_phone: parsed.customerPhone,
+        service_ids: parsed.serviceIds,
+        professional_id: parsed.professionalId,
+        appointment_time: parsed.appointmentTime,
+        total_price: parsed.totalPrice,
+        status: 'pending',
+        duration_minutes: parsed.durationMinutes,
+        product_lines: parsed.productLines ?? [],
+      });
+
+    if (insertError) throw insertError;
+  }
 
   try {
     await upsertPublicClientSession({
@@ -193,11 +218,13 @@ export async function submitPublicBooking(input: SubmitPublicBookingInput): Prom
     console.error('Failed to upsert public client after booking:', clientErr);
   }
 
-  const activeBooking = await getActiveBookingByPhone(parsed.customerPhone, parsed.businessId);
-  if (!activeBooking) {
+  if (!created) {
+    created = await getActiveBookingByPhone(parsed.customerPhone, parsed.businessId);
+  }
+  if (!created) {
     throw new Error('Booking created but could not be retrieved');
   }
-  return activeBooking;
+  return created;
 }
 
 export async function createAcceptedAppointmentFromBooking(
@@ -229,6 +256,30 @@ export async function createAcceptedAppointmentFromBooking(
   return data.id as string;
 }
 
+export async function acceptCompanyPublicBooking(bookingId: string): Promise<{
+  appointmentId: string;
+  serviceNames: string;
+} | null> {
+  const { data, error } = await supabase.rpc('accept_public_booking', {
+    p_booking_id: bookingId,
+  });
+  if (error) {
+    if (isMissingRpcError(error)) return null;
+    throw error;
+  }
+  const row = firstRpcRow(data) as {
+    appointment_id?: string;
+    service_names?: string;
+  } | null;
+  if (!row?.appointment_id) {
+    throw new Error('accept_public_booking returned no appointment');
+  }
+  return {
+    appointmentId: row.appointment_id,
+    serviceNames: row.service_names || 'Serviço',
+  };
+}
+
 export async function confirmPublicBooking(bookingId: string, businessId: string): Promise<void> {
   const { error } = await supabase
     .from('public_bookings')
@@ -240,23 +291,30 @@ export async function confirmPublicBooking(bookingId: string, businessId: string
 }
 
 export async function rejectPublicBooking(bookingId: string, businessId: string): Promise<void> {
-  const { error } = await supabase
+  const { error } = await supabase.rpc('reject_public_booking', {
+    p_booking_id: bookingId,
+  });
+  if (!error) return;
+  if (!isMissingRpcError(error)) throw error;
+
+  const { error: updateError } = await supabase
     .from('public_bookings')
     .update({ status: 'cancelled' })
     .eq('id', bookingId)
     .eq('business_id', businessId);
 
-  if (error) throw error;
+  if (updateError) throw updateError;
 }
 
-export async function cancelPublicBooking(bookingId: string, businessId: string): Promise<void> {
-  const { error } = await supabase
-    .from('public_bookings')
-    .delete()
-    .eq('id', bookingId)
-    .eq('business_id', businessId);
-
+export async function cancelPublicBooking(bookingId: string, phone: string): Promise<void> {
+  const { data, error } = await supabase.rpc('cancel_public_booking_by_client', {
+    p_booking_id: bookingId,
+    p_phone: phone,
+  });
   if (error) throw error;
+  if (data !== true) {
+    throw new Error('booking_not_cancellable');
+  }
 }
 
 export async function fetchEditBooking(editId: string, businessId: string, phone: string) {

@@ -24,9 +24,9 @@ import { CheckoutModal } from '../components/CheckoutModal';
 import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { mapError, formatUserFacingError } from '../utils/mapError';
-import { confirmPublicBooking, createAcceptedAppointmentFromBooking, rejectPublicBooking } from '../services/publicBooking';
+import { confirmPublicBooking, createAcceptedAppointmentFromBooking, rejectPublicBooking, acceptCompanyPublicBooking } from '../services/publicBooking';
 import { copyBookingProductsToAppointment } from '../services/catalog';
-import { deleteAppointmentWithFinance } from '../services/scheduling';
+import { deleteAppointmentWithFinance, fetchPendingPublicBookings } from '../services/scheduling';
 
 import { buildWhatsAppLink, formatCurrency, formatPhone } from '../utils/formatters';
 import { formatDateForInput, formatLocalDateString, combineDateAndTime } from '../utils/date';
@@ -182,7 +182,7 @@ export const Agenda: React.FC = () => {
 
     // Real-time subscription for public bookings
     useEffect(() => {
-        if (!user) return;
+        if (!user || !effectiveUserId) return;
 
         const subscription = supabase
             .channel('public_bookings_agenda')
@@ -190,7 +190,7 @@ export const Agenda: React.FC = () => {
                 event: '*',
                 schema: 'public',
                 table: 'public_bookings',
-                filter: `business_id=eq.${user.id}`
+                filter: `business_id=eq.${effectiveUserId}`
             }, () => {
                 fetchPublicBookings();
             })
@@ -199,13 +199,13 @@ export const Agenda: React.FC = () => {
         return () => {
             supabase.removeChannel(subscription);
         };
-    }, [user]);
+    }, [user, effectiveUserId]);
 
     useEffect(() => {
-        if (user) {
+        if (user && effectiveUserId) {
             fetchData();
         }
-    }, [user, selectedDate]);
+    }, [user, selectedDate, effectiveUserId]);
 
     // State for viewing appointment details
     const [showingDetailsAppointment, setShowingDetailsAppointment] = useState<Appointment | null>(null);
@@ -463,14 +463,9 @@ export const Agenda: React.FC = () => {
     };
 
     const fetchPublicBookings = async () => {
-        if (!user) return;
-        const { data } = await supabase
-            .from('public_bookings')
-            .select('*')
-            .eq('business_id', user.id)
-            .eq('status', 'pending')
-            .order('appointment_time');
-        if (data) setPublicBookings(data);
+        if (!user || !effectiveUserId) return;
+        const data = await fetchPendingPublicBookings(effectiveUserId);
+        setPublicBookings(data);
     };
 
     const fetchClients = async () => {
@@ -587,137 +582,109 @@ export const Agenda: React.FC = () => {
     };
 
     const handleAcceptBooking = async (booking: any) => {
-        if (!user || isProcessing) return;
+        if (!user || !effectiveUserId || isProcessing) return;
         setIsProcessing(true);
 
         try {
-            let clientId = null;
+            let serviceNames = '';
+            const accepted = await acceptCompanyPublicBooking(booking.id);
+            if (accepted) {
+                serviceNames = accepted.serviceNames;
+            } else {
+                let clientId = null;
+                const rawPhone = booking.customer_phone;
+                const formattedPhoneBR = formatPhone(rawPhone, 'BR');
+                const formattedPhonePT = formatPhone(rawPhone, 'PT');
+                const orFilter = `phone.eq.${rawPhone},phone.eq.${formattedPhoneBR},phone.eq.${formattedPhonePT}`;
 
-            // 1. Check for existing client by phone number
-            // Sanitize phone number for search (remove non-digits?) 
-            // Better to search exactly as stored first, or maybe both formats if possible.
-            // We search for both Raw (+55...) and Formatted ((11)...) to catch legacy clients.
-            const rawPhone = booking.customer_phone;
-            const formattedPhoneBR = formatPhone(rawPhone, 'BR'); // Try BR mask
-            const formattedPhonePT = formatPhone(rawPhone, 'PT'); // Try PT mask
+                const { data: existingClient } = await supabase
+                    .from('clients')
+                    .select('id, photo_url')
+                    .eq('user_id', effectiveUserId)
+                    .or(orFilter)
+                    .maybeSingle();
 
-            // Or filter construction: phone.eq.RAW,phone.eq.FORMATTED...
-            // Note: supabase .or() syntax expects comma separated filters
-            const orFilter = `phone.eq.${rawPhone},phone.eq.${formattedPhoneBR},phone.eq.${formattedPhonePT}`;
+                if (existingClient) {
+                    clientId = existingClient.id;
+                    if (booking.customer_photo_url && (!existingClient.photo_url || existingClient.photo_url !== booking.customer_photo_url)) {
+                        const { data: publicClient } = await supabase
+                            .from('public_clients')
+                            .select('photo_url')
+                            .eq('phone', booking.customer_phone)
+                            .eq('business_id', effectiveUserId)
+                            .order('created_at', { ascending: false })
+                            .limit(1)
+                            .single();
 
-            const { data: existingClient } = await supabase
-                .from('clients')
-                .select('id, photo_url')
-                .eq('user_id', user.id)
-                .or(orFilter)
-                .maybeSingle();
-
-            if (existingClient) {
-                clientId = existingClient.id;
-
-                // 2. Update photo if booking has one and client doesn't (or if we want to auto-update)
-                // Let's only update if client has no photo, to avoid overwriting a chosen photo.
-                // UNLESS the user wants to update it. The request said: "queria que pelomenos a foto que ele selecionou, se atualizasse na lista de clientes"
-                // So we should try to update it.
-                if (booking.customer_photo_url && (!existingClient.photo_url || existingClient.photo_url !== booking.customer_photo_url)) {
-                    // We can't access customer_photo_url directly from public_bookings table easily if it wasn't selected in the query?
-                    // Wait, public_bookings doesn't have photo_url usually?
-                    // Ah, the user said "a foto que ele selecionou". 
-                    // In PublicBooking.tsx, we upload to `client_photos` but do we save it to public_bookings?
-                    // Looking at PublicBooking.tsx: handleSubmit uploads and calls `register` (context) or saves to public_bookings?
-                    // Actually PublicBooking.tsx implementation of handleSubmit does NOT save photo_url to public_bookings table explicitly in the INSERT.
-                    // It registers the client in public_clients table via `register`. 
-
-                    // Let's check if we can get the photo from public_clients table for this booking phone?
+                        if (publicClient && publicClient.photo_url) {
+                            await supabase
+                                .from('clients')
+                                .update({ photo_url: publicClient.photo_url })
+                                .eq('id', clientId)
+                                .eq('user_id', effectiveUserId);
+                        }
+                    }
+                } else {
                     const { data: publicClient } = await supabase
                         .from('public_clients')
                         .select('photo_url')
                         .eq('phone', booking.customer_phone)
-                        .eq('business_id', user.id)
+                        .eq('business_id', effectiveUserId)
                         .order('created_at', { ascending: false })
                         .limit(1)
+                        .maybeSingle();
+
+                    const { data: newClient, error: clientError } = await supabase
+                        .from('clients')
+                        .insert({
+                            user_id: effectiveUserId,
+                            name: booking.customer_name,
+                            phone: booking.customer_phone,
+                            email: booking.customer_email,
+                            photo_url: publicClient?.photo_url || null
+                        })
+                        .select()
                         .single();
 
-                    if (publicClient && publicClient.photo_url) {
-                        await supabase
-                            .from('clients')
-                            .update({ photo_url: publicClient.photo_url })
-                            .eq('id', clientId)
-                            .eq('user_id', user.id);
+                    if (clientError) throw clientError;
+                    clientId = newClient.id;
+                }
+
+                const { data: serviceDetails } = await supabase
+                    .from('services')
+                    .select('name')
+                    .in('id', booking.service_ids)
+                    .eq('user_id', effectiveUserId);
+
+                serviceNames = (serviceDetails || []).map(s => s.name).join(', ');
+
+                let finalProfessionalId = booking.professional_id;
+                if (!finalProfessionalId && teamMembers.length > 0) {
+                    finalProfessionalId = teamMembers[0].id;
+                }
+
+                const appointmentId = await createAcceptedAppointmentFromBooking({
+                    businessId: effectiveUserId,
+                    clientId,
+                    professionalId: finalProfessionalId,
+                    serviceNames,
+                    bookingId: booking.id,
+                    appointmentTime: booking.appointment_time,
+                    totalPrice: booking.total_price,
+                    durationMinutes: booking.duration_minutes || 30,
+                    preservePublicBookingLink: !!booking.is_edit,
+                });
+
+                if (appointmentId) {
+                    try {
+                        await copyBookingProductsToAppointment(booking.id, appointmentId);
+                    } catch (productCopyError) {
+                        console.error('Failed to copy booking products:', productCopyError);
                     }
                 }
 
-            } else {
-                // 3. Create new client if not found
-                // First try to get photo from public_clients (where it might have been saved during public flow)
-                const { data: publicClient } = await supabase
-                    .from('public_clients')
-                    .select('photo_url')
-                    .eq('phone', booking.customer_phone)
-                    .eq('business_id', user.id)
-                    .order('created_at', { ascending: false })
-                    .limit(1)
-                    .maybeSingle();
-
-                const { data: newClient, error: clientError } = await supabase
-                    .from('clients')
-                    .insert({
-                        user_id: user.id,
-                        name: booking.customer_name,
-                        phone: booking.customer_phone,
-                        email: booking.customer_email,
-                        photo_url: publicClient?.photo_url || null
-                    })
-                    .select()
-                    .single();
-
-                if (clientError) throw clientError;
-                clientId = newClient.id;
+                await confirmPublicBooking(booking.id, effectiveUserId);
             }
-
-            // Fetch service names based on IDs
-            const { data: serviceDetails } = await supabase
-                .from('services')
-                .select('name')
-                .in('id', booking.service_ids)
-                .eq('user_id', user.id);
-
-            const serviceNames = (serviceDetails || []).map(s => s.name).join(', ');
-
-            // Auto-assign professional if not specified (e.g., "Anyone" booking)
-            let finalProfessionalId = booking.professional_id;
-            if (!finalProfessionalId) {
-                if (teamMembers.length === 1) {
-                    finalProfessionalId = teamMembers[0].id;
-                } else if (teamMembers.length > 1) {
-                    // Try to find the owner or just assign to first available as a fallback
-                    // for "Anyone" bookings in multi-pro shops, we could leave it
-                    // but for this user (1 pro), we definitely want to assignment.
-                    finalProfessionalId = teamMembers[0].id;
-                }
-            }
-
-            const appointmentId = await createAcceptedAppointmentFromBooking({
-                businessId: user.id,
-                clientId,
-                professionalId: finalProfessionalId,
-                serviceNames,
-                bookingId: booking.id,
-                appointmentTime: booking.appointment_time,
-                totalPrice: booking.total_price,
-                durationMinutes: booking.duration_minutes || 30,
-                preservePublicBookingLink: !!booking.is_edit,
-            });
-
-            if (appointmentId) {
-                try {
-                    await copyBookingProductsToAppointment(booking.id, appointmentId);
-                } catch (productCopyError) {
-                    console.error('Failed to copy booking products:', productCopyError);
-                }
-            }
-
-            await confirmPublicBooking(booking.id, user.id);
 
             const phone = booking.customer_phone;
             const dateObj = new Date(booking.appointment_time);
@@ -767,8 +734,9 @@ export const Agenda: React.FC = () => {
     };
 
     const handleRejectBooking = async (bookingId: string) => {
+        if (!effectiveUserId) return;
         try {
-            await rejectPublicBooking(bookingId, user.id);
+            await rejectPublicBooking(bookingId, effectiveUserId);
             showToast('Solicitação recusada.', 'info');
             fetchData();
         } catch (error) {
@@ -1235,7 +1203,6 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                 teamMembers={teamMembers}
                 services={services}
                 currencyRegion={currencyRegion}
-                isStaff={isStaff}
                 onAccept={handleAcceptBooking}
                 onReject={handleRejectBooking}
             />

@@ -36,6 +36,8 @@ const CODE_MAP: Record<string, string> = {
   '23503': 'Não foi possível concluir: existe um vínculo com outro registro.',
   '22P02': 'Algum campo está em formato inválido. Revise e tente de novo.',
   '42501': 'Você não tem permissão para essa ação.',
+  slot_unavailable: 'Este horário acabou de ser ocupado. Escolha outro.',
+  booking_not_cancellable: 'Não foi possível cancelar este agendamento. Tente de novo ou fale com o salão.',
 
   // PostgREST
   PGRST116: 'Não encontramos esse registro.',
@@ -59,6 +61,15 @@ function pickCode(raw: RawErrorShape): string {
     return 'invalid_login';
   }
   if (msg.includes('muitas tentativas')) return 'rate_limit_login';
+  if (
+    msg.includes('slot_unavailable')
+    || msg.includes('este horário acabou de ser ocupado')
+  ) {
+    return 'slot_unavailable';
+  }
+  if (msg.includes('booking_not_cancellable')) {
+    return 'booking_not_cancellable';
+  }
   if (raw.status === 401) return 'auth_expired';
   if (raw.status === 403) return 'permission_denied';
   if (raw.name === 'TypeError' && msg.includes('failed to fetch')) return 'network_error';

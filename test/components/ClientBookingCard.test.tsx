@@ -1,11 +1,14 @@
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { ClientBookingCard, type ClientBooking } from '../../components/ClientBookingCard';
+import { ToastProvider } from '../../components/ui/Toast';
+import { cancelPublicBooking } from '../../services/publicBooking';
 
-vi.mock('../../lib/supabase', () => ({
-  supabase: { from: vi.fn() },
+vi.mock('../../services/publicBooking', () => ({
+  cancelPublicBooking: vi.fn(),
 }));
 
 const booking: ClientBooking = {
@@ -21,21 +24,32 @@ const booking: ClientBooking = {
   created_at: '2026-09-01T00:00:00.000Z',
 };
 
-describe('ClientBookingCard', () => {
-  it('mantém ações dentro da grade sem cortar o botão Editar', () => {
-    const { container } = render(
-      <MemoryRouter>
+function renderCard() {
+  return render(
+    <MemoryRouter>
+      <ToastProvider>
         <ClientBookingCard
           booking={booking}
           isBeauty
           businessPhone="11999998888"
           businessSlug="barbearia-silva"
           clientName="Zé"
+          clientPhone="11999998888"
           region="PT"
           onCancelled={vi.fn()}
         />
-      </MemoryRouter>,
-    );
+      </ToastProvider>
+    </MemoryRouter>,
+  );
+}
+
+describe('ClientBookingCard', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('mantém ações dentro da grade sem cortar o botão Editar', () => {
+    const { container } = renderCard();
 
     const actions = screen.getByRole('button', { name: /Editar/ }).parentElement;
     expect(actions?.className).toMatch(/grid/);
@@ -43,5 +57,19 @@ describe('ClientBookingCard', () => {
     expect(screen.getByText(/50,00/)).toBeInTheDocument();
     expect(screen.queryByText(/Cobrar Confirmação/)).toBeNull();
     expect(screen.getByRole('button', { name: /Pedir confirmação/ })).toBeInTheDocument();
+    expect(screen.getByText('Aguardando')).toBeInTheDocument();
+  });
+
+  it('mostra toast de erro quando o cancelamento RPC falha', async () => {
+    (cancelPublicBooking as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new Error('booking_not_cancellable'),
+    );
+
+    renderCard();
+    await userEvent.click(screen.getByRole('button', { name: /Cancelar/ }));
+    await userEvent.click(screen.getByRole('button', { name: /^Confirmar$/ }));
+
+    expect(cancelPublicBooking).toHaveBeenCalledWith('b1', '11999998888');
+    expect(await screen.findByText(/Não foi possível cancelar/i)).toBeInTheDocument();
   });
 });

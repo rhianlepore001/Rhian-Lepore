@@ -470,7 +470,7 @@ Fonte de regras: `.pipeline/discovery-notes-products-v2.md` (R1–R8).
 
 | ID | Requisito |
 |----|-----------|
-| RF-BIL-01 | Planos: Solo (R$ 34,90 / € 9,90) e Equipe (R$ 59,90 / € 19,90) |
+| RF-BIL-01 | Planos: Solo (R$ 19,99 / € 5,99) e Equipe/Ilimitado (R$ 28,99 / € 9,99) |
 | RF-BIL-02 | Trial de 7 dias; após expiração, paywall |
 | RF-BIL-03 | Checkout Stripe via Edge Function `create-checkout-session` |
 | RF-BIL-04 | Assinatura ativa se status: active, subscriber, ou trial válido |
@@ -562,8 +562,8 @@ Fonte de regras: `.pipeline/discovery-notes-products-v2.md` (R1–R8).
 
 | Plano | Brasil | Portugal | Público |
 |-------|--------|----------|---------|
-| **Solo** | R$ 34,90/mês | € 9,90/mês | Barbearia individual |
-| **Equipe** | R$ 59,90/mês | € 19,90/mês | Salão com equipe |
+| **Solo** | R$ 19,99/mês | € 5,99/mês | Barbearia individual |
+| **Equipe** | R$ 28,99/mês | € 9,99/mês | Salão com equipe |
 
 Plano recomendado: Equipe para beauty, Solo para barber.
 

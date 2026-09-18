@@ -53,6 +53,8 @@ Script isolado em `scripts/demo-seed/` + doc `docs/demo-seed.md`. Dois tenants f
 
 ## 🛠️ Trabalho recente
 
+- **Preços do plano AgendiX (18 Set 2026):** Solo R$ 19,99 / € 5,99 e Equipe/Ilimitado R$ 28,99 / € 9,99. Constantes em `utils/planPricing.ts`. Price IDs do Stripe **não** foram inventados — fallbacks ainda são os IDs antigos até remapear no Dashboard (`VITE_STRIPE_PRICE_SOLO|TEAM_BRL|EUR`). Landing de marketing não tem preços no repo. Termos não hardcodam valores.
+
 - **P0 hardening de RPCs públicos (18 Set 2026):** #80 mergeado em `main`. Patch live-apply: sem `ALTER DEFAULT PRIVILEGES` de `supabase_admin`; catálogo de serviços sem `display_order`; team catalog filtra `deleted_at`. Harden (180100) aplicar no remoto via MCP. OTP da Minha Área e chave de IA no frontend ficam em PRs separados.
 
 - **Convite da equipe — e-mail duplicado, scroll, exclusão, spinner e Agenda órfã (18 Set 2026):**

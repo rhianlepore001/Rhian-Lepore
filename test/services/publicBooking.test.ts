@@ -65,21 +65,29 @@ describe('public booking service', () => {
     });
   });
 
-  it('cria novo public_booking com status pending', async () => {
-    (supabase.rpc as any).mockResolvedValue({
-      data: [{
-        id: 'booking-001',
-        business_id: 'business-001',
-        customer_name: 'Joao',
-        customer_phone: '11999999999',
-        service_ids: ['service-001'],
-        professional_id: null,
-        appointment_time: '2026-05-30T10:00:00-03:00',
-        total_price: 80,
-        status: 'pending',
-        duration_minutes: 30,
-      }],
-      error: null,
+  it('cria novo public_booking via create_public_booking com status pending', async () => {
+    (supabase.rpc as any).mockImplementation((fn: string) => {
+      if (fn === 'create_public_booking') {
+        return Promise.resolve({
+          data: {
+            id: 'booking-001',
+            business_id: 'business-001',
+            customer_name: 'Joao',
+            customer_phone: '11999999999',
+            service_ids: ['service-001'],
+            professional_id: null,
+            appointment_time: '2026-05-30T10:00:00-03:00',
+            total_price: 80,
+            status: 'pending',
+            duration_minutes: 30,
+          },
+          error: null,
+        });
+      }
+      return Promise.resolve({
+        data: [{ id: 'client-001', name: 'Joao', phone: '11999999999', business_id: 'business-001' }],
+        error: null,
+      });
     });
 
     const result = await submitPublicBooking({
@@ -95,7 +103,76 @@ describe('public booking service', () => {
       originalAppointmentTime: null,
     });
 
-    expect(supabase.from).toHaveBeenCalledWith('public_bookings');
+    expect(supabase.rpc).toHaveBeenCalledWith('create_public_booking', {
+      p_business_id: 'business-001',
+      p_customer_name: 'Joao',
+      p_customer_phone: '11999999999',
+      p_service_ids: ['service-001'],
+      p_appointment_time: '2026-05-30T10:00:00-03:00',
+      p_total_price: 80,
+      p_duration_minutes: 30,
+      p_professional_id: null,
+      p_product_lines: [],
+    });
+    expect(insertMock).not.toHaveBeenCalled();
+    expect(supabase.rpc).toHaveBeenCalledWith('upsert_public_client', {
+      p_business_id: 'business-001',
+      p_name: 'Joao',
+      p_phone: '11999999999',
+      p_photo_url: null,
+      p_email: null,
+    });
+    expect(supabase.rpc).not.toHaveBeenCalledWith(
+      'get_active_booking_by_phone',
+      expect.anything(),
+    );
+    expect(result.id).toBe('booking-001');
+  });
+
+  it('cai no INSERT sem select se create_public_booking não existir', async () => {
+    (supabase.rpc as any).mockImplementation((fn: string) => {
+      if (fn === 'create_public_booking') {
+        return Promise.resolve({
+          data: null,
+          error: { code: 'PGRST202', message: 'Could not find the function create_public_booking' },
+        });
+      }
+      if (fn === 'get_active_booking_by_phone') {
+        return Promise.resolve({
+          data: [{
+            id: 'booking-001',
+            business_id: 'business-001',
+            customer_name: 'Joao',
+            customer_phone: '11999999999',
+            service_ids: ['service-001'],
+            professional_id: null,
+            appointment_time: '2026-05-30T10:00:00-03:00',
+            total_price: 80,
+            status: 'pending',
+            duration_minutes: 30,
+          }],
+          error: null,
+        });
+      }
+      return Promise.resolve({
+        data: [{ id: 'client-001', name: 'Joao', phone: '11999999999', business_id: 'business-001' }],
+        error: null,
+      });
+    });
+
+    const result = await submitPublicBooking({
+      businessId: 'business-001',
+      customerName: 'Joao',
+      customerPhone: '11999999999',
+      serviceIds: ['service-001'],
+      professionalId: null,
+      appointmentTime: '2026-05-30T10:00:00-03:00',
+      totalPrice: 80,
+      durationMinutes: 30,
+      editingBookingId: null,
+      originalAppointmentTime: null,
+    });
+
     expect(insertMock).toHaveBeenCalledWith({
       business_id: 'business-001',
       customer_name: 'Joao',
@@ -107,17 +184,6 @@ describe('public booking service', () => {
       status: 'pending',
       duration_minutes: 30,
       product_lines: [],
-    });
-    expect(supabase.rpc).toHaveBeenCalledWith('upsert_public_client', {
-      p_business_id: 'business-001',
-      p_name: 'Joao',
-      p_phone: '11999999999',
-      p_photo_url: null,
-      p_email: null,
-    });
-    expect(supabase.rpc).toHaveBeenCalledWith('get_active_booking_by_phone', {
-      p_phone: '11999999999',
-      p_business_id: 'business-001',
     });
     expect(result.id).toBe('booking-001');
   });

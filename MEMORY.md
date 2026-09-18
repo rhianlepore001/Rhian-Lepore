@@ -53,7 +53,9 @@ Script isolado em `scripts/demo-seed/` + doc `docs/demo-seed.md`. Dois tenants f
 
 ## 🛠️ Trabalho recente
 
-- **P0 hardening de RPCs públicos (18 Set 2026):** #80 mergeado em `main`. Patch live-apply: sem `ALTER DEFAULT PRIVILEGES` de `supabase_admin`; catálogo de serviços sem `display_order`; team catalog filtra `deleted_at`. Harden (180100) aplicar no remoto via MCP. OTP da Minha Área e chave de IA no frontend ficam em PRs separados.
+- **P0 hotfix agendamento público (18 Set 2026):** CREATE público via RPC `create_public_booking` (status sempre pending) + helper `business_exists`. Migration `20260918180200` no git — Bob aplica no remoto após review (já conferido no projeto live). Frontend não usa `.insert().select()`. `create_secure_booking` segue autenticado. OTP da Minha Área e chave de IA no frontend ficam em PRs separados.
+
+- **P0 hardening de RPCs públicos (18 Set 2026):** #80 mergeado em `main`. Patch live-apply: sem `ALTER DEFAULT PRIVILEGES` de `supabase_admin`; catálogo de serviços sem `display_order`; team catalog filtra `deleted_at`. OTP da Minha Área e chave de IA no frontend ficam em PRs separados.
 
 - **Convite da equipe — e-mail duplicado, scroll, exclusão, spinner e Agenda órfã (18 Set 2026):**
   - Cadastro (owner e convite) mostra “Este e-mail já tem conta” — sem `#useralre`.

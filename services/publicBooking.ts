@@ -166,6 +166,41 @@ export async function submitPublicBooking(input: SubmitPublicBookingInput): Prom
     return updatedBooking as PublicBookingRecord;
   }
 
+  const createdBooking = await createPendingPublicBooking(parsed);
+
+  try {
+    await upsertPublicClientSession({
+      businessId: parsed.businessId,
+      name: parsed.customerName,
+      phone: parsed.customerPhone,
+    });
+  } catch (clientErr) {
+    console.error('Failed to upsert public client after booking:', clientErr);
+  }
+
+  return createdBooking;
+}
+
+function firstPublicBookingRow(data: unknown): PublicBookingRecord | null {
+  if (Array.isArray(data)) {
+    return (data[0] as PublicBookingRecord | undefined) ?? null;
+  }
+  if (data && typeof data === 'object') {
+    return data as PublicBookingRecord;
+  }
+  return null;
+}
+
+function isMissingRpcError(error: { code?: string; message?: string } | null): boolean {
+  if (!error) return false;
+  const code = error.code ?? '';
+  const message = error.message ?? '';
+  return code === 'PGRST202' || code === '42883' || message.includes('create_public_booking');
+}
+
+async function insertPendingPublicBookingWithoutReturning(
+  parsed: ReturnType<typeof submitPublicBookingInputSchema.parse>,
+): Promise<PublicBookingRecord> {
   const { error: insertError } = await supabase
     .from('public_bookings')
     .insert({
@@ -183,21 +218,39 @@ export async function submitPublicBooking(input: SubmitPublicBookingInput): Prom
 
   if (insertError) throw insertError;
 
-  try {
-    await upsertPublicClientSession({
-      businessId: parsed.businessId,
-      name: parsed.customerName,
-      phone: parsed.customerPhone,
-    });
-  } catch (clientErr) {
-    console.error('Failed to upsert public client after booking:', clientErr);
-  }
-
   const activeBooking = await getActiveBookingByPhone(parsed.customerPhone, parsed.businessId);
   if (!activeBooking) {
     throw new Error('Booking created but could not be retrieved');
   }
   return activeBooking;
+}
+
+async function createPendingPublicBooking(
+  parsed: ReturnType<typeof submitPublicBookingInputSchema.parse>,
+): Promise<PublicBookingRecord> {
+  const { data, error } = await supabase.rpc('create_public_booking', {
+    p_business_id: parsed.businessId,
+    p_customer_name: parsed.customerName,
+    p_customer_phone: parsed.customerPhone,
+    p_service_ids: parsed.serviceIds,
+    p_appointment_time: parsed.appointmentTime,
+    p_total_price: parsed.totalPrice,
+    p_duration_minutes: parsed.durationMinutes,
+    p_professional_id: parsed.professionalId,
+    p_product_lines: parsed.productLines ?? [],
+  });
+
+  if (!error) {
+    const created = firstPublicBookingRow(data);
+    if (!created) {
+      throw new Error('Booking created but could not be retrieved');
+    }
+    return created;
+  }
+
+  if (!isMissingRpcError(error)) throw error;
+
+  return insertPendingPublicBookingWithoutReturning(parsed);
 }
 
 export async function createAcceptedAppointmentFromBooking(

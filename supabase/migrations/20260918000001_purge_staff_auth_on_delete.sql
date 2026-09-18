@@ -28,7 +28,7 @@ BEGIN
   SELECT role::text, company_id::text
     INTO v_role, v_company_id
   FROM public.profiles
-  WHERE id = p_staff_user_id;
+  WHERE id = p_staff_user_id::text;
 
   IF FOUND THEN
     IF v_role IS DISTINCT FROM 'staff' THEN
@@ -55,7 +55,7 @@ BEGIN
   WHERE staff_user_id = p_staff_user_id;
 
   DELETE FROM public.profiles
-  WHERE id = p_staff_user_id
+  WHERE id = p_staff_user_id::text
     AND role = 'staff';
 
   v_purged_email := 'deleted-' || p_staff_user_id::text || '@purged.invalid';

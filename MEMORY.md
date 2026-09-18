@@ -65,6 +65,7 @@ Script isolado em `scripts/demo-seed/` + doc `docs/demo-seed.md`. Dois tenants f
   - Migrations `20260918000001_purge_staff_auth_on_delete.sql` e `20260918000002_complete_staff_invite.sql` aplicadas no remoto BARBER/Beauty OS.
   - Gates: typecheck, lint, build, 625 testes.
   - Regressão: excluir colaborador (`delete_staff_collaborator`) e cadastrar o mesmo e-mail no `member_id` do convite novo — não no row excluído.
+  - **Hotfix 18 Set 2026:** `purge_staff_auth_user` falhava com `#42883` (`text = uuid`) porque `profiles.id` é TEXT. Cast `p_staff_user_id::text` no SELECT/DELETE. Espelhado na 00001 (envs novos) + `20260918070000_fix_purge_staff_auth_uuid_text_cast.sql` (prod que já rodou a 00001). `purge` continua sem EXECUTE para anon/authenticated.
 
 
 

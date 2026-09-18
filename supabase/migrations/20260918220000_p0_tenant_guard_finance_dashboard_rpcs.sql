@@ -108,6 +108,10 @@ BEGIN
       END IF;
       IF v_i = v_tenant_idx THEN
         v_argtype := v_type_names[v_i];
+        IF v_argtype IS NULL OR btrim(v_argtype) = '' THEN
+          RAISE EXCEPTION 'tipo do arg tenant vazio em %(%) idx=%',
+            p_func_name, r.ident, v_tenant_idx;
+        END IF;
         v_call := v_call || format('v_auth_company_id::%s', v_argtype);
       ELSE
         v_call := v_call || format('%I', v_names[v_i]);
@@ -448,12 +452,12 @@ BEGIN
 CREATE OR REPLACE FUNCTION public.create_secure_booking(
     p_business_id TEXT,
     p_professional_id TEXT,
-    p_customer_name TEXT,
-    p_customer_phone TEXT,
-    p_customer_email TEXT,
-    p_appointment_time TIMESTAMPTZ,
-    p_service_ids TEXT[],
-    p_total_price NUMERIC,
+    p_customer_name TEXT DEFAULT NULL,
+    p_customer_phone TEXT DEFAULT NULL,
+    p_customer_email TEXT DEFAULT NULL,
+    p_appointment_time TIMESTAMPTZ DEFAULT now(),
+    p_service_ids TEXT[] DEFAULT '{}',
+    p_total_price NUMERIC DEFAULT 0,
     p_duration_min INTEGER DEFAULT 30,
     p_status TEXT DEFAULT 'pending',
     p_client_id TEXT DEFAULT NULL,
@@ -472,7 +476,7 @@ DECLARE
 BEGIN
     BEGIN
         v_business := p_business_id::uuid;
-        v_professional := NULLIF(btrim(p_professional_id), '')::uuid;
+        v_professional := NULLIF(btrim(COALESCE(p_professional_id, '')), '')::uuid;
         IF p_client_id IS NOT NULL AND btrim(p_client_id) <> '' THEN
             v_client := p_client_id::uuid;
         END IF;

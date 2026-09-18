@@ -53,6 +53,8 @@ Script isolado em `scripts/demo-seed/` + doc `docs/demo-seed.md`. Dois tenants f
 
 ## 🛠️ Trabalho recente
 
+- **P0 booking público (18 Set 2026):** branch `cursor/p0-public-booking-staff-c894`. Staff da empresa passa a ver/aceitar/recusar solicitações online no tenant; tela pública de sucesso deixa de dizer “confirmado” enquanto o status é pending; criação pública revalida o horário no servidor; cancelar na Minha Área deixa de falhar em silêncio. Migration `20260918190000` no PR (aplicar no remoto após review).
+
 - **P0 hardening de RPCs públicos (18 Set 2026):** #80 mergeado em `main`. Patch live-apply: sem `ALTER DEFAULT PRIVILEGES` de `supabase_admin`; catálogo de serviços sem `display_order`; team catalog filtra `deleted_at`. Harden (180100) aplicar no remoto via MCP. OTP da Minha Área e chave de IA no frontend ficam em PRs separados.
 
 - **Convite da equipe — e-mail duplicado, scroll, exclusão, spinner e Agenda órfã (18 Set 2026):**

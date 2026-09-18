@@ -38,8 +38,8 @@ export function useFindActivePublicBooking() {
 export function useCancelPublicBooking() {
   return useMutation({
     mutationKey: ['public-booking', 'cancel'],
-    mutationFn: ({ bookingId, businessId }: { bookingId: string; businessId: string }) =>
-      cancelPublicBooking(bookingId, businessId),
+    mutationFn: ({ bookingId, phone }: { bookingId: string; phone: string }) =>
+      cancelPublicBooking(bookingId, phone),
   });
 }
 

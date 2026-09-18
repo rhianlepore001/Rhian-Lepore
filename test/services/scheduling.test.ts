@@ -5,6 +5,7 @@ import {
   completeAppointment,
   createAppointment,
   deleteAppointmentWithFinance,
+  fetchPendingPublicBookings,
   getMachineFeePercent,
   markAppointmentComplete,
 } from '@/services/scheduling';
@@ -141,5 +142,17 @@ describe('scheduling service', () => {
     expect(supabase.rpc).toHaveBeenCalledWith('complete_appointment', {
       p_appointment_id: 'apt-002',
     });
+  });
+
+  it('lista pending public bookings pelo tenant autenticado (RPC), não pelo uuid do staff', async () => {
+    (supabase.rpc as any).mockResolvedValue({
+      data: [{ id: 'pb-1', business_id: 'company-001', status: 'pending' }],
+      error: null,
+    });
+
+    const rows = await fetchPendingPublicBookings('company-001');
+
+    expect(supabase.rpc).toHaveBeenCalledWith('list_company_pending_public_bookings');
+    expect(rows).toEqual([{ id: 'pb-1', business_id: 'company-001', status: 'pending' }]);
   });
 });

@@ -144,7 +144,7 @@ describe('usePublicBooking', () => {
   });
 
   describe('useCancelPublicBooking', () => {
-    it('chama cancelPublicBooking com bookingId e businessId', async () => {
+    it('chama cancelPublicBooking com bookingId e telefone', async () => {
       (publicBookingService.cancelPublicBooking as ReturnType<typeof vi.fn>).mockResolvedValue(
         undefined
       );
@@ -152,12 +152,12 @@ describe('usePublicBooking', () => {
       const { result } = renderHook(() => useCancelPublicBooking(), { wrapper: createWrapper() });
 
       await act(async () => {
-        await result.current.mutateAsync({ bookingId: 'booking-001', businessId: 'business-001' });
+        await result.current.mutateAsync({ bookingId: 'booking-001', phone: '11999999999' });
       });
 
       expect(publicBookingService.cancelPublicBooking).toHaveBeenCalledWith(
         'booking-001',
-        'business-001'
+        '11999999999'
       );
     });
   });

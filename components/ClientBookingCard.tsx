@@ -4,8 +4,10 @@ import {
     Calendar, Clock, User, MessageSquare,
     Edit3, X, RefreshCw, CheckCircle, AlertCircle, Loader2
 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
 import { formatCurrency, Region } from '../utils/formatters';
+import { cancelPublicBooking } from '../services/publicBooking';
+import { useToast } from './ui/Toast';
+import { logger } from '../utils/Logger';
 
 export interface ClientBooking {
     id: string;
@@ -26,6 +28,7 @@ interface ClientBookingCardProps {
     businessPhone: string | null;
     businessSlug: string;
     clientName: string;
+    clientPhone: string;
     region?: Region;
     allowEdit?: boolean;
     onCancelled: (bookingId: string) => void;
@@ -60,11 +63,13 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
     businessPhone,
     businessSlug,
     clientName,
+    clientPhone,
     region = 'BR',
     allowEdit = true,
     onCancelled,
 }) => {
     const navigate = useNavigate();
+    const { showToast } = useToast();
     const [cancelling, setCancelling] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
 
@@ -81,17 +86,19 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
     });
 
     const handleCancel = async () => {
+        if (!clientPhone) {
+            showToast('Não foi possível cancelar. Entre de novo na Minha Área com o WhatsApp do agendamento.', 'error');
+            setShowConfirm(false);
+            return;
+        }
         setCancelling(true);
         try {
-            const { error } = await supabase
-                .from('public_bookings')
-                .update({ status: 'cancelled' })
-                .eq('id', booking.id);
-
-            if (error) throw error;
+            await cancelPublicBooking(booking.id, clientPhone);
             onCancelled(booking.id);
-        } catch {
-            // silently fail — user stays on page
+            showToast('Agendamento cancelado.', 'success');
+        } catch (error) {
+            logger.error('Error cancelling public booking', error);
+            showToast('Não foi possível cancelar. Tente de novo ou fale com o salão.', 'error');
         } finally {
             setCancelling(false);
             setShowConfirm(false);

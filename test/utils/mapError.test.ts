@@ -40,6 +40,12 @@ describe('mapError', () => {
     expect(formatted).toContain('#23505');
   });
 
+  it('traduz slot_unavailable para copy de horário ocupado', () => {
+    const out = mapError({ message: 'slot_unavailable' }, 'fallback');
+    expect(out.message).toContain('horário acabou de ser ocupado');
+    expect(out.code).toBe('#slotunav');
+  });
+
   it('traduz e-mail já cadastrado no Auth (user_already_exists)', () => {
     const out = mapError(
       { code: 'user_already_exists', message: 'User already registered' },

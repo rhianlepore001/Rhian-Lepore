@@ -36,7 +36,7 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             const { data: overdueApts } = await supabase
                 .from('appointments')
                 .select('id')
-                .eq('user_id', user.id)
+                .eq('user_id', tenantId)
                 .in('status', ['Confirmed', 'Pending'])
                 .lt('appointment_time', now);
 
@@ -53,7 +53,7 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             const { data: pendingBookings } = await supabase
                 .from('public_bookings')
                 .select('id')
-                .eq('business_id', user.id)
+                .eq('business_id', tenantId)
                 .eq('status', 'pending');
 
             if (pendingBookings && pendingBookings.length > 0) {

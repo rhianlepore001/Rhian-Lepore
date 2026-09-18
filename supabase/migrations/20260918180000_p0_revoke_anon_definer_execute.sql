@@ -47,6 +47,8 @@ DECLARE
     'get_booking_by_id',
     'get_active_booking_by_phone',
     'update_public_booking_by_client',
+    'business_exists',
+    'create_public_booking',
     'get_available_slots',
     'get_full_dates',
     'get_first_available_professional',

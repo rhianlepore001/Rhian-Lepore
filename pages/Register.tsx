@@ -138,7 +138,11 @@ export const Register: React.FC = () => {
         p_member_id: memberIdFromUrl,
       })
       .then(({ error: claimError }) => {
-        if (cancelled || claimError) return;
+        if (cancelled) return;
+        if (claimError) {
+          setError(formatUserFacingError(mapError(claimError, 'Não foi possível vincular seu acesso ao convite.')));
+          return;
+        }
         navigate('/staff-onboarding');
       });
 

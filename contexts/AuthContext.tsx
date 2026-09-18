@@ -349,18 +349,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setTeamMemberId(claimedId || data.teamMemberId);
             return { error: null };
           }
-          await supabase.auth.signOut();
-        }
 
-        const { data: released } = await supabase.rpc('release_staff_email_for_reinvite', {
-          p_company_id: data.companyId,
-          p_member_id: data.teamMemberId,
-          p_email: data.email,
-        });
-        if (released === true) {
-          const retry = await supabase.auth.signUp(signUpPayload);
-          authData = retry.data;
-          authError = retry.error;
+          const { data: released } = await supabase.rpc('release_staff_email_for_reinvite', {
+            p_company_id: data.companyId,
+            p_member_id: data.teamMemberId,
+            p_email: data.email,
+          });
+          await supabase.auth.signOut();
+          if (released === true) {
+            const retry = await supabase.auth.signUp(signUpPayload);
+            authData = retry.data;
+            authError = retry.error;
+          }
+        } else {
+          const code = (existing?.error as unknown as Record<string, unknown>)?.code ?? '';
+          if (code === 'email_not_confirmed') {
+            return { error: { message: 'Este e-mail já foi cadastrado mas não foi confirmado. Verifique sua caixa de entrada ou peça ao gestor para reenviar o convite.' } as unknown as Error };
+          }
+          return { error: { message: 'Este e-mail já está em uso. Se você é colaborador, peça ao gestor para excluir e recriar o convite.' } as unknown as Error };
         }
       }
 

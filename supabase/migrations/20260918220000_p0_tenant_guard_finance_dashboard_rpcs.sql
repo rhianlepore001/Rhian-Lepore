@@ -16,6 +16,8 @@
 -- EXECUTE (não reabrir grant). Booking público segue em public_bookings
 -- INSERT pending e/ou create_public_booking — esta migration não os toca.
 
+DROP FUNCTION IF EXISTS public.__agendix_install_tenant_wrapper(text, text);
+
 -- ---------------------------------------------------------------------------
 -- Helper: instala wrapper tenant-safe para um nome (todas as overloads, ou
 -- uma assinatura se p_ident for informado). Dropado no final.
@@ -52,6 +54,7 @@ BEGIN
       p.prorettype,
       p.proretset,
       pg_get_function_identity_arguments(p.oid) AS ident,
+      oidvectortypes(p.proargtypes) AS type_list,
       pg_get_function_arguments(p.oid) AS args_full,
       pg_get_function_result(p.oid) AS result
     FROM pg_proc p
@@ -65,10 +68,11 @@ BEGIN
       )
     ORDER BY p.oid
   LOOP
-    IF to_regprocedure(format('public.%I(%s)', v_unsafe, r.ident)) IS NULL THEN
+    -- to_regprocedure / ALTER/REVOKE exigem tipos SEM nomes de parâmetro.
+    IF to_regprocedure(format('public.%I(%s)', v_unsafe, r.type_list)) IS NULL THEN
       EXECUTE format(
         'ALTER FUNCTION public.%I(%s) RENAME TO %I',
-        p_func_name, r.ident, v_unsafe
+        p_func_name, r.type_list, v_unsafe
       );
     END IF;
 
@@ -148,24 +152,24 @@ $fn$,
 
     EXECUTE format(
       'ALTER FUNCTION public.%I(%s) SET search_path = public',
-      v_unsafe, r.ident
+      v_unsafe, r.type_list
     );
     EXECUTE format(
       'REVOKE ALL ON FUNCTION public.%I(%s) FROM PUBLIC, anon, authenticated',
-      v_unsafe, r.ident
+      v_unsafe, r.type_list
     );
     EXECUTE format(
       'REVOKE ALL ON FUNCTION public.%I(%s) FROM PUBLIC, anon',
-      p_func_name, r.ident
+      p_func_name, r.type_list
     );
     EXECUTE format(
       'GRANT EXECUTE ON FUNCTION public.%I(%s) TO authenticated',
-      p_func_name, r.ident
+      p_func_name, r.type_list
     );
     EXECUTE format(
       'COMMENT ON FUNCTION public.%I(%s) IS %L',
       p_func_name,
-      r.ident,
+      r.type_list,
       'P0 tenant guard: p_user_id/p_business_id do cliente e ignorado; tenant vem de auth.uid()/get_auth_company_id().'
     );
   END LOOP;

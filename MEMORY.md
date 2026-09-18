@@ -53,6 +53,8 @@ Script isolado em `scripts/demo-seed/` + doc `docs/demo-seed.md`. Dois tenants f
 
 ## 🛠️ Trabalho recente
 
+- **P0 tenant guard em RPCs autenticadas de financeiro/dashboard (18 Set 2026):** PR #85 (`cursor/p0-tenant-guard-finance-rpcs-b2d0`). Núcleo útil do #79 (fechado), sem identity lock. Migration `20260918220000` aplicada no remoto BARBER/Beauty OS. Gates locais: typecheck, lint, build, 630 testes. Booking público (`create_public_booking`) não foi alterado.
+
 - **P0 hardening de RPCs públicos (18 Set 2026):** #80 mergeado em `main`. Patch live-apply: sem `ALTER DEFAULT PRIVILEGES` de `supabase_admin`; catálogo de serviços sem `display_order`; team catalog filtra `deleted_at`. Harden (180100) aplicar no remoto via MCP. OTP da Minha Área e chave de IA no frontend ficam em PRs separados.
 
 - **Convite da equipe — e-mail duplicado, scroll, exclusão, spinner e Agenda órfã (18 Set 2026):**

@@ -53,6 +53,8 @@ Script isolado em `scripts/demo-seed/` + doc `docs/demo-seed.md`. Dois tenants f
 
 ## 🛠️ Trabalho recente
 
+- **P0 hardening de RPCs públicos (18 Set 2026):** PR aberto (não mergeado) com migrations `20260918180000_p0_revoke_anon_definer_execute.sql` e `20260918180100_p0_harden_public_booking_catalogs.sql`. Aplicar no remoto só após review (MCP). Não mexe no PR #79. OTP da Minha Área e chave de IA no frontend ficam em PRs separados.
+
 - **Convite da equipe — e-mail duplicado, scroll, exclusão, spinner e Agenda órfã (18 Set 2026):**
   - Cadastro (owner e convite) mostra “Este e-mail já tem conta” — sem `#useralre`.
   - Reconvite dirty: se o Auth órfão ainda existe, tenta login com a senha do form e vincula o member novo; se a senha não bate, `release_staff_email_for_reinvite` + signUp.

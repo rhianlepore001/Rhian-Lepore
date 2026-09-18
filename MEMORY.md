@@ -53,6 +53,8 @@ Script isolado em `scripts/demo-seed/` + doc `docs/demo-seed.md`. Dois tenants f
 
 ## 🛠️ Trabalho recente
 
+- **P0 reconvite dirty (18 Set 2026):** após #78, `release_staff_email_for_reinvite` só aceitava o dono. O cadastro dirty chama a RPC autenticado como o staff órfão (signIn + `complete_staff_invite` falhou) → `released` nunca true. Authz novo: dono **ou** órfão com prova de e-mail+convite unbound. Anon segue sem EXECUTE. Purge continua sem EXECUTE; auto-purge do órfão só via GUC da RPC. Migration `20260918200000`. Happy path (mesma senha + claim) e exclusão pelo dono não mudam.
+
 - **P0 hardening de RPCs públicos (18 Set 2026):** #80 mergeado em `main`. Patch live-apply: sem `ALTER DEFAULT PRIVILEGES` de `supabase_admin`; catálogo de serviços sem `display_order`; team catalog filtra `deleted_at`. Harden (180100) aplicar no remoto via MCP. OTP da Minha Área e chave de IA no frontend ficam em PRs separados.
 
 - **Convite da equipe — e-mail duplicado, scroll, exclusão, spinner e Agenda órfã (18 Set 2026):**

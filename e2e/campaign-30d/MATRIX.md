@@ -6,7 +6,7 @@ Produção: https://www.agendixstudio.com · HashRouter `/#/…`.
 
 **Live autenticado: NO-GO** sem credenciais. Smoke anônimo só com slug DEMO.
 
-Relatório sintético A+B+C: [`RELATORIO.md`](./RELATORIO.md). **Não relançar A/B/C.**
+Relatório sintético A+B+C+F: [`RELATORIO.md`](./RELATORIO.md). **Não relançar A/B/C/F.**
 
 ---
 
@@ -17,18 +17,18 @@ Relatório sintético A+B+C: [`RELATORIO.md`](./RELATORIO.md). **Não relançar 
 | **A** | Permissões e papéis (Q1/Q2) | **COMPLETO** | [bc-b1ae84eb](https://cursor.com/agents/bc-b1ae84eb-1d4d-549f-9576-67dc3701114c) | staff vs owner | 2026-09-18 |
 | **B** | Inventário de superfícies | **COMPLETO** | [bc-e638dc10](https://cursor.com/agents/bc-e638dc10-6a1c-5917-aed7-2373c63cfe49) | B-01..B-48 + B-M01..M14 | 2026-09-18 |
 | **C** | Gestor-barbeiro 30d | **COMPLETO** | [bc-b87f87de](https://cursor.com/agents/bc-b87f87de-48e1-56c1-8eec-3f6448519c9e) | owner D1–D30 | 2026-09-18 |
-| **D** | Recepcionista | **TBD** | não mergear até o relatório | — | — |
-| **E** | 3 colaboradores | **TBD** | não mergear até o relatório | — | — |
-| **F** | Clientes booking+fila | **TBD** | não mergear até o relatório | — | — |
+| **D** | Recepcionista | **TBD** | aguardar relatório; não relançar | — | — |
+| **E** | 3 colaboradores | **TBD** | aguardar relatório; não relançar | — | — |
+| **F** | Clientes booking+fila | **COMPLETO** | [bc-7742ea7b](https://cursor.com/agents/bc-7742ea7b-ff79-5997-828a-e20e65f677ae) | book/queue/Minha Área; F-C-01..30 | 2026-09-18 |
 
 Duplicatas de lançamento (ignorar): A `bc-830d8a1e`, B `bc-1dc8a005`, C `bc-daeb09ba`.  
-D/E/F: **não relançar**. Relatórios ainda TBD neste merge.
+**Não relançar A/B/C/F.** D+E TBD → aí sim plano E2E final + backlog priorizado.
 
-A cobre ACL Q1/Q2. B cobre rotas/gaps de produto (não reabrir `public_bookings` staff). C cobre checklist do **dono**; C-10 = duplicata de CAM-002.
+A = ACL Q1/Q2. B = rotas. C = dono D1–D30 (C-10 = CAM-002). F = cliente público. Aceite staff **fora de F** (já CAM-001).
 
 ---
 
-## Achados canônicos (A+B+C, dedupe)
+## Achados canônicos (A+B+C+F, dedupe)
 
 | ID | Sev. | Origem | Veredito | duplicate_of / anti-dupe |
 |---|---|---|---|---|
@@ -44,13 +44,23 @@ A cobre ACL Q1/Q2. B cobre rotas/gaps de produto (não reabrir `public_bookings`
 | **CAM-010** | note | B-01 | Sem landing de marketing neste repo. Anônimo → `/#/login`. Autenticado `/#/` = Dashboard. | visual-critique já documenta |
 | **CAM-011** | note | C-02, B-04 | Trial AgendiX = **20 dias** (`TRIAL_DAYS`). | PKG-15 |
 | **CAM-012** | note | C-13 vs A | Fila **owner**: QR + Ajustes + add manual. Staff: vê/opera board, sem QR/Ajustes (já A). | D add-manual vs F join público |
+| **CAM-013** | major | **F-09** | Tela de sucesso: **“AGENDAMENTO CONFIRMADO”** com row `pending`. Mentira de copy vs A (só dono confirma). | F-C-01, F-C-07 |
+| **CAM-014** | blocker | F-04, **F-06**, **F-07** | Submit = INSERT direto (sem `create_public_booking`). Sem lock; servidor não revalida slot → double-book / slot stale. | F-C-23, F-C-24 |
+| **CAM-015** | major | **F-08** | `public_booking_enabled` / lead time / max por dia **não** no INSERT público. | C D11 settings vs F submit |
+| **CAM-016** | major | **F-15** | Minha Área cancel = UPDATE direto; provavelmente falha silenciosa (sem policy UPDATE anon). | F-C-12 |
+| **CAM-017** | minor | **F-10**, **F-19** | Realtime anon pode não entregar pós-drop SELECT; fallback poll RPC. | — |
+| **CAM-018** | note | **F-16** | Gate Minha Área = telefone/localStorage; **sem OTP** (P0.7 conhecido). | não misturar com CAM-001 |
+| **CAM-019** | minor | F-14 | Histórico Minha Área: match de telefone **exato** (sem `phones_match`). | F-C-25 |
 
-E2E runtime (quando houver login) — não é reinvestigação:
+E2E runtime — não é reinvestigação:
 
-1. Staff ≠ owner no aceite online (CAM-001, CAM-002)
+1. Staff ≠ owner no aceite online (CAM-001, CAM-002) — **fora de F**
 2. Fila PII no board staff (CAM-003)
 3. Owner: QR/Ajustes/add manual na fila (CAM-012)
-4. Placeholders “Em breve” / Notificações / senha (CAM-006–008) — assert copy, não fluxo
+4. Placeholders (CAM-006–008)
+5. Copy “CONFIRMADO” vs `pending` (CAM-013) — smoke **anônimo** se houver slug
+6. Double-book / flags de agendamento (CAM-014, CAM-015)
+7. Cancelar na Minha Área (CAM-016)
 
 ---
 
@@ -92,7 +102,7 @@ Bloqueadores C (B-C01..07): credenciais owner, pending via F/SQL, e-mail staff, 
 
 ---
 
-## Mapa pacotes 30d vs A+B+C
+## Mapa pacotes 30d vs A+B+C+F
 
 | Pacote 30d | Status desenho | Quem preenche runtime |
 |---|---|---|
@@ -101,10 +111,10 @@ Bloqueadores C (B-C01..07): credenciais owner, pending via F/SQL, e-mail staff, 
 | PKG-03 Agenda gestor | **C D11–D18** | live; assume CAM-001 |
 | PKG-04 Agenda staff | desenho A; prova CAM-001/002 | **E TBD** |
 | PKG-05 Recepção | desenho A CAM-004 | **D TBD** |
-| PKG-06 Fila cliente | B-37/38 | **F TBD** |
+| PKG-06 Fila cliente | **F F-C-15..22** | live anônimo + F |
 | PKG-07 Fila operação | **C D19–D23** + CAM-012 | D add; E call |
-| PKG-08 Booking público | B-35 | **F TBD** |
-| PKG-09 Minha Área + clube | B-39/40, C D28 | **F TBD** |
+| PKG-08 Booking público | **F F-C-01..06, 23–27** | live; CAM-013–015 |
+| PKG-09 Minha Área + clube | **F F-C-07..14** + C D28 | CAM-016–018; clube dono = C |
 | PKG-10 Financeiro | C D24–D26 + CAM-005 | live owner |
 | PKG-11 Meus Insights | B-24 | **E TBD** |
 | PKG-12 CRM | B-19/20 | live owner |
@@ -116,13 +126,27 @@ Bloqueadores C (B-C01..07): credenciais owner, pending via F/SQL, e-mail staff, 
 
 ---
 
-## Protocolo merge D/E/F
+## Cenários cliente F (F-C-01..30) — não confundir com C-01 do dono
 
-1. Mapear para CAM-001…012 ou criar CAM-013+.
-2. Aceitar staff / Recusar dono / fetch `user.id` → **CAM-001/002**.
-3. Staff vê fila → **CAM-003**. Cargo label → **CAM-004**. Financeiro URL → **CAM-005**.
-4. Placeholder notificações / Em breve / senha / landing / trial 20d / audit dev → CAM-006…011.
-5. Não relançar A/B/C. Não reabrir `Agenda.tsx` `fetchPublicBookings`.
+Submit: INSERT `public_bookings` `pending` + `get_active_booking_by_phone`. **Não há** RPC `create_public_booking` no repo.
+
+| Bloco | IDs F | Tema |
+|---|---|---|
+| Descoberta / book | F-C-01..06 | slug, submit pending, produtos, CTA clube |
+| Minha Área | F-C-07..14 | card Aguardando, edit/rebook, cancel (CAM-016), clube |
+| Fila | F-C-15..22 | QR join, duplicata, `?tab=fila`, book+fila no mesmo dia |
+| Bordas | F-C-23..30 | double-book, slot stale, phone match, INSERT confirmed rejeitado, PT/MB WAY, smoke prod |
+
+P0 sugerido F: F-C-01, F-C-07, F-C-15, F-C-18, F-C-27, F-C-30.  
+Confirmado na Minha Área só depois do **dono** aceitar (CAM-001) — background fora de F.
+
+## Protocolo merge D/E
+
+1. Mapear para CAM-001…019 ou criar CAM-020+.
+2. Aceitar staff → **CAM-001/002**. Staff vê fila → **CAM-003**. Cargo label → **CAM-004**.
+3. Copy CONFIRMADO / double-book / cancel Minha Área / OTP → já F (CAM-013–018). Não reabrir `submitPublicBooking`.
+4. Não relançar A/B/C/F.
+5. Quando D+E chegarem: **plano E2E 30d consolidado + backlog priorizado** (ainda não: faltam D e E).
 
 ```
 id: D-01
@@ -137,15 +161,15 @@ duplicate_of: null | CAM-002
 
 ## GO/NO-GO
 
-| Item | Estado pós A+B+C |
+| Item | Estado pós A+B+C+F |
 |---|---|
 | Credenciais | ausentes neste orquestrador |
 | Q1 staff aceita booking | **FAIL** CAM-001 |
 | Q2 staff vê fila | **PASS** CAM-003 |
-| Superfícies | inventário B fechado; sem landing marketing |
-| Checklist owner 30d | C desenhado; **não executado** no browser |
-| D/E/F | TBD |
+| Cliente público | F desenhado; copy CONFIRMADO vs pending = CAM-013 |
+| D/E | **TBD** |
 | Stripe live | não |
-| WhatsApp suporte | morto `#` (orquestrador; B-42 é wa.me de **cliente/negócio**, outro link) |
 
-**NO-GO** live autenticado. A+B+C fecham desenho ACL + mapa + jornada do dono. Runtime = depois das credenciais e dos relatórios D/E/F.
+**NO-GO** autenticado sem credenciais.  
+GO parcial anônimo (se slug DEMO): F-C-01, F-C-15, CAM-013.  
+Plano E2E final + backlog priorizado: **somente quando D+E chegarem**.

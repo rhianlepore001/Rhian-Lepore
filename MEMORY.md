@@ -53,6 +53,21 @@ Script isolado em `scripts/demo-seed/` + doc `docs/demo-seed.md`. Dois tenants f
 
 ## 🛠️ Trabalho recente
 
+- **Convite da equipe — e-mail duplicado, scroll, exclusão, spinner e Agenda órfã (18 Set 2026):**
+  - Cadastro (owner e convite) mostra “Este e-mail já tem conta” — sem `#useralre`.
+  - Reconvite dirty: se o Auth órfão ainda existe, tenta login com a senha do form e vincula o member novo; se a senha não bate, `release_staff_email_for_reinvite` + signUp.
+  - Banner de erro em login/cadastro/recuperar/nova senha rola para o centro da tela no mobile.
+  - Excluir colaborador faz soft-delete em `team_members` e remove a conta Auth (não o dono), liberando o e-mail. Convite novo tenta limpar órfão antigo (`release_staff_email_for_reinvite`).
+  - Campo “Link Personalizado (Slug)” saiu do formulário Novo Profissional; slug continua gerado automaticamente.
+  - Cadastro de colaborador não chama mais UPDATE em `team_members` (RLS do dono); usa RPC `complete_staff_invite`. Login tenta `relink_staff_if_unbound` se a Agenda estiver órfã.
+  - `onAuthStateChange` adia o fetch do perfil (evita deadlock do `signUp` → spinner infinito). Submit do cadastro sempre libera o loading.
+  - Gateway de login: card de cima “Barbearias”; card de baixo “Salão de Beleza” (não duplica BARBEARIAS).
+  - Migrations `20260918000001_purge_staff_auth_on_delete.sql` e `20260918000002_complete_staff_invite.sql` aplicadas no remoto BARBER/Beauty OS.
+  - Gates: typecheck, lint, build, 625 testes.
+  - Regressão: excluir colaborador (`delete_staff_collaborator`) e cadastrar o mesmo e-mail no `member_id` do convite novo — não no row excluído.
+
+
+
 - **Backup pré-landing infra (15 Set 2026):**
   - Tag anotada e branch `backup/pre-landing-infra-20260915` apontam para `77baa9fa37b8c16a263fb4e3b41e47bdc369741a` (`main` antes de #69/#71/#72).
   - Seed demo **não** aplicado neste run (sem `SUPABASE_SERVICE_ROLE_KEY` / `DEMO_SEED_PASSWORD` no ambiente).

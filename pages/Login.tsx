@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -8,6 +8,7 @@ import { mapError, formatUserFacingError } from '../utils/mapError';
 import { Screw } from '../components/Screw';
 import { AgendiXLogo } from '../components/AgendiXLogo';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
+import { useScrollToError } from '../hooks/useScrollToError';
 import { getBusinessCopy } from '../utils/businessCopy';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
@@ -22,26 +23,19 @@ export const Login: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showPassword, setShowPassword] = useState(false);
-    const errorRef = useRef<HTMLDivElement>(null);
+    const errorRef = useScrollToError(error);
 
     const [loginTheme, setLoginTheme] = useState<'barber' | 'beauty'>('barber');
     const [showGateway, setShowGateway] = useState(true);
     const isBeauty = loginTheme === 'beauty';
     const copy = getBusinessCopy(loginTheme);
+    const barberGatewayCopy = getBusinessCopy('barber');
+    const beautyGatewayCopy = getBusinessCopy('beauty');
     const { colors, accent, font, radius } = useBrutalTheme({ override: loginTheme });
 
     useEffect(() => {
         if (showGateway) applyPublicAuthTheme();
     }, [showGateway]);
-
-    useEffect(() => {
-        if (!error) return;
-
-        requestAnimationFrame(() => {
-            errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            errorRef.current?.focus({ preventScroll: true });
-        });
-    }, [error]);
 
     const handleLogin = async () => {
         setLoading(true);
@@ -128,7 +122,7 @@ export const Login: React.FC = () => {
 
                         <div className="absolute inset-0 flex flex-col items-center justify-end pb-10 md:pb-12 z-10 px-6 text-center">
                             <h2 className="font-heading text-3xl md:text-4xl text-[var(--color-text)] uppercase tracking-tight mb-3 group-hover:text-theme-accent transition-colors duration-300">
-                                {copy.segmentLabelPlural}
+                                {barberGatewayCopy.segmentLabelPlural}
                             </h2>
                             {/* Traço horizontal com animação de crescer */}
                             <div className="w-0 h-[1px] bg-theme-accent/60 group-hover:w-16 transition-all duration-500 mb-5" />
@@ -150,7 +144,7 @@ export const Login: React.FC = () => {
                     >
                         <button
                             data-testid="category-beauty"
-                            aria-label="Acessar painel para salões e spas"
+                            aria-label="Acessar painel para salões de beleza"
                             onClick={() => handleSelectSegment('beauty')}
                             className="group relative h-72 md:h-96 w-full rounded-2xl md:rounded-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]"
                         >
@@ -169,7 +163,7 @@ export const Login: React.FC = () => {
 
                             <div className="absolute inset-0 flex flex-col items-center justify-end pb-10 md:pb-12 z-10 px-6 text-center">
                                 <h2 className="font-heading text-3xl md:text-4xl text-[var(--color-text)] uppercase tracking-tight mb-3 group-hover:text-theme-accent transition-colors duration-300">
-                                    {copy.segmentLabelPlural}
+                                    {beautyGatewayCopy.segmentLabel}
                                 </h2>
                                 {/* Traço horizontal com animação de crescer */}
                                 <div className="w-0 h-[1px] bg-theme-accent/60 group-hover:w-16 transition-all duration-500 mb-5" />

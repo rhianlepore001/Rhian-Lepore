@@ -392,7 +392,7 @@ export const TeamSettings: React.FC = () => {
                 <ConfirmModal
                     open={!!pendingDeleteId}
                     title="Excluir profissional"
-                    message="Tem certeza que deseja excluir este profissional?"
+                    message="Excluir este profissional também remove o acesso dele ao sistema. O e-mail fica livre para um novo convite."
                     confirmLabel="Excluir"
                     variant="danger"
                     loading={deleteMemberMutation.isPending}

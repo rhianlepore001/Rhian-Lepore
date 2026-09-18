@@ -18,6 +18,7 @@ import { useCancelPublicClientMembership, usePublicClientMembership } from '../h
 import { useToast } from '../components/ui/Toast';
 import { validityHeadline } from '../utils/membershipValidity';
 import { formatFirstName } from '../utils/formatters';
+import { useScrollToError } from '../hooks/useScrollToError';
 
 interface BusinessProfile {
     id: string;
@@ -86,6 +87,7 @@ export const ClientArea: React.FC = () => {
     const [gateName, setGateName] = useState('');
     const [gateError, setGateError] = useState('');
     const [gateSubmitting, setGateSubmitting] = useState(false);
+    const gateErrorRef = useScrollToError(gateError);
 
     // Bookings
     const [bookings, setBookings] = useState<ClientBooking[]>([]);
@@ -367,7 +369,16 @@ export const ClientArea: React.FC = () => {
                                         />
                                     </div>
 
-                                    {gateError && <p className="text-[var(--color-danger)] text-xs text-center">{gateError}</p>}
+                                    {gateError && (
+                                        <div
+                                            ref={gateErrorRef}
+                                            role="alert"
+                                            tabIndex={-1}
+                                            className="text-[var(--color-danger)] text-xs text-center"
+                                        >
+                                            {gateError}
+                                        </div>
+                                    )}
 
                                     <button
                                         type="submit"
@@ -416,7 +427,16 @@ export const ClientArea: React.FC = () => {
                                         />
                                     </div>
 
-                                    {gateError && <p className="text-[var(--color-danger)] text-xs text-center">{gateError}</p>}
+                                    {gateError && (
+                                        <div
+                                            ref={gateErrorRef}
+                                            role="alert"
+                                            tabIndex={-1}
+                                            className="text-[var(--color-danger)] text-xs text-center"
+                                        >
+                                            {gateError}
+                                        </div>
+                                    )}
 
                                     <button
                                         type="submit"

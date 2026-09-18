@@ -5,6 +5,7 @@ import { ArrowLeft, Mail, Send, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Screw } from '../components/Screw';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
+import { useScrollToError } from '../hooks/useScrollToError';
 
 export const ForgotPassword: React.FC = () => {
     const navigate = useNavigate();
@@ -12,6 +13,7 @@ export const ForgotPassword: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [done, setDone] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const errorRef = useScrollToError(error);
 
     const handleResetRequest = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -68,7 +70,9 @@ export const ForgotPassword: React.FC = () => {
 
                             {error && (
                                 <div
+                                    ref={errorRef}
                                     role="alert"
+                                    tabIndex={-1}
                                     className="p-4 bg-[var(--color-danger-bg)] border border-[var(--color-danger-border)] text-[var(--color-danger)] text-xs font-mono mb-6 flex items-start gap-3 rounded-xl"
                                 >
                                     <AlertCircle className="w-4 h-4 shrink-0" />

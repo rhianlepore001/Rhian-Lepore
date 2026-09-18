@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mapError, formatUserFacingError } from '../../utils/mapError';
+import { mapError, formatUserFacingError, isEmailTakenError } from '../../utils/mapError';
 
 describe('mapError', () => {
   it('usa o fallback PT-BR quando o código é desconhecido', () => {
@@ -38,5 +38,27 @@ describe('mapError', () => {
     const formatted = formatUserFacingError(out);
     expect(formatted).toContain(out.message);
     expect(formatted).toContain('#23505');
+  });
+
+  it('traduz e-mail já cadastrado no Auth (user_already_exists)', () => {
+    const out = mapError(
+      { code: 'user_already_exists', message: 'User already registered' },
+      'Não foi possível criar a conta.'
+    );
+    expect(out.message).toContain('e-mail já tem conta');
+    expect(out.message).not.toContain('User already');
+    expect(out.code).toBe('#useralre');
+    expect(formatUserFacingError(out)).toBe(out.message);
+    expect(formatUserFacingError(out)).not.toContain('#useralre');
+  });
+
+  it('reconhece email_exists e a mensagem already registered', () => {
+    expect(mapError({ code: 'email_exists' }, 'fallback').message).toContain('já tem conta');
+    expect(
+      mapError({ message: 'User already registered' }, 'Não foi possível criar a conta.').message
+    ).toContain('já tem conta');
+    expect(isEmailTakenError({ code: 'user_already_exists' })).toBe(true);
+    expect(isEmailTakenError({ message: 'User already registered' })).toBe(true);
+    expect(isEmailTakenError({ code: 'invalid_login' })).toBe(false);
   });
 });

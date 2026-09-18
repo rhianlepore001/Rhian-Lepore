@@ -252,6 +252,12 @@ describe('AuthContext', () => {
 
                 return Promise.resolve({ data: null, error: null });
             }),
+            upsert: vi.fn().mockImplementation((row) => {
+                if (table === 'profiles') {
+                    insertedProfiles.push(row);
+                }
+                return Promise.resolve({ data: null, error: null });
+            }),
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
             single: vi.fn().mockResolvedValue({ data: null, error: null }),
@@ -301,7 +307,7 @@ describe('AuthContext', () => {
 
         (supabase.auth.getSession as any).mockResolvedValue({ data: { session: null }, error: null });
         (supabase.auth.signUp as any).mockResolvedValue({
-            data: { user: mockUser },
+            data: { user: mockUser, session: { user: mockUser } },
             error: null,
         });
         (supabase.from as any).mockImplementation((table: string) => {
@@ -317,6 +323,14 @@ describe('AuthContext', () => {
             (queryChain as any).insert = vi.fn().mockImplementation((rows) => {
                 if (table === 'profiles') insertedProfiles.push(...rows);
                 if (table === 'team_members') insertedTeamMembers.push(...rows);
+                return {
+                    select: vi.fn().mockReturnValue({
+                        single: vi.fn().mockResolvedValue({ data: { id: 'new-member' }, error: null }),
+                    }),
+                };
+            });
+            (queryChain as any).upsert = vi.fn().mockImplementation((row) => {
+                if (table === 'profiles') insertedProfiles.push(row);
                 return Promise.resolve({ data: null, error: null });
             });
             (queryChain as any).update = vi.fn().mockImplementation((updates) => {
@@ -374,7 +388,7 @@ describe('AuthContext', () => {
 
         (supabase.auth.getSession as any).mockResolvedValue({ data: { session: null }, error: null });
         (supabase.auth.signUp as any).mockResolvedValue({
-            data: { user: mockUser },
+            data: { user: mockUser, session: { user: mockUser } },
             error: null,
         });
         (supabase.from as any).mockImplementation((table: string) => {
@@ -392,10 +406,7 @@ describe('AuthContext', () => {
                 }
                 return Promise.resolve({ data: null, error: null });
             });
-            (queryChain as any).insert = vi.fn().mockImplementation((rows) => {
-                if (table === 'team_members') insertedTeamMembers.push(...rows);
-                return Promise.resolve({ data: null, error: null });
-            });
+            (queryChain as any).upsert = vi.fn().mockResolvedValue({ data: null, error: null });
             (queryChain as any).update = vi.fn().mockImplementation((updates) => {
                 if (table === 'team_members') updatedTeamMembers.push(updates);
                 return queryChain;
@@ -421,10 +432,13 @@ describe('AuthContext', () => {
         });
 
         expect(registerResult.error).toBeNull();
-        // Pré-cadastro achado → UPDATE (sem INSERT, sem duplicar)
         expect(insertedTeamMembers).toHaveLength(0);
-        expect(updatedTeamMembers).toHaveLength(1);
-        expect(updatedTeamMembers[0]).toEqual({ staff_user_id: mockUser.id });
+        expect(updatedTeamMembers).toHaveLength(0);
+        expect(supabase.rpc).toHaveBeenCalledWith('complete_staff_invite', {
+            p_company_id: 'owner-123',
+            p_member_id: 'pre-cadastrado-uuid',
+            p_birth_date: null,
+        });
     });
 
     it('marks owner onboarding as completed in onboarding_progress', async () => {
@@ -491,6 +505,7 @@ describe('AuthContext', () => {
         });
         (supabase.from as any).mockImplementation(() => ({
             insert: vi.fn().mockResolvedValue({ data: null, error: null }),
+            upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
             single: vi.fn().mockResolvedValue({ data: null, error: null }),
@@ -606,5 +621,324 @@ describe('AuthContext', () => {
         expect(document.documentElement.getAttribute('data-theme')).toBe('barber');
         expect(document.documentElement.getAttribute('data-mode')).toBe('dark');
         expect(localStorage.getItem('agendix_color_mode')).toBe('light');
+    });
+
+    it('não purga e-mail órfão sem sessão — retorna erro ao usuário quando signIn falha', async () => {
+        (supabase.auth.getSession as any).mockResolvedValue({ data: { session: null }, error: null });
+        (supabase.auth.signUp as any).mockResolvedValueOnce({
+            data: { user: null },
+            error: { code: 'user_already_exists', message: 'User already registered' },
+        });
+        (supabase.auth.signInWithPassword as any).mockResolvedValue({
+            data: { user: null, session: null },
+            error: { message: 'Invalid login credentials' },
+        });
+
+        const { result } = renderHook(() => useAuth(), { wrapper });
+
+        let registerResult: any;
+        await act(async () => {
+            registerResult = await result.current.register({
+                email: 'recepcao@example.com',
+                password: 'Password123!',
+                fullName: 'Recepção Moderna',
+                businessName: 'Barbearia Moderna',
+                userType: 'barber',
+                region: 'BR',
+                phone: '',
+                companyId: 'owner-123',
+                teamMemberId: 'member-new-reinvite',
+            });
+        });
+
+        expect(supabase.rpc).not.toHaveBeenCalledWith(
+            'release_staff_email_for_reinvite',
+            expect.anything(),
+        );
+        expect(supabase.auth.signUp).toHaveBeenCalledTimes(1);
+        expect(registerResult.error).toBeTruthy();
+        expect(registerResult.error.message).toMatch(/já está em uso/);
+    });
+
+    it('purga e-mail órfão via release quando signIn OK mas claim falha (sessão ativa)', async () => {
+        const mockUser = { id: 'staff-retry', email: 'recepcao@example.com' };
+
+        (supabase.auth.getSession as any).mockResolvedValue({ data: { session: null }, error: null });
+        (supabase.auth.signUp as any)
+            .mockResolvedValueOnce({
+                data: { user: null },
+                error: { code: 'user_already_exists', message: 'User already registered' },
+            })
+            .mockResolvedValueOnce({
+                data: { user: mockUser, session: { user: mockUser } },
+                error: null,
+            });
+        (supabase.auth.signInWithPassword as any).mockResolvedValue({
+            data: { user: mockUser, session: { user: mockUser } },
+            error: null,
+        });
+        (supabase.auth.signOut as any).mockResolvedValue({ error: null });
+        (supabase.rpc as any).mockImplementation((name: string) => {
+            if (name === 'release_staff_email_for_reinvite') {
+                return Promise.resolve({ data: true, error: null });
+            }
+            if (name === 'complete_staff_invite') {
+                return Promise.resolve({ data: 'member-new-reinvite', error: null });
+            }
+            return Promise.resolve({ data: null, error: null });
+        });
+        let claimCall = 0;
+        (supabase.rpc as any).mockImplementation((name: string) => {
+            if (name === 'complete_staff_invite') {
+                claimCall++;
+                if (claimCall === 1) return Promise.resolve({ data: null, error: { message: 'invite_already_used' } });
+                return Promise.resolve({ data: 'member-new-reinvite', error: null });
+            }
+            if (name === 'release_staff_email_for_reinvite') {
+                return Promise.resolve({ data: true, error: null });
+            }
+            return Promise.resolve({ data: null, error: null });
+        });
+
+        const { result } = renderHook(() => useAuth(), { wrapper });
+
+        let registerResult: any;
+        await act(async () => {
+            registerResult = await result.current.register({
+                email: 'recepcao@example.com',
+                password: 'Password123!',
+                fullName: 'Recepção Moderna',
+                businessName: 'Barbearia Moderna',
+                userType: 'barber',
+                region: 'BR',
+                phone: '',
+                companyId: 'owner-123',
+                teamMemberId: 'member-new-reinvite',
+            });
+        });
+
+        expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
+            email: 'recepcao@example.com',
+            password: 'Password123!',
+        });
+        expect(supabase.rpc).toHaveBeenCalledWith('release_staff_email_for_reinvite', {
+            p_company_id: 'owner-123',
+            p_member_id: 'member-new-reinvite',
+            p_email: 'recepcao@example.com',
+        });
+        expect(supabase.auth.signOut).toHaveBeenCalled();
+        expect(supabase.auth.signUp).toHaveBeenCalledTimes(2);
+        expect(registerResult.error).toBeNull();
+    });
+
+    it('se o Auth órfão ainda existe, entra com a senha e vincula o member_id novo', async () => {
+        const mockUser = { id: '78052ac0-f285-4419-9434-bfcf52f35cae', email: 'e2e.bob.colab.reinvite.20260918@gmail.com' };
+        const newMemberId = 'dff1d15d-8595-432d-b1e3-de3fdc467764';
+
+        (supabase.auth.getSession as any).mockResolvedValue({ data: { session: null }, error: null });
+        (supabase.auth.signUp as any).mockResolvedValue({
+            data: { user: null },
+            error: { code: 'user_already_exists', message: 'User already registered' },
+        });
+        (supabase.auth.signInWithPassword as any).mockResolvedValue({
+            data: { user: mockUser, session: { user: mockUser } },
+            error: null,
+        });
+        (supabase.rpc as any).mockImplementation((name: string, args?: { p_member_id?: string }) => {
+            if (name === 'complete_staff_invite') {
+                return Promise.resolve({ data: args?.p_member_id ?? newMemberId, error: null });
+            }
+            return Promise.resolve({ data: null, error: null });
+        });
+
+        const { result } = renderHook(() => useAuth(), { wrapper });
+
+        let registerResult;
+        await act(async () => {
+            registerResult = await result.current.register({
+                email: 'e2e.bob.colab.reinvite.20260918@gmail.com',
+                password: 'Password123!',
+                fullName: 'E2E Bob Colab 2',
+                businessName: 'DEMO · Barbearia Corte Fino',
+                userType: 'barber',
+                region: 'BR',
+                phone: '',
+                companyId: '7baee43b-a3b0-4d96-b566-62bc88224f5c',
+                teamMemberId: newMemberId,
+                birthDate: '1990-01-01',
+            });
+        });
+
+        expect(registerResult.error).toBeNull();
+        expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
+            email: 'e2e.bob.colab.reinvite.20260918@gmail.com',
+            password: 'Password123!',
+        });
+        expect(supabase.rpc).toHaveBeenCalledWith('complete_staff_invite', {
+            p_company_id: '7baee43b-a3b0-4d96-b566-62bc88224f5c',
+            p_member_id: newMemberId,
+            p_birth_date: '1990-01-01',
+        });
+        expect(supabase.rpc).not.toHaveBeenCalledWith(
+            'release_staff_email_for_reinvite',
+            expect.anything(),
+        );
+        expect(supabase.auth.signUp).toHaveBeenCalledTimes(1);
+        expect(result.current.role).toBe('staff');
+        expect(result.current.teamMemberId).toBe(newMemberId);
+    });
+
+    it('após purge do Auth, o mesmo e-mail cadastra no member_id novo e não no excluído', async () => {
+        const mockUser = { id: 'staff-reinvite', email: 'e2e.colab@example.com' };
+        const deletedMemberId = '11111111-1111-4111-8111-111111111111';
+        const newMemberId = '33333333-3333-4333-8333-333333333333';
+
+        (supabase.auth.getSession as any).mockResolvedValue({ data: { session: null }, error: null });
+        (supabase.auth.signUp as any).mockResolvedValue({
+            data: { user: mockUser, session: { user: mockUser } },
+            error: null,
+        });
+        (supabase.rpc as any).mockImplementation((name: string, args?: { p_member_id?: string }) => {
+            if (name === 'complete_staff_invite') {
+                return Promise.resolve({ data: args?.p_member_id ?? newMemberId, error: null });
+            }
+            return Promise.resolve({ data: null, error: null });
+        });
+
+        const { result } = renderHook(() => useAuth(), { wrapper });
+
+        let registerResult;
+        await act(async () => {
+            registerResult = await result.current.register({
+                email: 'e2e.colab@example.com',
+                password: 'Password123!',
+                fullName: 'E2E Bob Colab',
+                businessName: 'DEMO Barbearia',
+                userType: 'barber',
+                region: 'BR',
+                phone: '',
+                companyId: 'owner-123',
+                teamMemberId: newMemberId,
+                birthDate: '1993-06-06',
+            });
+        });
+
+        expect(registerResult.error).toBeNull();
+        expect(supabase.rpc).not.toHaveBeenCalledWith(
+            'release_staff_email_for_reinvite',
+            expect.anything(),
+        );
+        expect(supabase.rpc).toHaveBeenCalledWith('complete_staff_invite', {
+            p_company_id: 'owner-123',
+            p_member_id: newMemberId,
+            p_birth_date: '1993-06-06',
+        });
+        expect(supabase.rpc).not.toHaveBeenCalledWith(
+            'complete_staff_invite',
+            expect.objectContaining({ p_member_id: deletedMemberId }),
+        );
+        expect(result.current.role).toBe('staff');
+        expect(result.current.teamMemberId).toBe(newMemberId);
+    });
+
+    it('envia role staff e company_id no metadata do signUp do convite', async () => {
+        const mockUser = { id: 'staff-meta', email: 'meta@example.com' };
+
+        (supabase.auth.getSession as any).mockResolvedValue({ data: { session: null }, error: null });
+        (supabase.auth.signUp as any).mockResolvedValue({
+            data: { user: mockUser, session: { user: mockUser } },
+            error: null,
+        });
+        (supabase.rpc as any).mockResolvedValue({ data: 'member-1', error: null });
+
+        const { result } = renderHook(() => useAuth(), { wrapper });
+
+        await act(async () => {
+            await result.current.register({
+                email: 'meta@example.com',
+                password: 'Password123!',
+                fullName: 'Recepção Moderna',
+                businessName: 'Moderna',
+                userType: 'barber',
+                region: 'BR',
+                phone: '',
+                companyId: 'owner-123',
+                teamMemberId: 'member-1',
+                birthDate: '1993-06-06',
+            });
+        });
+
+        expect(supabase.auth.signUp).toHaveBeenCalledWith({
+            email: 'meta@example.com',
+            password: 'Password123!',
+            options: {
+                data: expect.objectContaining({
+                    full_name: 'Recepção Moderna',
+                    role: 'staff',
+                    company_id: 'owner-123',
+                    type: 'barber',
+                }),
+            },
+        });
+        expect(supabase.rpc).toHaveBeenCalledWith('complete_staff_invite', {
+            p_company_id: 'owner-123',
+            p_member_id: 'member-1',
+            p_birth_date: '1993-06-06',
+        });
+    });
+
+    it('religa colaborador sem team_member via relink_staff_if_unbound', async () => {
+        const mockUser = { id: 'staff-orphan', email: 'orphan@example.com' };
+        const mockSession = { user: mockUser };
+
+        (supabase.auth.getSession as any).mockResolvedValue({ data: { session: mockSession }, error: null });
+        (supabase.from as any).mockImplementation((table: string) => {
+            const query: any = {
+                select: vi.fn().mockReturnThis(),
+                eq: vi.fn().mockReturnThis(),
+                maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+                single: vi.fn().mockImplementation(() => {
+                    if (table === 'profiles' && query.eq.mock.calls.some((call: unknown[]) => call[1] === 'owner-123')) {
+                        return Promise.resolve({
+                            data: {
+                                subscription_status: 'active',
+                                trial_ends_at: null,
+                                user_type: 'barber',
+                                business_name: 'Moderna',
+                                region: 'BR',
+                            },
+                            error: null,
+                        });
+                    }
+                    return Promise.resolve({
+                        data: {
+                            id: mockUser.id,
+                            role: 'staff',
+                            company_id: 'owner-123',
+                            user_type: 'barber',
+                            region: 'BR',
+                            tutorial_completed: true,
+                            full_name: 'Recepção Moderna',
+                        },
+                        error: null,
+                    });
+                }),
+            };
+            return query;
+        });
+        (supabase.rpc as any).mockImplementation((name: string) => {
+            if (name === 'relink_staff_if_unbound') {
+                return Promise.resolve({ data: 'relinked-member', error: null });
+            }
+            return Promise.resolve({ data: null, error: null });
+        });
+
+        const { result } = renderHook(() => useAuth(), { wrapper });
+
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        expect(supabase.rpc).toHaveBeenCalledWith('relink_staff_if_unbound');
+        expect(result.current.role).toBe('staff');
+        expect(result.current.teamMemberId).toBe('relinked-member');
     });
 });

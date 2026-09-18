@@ -6,6 +6,7 @@ import { resolveIsDev } from '../utils/devAccess';
 import { applyPublicAuthTheme } from '../utils/publicAuthTheme';
 import { normalizeRegion } from '../utils/formatters';
 import { getTrialEndsAt } from '../constants';
+import { isEmailTakenError } from '../utils/mapError';
 
 export type UserType = 'barber' | 'beauty';
 export type Region = 'BR' | 'PT';
@@ -126,7 +127,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .eq('user_id', profile.company_id)
             .maybeSingle();
 
-          setTeamMemberId(teamMember?.id || null);
+          let resolvedMemberId = teamMember?.id || null;
+          if (!resolvedMemberId) {
+            const { data: relinked } = await supabase.rpc('relink_staff_if_unbound');
+            resolvedMemberId = relinked || null;
+          }
+          setTeamMemberId(resolvedMemberId);
         } else {
           const { data: onboardingProgress, error: onboardingError } = await supabase
             .from('onboarding_progress')
@@ -183,12 +189,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (session?.user?.id) {
         setIsDev(resolveIsDev(session.user.email));
-        // Re-fetch profile data on sign in/change
-        fetchProfileData(session.user.id).then(() => {
-          setLoading(false);
-        });
+        // supabase-js segura um lock neste callback; queries no mesmo tick travam o signUp.
+        setTimeout(() => {
+          fetchProfileData(session.user.id).then(() => {
+            setLoading(false);
+          });
+        }, 0);
       } else {
-        // Reset state on sign out
         setIsDev(false);
         setUserType('barber');
         setRegion('BR');
@@ -301,55 +308,133 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     birthDate?: string;
   }) => {
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const signUpPayload = {
         email: data.email,
         password: data.password,
         options: {
           data: {
             full_name: data.fullName,
             business_name: data.businessName,
+            phone: data.phone,
+            type: data.userType,
+            region: data.region,
+            role: data.companyId ? 'staff' : 'owner',
+            company_id: data.companyId || undefined,
           }
         }
-      });
+      };
+
+      let { data: authData, error: authError } = await supabase.auth.signUp(signUpPayload);
+
+      if (authError && isEmailTakenError(authError) && data.companyId && data.teamMemberId) {
+        const existing = await supabase.auth.signInWithPassword({
+          email: data.email,
+          password: data.password,
+        });
+
+        if (!existing?.error && existing?.data?.user) {
+          const { data: claimedId, error: claimError } = await supabase.rpc('complete_staff_invite', {
+            p_company_id: data.companyId,
+            p_member_id: data.teamMemberId,
+            p_birth_date: data.birthDate || null,
+          });
+          if (!claimError) {
+            setCompanyId(data.companyId);
+            setRole('staff');
+            setUserType(data.userType);
+            setRegion(normalizeRegion(data.region));
+            setBusinessName(data.businessName);
+            setFullName(data.fullName);
+            setTutorialCompleted(false);
+            setTeamMemberId(claimedId || data.teamMemberId);
+            return { error: null };
+          }
+
+          const { data: released } = await supabase.rpc('release_staff_email_for_reinvite', {
+            p_company_id: data.companyId,
+            p_member_id: data.teamMemberId,
+            p_email: data.email,
+          });
+          await supabase.auth.signOut();
+          if (released === true) {
+            const retry = await supabase.auth.signUp(signUpPayload);
+            authData = retry.data;
+            authError = retry.error;
+          }
+        } else {
+          const code = (existing?.error as unknown as Record<string, unknown>)?.code ?? '';
+          if (code === 'email_not_confirmed') {
+            return { error: { message: 'Este e-mail já foi cadastrado mas não foi confirmado. Verifique sua caixa de entrada ou peça ao gestor para reenviar o convite.' } as unknown as Error };
+          }
+          return { error: { message: 'Este e-mail já está em uso. Se você é colaborador, peça ao gestor para excluir e recriar o convite.' } as unknown as Error };
+        }
+      }
 
       if (authError) return { error: authError };
 
       if (authData.user) {
+        const resolvedCompanyId = data.companyId || authData.user.id;
+        const isStaffSignup = Boolean(data.companyId);
+
+        if (isStaffSignup && !authData.session) {
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: data.email,
+            password: data.password,
+          });
+          if (signInError) return { error: signInError };
+        }
+
+        if (isStaffSignup && data.teamMemberId) {
+          const { data: claimedId, error: claimError } = await supabase.rpc('complete_staff_invite', {
+            p_company_id: data.companyId,
+            p_member_id: data.teamMemberId,
+            p_birth_date: data.birthDate || null,
+          });
+          if (claimError) return { error: claimError };
+
+          setCompanyId(resolvedCompanyId);
+          setRole('staff');
+          setUserType(data.userType);
+          setRegion(normalizeRegion(data.region));
+          setBusinessName(data.businessName);
+          setFullName(data.fullName);
+          setTutorialCompleted(false);
+          setTeamMemberId(claimedId || data.teamMemberId);
+          return { error: null };
+        }
+
+        const profileRow = {
+          id: authData.user.id,
+          full_name: data.fullName,
+          business_name: data.businessName,
+          user_type: data.userType,
+          region: data.region,
+          phone: data.phone,
+          birth_date: data.birthDate || null,
+          email: data.email,
+          tutorial_completed: false,
+          subscription_status: 'trial',
+          trial_ends_at: getTrialEndsAt(),
+          role: isStaffSignup ? 'staff' : 'owner',
+          company_id: resolvedCompanyId,
+          aios_enabled: true
+        };
+
         const { error: profileError } = await supabase
           .from('profiles')
-          .insert([
-            {
-              id: authData.user.id,
-              full_name: data.fullName,
-              business_name: data.businessName,
-              user_type: data.userType,
-              region: data.region,
-              phone: data.phone,
-              birth_date: data.birthDate || null,
-              email: data.email,
-              tutorial_completed: false,
-              subscription_status: 'trial',
-              trial_ends_at: getTrialEndsAt(),
-              role: data.companyId ? 'staff' : 'owner',
-              company_id: data.companyId || authData.user.id,
-              aios_enabled: true
-            }
-          ]);
+          .upsert(profileRow, { onConflict: 'id' });
 
-        if (profileError) return { error: profileError };
+        if (profileError && profileError.code !== '23505') return { error: profileError };
 
-        // Hidrata o AuthContext imediatamente — evita race em que o wizard
-        // abre com companyId null e os botões falham em silêncio.
-        const resolvedCompanyId = data.companyId || authData.user.id;
         setCompanyId(resolvedCompanyId);
-        setRole(data.companyId ? 'staff' : 'owner');
+        setRole(isStaffSignup ? 'staff' : 'owner');
         setUserType(data.userType);
         setRegion(normalizeRegion(data.region));
         setBusinessName(data.businessName);
         setFullName(data.fullName);
         setTutorialCompleted(false);
 
-        if (!data.companyId) {
+        if (!isStaffSignup) {
           const { error: onboardingError } = await supabase.rpc('upsert_onboarding_progress', {
             p_company_id: authData.user.id,
             p_current_step: 1,
@@ -360,86 +445,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (onboardingError) return { error: onboardingError };
         }
 
-        // Se for um registro de equipe (tem companyId), vincula ou cria o team_member
-        if (data.companyId) {
+        if (isStaffSignup) {
           const trimmedName = data.fullName.trim();
+          const namePattern = trimmedName.replace(/[\\%_]/g, (char) => `\\${char}`);
+          const { data: existing } = await supabase
+            .from('team_members')
+            .select('id')
+            .eq('user_id', data.companyId)
+            .is('staff_user_id', null)
+            .ilike('name', namePattern)
+            .limit(1)
+            .maybeSingle();
 
-          // 1. Preferir vínculo pelo member_id do convite (domínio do gestor)
-          if (data.teamMemberId) {
-            const { data: byId, error: byIdError } = await supabase
-              .from('team_members')
-              .select('id, name, staff_user_id')
-              .eq('id', data.teamMemberId)
-              .eq('user_id', data.companyId)
-              .maybeSingle();
-
-            if (byIdError) {
-              console.error('Erro ao buscar team_member do convite:', byIdError);
-            } else if (byId?.staff_user_id) {
-              return { error: new Error('Este convite já foi utilizado.') };
-            } else if (byId?.id) {
-              const { error: linkError } = await supabase
-                .from('team_members')
-                .update({ staff_user_id: authData.user.id })
-                .eq('id', byId.id)
-                .is('staff_user_id', null);
-
-              if (linkError) {
-                console.error('Erro ao vincular team_member do convite:', linkError);
-                return { error: linkError };
-              }
-
-              if (byId.name) {
-                setFullName(byId.name);
-                await supabase
-                  .from('profiles')
-                  .update({ full_name: byId.name })
-                  .eq('id', authData.user.id);
-              }
-            } else {
-              return { error: new Error('Convite inválido ou profissional não encontrado.') };
-            }
+          if (existing?.id) {
+            const { data: claimedId, error: claimError } = await supabase.rpc('complete_staff_invite', {
+              p_company_id: data.companyId,
+              p_member_id: existing.id,
+              p_birth_date: data.birthDate || null,
+            });
+            if (claimError) return { error: claimError };
+            setTeamMemberId(claimedId || existing.id);
           } else {
-            // 2. Legacy: vincular por nome (convites antigos sem member_id)
-            const namePattern = trimmedName.replace(/[\\%_]/g, (char) => `\\${char}`);
-            const { data: existing } = await supabase
+            const { data: inserted, error: teamError } = await supabase
               .from('team_members')
+              .insert([
+                {
+                  user_id: data.companyId,
+                  staff_user_id: authData.user.id,
+                  name: trimmedName,
+                  role: 'Profissional',
+                  active: true,
+                  is_owner: false,
+                  commission_rate: 0,
+                  slug: trimmedName.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Math.floor(Math.random() * 1000)
+                }
+              ])
               .select('id')
-              .eq('user_id', data.companyId)
-              .is('staff_user_id', null)
-              .ilike('name', namePattern)
-              .limit(1)
-              .maybeSingle();
+              .single();
 
-            if (existing?.id) {
-              const { error: linkError } = await supabase
-                .from('team_members')
-                .update({ staff_user_id: authData.user.id })
-                .eq('id', existing.id);
-
-              if (linkError) {
-                console.error('Erro ao vincular team_member pré-cadastrado:', linkError);
-              }
-            } else {
-              const { error: teamError } = await supabase
-                .from('team_members')
-                .insert([
-                  {
-                    user_id: data.companyId,
-                    staff_user_id: authData.user.id,
-                    name: trimmedName,
-                    role: 'Profissional',
-                    active: true,
-                    is_owner: false,
-                    commission_rate: 0,
-                    slug: trimmedName.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Math.floor(Math.random() * 1000)
-                  }
-                ]);
-
-              if (teamError) {
-                console.error('Erro ao adicionar membro à listagem de equipe:', teamError);
-              }
+            if (teamError) {
+              console.error('Erro ao adicionar membro à listagem de equipe:', teamError);
+              return { error: teamError };
             }
+            setTeamMemberId(inserted?.id || null);
           }
         }
       }

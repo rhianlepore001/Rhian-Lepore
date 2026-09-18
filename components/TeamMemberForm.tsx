@@ -9,6 +9,7 @@ import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useBusinessCopy } from '../hooks/useBusinessCopy';
 import { useCopyInviteLink } from '../hooks/useCopyInviteLink';
 import { mapError } from '../utils/mapError';
+import { generateSlug } from '../services/team';
 
 interface TeamMemberFormProps {
     initialData?: any;
@@ -38,7 +39,6 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     );
     const [name, setName] = useState(initialData?.name || (isOwnerForm ? (fullName || businessName || '') : ''));
     const [role, setRole] = useState(initialData?.role || (isOwnerForm ? 'Dono / Profissional' : ''));
-    const [slug, setSlug] = useState(initialData?.slug || '');
     const [bio, setBio] = useState(initialData?.bio || '');
     const [isOwner, setIsOwner] = useState(initialData?.is_owner || (isOwnerForm ? true : false));
     const [active, setActive] = useState(initialData?.active ?? true);
@@ -110,11 +110,13 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                 }
             }
 
+            const generatedSlug = `${generateSlug(name)}-${Date.now().toString(36)}`;
+            const existingSlug = typeof initialData?.slug === 'string' ? initialData.slug.trim() : '';
             const teamMemberData: Record<string, unknown> = {
                 user_id: user.id,
                 name: name.trim(),
                 role: role.trim(),
-                slug: slug.trim() || name.toLowerCase().trim().replace(/[^a-z0-9]/g, '-'),
+                slug: existingSlug || generatedSlug,
                 bio: bio.trim(),
                 active,
                 photo_url: photoUrl,
@@ -361,20 +363,6 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                         A comissão e o dia de acerto ficam no card do colaborador, em Equipe e Comissões.
                     </p>
                 )}
-
-                <div>
-                    <label className={labelClass}>Link Personalizado (Slug)</label>
-                    <div className="flex items-center gap-2">
-                        <span className={`${colors.textMuted} text-xs`}>.../pro/</span>
-                        <input
-                            type="text"
-                            value={slug}
-                            onChange={e => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
-                            className={`flex-1 ${inputClass}`}
-                            placeholder="joao-silva"
-                        />
-                    </div>
-                </div>
 
                 <div>
                     <label className={labelClass}>CPF (Opcional)</label>

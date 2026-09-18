@@ -6,6 +6,7 @@ import { resolveIsDev } from '../utils/devAccess';
 import { applyPublicAuthTheme } from '../utils/publicAuthTheme';
 import { normalizeRegion } from '../utils/formatters';
 import { getTrialEndsAt } from '../constants';
+import { isEmailTakenError } from '../utils/mapError';
 
 export type UserType = 'barber' | 'beauty';
 export type Region = 'BR' | 'PT';
@@ -301,7 +302,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     birthDate?: string;
   }) => {
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const signUpPayload = {
         email: data.email,
         password: data.password,
         options: {
@@ -310,7 +311,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             business_name: data.businessName,
           }
         }
-      });
+      };
+
+      let { data: authData, error: authError } = await supabase.auth.signUp(signUpPayload);
+
+      if (authError && isEmailTakenError(authError) && data.companyId && data.teamMemberId) {
+        const { data: released } = await supabase.rpc('release_staff_email_for_reinvite', {
+          p_company_id: data.companyId,
+          p_member_id: data.teamMemberId,
+          p_email: data.email,
+        });
+        if (released === true) {
+          const retry = await supabase.auth.signUp(signUpPayload);
+          authData = retry.data;
+          authError = retry.error;
+        }
+      }
 
       if (authError) return { error: authError };
 

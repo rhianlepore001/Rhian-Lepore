@@ -2,6 +2,7 @@
 import { Card } from './ui/Card';
 import { Button } from './ui/Button';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
+import { useScrollToError } from '../hooks/useScrollToError';
 import { usePublicClient } from '../contexts/PublicClientContext';
 import { Phone, User, Mail, ArrowRight, LogOut, Check } from 'lucide-react';
 import { PhoneInput } from './PhoneInput';
@@ -29,6 +30,7 @@ export const ClientAuthModal: React.FC<ClientAuthModalProps> = ({
     const [email, setEmail] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
+    const errorRef = useScrollToError(error);
 
     if (client) {
         return (
@@ -144,7 +146,16 @@ export const ClientAuthModal: React.FC<ClientAuthModalProps> = ({
                             />
                         </div>
 
-                        {error && <p className={`${status.danger} text-sm text-center`}>{error}</p>}
+                        {error && (
+                            <div
+                                ref={errorRef}
+                                role="alert"
+                                tabIndex={-1}
+                                className={`${status.danger} text-sm text-center`}
+                            >
+                                {error}
+                            </div>
+                        )}
 
                         <Button
                             type="submit"
@@ -204,7 +215,16 @@ export const ClientAuthModal: React.FC<ClientAuthModalProps> = ({
                             </div>
                         </div>
 
-                        {error && <p className={`${status.danger} text-sm text-center`}>{error}</p>}
+                        {error && (
+                            <div
+                                ref={errorRef}
+                                role="alert"
+                                tabIndex={-1}
+                                className={`${status.danger} text-sm text-center`}
+                            >
+                                {error}
+                            </div>
+                        )}
 
                         <Button
                             type="submit"

@@ -607,4 +607,75 @@ describe('AuthContext', () => {
         expect(document.documentElement.getAttribute('data-mode')).toBe('dark');
         expect(localStorage.getItem('agendix_color_mode')).toBe('light');
     });
+
+    it('libera e-mail órfão de colaborador e tenta o cadastro de novo no convite', async () => {
+        const mockUser = { id: 'staff-retry', email: 'recepcao@example.com' };
+        const updatedTeamMembers: any[] = [];
+
+        (supabase.auth.getSession as any).mockResolvedValue({ data: { session: null }, error: null });
+        (supabase.auth.signUp as any)
+            .mockResolvedValueOnce({
+                data: { user: null },
+                error: { code: 'user_already_exists', message: 'User already registered' },
+            })
+            .mockResolvedValueOnce({
+                data: { user: mockUser },
+                error: null,
+            });
+        (supabase.from as any).mockImplementation((table: string) => {
+            const queryChain: any = {
+                select: vi.fn().mockReturnThis(),
+                eq: vi.fn().mockReturnThis(),
+                is: vi.fn().mockReturnThis(),
+                maybeSingle: vi.fn().mockImplementation(() => {
+                    if (table === 'team_members') {
+                        return Promise.resolve({
+                            data: { id: 'member-1', name: 'Recepção Moderna', staff_user_id: null },
+                            error: null,
+                        });
+                    }
+                    return Promise.resolve({ data: null, error: null });
+                }),
+                single: vi.fn().mockResolvedValue({ data: null, error: null }),
+            };
+            queryChain.insert = vi.fn().mockResolvedValue({ data: null, error: null });
+            queryChain.update = vi.fn().mockImplementation((updates: unknown) => {
+                if (table === 'team_members') updatedTeamMembers.push(updates);
+                return queryChain;
+            });
+            return queryChain;
+        });
+        (supabase.rpc as any).mockImplementation((name: string) => {
+            if (name === 'release_staff_email_for_reinvite') {
+                return Promise.resolve({ data: true, error: null });
+            }
+            return Promise.resolve({ data: null, error: null });
+        });
+
+        const { result } = renderHook(() => useAuth(), { wrapper });
+
+        let registerResult;
+        await act(async () => {
+            registerResult = await result.current.register({
+                email: 'recepcao@example.com',
+                password: 'Password123!',
+                fullName: 'Recepção Moderna',
+                businessName: 'Barbearia Moderna',
+                userType: 'barber',
+                region: 'BR',
+                phone: '',
+                companyId: 'owner-123',
+                teamMemberId: 'member-1',
+            });
+        });
+
+        expect(supabase.rpc).toHaveBeenCalledWith('release_staff_email_for_reinvite', {
+            p_company_id: 'owner-123',
+            p_member_id: 'member-1',
+            p_email: 'recepcao@example.com',
+        });
+        expect(supabase.auth.signUp).toHaveBeenCalledTimes(2);
+        expect(registerResult.error).toBeNull();
+        expect(updatedTeamMembers[0]).toEqual({ staff_user_id: mockUser.id });
+    });
 });

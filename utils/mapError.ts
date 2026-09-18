@@ -29,6 +29,7 @@ const CODE_MAP: Record<string, string> = {
   permission_denied: 'Você não tem permissão para essa ação.',
   invalid_login: 'E-mail ou senha incorretos. Verifique e tente de novo.',
   rate_limit_login: 'Muitas tentativas de login. Por segurança, aguarde 1 minuto.',
+  user_already_exists: 'Este e-mail já está cadastrado. Faça login ou use outro e-mail.',
 
   // Postgres
   '23505': 'Esse registro já existe.',
@@ -45,6 +46,15 @@ function pickCode(raw: RawErrorShape): string {
   const msg = (raw.message ?? '').toLowerCase();
 
   if (raw.code && CODE_MAP[raw.code]) return raw.code;
+  if (
+    raw.code === 'email_exists'
+    || msg.includes('already registered')
+    || msg.includes('already been registered')
+    || msg.includes('user already exists')
+    || msg.includes('email already exists')
+  ) {
+    return 'user_already_exists';
+  }
   if (msg.includes('invalid login credentials') || msg.includes('credenciais inválidas')) {
     return 'invalid_login';
   }
@@ -85,4 +95,14 @@ export function mapError(error: unknown, fallback: string): UserFacingError {
 /** Combina message + código em uma única string para toasts simples. */
 export function formatUserFacingError(err: UserFacingError): string {
   return `${err.message} (${err.code})`;
+}
+
+/** Signup do Auth: e-mail já existe em auth.users. */
+export function isEmailTakenError(error: unknown): boolean {
+  const raw: RawErrorShape =
+    error && typeof error === 'object'
+      ? (error as RawErrorShape)
+      : { message: String(error ?? '') };
+
+  return pickCode(raw) === 'user_already_exists';
 }

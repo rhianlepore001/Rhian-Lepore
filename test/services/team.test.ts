@@ -1,28 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => {
-  const maybeSingle = vi.fn();
-  const selectAfterUpdate = vi.fn(() => ({ maybeSingle }));
-  const isDeleted = vi.fn(() => ({ select: selectAfterUpdate, order: orderMock }));
-  const eqOwner = vi.fn(() => ({ is: isDeleted }));
-  const eqUser = vi.fn(() => ({ eq: eqOwner, is: isDeleted, order: orderMock }));
-  const eqId = vi.fn(() => ({ eq: eqUser }));
+  const isDeleted = vi.fn(() => ({ order: orderMock }));
+  const eqUser = vi.fn(() => ({ is: isDeleted, order: orderMock }));
   const orderSecond = vi.fn();
   const orderMock = vi.fn(() => ({ order: orderSecond }));
-  const update = vi.fn(() => ({ eq: eqId }));
   const select = vi.fn(() => ({ eq: eqUser }));
+  const rpc = vi.fn();
 
   return {
-    maybeSingle,
-    selectAfterUpdate,
     isDeleted,
-    eqOwner,
     eqUser,
-    eqId,
     orderMock,
     orderSecond,
-    update,
     select,
+    rpc,
   };
 });
 
@@ -30,12 +22,12 @@ vi.mock('@/lib/supabase', () => ({
   supabase: {
     from: vi.fn(() => ({
       select: mocks.select,
-      update: mocks.update,
     })),
+    rpc: mocks.rpc,
   },
 }));
 
-import { deleteTeamMember, fetchTeamMembers } from '@/services/team';
+import { deleteTeamMember, fetchTeamMembers, generateSlug } from '@/services/team';
 import { supabase } from '@/lib/supabase';
 
 const companyId = '22222222-2222-4222-8222-222222222222';
@@ -45,7 +37,7 @@ describe('team service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.orderSecond.mockResolvedValue({ data: [], error: null });
-    mocks.maybeSingle.mockResolvedValue({ data: { id: memberId }, error: null });
+    mocks.rpc.mockResolvedValue({ data: null, error: null });
   });
 
   it('lista só profissionais que não foram excluídos', async () => {
@@ -57,23 +49,24 @@ describe('team service', () => {
     expect(mocks.isDeleted).toHaveBeenCalledWith('deleted_at', null);
   });
 
-  it('exclui profissional com soft delete em vez de DELETE físico', async () => {
+  it('exclui profissional via RPC que também remove a conta de acesso', async () => {
     await deleteTeamMember(memberId, companyId);
 
-    expect(supabase.from).toHaveBeenCalledWith('team_members');
-    expect(mocks.update).toHaveBeenCalledWith(expect.objectContaining({
-      active: false,
-      deleted_at: expect.any(String),
-    }));
-    expect(mocks.eqId).toHaveBeenCalledWith('id', memberId);
-    expect(mocks.eqUser).toHaveBeenCalledWith('user_id', companyId);
-    expect(mocks.eqOwner).toHaveBeenCalledWith('is_owner', false);
-    expect(mocks.isDeleted).toHaveBeenCalledWith('deleted_at', null);
+    expect(supabase.rpc).toHaveBeenCalledWith('delete_staff_collaborator', {
+      p_member_id: memberId,
+    });
   });
 
   it('falha se o profissional for dono ou já estiver excluído', async () => {
-    mocks.maybeSingle.mockResolvedValue({ data: null, error: null });
+    mocks.rpc.mockResolvedValue({
+      data: null,
+      error: { message: 'OWNER_OR_MISSING_TEAM_MEMBER' },
+    });
 
     await expect(deleteTeamMember(memberId, companyId)).rejects.toThrow('OWNER_OR_MISSING_TEAM_MEMBER');
+  });
+
+  it('gera slug sem acento a partir do nome', () => {
+    expect(generateSlug('João Silva')).toBe('joao-silva');
   });
 });

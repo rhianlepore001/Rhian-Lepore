@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -8,6 +8,7 @@ import { mapError, formatUserFacingError } from '../utils/mapError';
 import { Screw } from '../components/Screw';
 import { AgendiXLogo } from '../components/AgendiXLogo';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
+import { useScrollToError } from '../hooks/useScrollToError';
 import { getBusinessCopy } from '../utils/businessCopy';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
@@ -22,7 +23,7 @@ export const Login: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showPassword, setShowPassword] = useState(false);
-    const errorRef = useRef<HTMLDivElement>(null);
+    const errorRef = useScrollToError(error);
 
     const [loginTheme, setLoginTheme] = useState<'barber' | 'beauty'>('barber');
     const [showGateway, setShowGateway] = useState(true);
@@ -33,15 +34,6 @@ export const Login: React.FC = () => {
     useEffect(() => {
         if (showGateway) applyPublicAuthTheme();
     }, [showGateway]);
-
-    useEffect(() => {
-        if (!error) return;
-
-        requestAnimationFrame(() => {
-            errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            errorRef.current?.focus({ preventScroll: true });
-        });
-    }, [error]);
 
     const handleLogin = async () => {
         setLoading(true);

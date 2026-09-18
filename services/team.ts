@@ -73,33 +73,29 @@ export async function deleteTeamMember(
   memberId: string,
   companyId: string,
 ): Promise<void> {
-  const now = new Date().toISOString();
-  const { data, error } = await supabase
-    .from('team_members')
-    .update({
-      deleted_at: now,
-      active: false,
-      updated_at: now,
-    })
-    .eq('id', memberId)
-    .eq('user_id', companyId)
-    .eq('is_owner', false)
-    .is('deleted_at', null)
-    .select('id')
-    .maybeSingle();
-
-  if (error) throw error;
-  if (!data) {
+  if (!companyId) {
     throw new Error('OWNER_OR_MISSING_TEAM_MEMBER');
+  }
+
+  const { error } = await supabase.rpc('delete_staff_collaborator', {
+    p_member_id: memberId,
+  });
+
+  if (error) {
+    if ((error.message ?? '').includes('OWNER_OR_MISSING_TEAM_MEMBER')) {
+      throw new Error('OWNER_OR_MISSING_TEAM_MEMBER');
+    }
+    throw error;
   }
 }
 
-function generateSlug(name: string): string {
-  return name
+export function generateSlug(name: string): string {
+  const slug = name
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '');
+  return slug || 'membro';
 }

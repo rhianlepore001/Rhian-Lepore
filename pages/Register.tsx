@@ -4,6 +4,7 @@ import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Check, Eye, EyeOff } from 'lucide-react';
 import { useAuth, UserType, Region } from '../contexts/AuthContext';
 import { useBrutalTheme, ThemeVariant } from '../hooks/useBrutalTheme';
+import { useScrollToError } from '../hooks/useScrollToError';
 import { PhoneInput } from '../components/PhoneInput';
 import { validatePassword } from '../utils/passwordValidation';
 import { AgendiXLogo } from '../components/AgendiXLogo';
@@ -45,6 +46,8 @@ export const Register: React.FC = () => {
   const beautyCopy = getBusinessCopy('beauty');
   const [ownerBusinessName, setOwnerBusinessName] = useState<string>('');
   const [memberRole, setMemberRole] = useState<string>('');
+  const formError = error || inviteError;
+  const errorRef = useScrollToError(formError);
 
   useEffect(() => {
     const typeFromUrl = searchParams.get('type') as UserType;
@@ -215,9 +218,14 @@ export const Register: React.FC = () => {
                 </p>
               </div>
 
-              {(error || inviteError) && (
-                <div role="alert" className="p-3.5 text-xs rounded-xl bg-[var(--color-danger)]/8 border border-[var(--color-danger-border)]/30 text-[var(--color-danger)] font-mono">
-                  {error || inviteError}
+              {formError && (
+                <div
+                  ref={errorRef}
+                  role="alert"
+                  tabIndex={-1}
+                  className="p-3.5 text-xs rounded-xl bg-[var(--color-danger)]/8 border border-[var(--color-danger-border)]/30 text-[var(--color-danger)] font-mono"
+                >
+                  {formError}
                 </div>
               )}
 
@@ -366,8 +374,13 @@ export const Register: React.FC = () => {
           <div className={`px-8 py-8 md:px-10 ${isBeauty ? 'bg-[var(--color-card)]/80 backdrop-blur-xl' : 'bg-[var(--color-card)]'}`}>
 
             {error && (
-              <div role="alert" className={`mb-6 p-3.5 text-xs rounded-xl border ${isBeauty ? 'bg-[var(--color-danger-bg)] border-[var(--color-danger-border)]/20 text-[var(--color-danger)]' : 'bg-[var(--color-danger)]/8 border-[var(--color-danger-border)]/30 text-[var(--color-danger)] font-mono'
-                }`}>
+              <div
+                ref={errorRef}
+                role="alert"
+                tabIndex={-1}
+                className={`mb-6 p-3.5 text-xs rounded-xl border ${isBeauty ? 'bg-[var(--color-danger-bg)] border-[var(--color-danger-border)]/20 text-[var(--color-danger)]' : 'bg-[var(--color-danger)]/8 border-[var(--color-danger-border)]/30 text-[var(--color-danger)] font-mono'
+                }`}
+              >
                 {error}
               </div>
             )}

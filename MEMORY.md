@@ -53,6 +53,16 @@ Script isolado em `scripts/demo-seed/` + doc `docs/demo-seed.md`. Dois tenants f
 
 ## 🛠️ Trabalho recente
 
+- **Convite da equipe — e-mail duplicado, scroll e exclusão de conta (18 Set 2026):**
+  - Cadastro (owner e convite) mostra “Este e-mail já está cadastrado” em vez de `#useralreadyexists`.
+  - Banner de erro em login/cadastro/recuperar/nova senha rola para o centro da tela no mobile.
+  - Excluir colaborador faz soft-delete em `team_members` e remove a conta Auth (não o dono), liberando o e-mail. Convite novo tenta limpar órfão antigo (`release_staff_email_for_reinvite`).
+  - Campo “Link Personalizado (Slug)” saiu do formulário Novo Profissional; slug continua gerado automaticamente.
+  - Migration `20260918000001_purge_staff_auth_on_delete.sql` aplicada no remoto BARBER/Beauty OS.
+  - Gates: typecheck, lint, build, 623 testes.
+
+
+
 - **Backup pré-landing infra (15 Set 2026):**
   - Tag anotada e branch `backup/pre-landing-infra-20260915` apontam para `77baa9fa37b8c16a263fb4e3b41e47bdc369741a` (`main` antes de #69/#71/#72).
   - Seed demo **não** aplicado neste run (sem `SUPABASE_SERVICE_ROLE_KEY` / `DEMO_SEED_PASSWORD` no ambiente).

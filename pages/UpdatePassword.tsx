@@ -5,6 +5,7 @@ import { Lock, ShieldCheck, AlertCircle, Eye, EyeOff, Save, Loader2 } from 'luci
 import { Screw } from '../components/Screw';
 import { validatePassword } from '../utils/passwordValidation';
 import { mapError } from '../utils/mapError';
+import { useScrollToError } from '../hooks/useScrollToError';
 
 export const UpdatePassword: React.FC = () => {
     const navigate = useNavigate();
@@ -15,6 +16,7 @@ export const UpdatePassword: React.FC = () => {
     const [initializing, setInitializing] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
+    const errorRef = useScrollToError(error);
 
     useEffect(() => {
         const initializeSession = async () => {
@@ -153,7 +155,12 @@ export const UpdatePassword: React.FC = () => {
                             </div>
 
                             {error && (
-                                <div className="p-4 bg-[var(--color-danger-bg)] border-2 border-[var(--color-danger-border)] text-[var(--color-danger)] text-xs font-mono mb-6 flex items-start gap-3">
+                                <div
+                                    ref={errorRef}
+                                    role="alert"
+                                    tabIndex={-1}
+                                    className="p-4 bg-[var(--color-danger-bg)] border-2 border-[var(--color-danger-border)] text-[var(--color-danger)] text-xs font-mono mb-6 flex items-start gap-3"
+                                >
                                     <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                                     <span>{error}</span>
                                 </div>

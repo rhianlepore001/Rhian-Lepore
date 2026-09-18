@@ -358,7 +358,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const { data: released } = await supabase.rpc('release_staff_email_for_reinvite', {
             p_company_id: data.companyId,
             p_member_id: data.teamMemberId,
-            p_email: data.email,
+            p_email: existing.data.user.email ?? data.email,
           });
           await supabase.auth.signOut();
           if (released === true) {

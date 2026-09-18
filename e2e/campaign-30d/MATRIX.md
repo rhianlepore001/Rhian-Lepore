@@ -6,7 +6,7 @@ Produção: https://www.agendixstudio.com · HashRouter `/#/…`.
 
 **Live autenticado: NO-GO** sem credenciais. Smoke anônimo só com slug DEMO.
 
-Relatório sintético A+B+C+E+F: [`RELATORIO.md`](./RELATORIO.md). **Não relançar A/B/C/E/F.**
+Relatório final A–F: [`PLANO-FINAL.md`](./PLANO-FINAL.md). **Não relançar A–F.**
 
 ---
 
@@ -17,26 +17,26 @@ Relatório sintético A+B+C+E+F: [`RELATORIO.md`](./RELATORIO.md). **Não relan�
 | **A** | Permissões e papéis (Q1/Q2) | **COMPLETO** | [bc-b1ae84eb](https://cursor.com/agents/bc-b1ae84eb-1d4d-549f-9576-67dc3701114c) | staff vs owner | 2026-09-18 |
 | **B** | Inventário de superfícies | **COMPLETO** | [bc-e638dc10](https://cursor.com/agents/bc-e638dc10-6a1c-5917-aed7-2373c63cfe49) | B-01..B-48 + B-M01..M14 | 2026-09-18 |
 | **C** | Gestor-barbeiro 30d | **COMPLETO** | [bc-b87f87de](https://cursor.com/agents/bc-b87f87de-48e1-56c1-8eec-3f6448519c9e) | owner D1–D30 | 2026-09-18 |
-| **D** | Recepcionista | **TBD** | aguardar relatório; não relançar | — | — |
+| **D** | Recepcionista | **COMPLETO** | [bc-8d424ad5](https://cursor.com/agents/bc-8d424ad5-2bcc-5a7f-aed2-98a23a8762be) | D-01..D-16; mês âncora 2026-09-01 | 2026-09-18 |
 | **E** | 3 colaboradores | **COMPLETO** | [bc-5fdc69cc](https://cursor.com/agents/bc-5fdc69cc-f23c-52f7-92a1-1105776aee34) | C1‖C2‖C3; E-01..E-14; E-D1..30 | 2026-09-18 |
 | **F** | Clientes booking+fila | **COMPLETO** | [bc-7742ea7b](https://cursor.com/agents/bc-7742ea7b-ff79-5997-828a-e20e65f677ae) | book/queue/Minha Área; F-C-01..30 | 2026-09-18 |
 
 Duplicatas de lançamento (ignorar): A `bc-830d8a1e`, B `bc-1dc8a005`, C `bc-daeb09ba`.  
-**Não relançar A/B/C/E/F.** Falta **D** → aí sim plano E2E 30d final + backlog P0 ranqueado.
+**A–F COMPLETOS.** Plano consolidado: [`PLANO-FINAL.md`](./PLANO-FINAL.md). Specs `e2e/recepcionista/*` foram **propostos** pelo D, **não** estão neste branch.
 
-E reforça Q1 FAIL (E-01..E-05 = CAM-001) e Q2 PASS (E-11 = CAM-003). C3 no E com label Recepcionista = **CAM-004** (mesmo ACL); jornada de balcão continua **Pacote D**.
+D-01..D-05 → CAM-001/002/023. D-07/D-08 fila PASS. D-11 → CAM-005. D-12 → CAM-024. D-15 → CAM-022. D-28 = dia, não finding.
 
 ---
 
-## Achados canônicos (A+B+C+E+F, dedupe)
+## Achados canônicos (A–F, dedupe)
 
 | ID | Sev. | Origem | Veredito | duplicate_of / anti-dupe |
 |---|---|---|---|---|
-| **CAM-001** | blocker | A-02/03/05, **E-01..E-05** | Staff não vê/confirma booking público: fetch+realtime `user.id`; RLS owner-only; aceite com `user.id`; INSERT `appointments` sem policy staff (E-05). | E-D12/D13 **FAIL esperado**; não reabrir |
-| **CAM-002** | major | A-04, C-10, **E-06** | Aceitar visível staff; Recusar só owner; toast genérico “Erro ao aceitar”. | E-D14 |
-| **CAM-003** | note | A-06, **E-11** | Q2 PASS: `/fila`; RLS view/update; **chamar/iniciar/checkout fila OK**. | E-D16..D20, D23 |
-| **CAM-004** | note | A-07, **E-07** | Cargo Barbeiro/Recepcionista cosmética. E-D15 C3≡C1. | **D** não retestar ACL; só jornada balcão |
-| **CAM-005** | major | A-08, **E-08** | `/#/financeiro` sem guard; “Meu Financeiro” scoped. | E-D26 |
+| **CAM-001** | blocker | A, E-01..05, **D-01..D-03** | Staff/recepção não vê/confirma booking: fetch+realtime `user.id`; RLS dono; aceite `user.id`. | D S3 FAIL esperado |
+| **CAM-002** | major | A-04, C-10, E-06, **D-04** | Aceitar visível; Recusar só dono. | D-19 |
+| **CAM-003** | note | A-06, E-11, **D-07** | Q2 PASS: ver/chamar/checkout. | D4 |
+| **CAM-004** | note | A-07, E-07, **D-06** | Cargo Recepcionista = staff. | não criar role |
+| **CAM-005** | major | A-08, E-08, **D-11** | `/#/financeiro` → Meu Financeiro. | D25–26 |
 | **CAM-006** | minor | B-32, C-17 | `/#/configuracoes/notificacoes` = Placeholder. Sino (B-16) ≠ esta página. | D/E settings |
 | **CAM-007** | note | B-26 | Escolha de profissional + lembretes e-mail = **“Em breve”** (disabled). E2E asserta copy, não o toggle. | C D11 (só slug/toggle online) |
 | **CAM-008** | minor | B-33 | Alterar senha in-app **“Recuperação em Breve”**. Recovery real = B-06/B-07. | — |
@@ -53,7 +53,12 @@ E reforça Q1 FAIL (E-01..E-05 = CAM-001) e Q2 PASS (E-11 = CAM-003). C3 no E co
 | **CAM-019** | minor | F-14 | Histórico Minha Área: match de telefone **exato** (sem `phones_match`). | F-C-25 |
 | **CAM-020** | major | **E-09** | Agenda: staff **não** conclui (toast “Apenas o dono…” / `complete_appointment`). Fila checkout **pode** (E-D23). | E-D22 vs D23; não misturar com CAM-001 |
 | **CAM-021** | minor | **E-10**, CAM-012 | SPEC F4: staff não add manual; UI mostra “Adicionar cliente” (header + empty). Drift. | E-D21; D recepção |
-| **CAM-022** | note | **E-14** | Staff sem `teamMemberId` → empty órfão (`staffLinkAccountMessage`). | E-D10 |
+| **CAM-022** | note | E-14, **D-15** | Staff sem `teamMemberId` → empty órfão. | E-D10, D F0 |
+| **CAM-023** | major | **D-05** | `AlertsContext` filtra `business_id=user.id` — recepção sem sino de pending. | mesmo fix que CAM-001 |
+| **CAM-024** | major | **D-12** | “Faltou” staff pode falhar RLS UPDATE `appointments`. | D21 |
+| **CAM-025** | note | **D-16** | Staff: barra de link público some sem slug. | — |
+
+D-08 add manual **PASS** (RPC tenant). D-09 walk-in agenda PASS. D-10 OwnerRouteGuard PASS. D-13 checkout agenda PIX reportado 2xx (alinhar CAM-020). D-14 overdue só Info. **D-28** = dia S4 (sem QR/Ajustes), não finding.
 
 E-12 convite e E-13 filtro **Todos** = desenho de teste (PKG-02 / `staff-agenda-filter`), não bugs novos.
 
@@ -108,7 +113,7 @@ Bloqueadores C (B-C01..07): credenciais owner, pending via F/SQL, e-mail staff, 
 
 ## Matriz paralela E — C1 ‖ C2 ‖ C3 (barbeiros staff)
 
-Mesmo RBAC. Label Recepcionista em C3 só para CAM-004. Balcão (walk-in/CRM) = **Pacote D**.
+Mesmo RBAC. Label Recepcionista em C3 só CAM-004. Jornada de balcão = **D** ([`PLANO-FINAL.md`](./PLANO-FINAL.md)).
 
 | Onda | Dias | Os 3 | Esperado |
 |---|---|---|---|
@@ -125,7 +130,7 @@ Mesmo RBAC. Label Recepcionista em C3 só para CAM-004. Balcão (walk-in/CRM) = 
 | PKG-02 Convites | **C D9–D10** + **E-D1..D6** | live 3 staff |
 | PKG-03 Agenda gestor | **C D11–D18** | live; assume CAM-001 |
 | PKG-04 Agenda staff | **E-D7..D15, D22, D24** | CAM-001/002/020 |
-| PKG-05 Recepção | desenho A CAM-004 | **D TBD** |
+| PKG-05 Recepção | **D D00 + S1–S4** | PLANO-FINAL; CAM-001/003/021 |
 | PKG-06 Fila cliente | **F F-C-15..22** | live anônimo + F |
 | PKG-07 Fila operação | C D19–D23 + **E-D16..D21, D23** | CAM-003, CAM-021 |
 | PKG-08 Booking público | **F F-C-01..06, 23–27** | live; CAM-013–015 |
@@ -155,45 +160,36 @@ Submit: INSERT `public_bookings` `pending` + `get_active_booking_by_phone`. **N�
 P0 sugerido F: F-C-01, F-C-07, F-C-15, F-C-18, F-C-27, F-C-30.  
 Confirmado na Minha Área só depois do **dono** aceitar (CAM-001) — background fora de F.
 
-## Protocolo merge D
+## Semana D (recepção) — âncora 2026-09-01
 
-1. Mapear para CAM-001…022 ou CAM-023+.
-2. Aceitar staff / Recusar / fetch `user.id` → **CAM-001/002**. Fila ver/chamar → **CAM-003**. Cargo label → **CAM-004**.
-3. Add manual fila / F4 → **CAM-021**. Concluir Agenda → **CAM-020**. Financeiro URL → **CAM-005**.
-4. Copy CONFIRMADO / race INSERT / cancel Minha Área → F. Não reabrir E-01..E-05.
-5. Não relançar A/B/C/E/F.
-6. **Com D:** emitir plano E2E 30d consolidado + backlog P0 ranqueado.
+Specs **propostos** (não neste git): `e2e/recepcionista/d00-invite.spec.ts`, `d01-d07-week1`, `d08-d14-week2`, `d15-d21-week3`, `d22-d30-week4`, `limits-vs-owner`, `public-booking-q1`.
 
-```
-id: D-01
-severity: blocker | major | minor | note
-persona: gestor | recepcionista | barbeiro-N | cliente-publico
-day: D12
-package: D
-duplicate_of: null | CAM-002
-```
+| Semana | Recepção | Dono | Pular |
+|---|---|---|---|
+| D00 | Convite + onboarding | Criar cargo Recepcionista | Wizard dono |
+| S1 D1–D7 | Walk-in agenda, add fila, checkout, histórico | Seed; cliente QR D2 | QR/Ajustes staff |
+| S2 D8–D14 | Grade, Fila, insights, produtos | Seed datas | Receita bruta |
+| S3 D15–D21 | Painel vazio, Aceitar FAIL, Recusar ausente, Faltou | D18 aceita pending | Assumir Q1 staff OK |
+| S4 D22–D30 | Deep links, Meu Financeiro, header sem QR | Pendências + convite | Role formal recepção |
+
+Calendário unificado C‖D‖E‖F: [`PLANO-FINAL.md`](./PLANO-FINAL.md) §2.
+
+## Protocolo
+
+A–F fechados. Achado novo só se **não** for CAM-001…025.
 
 ---
 
-## Backlog rascunho (ranking final **após D**)
+## Backlog ranqueado
 
-P0 candidatos já nomeados (não ranquear contra achados D ainda):
+Ver tabela P0–P2 em [`PLANO-FINAL.md`](./PLANO-FINAL.md) §3.
 
-1. **CAM-001** — staff não aceita booking online (E-01..E-05)
-2. **CAM-013** — copy “CONFIRMADO” vs `pending`
-3. **CAM-014** — INSERT sem lock / sem revalidar slot
-4. **CAM-016** — cancel Minha Área silencioso
-
-P1 na fila: CAM-002, CAM-015, CAM-020. P2: CAM-005, CAM-021.
+P0: CAM-001, CAM-014, CAM-013, CAM-016.  
+P1: CAM-002, CAM-015, CAM-020, CAM-023, CAM-024.  
+P2: CAM-005, CAM-021, CAM-017, CAM-019, CAM-006–008.
 
 ## GO/NO-GO
 
-| Item | Estado pós A+B+C+E+F |
-|---|---|
-| Q1 staff aceita booking | **FAIL** CAM-001 (E reforça) |
-| Q2 staff vê/opera fila | **PASS** CAM-003 (E-11) |
-| 3 barbeiros 30d | E-D1..30 desenhado; **não executado** |
-| D recepção | **TBD** |
-| Plano E2E final | espera D |
-
-**NO-GO** autenticado sem credenciais. Smoke anônimo: F-C-01 + CAM-013.
+**NO-GO** 30 dias autenticado sem credenciais.  
+**GO parcial** anônimo + slug: F-C-01, fila, CAM-013.  
+Q1 FAIL / Q2 PASS estáticos. Live = prova, não rediscovery.

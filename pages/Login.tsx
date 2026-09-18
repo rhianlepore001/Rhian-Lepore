@@ -29,6 +29,8 @@ export const Login: React.FC = () => {
     const [showGateway, setShowGateway] = useState(true);
     const isBeauty = loginTheme === 'beauty';
     const copy = getBusinessCopy(loginTheme);
+    const barberGatewayCopy = getBusinessCopy('barber');
+    const beautyGatewayCopy = getBusinessCopy('beauty');
     const { colors, accent, font, radius } = useBrutalTheme({ override: loginTheme });
 
     useEffect(() => {
@@ -120,7 +122,7 @@ export const Login: React.FC = () => {
 
                         <div className="absolute inset-0 flex flex-col items-center justify-end pb-10 md:pb-12 z-10 px-6 text-center">
                             <h2 className="font-heading text-3xl md:text-4xl text-[var(--color-text)] uppercase tracking-tight mb-3 group-hover:text-theme-accent transition-colors duration-300">
-                                {copy.segmentLabelPlural}
+                                {barberGatewayCopy.segmentLabelPlural}
                             </h2>
                             {/* Traço horizontal com animação de crescer */}
                             <div className="w-0 h-[1px] bg-theme-accent/60 group-hover:w-16 transition-all duration-500 mb-5" />
@@ -161,7 +163,7 @@ export const Login: React.FC = () => {
 
                             <div className="absolute inset-0 flex flex-col items-center justify-end pb-10 md:pb-12 z-10 px-6 text-center">
                                 <h2 className="font-heading text-3xl md:text-4xl text-[var(--color-text)] uppercase tracking-tight mb-3 group-hover:text-theme-accent transition-colors duration-300">
-                                    {copy.segmentLabelPlural}
+                                    {beautyGatewayCopy.segmentLabelPlural}
                                 </h2>
                                 {/* Traço horizontal com animação de crescer */}
                                 <div className="w-0 h-[1px] bg-theme-accent/60 group-hover:w-16 transition-all duration-500 mb-5" />

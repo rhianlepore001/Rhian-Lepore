@@ -53,13 +53,16 @@ Script isolado em `scripts/demo-seed/` + doc `docs/demo-seed.md`. Dois tenants f
 
 ## 🛠️ Trabalho recente
 
-- **Convite da equipe — e-mail duplicado, scroll e exclusão de conta (18 Set 2026):**
+- **Convite da equipe — e-mail duplicado, scroll, exclusão, spinner e Agenda órfã (18 Set 2026):**
   - Cadastro (owner e convite) mostra “Este e-mail já está cadastrado” em vez de `#useralreadyexists`.
   - Banner de erro em login/cadastro/recuperar/nova senha rola para o centro da tela no mobile.
   - Excluir colaborador faz soft-delete em `team_members` e remove a conta Auth (não o dono), liberando o e-mail. Convite novo tenta limpar órfão antigo (`release_staff_email_for_reinvite`).
   - Campo “Link Personalizado (Slug)” saiu do formulário Novo Profissional; slug continua gerado automaticamente.
-  - Migration `20260918000001_purge_staff_auth_on_delete.sql` aplicada no remoto BARBER/Beauty OS.
-  - Gates: typecheck, lint, build, 623 testes.
+  - Cadastro de colaborador não chama mais UPDATE em `team_members` (RLS do dono); usa RPC `complete_staff_invite`. Login tenta `relink_staff_if_unbound` se a Agenda estiver órfã.
+  - `onAuthStateChange` adia o fetch do perfil (evita deadlock do `signUp` → spinner infinito). Submit do cadastro sempre libera o loading.
+  - Gateway de login: card beauty usa “Salões & Studios”, não “Barbearias”.
+  - Migrations `20260918000001_purge_staff_auth_on_delete.sql` e `20260918000002_complete_staff_invite.sql` aplicadas no remoto BARBER/Beauty OS.
+  - Gates: typecheck, lint, build, 625 testes.
 
 
 

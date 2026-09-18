@@ -9,6 +9,9 @@ const registerMock = vi.fn();
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({
     register: registerMock,
+    isAuthenticated: false,
+    role: 'owner',
+    companyId: null,
   }),
 }));
 

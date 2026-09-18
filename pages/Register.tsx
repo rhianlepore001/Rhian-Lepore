@@ -15,7 +15,7 @@ import { getBusinessCopy } from '../utils/businessCopy';
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const { register, isAuthenticated, role, companyId } = useAuth();
   const [searchParams] = useSearchParams();
 
   const [email, setEmail] = useState('');
@@ -127,58 +127,80 @@ export const Register: React.FC = () => {
     };
   }, [companyIdFromUrl, memberIdFromUrl]);
 
+  useEffect(() => {
+    if (!isInvitedStaff || !memberIdFromUrl || !companyIdFromUrl) return;
+    if (!isAuthenticated || role !== 'staff' || companyId !== companyIdFromUrl) return;
+
+    let cancelled = false;
+    void supabase
+      .rpc('complete_staff_invite', {
+        p_company_id: companyIdFromUrl,
+        p_member_id: memberIdFromUrl,
+      })
+      .then(({ error: claimError }) => {
+        if (cancelled || claimError) return;
+        navigate('/staff-onboarding');
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isInvitedStaff, memberIdFromUrl, companyIdFromUrl, isAuthenticated, role, companyId, navigate]);
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    if (isInvitedStaff && nameLocked && !fullName.trim()) {
-      setError('Nome do profissional não encontrado no convite.');
-      setLoading(false);
-      return;
-    }
+    try {
+      if (isInvitedStaff && nameLocked && !fullName.trim()) {
+        setError('Nome do profissional não encontrado no convite.');
+        return;
+      }
 
-    if (isInvitedStaff && !birthDate) {
-      setError('Informe sua data de nascimento.');
-      setLoading(false);
-      return;
-    }
+      if (isInvitedStaff && !birthDate) {
+        setError('Informe sua data de nascimento.');
+        return;
+      }
 
-    if (password !== confirmPassword) {
-      setError('As senhas não coincidem');
-      setLoading(false);
-      return;
-    }
+      if (password !== confirmPassword) {
+        setError('As senhas não coincidem');
+        return;
+      }
 
-    const passwordValidation = validatePassword(password);
-    if (!passwordValidation.isValid) {
-      setError(passwordValidation.errors.join(', '));
-      setLoading(false);
-      return;
-    }
+      const passwordValidation = validatePassword(password);
+      if (!passwordValidation.isValid) {
+        setError(passwordValidation.errors.join(', '));
+        return;
+      }
 
-    const { error } = await register({
-      email,
-      password,
-      fullName,
-      businessName: isInvitedStaff ? (ownerBusinessName || '') : businessName,
-      userType,
-      region,
-      phone: isInvitedStaff ? '' : phone,
-      companyId: companyIdFromUrl || undefined,
-      teamMemberId: memberIdFromUrl || undefined,
-      birthDate: isInvitedStaff ? birthDate : undefined,
-    });
+      const { error } = await register({
+        email,
+        password,
+        fullName,
+        businessName: isInvitedStaff ? (ownerBusinessName || '') : businessName,
+        userType,
+        region,
+        phone: isInvitedStaff ? '' : phone,
+        companyId: companyIdFromUrl || undefined,
+        teamMemberId: memberIdFromUrl || undefined,
+        birthDate: isInvitedStaff ? birthDate : undefined,
+      });
 
-    if (error) {
-      setError(formatUserFacingError(mapError(error, 'Não foi possível criar a conta.')));
-      setLoading(false);
-    } else {
+      if (error) {
+        setError(formatUserFacingError(mapError(error, 'Não foi possível criar a conta.')));
+        return;
+      }
+
       if (isInvitedStaff) {
         navigate('/staff-onboarding');
       } else {
         navigate('/onboarding-wizard');
       }
+    } catch (err) {
+      setError(formatUserFacingError(mapError(err, 'Não foi possível criar a conta.')));
+    } finally {
+      setLoading(false);
     }
   };
 

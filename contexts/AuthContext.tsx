@@ -308,6 +308,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     birthDate?: string;
   }) => {
     try {
+      if (data.companyId && !data.teamMemberId) {
+        return { error: { message: 'Convite inválido. Peça ao gestor um link atualizado.' } };
+      }
+
       const signUpPayload = {
         email: data.email,
         password: data.password,
@@ -320,6 +324,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             region: data.region,
             role: data.companyId ? 'staff' : 'owner',
             company_id: data.companyId || undefined,
+            member_id: data.teamMemberId || undefined,
           }
         }
       };
@@ -415,8 +420,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           tutorial_completed: false,
           subscription_status: 'trial',
           trial_ends_at: getTrialEndsAt(),
-          role: isStaffSignup ? 'staff' : 'owner',
-          company_id: resolvedCompanyId,
           aios_enabled: true
         };
 
@@ -427,69 +430,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (profileError && profileError.code !== '23505') return { error: profileError };
 
         setCompanyId(resolvedCompanyId);
-        setRole(isStaffSignup ? 'staff' : 'owner');
+        setRole('owner');
         setUserType(data.userType);
         setRegion(normalizeRegion(data.region));
         setBusinessName(data.businessName);
         setFullName(data.fullName);
         setTutorialCompleted(false);
 
-        if (!isStaffSignup) {
-          const { error: onboardingError } = await supabase.rpc('upsert_onboarding_progress', {
-            p_company_id: authData.user.id,
-            p_current_step: 1,
-            p_completed_steps: [],
-            p_step_data: {}
-          });
+        const { error: onboardingError } = await supabase.rpc('upsert_onboarding_progress', {
+          p_company_id: authData.user.id,
+          p_current_step: 1,
+          p_completed_steps: [],
+          p_step_data: {}
+        });
 
-          if (onboardingError) return { error: onboardingError };
-        }
-
-        if (isStaffSignup) {
-          const trimmedName = data.fullName.trim();
-          const namePattern = trimmedName.replace(/[\\%_]/g, (char) => `\\${char}`);
-          const { data: existing } = await supabase
-            .from('team_members')
-            .select('id')
-            .eq('user_id', data.companyId)
-            .is('staff_user_id', null)
-            .ilike('name', namePattern)
-            .limit(1)
-            .maybeSingle();
-
-          if (existing?.id) {
-            const { data: claimedId, error: claimError } = await supabase.rpc('complete_staff_invite', {
-              p_company_id: data.companyId,
-              p_member_id: existing.id,
-              p_birth_date: data.birthDate || null,
-            });
-            if (claimError) return { error: claimError };
-            setTeamMemberId(claimedId || existing.id);
-          } else {
-            const { data: inserted, error: teamError } = await supabase
-              .from('team_members')
-              .insert([
-                {
-                  user_id: data.companyId,
-                  staff_user_id: authData.user.id,
-                  name: trimmedName,
-                  role: 'Profissional',
-                  active: true,
-                  is_owner: false,
-                  commission_rate: 0,
-                  slug: trimmedName.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Math.floor(Math.random() * 1000)
-                }
-              ])
-              .select('id')
-              .single();
-
-            if (teamError) {
-              console.error('Erro ao adicionar membro à listagem de equipe:', teamError);
-              return { error: teamError };
-            }
-            setTeamMemberId(inserted?.id || null);
-          }
-        }
+        if (onboardingError) return { error: onboardingError };
       }
 
       return { error: null };

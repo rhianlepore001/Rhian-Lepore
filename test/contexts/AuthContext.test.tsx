@@ -282,12 +282,12 @@ describe('AuthContext', () => {
         expect(registerResult.error).toBeNull();
         expect(insertedProfiles[0]).toMatchObject({
             id: mockUser.id,
-            role: 'owner',
-            company_id: mockUser.id,
             tutorial_completed: false,
             subscription_status: 'trial',
             aios_enabled: true,
         });
+        expect(insertedProfiles[0]).not.toHaveProperty('role');
+        expect(insertedProfiles[0]).not.toHaveProperty('company_id');
         const trialMs = new Date(insertedProfiles[0].trial_ends_at).getTime() - Date.now();
         const expectedMs = TRIAL_DAYS * 24 * 60 * 60 * 1000;
         expect(Math.abs(trialMs - expectedMs)).toBeLessThan(5_000);
@@ -299,51 +299,11 @@ describe('AuthContext', () => {
         });
     });
 
-    it('registers staff inside owner company without creating owner onboarding progress', async () => {
-        const mockUser = { id: 'staff-new', email: 'staff@example.com' };
-        const insertedProfiles: any[] = [];
-        const insertedTeamMembers: any[] = [];
-        const updatedTeamMembers: any[] = [];
-
+    it('recusa cadastro staff sem member_id do convite', async () => {
         (supabase.auth.getSession as any).mockResolvedValue({ data: { session: null }, error: null });
         (supabase.auth.signUp as any).mockResolvedValue({
-            data: { user: mockUser, session: { user: mockUser } },
+            data: { user: { id: 'staff-new' } },
             error: null,
-        });
-        (supabase.from as any).mockImplementation((table: string) => {
-            const queryChain: any = {
-                select: vi.fn().mockReturnThis(),
-                eq: vi.fn().mockReturnThis(),
-                is: vi.fn().mockReturnThis(),
-                ilike: vi.fn().mockReturnThis(),
-                limit: vi.fn().mockReturnThis(),
-                maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-                single: vi.fn().mockResolvedValue({ data: null, error: null }),
-            };
-            (queryChain as any).insert = vi.fn().mockImplementation((rows) => {
-                if (table === 'profiles') insertedProfiles.push(...rows);
-                if (table === 'team_members') insertedTeamMembers.push(...rows);
-                return {
-                    select: vi.fn().mockReturnValue({
-                        single: vi.fn().mockResolvedValue({ data: { id: 'new-member' }, error: null }),
-                    }),
-                };
-            });
-            (queryChain as any).upsert = vi.fn().mockImplementation((row) => {
-                if (table === 'profiles') insertedProfiles.push(row);
-                return Promise.resolve({ data: null, error: null });
-            });
-            (queryChain as any).update = vi.fn().mockImplementation((updates) => {
-                if (table === 'team_members') updatedTeamMembers.push(updates);
-                return Promise.resolve({ data: null, error: null });
-            });
-            return queryChain;
-        });
-        (supabase.rpc as any).mockImplementation((name: string) => {
-            if (name === 'upsert_onboarding_progress') {
-                return Promise.resolve({ data: null, error: null });
-            }
-            return Promise.resolve({ data: null, error: null });
         });
 
         const { result } = renderHook(() => useAuth(), { wrapper });
@@ -362,58 +322,20 @@ describe('AuthContext', () => {
             });
         });
 
-        expect(registerResult.error).toBeNull();
-        expect(insertedProfiles[0]).toMatchObject({
-            id: mockUser.id,
-            role: 'staff',
-            company_id: 'owner-123',
-            tutorial_completed: false,
-        });
-        // Pré-cadastro não achado → INSERT novo (caminho atual mantido)
-        expect(insertedTeamMembers[0]).toMatchObject({
-            user_id: 'owner-123',
-            staff_user_id: mockUser.id,
-            name: 'Staff Test',
-            active: true,
-            is_owner: false,
-        });
-        expect(updatedTeamMembers).toHaveLength(0);
-        expect(supabase.rpc).not.toHaveBeenCalledWith('upsert_onboarding_progress', expect.anything());
+        expect(registerResult.error).toBeTruthy();
+        expect(registerResult.error.message).toMatch(/Convite inválido/);
+        expect(supabase.auth.signUp).not.toHaveBeenCalled();
     });
 
     it('vincula staff_user_id em team_member pré-cadastrado (sem duplicar)', async () => {
         const mockUser = { id: 'staff-existing', email: 'existing@example.com' };
-        const insertedTeamMembers: any[] = [];
-        const updatedTeamMembers: any[] = [];
 
         (supabase.auth.getSession as any).mockResolvedValue({ data: { session: null }, error: null });
         (supabase.auth.signUp as any).mockResolvedValue({
             data: { user: mockUser, session: { user: mockUser } },
             error: null,
         });
-        (supabase.from as any).mockImplementation((table: string) => {
-            const queryChain: any = {
-                select: vi.fn().mockReturnThis(),
-                eq: vi.fn().mockReturnThis(),
-                is: vi.fn().mockReturnThis(),
-                ilike: vi.fn().mockReturnThis(),
-                limit: vi.fn().mockReturnThis(),
-                single: vi.fn().mockResolvedValue({ data: null, error: null }),
-            };
-            (queryChain as any).maybeSingle = vi.fn().mockImplementation(() => {
-                if (table === 'team_members') {
-                    return Promise.resolve({ data: { id: 'pre-cadastrado-uuid' }, error: null });
-                }
-                return Promise.resolve({ data: null, error: null });
-            });
-            (queryChain as any).upsert = vi.fn().mockResolvedValue({ data: null, error: null });
-            (queryChain as any).update = vi.fn().mockImplementation((updates) => {
-                if (table === 'team_members') updatedTeamMembers.push(updates);
-                return queryChain;
-            });
-            return queryChain;
-        });
-        (supabase.rpc as any).mockResolvedValue({ data: null, error: null });
+        (supabase.rpc as any).mockResolvedValue({ data: 'pre-cadastrado-uuid', error: null });
 
         const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -428,17 +350,18 @@ describe('AuthContext', () => {
                 region: 'BR',
                 phone: '11988888888',
                 companyId: 'owner-123',
+                teamMemberId: 'pre-cadastrado-uuid',
             });
         });
 
         expect(registerResult.error).toBeNull();
-        expect(insertedTeamMembers).toHaveLength(0);
-        expect(updatedTeamMembers).toHaveLength(0);
         expect(supabase.rpc).toHaveBeenCalledWith('complete_staff_invite', {
             p_company_id: 'owner-123',
             p_member_id: 'pre-cadastrado-uuid',
             p_birth_date: null,
         });
+        expect(result.current.role).toBe('staff');
+        expect(result.current.teamMemberId).toBe('pre-cadastrado-uuid');
     });
 
     it('marks owner onboarding as completed in onboarding_progress', async () => {
@@ -876,6 +799,7 @@ describe('AuthContext', () => {
                     full_name: 'Recepção Moderna',
                     role: 'staff',
                     company_id: 'owner-123',
+                    member_id: 'member-1',
                     type: 'barber',
                 }),
             },

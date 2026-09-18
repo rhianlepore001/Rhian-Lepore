@@ -649,9 +649,65 @@ describe('AuthContext', () => {
             p_member_id: 'member-new-reinvite',
             p_email: 'recepcao@example.com',
         });
+        const releaseCallIndex = (supabase.rpc as any).mock.calls.findIndex(
+            (call: unknown[]) => call[0] === 'release_staff_email_for_reinvite',
+        );
+        const releaseOrder = (supabase.rpc as any).mock.invocationCallOrder[releaseCallIndex];
+        const signOutOrder = (supabase.auth.signOut as any).mock.invocationCallOrder[0];
+        expect(releaseOrder).toBeLessThan(signOutOrder);
         expect(supabase.auth.signOut).toHaveBeenCalled();
         expect(supabase.auth.signUp).toHaveBeenCalledTimes(2);
         expect(registerResult.error).toBeNull();
+    });
+
+    it('dirty path não tenta signUp de novo se o release do órfão falhar', async () => {
+        const mockUser = { id: 'staff-retry', email: 'recepcao@example.com' };
+
+        (supabase.auth.getSession as any).mockResolvedValue({ data: { session: null }, error: null });
+        (supabase.auth.signUp as any).mockResolvedValue({
+            data: { user: null },
+            error: { code: 'user_already_exists', message: 'User already registered' },
+        });
+        (supabase.auth.signInWithPassword as any).mockResolvedValue({
+            data: { user: mockUser, session: { user: mockUser } },
+            error: null,
+        });
+        (supabase.auth.signOut as any).mockResolvedValue({ error: null });
+        (supabase.rpc as any).mockImplementation((name: string) => {
+            if (name === 'complete_staff_invite') {
+                return Promise.resolve({ data: null, error: { message: 'invite_already_used' } });
+            }
+            if (name === 'release_staff_email_for_reinvite') {
+                return Promise.resolve({ data: false, error: null });
+            }
+            return Promise.resolve({ data: null, error: null });
+        });
+
+        const { result } = renderHook(() => useAuth(), { wrapper });
+
+        let registerResult: any;
+        await act(async () => {
+            registerResult = await result.current.register({
+                email: 'recepcao@example.com',
+                password: 'Password123!',
+                fullName: 'Recepção Moderna',
+                businessName: 'Barbearia Moderna',
+                userType: 'barber',
+                region: 'BR',
+                phone: '',
+                companyId: 'owner-123',
+                teamMemberId: 'member-new-reinvite',
+            });
+        });
+
+        expect(supabase.rpc).toHaveBeenCalledWith('release_staff_email_for_reinvite', {
+            p_company_id: 'owner-123',
+            p_member_id: 'member-new-reinvite',
+            p_email: 'recepcao@example.com',
+        });
+        expect(supabase.auth.signOut).toHaveBeenCalled();
+        expect(supabase.auth.signUp).toHaveBeenCalledTimes(1);
+        expect(registerResult.error).toBeTruthy();
     });
 
     it('se o Auth órfão ainda existe, entra com a senha e vincula o member_id novo', async () => {

@@ -8,6 +8,11 @@ import { useTenantLocale } from '../hooks/useTenantLocale';
 import { useToast } from './ui/Toast';
 import { mapError } from '../utils/mapError';
 import {
+    formatServiceDuration,
+    minutesFromSelection,
+    selectionFromDurationMinutes,
+} from '../utils/serviceDuration';
+import {
     useCreateServiceCategory,
     useSaveService,
     useServiceUpsellIds,
@@ -23,6 +28,15 @@ interface ServiceModalProps {
     onClose: () => void;
     onSave: () => void;
     accentColor?: string;
+}
+
+
+function minutesFromSelectionSafe(selectValue: string, hours: string, minutes: string): number {
+    try {
+        return minutesFromSelection(selectValue, hours, minutes);
+    } catch {
+        return 0;
+    }
 }
 
 export const ServiceModal: React.FC<ServiceModalProps> = ({
@@ -46,9 +60,10 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
     const [name, setName] = useState(service?.name || '');
     const [description, setDescription] = useState(service?.description || '');
     const [price, setPrice] = useState(service?.price?.toString() || '');
-    const [duration, setDuration] = useState(service?.duration_minutes?.toString() || '30');
-    const [customHours, setCustomHours] = useState('0');
-    const [customMinutes, setCustomMinutes] = useState('0');
+    const initialDuration = selectionFromDurationMinutes(service?.duration_minutes);
+    const [duration, setDuration] = useState(initialDuration.selectValue);
+    const [customHours, setCustomHours] = useState(initialDuration.customHours);
+    const [customMinutes, setCustomMinutes] = useState(initialDuration.customMinutes);
     const [categoryId, setCategoryId] = useState(service?.category_id || categories[0]?.id || '');
     const [active, setActive] = useState(service?.active ?? true);
 
@@ -105,9 +120,19 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                 imageUrl = await uploadImageMutation.mutateAsync({ companyId, file: imageFile });
             }
 
-            const durationMinutes = duration === 'custom'
-                ? (parseInt(customHours || '0') * 60) + parseInt(customMinutes || '0')
-                : parseInt(duration);
+            let durationMinutes: number;
+            try {
+                durationMinutes = minutesFromSelection(duration, customHours, customMinutes);
+            } catch (durationError) {
+                showToast(
+                    durationError instanceof Error
+                        ? durationError.message
+                        : 'Duração inválida.',
+                    'error',
+                );
+                setLoading(false);
+                return;
+            }
 
             await saveServiceMutation.mutateAsync({
                 companyId,
@@ -290,7 +315,19 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                                 </div>
                                 <div>
                                     <label className={`${classes.label} mb-1 block`} htmlFor="service-duration">Duração</label>
-                                    <select id="service-duration" value={duration} onChange={e => setDuration(e.target.value)} className={classes.input}>
+                                    <select
+                                        id="service-duration"
+                                        value={duration}
+                                        onChange={e => {
+                                            const next = e.target.value;
+                                            setDuration(next);
+                                            if (next === 'custom' && customHours === '0' && customMinutes === '0') {
+                                                setCustomHours('1');
+                                                setCustomMinutes('15');
+                                            }
+                                        }}
+                                        className={classes.input}
+                                    >
                                         <option value="15">15 min</option>
                                         <option value="30">30 min</option>
                                         <option value="45">45 min</option>
@@ -299,6 +336,38 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                                     </select>
                                 </div>
                             </div>
+
+                            {duration === 'custom' && (
+                                <div className="grid grid-cols-2 gap-4" data-testid="custom-duration-fields">
+                                    <div>
+                                        <label className={`${classes.label} mb-1 block`} htmlFor="service-duration-hours">Horas</label>
+                                        <input
+                                            id="service-duration-hours"
+                                            type="number"
+                                            min={0}
+                                            max={12}
+                                            value={customHours}
+                                            onChange={e => setCustomHours(e.target.value)}
+                                            className={classes.input}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className={`${classes.label} mb-1 block`} htmlFor="service-duration-minutes">Minutos</label>
+                                        <input
+                                            id="service-duration-minutes"
+                                            type="number"
+                                            min={0}
+                                            max={59}
+                                            value={customMinutes}
+                                            onChange={e => setCustomMinutes(e.target.value)}
+                                            className={classes.input}
+                                        />
+                                    </div>
+                                    <p className={`${colors.textSecondary} text-xs col-span-2`}>
+                                        Total: {formatServiceDuration(minutesFromSelectionSafe(duration, customHours, customMinutes))}
+                                    </p>
+                                </div>
+                            )}
 
                             <div>
                                 <label className={`${classes.label} mb-1 block`} htmlFor="service-description">Descrição</label>
@@ -323,8 +392,17 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
 
                     <div className={`flex items-center justify-between pt-4 border-t ${colors.divider}`}>
                         <div className="flex items-center gap-2">
-                            <input type="checkbox" id="active" checked={active} onChange={e => setActive(e.target.checked)} className={`rounded ${colors.inputBg} ${colors.border} ${accent.text} focus:ring-0`} />
-                            <label htmlFor="active" className={`${colors.text} text-sm cursor-pointer`}>Serviço Ativo</label>
+                            <div className="flex flex-col gap-1">
+                                <div className="flex items-center gap-2">
+                                    <input type="checkbox" id="active" checked={active} onChange={e => setActive(e.target.checked)} className={`rounded ${colors.inputBg} ${colors.border} ${accent.text} focus:ring-0`} />
+                                    <label htmlFor="active" className={`${colors.text} text-sm cursor-pointer`}>Serviço ativo (visível no agendamento público)</label>
+                                </div>
+                                {!active && (
+                                    <p className="text-xs text-[var(--color-danger)] max-w-xs">
+                                        Inativo: o serviço some da agenda pública e do booking online, mas continua na lista para você reativar.
+                                    </p>
+                                )}
+                            </div>
                         </div>
                         <button type="submit" disabled={loading} className={`px-6 py-3 font-bold rounded-xl flex items-center gap-2 disabled:opacity-50 ${classes.buttonPrimary}`}>
                             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Salvar Serviço'}

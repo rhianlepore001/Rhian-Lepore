@@ -152,3 +152,17 @@ export async function saveService(input: SaveServiceInput): Promise<string> {
 
   return serviceId!;
 }
+
+
+export async function setServiceActive(
+  companyId: string,
+  serviceId: string,
+  active: boolean,
+): Promise<void> {
+  const { error } = await supabase
+    .from('services')
+    .update({ active })
+    .eq('id', serviceId)
+    .eq('user_id', companyId);
+  if (error) throw error;
+}

@@ -12,7 +12,7 @@ import path from 'node:path';
 const BASE = process.env.E2E_BASE_URL || 'http://localhost:3000';
 const OWNER_EMAIL = process.env.E2E_OWNER_EMAIL || 'Bob.teste@gmail.com';
 const OWNER_PASS = process.env.E2E_OWNER_PASS || 'BobTeste@123';
-const ARTIFACTS = process.env.E2E_ARTIFACTS_DIR || '/opt/cursor/artifacts';
+const ARTIFACTS = process.env.E2E_ARTIFACTS_DIR || path.join(process.cwd(), 'test-results', 'e2e-artifacts');
 
 async function loginOwner(page: Page): Promise<void> {
   await page.goto(`${BASE}/#/login`, { waitUntil: 'load' });

@@ -39,9 +39,9 @@ describe('preços do plano AgendiX', () => {
         expect(brl.team.priceId).toMatch(/^price_/);
         expect(eur.solo.priceId).toMatch(/^price_/);
         expect(eur.team.priceId).toMatch(/^price_/);
-        expect(brl.solo.priceId).toBe('price_1SmKO0PUPmLLh2qEwaMMPA6i');
-        expect(brl.team.priceId).toBe('price_1SmKQPPUPmLLh2qEwY9lvQki');
-        expect(eur.solo.priceId).toBe('price_1SmKQPPUPmLLh2qEtjjlg2S1');
-        expect(eur.team.priceId).toBe('price_1SmKQPPUPmLLh2qEomuqHXvt');
+        expect(brl.solo.priceId).toBe('price_1UHfuLPUPmLLh2qEjVZ7g0hA');
+        expect(brl.team.priceId).toBe('price_1UHfuMPUPmLLh2qEBQdKfGNv');
+        expect(eur.solo.priceId).toBe('price_1UHfuNPUPmLLh2qEUiuYaUyN');
+        expect(eur.team.priceId).toBe('price_1UHfuNPUPmLLh2qEaolUiKUI');
     });
 });

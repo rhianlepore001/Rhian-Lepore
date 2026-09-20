@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
 import { Card, Button, ConfirmModal, useToast } from '../../components/ui';
 import { SettingsLayout } from '../../components/SettingsLayout';
-import { Plus, Package, Edit2, Trash2, GripVertical, FolderPlus } from 'lucide-react';
+import { Plus, Package, Edit2, Trash2, GripVertical, FolderPlus, Power, HelpCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import {
     useCreateServiceCategory,
+    useDeleteService,
     useDeleteServiceCategory,
+    useSetServiceActive,
     useServiceSettings,
 } from '../../hooks/useServiceSettings';
 import { ServiceModal } from '../../components/ServiceModal';
 import { Modal } from '../../components/Modal';
 import { formatCurrency } from '../../utils/formatters';
+import { formatServiceDuration } from '../../utils/serviceDuration';
 import { mapError } from '../../utils/mapError';
 import type { ServiceItem } from '@/types/serviceSettings';
 
@@ -22,12 +25,16 @@ export const ServiceSettings: React.FC = () => {
     const { categories, services, loading, refetch } = useServiceSettings(effectiveCompanyId);
     const createCategory = useCreateServiceCategory();
     const deleteCategory = useDeleteServiceCategory();
+    const deleteServiceMutation = useDeleteService();
+    const setServiceActiveMutation = useSetServiceActive();
 
     const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
     const [editingService, setEditingService] = useState<ServiceItem | null>(null);
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState('');
     const [pendingDeleteCategoryId, setPendingDeleteCategoryId] = useState<string | null>(null);
+    const [pendingDeleteServiceId, setPendingDeleteServiceId] = useState<string | null>(null);
+    const [inactiveInfoServiceId, setInactiveInfoServiceId] = useState<string | null>(null);
     const { showToast } = useToast();
 
     const handleAddCategory = async () => {
@@ -44,6 +51,48 @@ export const ServiceSettings: React.FC = () => {
         } catch (error) {
             console.error('Error adding category:', error);
             showToast(mapError(error, 'Não foi possível criar a categoria.').message, 'error');
+        }
+    };
+
+
+    const handleToggleServiceActive = async (service: ServiceItem, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!effectiveCompanyId) return;
+        try {
+            await setServiceActiveMutation.mutateAsync({
+                companyId: effectiveCompanyId,
+                serviceId: service.id,
+                active: !service.active,
+            });
+            showToast(
+                service.active
+                    ? 'Serviço desativado. Ele some do agendamento público.'
+                    : 'Serviço reativado e visível no agendamento público.',
+                'success',
+            );
+            await refetch();
+        } catch (error) {
+            console.error('Error toggling service:', error);
+            showToast(mapError(error, 'Não foi possível atualizar o serviço.').message, 'error');
+        }
+    };
+
+    const handleDeleteService = (id: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setPendingDeleteServiceId(id);
+    };
+
+    const confirmDeleteService = async () => {
+        if (!pendingDeleteServiceId || !effectiveCompanyId) return;
+        try {
+            await deleteServiceMutation.mutateAsync({ companyId: effectiveCompanyId, serviceId: pendingDeleteServiceId });
+            showToast('Serviço excluído.', 'success');
+            await refetch();
+        } catch (error) {
+            console.error('Error deleting service:', error);
+            showToast(mapError(error, 'Não foi possível excluir o serviço.').message, 'error');
+        } finally {
+            setPendingDeleteServiceId(null);
         }
     };
 
@@ -180,15 +229,42 @@ export const ServiceSettings: React.FC = () => {
                                                         <div className="flex items-center gap-2 mb-1">
                                                             <h4 className={`${colors.text} font-bold tracking-tight truncate`}>{service.name}</h4>
                                                             {!service.active && (
-                                                                <span className="text-xs bg-[var(--color-danger-bg)] text-[var(--color-danger)] border border-[var(--color-danger-border)]/20 px-1.5 py-0.5 rounded uppercase font-bold">Inativo</span>
+                                                                <button
+                                                                    type="button"
+                                                                    title="O que significa Inativo?"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setInactiveInfoServiceId(service.id);
+                                                                    }}
+                                                                    className="text-xs bg-[var(--color-danger-bg)] text-[var(--color-danger)] border border-[var(--color-danger-border)]/20 px-1.5 py-0.5 rounded uppercase font-bold inline-flex items-center gap-1"
+                                                                >
+                                                                    Inativo
+                                                                    <HelpCircle className="w-3 h-3" />
+                                                                </button>
                                                             )}
                                                         </div>
                                                         <p className={`text-sm font-mono ${colors.textMuted}`}>
-                                                            {service.duration_minutes}m • <span className={accent.text}>{formatCurrency(service.price, region)}</span>
+                                                            {formatServiceDuration(service.duration_minutes)} • <span className={accent.text}>{formatCurrency(service.price, region)}</span>
                                                         </p>
                                                     </div>
 
                                                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button
+                                                            type="button"
+                                                            title={service.active ? 'Desativar serviço' : 'Reativar serviço'}
+                                                            onClick={(e) => void handleToggleServiceActive(service, e)}
+                                                            className={`p-2 ${colors.textMuted} hover:text-theme-text`}
+                                                        >
+                                                            <Power className={`w-4 h-4 ${service.active ? '' : 'text-[var(--color-danger)]'}`} />
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            title="Excluir serviço"
+                                                            onClick={(e) => handleDeleteService(service.id, e)}
+                                                            className={`p-2 ${colors.textMuted} hover:text-[var(--color-danger)]`}
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
                                                         <div className={`p-2 ${colors.textMuted} hover:text-theme-text`}>
                                                             <Edit2 className="w-4 h-4" />
                                                         </div>
@@ -255,6 +331,27 @@ export const ServiceSettings: React.FC = () => {
                     loading={deleteCategory.isPending}
                     onCancel={() => setPendingDeleteCategoryId(null)}
                     onConfirm={() => void confirmDeleteCategory()}
+                />
+
+                <ConfirmModal
+                    open={!!pendingDeleteServiceId}
+                    title="Excluir serviço"
+                    message="O serviço será removido permanentemente. Para só esconder do agendamento público, use Desativar."
+                    confirmLabel="Excluir"
+                    variant="danger"
+                    loading={deleteServiceMutation.isPending}
+                    onCancel={() => setPendingDeleteServiceId(null)}
+                    onConfirm={() => void confirmDeleteService()}
+                />
+
+                <ConfirmModal
+                    open={!!inactiveInfoServiceId}
+                    title="Serviço inativo"
+                    message="Inativo significa que o serviço está desligado no cadastro (campo active = false). Ele não aparece no agendamento público nem no booking online, mas continua na lista para você editar ou reativar. Isso acontece quando alguém desmarca “Serviço ativo” ao editar, ou usa o botão de energia na lista."
+                    confirmLabel="Entendi"
+                    variant="default"
+                    onCancel={() => setInactiveInfoServiceId(null)}
+                    onConfirm={() => setInactiveInfoServiceId(null)}
                 />
             </div>
         </SettingsLayout>

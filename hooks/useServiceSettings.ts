@@ -8,6 +8,7 @@ import {
   fetchServices,
   fetchServiceUpsellIds,
   saveService,
+  setServiceActive,
   uploadServiceImage,
 } from '@/services/serviceSettings';
 import type { CreateCategoryInput, SaveServiceInput } from '@/types/serviceSettings';
@@ -107,5 +108,26 @@ export function useUploadServiceImage() {
     mutationKey: ['serviceSettings', 'service', 'uploadImage'],
     mutationFn: ({ companyId, file }: { companyId: string; file: File }) =>
       uploadServiceImage(companyId, file),
+  });
+}
+
+
+export function useSetServiceActive() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ['serviceSettings', 'service', 'setActive'],
+    mutationFn: ({
+      companyId,
+      serviceId,
+      active,
+    }: {
+      companyId: string;
+      serviceId: string;
+      active: boolean;
+    }) => setServiceActive(companyId, serviceId, active),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: serviceSettingsKey(variables.companyId) });
+    },
   });
 }

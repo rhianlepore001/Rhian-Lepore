@@ -248,10 +248,12 @@ export const ServiceSettings: React.FC = () => {
                                                         </p>
                                                     </div>
 
-                                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <div className="flex items-center gap-1 shrink-0" data-testid="service-row-actions">
                                                         <button
                                                             type="button"
                                                             title={service.active ? 'Desativar serviço' : 'Reativar serviço'}
+                                                            aria-label={service.active ? `Desativar serviço ${service.name}` : `Reativar serviço ${service.name}`}
+                                                            data-testid={`service-toggle-${service.id}`}
                                                             onClick={(e) => void handleToggleServiceActive(service, e)}
                                                             className={`p-2 ${colors.textMuted} hover:text-theme-text`}
                                                         >
@@ -260,6 +262,8 @@ export const ServiceSettings: React.FC = () => {
                                                         <button
                                                             type="button"
                                                             title="Excluir serviço"
+                                                            aria-label={`Excluir serviço ${service.name}`}
+                                                            data-testid={`service-delete-${service.id}`}
                                                             onClick={(e) => handleDeleteService(service.id, e)}
                                                             className={`p-2 ${colors.textMuted} hover:text-[var(--color-danger)]`}
                                                         >

@@ -53,6 +53,7 @@ Script isolado em `scripts/demo-seed/` + doc `docs/demo-seed.md`. Dois tenants f
 
 ## 🛠️ Trabalho recente
 
+- **Preços do plano AgendiX (18–20 Set 2026):** Solo R$ 19,99 / € 5,99 e Equipe/Ilimitado R$ 28,99 / € 9,99. Constantes + Price IDs de teste em `utils/planPricing.ts` (Stripe testmode). Em produção Vercel, preferir envs `VITE_STRIPE_PRICE_*` com IDs **live**. Landing de marketing não tem preços no repo.
 - **P0 booking público (18–20 Set 2026):** #87 mergeada. Staff da empresa vê/aceita/recusa solicitações online no tenant; tela pública não diz “confirmado” enquanto pending; criação pública atômica; cancelar na Minha Área com prova de telefone. Migration `20260918190000` no live.
 - **P0 tenant guard em RPCs autenticadas de financeiro/dashboard (18 Set 2026):** #85 mergeada. Núcleo útil do #79 (fechado), sem identity lock. Migration `20260918220000` no remoto. Booking público não foi alterado por esta PR.
 - **P0 reconvite dirty (18 Set 2026):** após #78, `release_staff_email_for_reinvite` só aceitava o dono. Authz novo: dono **ou** órfão com prova de e-mail+convite unbound. Anon sem EXECUTE. Auto-purge do órfão só via GUC da RPC. Migration `20260918200000`.

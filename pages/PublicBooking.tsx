@@ -18,6 +18,8 @@ import { buildWhatsAppLink, formatCurrency, formatDuration, Region } from '../ut
 import { logger } from '../utils/Logger';
 import { fetchEditBooking, fetchPublicClientByPhone, fetchClientByPhone, fetchPublicBookingById, fetchAvailableSlots, fetchFullDates, getFirstAvailableProfessional, uploadClientPhoto, upsertPublicClientSession } from '../services/publicBooking';
 import { shouldLandOnClientArea } from '../utils/publicBookingLanding';
+import { getPublicBookingAwaitingWhatsAppText, getPublicBookingSuccessCopy } from '../utils/publicBookingCopy';
+import { isSlotUnavailableError } from '../utils/supabaseRpc';
 import { Checkbox, ConfirmModal, useToast } from '@/components/ui';
 import { PublicBookingMemberships } from '@/components/membership/PublicBookingMemberships';
 import FocusTrap from 'focus-trap-react';
@@ -486,15 +488,20 @@ export const PublicBooking: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleCancelBooking = async (bookingId: string) => {
+        const phone = customerPhone || client?.phone || '';
+        if (!phone) {
+            showToast('Não foi possível cancelar. Informe o WhatsApp usado no agendamento.', 'error');
+            return;
+        }
         try {
-            await cancelBookingMutation.mutateAsync({ bookingId, businessId: businessId! });
+            await cancelBookingMutation.mutateAsync({ bookingId, phone });
             setActiveBooking(null);
             setStep('services');
             setQuickStep('services');
             showToast('Agendamento cancelado com sucesso.', 'success');
         } catch (error) {
             logger.error('Error cancelling booking', error);
-            showToast('Erro ao cancelar agendamento.', 'error');
+            showToast('Não foi possível cancelar o agendamento. Tente de novo ou fale com o salão.', 'error');
         }
     };
 
@@ -646,7 +653,11 @@ export const PublicBooking: React.FC = () => {
             setQuickStep('success');
         } catch (error: any) {
             logger.error('Error creating booking', error);
-            showToast('Não foi possível concluir seu agendamento agora. Tente novamente em instantes ou fale com a equipe pelo WhatsApp.', 'error');
+            if (isSlotUnavailableError(error)) {
+                showToast('Este horário acabou de ser ocupado. Escolha outro.', 'error');
+            } else {
+                showToast('Não foi possível concluir seu agendamento agora. Tente novamente em instantes ou fale com a equipe pelo WhatsApp.', 'error');
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -659,7 +670,17 @@ export const PublicBooking: React.FC = () => {
 
     const stepIndex = { services: 0, datetime: 1, contact: 2, success: 3 };
     const currentStepNum = stepIndex[step as keyof typeof stepIndex] ?? 0;
-    const stepLabels = ['Serviços', 'Agenda', 'Dados', 'Confirmado'];
+    const successCopy = getPublicBookingSuccessCopy({
+        isBeauty,
+        status: activeBooking?.status,
+        isEdit: Boolean(editingBookingId),
+    });
+    const stepLabels = ['Serviços', 'Agenda', 'Dados', successCopy.stepperLastLabel];
+    const successWhatsAppText = getPublicBookingAwaitingWhatsAppText({
+        businessName: business?.business_name || '',
+        dateLabel: selectedDate?.toLocaleDateString('pt-BR') ?? '',
+        timeLabel: selectedTime ?? '',
+    });
 
     // Quick flow stepper data
     const quickSteps = [
@@ -1476,14 +1497,11 @@ export const PublicBooking: React.FC = () => {
                                     </div>
 
                                     <h2 className={`${colors.text} font-black tracking-tighter text-5xl md:text-7xl mb-6`}>
-                                        {isBeauty ? 'Sua beleza agendada' : 'AGENDAMENTO CONFIRMADO'}
+                                        {successCopy.title}
                                     </h2>
 
                                     <p className={`text-lg md:text-xl mb-12 max-w-md mx-auto leading-relaxed ${colors.textMuted}`}>
-                                        {editingBookingId
-                                            ? (isBeauty ? "Edição feita com sucesso! Acesse sua área de membros." : "EDIÇÃO CONCLUÍDA. ACESSE SUA ÁREA DE MEMBROS.")
-                                            : (isBeauty ? "Prepare-se para um momento único de auto-cuidado e transformação." : "VOCÊ ESTÁ UM PASSO À FRENTE. PREPARAMOS TUDO PARA SUA CHEGADA.")
-                                        }
+                                        {successCopy.subtitle}
                                     </p>
 
                                     <div className={`p-8 mb-12 text-left relative overflow-hidden group ${colors.card} ${colors.border} border-2 ${shadow.elevated} rounded-2xl`}>
@@ -1519,12 +1537,12 @@ export const PublicBooking: React.FC = () => {
                                     </div>
 
                                     <div className="flex flex-col gap-5">
-                                        <a href={buildWhatsAppLink(business.phone, currencyRegion, `Olá! Gostaria de confirmar meu agendamento na *${business.business_name}* para o dia ${selectedDate?.toLocaleDateString('pt-BR')} às ${selectedTime}. Nos vemos em breve!`)} target="_blank" rel="noopener noreferrer"
+                                        <a href={buildWhatsAppLink(business.phone, currencyRegion, successWhatsAppText)} target="_blank" rel="noopener noreferrer"
                                             className={`group flex items-center justify-center gap-4 py-6 px-10 transition-all duration-200 relative overflow-hidden rounded-2xl ${accent.bg} ${accentTextOnAccent} ${shadow.elevated}`}>
                                             <div className={`p-2 bg-[var(--color-card-hover)] rounded-lg group-hover:bg-white/20`}>
                                                 <Send className="w-5 h-5" />
                                             </div>
-                                            <span className="text-sm font-black uppercase tracking-[0.2em]">Confirmar no WhatsApp</span>
+                                            <span className="text-sm font-black uppercase tracking-[0.2em]">{successCopy.whatsappCta}</span>
                                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine pointer-events-none" />
                                         </a>
 
@@ -1738,14 +1756,11 @@ export const PublicBooking: React.FC = () => {
                     </div>
 
                     <h2 className={`${colors.text} font-black tracking-tighter text-5xl md:text-7xl mb-6`}>
-                        {isBeauty ? 'Sua beleza agendada' : 'AGENDAMENTO CONFIRMADO'}
+                        {successCopy.title}
                     </h2>
 
                     <p className={`text-lg md:text-xl mb-12 max-w-md mx-auto leading-relaxed ${colors.textMuted}`}>
-                        {editingBookingId
-                            ? (isBeauty ? "Edição feita com sucesso! Acesse sua área de membros." : "EDIÇÃO CONCLUÍDA. ACESSE SUA ÁREA DE MEMBROS.")
-                            : (isBeauty ? "Prepare-se para um momento único de auto-cuidado e transformação." : "VOCÊ ESTÁ UM PASSO À FRENTE. PREPARAMOS TUDO PARA SUA CHEGADA.")
-                        }
+                        {successCopy.subtitle}
                     </p>
 
                     <div className={`p-8 mb-12 text-left relative overflow-hidden group ${colors.card} ${colors.border} border-2 ${shadow.elevated} rounded-2xl`}>
@@ -1781,12 +1796,12 @@ export const PublicBooking: React.FC = () => {
                     </div>
 
                     <div className="flex flex-col gap-5">
-                        <a href={buildWhatsAppLink(business.phone, currencyRegion, `Olá! Gostaria de confirmar meu agendamento na *${business.business_name}* para o dia ${selectedDate?.toLocaleDateString('pt-BR')} às ${selectedTime}. Nos vemos em breve!`)} target="_blank" rel="noopener noreferrer"
+                        <a href={buildWhatsAppLink(business.phone, currencyRegion, successWhatsAppText)} target="_blank" rel="noopener noreferrer"
                             className={`group flex items-center justify-center gap-4 py-6 px-10 transition-all duration-200 relative overflow-hidden rounded-2xl ${accent.bg} ${accentTextOnAccent} ${shadow.elevated}`}>
                             <div className={`p-2 bg-[var(--color-card-hover)] rounded-lg group-hover:bg-white/20`}>
                                 <Send className="w-5 h-5" />
                             </div>
-                            <span className="text-sm font-black uppercase tracking-[0.2em]">Confirmar no WhatsApp</span>
+                            <span className="text-sm font-black uppercase tracking-[0.2em]">{successCopy.whatsappCta}</span>
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine pointer-events-none" />
                         </a>
 

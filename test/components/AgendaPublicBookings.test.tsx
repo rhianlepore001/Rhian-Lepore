@@ -33,7 +33,6 @@ describe('AgendaPublicBookings', () => {
         teamMembers={members}
         services={services}
         currencyRegion="BR"
-        isStaff={false}
         onAccept={vi.fn()}
         onReject={vi.fn()}
       />,
@@ -56,7 +55,6 @@ describe('AgendaPublicBookings', () => {
         teamMembers={members}
         services={services}
         currencyRegion="BR"
-        isStaff={false}
         onAccept={onAccept}
         onReject={onReject}
       />,
@@ -66,5 +64,21 @@ describe('AgendaPublicBookings', () => {
     expect(onAccept).toHaveBeenCalledWith(booking);
     await userEvent.click(screen.getByRole('button', { name: /Recusar/ }));
     expect(onReject).toHaveBeenCalledWith('pb1');
+  });
+
+  it('mostra Recusar também para staff', () => {
+    render(
+      <AgendaPublicBookings
+        bookings={[booking]}
+        teamMembers={members}
+        services={services}
+        currencyRegion="BR"
+        onAccept={vi.fn()}
+        onReject={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: /Aceitar/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Recusar/ })).toBeInTheDocument();
   });
 });

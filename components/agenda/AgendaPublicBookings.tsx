@@ -32,7 +32,6 @@ export interface AgendaPublicBookingsProps {
   teamMembers: AgendaPublicBookingMember[];
   services: AgendaPublicBookingService[];
   currencyRegion: Region;
-  isStaff: boolean;
   onAccept: (booking: AgendaPublicBookingItem) => void;
   onReject: (bookingId: string) => void;
 }
@@ -58,7 +57,6 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
   teamMembers,
   services,
   currencyRegion,
-  isStaff,
   onAccept,
   onReject,
 }) => {
@@ -121,16 +119,14 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
                   >
                     <Check className="w-3.5 h-3.5" aria-hidden /> Aceitar
                   </button>
-                  {!isStaff && (
-                    <button
-                      type="button"
-                      onClick={() => onReject(booking.id)}
-                      className={`px-3 min-h-[44px] py-1.5 rounded-lg text-xs font-bold inline-flex items-center gap-1 ${classes.buttonDanger}`}
-                      title="Recusar"
-                    >
-                      <X className="w-3.5 h-3.5" aria-hidden /> Recusar
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => onReject(booking.id)}
+                    className={`px-3 min-h-[44px] py-1.5 rounded-lg text-xs font-bold inline-flex items-center gap-1 ${classes.buttonDanger}`}
+                    title="Recusar"
+                  >
+                    <X className="w-3.5 h-3.5" aria-hidden /> Recusar
+                  </button>
                 </div>
               </div>
 

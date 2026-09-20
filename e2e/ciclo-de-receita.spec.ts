@@ -163,7 +163,7 @@ test.describe('Ciclo de receita', () => {
                 for (let i = 0; i < n; i++) await checks.nth(i).check({ timeout: 3_000 }).catch(() => { /* opcional */ });
 
                 await joao.getByRole('button', { name: /Confirmar & Agendar/i }).click({ timeout: 5_000 });
-                await expect(joao.getByText('AGENDAMENTO CONFIRMADO')).toBeVisible({ timeout: 20_000 });
+                await expect(joao.getByText(/SOLICITAÇÃO ENVIADA|Solicitação enviada/i)).toBeVisible({ timeout: 20_000 });
             } finally {
                 await joaoCtx.close();
             }

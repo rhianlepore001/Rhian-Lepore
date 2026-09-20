@@ -606,6 +606,7 @@ export const ClientArea: React.FC = () => {
                                             businessPhone={business.phone}
                                             businessSlug={slug ?? ''}
                                             clientName={sessionClient.name}
+                                            clientPhone={sessionClient.phone}
                                             region={region}
                                             onCancelled={handleBookingCancelled}
                                             allowEdit={business?.allow_client_rescheduling ?? true}
@@ -635,6 +636,7 @@ export const ClientArea: React.FC = () => {
                                                 businessPhone={business.phone}
                                                 businessSlug={slug ?? ''}
                                                 clientName={sessionClient.name}
+                                                clientPhone={sessionClient.phone}
                                                 region={region}
                                                 onCancelled={handleBookingCancelled}
                                             />

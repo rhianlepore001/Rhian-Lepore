@@ -45,6 +45,21 @@ describe('navegação do Clube (dono)', () => {
   });
 });
 
+describe('Serviços no menu principal', () => {
+  it('expõe Serviços só para dono, entre Equipe e Produtos', () => {
+    const servicos = NAVIGATION_ITEMS.find((item) => item.path === '/configuracoes/servicos');
+    const equipeIdx = NAVIGATION_ITEMS.findIndex((item) => item.path === '/configuracoes/equipe');
+    const servicosIdx = NAVIGATION_ITEMS.findIndex((item) => item.path === '/configuracoes/servicos');
+    const produtosIdx = NAVIGATION_ITEMS.findIndex((item) => item.path === '/produtos');
+    expect(servicos?.name).toBe('Serviços');
+    expect(servicos?.ownerOnly).toBe(true);
+    expect(servicos?.group).toBe('Operação');
+    expect(servicosIdx).toBeGreaterThan(equipeIdx);
+    expect(servicosIdx).toBeLessThan(produtosIdx);
+    expect(findActiveSettingsItem(NAVIGATION_ITEMS, '/configuracoes/servicos')?.name).toBe('Serviços');
+  });
+});
+
 describe('trial do produto AgendiX', () => {
   it('dura 20 dias e calcula trial_ends_at a partir disso', () => {
     expect(TRIAL_DAYS).toBe(20);

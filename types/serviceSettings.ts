@@ -29,7 +29,8 @@ export const saveServiceInputSchema = z.object({
   categoryId: z.string().min(1),
   active: z.boolean(),
   imageUrl: z.string().nullable().optional(),
-  upsellIds: z.array(z.string().min(1)).default([]),
+  /** @deprecated Upsells removidos da UI; campo ignorado no save para não apagar dados legados. */
+  upsellIds: z.array(z.string().min(1)).optional(),
 });
 
 export const createCategoryInputSchema = z.object({

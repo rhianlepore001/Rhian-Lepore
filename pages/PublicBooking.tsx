@@ -6,7 +6,6 @@ import { Star, Calendar, Clock, MapPin, Instagram, Scissors, Sparkles, User, Arr
 import { PhoneInput } from '../components/PhoneInput';
 import { CalendarPicker } from '../components/CalendarPicker';
 import { TimeGrid } from '../components/TimeGrid';
-import { UpsellSection } from '../components/UpsellSection';
 import { ClientAuthModal } from '../components/ClientAuthModal';
 import { usePublicClient } from '../contexts/PublicClientContext';
 import { PublicBusinessHeader } from '../components/PublicBusinessHeader';

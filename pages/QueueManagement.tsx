@@ -25,6 +25,7 @@ import { supabase } from '@/lib/supabase';
 import { useQueueRealtime } from '@/hooks/useQueueRealtime';
 import { fetchServices } from '@/services/serviceSettings';
 import type { QueueRecord } from '@/types/queue';
+import { filterBookableServices } from '@/utils/filterBookableServices';
 
 export const QueueManagement: React.FC = () => {
   const navigate = useNavigate();
@@ -39,7 +40,7 @@ export const QueueManagement: React.FC = () => {
   const { data: settings, refetch: refetchSettings } = useQueueSettings();
   const { data: services = [] } = useQuery({
     queryKey: ['queue', 'services', tenantId],
-    queryFn: () => fetchServices(tenantId),
+    queryFn: async () => filterBookableServices(await fetchServices(tenantId)),
     enabled: Boolean(tenantId),
   });
 

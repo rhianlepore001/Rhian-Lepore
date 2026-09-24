@@ -1,6 +1,6 @@
 
 import { Appointment, Client, FinanceRecord } from './types';
-import { LucideIcon, Bell, LayoutDashboard, Calendar, Users, UserCog, Settings, DollarSign, Package, CreditCard, Clock, Shield, Trash2, ClipboardList, ShieldAlert, TrendingUp, Crown } from 'lucide-react';
+import { LucideIcon, Bell, LayoutDashboard, Calendar, Users, UserCog, Settings, DollarSign, Package, CreditCard, Clock, Shield, Trash2, ClipboardList, ShieldAlert, TrendingUp, Crown, Scissors } from 'lucide-react';
 
 /** Duração do trial grátis do produto AgendiX (não o clube de assinatura dos clientes). */
 export const TRIAL_DAYS = 20;
@@ -35,6 +35,7 @@ export const NAVIGATION_ITEMS = [
   { name: 'Fila Digital', icon: Clock, path: '/fila', ownerOnly: false, group: 'Operação' },
   { name: 'Clientes', icon: Users, path: '/clientes', ownerOnly: true, group: 'Operação' },
   { name: 'Equipe', icon: UserCog, path: '/configuracoes/equipe', ownerOnly: true, group: 'Operação' },
+  { name: 'Serviços', icon: Scissors, path: '/configuracoes/servicos', ownerOnly: true, group: 'Operação' },
   { name: 'Produtos', icon: Package, path: '/produtos', ownerOnly: false, group: 'Operação' },
   { name: 'Financeiro', icon: DollarSign, path: '/financeiro', ownerOnly: true, group: 'Crescimento' },
   { name: 'Análises', icon: TrendingUp, path: '/insights', ownerOnly: true, group: 'Crescimento' },
@@ -54,7 +55,7 @@ export const SETTINGS_ITEMS: SettingsItem[] = [
   { label: 'Geral', path: '/configuracoes/geral', icon: Settings, group: 'Negócio' },
   { label: 'Agendamento', path: '/configuracoes/agendamento', icon: Calendar, group: 'Negócio' },
   { label: 'Equipe e Comissões', path: '/configuracoes/equipe', icon: Users, group: 'Negócio' },
-  { label: 'Serviços', path: '/configuracoes/servicos', icon: Package, group: 'Negócio' },
+  { label: 'Serviços', path: '/configuracoes/servicos', icon: Scissors, group: 'Negócio' },
   { label: 'Clube', path: '/configuracoes/clube', icon: Crown, group: 'Negócio' },
   { label: 'Plano AgendiX', path: '/configuracoes/assinatura', icon: CreditCard, group: 'Financeiro' },
   { label: 'Notificações', path: '/configuracoes/notificacoes', icon: Bell, group: 'Conta' },

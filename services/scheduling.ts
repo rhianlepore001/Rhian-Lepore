@@ -20,6 +20,7 @@ import {
   type MachineFeeSettings,
   type MarkAppointmentCompleteInput,
 } from '@/types/scheduling';
+import { filterBookableServices } from '@/utils/filterBookableServices';
 
 interface AppointmentRow {
   id: string;
@@ -133,12 +134,12 @@ export async function createAppointment(input: CreateAppointmentInput): Promise<
 export async function fetchAgendaServices(companyId: string) {
   const { data, error } = await supabase
     .from('services')
-    .select('id, name, price, duration_minutes, category_id, description')
+    .select('id, name, price, duration_minutes, category_id, description, active')
     .eq('user_id', companyId)
     .eq('active', true)
     .order('name');
   if (error) throw error;
-  return data;
+  return filterBookableServices(data ?? []);
 }
 
 export async function fetchAgendaClients(companyId: string) {

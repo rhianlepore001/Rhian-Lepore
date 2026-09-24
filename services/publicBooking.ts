@@ -9,6 +9,7 @@ import {
   type PublicBookingRecord,
   type SubmitPublicBookingInput,
 } from '@/types/publicBooking';
+import { filterBookableServices } from '@/utils/filterBookableServices';
 
 function firstRpcRow<T>(data: T[] | T | null | undefined): T | null {
   if (Array.isArray(data)) return data[0] ?? null;
@@ -430,7 +431,18 @@ export async function fetchPublicServices(businessId: string) {
   });
 
   if (error) throw error;
-  return data ?? [];
+  const rows = (data ?? []) as Array<{
+    id: string;
+    name: string;
+    duration_minutes: number;
+    price: number;
+    category_id?: string;
+    description?: string | null;
+    image_url?: string | null;
+    active?: boolean | null;
+  }>;
+  // Defesa em profundidade: RPC já filtra active=true; reforçamos no cliente.
+  return filterBookableServices(rows);
 }
 
 export async function fetchPublicCategories(businessId: string) {

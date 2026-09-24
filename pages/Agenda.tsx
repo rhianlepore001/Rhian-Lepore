@@ -24,6 +24,7 @@ import { CheckoutModal } from '../components/CheckoutModal';
 import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { mapError, formatUserFacingError } from '../utils/mapError';
+import { filterBookableServices } from '../utils/filterBookableServices';
 import { confirmPublicBooking, createAcceptedAppointmentFromBooking, rejectPublicBooking, acceptCompanyPublicBooking } from '../services/publicBooking';
 import { copyBookingProductsToAppointment } from '../services/catalog';
 import { deleteAppointmentWithFinance, fetchPendingPublicBookings } from '../services/scheduling';
@@ -67,6 +68,7 @@ interface Service {
     duration_minutes?: number;
     category_id?: string;
     description?: string | null;
+    active?: boolean;
 }
 
 interface Category {
@@ -482,11 +484,11 @@ export const Agenda: React.FC = () => {
         if (!user) return;
         const { data } = await supabase
             .from('services')
-            .select('id, name, price, duration_minutes, category_id, description') // Adicionando details para wizard
+            .select('id, name, price, duration_minutes, category_id, description, active') // Adicionando details para wizard
             .eq('user_id', effectiveUserId)
             .eq('active', true)
             .order('name');
-        if (data) setServices(data as Service[]);
+        if (data) setServices(filterBookableServices(data as Service[]));
     };
 
     const fetchCategories = async () => {

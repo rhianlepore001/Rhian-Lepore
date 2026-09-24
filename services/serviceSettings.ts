@@ -67,15 +67,6 @@ export async function deleteService(companyId: string, serviceId: string): Promi
   if (error) throw error;
 }
 
-export async function fetchServiceUpsellIds(serviceId: string): Promise<string[]> {
-  const { data, error } = await supabase
-    .from('service_upsells')
-    .select('upsell_service_id')
-    .eq('parent_service_id', serviceId);
-
-  if (error) throw error;
-  return (data || []).map(row => row.upsell_service_id);
-}
 
 export async function uploadServiceImage(companyId: string, file: File): Promise<string> {
   const fileExt = file.name.split('.').pop();
@@ -126,29 +117,8 @@ export async function saveService(input: SaveServiceInput): Promise<string> {
     serviceId = data.id;
   }
 
-  if (serviceId) {
-    if (parsed.serviceId) {
-      const { error: deleteError } = await supabase
-        .from('service_upsells')
-        .delete()
-        .eq('parent_service_id', serviceId);
-
-      if (deleteError) throw deleteError;
-    }
-
-    if (parsed.upsellIds.length > 0) {
-      const upsellData = parsed.upsellIds.map(upsellId => ({
-        parent_service_id: serviceId,
-        upsell_service_id: upsellId,
-      }));
-
-      const { error: insertError } = await supabase
-        .from('service_upsells')
-        .insert(upsellData);
-
-      if (insertError) throw insertError;
-    }
-  }
+  // Upsells: UI removida. NÃO apagar/reescrever service_upsells no save
+  // (evita wipe acidental de dados legados). setServiceActive também não toca upsells.
 
   return serviceId!;
 }

@@ -15,7 +15,6 @@ import {
 import {
     useCreateServiceCategory,
     useSaveService,
-    useServiceUpsellIds,
     useUploadServiceImage,
 } from '../hooks/useServiceSettings';
 import type { ServiceCategory, ServiceItem } from '@/types/serviceSettings';
@@ -24,7 +23,8 @@ interface ServiceModalProps {
     companyId: string;
     service?: ServiceItem | null;
     categories: ServiceCategory[];
-    allServices: ServiceItem[];
+    /** @deprecated Mantido por compat — upsells removidos da UI. */
+    allServices?: ServiceItem[];
     onClose: () => void;
     onSave: () => void;
     accentColor?: string;
@@ -43,7 +43,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
     companyId,
     service,
     categories,
-    allServices,
+    allServices: _allServices,
     onClose,
     onSave,
     accentColor: _accentColorProp
@@ -54,7 +54,6 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
     const saveServiceMutation = useSaveService();
     const uploadImageMutation = useUploadServiceImage();
     const createCategoryMutation = useCreateServiceCategory();
-    const { data: upsellIds = [] } = useServiceUpsellIds(service?.id);
 
     const suggestions = isBeauty ? PREDEFINED_SERVICES.beauty : PREDEFINED_SERVICES.barber;
     const [name, setName] = useState(service?.name || '');
@@ -70,19 +69,12 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(service?.image_url || null);
 
-    const [selectedUpsells, setSelectedUpsells] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [isCreatingCategory, setIsCreatingCategory] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState('');
     const [localCategories, setLocalCategories] = useState<ServiceCategory[]>(categories);
-
-    useEffect(() => {
-        if (upsellIds.length > 0) {
-            setSelectedUpsells(upsellIds);
-        }
-    }, [upsellIds]);
 
     useEffect(() => {
         setLocalCategories(categories);
@@ -144,7 +136,6 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                 categoryId,
                 active,
                 imageUrl,
-                upsellIds: selectedUpsells,
             });
 
             window.dispatchEvent(new CustomEvent('setup-step-completed', { detail: { stepId: 'services' } }));
@@ -157,12 +148,6 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
         } finally {
             setLoading(false);
         }
-    };
-
-    const toggleUpsell = (id: string) => {
-        setSelectedUpsells(prev =>
-            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-        );
     };
 
     const handleCreateCategory = async () => {
@@ -197,218 +182,216 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
     };
 
     const savingCategory = createCategoryMutation.isPending;
+    const modalTitle = service ? 'Editar Serviço' : 'Novo Serviço';
 
     return createPortal(
         <div className={`fixed inset-0 ${classes.modalOverlay} flex items-center justify-center p-4 backdrop-blur-sm`} style={{ zIndex: 'var(--z-modal)' }}>
             <div className="absolute inset-0" onClick={onClose} />
             <FocusTrap active={true}>
-                <div className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto ${classes.modalContainer} transform transition-all duration-300 z-10 modal-enter`}
+                <div
+                    className={`relative w-full max-w-2xl max-h-[90vh] ${classes.modalContainer} transform transition-all duration-300 z-10 modal-enter flex flex-col`}
                     role="dialog"
                     aria-modal="true"
                     aria-labelledby="service-modal-title"
                 >
-                <div className={`flex items-center justify-between ${classes.modalHeader} sticky top-0 z-10`}>
-                    <h3 id="service-modal-title" className={`font-heading text-lg md:text-xl ${colors.text} ${font.heading === 'font-heading' ? 'tracking-wide' : 'tracking-normal'}`}>
-                        {service ? 'Editar Serviço' : 'Novo Serviço'}
-                    </h3>
+                    {/* Só o X permanece fixo sobre o conteúdo ao rolar */}
                     <button
+                        type="button"
                         onClick={onClose}
-                        className={`${colors.textSecondary} hover:text-theme-text hover:bg-white/10 rounded-full p-1.5 transition-all`}
-                        aria-label="Fechar modal de serviço"
+                        className={`absolute top-3 right-3 z-20 ${colors.text} hover:text-theme-text rounded-full p-2 transition-all border ${colors.border} bg-[var(--color-card)] hover:bg-[var(--color-card-hover)]`}
+                        aria-label="Fechar"
                         title="Fechar"
+                        data-testid="service-modal-close"
                     >
                         <X className="w-5 h-5" />
                     </button>
-                </div>
 
-                {!service && (
-                    <div className={`p-4 border-b ${colors.divider} ${accent.bgDim}`}>
-                        <div className="flex items-center gap-2 mb-3">
-                            <Sparkles className={`w-4 h-4 ${accent.text}`} />
-                            <span className={`text-xs font-bold uppercase tracking-wider ${colors.textSecondary} ${font.label}`}>Sugestões Rápidas:</span>
-                        </div>
-                        <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
-                            {suggestions.map((s, i) => (
-                                <button
-                                    key={i}
-                                    type="button"
-                                    onClick={() => handleApplySuggestion(s)}
-                                    className={`whitespace-nowrap px-3 py-1.5 text-xs text-[var(--color-text)] transition-all flex items-center gap-2 rounded-xl ${isBeauty
-                                        ? `${colors.card} ${accent.border} hover:bg-theme-accent`
-                                        : `${colors.card} ${colors.border} hover:bg-[var(--color-card-hover)]`
-                                        }`}
-                                >
-                                    {s.name}
-                                    <span className={`font-bold ${accent.text}`}>{currencySymbol}{s.price}</span>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-4">
-                            <div
-                                className={`relative w-full h-48 rounded-lg ${colors.card} border-2 border-dashed ${imagePreview ? 'border-transparent' : colors.border} flex items-center justify-center cursor-pointer hover:border-[var(--color-accent-border)] overflow-hidden group transition-colors`}
-                                onClick={() => fileInputRef.current?.click()}
+                    <div className="overflow-y-auto flex-1 min-h-0 overscroll-contain">
+                        {/* Título rola junto com o formulário (não sticky) */}
+                        <div className={`flex items-center pr-14 ${classes.modalHeader}`}>
+                            <h3
+                                id="service-modal-title"
+                                className={`font-heading text-lg md:text-xl ${colors.text} ${font.heading === 'font-heading' ? 'tracking-wide' : 'tracking-normal'}`}
                             >
-                                {imagePreview ? (
-                                    <div className="w-full h-full bg-[var(--color-bg)] flex items-center justify-center relative">
-                                        <div className="absolute inset-0 scale-125 blur-xl opacity-50">
-                                            <img src={imagePreview} alt="" className="w-full h-full object-cover" />
-                                        </div>
-                                        <img src={imagePreview} alt="Preview" className="relative z-10 max-w-full max-h-full object-contain p-2 shadow-2xl" />
-                                    </div>
-                                ) : (
-                                    <div className="flex flex-col items-center text-[var(--color-text-muted)]">
-                                        <ImageIcon className="w-8 h-8 mb-2" />
-                                        <span className="text-xs">Adicionar Foto</span>
-                                    </div>
-                                )}
-                                <div className="absolute inset-0 bg-[var(--color-bg)]/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                    <Upload className="w-6 h-6 text-[var(--color-text)]" />
-                                </div>
-                            </div>
-                            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
-
-                            <div>
-                                <label className={`${classes.label} mb-1 block`} htmlFor="service-name">Nome do Serviço</label>
-                                <input id="service-name" type="text" required value={name} onChange={e => setName(e.target.value)} className={classes.input} placeholder={isBeauty ? "Ex: Manicure e Pedicure" : "Ex: Corte Degradê"} />
-                            </div>
-
-                            <div>
-                                <div className="flex items-center justify-between mb-1">
-                                    <label className={`${classes.label} block`} htmlFor="service-category">Categoria</label>
-                                    {!isCreatingCategory && (
-                                        <button type="button" onClick={() => setIsCreatingCategory(true)} className={`${accent.text} hover:bg-[var(--color-accent-dim)] text-xs font-bold flex items-center gap-1 transition-colors`}>
-                                            <Plus className="w-3 h-3" /> Nova Categoria
-                                        </button>
-                                    )}
-                                </div>
-                                {isCreatingCategory ? (
-                                    <div className="space-y-2">
-                                        <div className="flex gap-2">
-                                            <input type="text" value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} placeholder="Nome da categoria..." className={`flex-1 ${classes.input}`} autoFocus />
-                                            <button type="button" onClick={handleCreateCategory} disabled={!newCategoryName.trim() || savingCategory} className={`px-3 py-2 font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed ${classes.buttonPrimary}`}>
-                                                {savingCategory ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
-                                            </button>
-                                            <button type="button" onClick={() => { setIsCreatingCategory(false); setNewCategoryName(''); }} className={`px-3 py-2 ${classes.buttonSecondary} rounded-lg`}>
-                                                <X className="w-5 h-5" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <select id="service-category" value={categoryId} onChange={e => setCategoryId(e.target.value)} className={classes.input}>
-                                        <option value="" disabled>Selecione uma categoria</option>
-                                        {localCategories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
-                                    </select>
-                                )}
-                            </div>
+                                {modalTitle}
+                            </h3>
                         </div>
 
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className={`${classes.label} mb-1 block`} htmlFor="service-price">Preço ({currencySymbol})</label>
-                                    <input id="service-price" type="number" required step="0.01" value={price} onChange={e => setPrice(e.target.value)} className={classes.input} placeholder="0.00" />
+                        {!service && (
+                            <div className={`p-4 border-b ${colors.divider} ${accent.bgDim}`}>
+                                <div className="flex items-center gap-2 mb-3">
+                                    <Sparkles className={`w-4 h-4 ${accent.text}`} />
+                                    <span className={`text-xs font-bold uppercase tracking-wider ${colors.textSecondary} ${font.label}`}>Sugestões Rápidas:</span>
                                 </div>
-                                <div>
-                                    <label className={`${classes.label} mb-1 block`} htmlFor="service-duration">Duração</label>
-                                    <select
-                                        id="service-duration"
-                                        value={duration}
-                                        onChange={e => {
-                                            const next = e.target.value;
-                                            setDuration(next);
-                                            if (next === 'custom' && customHours === '0' && customMinutes === '0') {
-                                                setCustomHours('1');
-                                                setCustomMinutes('15');
-                                            }
-                                        }}
-                                        className={classes.input}
-                                    >
-                                        <option value="15">15 min</option>
-                                        <option value="30">30 min</option>
-                                        <option value="45">45 min</option>
-                                        <option value="60">1 hora</option>
-                                        <option value="custom">⏱️ Personalizado</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            {duration === 'custom' && (
-                                <div className="grid grid-cols-2 gap-4" data-testid="custom-duration-fields">
-                                    <div>
-                                        <label className={`${classes.label} mb-1 block`} htmlFor="service-duration-hours">Horas</label>
-                                        <input
-                                            id="service-duration-hours"
-                                            type="number"
-                                            min={0}
-                                            max={12}
-                                            value={customHours}
-                                            onChange={e => setCustomHours(e.target.value)}
-                                            className={classes.input}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className={`${classes.label} mb-1 block`} htmlFor="service-duration-minutes">Minutos</label>
-                                        <input
-                                            id="service-duration-minutes"
-                                            type="number"
-                                            min={0}
-                                            max={59}
-                                            value={customMinutes}
-                                            onChange={e => setCustomMinutes(e.target.value)}
-                                            className={classes.input}
-                                        />
-                                    </div>
-                                    <p className={`${colors.textSecondary} text-xs col-span-2`}>
-                                        Total: {formatServiceDuration(minutesFromSelectionSafe(duration, customHours, customMinutes))}
-                                    </p>
-                                </div>
-                            )}
-
-                            <div>
-                                <label className={`${classes.label} mb-1 block`} htmlFor="service-description">Descrição</label>
-                                <textarea id="service-description" value={description} onChange={e => setDescription(e.target.value)} rows={3} className={`${classes.input} resize-none`} placeholder="Detalhes do serviço..." />
-                            </div>
-
-                            <div className={`border-t ${colors.divider} pt-4`}>
-                                <label className={`${colors.text} font-bold text-sm mb-2 block flex items-center gap-2`}>🚀 Upsells (Sugestões)</label>
-                                <div className={`max-h-32 overflow-y-auto space-y-2 ${colors.card} p-2 rounded-lg border ${colors.border}`}>
-                                    {allServices.filter(s => s.id !== service?.id).map(s => (
-                                        <div key={s.id} onClick={() => toggleUpsell(s.id)} className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${selectedUpsells.includes(s.id) ? `${accent.bgDim} ${colors.text}` : `hover:bg-[var(--color-card-hover)] ${colors.textSecondary}`}`}>
-                                            <div className={`w-4 h-4 rounded border flex items-center justify-center ${selectedUpsells.includes(s.id) ? `${accent.border} ${accent.bg}` : `${colors.border}`}`}>
-                                                {selectedUpsells.includes(s.id) && <Check className="w-3 h-3 text-[var(--color-bg)]" />}
-                                            </div>
-                                            <span className="text-sm">{s.name}</span>
-                                        </div>
+                                <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                                    {suggestions.map((s, i) => (
+                                        <button
+                                            key={i}
+                                            type="button"
+                                            onClick={() => handleApplySuggestion(s)}
+                                            className={`whitespace-nowrap px-3 py-1.5 text-xs text-[var(--color-text)] transition-all flex items-center gap-2 rounded-xl ${isBeauty
+                                                ? `${colors.card} ${accent.border} hover:bg-theme-accent`
+                                                : `${colors.card} ${colors.border} hover:bg-[var(--color-card-hover)]`
+                                                }`}
+                                        >
+                                            {s.name}
+                                            <span className={`font-bold ${accent.text}`}>{currencySymbol}{s.price}</span>
+                                        </button>
                                     ))}
                                 </div>
                             </div>
-                        </div>
-                    </div>
+                        )}
 
-                    <div className={`flex items-center justify-between pt-4 border-t ${colors.divider}`}>
-                        <div className="flex items-center gap-2">
-                            <div className="flex flex-col gap-1">
-                                <div className="flex items-center gap-2">
-                                    <input type="checkbox" id="active" checked={active} onChange={e => setActive(e.target.checked)} className={`rounded ${colors.inputBg} ${colors.border} ${accent.text} focus:ring-0`} />
-                                    <label htmlFor="active" className={`${colors.text} text-sm cursor-pointer`}>Serviço ativo (visível no agendamento público)</label>
+                        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-4">
+                                    <div
+                                        className={`relative w-full h-48 rounded-lg ${colors.card} border-2 border-dashed ${imagePreview ? 'border-transparent' : colors.border} flex items-center justify-center cursor-pointer hover:border-[var(--color-accent-border)] overflow-hidden group transition-colors`}
+                                        onClick={() => fileInputRef.current?.click()}
+                                    >
+                                        {imagePreview ? (
+                                            <div className="w-full h-full bg-[var(--color-bg)] flex items-center justify-center relative">
+                                                <div className="absolute inset-0 scale-125 blur-xl opacity-50">
+                                                    <img src={imagePreview} alt="" className="w-full h-full object-cover" />
+                                                </div>
+                                                <img src={imagePreview} alt="Preview" className="relative z-10 max-w-full max-h-full object-contain p-2 shadow-2xl" />
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col items-center text-[var(--color-text-muted)]">
+                                                <ImageIcon className="w-8 h-8 mb-2" />
+                                                <span className="text-xs">Adicionar Foto</span>
+                                            </div>
+                                        )}
+                                        <div className="absolute inset-0 bg-[var(--color-bg)]/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                            <Upload className="w-6 h-6 text-[var(--color-text)]" />
+                                        </div>
+                                    </div>
+                                    <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
+
+                                    <div>
+                                        <label className={`${classes.label} mb-1 block`} htmlFor="service-name">Nome do Serviço</label>
+                                        <input id="service-name" type="text" required value={name} onChange={e => setName(e.target.value)} className={classes.input} placeholder={isBeauty ? "Ex: Manicure e Pedicure" : "Ex: Corte Degradê"} />
+                                    </div>
+
+                                    <div>
+                                        <div className="flex items-center justify-between mb-1">
+                                            <label className={`${classes.label} block`} htmlFor="service-category">Categoria</label>
+                                            {!isCreatingCategory && (
+                                                <button type="button" onClick={() => setIsCreatingCategory(true)} className={`${accent.text} hover:bg-[var(--color-accent-dim)] text-xs font-bold flex items-center gap-1 transition-colors`}>
+                                                    <Plus className="w-3 h-3" /> Nova Categoria
+                                                </button>
+                                            )}
+                                        </div>
+                                        {isCreatingCategory ? (
+                                            <div className="space-y-2">
+                                                <div className="flex gap-2">
+                                                    <input type="text" value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} placeholder="Nome da categoria..." className={`flex-1 ${classes.input}`} autoFocus />
+                                                    <button type="button" onClick={handleCreateCategory} disabled={!newCategoryName.trim() || savingCategory} className={`px-3 py-2 font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed ${classes.buttonPrimary}`}>
+                                                        {savingCategory ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
+                                                    </button>
+                                                    <button type="button" onClick={() => { setIsCreatingCategory(false); setNewCategoryName(''); }} className={`px-3 py-2 ${classes.buttonSecondary} rounded-lg`}>
+                                                        <X className="w-5 h-5" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <select id="service-category" value={categoryId} onChange={e => setCategoryId(e.target.value)} className={classes.input}>
+                                                <option value="" disabled>Selecione uma categoria</option>
+                                                {localCategories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+                                            </select>
+                                        )}
+                                    </div>
                                 </div>
-                                {!active && (
-                                    <p className="text-xs text-[var(--color-danger)] max-w-xs">
-                                        Inativo: o serviço some da agenda pública e do booking online, mas continua na lista para você reativar.
-                                    </p>
-                                )}
+
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className={`${classes.label} mb-1 block`} htmlFor="service-price">Preço ({currencySymbol})</label>
+                                            <input id="service-price" type="number" required step="0.01" value={price} onChange={e => setPrice(e.target.value)} className={classes.input} placeholder="0.00" />
+                                        </div>
+                                        <div>
+                                            <label className={`${classes.label} mb-1 block`} htmlFor="service-duration">Duração</label>
+                                            <select
+                                                id="service-duration"
+                                                value={duration}
+                                                onChange={e => {
+                                                    const next = e.target.value;
+                                                    setDuration(next);
+                                                    if (next === 'custom' && customHours === '0' && customMinutes === '0') {
+                                                        setCustomHours('1');
+                                                        setCustomMinutes('15');
+                                                    }
+                                                }}
+                                                className={classes.input}
+                                            >
+                                                <option value="15">15 min</option>
+                                                <option value="30">30 min</option>
+                                                <option value="45">45 min</option>
+                                                <option value="60">1 hora</option>
+                                                <option value="custom">⏱️ Personalizado</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    {duration === 'custom' && (
+                                        <div className="grid grid-cols-2 gap-4" data-testid="custom-duration-fields">
+                                            <div>
+                                                <label className={`${classes.label} mb-1 block`} htmlFor="service-duration-hours">Horas</label>
+                                                <input
+                                                    id="service-duration-hours"
+                                                    type="number"
+                                                    min={0}
+                                                    max={12}
+                                                    value={customHours}
+                                                    onChange={e => setCustomHours(e.target.value)}
+                                                    className={classes.input}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className={`${classes.label} mb-1 block`} htmlFor="service-duration-minutes">Minutos</label>
+                                                <input
+                                                    id="service-duration-minutes"
+                                                    type="number"
+                                                    min={0}
+                                                    max={59}
+                                                    value={customMinutes}
+                                                    onChange={e => setCustomMinutes(e.target.value)}
+                                                    className={classes.input}
+                                                />
+                                            </div>
+                                            <p className={`${colors.textSecondary} text-xs col-span-2`}>
+                                                Total: {formatServiceDuration(minutesFromSelectionSafe(duration, customHours, customMinutes))}
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    <div>
+                                        <label className={`${classes.label} mb-1 block`} htmlFor="service-description">Descrição</label>
+                                        <textarea id="service-description" value={description} onChange={e => setDescription(e.target.value)} rows={3} className={`${classes.input} resize-none`} placeholder="Detalhes do serviço..." />
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <button type="submit" disabled={loading} className={`px-6 py-3 font-bold rounded-xl flex items-center gap-2 disabled:opacity-50 ${classes.buttonPrimary}`}>
-                            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Salvar Serviço'}
-                        </button>
+
+                            <div className={`flex items-center justify-between pt-4 border-t ${colors.divider}`}>
+                                <div className="flex items-center gap-2">
+                                    <div className="flex flex-col gap-1">
+                                        <div className="flex items-center gap-2">
+                                            <input type="checkbox" id="active" checked={active} onChange={e => setActive(e.target.checked)} className={`rounded ${colors.inputBg} ${colors.border} ${accent.text} focus:ring-0`} />
+                                            <label htmlFor="active" className={`${colors.text} text-sm cursor-pointer`}>Serviço ativo (visível no agendamento público)</label>
+                                        </div>
+                                        {!active && (
+                                            <p className="text-xs text-[var(--color-danger)] max-w-xs">
+                                                Inativo: o serviço some da agenda pública e do booking online, mas continua na lista para você reativar.
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                                <button type="submit" disabled={loading} className={`px-6 py-3 font-bold rounded-xl flex items-center gap-2 disabled:opacity-50 ${classes.buttonPrimary}`}>
+                                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Salvar Serviço'}
+                                </button>
+                            </div>
+                        </form>
                     </div>
-                </form>
                 </div>
             </FocusTrap>
         </div>,

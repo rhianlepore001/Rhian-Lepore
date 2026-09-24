@@ -16,6 +16,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useBusinessCopy } from '../../hooks/useBusinessCopy';
 import { useTenantLocale } from '../../hooks/useTenantLocale';
 import { supabase } from '../../lib/supabase';
+import { filterBookableServices } from '@/utils/filterBookableServices';
 
 const BADGE_COLORS: { value: MembershipBadgeColor; label: string; icon: React.ReactNode; gradient: string }[] = [
     { value: 'gold', label: 'Ouro', icon: <Crown className="w-4 h-4" />, gradient: 'from-yellow-500/30 to-amber-600/10' },
@@ -64,10 +65,14 @@ export const MembershipPlansSettings: React.FC = () => {
         (async () => {
             const { data } = await supabase
                 .from('services')
-                .select('id, name, price, duration_minutes')
+                .select('id, name, price, duration_minutes, active')
                 .eq('user_id', companyId)
                 .order('name');
-            setServices((data ?? []) as Array<{ id: string; name: string; price: number; duration_minutes: number }>);
+            setServices(
+                filterBookableServices(
+                    (data ?? []) as Array<{ id: string; name: string; price: number; duration_minutes: number; active?: boolean }>,
+                ),
+            );
         })();
     }, [companyId]);
     const [showForm, setShowForm] = useState(false);

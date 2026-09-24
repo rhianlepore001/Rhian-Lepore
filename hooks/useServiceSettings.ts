@@ -6,7 +6,6 @@ import {
   deleteServiceCategory,
   fetchServiceCategories,
   fetchServices,
-  fetchServiceUpsellIds,
   saveService,
   setServiceActive,
   uploadServiceImage,
@@ -83,13 +82,6 @@ export function useDeleteService() {
   });
 }
 
-export function useServiceUpsellIds(serviceId: string | undefined) {
-  return useQuery({
-    queryKey: ['serviceSettings', 'upsells', serviceId],
-    queryFn: () => fetchServiceUpsellIds(serviceId!),
-    enabled: !!serviceId,
-  });
-}
 
 export function useSaveService() {
   const queryClient = useQueryClient();

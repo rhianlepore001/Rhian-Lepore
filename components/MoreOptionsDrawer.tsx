@@ -14,6 +14,7 @@ import {
   DollarSign,
   ChevronRight,
   Crown,
+  Scissors,
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -121,6 +122,7 @@ export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose })
     { name: 'Agenda', icon: Clock, path: '/agenda' },
     { name: 'Clientes', icon: Users, path: '/clientes', ownerOnly: true },
     { name: 'Equipe', icon: UserCog, path: '/configuracoes/equipe', ownerOnly: true },
+    { name: 'Serviços', icon: Scissors, path: '/configuracoes/servicos', ownerOnly: true },
     { name: 'Financeiro', icon: DollarSign, path: '/financeiro', ownerOnly: true },
     { name: 'Produtos', icon: Package, path: '/produtos', ownerOnly: true },
     { name: 'Fila Digital', icon: Users, path: '/fila', ownerOnly: false },

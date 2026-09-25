@@ -6,6 +6,8 @@ import { supabase } from '../lib/supabase';
 import { usePublicClient } from '../contexts/PublicClientContext';
 import { useBusinessProfileBySlug, useBusinessSettings } from '../hooks/usePublicBooking';
 import { ClientBookingCard, ClientBooking } from '../components/ClientBookingCard';
+import { fetchClientBookingCancellations } from '../services/publicBooking';
+import { splitClientBookings, withCancellationInfo } from '../utils/clientBookings';
 import { PhoneInput } from '../components/PhoneInput';
 import {
     Calendar, History, User, LogOut, ArrowRight,
@@ -151,12 +153,16 @@ export const ClientArea: React.FC = () => {
         if (!sessionClient || !business) return;
         setBookingsLoading(true);
         try {
-            const { data, error } = await supabase.rpc('get_client_bookings_history', {
-                p_phone: sessionClient.phone,
-                p_business_id: business.id,
-            });
-            if (error) throw error;
-            setBookings((data as ClientBooking[]) ?? []);
+            const [historyRes, cancelledByBusiness] = await Promise.all([
+                supabase.rpc('get_client_bookings_history', {
+                    p_phone: sessionClient.phone,
+                    p_business_id: business.id,
+                }),
+                // Quem cancelou (item 5b). Falha aqui não pode esconder os agendamentos.
+                fetchClientBookingCancellations(sessionClient.phone, business.id).catch(() => ({})),
+            ]);
+            if (historyRes.error) throw historyRes.error;
+            setBookings(withCancellationInfo((historyRes.data as ClientBooking[]) ?? [], cancelledByBusiness));
         } catch {
             setBookings([]);
         } finally {
@@ -288,14 +294,13 @@ export const ClientArea: React.FC = () => {
         setEditingProfile(true);
     };
 
-    const upcomingBookings = bookings.filter(b =>
-        ['pending', 'confirmed'].includes(b.status) &&
-        new Date(b.appointment_time) >= new Date()
-    );
-    const historyBookings = bookings.filter(b =>
-        b.status === 'completed' ||
-        (b.status !== 'cancelled' && new Date(b.appointment_time) < new Date())
-    );
+    // Próximos = ativos futuros + cancelados futuros (item 5b: o cliente vê o
+    // cancelamento e pode reagendar). Contadores usam só os ativos.
+    const {
+        upcoming: upcomingBookings,
+        activeUpcoming: activeUpcomingBookings,
+        history: historyBookings,
+    } = splitClientBookings(bookings);
     const historySlice = historyBookings.slice(0, historyPage * ITEMS_PER_PAGE);
 
     if (businessLoading || clientLoading) {
@@ -504,8 +509,8 @@ export const ClientArea: React.FC = () => {
                             <p className="text-xs mt-1 text-theme-textSecondary leading-snug">
                                 {activeTab === 'queue'
                                     ? 'Acompanhe sua senha por aqui.'
-                                    : upcomingBookings.length > 0
-                                        ? `Você tem ${upcomingBookings.length} agendamento${upcomingBookings.length > 1 ? 's' : ''} próximo${upcomingBookings.length > 1 ? 's' : ''}`
+                                    : activeUpcomingBookings.length > 0
+                                        ? `Você tem ${activeUpcomingBookings.length} agendamento${activeUpcomingBookings.length > 1 ? 's' : ''} próximo${activeUpcomingBookings.length > 1 ? 's' : ''}`
                                         : 'Nenhum agendamento futuro'}
                             </p>
                             {membership && membership.effective_status !== 'cancelled' && (
@@ -566,9 +571,9 @@ export const ClientArea: React.FC = () => {
                         >
                             {tab.icon}
                             <span className="truncate">{tab.label}</span>
-                            {tab.id === 'upcoming' && upcomingBookings.length > 0 && (
+                            {tab.id === 'upcoming' && activeUpcomingBookings.length > 0 && (
                                 <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-xs font-black ${isBeauty ? 'bg-theme-surface text-theme-text' : 'bg-theme-accent text-[var(--color-on-accent)]'}`}>
-                                    {upcomingBookings.length}
+                                    {activeUpcomingBookings.length}
                                 </span>
                             )}
                             {tab.id === 'club' && membership && (membership.effective_status === 'pending' || membership.effective_status === 'overdue') && (

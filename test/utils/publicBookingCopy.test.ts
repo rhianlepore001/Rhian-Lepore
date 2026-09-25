@@ -34,3 +34,14 @@ describe('publicBookingCopy', () => {
     expect(text.toLowerCase()).not.toContain('nos vemos em breve');
   });
 });
+
+describe('publicBookingCopy — cancelado pelo estabelecimento (item 5b)', () => {
+  it('cancelled não fica como "solicitação enviada" nem "confirmado"', () => {
+    const barber = getPublicBookingSuccessCopy({ isBeauty: false, status: 'cancelled' });
+    const beauty = getPublicBookingSuccessCopy({ isBeauty: true, status: 'cancelled', isEdit: true });
+    expect(barber.title).toBe('AGENDAMENTO CANCELADO');
+    expect(beauty.title).toBe('Agendamento cancelado');
+    expect(beauty.subtitle).toBe('O estabelecimento cancelou este agendamento. Escolha um novo horário.');
+    expect(barber.stepperLastLabel).toBe('Cancelado');
+  });
+});

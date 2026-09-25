@@ -52,10 +52,12 @@ BEGIN
   DELETE FROM public.appointment_product_lines WHERE company_id::text = ANY (demo_ids);
   DELETE FROM public.product_sales WHERE company_id::text = ANY (demo_ids);
   DELETE FROM public.products WHERE company_id::text = ANY (demo_ids);
-  DELETE FROM public.public_bookings WHERE business_id = ANY (demo_ids);
   DELETE FROM public.public_clients WHERE business_id = ANY (demo_ids);
   DELETE FROM public.finance_records WHERE user_id = ANY (demo_ids);
   DELETE FROM public.appointments WHERE user_id = ANY (demo_ids);
+  -- depois de appointments: appointments.public_booking_id -> public_bookings (FK);
+  -- accept_public_booking grava o vínculo desde 20260925170000.
+  DELETE FROM public.public_bookings WHERE business_id = ANY (demo_ids);
   DELETE FROM public.clients WHERE user_id = ANY (demo_ids);
   DELETE FROM public.services WHERE user_id = ANY (demo_ids);
   DELETE FROM public.service_categories WHERE user_id = ANY (demo_ids);

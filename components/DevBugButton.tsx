@@ -63,7 +63,7 @@ export const DevBugButton: React.FC = () => {
           aria-label="Reporte do admin (marcar e comentar) — Ctrl+Shift+B"
           title="Reporte do admin (Ctrl+Shift+B)"
           className={[
-            'fixed bottom-20 right-4 md:bottom-6 md:right-6 z-[var(--z-modal)]',
+            'fixed bottom-[calc(5rem+var(--safe-bottom))] right-4 md:bottom-6 md:right-6 z-[var(--z-modal)]',
             'inline-flex items-center justify-center w-12 h-12 rounded-full',
             'bg-[var(--color-danger)] text-[var(--color-text)] shadow-lg shadow-[var(--color-danger)]/30',
             'hover:brightness-110 active:scale-95 transition-all duration-150',

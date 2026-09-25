@@ -169,7 +169,7 @@ function OnboardingToast({
   const nextStepName = data.nextStepId ? STEP_LABELS[data.nextStepId as WizardStepId] : null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-[9999] bg-surface bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl shadow-2xl p-5 min-w-[320px] max-w-sm animate-in slide-in-from-bottom-6 fade-in duration-300 ease-out">
+    <div className="fixed bottom-[calc(1.5rem+var(--safe-bottom))] right-6 z-[9999] bg-surface bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl shadow-2xl p-5 min-w-[320px] max-w-sm animate-in slide-in-from-bottom-6 fade-in duration-300 ease-out">
       <div className="flex items-start gap-4">
         <div className="bg-[var(--color-success-bg)] p-2 rounded-full mt-1">
           <Check className="w-5 h-5 text-[var(--color-success)]" strokeWidth={3} />

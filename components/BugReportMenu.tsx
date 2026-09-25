@@ -63,7 +63,7 @@ export const BugReportMenu: React.FC<BugReportMenuProps> = ({
         role="menu"
         aria-label="Ajuda e reportar problema"
         className={[
-          'fixed right-3 top-16 z-50 w-[min(20rem,calc(100vw-1.5rem))]',
+          'fixed right-3 top-[calc(4rem+var(--safe-top))] z-50 w-[min(20rem,calc(100vw-1.5rem))]',
           'md:right-6 md:top-24',
           classes.card,
           'p-2',

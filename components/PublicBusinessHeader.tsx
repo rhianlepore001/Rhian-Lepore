@@ -96,7 +96,7 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
                 </div>
 
                 {/* Badge de segmento + toggle dark/light */}
-                <div className="absolute top-5 left-5 z-20 flex items-center gap-2">
+                <div className="absolute top-[calc(1.25rem+var(--safe-top))] left-5 z-20 flex items-center gap-2">
                     <div className={`flex items-center gap-2 px-4 py-1.5 backdrop-blur-xl rounded-full border text-xs font-bold uppercase tracking-[0.18em] ${colors.card} ${colors.border} ${colors.textSecondary}`}>
                         <SegmentIcon className="w-3 h-3" />
                         {segmentLabel}
@@ -123,7 +123,7 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
 
                 {/* Sessão do Cliente (Canto Superior Direito) */}
                 {clientSession && businessSlug && (
-                    <div className="fixed top-5 right-5 z-50">
+                    <div className="fixed top-[calc(1.25rem+var(--safe-top))] right-5 z-50">
                         <a href={`/#/minha-area/${businessSlug}`}
                             className={`group flex items-center gap-3 px-4 py-2 backdrop-blur-xl rounded-full border transition-all shadow-lg ${colors.card} ${colors.border} cursor-pointer hover:brightness-110`}>
                             <div className="flex flex-col items-end">

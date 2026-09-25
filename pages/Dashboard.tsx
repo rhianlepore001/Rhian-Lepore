@@ -290,7 +290,7 @@ export const Dashboard: React.FC = () => {
 
       {redirectToast && (
         <div
-          className={`fixed bottom-24 left-1/2 z-[90] flex -translate-x-1/2 items-center gap-3 rounded-xl border px-4 py-3 shadow-lite-glass ${status.dangerBg.replace('/10', '/90').replace('/20', '/90')}`}
+          className={`fixed bottom-[calc(6rem+var(--safe-bottom))] left-1/2 z-[90] flex -translate-x-1/2 items-center gap-3 rounded-xl border px-4 py-3 shadow-lite-glass ${status.dangerBg.replace('/10', '/90').replace('/20', '/90')}`}
           role="status"
         >
           <span className="text-sm font-medium">{redirectToast}</span>

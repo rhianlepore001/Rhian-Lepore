@@ -36,7 +36,7 @@ export const QuickActionsModal: React.FC<QuickActionsModalProps> = ({ onClose })
             />
             <FocusTrap active={true}>
                 <div
-                    className={`relative w-full max-w-sm mx-4 mb-24 sm:mb-0 ${radius.modal} ${shadow.modal} overflow-hidden animate-in slide-in-from-bottom-10 duration-300 bg-[var(--color-modal-bg)] border border-[var(--color-modal-border)] backdrop-blur-2xl`}
+                    className={`relative w-full max-w-sm mx-4 mb-[calc(6rem+var(--safe-bottom))] sm:mb-0 ${radius.modal} ${shadow.modal} overflow-hidden animate-in slide-in-from-bottom-10 duration-300 bg-[var(--color-modal-bg)] border border-[var(--color-modal-border)] backdrop-blur-2xl`}
                     role="dialog"
                     aria-modal="true"
                     aria-labelledby="quick-actions-title"

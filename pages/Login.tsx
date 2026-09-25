@@ -82,7 +82,7 @@ export const Login: React.FC = () => {
     // ─── GATEWAY ─────────────────────────────────────────────────────────────
     if (showGateway) {
         return (
-            <div className="min-h-screen bg-[var(--color-bg)] flex flex-col items-center justify-center p-6 md:p-12">
+            <div className="min-h-screen bg-[var(--color-bg)] flex flex-col items-center justify-center p-6 pt-[calc(1.5rem+var(--safe-top))] pb-[calc(1.5rem+var(--safe-bottom))] md:p-12">
 
                 <div className="mb-10 md:mb-14 flex items-center gap-3">
                     <AgendiXLogo size={32} isBeauty={false} showText={true} />
@@ -197,7 +197,7 @@ export const Login: React.FC = () => {
 
     // ─── LOGIN SCREEN ─────────────────────────────────────────────────────────
     return (
-        <div className={`min-h-screen flex items-center justify-center p-4 relative overflow-hidden
+        <div className={`min-h-screen flex items-center justify-center p-4 pt-[calc(1rem+var(--safe-top))] pb-[calc(1rem+var(--safe-bottom))] relative overflow-hidden
             bg-theme-bg
         `}>
             {isBeauty
@@ -208,7 +208,7 @@ export const Login: React.FC = () => {
             {/* Voltar */}
             <button
                 onClick={() => setShowGateway(true)}
-                className="absolute top-6 left-6 z-20 font-mono text-xs uppercase tracking-widest text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors flex items-center gap-1.5"
+                className="absolute top-[calc(1.5rem+var(--safe-top))] left-6 z-20 font-mono text-xs uppercase tracking-widest text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors flex items-center gap-1.5"
             >
                 ← Voltar
             </button>
@@ -353,7 +353,7 @@ export const Login: React.FC = () => {
 
             </div>
 
-            <div className="absolute bottom-5 font-mono text-xs text-[var(--color-text)]/15 uppercase tracking-[0.2em]">
+            <div className="absolute bottom-[calc(1.25rem+var(--safe-bottom))] font-mono text-xs text-[var(--color-text)]/15 uppercase tracking-[0.2em]">
 AgendiX
             </div>
         </div>

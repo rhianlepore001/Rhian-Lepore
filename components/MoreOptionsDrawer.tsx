@@ -158,7 +158,7 @@ export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose })
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className={`relative h-full w-[85vw] max-w-[320px] shadow-2xl flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${colors.bg} border-l ${colors.divider}`}
+        className={`relative h-full w-[85vw] max-w-[320px] pt-[var(--safe-top)] pb-[var(--safe-bottom)] shadow-2xl flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${colors.bg} border-l ${colors.divider}`}
         style={{
           transform: isVisible ? 'translateX(0)' : 'translateX(100%)',
           willChange: 'transform',

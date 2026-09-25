@@ -768,7 +768,15 @@
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    /* Mobile Safe Areas */
+    /* Mobile Safe Areas
+       viewport-fit=cover + apple-mobile-web-app-status-bar-style=black-translucent
+       fazem o app instalado (PWA iOS) desenhar sob a status bar e o home indicator.
+       Todo chrome fixo usa estas variáveis; valem 0 em Android/desktop/Safari sem notch. */
+    :root {
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
     .pb-safe {
       padding-bottom: env(safe-area-inset-bottom);
     }

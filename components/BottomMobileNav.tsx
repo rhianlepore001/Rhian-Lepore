@@ -30,12 +30,12 @@ export const BottomMobileNav: React.FC = () => {
         <>
             {/* Scrim sólido sob a nav — evita texto da página “vazar” atrás do chrome */}
             <div
-                className="md:hidden fixed bottom-0 left-0 right-0 z-30 h-16 pointer-events-none bg-gradient-to-t from-[var(--color-bg)] from-70% via-[var(--color-bg)]/80 to-transparent"
+                className="md:hidden fixed bottom-0 left-0 right-0 z-30 h-[calc(4rem+var(--safe-bottom))] pointer-events-none bg-gradient-to-t from-[var(--color-bg)] from-70% via-[var(--color-bg)]/80 to-transparent"
                 aria-hidden="true"
             />
             <nav
                 aria-label="Navegação principal"
-                className={`md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-end justify-between gap-0.5 px-1.5 pb-[max(0.35rem,env(safe-area-inset-bottom))] pt-1.5 h-[64px] transition-all duration-300 rounded-none rounded-t-2xl border-x-0 border-b-0 border-t ${colors.divider}
+                className={`md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-end justify-between gap-0.5 px-1.5 pb-[calc(0.35rem+var(--safe-bottom))] pt-1.5 h-[calc(64px+var(--safe-bottom))] transition-all duration-300 rounded-none rounded-t-2xl border-x-0 border-b-0 border-t ${colors.divider}
                 bg-[var(--color-bg)]`}
             >
                 {/* Owner: Agenda, Clientes, FAB, Financeiro, Mais.

@@ -82,7 +82,7 @@ export const SaveFooter: React.FC<SaveFooterProps> = ({
             </div>
 
             {/* Mobile Sticky Footer */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-[var(--color-card)]/95 backdrop-blur border-t border-[var(--color-border)] z-50">
+            <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 pb-[calc(1rem+var(--safe-bottom))] bg-[var(--color-card)]/95 backdrop-blur border-t border-[var(--color-border)] z-50">
                 <button
                     onClick={onSave}
                     disabled={disabled}

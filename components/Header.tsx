@@ -181,7 +181,7 @@ export const Header: React.FC = () => {
               </button>
 
               {showNotifications && (
-                <div className={`fixed inset-x-4 md:inset-auto md:absolute md:right-0 top-20 md:top-full mt-2 md:w-80 z-50 animate-in fade-in slide-in-from-top-2 shadow-promax-glass ring-1 ring-[var(--color-border)]
+                <div className={`fixed inset-x-4 md:inset-auto md:absolute md:right-0 top-[calc(5rem+var(--safe-top))] md:top-full mt-2 md:w-80 z-50 animate-in fade-in slide-in-from-top-2 shadow-promax-glass ring-1 ring-[var(--color-border)]
                 ${colors.card} border ${colors.border} rounded-xl
               `}>
                   <div className={`p-3 border-b ${colors.divider} font-bold ${colors.text} uppercase text-xs tracking-wider`}>Avisos Importantes</div>

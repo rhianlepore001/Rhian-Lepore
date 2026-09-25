@@ -31,7 +31,7 @@ DROP TRIGGER IF EXISTS enforce_staff_appointment_edit_scope ON public.appointmen
 
 DROP FUNCTION IF EXISTS public.enforce_staff_appointment_edit_scope();
 
-DROP FUNCTION IF EXISTS public.staff_can_modify_appointment(text, uuid, uuid);
+DROP FUNCTION IF EXISTS public.staff_can_modify_appointment(text, uuid, uuid, text);
 
 ALTER TABLE public.business_settings
   DROP CONSTRAINT IF EXISTS business_settings_staff_appointment_edit_scope_check;

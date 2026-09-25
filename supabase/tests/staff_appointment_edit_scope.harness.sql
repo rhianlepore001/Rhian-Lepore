@@ -18,6 +18,9 @@ CREATE TABLE public.profiles (id text PRIMARY KEY, role text, company_id text);
 CREATE TABLE public.team_members (
   id uuid PRIMARY KEY, user_id text, name text, staff_user_id uuid, deleted_at timestamptz
 );
+-- clients / FKs de prod relevantes: appointments.client_id -> clients ON DELETE CASCADE;
+-- appointments.received_by/completed_by -> team_members ON DELETE SET NULL.
+CREATE TABLE public.clients (id uuid PRIMARY KEY, user_id text, name text);
 CREATE TABLE public.business_settings (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id text UNIQUE,
   cancellation_policy text DEFAULT 'flexible', timezone text
@@ -25,12 +28,15 @@ CREATE TABLE public.business_settings (
 CREATE TABLE public.appointments (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id text,
-  client_id uuid NOT NULL DEFAULT gen_random_uuid(),
+  client_id uuid NOT NULL DEFAULT '30000000-0000-0000-0000-000000000001'
+    REFERENCES public.clients(id) ON DELETE CASCADE,
   service text NOT NULL DEFAULT 'Corte',
   appointment_time timestamptz NOT NULL DEFAULT now() + interval '1 day',
   status text NOT NULL DEFAULT 'Pending',
   price numeric,
-  professional_id uuid,
+  professional_id uuid REFERENCES public.team_members(id),
+  received_by uuid REFERENCES public.team_members(id) ON DELETE SET NULL,
+  completed_by uuid REFERENCES public.team_members(id) ON DELETE SET NULL,
   notes text,
   payment_method text,
   edited_at timestamptz,
@@ -72,8 +78,15 @@ ALTER TABLE public.appointments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.business_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.team_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.clients ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "profiles self" ON public.profiles FOR SELECT USING (id = auth.uid()::text);
 CREATE POLICY "Tenant can view team members" ON public.team_members FOR SELECT TO authenticated USING (user_id = get_auth_company_id());
+-- Só no harness (NÃO é policy de prod): deixa o colaborador disparar DELETEs que
+-- cascateiam em appointments, para provar que a trigger não bloqueia FK em cascata.
+CREATE POLICY "harness: company manage clients" ON public.clients FOR ALL TO authenticated
+  USING (user_id = get_auth_company_id()) WITH CHECK (user_id = get_auth_company_id());
+CREATE POLICY "harness: company delete team members" ON public.team_members FOR DELETE TO authenticated
+  USING (user_id = get_auth_company_id());
 
 -- appointments: policies de prod
 CREATE POLICY "Appointments: company isolation" ON public.appointments FOR ALL TO authenticated
@@ -118,6 +131,10 @@ INSERT INTO public.profiles VALUES
 INSERT INTO public.team_members VALUES
   ('10000000-0000-0000-0000-0000000000a0', '00000000-0000-0000-0000-0000000000a0', 'Dono A', NULL, NULL),
   ('10000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-0000000000a0', 'Staff 1', '00000000-0000-0000-0000-0000000000a1', NULL),
-  ('10000000-0000-0000-0000-0000000000a2', '00000000-0000-0000-0000-0000000000a0', 'Staff 2', '00000000-0000-0000-0000-0000000000a2', NULL);
+  ('10000000-0000-0000-0000-0000000000a2', '00000000-0000-0000-0000-0000000000a0', 'Staff 2', '00000000-0000-0000-0000-0000000000a2', NULL),
+  ('10000000-0000-0000-0000-0000000000a3', '00000000-0000-0000-0000-0000000000a0', 'Staff 3 (sem login)', NULL, NULL);
+INSERT INTO public.clients VALUES
+  ('30000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-0000000000a0', 'Cliente 1'),
+  ('30000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-0000000000a0', 'Cliente 2');
 INSERT INTO public.business_settings (user_id) VALUES
   ('00000000-0000-0000-0000-0000000000a0'), ('00000000-0000-0000-0000-0000000000b0');

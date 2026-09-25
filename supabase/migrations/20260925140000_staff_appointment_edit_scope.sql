@@ -16,9 +16,12 @@
 --        none = colaborador não edita/reagenda/cancela (= comportamento atual da UI)
 --        own  = só agendamentos em que ele é o profissional
 --        all  = qualquer agendamento da empresa
---   2. public.staff_can_modify_appointment(company, old_pro, new_pro) — SECURITY
---      DEFINER, STABLE: aplica a regra para o usuário logado. Não-staff (dono)
---      sempre true.
+--   2. public.staff_can_modify_appointment(company, old_pro, new_pro, old_status)
+--      — SECURITY DEFINER, STABLE: aplica a regra para o usuário logado.
+--      Não-staff (dono) sempre true. Para colaborador, em QUALQUER nível, só
+--      agendamentos em aberto (status atual Confirmed/Pending) podem ser
+--      alterados/excluídos: finalizados (Completed/NoShow/Cancelled) ficam
+--      travados (evita, p.ex., mudar price de um atendimento já cobrado).
 --   3. Trigger BEFORE UPDATE OR DELETE em appointments
 --      (enforce_staff_appointment_edit_scope, SECURITY INVOKER):
 --        * só atua em escrita direta pela API (current_user = 'authenticated');
@@ -29,8 +32,12 @@
 --          público e área do cliente não mudam;
 --        * "Faltou" (status Confirmed/Pending -> NoShow sem mudar mais nada)
 --          continua liberado para toda a equipe;
---        * demais UPDATE/DELETE de colaborador passam pela permissão; bloqueio
---          = erro 42501 'staff_appointment_edit_forbidden'.
+--        * demais UPDATE/DELETE de colaborador passam pela permissão (nível +
+--          status atual em aberto); bloqueio = erro 42501
+--          'staff_appointment_edit_forbidden'.
+--        * FK em cascata (clients ON DELETE CASCADE, team_members ON DELETE SET
+--          NULL) roda como dono da tabela -> não é bloqueada; service_role e
+--          anon também não passam pela regra.
 --   INSERT não é afetado (criar agendamento segue liberado para a equipe).
 --
 -- COMPATIBILIDADE
@@ -66,7 +73,8 @@ COMMENT ON COLUMN public.business_settings.staff_appointment_edit_scope IS
 CREATE OR REPLACE FUNCTION public.staff_can_modify_appointment(
   p_company_id text,
   p_old_professional_id uuid,
-  p_new_professional_id uuid
+  p_new_professional_id uuid,
+  p_old_status text
 )
 RETURNS boolean
 LANGUAGE plpgsql
@@ -95,6 +103,12 @@ BEGIN
 
   IF v_company IS DISTINCT FROM p_company_id THEN
     RETURN true; -- fora da empresa do colaborador: a RLS já decide
+  END IF;
+
+  -- Colaborador nunca altera/exclui agendamento finalizado (Completed/NoShow/
+  -- Cancelled), em nenhum nível. Dono segue livre (retornou true acima).
+  IF p_old_status IS NULL OR p_old_status NOT IN ('Confirmed', 'Pending') THEN
+    RETURN false;
   END IF;
 
   SELECT bs.staff_appointment_edit_scope
@@ -132,9 +146,9 @@ BEGIN
 END;
 $function$;
 
-REVOKE ALL ON FUNCTION public.staff_can_modify_appointment(text, uuid, uuid) FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.staff_can_modify_appointment(text, uuid, uuid) FROM anon;
-GRANT EXECUTE ON FUNCTION public.staff_can_modify_appointment(text, uuid, uuid) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.staff_can_modify_appointment(text, uuid, uuid, text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.staff_can_modify_appointment(text, uuid, uuid, text) FROM anon;
+GRANT EXECUTE ON FUNCTION public.staff_can_modify_appointment(text, uuid, uuid, text) TO authenticated, service_role;
 
 -- 3. Trigger (SECURITY INVOKER: current_user distingue API direta de RPC) ------
 CREATE OR REPLACE FUNCTION public.enforce_staff_appointment_edit_scope()
@@ -151,7 +165,7 @@ BEGIN
   END IF;
 
   IF TG_OP = 'DELETE' THEN
-    IF NOT public.staff_can_modify_appointment(OLD.user_id, OLD.professional_id, OLD.professional_id) THEN
+    IF NOT public.staff_can_modify_appointment(OLD.user_id, OLD.professional_id, OLD.professional_id, OLD.status) THEN
       RAISE EXCEPTION 'staff_appointment_edit_forbidden'
         USING ERRCODE = '42501',
               DETAIL = 'A permissão da equipe definida pelo dono não permite excluir este agendamento.';
@@ -166,7 +180,7 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  IF NOT public.staff_can_modify_appointment(OLD.user_id, OLD.professional_id, NEW.professional_id) THEN
+  IF NOT public.staff_can_modify_appointment(OLD.user_id, OLD.professional_id, NEW.professional_id, OLD.status) THEN
     RAISE EXCEPTION 'staff_appointment_edit_forbidden'
       USING ERRCODE = '42501',
             DETAIL = 'A permissão da equipe definida pelo dono não permite alterar este agendamento.';

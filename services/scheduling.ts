@@ -329,14 +329,20 @@ export async function markAppointmentComplete(input: MarkAppointmentCompleteInpu
   if (error) throw error;
 }
 
+/** Erro lançado quando o UPDATE de cancelamento não alterou nenhuma linha. */
+export const APPOINTMENT_CANCEL_NO_ROWS = 'appointment_cancel_no_rows';
+
 export async function cancelAppointment(input: CancelAppointmentInput): Promise<void> {
   const parsed = cancelAppointmentInputSchema.parse(input);
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('appointments')
     .update({ status: 'Cancelled' })
     .eq('id', parsed.appointmentId)
-    .eq('user_id', parsed.companyId);
+    .eq('user_id', parsed.companyId)
+    .select('id');
   if (error) throw error;
+  // 0 linhas = nada mudou (id/empresa não casam ou a RLS filtrou): não é sucesso.
+  if (!data || data.length === 0) throw new Error(APPOINTMENT_CANCEL_NO_ROWS);
 }
 
 export async function assignAppointmentProfessional(input: AssignProfessionalInput): Promise<void> {

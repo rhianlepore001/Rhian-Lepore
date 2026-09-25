@@ -30,7 +30,7 @@ import { mapError, formatUserFacingError } from '../utils/mapError';
 import { filterBookableServices } from '../utils/filterBookableServices';
 import { confirmPublicBooking, createAcceptedAppointmentFromBooking, rejectPublicBooking, acceptCompanyPublicBooking } from '../services/publicBooking';
 import { copyBookingProductsToAppointment } from '../services/catalog';
-import { deleteAppointmentWithFinance, fetchPendingPublicBookings } from '../services/scheduling';
+import { cancelAppointment, deleteAppointmentWithFinance, fetchPendingPublicBookings } from '../services/scheduling';
 
 import { buildWhatsAppLink, formatCurrency, formatPhone } from '../utils/formatters';
 import { formatDateForInput, formatLocalDateString, combineDateAndTime } from '../utils/date';
@@ -786,12 +786,8 @@ export const Agenda: React.FC = () => {
             onConfirm: async () => {
                 setConfirmDialog(null);
                 try {
-                    const { error } = await supabase
-                        .from('appointments')
-                        .update({ status: 'Cancelled' })
-                        .eq('id', appointmentId)
-                        .eq('user_id', effectiveUserId);
-                    if (error) throw error;
+                    // Lança erro também se 0 linhas mudarem (sem toast de sucesso falso).
+                    await cancelAppointment({ appointmentId, companyId: effectiveUserId ?? '' });
                     setShowingDetailsAppointment(null);
                     showToast('Agendamento cancelado e movido para o histórico.', 'success');
                     if (isOverdue) {

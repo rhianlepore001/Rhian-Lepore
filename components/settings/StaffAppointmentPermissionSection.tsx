@@ -99,7 +99,7 @@ export const StaffAppointmentPermissionSection: React.FC = () => {
         </div>
 
         <p className={`text-xs ${colors.textMuted}`}>
-          {'Criar agendamentos, "Confirmar e cobrar" e marcar "Faltou" continuam liberados para toda a equipe.'}
+          {'Criar agendamentos, "Confirmar e cobrar" e marcar "Faltou" continuam liberados para toda a equipe. Atendimentos já finalizados (concluídos, faltas e cancelados) só o dono altera.'}
         </p>
         {columnMissing && (
           <p className={`text-xs ${colors.textMuted}`} data-testid="staff-edit-scope-pending">

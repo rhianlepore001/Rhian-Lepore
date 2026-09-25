@@ -5,6 +5,17 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Star, Calendar, Clock, MapPin, Instagram, Scissors, Sparkles, User, ArrowRight, Check, ChevronLeft, ChevronRight, Phone, Users, Loader2, X, AlertTriangle, Send, MessageSquare, LayoutDashboard, Package, Minus, Plus } from 'lucide-react';
 import { PhoneInput } from '../components/PhoneInput';
 import { CalendarPicker } from '../components/CalendarPicker';
+import {
+    addDaysToDateString,
+    dateStringToLocalDate,
+    formatTimeInTimeZone,
+    getDateStringInTimeZone,
+    getTodayInTimeZone,
+    isZonedSlotInPast,
+    resolveBusinessTimezone,
+    zonedDateTimeToIso,
+} from '../utils/businessTimezone';
+import { parseDate } from '../utils/date';
 import { TimeGrid } from '../components/TimeGrid';
 import { ClientAuthModal } from '../components/ClientAuthModal';
 import { usePublicClient } from '../contexts/PublicClientContext';
@@ -90,7 +101,17 @@ export const PublicBooking: React.FC = () => {
     const { data: businessProfile, isLoading: loadingProfile, isError: profileError } = useBusinessProfileBySlug(slug ?? '');
     const business = useMemo(() => businessProfile as BusinessProfile | null ?? null, [businessProfile]);
     const businessId = business?.id ?? null;
-    const { data: businessSettings } = useBusinessSettings(businessId);
+    const { data: businessSettings, isFetched: businessSettingsFetched } = useBusinessSettings(businessId);
+    // Fuso fixo do negócio (nunca o do navegador). Antes da migration
+    // business_settings.timezone, a chave não existe e caímos na região.
+    const businessTimezone = useMemo(
+        () => resolveBusinessTimezone({
+            timezone: (businessSettings as { timezone?: string | null } | null | undefined)?.timezone,
+            region: business?.region,
+        }),
+        [businessSettings, business?.region],
+    );
+    const businessToday = getTodayInTimeZone(businessTimezone);
     const { data: servicesData = [] } = usePublicServices(businessId);
     const { data: categoriesData = [] } = usePublicCategories(businessId);
     const { data: professionalsData = [] } = usePublicProfessionals(businessId);
@@ -190,7 +211,8 @@ export const PublicBooking: React.FC = () => {
 
     // Carrega agendamento diretamente pela tabela quando há ?edit= na URL e o cliente está logado
     useEffect(() => {
-        if (!editParam || !businessId) return;
+        // Espera o fuso do negócio para converter o horário do agendamento.
+        if (!editParam || !businessId || !businessSettingsFetched) return;
         const phone = client?.phone || customerPhone;
         if (!phone) return;
 
@@ -210,7 +232,7 @@ export const PublicBooking: React.FC = () => {
         };
 
         fetchEdit();
-    }, [editParam, businessId, client?.phone]);
+    }, [editParam, businessId, client?.phone, businessSettingsFetched]);
 
     // Detecta clientes existentes pelo telefone e busca agendamento ativo (fluxo normal, sem edição)
     useEffect(() => {
@@ -305,22 +327,22 @@ export const PublicBooking: React.FC = () => {
 
                 try {
                     const slots = await fetchAvailableSlots(businessId, dateStr, selectedProfessional === 'any' ? null : selectedProfessional, duration);
-                    setAvailableSlots(slots);
+                    // Rótulos "HH:MM" são hora local do negócio; esconde os que já
+                    // passaram no fuso do negócio (independe do navegador).
+                    setAvailableSlots(slots.filter((slot) => !isZonedSlotInPast(dateStr, slot, businessTimezone)));
                 } catch {
                     setAvailableSlots([]);
                 }
             }
         };
         fetchSlots();
-    }, [selectedDate, businessId, selectedProfessional]);
+    }, [selectedDate, businessId, selectedProfessional, businessTimezone]);
 
     useEffect(() => {
         const fetchFullDatesAsync = async () => {
             if (businessId) {
-                const now = new Date();
-                const startDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-                const end = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
-                const endDate = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`;
+                const startDate = getTodayInTimeZone(businessTimezone);
+                const endDate = addDaysToDateString(startDate, 60);
 
                 try {
                     const dates = await fetchFullDates(businessId, startDate, endDate, selectedProfessional === 'any' ? null : selectedProfessional, calculateDuration());
@@ -329,7 +351,7 @@ export const PublicBooking: React.FC = () => {
             }
         };
         fetchFullDatesAsync();
-    }, [businessId, selectedProfessional]);
+    }, [businessId, selectedProfessional, businessTimezone]);
 
     
 
@@ -511,9 +533,9 @@ export const PublicBooking: React.FC = () => {
     const handleEditBooking = (booking: any) => {
         setEditingBookingId(booking.id);
         setOriginalTimeISO(booking.appointment_time);
-        const bDate = new Date(booking.appointment_time);
-        setSelectedDate(bDate);
-        setSelectedTime(bDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
+        // Data/hora do agendamento no fuso do negócio (não do navegador).
+        setSelectedDate(dateStringToLocalDate(getDateStringInTimeZone(booking.appointment_time, businessTimezone)));
+        setSelectedTime(formatTimeInTimeZone(booking.appointment_time, businessTimezone));
 
         if (booking.service_ids) setSelectedServices(booking.service_ids);
         setSelectedProfessional(booking.professional_id || 'any');
@@ -610,8 +632,13 @@ export const PublicBooking: React.FC = () => {
             const dateStr = `${year}-${month}-${day}`;
             const totalPrice = calculateTotal();
             const duration = calculateDuration();
-            const offset = business?.region === 'PT' ? '+00:00' : '-03:00';
-            const appointmentTimeISO = `${dateStr}T${selectedTime}:00${offset}`;
+            if (isZonedSlotInPast(dateStr, selectedTime, businessTimezone)) {
+                showToast('Esse horário já passou. Escolha outro horário.', 'warning');
+                return;
+            }
+            // Hora de parede do negócio + offset real daquele dia (horário de
+            // verão incluso). Antes: offset fixo -03:00 / +00:00 por região.
+            const appointmentTimeISO = zonedDateTimeToIso(dateStr, selectedTime, businessTimezone);
 
             if (!editingBookingId) {
                 const existingBooking = await findActiveBookingMutation.mutateAsync({ phone: customerPhone, businessId });
@@ -675,10 +702,18 @@ export const PublicBooking: React.FC = () => {
         isEdit: Boolean(editingBookingId),
     });
     const stepLabels = ['Serviços', 'Agenda', 'Dados', successCopy.stepperLastLabel];
+    // Resumo pós-agendamento: usa o horário gravado, exibido no fuso do negócio.
+    const bookedAt: Date | null = parseDate(activeBooking?.appointment_time ?? null);
+    const successDateLong = bookedAt
+        ? bookedAt.toLocaleDateString('pt-BR', { timeZone: businessTimezone, weekday: 'short', day: '2-digit', month: 'short' })
+        : selectedDate?.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' });
+    const successTime = bookedAt ? formatTimeInTimeZone(bookedAt, businessTimezone) : selectedTime;
     const successWhatsAppText = getPublicBookingAwaitingWhatsAppText({
         businessName: business?.business_name || '',
-        dateLabel: selectedDate?.toLocaleDateString('pt-BR') ?? '',
-        timeLabel: selectedTime ?? '',
+        dateLabel: bookedAt
+            ? bookedAt.toLocaleDateString('pt-BR', { timeZone: businessTimezone })
+            : selectedDate?.toLocaleDateString('pt-BR') ?? '',
+        timeLabel: successTime ?? '',
     });
 
     // Quick flow stepper data
@@ -1041,7 +1076,7 @@ export const PublicBooking: React.FC = () => {
                                 <p className={`${colors.textMuted} text-sm`}>Selecione o melhor dia e horário para você.</p>
                             </div>
                             <div className="max-w-2xl mx-auto">
-                                <CalendarPicker selectedDate={selectedDate} onDateSelect={setSelectedDate} forceTheme={themeOverride} fullDates={fullDates} />
+                                <CalendarPicker selectedDate={selectedDate} onDateSelect={setSelectedDate} forceTheme={themeOverride} fullDates={fullDates} today={businessToday} />
                             </div>
                             {selectedDate && (
                                 <div className="animate-reveal-fragment duration-700 max-w-2xl mx-auto">
@@ -1446,7 +1481,7 @@ export const PublicBooking: React.FC = () => {
                                                 <div className="w-full space-y-8 md:space-y-12 max-w-2xl mx-auto">
                                                     <div className={`${colors.card} ${colors.border} border-2 p-6 md:p-8 ${shadow.elevated} rounded-2xl`}>
                                                         <h3 className={`mb-8 ${colors.text} font-heading text-xl text-center md:text-left`}>Seleção de Agenda</h3>
-                                                        <CalendarPicker selectedDate={selectedDate} onDateSelect={setSelectedDate} forceTheme={themeOverride} fullDates={fullDates} />
+                                                        <CalendarPicker selectedDate={selectedDate} onDateSelect={setSelectedDate} forceTheme={themeOverride} fullDates={fullDates} today={businessToday} />
                                                     </div>
                                                     {selectedDate && (
                                                         <div className="animate-reveal-fragment duration-700">
@@ -1515,7 +1550,7 @@ export const PublicBooking: React.FC = () => {
                                                 <div className="space-y-1">
                                                     <p className={`text-xs uppercase font-black tracking-widest ${colors.textMuted}`}>Data e Hora</p>
                                                     <p className={`text-lg font-black tracking-tight ${colors.text}`}>
-                                                        {selectedDate?.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })} às {selectedTime}
+                                                        {successDateLong} às {successTime}
                                                     </p>
                                                 </div>
                                                 <div className="space-y-1">
@@ -1774,7 +1809,7 @@ export const PublicBooking: React.FC = () => {
                                 <div className="space-y-1">
                                     <p className={`text-xs uppercase font-black tracking-widest ${colors.textMuted}`}>Data e Hora</p>
                                     <p className={`text-lg font-black tracking-tight ${colors.text}`}>
-                                        {selectedDate?.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })} às {selectedTime}
+                                        {successDateLong} às {successTime}
                                     </p>
                                 </div>
                                 <div className="space-y-1">

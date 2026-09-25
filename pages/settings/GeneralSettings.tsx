@@ -5,7 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../components/ui/Toast';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { useBusinessCopy } from '../../hooks/useBusinessCopy';
-import { useBusinessSettings, useUpdateBusinessSettings } from '../../hooks/useSettings';
+import { useBusinessSettings, useUpdateBusinessSettings, useUpdateBusinessTimezone } from '../../hooks/useSettings';
 import { useProfileFields, useUpdateProfileFields } from '../../hooks/useSettings';
 import { BusinessHoursEditor } from '../../components/BusinessHoursEditor';
 import { BrandIdentitySection } from '../../components/BrandIdentitySection';
@@ -15,6 +15,13 @@ import { PhoneInput } from '../../components/PhoneInput';
 import { SettingsSection } from '../../components/SettingsSection';
 import { InfoButton } from '../../components/HelpButtons';
 import { getCurrencySymbol, normalizeRegion, type Region } from '../../utils/formatters';
+import {
+    TIMEZONE_OPTIONS,
+    defaultTimezoneForRegion,
+    formatTimeInTimeZone,
+    getTimeZoneOffsetMinutes,
+    resolveBusinessTimezone,
+} from '../../utils/businessTimezone';
 
 export const GeneralSettings: React.FC = () => {
     const { user, companyId, region, updateRegion } = useAuth();
@@ -25,6 +32,7 @@ export const GeneralSettings: React.FC = () => {
     const { data: profile } = useProfileFields();
     const updateSettingsMutation = useUpdateBusinessSettings();
     const updateProfileMutation = useUpdateProfileFields();
+    const updateTimezoneMutation = useUpdateBusinessTimezone();
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [coverFile, setCoverFile] = useState<File | null>(null);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -52,6 +60,16 @@ export const GeneralSettings: React.FC = () => {
     const [instagram, setInstagram] = useState('');
     const [dailyGoal, setDailyGoal] = useState('');
     const [selectedRegion, setSelectedRegion] = useState<Region>(normalizeRegion(region));
+    // null = sem escolha nesta sessão (mostra o salvo ou o padrão da região).
+    const [timezoneOverride, setTimezoneOverride] = useState<string | null>(null);
+    // A coluna business_settings.timezone só existe após a migration
+    // 20260925120000. Sem ela a chave não vem no row: mostramos o padrão da
+    // região e desabilitamos a troca manual (nada quebra).
+    const timezoneColumnMissing = !!settings && !Object.prototype.hasOwnProperty.call(settings, 'timezone');
+    const storedTimezone = settings?.timezone ?? null;
+    const selectedTimezone = timezoneOverride ?? resolveBusinessTimezone({ timezone: storedTimezone, region: selectedRegion });
+    const savedTimezone = resolveBusinessTimezone({ timezone: storedTimezone, region: profile?.region ?? region });
+    const timezoneDirty = timezoneOverride !== null && timezoneOverride !== savedTimezone;
 
     const policyTemplates: Record<string, string> = {
         flexible: 'Cancelamentos podem ser feitos com até 24h de antecedência sem custo. Cancelamentos com menos de 24h terão cobrança de 50% do valor.',
@@ -92,6 +110,28 @@ export const GeneralSettings: React.FC = () => {
         }
     }, [settings]);
 
+    // Trocar a região leva o fuso para o padrão dela se o atual for de outro país.
+    const handleRegionChange = (next: Region) => {
+        setSelectedRegion(next);
+        const current = TIMEZONE_OPTIONS.find((o) => o.value === selectedTimezone);
+        if (!current || current.region !== next) {
+            setTimezoneOverride(defaultTimezoneForRegion(next));
+        }
+    };
+
+    const deviceTimezone = React.useMemo(() => {
+        try {
+            return Intl.DateTimeFormat().resolvedOptions().timeZone;
+        } catch {
+            return '';
+        }
+    }, []);
+    const deviceDiffersFromBusiness = !!deviceTimezone
+        && getTimeZoneOffsetMinutes(Date.now(), deviceTimezone) !== getTimeZoneOffsetMinutes(Date.now(), selectedTimezone);
+    const timezoneChoices = TIMEZONE_OPTIONS.some((o) => o.value === selectedTimezone)
+        ? TIMEZONE_OPTIONS
+        : [...TIMEZONE_OPTIONS, { value: selectedTimezone, label: selectedTimezone, region: selectedRegion }];
+
     React.useEffect(() => {
         if (loading) return;
         if (!initialValuesRef.current) {
@@ -117,10 +157,11 @@ export const GeneralSettings: React.FC = () => {
             cancellationPolicy !== initial.cancellationPolicy ||
             JSON.stringify(businessHours) !== JSON.stringify(initial.businessHours) ||
             selectedRegion !== initial.selectedRegion ||
+            timezoneDirty ||
             logoFile !== null ||
             coverFile !== null;
         setHasChanges(dirty);
-    }, [businessName, phone, address, instagram, dailyGoal, logoFile, coverFile, cancellationPolicy, businessHours, selectedRegion, loading]);
+    }, [businessName, phone, address, instagram, dailyGoal, logoFile, coverFile, cancellationPolicy, businessHours, selectedRegion, timezoneDirty, loading]);
 
     const handleLogoChange = (file: File) => {
         if (file.size > 10 * 1024 * 1024) {
@@ -183,6 +224,19 @@ export const GeneralSettings: React.FC = () => {
                 cancellation_policy: cancellationPolicy,
                 business_hours: businessHours as any,
             });
+
+            // Fuso: salvo à parte para tolerar a coluna ainda inexistente.
+            // Se nunca foi escolhido e bate com o padrão da região, não grava
+            // (continua acompanhando a região).
+            const timezoneChanged = storedTimezone
+                ? selectedTimezone !== storedTimezone
+                : selectedTimezone !== defaultTimezoneForRegion(selectedRegion);
+            if (!timezoneColumnMissing && timezoneChanged) {
+                const tzResult = await updateTimezoneMutation.mutateAsync(selectedTimezone);
+                if (tzResult === 'unsupported') {
+                    showToast('Fuso horário ainda não pode ser alterado; usando o padrão da região.', 'info');
+                }
+            }
 
             const { error: authError } = await supabase.auth.updateUser({
                 data: {
@@ -281,7 +335,7 @@ export const GeneralSettings: React.FC = () => {
                                         key={opt.id}
                                         type="button"
                                         aria-pressed={selectedRegion === opt.id}
-                                        onClick={() => setSelectedRegion(opt.id)}
+                                        onClick={() => handleRegionChange(opt.id)}
                                         className={`flex-1 py-3 min-h-[44px] text-xs font-semibold rounded-xl transition-all border ${
                                             selectedRegion === opt.id
                                                 ? `${accent.bgDim} ${accent.border} ${accent.text}`
@@ -377,6 +431,44 @@ export const GeneralSettings: React.FC = () => {
                 </SettingsSection>
 
                 <SettingsSection title="Horário de Funcionamento">
+                    <div className="mb-6 max-w-xl">
+                        <label htmlFor="business-timezone" className={classes.label}>
+                            Fuso horário do estabelecimento
+                        </label>
+                        <select
+                            id="business-timezone"
+                            data-testid="business-timezone-select"
+                            value={selectedTimezone}
+                            onChange={(e) => setTimezoneOverride(e.target.value)}
+                            disabled={timezoneColumnMissing}
+                            className={`${classes.input} ${timezoneColumnMissing ? 'opacity-60 cursor-not-allowed' : ''}`}
+                        >
+                            <optgroup label="Brasil">
+                                {timezoneChoices.filter((o) => o.region === 'BR').map((o) => (
+                                    <option key={o.value} value={o.value}>{o.label}</option>
+                                ))}
+                            </optgroup>
+                            <optgroup label="Portugal">
+                                {timezoneChoices.filter((o) => o.region === 'PT').map((o) => (
+                                    <option key={o.value} value={o.value}>{o.label}</option>
+                                ))}
+                            </optgroup>
+                        </select>
+                        <p className={`${colors.textMuted} text-xs mt-1`} data-testid="business-timezone-help">
+                            O agendamento online mostra e reserva horários sempre neste fuso, esteja o cliente onde estiver.
+                            Agora são {formatTimeInTimeZone(Date.now(), selectedTimezone)} no estabelecimento.
+                        </p>
+                        {timezoneColumnMissing && (
+                            <p className={`${colors.textMuted} text-xs mt-1`} data-testid="business-timezone-pending">
+                                Usando o padrão da região. A troca manual fica disponível após a próxima atualização do sistema.
+                            </p>
+                        )}
+                        {deviceDiffersFromBusiness && (
+                            <p className="text-xs mt-1 text-[var(--color-warning)]" data-testid="business-timezone-device-warning">
+                                Seu dispositivo está em outro fuso ({deviceTimezone}). A agenda interna usa o relógio do dispositivo.
+                            </p>
+                        )}
+                    </div>
                     <BusinessHoursEditor
                         hours={businessHours}
                         onChange={setBusinessHours}

@@ -41,6 +41,36 @@ export async function updateBusinessSettings(
   return businessSettingsSchema.parse(data);
 }
 
+export type BusinessTimezoneSaveResult = 'saved' | 'unsupported';
+
+/** Erro de coluna inexistente (migration do fuso ainda não aplicada). */
+export function isMissingColumnError(error: { code?: string; message?: string } | null | undefined): boolean {
+  if (!error) return false;
+  if (error.code === '42703' || error.code === 'PGRST204') return true;
+  return /column .*timezone|timezone.* column/i.test(error.message ?? '');
+}
+
+/**
+ * Salva o fuso do negócio em separado dos demais campos: se a coluna ainda não
+ * existir (deploy do front antes da migration), devolve 'unsupported' em vez de
+ * quebrar o salvamento do resto das configurações.
+ */
+export async function updateBusinessTimezone(
+  companyId: string,
+  timezone: string | null,
+): Promise<BusinessTimezoneSaveResult> {
+  const { error } = await supabase
+    .from('business_settings')
+    .update({ timezone })
+    .eq('user_id', companyId);
+
+  if (error) {
+    if (isMissingColumnError(error)) return 'unsupported';
+    throw error;
+  }
+  return 'saved';
+}
+
 export async function fetchProfileFields(
   userId: string,
 ): Promise<ProfileFields | null> {

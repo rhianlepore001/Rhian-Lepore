@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
   fetchBusinessSettings,
   updateBusinessSettings,
+  updateBusinessTimezone,
   fetchProfileFields,
   updateProfileFields,
 } from '@/services/settings';
@@ -29,6 +30,19 @@ export function useUpdateBusinessSettings() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings', companyId, 'business'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard', companyId] });
+    },
+  });
+}
+
+export function useUpdateBusinessTimezone() {
+  const { companyId } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (timezone: string | null) => updateBusinessTimezone(companyId!, timezone),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['settings', companyId, 'business'] });
+      queryClient.invalidateQueries({ queryKey: ['public-booking', 'settings', companyId] });
     },
   });
 }

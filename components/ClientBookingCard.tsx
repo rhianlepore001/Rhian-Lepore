@@ -8,6 +8,7 @@ import { formatCurrency, Region } from '../utils/formatters';
 import { cancelPublicBooking } from '../services/publicBooking';
 import { useToast } from './ui/Toast';
 import { logger } from '../utils/Logger';
+import { resolveBusinessTimezone } from '../utils/businessTimezone';
 
 export interface ClientBooking {
     id: string;
@@ -30,6 +31,8 @@ interface ClientBookingCardProps {
     clientName: string;
     clientPhone: string;
     region?: Region;
+    /** Fuso IANA do negócio; horários são exibidos nele (não no do navegador). */
+    timeZone?: string;
     allowEdit?: boolean;
     onCancelled: (bookingId: string) => void;
 }
@@ -65,6 +68,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
     clientName,
     clientPhone,
     region = 'BR',
+    timeZone,
     allowEdit = true,
     onCancelled,
 }) => {
@@ -77,12 +81,13 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
     const isPast = !isUpcoming && booking.status !== 'cancelled';
     const statusCfg = STATUS_CONFIG[booking.status] ?? STATUS_CONFIG.completed;
 
+    const businessTz = resolveBusinessTimezone({ timezone: timeZone, region });
     const appointmentDate = new Date(booking.appointment_time);
     const formattedDate = appointmentDate.toLocaleDateString('pt-BR', {
-        weekday: 'short', day: '2-digit', month: 'short'
+        timeZone: businessTz, weekday: 'short', day: '2-digit', month: 'short'
     });
     const formattedTime = appointmentDate.toLocaleTimeString('pt-BR', {
-        hour: '2-digit', minute: '2-digit'
+        timeZone: businessTz, hour: '2-digit', minute: '2-digit'
     });
 
     const handleCancel = async () => {

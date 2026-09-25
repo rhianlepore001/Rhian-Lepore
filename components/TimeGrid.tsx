@@ -3,6 +3,18 @@ import { Clock } from 'lucide-react';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { Card } from './ui/Card';
 
+/**
+ * Rótulo do período pela hora do slot ("HH:MM" já na hora local do negócio).
+ * Antes o primeiro bloco era sempre "Manhã", mesmo quando só restavam horários
+ * da tarde (ex.: hoje às 16:00 ou negócio que abre às 14:00).
+ */
+export function slotPeriodLabel(slot: string): 'Manhã' | 'Tarde' | 'Noite' {
+    const hour = parseInt(slot.split(':')[0], 10);
+    if (hour < 12) return 'Manhã';
+    if (hour < 18) return 'Tarde';
+    return 'Noite';
+}
+
 interface TimeGridProps {
     selectedTime: string | null;
     onTimeSelect: (time: string) => void;
@@ -82,7 +94,7 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
 
                 {displayMorning.length > 0 && (
                     <div className="mb-4">
-                        <p className={`${colors.textMuted} text-xs ${font.mono} mb-2`}>Manhã</p>
+                        <p className={`${colors.textMuted} text-xs ${font.mono} mb-2`}>{slotPeriodLabel(displayMorning[0])}</p>
                         <div className={`grid grid-cols-3 md:grid-cols-4 ${density.inlineGap}`}>
                             {displayMorning.map(renderTimeSlot)}
                         </div>
@@ -99,7 +111,7 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
 
                 {afternoonSlots.length > 0 && (
                     <div>
-                        <p className={`${colors.textMuted} text-xs ${font.mono} mb-2`}>Tarde</p>
+                        <p className={`${colors.textMuted} text-xs ${font.mono} mb-2`}>{slotPeriodLabel(afternoonSlots[0])}</p>
                         <div className={`grid grid-cols-3 md:grid-cols-4 ${density.inlineGap}`}>
                             {afternoonSlots.map(renderTimeSlot)}
                         </div>

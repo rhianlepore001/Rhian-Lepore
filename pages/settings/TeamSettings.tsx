@@ -12,6 +12,7 @@ import { useBusinessSettings } from '../../hooks/useSettings';
 import { useQueryClient } from '@tanstack/react-query';
 import { TeamMemberCard, type CommissionDraft } from '../../components/TeamMemberCard';
 import { TeamMemberForm } from '../../components/TeamMemberForm';
+import { StaffAppointmentPermissionSection } from '../../components/settings/StaffAppointmentPermissionSection';
 import { supabase } from '../../lib/supabase';
 import { mapError, formatUserFacingError } from '../../utils/mapError';
 
@@ -266,6 +267,8 @@ export const TeamSettings: React.FC = () => {
                         )}
                     </div>
                 )}
+
+                <StaffAppointmentPermissionSection />
 
                 <section className="space-y-4 border-t border-[var(--color-divider)] pt-8">
                     <div className={`flex items-center gap-2 ${colors.textMuted} font-mono text-xs uppercase tracking-[0.2em] px-1`}>

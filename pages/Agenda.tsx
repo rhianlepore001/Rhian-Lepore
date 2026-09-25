@@ -19,6 +19,9 @@ import { AgendaResourceGrid } from '../components/agenda/AgendaResourceGrid';
 import { AgendaStatusLegend } from '../components/agenda/AgendaStatusLegend';
 import { AgendaPublicBookings } from '../components/agenda/AgendaPublicBookings';
 import { AgendaPublicLinkBar } from '../components/agenda/AgendaPublicLinkBar';
+import { AppointmentDetailsActions } from '../components/agenda/AppointmentDetailsActions';
+import { useStaffAppointmentPermission } from '../hooks/useStaffAppointmentPermission';
+import { isStaffEditForbiddenError, STAFF_EDIT_FORBIDDEN_MESSAGE } from '../utils/staffAppointmentPermission';
 import { AllAppointmentsModal } from '../components/dashboard/modals/AllAppointmentsModal';
 import { CheckoutModal } from '../components/CheckoutModal';
 import { EmptyState } from '../components/EmptyState';
@@ -27,7 +30,7 @@ import { mapError, formatUserFacingError } from '../utils/mapError';
 import { filterBookableServices } from '../utils/filterBookableServices';
 import { confirmPublicBooking, createAcceptedAppointmentFromBooking, rejectPublicBooking, acceptCompanyPublicBooking } from '../services/publicBooking';
 import { copyBookingProductsToAppointment } from '../services/catalog';
-import { deleteAppointmentWithFinance, fetchPendingPublicBookings } from '../services/scheduling';
+import { cancelAppointment, deleteAppointmentWithFinance, fetchPendingPublicBookings } from '../services/scheduling';
 
 import { buildWhatsAppLink, formatCurrency, formatPhone } from '../utils/formatters';
 import { formatDateForInput, formatLocalDateString, combineDateAndTime } from '../utils/date';
@@ -100,6 +103,7 @@ const getInitialDate = (searchParams: URLSearchParams): Date => {
 export const Agenda: React.FC = () => {
     const { user, region, role, companyId, teamMemberId } = useAuth();
     const isStaff = role === 'staff';
+    const staffPermission = useStaffAppointmentPermission();
     const effectiveUserId = companyId ?? user?.id;
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
@@ -767,9 +771,10 @@ export const Agenda: React.FC = () => {
             showToast('Erro ao concluir agendamento. Tente novamente.', 'error');
         }
     };
-    const handleCancelAppointment = (appointmentId: string, isOverdue: boolean = false) => {
-        if (isStaff) {
-            showToast('Apenas o dono pode cancelar agendamentos.', 'warning');
+    const handleCancelAppointment = (appointmentId: string, isOverdue: boolean = false, professionalId?: string | null) => {
+        // Dono sempre; colaborador conforme "Permissões da equipe" (o banco aplica a mesma regra).
+        if (!staffPermission.canEdit(professionalId)) {
+            showToast(staffPermission.blockedMessage, 'warning');
             return;
         }
         setConfirmDialog({
@@ -781,10 +786,9 @@ export const Agenda: React.FC = () => {
             onConfirm: async () => {
                 setConfirmDialog(null);
                 try {
-                    await supabase
-                        .from('appointments')
-                        .update({ status: 'Cancelled' })
-                        .eq('id', appointmentId);
+                    // Lança erro também se 0 linhas mudarem (sem toast de sucesso falso).
+                    await cancelAppointment({ appointmentId, companyId: effectiveUserId ?? '' });
+                    setShowingDetailsAppointment(null);
                     showToast('Agendamento cancelado e movido para o histórico.', 'success');
                     if (isOverdue) {
                         fetchOverdueAppointments();
@@ -793,7 +797,10 @@ export const Agenda: React.FC = () => {
                     }
                 } catch (error) {
                     logger.error('Error cancelling appointment', error);
-                    showToast('Erro ao cancelar agendamento.', 'error');
+                    showToast(
+                        isStaffEditForbiddenError(error) ? STAFF_EDIT_FORBIDDEN_MESSAGE : 'Erro ao cancelar agendamento.',
+                        'error',
+                    );
                 }
             },
         });
@@ -1159,22 +1166,22 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                                             <Info className="w-4 h-4" /> Info
                                                         </button>
                                                         {!isStaff && (
-                                                            <>
-                                                                <button
-                                                                    onClick={() => handleCompleteAppointment(apt.id, true)}
-                                                                    className={`px-3 py-2 min-h-[44px] items-center font-bold rounded-lg transition-all flex items-center gap-2 text-xs ${classes.buttonSuccess}`}
-                                                                    title="Concluir e Faturar"
-                                                                >
-                                                                    <Check className="w-4 h-4" /> Faturar
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => handleCancelAppointment(apt.id, true)}
-                                                                    className={`px-3 py-2 min-h-[44px] items-center font-bold rounded-lg transition-all flex items-center gap-2 text-xs ${classes.buttonDanger}`}
-                                                                    title="Cancelar"
-                                                                >
-                                                                    <X className="w-4 h-4" /> Cancelar
-                                                                </button>
-                                                            </>
+                                                            <button
+                                                                onClick={() => handleCompleteAppointment(apt.id, true)}
+                                                                className={`px-3 py-2 min-h-[44px] items-center font-bold rounded-lg transition-all flex items-center gap-2 text-xs ${classes.buttonSuccess}`}
+                                                                title="Concluir e Faturar"
+                                                            >
+                                                                <Check className="w-4 h-4" /> Faturar
+                                                            </button>
+                                                        )}
+                                                        {staffPermission.canEdit(apt.professional_id) && (
+                                                            <button
+                                                                onClick={() => handleCancelAppointment(apt.id, true, apt.professional_id)}
+                                                                className={`px-3 py-2 min-h-[44px] items-center font-bold rounded-lg transition-all flex items-center gap-2 text-xs ${classes.buttonDanger}`}
+                                                                title="Cancelar"
+                                                            >
+                                                                <X className="w-4 h-4" /> Cancelar
+                                                            </button>
                                                         )}
                                                     </div>
                                                 </div>
@@ -1400,59 +1407,23 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
 
                         {/* Footer Actions */}
                         <div className={`p-5 border-t ${colors.divider} ${colors.surface} flex flex-col gap-3 rounded-b-2xl`}>
-                            {(detailsApt.status === 'Confirmed' || detailsApt.status === 'Pending') ? (
-                                <>
-                                    {/* Confirmar e cobrar — disponível para dono E colaborador (abre o checkout) */}
-                                    <Button
-                                        variant="primary"
-                                        className="w-full flex justify-center items-center gap-2"
-                                        onClick={() => {
-                                            setCheckoutAppointment(detailsApt as unknown as import('../types').Appointment);
-                                            setShowingDetailsAppointment(null);
-                                        }}
-                                    >
-                                        <DollarSign className="w-4 h-4" /> Confirmar e cobrar
-                                    </Button>
-                                    <div className="flex flex-wrap gap-2">
-                                        {/* Faltou — dono E colaborador */}
-                                        <Button
-                                            variant="secondary"
-                                            className="flex-1 min-w-[7rem] flex justify-center items-center gap-2"
-                                            onClick={() => handleNoShowAppointment(detailsApt.id)}
-                                        >
-                                            <Ban className="w-4 h-4" /> Faltou
-                                        </Button>
-                                        {/* Editar — apenas o dono */}
-                                        {!isStaff && detailsApt.status === 'Confirmed' && (
-                                            <Button
-                                                variant="secondary"
-                                                className="flex-1 min-w-[7rem] flex justify-center items-center gap-2"
-                                                onClick={() => {
-                                                    setEditingAppointment(detailsApt);
-                                                    setShowingDetailsAppointment(null);
-                                                }}
-                                            >
-                                                <Edit2 className="w-4 h-4" /> Editar
-                                            </Button>
-                                        )}
-                                        <Button
-                                            variant="ghost"
-                                            className="flex-1 min-w-[7rem] flex justify-center items-center gap-2"
-                                            onClick={() => setShowingDetailsAppointment(null)}
-                                        >
-                                            Fechar
-                                        </Button>
-                                    </div>
-                                </>
-                            ) : (
-                                <Button
-                                    variant="primary"
-                                    className="flex-1 flex justify-center items-center gap-2"
-                                    onClick={() => setShowingDetailsAppointment(null)}
-                                >
-                                    <Check className="w-4 h-4" /> Fechar
-                                </Button>
-                            )}
+                            <AppointmentDetailsActions
+                                status={detailsApt.status}
+                                canEdit={staffPermission.canEdit(detailsApt.professional_id)}
+                                isStaff={isStaff}
+                                blockedMessage={staffPermission.blockedMessage}
+                                onCheckout={() => {
+                                    setCheckoutAppointment(detailsApt as unknown as import('../types').Appointment);
+                                    setShowingDetailsAppointment(null);
+                                }}
+                                onNoShow={() => handleNoShowAppointment(detailsApt.id)}
+                                onEdit={() => {
+                                    setEditingAppointment(detailsApt);
+                                    setShowingDetailsAppointment(null);
+                                }}
+                                onCancel={() => handleCancelAppointment(detailsApt.id, false, detailsApt.professional_id)}
+                                onClose={() => setShowingDetailsAppointment(null)}
+                            />
                         </div>
                     </div>
                     </FocusTrap>
@@ -1640,6 +1611,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                     onSave={fetchData}
                     accentColor={isBeauty ? 'beauty-neon' : 'accent-gold'}
                     currencySymbol={currencySymbol}
+                    lockProfessional={staffPermission.lockProfessionalToSelf}
                 />
             )}
 

@@ -4,10 +4,12 @@ import {
   fetchBusinessSettings,
   updateBusinessSettings,
   updateBusinessTimezone,
+  updateStaffAppointmentEditScope,
   fetchProfileFields,
   updateProfileFields,
 } from '@/services/settings';
 import type { BusinessSettingsUpdate, ProfileFields } from '@/types/settings';
+import type { StaffAppointmentEditScope } from '@/utils/staffAppointmentPermission';
 
 export function useBusinessSettings() {
   const { companyId } = useAuth();
@@ -43,6 +45,18 @@ export function useUpdateBusinessTimezone() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings', companyId, 'business'] });
       queryClient.invalidateQueries({ queryKey: ['public-booking', 'settings', companyId] });
+    },
+  });
+}
+
+export function useUpdateStaffAppointmentEditScope() {
+  const { companyId } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (scope: StaffAppointmentEditScope) => updateStaffAppointmentEditScope(companyId!, scope),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['settings', companyId, 'business'] });
     },
   });
 }

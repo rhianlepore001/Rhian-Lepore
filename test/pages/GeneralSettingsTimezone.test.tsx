@@ -111,6 +111,16 @@ describe('GeneralSettings — fuso horário do estabelecimento', () => {
     await waitFor(() => expect(updateTimezone).toHaveBeenCalledWith('Europe/Lisbon'));
   });
 
+  it('valor fora da lista no seletor é ignorado e nunca é gravado', async () => {
+    state.settings = { ...baseSettings, timezone: 'America/Sao_Paulo' };
+    render(<GeneralSettings />);
+    fireEvent.change(select(), { target: { value: 'Mars/Olympus' } });
+    expect(select().value).toBe('America/Sao_Paulo');
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
+    await waitFor(() => expect(updateSettings).toHaveBeenCalled());
+    expect(updateTimezone).not.toHaveBeenCalled();
+  });
+
   it('não grava quando nada mudou (segue acompanhando a região)', async () => {
     state.settings = { ...baseSettings, timezone: null };
     render(<GeneralSettings />);

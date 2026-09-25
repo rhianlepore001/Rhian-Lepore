@@ -26,7 +26,8 @@ import { useCancelPublicBooking, useFindActivePublicBooking, useSubmitPublicBook
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { buildWhatsAppLink, formatCurrency, formatDuration, Region } from '../utils/formatters';
 import { logger } from '../utils/Logger';
-import { fetchEditBooking, fetchPublicClientByPhone, fetchClientByPhone, fetchPublicBookingById, fetchAvailableSlots, fetchFullDates, getFirstAvailableProfessional, uploadClientPhoto, upsertPublicClientSession } from '../services/publicBooking';
+import { useZonedAvailableSlots } from '../hooks/useZonedAvailableSlots';
+import { fetchEditBooking, fetchPublicClientByPhone, fetchClientByPhone, fetchPublicBookingById, fetchFullDates, getFirstAvailableProfessional, uploadClientPhoto, upsertPublicClientSession } from '../services/publicBooking';
 import { shouldLandOnClientArea } from '../utils/publicBookingLanding';
 import { getPublicBookingAwaitingWhatsAppText, getPublicBookingSuccessCopy } from '../utils/publicBookingCopy';
 import { isSlotUnavailableError } from '../utils/supabaseRpc';
@@ -136,7 +137,6 @@ export const PublicBooking: React.FC = () => {
     const [selectedProfessional, setSelectedProfessional] = useState<string | null>(proIdParam || null);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [selectedTime, setSelectedTime] = useState<string | null>(null);
-    const [availableSlots, setAvailableSlots] = useState<string[]>([]);
     const [fullDates, setFullDates] = useState<string[]>([]);
     const [acceptedPolicy, setAcceptedPolicy] = useState(false);
     const [acceptedMarketing, setAcceptedMarketing] = useState(false);
@@ -317,28 +317,9 @@ export const PublicBooking: React.FC = () => {
     }, [activeBooking?.id, activeBooking?.status]);
 
     useEffect(() => {
-        const fetchSlots = async () => {
-            if (selectedDate && businessId) {
-                const year = selectedDate.getFullYear();
-                const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
-                const day = String(selectedDate.getDate()).padStart(2, '0');
-                const dateStr = `${year}-${month}-${day}`;
-                const duration = calculateDuration();
-
-                try {
-                    const slots = await fetchAvailableSlots(businessId, dateStr, selectedProfessional === 'any' ? null : selectedProfessional, duration);
-                    // Rótulos "HH:MM" são hora local do negócio; esconde os que já
-                    // passaram no fuso do negócio (independe do navegador).
-                    setAvailableSlots(slots.filter((slot) => !isZonedSlotInPast(dateStr, slot, businessTimezone)));
-                } catch {
-                    setAvailableSlots([]);
-                }
-            }
-        };
-        fetchSlots();
-    }, [selectedDate, businessId, selectedProfessional, businessTimezone]);
-
-    useEffect(() => {
+        // Mesmo cuidado dos horários: fuso muda quando os settings chegam;
+        // resposta de uma busca já substituída não sobrescreve a atual.
+        let cancelled = false;
         const fetchFullDatesAsync = async () => {
             if (businessId) {
                 const startDate = getTodayInTimeZone(businessTimezone);
@@ -346,11 +327,14 @@ export const PublicBooking: React.FC = () => {
 
                 try {
                     const dates = await fetchFullDates(businessId, startDate, endDate, selectedProfessional === 'any' ? null : selectedProfessional, calculateDuration());
-                    if (dates) setFullDates(dates);
+                    if (dates && !cancelled) setFullDates(dates);
                 } catch { /* full dates fetch failed silently */ }
             }
         };
         fetchFullDatesAsync();
+        return () => {
+            cancelled = true;
+        };
     }, [businessId, selectedProfessional, businessTimezone]);
 
     
@@ -500,6 +484,19 @@ export const PublicBooking: React.FC = () => {
     const calculateTotal = () =>
         services.filter(s => selectedServices.includes(s.id)).reduce((sum, s) => sum + s.price, 0) + productsTotal;
     const calculateDuration = () => services.filter(s => selectedServices.includes(s.id)).reduce((sum, s) => sum + s.duration_minutes, 0);
+
+    const selectedDateStr = selectedDate
+        ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`
+        : null;
+    // Horários livres no fuso do negócio; respostas obsoletas (fuso padrão da
+    // região vs. fuso dos settings, ou troca rápida de data) são descartadas.
+    const availableSlots = useZonedAvailableSlots({
+        businessId,
+        dateStr: selectedDateStr,
+        professionalId: selectedProfessional === 'any' ? null : selectedProfessional,
+        durationMinutes: calculateDuration(),
+        timezone: businessTimezone,
+    });
 
     const professionalCategories = Array.from(new Set((professionals || []).flatMap((p: any) => p.specialties || []))).filter(Boolean);
     const filteredProfessionals = activeProfessionalCategory === 'all'

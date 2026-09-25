@@ -47,6 +47,13 @@ describe('TimeGrid — rótulo do grupo segue a hora real dos slots', () => {
     expect(headings()).toEqual(['Tarde']);
   });
 
+  it('12:00–12:30, almoço e 14:00+ não repete "Tarde" (mantém o separador Almoço)', () => {
+    render(<TimeGrid selectedTime={null} onTimeSelect={() => undefined} availableSlots={[...slotsFrom('12:00', '12:30'), ...slotsFrom('14:00', '17:00')]} />);
+    expect(headings()).toEqual(['Tarde', 'Almoço']);
+    expect(screen.getByText('14:00')).toBeInTheDocument();
+    expect(screen.getByText('12:30')).toBeInTheDocument();
+  });
+
   it('só horários da noite mostram "Noite"', () => {
     render(<TimeGrid selectedTime={null} onTimeSelect={() => undefined} availableSlots={slotsFrom('19:00', '21:30')} />);
     expect(headings()).toEqual(['Noite']);

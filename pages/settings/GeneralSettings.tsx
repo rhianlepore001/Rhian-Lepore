@@ -21,6 +21,7 @@ import {
     formatTimeInTimeZone,
     getTimeZoneOffsetMinutes,
     resolveBusinessTimezone,
+    isSelectableTimeZone,
 } from '../../utils/businessTimezone';
 
 export const GeneralSettings: React.FC = () => {
@@ -231,7 +232,9 @@ export const GeneralSettings: React.FC = () => {
             const timezoneChanged = storedTimezone
                 ? selectedTimezone !== storedTimezone
                 : selectedTimezone !== defaultTimezoneForRegion(selectedRegion);
-            if (!timezoneColumnMissing && timezoneChanged) {
+            if (!timezoneColumnMissing && timezoneChanged && !isSelectableTimeZone(selectedTimezone)) {
+                showToast('Fuso horário inválido; escolha um da lista.', 'error');
+            } else if (!timezoneColumnMissing && timezoneChanged) {
                 const tzResult = await updateTimezoneMutation.mutateAsync(selectedTimezone);
                 if (tzResult === 'unsupported') {
                     showToast('Fuso horário ainda não pode ser alterado; usando o padrão da região.', 'info');
@@ -439,7 +442,7 @@ export const GeneralSettings: React.FC = () => {
                             id="business-timezone"
                             data-testid="business-timezone-select"
                             value={selectedTimezone}
-                            onChange={(e) => setTimezoneOverride(e.target.value)}
+                            onChange={(e) => setTimezoneOverride(isSelectableTimeZone(e.target.value) ? e.target.value : null)}
                             disabled={timezoneColumnMissing}
                             className={`${classes.input} ${timezoneColumnMissing ? 'opacity-60 cursor-not-allowed' : ''}`}
                         >

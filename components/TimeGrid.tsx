@@ -63,6 +63,12 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
         return true;
     });
 
+    // Dois grupos seguidos com o mesmo rótulo (ex.: 12:00–12:30, almoço,
+    // 14:00+) ficariam "Tarde" / Almoço / "Tarde": o segundo título é omitido.
+    const firstGroupLabel = displayMorning.length > 0 ? slotPeriodLabel(displayMorning[0]) : null;
+    const secondGroupLabel = afternoonSlots.length > 0 ? slotPeriodLabel(afternoonSlots[0]) : null;
+    const showSecondGroupLabel = secondGroupLabel !== null && secondGroupLabel !== firstGroupLabel;
+
     const renderTimeSlot = (time: string) => {
         const isSelected = selectedTime === time;
 
@@ -94,7 +100,7 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
 
                 {displayMorning.length > 0 && (
                     <div className="mb-4">
-                        <p className={`${colors.textMuted} text-xs ${font.mono} mb-2`}>{slotPeriodLabel(displayMorning[0])}</p>
+                        <p className={`${colors.textMuted} text-xs ${font.mono} mb-2`}>{firstGroupLabel}</p>
                         <div className={`grid grid-cols-3 md:grid-cols-4 ${density.inlineGap}`}>
                             {displayMorning.map(renderTimeSlot)}
                         </div>
@@ -111,7 +117,9 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
 
                 {afternoonSlots.length > 0 && (
                     <div>
-                        <p className={`${colors.textMuted} text-xs ${font.mono} mb-2`}>{slotPeriodLabel(afternoonSlots[0])}</p>
+                        {showSecondGroupLabel && (
+                            <p className={`${colors.textMuted} text-xs ${font.mono} mb-2`}>{secondGroupLabel}</p>
+                        )}
                         <div className={`grid grid-cols-3 md:grid-cols-4 ${density.inlineGap}`}>
                             {afternoonSlots.map(renderTimeSlot)}
                         </div>

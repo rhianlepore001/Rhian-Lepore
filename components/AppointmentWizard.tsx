@@ -137,9 +137,10 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                 const duration = services
                     .filter(s => selectedServiceIds.includes(s.id))
                     .reduce((sum, s) => sum + (s.duration_minutes || 30), 0);
-                const dateStr = selectedDate.toISOString().split('T')[0];
-                const offset = region === 'PT' ? '+00:00' : '-03:00';
-                const appointmentTimeISO = `${dateStr}T${selectedTime}:00${offset}`;
+                // Mesmo instante que o handleSubmit grava (data/hora locais do
+                // dispositivo da equipe). Antes: data em UTC + offset fixo por
+                // região, que em PT no verão checava 1h depois do horário real.
+                const appointmentTimeISO = combineDateAndTime(formatLocalDateString(selectedDate), selectedTime).toISOString();
                 const proId = await getFirstAvailableProfessional(
                     businessId,
                     appointmentTimeISO,
@@ -165,7 +166,6 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
         selectedDate,
         selectedServiceIds,
         services,
-        region,
     ]);
 
     const finalPrice = parseFloat(customPrice || '0') * (1 - (parseFloat(discount || '0') / 100));

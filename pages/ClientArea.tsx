@@ -18,6 +18,7 @@ import { useCancelPublicClientMembership, usePublicClientMembership } from '../h
 import { useToast } from '../components/ui/Toast';
 import { validityHeadline } from '../utils/membershipValidity';
 import { formatFirstName } from '../utils/formatters';
+import { resolveBusinessTimezone } from '../utils/businessTimezone';
 import { useScrollToError } from '../hooks/useScrollToError';
 
 interface BusinessProfile {
@@ -131,6 +132,10 @@ export const ClientArea: React.FC = () => {
 
     const isBeauty = business?.user_type === 'beauty';
     const region = (business?.region as 'BR' | 'PT') ?? 'BR';
+    const businessTimezone = resolveBusinessTimezone({
+        timezone: (businessSettings as { timezone?: string | null } | null | undefined)?.timezone,
+        region: business?.region,
+    });
 
     // Tokens do DS: beauty = claro (silk), barber = escuro. O script anti-FOUC do
     // index.html remove data-mode nas rotas públicas; aqui restauramos assim que
@@ -608,6 +613,7 @@ export const ClientArea: React.FC = () => {
                                             clientName={sessionClient.name}
                                             clientPhone={sessionClient.phone}
                                             region={region}
+                                            timeZone={businessTimezone}
                                             onCancelled={handleBookingCancelled}
                                             allowEdit={business?.allow_client_rescheduling ?? true}
                                         />
@@ -638,6 +644,7 @@ export const ClientArea: React.FC = () => {
                                                 clientName={sessionClient.name}
                                                 clientPhone={sessionClient.phone}
                                                 region={region}
+                                                timeZone={businessTimezone}
                                                 onCancelled={handleBookingCancelled}
                                             />
                                         ))}

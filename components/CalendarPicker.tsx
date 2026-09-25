@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
+import { formatLocalDateString } from '../utils/date';
+import { dateStringToLocalDate } from '../utils/businessTimezone';
 
 interface CalendarPickerProps {
     selectedDate: Date | null;
@@ -8,6 +10,11 @@ interface CalendarPickerProps {
     minDate?: Date;
     forceTheme?: ThemeVariant;
     fullDates?: string[]; // Array of 'YYYY-MM-DD'
+    /**
+     * "Hoje" (YYYY-MM-DD) no fuso do negócio. Dias anteriores ficam desabilitados
+     * e este dia recebe o destaque de hoje. Sem a prop, usa o dia do navegador.
+     */
+    today?: string;
 }
 
 export const CalendarPicker: React.FC<CalendarPickerProps> = ({
@@ -15,9 +22,11 @@ export const CalendarPicker: React.FC<CalendarPickerProps> = ({
     onDateSelect,
     minDate = new Date(),
     forceTheme,
-    fullDates = []
+    fullDates = [],
+    today,
 }) => {
-    const [currentMonth, setCurrentMonth] = useState(new Date());
+    const todayStr = today ?? formatLocalDateString(new Date());
+    const [currentMonth, setCurrentMonth] = useState(() => dateStringToLocalDate(todayStr));
     const { colors, accent, font, shadow, isBeauty } = useBrutalTheme({ override: forceTheme });
 
     const hoverBg = `hover:bg-[var(--color-accent-dim)]`;
@@ -53,18 +62,15 @@ export const CalendarPicker: React.FC<CalendarPickerProps> = ({
         setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
     };
 
+    // Datas comparadas como YYYY-MM-DD de calendário (sem toISOString, que em
+    // fusos UTC+ como Lisboa/Londres rolava para o dia anterior e desabilitava
+    // a segunda-feira no lugar do domingo fechado).
+    const dayString = (day: number) =>
+        formatLocalDateString(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day));
+
     const isDateDisabled = (day: number) => {
-        const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
-        const dateStr = date.toISOString().split('T')[0];
-
-        // Reset minDate time for accurate comparison
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        const checkDate = new Date(date);
-        checkDate.setHours(0, 0, 0, 0);
-
-        return checkDate < today || fullDates.includes(dateStr);
+        const dateStr = dayString(day);
+        return dateStr < todayStr || fullDates.includes(dateStr);
     };
 
     const isDateSelected = (day: number) => {
@@ -77,15 +83,7 @@ export const CalendarPicker: React.FC<CalendarPickerProps> = ({
         );
     };
 
-    const isToday = (day: number) => {
-        const today = new Date();
-        const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
-        return (
-            date.getDate() === today.getDate() &&
-            date.getMonth() === today.getMonth() &&
-            date.getFullYear() === today.getFullYear()
-        );
-    };
+    const isToday = (day: number) => dayString(day) === todayStr;
 
     const handleDateClick = (day: number) => {
         if (isDateDisabled(day)) return;
@@ -114,6 +112,7 @@ export const CalendarPicker: React.FC<CalendarPickerProps> = ({
                 type="button"
                 onClick={() => handleDateClick(day)}
                 disabled={disabled}
+                data-date={dayString(day)}
                 className={`
           h-12 rounded-lg ${font.mono} text-sm transition-all
           ${disabled

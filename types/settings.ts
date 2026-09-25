@@ -29,6 +29,11 @@ export const businessSettingsSchema = z.object({
   credit_fee_percent: z.number().min(0).max(100).default(0),
   enable_self_rescheduling: z.boolean().default(true),
   public_products_enabled: z.boolean().default(false),
+  /**
+   * Fuso IANA fixo do negócio. Só vem preenchido/presente depois da migration
+   * 20260925120000_business_timezone (antes a chave não existe no row).
+   */
+  timezone: z.string().nullable().optional(),
   created_at: z.string().nullable().optional(),
   updated_at: z.string().nullable().optional(),
 });

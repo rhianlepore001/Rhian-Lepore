@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Check, AlertTriangle, Clock, Ban, X, Edit2, MessageCircle, Users, Plus } from 'lucide-react';
 import { AgendaEmptySlotCell } from './AgendaEmptySlotCell';
-import { getVisualStatus, VISUAL_STATUS_CLASSES, VISUAL_STATUS_LABEL, type VisualStatus } from '../../utils/appointmentStatus';
+import { appointmentFreesSlot, getVisualStatus, VISUAL_STATUS_CLASSES, VISUAL_STATUS_LABEL, type VisualStatus } from '../../utils/appointmentStatus';
 import { formatCurrency, type Region } from '../../utils/formatters';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 
@@ -254,9 +254,13 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
 
                 <div className="relative overflow-hidden">
                   {timeSlots.map((time, slotIdx) => {
-                    const occupied = columnOverlays.some(
+                    const covering = columnOverlays.filter(
                       (o) => slotIdx >= o.startIdx && slotIdx < o.startIdx + o.span,
                     );
+                    // Falta/cancelado não ocupa o horário (mesma regra do banco):
+                    // o card continua visível e o "+" aparece ao lado.
+                    const occupied = covering.some((o) => !appointmentFreesSlot(o.apt.status));
+                    const freedOnly = !occupied && covering.length > 0;
                     return (
                       <div
                         key={time}
@@ -268,6 +272,7 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                             time={time}
                             professionalName={member.name}
                             onClick={() => onEmptySlotClick(member.id, time)}
+                            compact={freedOnly}
                           />
                         )}
                       </div>
@@ -283,6 +288,9 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                     const cardTokens = isUnassigned
                       ? 'border-[var(--color-danger-border)] bg-[var(--color-danger-bg)]'
                       : vc.card;
+                    // Horário liberado (falta/cancelado): card estreito à esquerda,
+                    // deixando a faixa da direita para o "+" de novo agendamento.
+                    const freesSlot = appointmentFreesSlot(apt.status);
 
                     return (
                       <button
@@ -291,11 +299,12 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                         onClick={() => onSelectAppointment(apt)}
                         aria-label={`${apt.clientName} — ${apt.service} às ${time}`}
                         data-agenda-span={span}
+                        data-frees-slot={freesSlot ? 'true' : undefined}
                         style={{
                           top: `calc(var(--agenda-slot-h) * ${startIdx} + 2px)`,
                           height: `calc(var(--agenda-slot-h) * ${span} - 4px)`,
                         }}
-                        className={`agenda-event-chip absolute left-0.5 right-0.5 z-[1] overflow-hidden text-left rounded-md border ${cardTokens} px-1.5 py-1 min-h-0 flex flex-col justify-center gap-0.5 transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-accent`}
+                        className={`agenda-event-chip absolute left-0.5 ${freesSlot ? 'right-[40%] opacity-80' : 'right-0.5'} z-[1] overflow-hidden text-left rounded-md border ${cardTokens} px-1.5 py-1 min-h-0 flex flex-col justify-center gap-0.5 transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-accent`}
                       >
                         <div className="flex items-start justify-between gap-1 min-w-0">
                           <h4 className={`text-xs font-bold truncate leading-tight ${colors.text}`}>{apt.clientName}</h4>

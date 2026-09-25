@@ -6,6 +6,11 @@ interface AgendaEmptySlotCellProps {
   professionalName: string;
   onClick: () => void;
   className?: string;
+  /**
+   * Horário liberado por falta/cancelamento: o card do registro fica à
+   * esquerda e o "+" ocupa só a faixa da direita.
+   */
+  compact?: boolean;
 }
 
 /**
@@ -17,13 +22,15 @@ export const AgendaEmptySlotCell: React.FC<AgendaEmptySlotCellProps> = ({
   professionalName,
   onClick,
   className = '',
+  compact = false,
 }) => {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={`Novo agendamento às ${time} com ${professionalName}`}
-      className={`group/slot absolute inset-0 flex items-center justify-center
+      data-freed-slot={compact ? 'true' : undefined}
+      className={`group/slot absolute ${compact ? 'inset-y-0 right-0 w-[40%]' : 'inset-0'} flex items-center justify-center
         transition-colors duration-200 ease-out
         hover:bg-[var(--color-accent-dim)]
         focus-visible:outline-none focus-visible:bg-[var(--color-accent-dim)]

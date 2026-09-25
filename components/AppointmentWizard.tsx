@@ -38,6 +38,11 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     initialDate = new Date(),
     initialProfessionalId = '',
     initialTime = '',
+    initialClientId = '',
+    initialServiceIds,
+    initialNotes = '',
+    initialStep = 1,
+    rescheduleContext,
     teamMembers,
     services,
     categories = [],
@@ -49,7 +54,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     const { establishmentFallback } = useBusinessCopy();
     const createAppointment = useCreateAppointment();
     const { showToast } = useToast();
-    const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+    const [step, setStep] = useState<1 | 2 | 3 | 4>(initialStep);
     const [loading, setLoading] = useState(false);
 
     // Step 2 State
@@ -60,8 +65,8 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     const [customServicePrice, setCustomServicePrice] = useState('');
 
     // Data State — profissional/horário podem vir pré-preenchidos da grade
-    const [selectedClientId, setSelectedClientId] = useState<string>('');
-    const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+    const [selectedClientId, setSelectedClientId] = useState<string>(initialClientId);
+    const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>(initialServiceIds ?? []);
     const [selectedProId, setSelectedProId] = useState<string>(initialProfessionalId);
     const [selectedDate, setSelectedDate] = useState<Date>(initialDate);
     const [selectedTime, setSelectedTime] = useState<string>(initialTime);
@@ -69,7 +74,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     // Admin Overrides & Review State
     const [customPrice, setCustomPrice] = useState<string>('');
     const [discount, setDiscount] = useState<string>('0');
-    const [notes, setNotes] = useState<string>('');
+    const [notes, setNotes] = useState<string>(initialNotes);
     const [sendWhatsapp, setSendWhatsapp] = useState(true);
     const [paymentMethod, setPaymentMethod] = useState<string>('');
     const [autoAssigningPro, setAutoAssigningPro] = useState(false);
@@ -288,8 +293,13 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                 <div className={`relative p-6 flex items-center justify-between border-b border-[var(--color-divider)] shrink-0`}>
                     <div>
                         <h2 id="appointment-wizard-title" className={`text-2xl font-heading ${colors.text} uppercase tracking-wider`}>
-                            Novo Atendimento
+                            {rescheduleContext ? 'Reagendar' : 'Novo Atendimento'}
                         </h2>
+                        {rescheduleContext && (
+                            <p className={`text-xs mt-1 max-w-md ${colors.textMuted}`} data-testid="wizard-reschedule-context">
+                                {rescheduleContext}
+                            </p>
+                        )}
                         {(() => {
 const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                              const accentRing = 'ring-[var(--color-input-focus)] ring-offset-[var(--color-modal-bg)]';

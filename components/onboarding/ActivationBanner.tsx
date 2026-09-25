@@ -29,7 +29,7 @@ export function ActivationBanner() {
   if (!show) return null;
 
   return createPortal(
-    <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[10000] w-full max-w-md px-4 pointer-events-none">
+    <div className="fixed top-[calc(1.5rem+var(--safe-top))] left-1/2 -translate-x-1/2 z-[10000] w-full max-w-md px-4 pointer-events-none">
       <div className="bg-[var(--color-success-bg)] border border-[var(--color-success-border)] backdrop-blur-md bg-[var(--color-card)] rounded-2xl shadow-2xl p-4 flex items-start gap-4 animate-in slide-in-from-top-10 fade-in duration-500 pointer-events-auto">
         <button 
           onClick={() => setShow(false)}

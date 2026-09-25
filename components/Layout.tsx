@@ -23,9 +23,12 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const { colors, density } = useBrutalTheme();
 
   const showBanner = !isBillingRoute && (isTrial || isExpired);
-  const headerTop = showBanner ? '40px' : '0px';
+  // --header-top inclui a status bar do iOS (PWA instalado); 0px em Android/desktop.
+  const headerTop = showBanner ? 'calc(var(--safe-top) + 40px)' : 'var(--safe-top)';
   // Header mobile é h-14 (56px), 1 linha; banner trial é h-10 (40px)
-  const paddingTop = showBanner ? 'pt-[96px] md:pt-[120px]' : 'pt-14 md:pt-20';
+  const paddingTop = showBanner
+    ? 'pt-[calc(var(--safe-top)+96px)] md:pt-[calc(var(--safe-top)+120px)]'
+    : 'pt-[calc(var(--safe-top)+3.5rem)] md:pt-[calc(var(--safe-top)+5rem)]';
   const hideMobileNavForNewFlow = Boolean(new URLSearchParams(search).get('new'));
   const showBottomMobileNav = !isSettingsRoute && !isBillingRoute && !hideMobileNavForNewFlow;
 
@@ -37,7 +40,8 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       {/* Background layer — now handled by CSS variables in index.html */}
       <BrutalBackground />
 
-      <div className="fixed top-0 left-0 right-0 z-50">
+      {/* pt = faixa da status bar do iOS (fundo sólido para o conteúdo não aparecer por trás) */}
+      <div className={`fixed top-0 left-0 right-0 z-50 pt-[var(--safe-top)] ${colors.bg}`}>
         <TrialBanner />
       </div>
       {!isBillingRoute && <PaywallModal />}
@@ -48,7 +52,7 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           conteúdo “preso” na navegação SPA (URL muda, main não troca). */}
       <main
         className={`${!isSettingsRoute ? 'md:pl-64' : ''} ${paddingTop} relative z-10 flex flex-col min-h-screen ${
-          showBottomMobileNav ? 'pb-24' : 'pb-8'
+          showBottomMobileNav ? 'pb-[calc(6rem+var(--safe-bottom))]' : 'pb-[calc(2rem+var(--safe-bottom))]'
         } md:pb-8`}
       >
         <div

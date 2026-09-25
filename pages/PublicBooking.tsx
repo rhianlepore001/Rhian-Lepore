@@ -1602,7 +1602,7 @@ export const PublicBooking: React.FC = () => {
                         aria-label="Confirmação do agendamento"
                         tabIndex={-1}
                         onKeyDown={(e) => { if (e.key === 'Escape') setStep('datetime'); }}
-                        className={`${colors.card} ${colors.border} border w-full max-w-2xl p-6 md:p-10 relative shadow-promax-depth overflow-y-auto max-h-[90vh] animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 rounded-t-3xl sm:rounded-3xl`}>
+                        className={`${colors.card} ${colors.border} border w-full max-w-2xl p-6 max-sm:pb-[calc(1.5rem+var(--safe-bottom))] md:p-10 relative shadow-promax-depth overflow-y-auto max-h-[90vh] animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 rounded-t-3xl sm:rounded-3xl`}>
                         <div className="flex justify-between items-center mb-6">
                             <h3 className={`text-2xl ${colors.text} font-heading`}>Confirmação do Agendamento</h3>
                             <button onClick={() => setStep('datetime')} className={`${colors.textMuted} hover:text-theme-text transition-colors rounded-full p-2 hover:bg-[var(--color-card-hover)]`}>

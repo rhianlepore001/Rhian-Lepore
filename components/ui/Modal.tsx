@@ -124,8 +124,8 @@ export const Modal: React.FC<ModalProps> = ({
             SIZE_MAP[size],
             classes.modalContainer,
             isFull
-              ? 'flex flex-col'
-              : 'max-h-[92dvh] md:max-h-[90vh] flex flex-col max-md:max-w-none max-md:rounded-b-none max-md:rounded-t-2xl max-md:animate-slide-up',
+              ? 'flex flex-col pt-[var(--safe-top)] pb-[var(--safe-bottom)]'
+              : 'max-h-[92dvh] md:max-h-[90vh] flex flex-col max-md:max-w-none max-md:rounded-b-none max-md:rounded-t-2xl max-md:animate-slide-up max-md:pb-[var(--safe-bottom)]',
             'focus:outline-none',
             className,
           ].filter(Boolean).join(' ')}

@@ -122,7 +122,7 @@ export function WizardEngine() {
 
         {/* Header */}
         <div className="relative z-10 w-full">
-          <div className={`sticky top-0 z-[60] w-full border-b ${colors.bg}/95 ${colors.divider} backdrop-blur-md`}>
+          <div className={`sticky top-0 z-[60] w-full pt-[var(--safe-top)] border-b ${colors.bg}/95 ${colors.divider} backdrop-blur-md`}>
             <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${accent.bgDim}`}>
@@ -161,7 +161,7 @@ export function WizardEngine() {
         </div>
 
         {/* Footer */}
-        <div className="fixed bottom-0 left-0 right-0 z-[60] border-t ${colors.divider} ${colors.bg}/90 backdrop-blur-2xl">
+        <div className="fixed bottom-0 left-0 right-0 z-[60] pb-[var(--safe-bottom)] border-t ${colors.divider} ${colors.bg}/90 backdrop-blur-2xl">
           <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
               © {new Date().getFullYear()} AgendiX

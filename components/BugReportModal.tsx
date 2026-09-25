@@ -172,7 +172,7 @@ export const BugReportModal: React.FC<BugReportModalProps> = ({
           aria-labelledby="bug-report-title"
           tabIndex={-1}
           className={[
-            'relative w-full md:max-w-lg flex flex-col max-h-[92dvh] md:max-h-[88vh]',
+            'relative w-full md:max-w-lg flex flex-col max-h-[92dvh] md:max-h-[88vh] max-md:pb-[var(--safe-bottom)]',
             classes.modalContainer,
             'rounded-t-2xl md:rounded-2xl',
             'animate-in slide-in-from-bottom-full md:slide-in-from-bottom-0 md:fade-in md:zoom-in-95 duration-300',

@@ -74,6 +74,18 @@ INSERT INTO public.appointments (user_id, client_id, professional_id, appointmen
 SELECT '00000000-0000-0000-0000-00000000000b', '30000000-0000-0000-0000-00000000000b', '10000000-0000-0000-0000-00000000000b', pg_temp.at_s(d, v.hm), v.st
 FROM ctx, (VALUES ('10:00', 'Confirmed'), ('11:00', 'NoShow')) AS v(hm, st);
 
+-- Falta marcada DEPOIS do horário (caso real: cliente das 14:00 não veio, marcado às 14:15):
+-- P2 hoje, NoShow começou há 20 min; Confirmed 30 min depois do início da falta.
+INSERT INTO public.clients VALUES ('30000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-00000000000a', 'Carla', '351600000002');
+CREATE TEMP TABLE past_slot AS SELECT date_trunc('minute', now() - interval '20 minutes') AS t;
+GRANT SELECT ON past_slot TO PUBLIC;
+INSERT INTO public.appointments (id, user_id, client_id, professional_id, appointment_time, status, updated_at)
+SELECT v.id::uuid, '00000000-0000-0000-0000-00000000000a', '30000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000002', t + v.off, v.st, '2026-01-01 00:00+00'
+FROM past_slot, (VALUES
+  ('40000000-0000-0000-0000-00000000a000', interval '0 minutes', 'NoShow'),
+  ('40000000-0000-0000-0000-00000000a030', interval '30 minutes', 'Confirmed')
+) AS v(id, off, st);
+
 CREATE TEMP TABLE noshow_before AS SELECT id, status, updated_at, appointment_time FROM public.appointments WHERE status = 'NoShow';
 
 -- Helpers ------------------------------------------------------------------------
@@ -161,6 +173,15 @@ SELECT pg_temp.check('staff wizard: new appt at Cancelled 14:00 -> success (as b
   pg_temp.run_as('authenticated', :STAFF, format($q$SELECT (public.create_secure_booking(%L::uuid, %L::uuid, 'Aline', NULL, NULL, %L::timestamptz, ARRAY['20000000-0000-0000-0000-000000000001'], 45, 30, 'Confirmed', '30000000-0000-0000-0000-000000000001'::uuid))->>'success'$q$, :L, :P1, pg_temp.at_l(d, '14:00'))), 'true') FROM ctx;
 SELECT pg_temp.check('other tenant cannot book into L', left(pg_temp.run_as('authenticated', :S, format($q$SELECT (public.create_secure_booking(%L::uuid, %L::uuid, 'X', NULL, NULL, %L::timestamptz, ARRAY[]::text[], 0, 30, 'Confirmed', NULL))->>'success'$q$, :L, :P1, pg_temp.at_l(d, '10:00'))), 6), 'error:') FROM ctx;
 SELECT pg_temp.check('rebooked NoShow slot 16:00 is busy again', pg_temp.has(pg_temp.slots(:L, d, :P1), '16:00'), 'busy') FROM ctx;
+
+-- Reaproveitar horário de falta já passado (mesmo dia), outro cliente ----------------
+SELECT pg_temp.check('past NoShow slot: 60-min service overlapping next appt -> refused',
+  pg_temp.run_as('authenticated', :STAFF, format($q$SELECT (public.create_secure_booking(%L::uuid, %L::uuid, 'Carla', NULL, NULL, %L::timestamptz, ARRAY['20000000-0000-0000-0000-000000000001'], 70, 60, 'Confirmed', '30000000-0000-0000-0000-000000000002'::uuid))->>'message'$q$, :L, :P2, t)), 'Desculpe, este horário acabou de ser ocupado. Por favor, escolha outro.') FROM past_slot;
+SELECT pg_temp.check('past NoShow slot (started 20 min ago): staff books a DIFFERENT client -> success',
+  pg_temp.run_as('authenticated', :STAFF, format($q$SELECT (public.create_secure_booking(%L::uuid, %L::uuid, 'Carla', NULL, NULL, %L::timestamptz, ARRAY['20000000-0000-0000-0000-000000000001'], 45, 30, 'Confirmed', '30000000-0000-0000-0000-000000000002'::uuid))->>'success'$q$, :L, :P2, t)), 'true') FROM past_slot;
+SELECT pg_temp.check('past NoShow slot: new row is Carla at the NoShow start, NoShow row kept',
+  (SELECT string_agg(c.name || ':' || a.status, ',' ORDER BY a.status) FROM public.appointments a JOIN public.clients c ON c.id = a.client_id, past_slot
+    WHERE a.professional_id = '10000000-0000-0000-0000-000000000002' AND a.appointment_time = past_slot.t), 'Carla:Confirmed,Aline:NoShow');
 
 -- As faltas nunca são tocadas ----------------------------------------------------
 SELECT pg_temp.check('NoShow rows unchanged (status, updated_at, time)',

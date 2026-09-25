@@ -65,9 +65,15 @@ describe('rollback 20260925160000', () => {
   });
 });
 
-describe('Agenda — histórico inclui faltas', () => {
-  it('consulta do histórico traz NoShow junto com concluídos/cancelados', () => {
-    const src = read('pages/Agenda.tsx');
+describe('Agenda — histórico e "+" da falta', () => {
+  const src = read('pages/Agenda.tsx');
+  it('consulta do histórico traz NoShow (selo FALTOU), sem ação de reagendar no histórico', () => {
     expect(src).toMatch(/\.in\('status', \['Completed', 'Cancelled', 'NoShow'\]\)/);
+    expect(src).toContain("'FALTOU'");
+    expect(src).not.toMatch(/history-noshow-reschedule|Reagendar/);
+  });
+  it('"+" da grade usa a falta que cobre a linha para o mesmo contexto do "Usar este horário"', () => {
+    expect(src).toMatch(/findNoShowCoveringSlot\(appointments, professionalId, selectedDate, time\)/);
+    expect(src).toMatch(/onUseSlot=\{\(\) => handleUseNoShowSlot\(detailsApt\)\}/);
   });
 });

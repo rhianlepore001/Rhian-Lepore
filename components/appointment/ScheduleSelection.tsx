@@ -1,4 +1,4 @@
-﻿import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { User, Calendar, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
 import { buildManualBookingTimeSlots } from '../../utils/agendaTimeSlots';
 
@@ -35,7 +35,14 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
     activeCardBg,
     cardBg,
 }) => {
-    const timeSlots = useMemo(() => buildManualBookingTimeSlots(), []);
+    // Horário pré-preenchido fora da grade de 30 min (ex.: falta às 14:15)
+    // entra na lista para aparecer selecionado.
+    const [prefilledTime] = useState(selectedTime);
+    const timeSlots = useMemo(() => {
+        const base = buildManualBookingTimeSlots();
+        if (!prefilledTime || base.includes(prefilledTime)) return base;
+        return [...base, prefilledTime].sort();
+    }, [prefilledTime]);
 
     const changeDate = (days: number) => {
         const newDate = new Date(selectedDate);

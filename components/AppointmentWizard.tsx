@@ -25,6 +25,7 @@ import type { CheckoutPaymentMethod } from '../types/scheduling';
 import { getFirstAvailableProfessional } from '../services/publicBooking';
 import { useToast } from '@/components/ui';
 import { useProducts } from '@/hooks/useCatalog';
+import { slotConflictMessage } from '../utils/noShowSlotReuse';
 import { setAppointmentProductLines } from '@/services/catalog';
 import {
     ProductLinesPicker,
@@ -38,11 +39,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     initialDate = new Date(),
     initialProfessionalId = '',
     initialTime = '',
-    initialClientId = '',
-    initialServiceIds,
-    initialNotes = '',
-    initialStep = 1,
-    rescheduleContext,
+    slotContext,
     teamMembers,
     services,
     categories = [],
@@ -54,7 +51,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     const { establishmentFallback } = useBusinessCopy();
     const createAppointment = useCreateAppointment();
     const { showToast } = useToast();
-    const [step, setStep] = useState<1 | 2 | 3 | 4>(initialStep);
+    const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
     const [loading, setLoading] = useState(false);
 
     // Step 2 State
@@ -65,8 +62,8 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     const [customServicePrice, setCustomServicePrice] = useState('');
 
     // Data State — profissional/horário podem vir pré-preenchidos da grade
-    const [selectedClientId, setSelectedClientId] = useState<string>(initialClientId);
-    const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>(initialServiceIds ?? []);
+    const [selectedClientId, setSelectedClientId] = useState<string>('');
+    const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
     const [selectedProId, setSelectedProId] = useState<string>(initialProfessionalId);
     const [selectedDate, setSelectedDate] = useState<Date>(initialDate);
     const [selectedTime, setSelectedTime] = useState<string>(initialTime);
@@ -74,7 +71,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     // Admin Overrides & Review State
     const [customPrice, setCustomPrice] = useState<string>('');
     const [discount, setDiscount] = useState<string>('0');
-    const [notes, setNotes] = useState<string>(initialNotes);
+    const [notes, setNotes] = useState<string>('');
     const [sendWhatsapp, setSendWhatsapp] = useState(true);
     const [paymentMethod, setPaymentMethod] = useState<string>('');
     const [autoAssigningPro, setAutoAssigningPro] = useState(false);
@@ -84,6 +81,10 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
         companyId: companyId ?? user?.id ?? '',
         includeInactive: false,
     });
+
+    // Horário liberado por falta: profissional + horário já vêm prontos, então
+    // Serviços -> Confirmar direto (Voltar no Confirmar leva ao Horário para trocar).
+    const skipSchedule = !!slotContext && !!selectedProId && !!selectedTime;
 
     const currencySymbol = region === 'PT' ? '€' : 'R$';
     const currencyRegion: Region = region === 'PT' ? 'PT' : 'BR';
@@ -210,7 +211,10 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
             }) as { success?: boolean; message?: string; booking_id?: string };
 
             if (!result.success) {
-                showToast(result.message || 'Horário indisponível', 'warning');
+                // Mensagem clara (ex.: serviço de 60 min num horário liberado de 30 min
+                // com outro agendamento logo depois) — o banco só diz "ocupado".
+                const proName = teamMembers.find(m => m.id === selectedProId)?.name;
+                showToast(slotConflictMessage(selectedTime, duration || 30, proName), 'warning');
                 setLoading(false);
                 return;
             }
@@ -293,12 +297,21 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                 <div className={`relative p-6 flex items-center justify-between border-b border-[var(--color-divider)] shrink-0`}>
                     <div>
                         <h2 id="appointment-wizard-title" className={`text-2xl font-heading ${colors.text} uppercase tracking-wider`}>
-                            {rescheduleContext ? 'Reagendar' : 'Novo Atendimento'}
+                            Novo Atendimento
                         </h2>
-                        {rescheduleContext && (
-                            <p className={`text-xs mt-1 max-w-md ${colors.textMuted}`} data-testid="wizard-reschedule-context">
-                                {rescheduleContext}
-                            </p>
+                        {slotContext && (
+                            <div className="mt-1 max-w-md" data-testid="wizard-slot-context">
+                                <p className={`text-xs ${colors.textMuted}`}>{slotContext}</p>
+                                {selectedProId && selectedTime && (
+                                    <p className={`text-xs font-bold mt-0.5 ${accent.text}`} data-testid="wizard-slot-summary">
+                                        {[
+                                            teamMembers.find(m => m.id === selectedProId)?.name,
+                                            selectedDate.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' }),
+                                            selectedTime,
+                                        ].filter(Boolean).join(' · ')}
+                                    </p>
+                                )}
+                            </div>
                         )}
                         {(() => {
 const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
@@ -489,7 +502,7 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                         {step < 4 ? (
                             <Button
                                 variant="primary"
-                                onClick={() => setStep(prev => (prev + 1) as any)}
+                                onClick={() => setStep(prev => (prev === 2 && skipSchedule ? 4 : prev + 1) as any)}
                                 disabled={
                                     (step === 1 && !selectedClientId) ||
                                     (step === 2 && selectedServiceIds.length === 0 && !(isCustomService && customServiceName.trim())) ||

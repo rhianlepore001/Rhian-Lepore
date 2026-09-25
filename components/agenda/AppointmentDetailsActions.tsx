@@ -17,10 +17,11 @@ interface AppointmentDetailsActionsProps {
   onCancel: () => void;
   onClose: () => void;
   /**
-   * Falta (NoShow): cria um NOVO agendamento (mesmo cliente/serviço) em outro
-   * horário. Liberado para toda a equipe (criar não depende da permissão de edição).
+   * Falta (NoShow): "Usar este horário" — abre um NOVO agendamento no horário
+   * liberado (mesmo profissional, qualquer cliente). Liberado para toda a
+   * equipe (criar não depende da permissão de edição).
    */
-  onReschedule?: () => void;
+  onUseSlot?: () => void;
 }
 
 /**
@@ -38,29 +39,29 @@ export const AppointmentDetailsActions: React.FC<AppointmentDetailsActionsProps>
   onEdit,
   onCancel,
   onClose,
-  onReschedule,
+  onUseSlot,
 }) => {
   const { colors } = useBrutalTheme();
   const isOpen = status === 'Confirmed' || status === 'Pending';
 
   const isNoShow = isNoShowStatus(status);
 
-  if (isNoShow && onReschedule) {
+  if (isNoShow && onUseSlot) {
     return (
       <>
         <Button
           variant="primary"
           className="w-full flex justify-center items-center gap-2"
-          onClick={onReschedule}
-          data-testid="noshow-reschedule"
+          onClick={onUseSlot}
+          data-testid="noshow-use-slot"
         >
-          <CalendarPlus className="w-4 h-4" /> Reagendar
+          <CalendarPlus className="w-4 h-4" /> Usar este horário
         </Button>
         <Button variant="ghost" className="w-full flex justify-center items-center gap-2" onClick={onClose}>
           Fechar
         </Button>
-        <p className={`text-xs ${colors.textMuted}`} data-testid="noshow-reschedule-hint">
-          Cria um novo agendamento para o mesmo cliente. A falta continua no histórico e o horário já está livre.
+        <p className={`text-xs ${colors.textMuted}`} data-testid="noshow-use-slot-hint">
+          O horário ficou livre. Crie um novo agendamento nele para qualquer cliente — a falta continua no histórico.
         </p>
       </>
     );

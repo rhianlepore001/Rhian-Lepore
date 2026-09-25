@@ -38,7 +38,7 @@ import { buildAgendaGridSlots } from '../utils/agendaTimeSlots';
 import { useAppTour } from '../hooks/useAppTour';
 import { logger } from '../utils/Logger';
 import { getVisualStatus, isNoShowStatus, VISUAL_STATUS_CLASSES, VISUAL_STATUS_LABEL } from '../utils/appointmentStatus';
-import { buildNoShowReschedulePrefill } from '../utils/noShowReschedule';
+import { buildNoShowSlotPrefill, findNoShowCoveringSlot, noShowSlotContext } from '../utils/noShowSlotReuse';
 import { useTenantLocale } from '../hooks/useTenantLocale';
 import { useBusinessCopy } from '../hooks/useBusinessCopy';
 
@@ -121,17 +121,14 @@ export const Agenda: React.FC = () => {
     const [showNewAppointmentModal, setShowNewAppointmentModal] = useState(false);
     /**
      * Prefill do wizard: célula vazia da grade (profissional + horário) ou
-     * "Reagendar" de uma falta (cliente, serviços, profissional, observação).
+     * horário liberado por falta ("Usar este horário" / "+" ao lado da falta):
+     * profissional, dia e horário da falta; cliente e serviço em branco.
      */
     const [wizardPrefill, setWizardPrefill] = useState<{
         professionalId: string;
         time: string;
         date?: Date;
-        clientId?: string;
-        serviceIds?: string[];
-        notes?: string;
-        step?: 1 | 2 | 3 | 4;
-        rescheduleContext?: string;
+        slotContext?: string;
     } | null>(null);
     const [showHistoryModal, setShowHistoryModal] = useState(false);
     const [showAllAppointmentsModal, setShowAllAppointmentsModal] = useState(false);
@@ -979,28 +976,30 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
     };
 
     const openNewAppointmentAt = (professionalId: string, time: string) => {
-        setWizardPrefill({ professionalId, time });
+        // "+" ao lado de uma falta: mesmo comportamento do "Usar este horário".
+        const noShow = findNoShowCoveringSlot(appointments, professionalId, selectedDate, time);
+        setWizardPrefill({
+            professionalId,
+            time,
+            slotContext: noShow ? noShowSlotContext(noShow) : undefined,
+        });
         setShowNewAppointmentModal(true);
     };
 
     /**
-     * Falta (NoShow) -> "Reagendar": abre o wizard de NOVO agendamento com o
-     * mesmo cliente/serviço/profissional. A falta não é alterada (fica no
-     * histórico); criar segue liberado para toda a equipe.
+     * Falta (NoShow) -> "Usar este horário": abre o wizard de NOVO agendamento
+     * no mesmo profissional/dia/horário, com cliente e serviço em branco
+     * (qualquer cliente). A falta não é alterada; criar é liberado para toda a equipe.
      */
-    const handleRescheduleNoShow = (apt: { client_id?: string | null; clientName?: string | null; service?: string | null; professional_id?: string | null; appointment_time: string }) => {
-        const prefill = buildNoShowReschedulePrefill(apt, { services, teamMembers, clients });
+    const handleUseNoShowSlot = (apt: { clientName?: string | null; professional_id?: string | null; appointment_time: string; status?: string | null; duration_minutes?: number | null }) => {
+        const prefill = buildNoShowSlotPrefill(apt, teamMembers);
         setShowingDetailsAppointment(null);
         setShowHistoryModal(false);
         setWizardPrefill({
             professionalId: prefill.professionalId,
-            time: '',
+            time: prefill.time,
             date: prefill.date,
-            clientId: prefill.clientId,
-            serviceIds: prefill.serviceIds,
-            notes: prefill.notes,
-            step: prefill.startStep,
-            rescheduleContext: prefill.contextLabel,
+            slotContext: prefill.slotContext,
         });
         setShowNewAppointmentModal(true);
     };
@@ -1458,7 +1457,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                 }}
                                 onCancel={() => handleCancelAppointment(detailsApt.id, false, detailsApt.professional_id)}
                                 onClose={() => setShowingDetailsAppointment(null)}
-                                onReschedule={() => handleRescheduleNoShow(detailsApt)}
+                                onUseSlot={() => handleUseNoShowSlot(detailsApt)}
                             />
                         </div>
                     </div>
@@ -1595,15 +1594,6 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                                             Preço Customizado
                                                         </span>
                                                     )}
-                                                    {isNoShow && (
-                                                        <button
-                                                            onClick={() => handleRescheduleNoShow(apt)}
-                                                            className={`text-xs font-bold px-2 py-1 rounded border ${accent.border} ${accent.text} hover:bg-[var(--color-accent-dim)] transition-colors`}
-                                                            data-testid="history-noshow-reschedule"
-                                                        >
-                                                            Reagendar
-                                                        </button>
-                                                    )}
                                                     {/* Excluir: só concluído/cancelado (regra da RPC delete_appointment_with_finance) */}
                                                     {!isStaff && !isNoShow && (
                                                         <button
@@ -1640,11 +1630,11 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                         setSelectedDate(nextDate);
                         navigate(`/agenda?date=${newDateStr}`, { replace: true });
                         // Refetch com a data do agendamento (evita closure stale de selectedDate)
-                        const wasReschedule = !!wizardPrefill?.rescheduleContext;
+                        const usedNoShowSlot = !!wizardPrefill?.slotContext;
                         await fetchData(nextDate);
                         showToast(
-                            wasReschedule
-                                ? 'Novo horário agendado. A falta continua no histórico.'
+                            usedNoShowSlot
+                                ? 'Agendamento criado no horário liberado. A falta continua no histórico.'
                                 : 'Agendamento criado com sucesso!',
                             'success',
                         );
@@ -1652,11 +1642,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                     initialDate={wizardPrefill?.date ?? selectedDate}
                     initialProfessionalId={wizardPrefill?.professionalId}
                     initialTime={wizardPrefill?.time}
-                    initialClientId={wizardPrefill?.clientId}
-                    initialServiceIds={wizardPrefill?.serviceIds}
-                    initialNotes={wizardPrefill?.notes}
-                    initialStep={wizardPrefill?.step}
-                    rescheduleContext={wizardPrefill?.rescheduleContext}
+                    slotContext={wizardPrefill?.slotContext}
                     teamMembers={teamMembers}
                     services={services}
                     categories={categories}

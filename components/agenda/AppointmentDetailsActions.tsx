@@ -1,7 +1,8 @@
 import React from 'react';
-import { Ban, Check, DollarSign, Edit2, Lock, X } from 'lucide-react';
+import { Ban, CalendarPlus, Check, DollarSign, Edit2, Lock, X } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
+import { isNoShowStatus } from '../../utils/appointmentStatus';
 
 interface AppointmentDetailsActionsProps {
   status: string;
@@ -15,6 +16,12 @@ interface AppointmentDetailsActionsProps {
   onEdit: () => void;
   onCancel: () => void;
   onClose: () => void;
+  /**
+   * Falta (NoShow): "Usar este horário" — abre um NOVO agendamento no horário
+   * liberado (mesmo profissional, qualquer cliente). Liberado para toda a
+   * equipe (criar não depende da permissão de edição).
+   */
+  onUseSlot?: () => void;
 }
 
 /**
@@ -32,9 +39,33 @@ export const AppointmentDetailsActions: React.FC<AppointmentDetailsActionsProps>
   onEdit,
   onCancel,
   onClose,
+  onUseSlot,
 }) => {
   const { colors } = useBrutalTheme();
   const isOpen = status === 'Confirmed' || status === 'Pending';
+
+  const isNoShow = isNoShowStatus(status);
+
+  if (isNoShow && onUseSlot) {
+    return (
+      <>
+        <Button
+          variant="primary"
+          className="w-full flex justify-center items-center gap-2"
+          onClick={onUseSlot}
+          data-testid="noshow-use-slot"
+        >
+          <CalendarPlus className="w-4 h-4" /> Usar este horário
+        </Button>
+        <Button variant="ghost" className="w-full flex justify-center items-center gap-2" onClick={onClose}>
+          Fechar
+        </Button>
+        <p className={`text-xs ${colors.textMuted}`} data-testid="noshow-use-slot-hint">
+          O horário ficou livre. Crie um novo agendamento nele para qualquer cliente — a falta continua no histórico.
+        </p>
+      </>
+    );
+  }
 
   if (!isOpen) {
     return (

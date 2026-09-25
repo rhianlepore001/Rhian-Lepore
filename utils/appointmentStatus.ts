@@ -104,3 +104,20 @@ export const VISUAL_STATUS_CLASSES: Record<VisualStatus, VisualStatusClasses> = 
     text: 'text-[var(--color-danger)]',
   },
 };
+
+/**
+ * Status que LIBERAM o horário para novos agendamentos: cancelado e falta
+ * (NoShow). Mesma regra do banco (get_available_slots, public_booking_slot_busy,
+ * create_secure_booking — migration 20260925160000_noshow_frees_slot).
+ * O registro continua no histórico; só deixa de ocupar a grade.
+ */
+export function appointmentFreesSlot(status: string | null | undefined): boolean {
+  const s = (status ?? '').trim().toLowerCase();
+  return s === 'cancelled' || s === 'noshow' || s === 'no_show';
+}
+
+/** Falta (NoShow)? Aceita as mesmas variações que getVisualStatus. */
+export function isNoShowStatus(status: string | null | undefined): boolean {
+  const s = (status ?? '').trim().toLowerCase();
+  return s === 'noshow' || s === 'no_show';
+}

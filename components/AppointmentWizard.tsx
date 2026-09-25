@@ -25,6 +25,7 @@ import type { CheckoutPaymentMethod } from '../types/scheduling';
 import { getFirstAvailableProfessional } from '../services/publicBooking';
 import { useToast } from '@/components/ui';
 import { useProducts } from '@/hooks/useCatalog';
+import { slotConflictMessage } from '../utils/noShowSlotReuse';
 import { setAppointmentProductLines } from '@/services/catalog';
 import {
     ProductLinesPicker,
@@ -38,6 +39,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     initialDate = new Date(),
     initialProfessionalId = '',
     initialTime = '',
+    slotContext,
     teamMembers,
     services,
     categories = [],
@@ -79,6 +81,10 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
         companyId: companyId ?? user?.id ?? '',
         includeInactive: false,
     });
+
+    // Horário liberado por falta: profissional + horário já vêm prontos, então
+    // Serviços -> Confirmar direto (Voltar no Confirmar leva ao Horário para trocar).
+    const skipSchedule = !!slotContext && !!selectedProId && !!selectedTime;
 
     const currencySymbol = region === 'PT' ? '€' : 'R$';
     const currencyRegion: Region = region === 'PT' ? 'PT' : 'BR';
@@ -205,7 +211,10 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
             }) as { success?: boolean; message?: string; booking_id?: string };
 
             if (!result.success) {
-                showToast(result.message || 'Horário indisponível', 'warning');
+                // Mensagem clara (ex.: serviço de 60 min num horário liberado de 30 min
+                // com outro agendamento ou pedido online dentro da duração).
+                const proName = teamMembers.find(m => m.id === selectedProId)?.name;
+                showToast(slotConflictMessage(duration || 30, proName, result.message), 'warning');
                 setLoading(false);
                 return;
             }
@@ -290,6 +299,20 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                         <h2 id="appointment-wizard-title" className={`text-2xl font-heading ${colors.text} uppercase tracking-wider`}>
                             Novo Atendimento
                         </h2>
+                        {slotContext && (
+                            <div className="mt-1 max-w-md" data-testid="wizard-slot-context">
+                                <p className={`text-xs ${colors.textMuted}`}>{slotContext}</p>
+                                {selectedProId && selectedTime && (
+                                    <p className={`text-xs font-bold mt-0.5 ${accent.text}`} data-testid="wizard-slot-summary">
+                                        {[
+                                            teamMembers.find(m => m.id === selectedProId)?.name,
+                                            selectedDate.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' }),
+                                            selectedTime,
+                                        ].filter(Boolean).join(' · ')}
+                                    </p>
+                                )}
+                            </div>
+                        )}
                         {(() => {
 const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                              const accentRing = 'ring-[var(--color-input-focus)] ring-offset-[var(--color-modal-bg)]';
@@ -479,7 +502,7 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                         {step < 4 ? (
                             <Button
                                 variant="primary"
-                                onClick={() => setStep(prev => (prev + 1) as any)}
+                                onClick={() => setStep(prev => (prev === 2 && skipSchedule ? 4 : prev + 1) as any)}
                                 disabled={
                                     (step === 1 && !selectedClientId) ||
                                     (step === 2 && selectedServiceIds.length === 0 && !(isCustomService && customServiceName.trim())) ||

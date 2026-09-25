@@ -37,7 +37,8 @@ import { formatDateForInput, formatLocalDateString, combineDateAndTime } from '.
 import { buildAgendaGridSlots } from '../utils/agendaTimeSlots';
 import { useAppTour } from '../hooks/useAppTour';
 import { logger } from '../utils/Logger';
-import { getVisualStatus, VISUAL_STATUS_CLASSES, VISUAL_STATUS_LABEL } from '../utils/appointmentStatus';
+import { getVisualStatus, isNoShowStatus, VISUAL_STATUS_CLASSES, VISUAL_STATUS_LABEL } from '../utils/appointmentStatus';
+import { buildNoShowSlotPrefill, findNoShowCoveringSlot, noShowSlotContext, noShowSlotEnded } from '../utils/noShowSlotReuse';
 import { useTenantLocale } from '../hooks/useTenantLocale';
 import { useBusinessCopy } from '../hooks/useBusinessCopy';
 
@@ -118,8 +119,17 @@ export const Agenda: React.FC = () => {
     const [fetchError, setFetchError] = useState<string | null>(null);
     const [selectedDate, setSelectedDate] = useState(getInitialDate(searchParams));
     const [showNewAppointmentModal, setShowNewAppointmentModal] = useState(false);
-    /** Prefill ao clicar numa célula vazia da grade (profissional + horário) */
-    const [wizardPrefill, setWizardPrefill] = useState<{ professionalId: string; time: string } | null>(null);
+    /**
+     * Prefill do wizard: célula vazia da grade (profissional + horário) ou
+     * horário liberado por falta ("Usar este horário" / "+" ao lado da falta):
+     * profissional, dia e horário da falta; cliente e serviço em branco.
+     */
+    const [wizardPrefill, setWizardPrefill] = useState<{
+        professionalId: string;
+        time: string;
+        date?: Date;
+        slotContext?: string;
+    } | null>(null);
     const [showHistoryModal, setShowHistoryModal] = useState(false);
     const [showAllAppointmentsModal, setShowAllAppointmentsModal] = useState(false);
     const [historyAppointments, setHistoryAppointments] = useState<Appointment[]>([]);
@@ -539,7 +549,7 @@ export const Agenda: React.FC = () => {
             .neq('origin', 'queue')
             .gte('appointment_time', startOfMonth.toISOString())
             .lte('appointment_time', endOfMonth.toISOString())
-            .in('status', ['Completed', 'Cancelled'])
+            .in('status', ['Completed', 'Cancelled', 'NoShow']) // faltas ficam no histórico
             .order('appointment_time', { ascending: false });
 
         if (data) {
@@ -966,7 +976,31 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
     };
 
     const openNewAppointmentAt = (professionalId: string, time: string) => {
-        setWizardPrefill({ professionalId, time });
+        // "+" ao lado de uma falta: mesmo comportamento do "Usar este horário".
+        const noShow = findNoShowCoveringSlot(appointments, professionalId, selectedDate, time);
+        setWizardPrefill({
+            professionalId,
+            time,
+            slotContext: noShow ? noShowSlotContext(noShow) : undefined,
+        });
+        setShowNewAppointmentModal(true);
+    };
+
+    /**
+     * Falta (NoShow) -> "Usar este horário": abre o wizard de NOVO agendamento
+     * no mesmo profissional/dia/horário, com cliente e serviço em branco
+     * (qualquer cliente). A falta não é alterada; criar é liberado para toda a equipe.
+     */
+    const handleUseNoShowSlot = (apt: { clientName?: string | null; professional_id?: string | null; appointment_time: string; status?: string | null; duration_minutes?: number | null }) => {
+        const prefill = buildNoShowSlotPrefill(apt, teamMembers);
+        setShowingDetailsAppointment(null);
+        setShowHistoryModal(false);
+        setWizardPrefill({
+            professionalId: prefill.professionalId,
+            time: prefill.time,
+            date: prefill.date,
+            slotContext: prefill.slotContext,
+        });
         setShowNewAppointmentModal(true);
     };
 
@@ -1423,6 +1457,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                 }}
                                 onCancel={() => handleCancelAppointment(detailsApt.id, false, detailsApt.professional_id)}
                                 onClose={() => setShowingDetailsAppointment(null)}
+                                onUseSlot={noShowSlotEnded(detailsApt) ? undefined : () => handleUseNoShowSlot(detailsApt)}
                             />
                         </div>
                     </div>
@@ -1495,22 +1530,30 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                         {/* History List */}
                         <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
                             {historyAppointments.length === 0 ? (
-                                <EmptyState icon={History} message="Nenhum agendamento concluído ou cancelado neste mês" />
+                                <EmptyState icon={History} message="Nenhum agendamento concluído, cancelado ou com falta neste mês" />
                             ) : (
                                 historyAppointments.map(apt => {
                                     const professional = teamMembers.find(m => m.id === apt.professional_id);
                                     const { hasDiscount, discountPercentage, isCustomPriceHigher } = getDiscountInfo(apt);
+                                    const isNoShow = isNoShowStatus(apt.status);
+                                    const historyBorder = apt.status === 'Completed'
+                                        ? 'border-[var(--color-success-border)]'
+                                        : isNoShow ? VISUAL_STATUS_CLASSES.noshow.card : 'border-[var(--color-danger-border)]';
+                                    const historyBadge = apt.status === 'Completed'
+                                        ? status.successBg + ' ' + status.success
+                                        : isNoShow ? 'bg-stone-500/15 ' + VISUAL_STATUS_CLASSES.noshow.text : status.dangerBg + ' ' + status.danger;
 
                                     return (
                                         <div
                                             key={apt.id}
-                                            className={`${colors.surface} rounded-xl p-5 border-2 ${apt.status === 'Completed' ? 'border-[var(--color-success-border)]' : 'border-[var(--color-danger-border)]'}`}
+                                            className={`${colors.surface} rounded-xl p-5 border-2 ${historyBorder}`}
+                                            data-history-status={apt.status}
                                         >
                                             <div className="flex items-start justify-between">
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2 mb-2">
-                                                        <span className={`text-xs font-mono font-bold px-2 py-1 rounded ${apt.status === 'Completed' ? status.successBg + ' ' + status.success : status.dangerBg + ' ' + status.danger}`}>
-                                                            {apt.status === 'Completed' ? 'CONCLUÍDO' : 'CANCELADO'}
+                                                        <span className={`text-xs font-mono font-bold px-2 py-1 rounded ${historyBadge}`}>
+                                                            {apt.status === 'Completed' ? 'CONCLUÍDO' : isNoShow ? 'FALTOU' : 'CANCELADO'}
                                                         </span>
                                                         <span className={`${colors.textMuted} text-xs`}>
                                                             {new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} às {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
@@ -1551,7 +1594,8 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                                             Preço Customizado
                                                         </span>
                                                     )}
-                                                    {!isStaff && (
+                                                    {/* Excluir: só concluído/cancelado (regra da RPC delete_appointment_with_finance) */}
+                                                    {!isStaff && !isNoShow && (
                                                         <button
                                                             onClick={() => handleDeleteHistoryAppointment(apt.id)}
                                                             className={`p-2 text-[var(--color-danger)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)] rounded-lg transition-colors`}
@@ -1586,12 +1630,19 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                         setSelectedDate(nextDate);
                         navigate(`/agenda?date=${newDateStr}`, { replace: true });
                         // Refetch com a data do agendamento (evita closure stale de selectedDate)
+                        const usedNoShowSlot = !!wizardPrefill?.slotContext;
                         await fetchData(nextDate);
-                        showToast('Agendamento criado com sucesso!', 'success');
+                        showToast(
+                            usedNoShowSlot
+                                ? 'Agendamento criado no horário liberado. A falta continua no histórico.'
+                                : 'Agendamento criado com sucesso!',
+                            'success',
+                        );
                     }}
-                    initialDate={selectedDate}
+                    initialDate={wizardPrefill?.date ?? selectedDate}
                     initialProfessionalId={wizardPrefill?.professionalId}
                     initialTime={wizardPrefill?.time}
+                    slotContext={wizardPrefill?.slotContext}
                     teamMembers={teamMembers}
                     services={services}
                     categories={categories}

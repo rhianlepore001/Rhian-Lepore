@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Check, AlertTriangle, Clock, Ban, X, Edit2, MessageCircle, Users, Plus } from 'lucide-react';
 import { AgendaEmptySlotCell } from './AgendaEmptySlotCell';
-import { getVisualStatus, VISUAL_STATUS_CLASSES, VISUAL_STATUS_LABEL, type VisualStatus } from '../../utils/appointmentStatus';
+import { noShowSlotEnded } from '../../utils/noShowSlotReuse';
+import { appointmentFreesSlot, getVisualStatus, isNoShowStatus, VISUAL_STATUS_CLASSES, VISUAL_STATUS_LABEL, type VisualStatus } from '../../utils/appointmentStatus';
 import { formatCurrency, type Region } from '../../utils/formatters';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 
@@ -47,6 +48,8 @@ export interface AgendaResourceGridProps {
   onToggleProfessional: (id: string) => void;
   onSelectAppointment: (apt: AgendaGridAppointment) => void;
   onEmptySlotClick: (professionalId: string, time: string) => void;
+  /** Relógio (testes). Falta cujo horário já terminou não oferece o "+" ao lado. */
+  now?: Date;
 }
 
 function firstName(fullName: string): string {
@@ -102,7 +105,9 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
   onToggleProfessional,
   onSelectAppointment,
   onEmptySlotClick,
+  now,
 }) => {
+  const nowRef = now ?? new Date();
   const { colors, accent } = useBrutalTheme();
   const [addOpen, setAddOpen] = useState(false);
   const addWrapRef = useRef<HTMLDivElement>(null);
@@ -204,7 +209,12 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                 const range = slotRange(apt, timeSlots);
                 return range ? { apt, ...range } : null;
               })
-              .filter((o): o is { apt: AgendaGridAppointment; startIdx: number; span: number } => o !== null);
+              .filter((o): o is { apt: AgendaGridAppointment; startIdx: number; span: number } => o !== null)
+              // Liberados (falta/cancelado) primeiro: os ativos vêm depois no DOM e
+              // também têm z-index maior — ficam sempre por cima e recebem o clique.
+              .sort((a, b) => Number(appointmentFreesSlot(b.apt.status)) - Number(appointmentFreesSlot(a.apt.status)));
+            const overlaps = (a: { startIdx: number; span: number }, b: { startIdx: number; span: number }) =>
+              a.startIdx < b.startIdx + b.span && b.startIdx < a.startIdx + a.span;
 
             return (
               <div
@@ -254,8 +264,16 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
 
                 <div className="relative overflow-hidden">
                   {timeSlots.map((time, slotIdx) => {
-                    const occupied = columnOverlays.some(
+                    const covering = columnOverlays.filter(
                       (o) => slotIdx >= o.startIdx && slotIdx < o.startIdx + o.span,
+                    );
+                    // Falta/cancelado não ocupa o horário (mesma regra do banco):
+                    // o card continua visível e o "+" aparece ao lado.
+                    const occupied = covering.some((o) => !appointmentFreesSlot(o.apt.status));
+                    const freedOnly = !occupied && covering.length > 0;
+                    // Falta cujo horário já terminou: sem "+" ao lado (nada a reaproveitar).
+                    const endedNoShow = freedOnly && covering.some(
+                      (o) => isNoShowStatus(o.apt.status) && noShowSlotEnded(o.apt, nowRef),
                     );
                     return (
                       <div
@@ -263,18 +281,20 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                         data-agenda-slot={time}
                         className={`relative h-12 md:h-14 w-full border-b ${colors.divider} last:border-b-0`}
                       >
-                        {!occupied && (
+                        {!occupied && !endedNoShow && (
                           <AgendaEmptySlotCell
                             time={time}
                             professionalName={member.name}
                             onClick={() => onEmptySlotClick(member.id, time)}
+                            compact={freedOnly}
                           />
                         )}
                       </div>
                     );
                   })}
 
-                  {columnOverlays.map(({ apt, startIdx, span }) => {
+                  {columnOverlays.map((overlay) => {
+                    const { apt, startIdx, span } = overlay;
                     const time = timeSlots[startIdx];
                     const isUnassigned = !apt.professional_id;
                     const visual = getVisualStatus(apt);
@@ -283,6 +303,18 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                     const cardTokens = isUnassigned
                       ? 'border-[var(--color-danger-border)] bg-[var(--color-danger-bg)]'
                       : vc.card;
+                    // Horário liberado (falta/cancelado): card estreito à esquerda,
+                    // deixando a faixa da direita para o "+" de novo agendamento.
+                    const freesSlot = appointmentFreesSlot(apt.status);
+                    // Falta/cancelado e agendamento ativo no mesmo horário (ex.: "Usar
+                    // este horário"): lado a lado — faixa estreita à esquerda para o
+                    // liberado, resto para o ativo (z maior, sempre clicável).
+                    const sharesWithOther = columnOverlays.some(
+                      (o) => o !== overlay && appointmentFreesSlot(o.apt.status) !== freesSlot && overlaps(o, overlay),
+                    );
+                    const layout = freesSlot
+                      ? `left-0.5 ${sharesWithOther ? 'right-[68%]' : 'right-[40%]'} z-[1] opacity-80`
+                      : `${sharesWithOther ? 'left-[33%]' : 'left-0.5'} right-0.5 z-[2]`;
 
                     return (
                       <button
@@ -291,11 +323,13 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                         onClick={() => onSelectAppointment(apt)}
                         aria-label={`${apt.clientName} — ${apt.service} às ${time}`}
                         data-agenda-span={span}
+                        data-frees-slot={freesSlot ? 'true' : undefined}
+                        data-shares-slot={sharesWithOther ? 'true' : undefined}
                         style={{
                           top: `calc(var(--agenda-slot-h) * ${startIdx} + 2px)`,
                           height: `calc(var(--agenda-slot-h) * ${span} - 4px)`,
                         }}
-                        className={`agenda-event-chip absolute left-0.5 right-0.5 z-[1] overflow-hidden text-left rounded-md border ${cardTokens} px-1.5 py-1 min-h-0 flex flex-col justify-center gap-0.5 transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-accent`}
+                        className={`agenda-event-chip absolute ${layout} overflow-hidden text-left rounded-md border ${cardTokens} px-1.5 py-1 min-h-0 flex flex-col justify-center gap-0.5 transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-accent`}
                       >
                         <div className="flex items-start justify-between gap-1 min-w-0">
                           <h4 className={`text-xs font-bold truncate leading-tight ${colors.text}`}>{apt.clientName}</h4>

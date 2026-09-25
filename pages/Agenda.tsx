@@ -38,7 +38,7 @@ import { buildAgendaGridSlots } from '../utils/agendaTimeSlots';
 import { useAppTour } from '../hooks/useAppTour';
 import { logger } from '../utils/Logger';
 import { getVisualStatus, isNoShowStatus, VISUAL_STATUS_CLASSES, VISUAL_STATUS_LABEL } from '../utils/appointmentStatus';
-import { buildNoShowSlotPrefill, findNoShowCoveringSlot, noShowSlotContext } from '../utils/noShowSlotReuse';
+import { buildNoShowSlotPrefill, findNoShowCoveringSlot, noShowSlotContext, noShowSlotEnded } from '../utils/noShowSlotReuse';
 import { useTenantLocale } from '../hooks/useTenantLocale';
 import { useBusinessCopy } from '../hooks/useBusinessCopy';
 
@@ -1457,7 +1457,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                 }}
                                 onCancel={() => handleCancelAppointment(detailsApt.id, false, detailsApt.professional_id)}
                                 onClose={() => setShowingDetailsAppointment(null)}
-                                onUseSlot={() => handleUseNoShowSlot(detailsApt)}
+                                onUseSlot={noShowSlotEnded(detailsApt) ? undefined : () => handleUseNoShowSlot(detailsApt)}
                             />
                         </div>
                     </div>

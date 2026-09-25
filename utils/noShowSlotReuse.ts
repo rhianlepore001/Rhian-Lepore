@@ -83,14 +83,35 @@ export function findNoShowCoveringSlot<T extends NoShowSlotSource>(
 }
 
 /**
- * Mensagem clara quando o banco recusa o horário (create_secure_booking: outro
- * agendamento começa dentro de [início, início + duração) ou pedido online
- * sobrepõe). Ex.: serviço de 60 min num horário liberado de 30 min.
+ * O horário da falta já terminou? (início + duração, padrão 30 min, antes de
+ * `now`). Falta de hoje ainda em andamento ou futura continua reaproveitável;
+ * falta de dia passado / já encerrada não oferece "Usar este horário" nem o "+".
  */
-export function slotConflictMessage(time: string, durationMin: number, professionalName?: string | null): string {
-  const [h, m] = time.split(':').map(Number);
-  const endMins = h * 60 + (m || 0) + durationMin;
-  const end = `${pad(Math.floor(endMins / 60) % 24)}:${pad(endMins % 60)}`;
-  const who = professionalName?.trim() ? `${professionalName.trim()} já tem` : 'já existe';
-  return `Esse horário não está livre para ${durationMin} min: ${who} outro agendamento entre ${time} e ${end}. Escolha outro horário ou serviços mais curtos.`;
+export function noShowSlotEnded(
+  apt: Pick<NoShowSlotSource, 'appointment_time' | 'duration_minutes'>,
+  now: Date = new Date(),
+): boolean {
+  const start = new Date(apt.appointment_time).getTime();
+  if (Number.isNaN(start)) return true;
+  const mins = apt.duration_minutes && apt.duration_minutes > 0 ? apt.duration_minutes : 30;
+  return start + mins * 60_000 < now.getTime();
+}
+
+/** Mensagem padrão de create_secure_booking quando o horário está ocupado. */
+const DB_BUSY_MESSAGE = /acabou de ser ocupado/i;
+
+/**
+ * Mensagem quando o banco recusa o horário. Genérica de propósito: o motivo
+ * pode ser outro agendamento OU um pedido online pendente dentro da duração
+ * escolhida (ex.: serviço de 60 min num horário liberado de 30 min).
+ * Mensagens específicas do banco (não a de "ocupado") são mantidas.
+ */
+export function slotConflictMessage(
+  durationMin: number,
+  professionalName?: string | null,
+  dbMessage?: string | null,
+): string {
+  if (dbMessage && dbMessage.trim() && !DB_BUSY_MESSAGE.test(dbMessage)) return dbMessage.trim();
+  const who = professionalName?.trim() ? ` com ${professionalName.trim()}` : '';
+  return `Esse horário não está livre para ${durationMin} min${who}. Escolha outro horário ou serviços mais curtos.`;
 }

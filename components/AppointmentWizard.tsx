@@ -212,9 +212,9 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
 
             if (!result.success) {
                 // Mensagem clara (ex.: serviço de 60 min num horário liberado de 30 min
-                // com outro agendamento logo depois) — o banco só diz "ocupado".
+                // com outro agendamento ou pedido online dentro da duração).
                 const proName = teamMembers.find(m => m.id === selectedProId)?.name;
-                showToast(slotConflictMessage(selectedTime, duration || 30, proName), 'warning');
+                showToast(slotConflictMessage(duration || 30, proName, result.message), 'warning');
                 setLoading(false);
                 return;
             }

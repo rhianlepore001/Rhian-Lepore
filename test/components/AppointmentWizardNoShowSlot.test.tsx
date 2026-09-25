@@ -134,7 +134,7 @@ describe('AppointmentWizard — "Usar este horário" da falta', () => {
     expect(screen.getByRole('button', { name: '14:15' })).toBeInTheDocument();
   });
 
-  it('serviço maior que o intervalo livre: banco recusa e a mensagem explica', async () => {
+  it('serviço maior que o intervalo livre (agendamento ou pedido online pendente): banco recusa e a mensagem explica', async () => {
     mutateAsync.mockResolvedValue({ success: false, message: 'Desculpe, este horário acabou de ser ocupado. Por favor, escolha outro.' });
     render(<AppointmentWizard {...props} {...slotProps} />);
     await userEvent.click(screen.getByRole('button', { name: 'cliente Bruno Walk-in' }));
@@ -144,7 +144,7 @@ describe('AppointmentWizard — "Usar este horário" da falta', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar Atendimento' }));
     expect(mutateAsync.mock.calls[0][0].durationMinutes).toBe(60);
     expect(showToast).toHaveBeenCalledWith(
-      'Esse horário não está livre para 60 min: Bob já tem outro agendamento entre 14:00 e 15:00. Escolha outro horário ou serviços mais curtos.',
+      'Esse horário não está livre para 60 min com Bob. Escolha outro horário ou serviços mais curtos.',
       'warning',
     );
     expect(onSuccess).not.toHaveBeenCalled();

@@ -17,7 +17,10 @@ const apt = (status: string, time = '08:00'): AgendaGridAppointment => ({
   professional_id: 'm1',
 });
 
-function setup(appointments: AgendaGridAppointment[]) {
+// Relógio antes dos horários do teste (05/01 07:00): faltas ainda reaproveitáveis.
+const BEFORE = new Date(2026, 0, 5, 7, 0);
+
+function setup(appointments: AgendaGridAppointment[], now: Date = BEFORE) {
   const onEmptySlotClick = vi.fn();
   const onSelectAppointment = vi.fn();
   render(
@@ -33,6 +36,7 @@ function setup(appointments: AgendaGridAppointment[]) {
       onToggleProfessional={vi.fn()}
       onSelectAppointment={onSelectAppointment}
       onEmptySlotClick={onEmptySlotClick}
+      now={now}
     />,
   );
   const slot = (time: string) => document.querySelector(`[data-testid="agenda-col-m1"] [data-agenda-slot="${time}"]`) as HTMLElement;
@@ -72,5 +76,44 @@ describe('AgendaResourceGrid — falta/cancelado liberam o horário', () => {
     const { slot } = setup([apt('NoShow')]);
     const plus = within(slot('08:30')).getByRole('button', { name: /Novo agendamento às 08:30/ });
     expect(plus).not.toHaveAttribute('data-freed-slot');
+  });
+
+  it('falta + agendamento ativo no MESMO horário: ativo por cima (z maior, depois no DOM) e ambos clicáveis', async () => {
+    const noShow = apt('NoShow');
+    const active = { ...apt('Confirmed'), id: 'a-new', clientName: 'Bruno' };
+    const { onSelectAppointment } = setup([active, noShow]); // ordem da API não importa
+    const noShowChip = screen.getByRole('button', { name: /Aline — Corte às 08:00/ });
+    const activeChip = screen.getByRole('button', { name: /Bruno — Corte às 08:00/ });
+    // ativo: z-[2], começa depois da faixa da falta; falta: z-[1], faixa estreita à esquerda
+    expect(activeChip.className).toMatch(/\bz-\[2\]/);
+    expect(activeChip.className).toMatch(/\bleft-\[33%\]/);
+    expect(noShowChip.className).toMatch(/\bz-\[1\]/);
+    expect(noShowChip.className).toMatch(/\bright-\[68%\]/);
+    expect(activeChip).toHaveAttribute('data-shares-slot', 'true');
+    expect(noShowChip.compareDocumentPosition(activeChip) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    await userEvent.click(activeChip);
+    expect(onSelectAppointment).toHaveBeenLastCalledWith(expect.objectContaining({ id: 'a-new' }));
+    await userEvent.click(noShowChip);
+    expect(onSelectAppointment).toHaveBeenLastCalledWith(expect.objectContaining({ id: noShow.id }));
+  });
+
+  it('agendamento ativo sozinho continua com largura total e z-[2]', () => {
+    setup([apt('Confirmed')]);
+    const chip = screen.getByRole('button', { name: /Aline — Corte às 08:00/ });
+    expect(chip.className).toMatch(/\bleft-0\.5\b/);
+    expect(chip.className).toMatch(/\bz-\[2\]/);
+    expect(chip).not.toHaveAttribute('data-shares-slot');
+  });
+
+  it('falta cujo horário já terminou: card visível e clicável, mas sem "+" ao lado', async () => {
+    const { slot, onSelectAppointment } = setup([apt('NoShow')], new Date(2026, 0, 5, 9, 0));
+    expect(within(slot('08:00')).queryByRole('button', { name: /Novo agendamento às 08:00/ })).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: /Aline — Corte às 08:00/ }));
+    expect(onSelectAppointment).toHaveBeenCalled();
+  });
+
+  it('falta de hoje ainda em andamento (08:00–08:30, agora 08:10): "+" continua', () => {
+    const { slot } = setup([apt('NoShow')], new Date(2026, 0, 5, 8, 10));
+    expect(within(slot('08:00')).getByRole('button', { name: /Novo agendamento às 08:00/ })).toBeInTheDocument();
   });
 });

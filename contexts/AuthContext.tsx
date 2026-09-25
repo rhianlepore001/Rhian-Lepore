@@ -7,6 +7,7 @@ import { applyPublicAuthTheme } from '../utils/publicAuthTheme';
 import { normalizeRegion } from '../utils/formatters';
 import { getTrialEndsAt } from '../constants';
 import { isEmailTakenError } from '../utils/mapError';
+import { classifySignupError, signupError } from '../utils/signupErrors';
 
 export type UserType = 'barber' | 'beauty';
 export type Region = 'BR' | 'PT';
@@ -309,8 +310,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }) => {
     try {
       if (data.companyId && !data.teamMemberId) {
-        return { error: { message: 'Convite inválido. Peça ao gestor um link atualizado.' } };
+        return { error: { code: 'invalid_invite', message: 'Convite inválido. Peça ao gestor um link atualizado.' } };
       }
+
+      const isStaffInvite = Boolean(data.companyId && data.teamMemberId);
 
       const signUpPayload = {
         email: data.email,
@@ -329,59 +332,102 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       };
 
+      const claimInvite = () => supabase.rpc('complete_staff_invite', {
+        p_company_id: data.companyId,
+        p_member_id: data.teamMemberId,
+        p_birth_date: data.birthDate || null,
+      });
+
+      const applyStaffState = (claimedId: string | null) => {
+        setCompanyId(data.companyId || null);
+        setRole('staff');
+        setUserType(data.userType);
+        setRegion(normalizeRegion(data.region));
+        setBusinessName(data.businessName);
+        setFullName(data.fullName);
+        setTutorialCompleted(false);
+        setTeamMemberId(claimedId || data.teamMemberId || null);
+      };
+
+      // Retry após sucesso parcial (conta criada, vínculo falhou): a sessão já é
+      // deste e-mail — só conclui o vínculo, sem novo signUp (idempotente).
+      if (isStaffInvite) {
+        const { data: current } = await supabase.auth.getSession();
+        const currentEmail = current?.session?.user?.email?.trim().toLowerCase();
+        if (currentEmail && currentEmail === data.email.trim().toLowerCase()) {
+          const { data: claimedId, error: claimError } = await claimInvite();
+          if (!claimError) {
+            applyStaffState(claimedId);
+            return { error: null };
+          }
+          if (classifySignupError(claimError) === 'invite_email_owner_account') {
+            await supabase.auth.signOut();
+            return { error: signupError('invite_email_owner_account') };
+          }
+          return { error: claimError };
+        }
+      }
+
       let { data: authData, error: authError } = await supabase.auth.signUp(signUpPayload);
 
-      if (authError && isEmailTakenError(authError) && data.companyId && data.teamMemberId) {
+      // Com confirmação de e-mail ligada, o Auth responde "sucesso" com usuário
+      // sem identities para e-mail já existente: trate como e-mail em uso.
+      if (!authError && authData?.user && Array.isArray(authData.user.identities) && authData.user.identities.length === 0) {
+        authError = { code: 'user_already_exists', message: 'User already registered' } as unknown as typeof authError;
+      }
+
+      if (authError && isEmailTakenError(authError) && isStaffInvite) {
         const existing = await supabase.auth.signInWithPassword({
           email: data.email,
           password: data.password,
         });
 
-        if (!existing?.error && existing?.data?.user) {
-          const { data: claimedId, error: claimError } = await supabase.rpc('complete_staff_invite', {
-            p_company_id: data.companyId,
-            p_member_id: data.teamMemberId,
-            p_birth_date: data.birthDate || null,
-          });
-          if (!claimError) {
-            setCompanyId(data.companyId);
-            setRole('staff');
-            setUserType(data.userType);
-            setRegion(normalizeRegion(data.region));
-            setBusinessName(data.businessName);
-            setFullName(data.fullName);
-            setTutorialCompleted(false);
-            setTeamMemberId(claimedId || data.teamMemberId);
-            return { error: null };
+        if (existing?.error || !existing?.data?.user) {
+          const signInError = existing?.error as unknown as { code?: string; message?: string } | null;
+          if (signInError?.code === 'email_not_confirmed') {
+            return { error: signupError('invite_email_not_confirmed') };
           }
-
-          const { data: released } = await supabase.rpc('release_staff_email_for_reinvite', {
-            p_company_id: data.companyId,
-            p_member_id: data.teamMemberId,
-            p_email: existing.data.user.email ?? data.email,
-          });
-          await supabase.auth.signOut();
-          if (released === true) {
-            const retry = await supabase.auth.signUp(signUpPayload);
-            authData = retry.data;
-            authError = retry.error;
-          }
-        } else {
-          const code = (existing?.error as unknown as Record<string, unknown>)?.code ?? '';
-          if (code === 'email_not_confirmed') {
-            return { error: { message: 'Este e-mail já foi cadastrado mas não foi confirmado. Verifique sua caixa de entrada ou peça ao gestor para reenviar o convite.' } as unknown as Error };
-          }
-          return { error: { message: 'Este e-mail já está em uso. Se você é colaborador, peça ao gestor para excluir e recriar o convite.' } as unknown as Error };
+          const wrongPassword = !signInError
+            || signInError.code === 'invalid_credentials'
+            || /invalid login credentials/i.test(signInError.message ?? '');
+          // E-mail já tem conta e a senha digitada não é a dela (caso do convite
+          // com e-mail de uma conta antiga). Outras falhas (limite, rede, 5xx)
+          // seguem com o erro original para a tela mapear/logar.
+          return { error: wrongPassword ? signupError('invite_email_wrong_password') : signInError };
         }
+
+        const { data: claimedId, error: claimError } = await claimInvite();
+        if (!claimError) {
+          applyStaffState(claimedId);
+          return { error: null };
+        }
+
+        if (classifySignupError(claimError) === 'invite_email_owner_account') {
+          // Conta de dono não vira colaborador e nunca é purgada: sem release.
+          await supabase.auth.signOut();
+          return { error: signupError('invite_email_owner_account') };
+        }
+
+        const { data: released } = await supabase.rpc('release_staff_email_for_reinvite', {
+          p_company_id: data.companyId,
+          p_member_id: data.teamMemberId,
+          p_email: existing.data.user.email ?? data.email,
+        });
+        await supabase.auth.signOut();
+        if (released !== true) {
+          return { error: claimError };
+        }
+        const retry = await supabase.auth.signUp(signUpPayload);
+        authData = retry.data;
+        authError = retry.error;
       }
 
       if (authError) return { error: authError };
 
       if (authData.user) {
         const resolvedCompanyId = data.companyId || authData.user.id;
-        const isStaffSignup = Boolean(data.companyId);
 
-        if (isStaffSignup && !authData.session) {
+        if (isStaffInvite && !authData.session) {
           const { error: signInError } = await supabase.auth.signInWithPassword({
             email: data.email,
             password: data.password,
@@ -389,22 +435,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (signInError) return { error: signInError };
         }
 
-        if (isStaffSignup && data.teamMemberId) {
-          const { data: claimedId, error: claimError } = await supabase.rpc('complete_staff_invite', {
-            p_company_id: data.companyId,
-            p_member_id: data.teamMemberId,
-            p_birth_date: data.birthDate || null,
-          });
+        if (isStaffInvite) {
+          const { data: claimedId, error: claimError } = await claimInvite();
+          // Sessão fica ativa: o próximo toque em "Criar minha conta" só refaz o vínculo.
           if (claimError) return { error: claimError };
 
-          setCompanyId(resolvedCompanyId);
-          setRole('staff');
-          setUserType(data.userType);
-          setRegion(normalizeRegion(data.region));
-          setBusinessName(data.businessName);
-          setFullName(data.fullName);
-          setTutorialCompleted(false);
-          setTeamMemberId(claimedId || data.teamMemberId);
+          applyStaffState(claimedId);
           return { error: null };
         }
 

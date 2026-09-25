@@ -580,7 +580,9 @@ describe('AuthContext', () => {
         );
         expect(supabase.auth.signUp).toHaveBeenCalledTimes(1);
         expect(registerResult.error).toBeTruthy();
-        expect(registerResult.error.message).toMatch(/já está em uso/);
+        // Código explícito: a tela não pode mais cair em "#unknown" (caso Tales, 24/09).
+        expect(registerResult.error.code).toBe('invite_email_wrong_password');
+        expect(registerResult.error.message).toMatch(/já tem uma conta/);
     });
 
     it('purga e-mail órfão via release quando signIn OK mas claim falha (sessão ativa)', async () => {
@@ -920,5 +922,33 @@ describe('AuthContext', () => {
         expect(supabase.rpc).toHaveBeenCalledWith('relink_staff_if_unbound');
         expect(result.current.role).toBe('staff');
         expect(result.current.teamMemberId).toBe('relinked-member');
+    });
+
+    it('e-mail existente com confirmação ligada (user sem identities) vira user_already_exists, sem criar perfil', async () => {
+        (supabase.auth.getSession as any).mockResolvedValue({ data: { session: null }, error: null });
+        (supabase.auth.signUp as any).mockResolvedValue({
+            data: { user: { id: 'fake-obfuscated', identities: [] }, session: null },
+            error: null,
+        });
+        const upsert = vi.fn();
+        (supabase.from as any).mockReturnValue({ upsert, select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), single: vi.fn().mockResolvedValue({ data: null, error: null }) });
+
+        const { result } = renderHook(() => useAuth(), { wrapper });
+
+        let registerResult: any;
+        await act(async () => {
+            registerResult = await result.current.register({
+                email: 'dono@example.com',
+                password: 'Password123!',
+                fullName: 'Dono',
+                businessName: 'Barbearia',
+                userType: 'barber',
+                region: 'BR',
+                phone: '11988888888',
+            });
+        });
+
+        expect(registerResult.error).toMatchObject({ code: 'user_already_exists' });
+        expect(upsert).not.toHaveBeenCalled();
     });
 });

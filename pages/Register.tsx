@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Check, Eye, EyeOff } from 'lucide-react';
@@ -11,6 +11,12 @@ import { AgendiXLogo } from '../components/AgendiXLogo';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { mapError, formatUserFacingError } from '../utils/mapError';
+import {
+  mapSignupError,
+  newSupportRef,
+  reportUnexpectedSignupError,
+  type SignupErrorAction,
+} from '../utils/signupErrors';
 import { getBusinessCopy } from '../utils/businessCopy';
 
 export const Register: React.FC = () => {
@@ -31,6 +37,9 @@ export const Register: React.FC = () => {
   const [region, setRegion] = useState<Region>('BR');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorAction, setErrorAction] = useState<SignupErrorAction | null>(null);
+  // Guard síncrono: toques rápidos disparam onSubmit antes do re-render que desabilita o botão.
+  const submittingRef = useRef(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [inviteLoading, setInviteLoading] = useState(false);
@@ -130,6 +139,8 @@ export const Register: React.FC = () => {
   useEffect(() => {
     if (!isInvitedStaff || !memberIdFromUrl || !companyIdFromUrl) return;
     if (!isAuthenticated || role !== 'staff' || companyId !== companyIdFromUrl) return;
+    // O submit já vincula o convite; evita um segundo complete_staff_invite concorrente.
+    if (submittingRef.current) return;
 
     let cancelled = false;
     void supabase
@@ -151,10 +162,37 @@ export const Register: React.FC = () => {
     };
   }, [isInvitedStaff, memberIdFromUrl, companyIdFromUrl, isAuthenticated, role, companyId, navigate]);
 
+  const showSignupError = (err: unknown) => {
+    const view = mapSignupError(err);
+    if (view.expected) {
+      setError(view.message);
+      setErrorAction(view.action ?? null);
+      return;
+    }
+    // Inesperado: mantém a copy/código do mapa genérico e registra com referência.
+    const ref = newSupportRef();
+    const generic = mapError(err, view.message);
+    setError(`${generic.message} (${generic.code} · Ref. ${ref})`);
+    setErrorAction(null);
+    void reportUnexpectedSignupError(
+      err,
+      {
+        flow: isInvitedStaff ? 'staff_invite' : 'owner',
+        email,
+        companyId: companyIdFromUrl,
+        memberId: memberIdFromUrl,
+      },
+      ref,
+    );
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setLoading(true);
     setError(null);
+    setErrorAction(null);
 
     try {
       if (isInvitedStaff && nameLocked && !fullName.trim()) {
@@ -192,7 +230,7 @@ export const Register: React.FC = () => {
       });
 
       if (error) {
-        setError(formatUserFacingError(mapError(error, 'Não foi possível criar a conta.')));
+        showSignupError(error);
         return;
       }
 
@@ -202,11 +240,22 @@ export const Register: React.FC = () => {
         navigate('/onboarding-wizard');
       }
     } catch (err) {
-      setError(formatUserFacingError(mapError(err, 'Não foi possível criar a conta.')));
+      showSignupError(err);
     } finally {
+      submittingRef.current = false;
       setLoading(false);
     }
   };
+
+  const errorActionLink = error && errorAction && errorAction !== 'new_invite' ? (
+    <Link
+      to={errorAction === 'recover_password' ? '/forgot-password' : '/login'}
+      className="mt-2 inline-block font-bold underline"
+      data-testid="signup-error-action"
+    >
+      {errorAction === 'recover_password' ? 'Esqueci a senha dessa conta' : 'Fazer login'}
+    </Link>
+  ) : null;
 
   const regionBtnClass = (active: boolean) =>
     `flex-1 py-3 text-xs font-semibold ${radius.input} transition-all border cursor-pointer ${active
@@ -251,7 +300,8 @@ export const Register: React.FC = () => {
                   tabIndex={-1}
                   className="p-3.5 text-xs rounded-xl bg-[var(--color-danger)]/8 border border-[var(--color-danger-border)]/30 text-[var(--color-danger)] font-mono"
                 >
-                  {formError}
+                  <p>{formError}</p>
+                  {errorActionLink}
                 </div>
               )}
 
@@ -313,6 +363,8 @@ export const Register: React.FC = () => {
                   value={birthDate}
                   onChange={(e) => setBirthDate(e.target.value)}
                   forceTheme={userType}
+                  // iOS Safari: input date tem largura intrínseca e ignora w-full → vaza do card.
+                  className="flex items-center min-w-0 max-w-full appearance-none text-left [&::-webkit-date-and-time-value]:text-left [&::-webkit-date-and-time-value]:min-h-[1.25em]"
                 />
 
                 <Input
@@ -350,7 +402,7 @@ export const Register: React.FC = () => {
 
                 <div className="pt-2">
                     <Button type="submit" variant="primary" size="md" fullWidth loading={loading} forceTheme={userType}>
-                        <Check size={16} className="mr-2" /> Criar minha conta
+                        {loading ? 'Criando sua conta…' : (<><Check size={16} className="mr-2" /> Criar minha conta</>)}
                     </Button>
                 </div>
 
@@ -407,7 +459,8 @@ export const Register: React.FC = () => {
                 className={`mb-6 p-3.5 text-xs rounded-xl border ${isBeauty ? 'bg-[var(--color-danger-bg)] border-[var(--color-danger-border)]/20 text-[var(--color-danger)]' : 'bg-[var(--color-danger)]/8 border-[var(--color-danger-border)]/30 text-[var(--color-danger)] font-mono'
                 }`}
               >
-                {error}
+                <p>{error}</p>
+                {errorActionLink}
               </div>
             )}
 

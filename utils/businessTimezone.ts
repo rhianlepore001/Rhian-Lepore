@@ -41,6 +41,16 @@ export const TIMEZONE_OPTIONS: TimezoneOption[] = [
   { value: 'Atlantic/Azores', label: 'Açores (Ponta Delgada)', region: 'PT' },
 ];
 
+const SELECTABLE_TIMEZONES = new Set(TIMEZONE_OPTIONS.map((o) => o.value));
+
+/**
+ * Só os fusos IANA oferecidos no seletor podem ser gravados pelo app.
+ * (null = "seguir o padrão da região" é tratado por quem chama.)
+ */
+export function isSelectableTimeZone(tz: unknown): tz is string {
+  return typeof tz === 'string' && SELECTABLE_TIMEZONES.has(tz);
+}
+
 const validityCache = new Map<string, boolean>();
 
 export function isValidTimeZone(tz: unknown): tz is string {

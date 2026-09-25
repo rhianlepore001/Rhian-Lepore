@@ -769,6 +769,104 @@ describe('AuthContext', () => {
         expect(result.current.teamMemberId).toBe(newMemberId);
     });
 
+    it.each([
+        ['session_missing', { message: 'not_authenticated' }],
+        ['unknown', { message: 'something unexpected' }],
+    ])('retry com sessão do mesmo e-mail e vínculo %s: sai da sessão e segue para signUp (sem loop)', async (_label, claimFailure) => {
+        const mockUser = { id: 'staff-stale', email: 'stale@example.com' };
+        const memberId = 'member-stale-1';
+
+        (supabase.auth.getSession as any).mockResolvedValue({ data: { session: null }, error: null });
+        (supabase.from as any).mockImplementation(() => ({
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            single: vi.fn().mockResolvedValue({ data: null, error: null }),
+            maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+        }));
+
+        const { result } = renderHook(() => useAuth(), { wrapper });
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        // Sessão local (obsoleta) do mesmo e-mail só no momento do cadastro.
+        (supabase.auth.getSession as any).mockResolvedValueOnce({ data: { session: { user: mockUser } }, error: null });
+        (supabase.auth.signUp as any).mockResolvedValue({
+            data: { user: null },
+            error: { code: 'user_already_exists', message: 'User already registered' },
+        });
+        (supabase.auth.signInWithPassword as any).mockResolvedValue({
+            data: { user: mockUser, session: { user: mockUser } },
+            error: null,
+        });
+        let claimCall = 0;
+        (supabase.rpc as any).mockImplementation((name: string) => {
+            if (name === 'complete_staff_invite') {
+                claimCall += 1;
+                if (claimCall === 1) return Promise.resolve({ data: null, error: claimFailure });
+                return Promise.resolve({ data: memberId, error: null });
+            }
+            return Promise.resolve({ data: null, error: null });
+        });
+
+        let registerResult: any;
+        await act(async () => {
+            registerResult = await result.current.register({
+                email: 'Stale@example.com',
+                password: 'Password123!',
+                fullName: 'Colab Stale',
+                businessName: 'Barbearia Stale',
+                userType: 'barber',
+                region: 'BR',
+                phone: '',
+                companyId: 'owner-stale',
+                teamMemberId: memberId,
+                birthDate: '1990-01-01',
+            });
+        });
+
+        expect(registerResult.error).toBeNull();
+        expect(supabase.auth.signOut).toHaveBeenCalled();
+        expect(supabase.auth.signUp).toHaveBeenCalledTimes(1);
+        const signOutOrder = (supabase.auth.signOut as any).mock.invocationCallOrder[0];
+        const signUpOrder = (supabase.auth.signUp as any).mock.invocationCallOrder[0];
+        expect(signOutOrder).toBeLessThan(signUpOrder);
+        expect(claimCall).toBe(2);
+        expect(result.current.role).toBe('staff');
+        expect(result.current.teamMemberId).toBe(memberId);
+    });
+
+    it('retry com sessão do mesmo e-mail e convite já usado: mantém o erro, sem signUp', async () => {
+        const mockUser = { id: 'staff-used', email: 'used@example.com' };
+        (supabase.auth.getSession as any).mockResolvedValue({ data: { session: null }, error: null });
+        const { result } = renderHook(() => useAuth(), { wrapper });
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        (supabase.auth.getSession as any).mockResolvedValueOnce({ data: { session: { user: mockUser } }, error: null });
+        (supabase.rpc as any).mockImplementation((name: string) => (
+            name === 'complete_staff_invite'
+                ? Promise.resolve({ data: null, error: { message: 'invite_already_used' } })
+                : Promise.resolve({ data: null, error: null })
+        ));
+
+        let registerResult: any;
+        await act(async () => {
+            registerResult = await result.current.register({
+                email: 'used@example.com',
+                password: 'Password123!',
+                fullName: 'Colab Used',
+                businessName: 'Barbearia Used',
+                userType: 'barber',
+                region: 'BR',
+                phone: '',
+                companyId: 'owner-used',
+                teamMemberId: 'member-used',
+                birthDate: '1990-01-01',
+            });
+        });
+
+        expect(registerResult.error).toEqual({ message: 'invite_already_used' });
+        expect(supabase.auth.signUp).not.toHaveBeenCalled();
+    });
+
     it('após purge do Auth, o mesmo e-mail cadastra no member_id novo e não no excluído', async () => {
         const mockUser = { id: 'staff-reinvite', email: 'e2e.colab@example.com' };
         const deletedMemberId = '11111111-1111-4111-8111-111111111111';

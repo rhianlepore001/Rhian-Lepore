@@ -360,11 +360,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             applyStaffState(claimedId);
             return { error: null };
           }
-          if (classifySignupError(claimError) === 'invite_email_owner_account') {
+          const claimCode = classifySignupError(claimError);
+          if (claimCode === 'invite_email_owner_account') {
             await supabase.auth.signOut();
             return { error: signupError('invite_email_owner_account') };
           }
-          return { error: claimError };
+          // Sessão local obsoleta/inválida (ou erro desconhecido): repetir o
+          // atalho só devolveria o mesmo erro a cada toque. Sai da sessão e
+          // segue o fluxo normal (signUp → e-mail em uso → signIn → vínculo).
+          if (claimCode !== 'session_missing' && claimCode !== 'unknown') {
+            return { error: claimError };
+          }
+          await supabase.auth.signOut();
         }
       }
 

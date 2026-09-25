@@ -7,6 +7,7 @@ import {
   type BusinessSettingsUpdate,
   type ProfileFields,
 } from '@/types/settings';
+import { isSelectableTimeZone } from '@/utils/businessTimezone';
 
 export async function fetchBusinessSettings(
   companyId: string,
@@ -59,6 +60,11 @@ export async function updateBusinessTimezone(
   companyId: string,
   timezone: string | null,
 ): Promise<BusinessTimezoneSaveResult> {
+  // null = volta ao padrão da região. Fora isso, só nomes IANA da lista do
+  // seletor (TIMEZONE_OPTIONS) — nada de texto livre chegando ao banco.
+  if (timezone !== null && !isSelectableTimeZone(timezone)) {
+    throw new Error(`invalid_timezone: ${String(timezone)}`);
+  }
   const { error } = await supabase
     .from('business_settings')
     .update({ timezone })

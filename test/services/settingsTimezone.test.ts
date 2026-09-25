@@ -36,6 +36,17 @@ describe('updateBusinessTimezone — compatível antes/depois da migration', () 
     await expect(updateBusinessTimezone('biz-1', 'Europe/Lisbon')).rejects.toMatchObject({ code: '42501' });
     expect(isMissingColumnError(null)).toBe(false);
   });
+
+  it.each(['America/New_York', 'Mars/Olympus', '', 'UTC'])('recusa fuso fora de TIMEZONE_OPTIONS (%s) sem chamar o banco', async (tz) => {
+    await expect(updateBusinessTimezone('biz-1', tz)).rejects.toThrow(/invalid_timezone/);
+    expect(updateMock).not.toHaveBeenCalled();
+  });
+
+  it('null (seguir a região) continua permitido', async () => {
+    eqMock.mockResolvedValueOnce({ error: null });
+    await expect(updateBusinessTimezone('biz-1', null)).resolves.toBe('saved');
+    expect(updateMock).toHaveBeenCalledWith({ timezone: null });
+  });
 });
 
 describe('businessSettingsSchema — timezone opcional', () => {

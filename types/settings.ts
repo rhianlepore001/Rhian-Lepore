@@ -34,6 +34,13 @@ export const businessSettingsSchema = z.object({
    * 20260925120000_business_timezone (antes a chave não existe no row).
    */
   timezone: z.string().nullable().optional(),
+  /**
+   * Permissão da equipe para editar/cancelar agendamentos ('none' | 'own' | 'all').
+   * Só existe depois da migration 20260925140000_staff_appointment_edit_scope;
+   * string livre aqui para um valor inesperado não derrubar o fetch inteiro
+   * (normalizado em utils/staffAppointmentPermission).
+   */
+  staff_appointment_edit_scope: z.string().nullable().optional(),
   created_at: z.string().nullable().optional(),
   updated_at: z.string().nullable().optional(),
 });

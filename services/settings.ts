@@ -8,6 +8,7 @@ import {
   type ProfileFields,
 } from '@/types/settings';
 import { isSelectableTimeZone } from '@/utils/businessTimezone';
+import { isStaffAppointmentEditScope, type StaffAppointmentEditScope } from '@/utils/staffAppointmentPermission';
 
 export async function fetchBusinessSettings(
   companyId: string,
@@ -72,6 +73,39 @@ export async function updateBusinessTimezone(
 
   if (error) {
     if (isMissingColumnError(error)) return 'unsupported';
+    throw error;
+  }
+  return 'saved';
+}
+
+export type StaffAppointmentEditScopeSaveResult = 'saved' | 'unsupported';
+
+/** Erro de coluna inexistente para a permissão da equipe (migration ainda não aplicada). */
+function isMissingStaffScopeColumn(error: { code?: string; message?: string }): boolean {
+  if (error.code === '42703' || error.code === 'PGRST204') {
+    return /staff_appointment_edit_scope/i.test(error.message ?? '') || !error.message;
+  }
+  return false;
+}
+
+/**
+ * Salva a permissão da equipe para editar/cancelar agendamentos. Só o dono
+ * consegue (RLS de business_settings). Antes da migration devolve
+ * 'unsupported' sem quebrar a tela.
+ */
+export async function updateStaffAppointmentEditScope(
+  companyId: string,
+  scope: StaffAppointmentEditScope,
+): Promise<StaffAppointmentEditScopeSaveResult> {
+  if (!isStaffAppointmentEditScope(scope)) {
+    throw new Error(`invalid_staff_appointment_edit_scope: ${String(scope)}`);
+  }
+  const { error } = await supabase
+    .from('business_settings')
+    .upsert({ user_id: companyId, staff_appointment_edit_scope: scope }, { onConflict: 'user_id' });
+
+  if (error) {
+    if (isMissingStaffScopeColumn(error)) return 'unsupported';
     throw error;
   }
   return 'saved';

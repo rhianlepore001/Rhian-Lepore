@@ -10,6 +10,7 @@ import { Button } from './ui/Button';
 import { useToast } from './ui';
 import { formatDateForInput, combineDateAndTime } from '../utils/date';
 import { buildManualBookingTimeSlots } from '../utils/agendaTimeSlots';
+import { isStaffEditForbiddenError, STAFF_EDIT_FORBIDDEN_MESSAGE } from '../utils/staffAppointmentPermission';
 
 import { SearchableSelect } from './SearchableSelect';
 import { useProducts } from '@/hooks/useCatalog';
@@ -56,6 +57,11 @@ interface AppointmentEditModalProps {
     onSave: () => void;
     accentColor: string;
     currencySymbol: string;
+    /**
+     * Permissão "só os próprios": o colaborador reagenda/edita o próprio
+     * agendamento, mas não passa para outro profissional (o banco bloqueia).
+     */
+    lockProfessional?: boolean;
 }
 
 export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
@@ -66,7 +72,8 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     onClose,
     onSave,
     accentColor,
-    currencySymbol
+    currencySymbol,
+    lockProfessional = false,
 }) => {
     const { user, companyId, region } = useAuth();
     const { setModalOpen } = useUI();
@@ -258,7 +265,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                 ? (serviceNames ? serviceNames + ', ' + customNameTrimmed : customNameTrimmed)
                 : serviceNames;
 
-            const { error } = await supabase
+            const { data: updated, error } = await supabase
                 .from('appointments')
                 .update({
                     client_id: selectedClient,
@@ -270,9 +277,15 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                     edited_at: new Date().toISOString()
                 })
                 .eq('id', appointment.id)
-                .eq('user_id', user.id);
+                // Tenant da empresa (para colaborador, user.id é o próprio login e
+                // não o dono: o filtro antigo não casava nenhuma linha em silêncio).
+                .eq('user_id', tenantId)
+                .select('id');
 
             if (error) throw error;
+            if (!updated || updated.length === 0) {
+                throw new Error('appointment_update_no_rows');
+            }
 
             if (tenantId) {
                 await setAppointmentProductLines({
@@ -287,7 +300,12 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
             onClose();
         } catch (error: any) {
             console.error('Error updating appointment:', error);
-            showToast('Não foi possível salvar as alterações. Tente novamente.', 'error');
+            showToast(
+                isStaffEditForbiddenError(error)
+                    ? STAFF_EDIT_FORBIDDEN_MESSAGE
+                    : 'Não foi possível salvar as alterações. Tente novamente.',
+                'error',
+            );
         } finally {
             setLoading(false);
         }
@@ -344,13 +362,19 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                             value={selectedProfessional}
                             onChange={(e) => setSelectedProfessional(e.target.value)}
                             className={inputStyles}
-                            disabled={loading}
+                            disabled={loading || lockProfessional}
+                            aria-describedby={lockProfessional ? 'appt-professional-locked' : undefined}
                         >
                             <option value="">Selecione um profissional</option>
                             {teamMembers.map(member => (
                                 <option key={member.id} value={member.id}>{member.name}</option>
                             ))}
                         </select>
+                        {lockProfessional && (
+                            <p id="appt-professional-locked" className={`text-xs mt-1 ${colors.textMuted}`}>
+                                Você pode reagendar os seus agendamentos, mas não passá-los para outro profissional.
+                            </p>
+                        )}
                     </div>
 
                     {/* Seção: Serviços */}

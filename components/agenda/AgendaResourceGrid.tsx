@@ -108,6 +108,7 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
   now,
 }) => {
   const nowRef = now ?? new Date();
+  const isEndedNoShow = (apt: AgendaGridAppointment) => isNoShowStatus(apt.status) && noShowSlotEnded(apt, nowRef);
   const { colors, accent } = useBrutalTheme();
   const [addOpen, setAddOpen] = useState(false);
   const addWrapRef = useRef<HTMLDivElement>(null);
@@ -271,10 +272,10 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                     // o card continua visível e o "+" aparece ao lado.
                     const occupied = covering.some((o) => !appointmentFreesSlot(o.apt.status));
                     const freedOnly = !occupied && covering.length > 0;
-                    // Falta cujo horário já terminou: sem "+" ao lado (nada a reaproveitar).
-                    const endedNoShow = freedOnly && covering.some(
-                      (o) => isNoShowStatus(o.apt.status) && noShowSlotEnded(o.apt, nowRef),
-                    );
+                    // Sem "+" só quando o horário tem APENAS falta(s) já encerrada(s)
+                    // (nada a reaproveitar). Com um cancelado junto, o "+" do
+                    // cancelado continua; horário vazio não muda.
+                    const endedNoShow = freedOnly && covering.every((o) => isEndedNoShow(o.apt));
                     return (
                       <div
                         key={time}
@@ -312,8 +313,13 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                     const sharesWithOther = columnOverlays.some(
                       (o) => o !== overlay && appointmentFreesSlot(o.apt.status) !== freesSlot && overlaps(o, overlay),
                     );
+                    // Falta encerrada sozinha no horário: sem "+" ao lado, então
+                    // ocupa a largura toda (sem faixa vazia à direita).
+                    const endedNoShowAlone = isEndedNoShow(apt)
+                      && !columnOverlays.some((o) => o !== overlay && overlaps(o, overlay));
+                    const freedRight = endedNoShowAlone ? 'right-0.5' : sharesWithOther ? 'right-[68%]' : 'right-[40%]';
                     const layout = freesSlot
-                      ? `left-0.5 ${sharesWithOther ? 'right-[68%]' : 'right-[40%]'} z-[1] opacity-80`
+                      ? `left-0.5 ${freedRight} z-[1] opacity-80`
                       : `${sharesWithOther ? 'left-[33%]' : 'left-0.5'} right-0.5 z-[2]`;
 
                     return (
@@ -325,6 +331,7 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                         data-agenda-span={span}
                         data-frees-slot={freesSlot ? 'true' : undefined}
                         data-shares-slot={sharesWithOther ? 'true' : undefined}
+                        data-full-width={endedNoShowAlone ? 'true' : undefined}
                         style={{
                           top: `calc(var(--agenda-slot-h) * ${startIdx} + 2px)`,
                           height: `calc(var(--agenda-slot-h) * ${span} - 4px)`,

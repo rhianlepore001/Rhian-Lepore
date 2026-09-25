@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { Register } from '@/pages/Register';
@@ -120,5 +120,41 @@ describe('Register page', () => {
         }),
       );
     });
+  }, 10000);
+
+  it('AC1: toques/submit repetidos durante o envio disparam só 1 cadastro e o botão fica em loading', async () => {
+    let resolveRegister: (v: { error: null }) => void = () => {};
+    registerMock.mockImplementation(() => new Promise((resolve) => { resolveRegister = resolve; }));
+
+    render(
+      <MemoryRouter initialEntries={['/register?company=owner-1&member=member-1']}>
+        <Register />
+      </MemoryRouter>
+    );
+
+    await screen.findByLabelText(/e-mail \(gmail\)/i);
+    await userEvent.type(screen.getByLabelText(/e-mail \(gmail\)/i), 'tales@gmail.com');
+    await userEvent.type(screen.getByLabelText(/data de nascimento/i), '1993-09-17');
+    await userEvent.type(screen.getByLabelText('Senha'), 'Password123!');
+    await userEvent.type(screen.getByLabelText('Confirmar senha'), 'Password123!');
+
+    const button = screen.getByRole('button', { name: /criar minha conta/i });
+    const form = button.closest('form')!;
+    // Mesmo tick: o re-render que desabilita o botão ainda não aconteceu.
+    act(() => {
+      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    });
+    fireEvent.submit(form);
+    fireEvent.click(button);
+
+    expect(registerMock).toHaveBeenCalledTimes(1);
+    expect(button).toBeDisabled();
+    expect(button).toHaveAttribute('aria-busy', 'true');
+    expect(button).toHaveTextContent('Criando sua conta…');
+
+    await act(async () => { resolveRegister({ error: null }); });
+    expect(registerMock).toHaveBeenCalledTimes(1);
   }, 10000);
 });

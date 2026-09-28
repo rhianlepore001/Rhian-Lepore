@@ -90,6 +90,40 @@ export async function deleteByTenant(client, table, column, tenantId, { dryRun =
   return count ?? 0;
 }
 
+/**
+ * appointments.public_booking_id -> public_bookings (FK sem ON DELETE) e o
+ * accept grava o vínculo sempre (20260925170000). Agendamentos aceitos não têm
+ * o MARKER, então não saem na limpeza da agenda demo: solta o vínculo antes de
+ * apagar os pedidos do tenant, senão o DELETE falha com FK.
+ */
+export async function unlinkTenantPublicBookings(client, tenantId, { dryRun = false, log = console.log } = {}) {
+  if (dryRun) {
+    log('  [dry-run] UPDATE appointments SET public_booking_id = NULL WHERE user_id = <demo-tenant>');
+    return 0;
+  }
+  const { error, count } = await client
+    .from('appointments')
+    .update({ public_booking_id: null }, { count: 'exact' })
+    .eq('user_id', tenantId)
+    .not('public_booking_id', 'is', null);
+  if (error) {
+    const noLinkColumn = missingColumnFromError(error.message) === 'public_booking_id'
+      || /public_booking_id\b.*does not exist/i.test(error.message);
+    if (relationMissing(error.message) || noLinkColumn) {
+      log(`  [skip] vínculo appointments.public_booking_id ausente (${error.message})`);
+      return 0;
+    }
+    throw new SeedSafetyError(`soltar vínculo appointments.public_booking_id: ${error.message}`);
+  }
+  return count ?? 0;
+}
+
+/** Apaga os pedidos online do tenant demo sem esbarrar na FK dos agendamentos. */
+export async function resetTenantPublicBookings(client, tenantId, { dryRun = false, log = console.log } = {}) {
+  await unlinkTenantPublicBookings(client, tenantId, { dryRun, log });
+  return deleteByTenant(client, 'public_bookings', 'business_id', tenantId, { dryRun, log });
+}
+
 export async function purgeDemoTenantRows(client, tenantId, { dryRun = false, log = console.log } = {}) {
   if (!tenantId) throw new SeedSafetyError('purge recusado: tenantId vazio');
   if (!dryRun && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tenantId)) {

@@ -688,7 +688,8 @@ export const Agenda: React.FC = () => {
                     appointmentTime: booking.appointment_time,
                     totalPrice: booking.total_price,
                     durationMinutes: booking.duration_minutes || 30,
-                    preservePublicBookingLink: !!booking.is_edit,
+                    // Igual ao accept_public_booking: vínculo sempre gravado (item 5b).
+                    preservePublicBookingLink: true,
                 });
 
                 if (appointmentId) {

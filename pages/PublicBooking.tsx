@@ -505,7 +505,7 @@ export const PublicBooking: React.FC = () => {
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Item 5b: o estabelecimento cancelou/recusou -> recomeça o fluxo com os
+    // Item 5b: pedido/agendamento cancelado -> recomeça o fluxo com os
     // mesmos serviços; o cliente escolhe um novo horário.
     const handleRescheduleCancelled = () => {
         const ids: string[] = (activeBooking?.service_ids ?? []).filter((id: string) => services.some((s) => s.id === id));

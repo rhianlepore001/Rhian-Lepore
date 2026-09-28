@@ -208,3 +208,76 @@ describe('demo-seed time helpers', () => {
     expect(dropColumn([{ a: 1, b: 2 }], 'b')).toEqual([{ a: 1 }]);
   });
 });
+
+// Review do #98 (S1): accept grava appointments.public_booking_id sempre (FK sem
+// ON DELETE). Apagar public_bookings antes de soltar/apagar os agendamentos quebra.
+function fakeSupabase(errors: Record<string, { message: string }> = {}) {
+  const ops: string[] = [];
+  const client = {
+    from(table: string) {
+      const chain = (op: string) => {
+        const parts = [`${op} ${table}`];
+        const builder = {
+          eq(col: string, val: unknown) { parts.push(`eq ${col}=${String(val)}`); return builder; },
+          not(col: string, opName: string, val: unknown) { parts.push(`not ${col} ${opName} ${String(val)}`); return builder; },
+          then(resolve: (v: unknown) => void) {
+            ops.push(parts.join(' | '));
+            resolve({ error: errors[`${op} ${table}`] ?? null, count: 1 });
+          },
+        };
+        return builder;
+      };
+      return {
+        update(payload: Record<string, unknown>) { return chain(`update ${JSON.stringify(payload)}`); },
+        delete() { return chain('delete'); },
+      };
+    },
+  };
+  return { client, ops };
+}
+
+describe('demo-seed: pedidos online x vínculo dos agendamentos (FK)', () => {
+  const TENANT = '7baee43b-a3b0-4d96-b566-62bc88224f5c';
+
+  it('purge apaga public_bookings depois de appointments', () => {
+    const order = PURGE_TABLES.map((t) => t.table);
+    expect(order.indexOf('public_bookings')).toBeGreaterThan(order.indexOf('appointments'));
+  });
+
+  it('rebuild solta o vínculo dos agendamentos do tenant antes de apagar os pedidos', async () => {
+    const { resetTenantPublicBookings } = await import('../../scripts/demo-seed/db.mjs');
+    const { client, ops } = fakeSupabase();
+    await resetTenantPublicBookings(client, TENANT, { dryRun: false, log: () => {} });
+    expect(ops).toEqual([
+      `update {"public_booking_id":null} appointments | eq user_id=${TENANT} | not public_booking_id is null`,
+      `delete public_bookings | eq business_id=${TENANT}`,
+    ]);
+  });
+
+  it('dry-run não toca no banco', async () => {
+    const { resetTenantPublicBookings } = await import('../../scripts/demo-seed/db.mjs');
+    const { client, ops } = fakeSupabase();
+    const logs: string[] = [];
+    await resetTenantPublicBookings(client, TENANT, { dryRun: true, log: (m: string) => logs.push(m) });
+    expect(ops).toEqual([]);
+    expect(logs.join('\n')).toMatch(/public_booking_id = NULL/);
+  });
+
+  it('banco sem a coluna public_booking_id: segue e apaga os pedidos', async () => {
+    const { resetTenantPublicBookings } = await import('../../scripts/demo-seed/db.mjs');
+    const { client, ops } = fakeSupabase({
+      'update {"public_booking_id":null} appointments': { message: 'column appointments.public_booking_id does not exist' },
+    });
+    await resetTenantPublicBookings(client, TENANT, { dryRun: false, log: () => {} });
+    expect(ops[1]).toBe(`delete public_bookings | eq business_id=${TENANT}`);
+  });
+
+  it('outro erro ao soltar o vínculo aborta antes de apagar os pedidos', async () => {
+    const { resetTenantPublicBookings } = await import('../../scripts/demo-seed/db.mjs');
+    const { client, ops } = fakeSupabase({
+      'update {"public_booking_id":null} appointments': { message: 'permission denied for table appointments' },
+    });
+    await expect(resetTenantPublicBookings(client, TENANT, { dryRun: false, log: () => {} })).rejects.toThrow(/permission denied/);
+    expect(ops).toHaveLength(1);
+  });
+});

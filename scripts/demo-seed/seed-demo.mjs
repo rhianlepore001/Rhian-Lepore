@@ -37,6 +37,7 @@ import {
   insertBestEffort,
   loadProfileByEmail,
   purgeDemoTenantRows,
+  resetTenantPublicBookings,
   upsertBestEffort,
 } from './db.mjs';
 
@@ -394,7 +395,7 @@ async function rebuildTimeSensitive(client, spec, ctx, { dryRun }) {
   }
   await deleteByTenant(client, 'queue_payments', 'business_id', userId, { dryRun, log });
   await deleteByTenant(client, 'queue_entries', 'business_id', userId, { dryRun, log });
-  await deleteByTenant(client, 'public_bookings', 'business_id', userId, { dryRun, log });
+  await resetTenantPublicBookings(client, userId, { dryRun, log });
   if (!dryRun) {
     const { error } = await client
       .from('appointments')

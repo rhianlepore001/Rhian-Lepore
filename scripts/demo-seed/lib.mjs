@@ -263,10 +263,11 @@ export const PURGE_TABLES = [
   { table: 'appointment_product_lines', column: 'company_id' },
   { table: 'product_sales', column: 'company_id' },
   { table: 'products', column: 'company_id' },
-  { table: 'public_bookings', column: 'business_id' },
   { table: 'public_clients', column: 'business_id' },
   { table: 'finance_records', column: 'user_id' },
   { table: 'appointments', column: 'user_id' },
+  // depois de appointments: appointments.public_booking_id -> public_bookings (FK)
+  { table: 'public_bookings', column: 'business_id' },
   { table: 'clients', column: 'user_id' },
   { table: 'services', column: 'user_id' },
   { table: 'service_categories', column: 'user_id' },

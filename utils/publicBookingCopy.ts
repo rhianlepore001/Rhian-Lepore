@@ -11,13 +11,15 @@ export function getPublicBookingSuccessCopy(input: {
   const isConfirmed = input.status === 'confirmed';
   const isBeauty = input.isBeauty;
 
-  // Item 5b: pedido recusado ou agendamento cancelado pelo estabelecimento.
+  // Item 5b: aqui "cancelled" costuma ser pedido recusado pelo salão ou
+  // cancelado pelo próprio cliente em outra aba; não dá para saber quem
+  // cancelou, então o texto é neutro (a Minha Área diferencia quando sabe).
   if (input.status === 'cancelled') {
     return {
       title: isBeauty ? 'Agendamento cancelado' : 'AGENDAMENTO CANCELADO',
       subtitle: isBeauty
-        ? 'O estabelecimento cancelou este agendamento. Escolha um novo horário.'
-        : 'O ESTABELECIMENTO CANCELOU ESTE AGENDAMENTO. ESCOLHA UM NOVO HORÁRIO.',
+        ? 'Este agendamento foi cancelado. Escolha um novo horário.'
+        : 'ESTE AGENDAMENTO FOI CANCELADO. ESCOLHA UM NOVO HORÁRIO.',
       whatsappCta: 'Falar no WhatsApp',
       stepperLastLabel: 'Cancelado',
     };

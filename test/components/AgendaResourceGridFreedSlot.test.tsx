@@ -116,4 +116,68 @@ describe('AgendaResourceGrid — falta/cancelado liberam o horário', () => {
     const { slot } = setup([apt('NoShow')], new Date(2026, 0, 5, 8, 10));
     expect(within(slot('08:00')).getByRole('button', { name: /Novo agendamento às 08:00/ })).toBeInTheDocument();
   });
+
+  describe('nits do review (#97): regra do "+" e largura da falta encerrada', () => {
+    const AFTER = new Date(2026, 0, 5, 9, 0);
+
+    it('falta encerrada + cancelado no mesmo horário: o "+" do cancelado continua', async () => {
+      const { slot, onEmptySlotClick } = setup([apt('NoShow'), apt('Cancelled')], AFTER);
+      const plus = within(slot('08:00')).getByRole('button', { name: /Novo agendamento às 08:00/ });
+      expect(plus).toHaveAttribute('data-freed-slot', 'true');
+      await userEvent.click(plus);
+      expect(onEmptySlotClick).toHaveBeenCalledWith('m1', '08:00');
+    });
+
+    it('falta encerrada + cancelado: a falta não vira largura total (não está sozinha)', () => {
+      setup([apt('NoShow'), { ...apt('Cancelled'), clientName: 'Bruno' }], AFTER);
+      const noShowChip = screen.getByRole('button', { name: /Aline — Corte às 08:00/ });
+      expect(noShowChip).not.toHaveAttribute('data-full-width');
+      expect(noShowChip.className).toMatch(/\bright-\[40%\]/);
+    });
+
+    it('cancelado sozinho em horário passado: "+" continua (sem mudança)', () => {
+      const { slot } = setup([apt('Cancelled')], AFTER);
+      expect(within(slot('08:00')).getByRole('button', { name: /Novo agendamento às 08:00/ })).toBeInTheDocument();
+    });
+
+    it('horário vazio em horário passado: "+" normal (sem mudança)', () => {
+      const { slot } = setup([apt('NoShow')], AFTER);
+      const plus = within(slot('08:30')).getByRole('button', { name: /Novo agendamento às 08:30/ });
+      expect(plus).not.toHaveAttribute('data-freed-slot');
+    });
+
+    it('falta encerrada sozinha: largura total (sem faixa vazia à direita) e sem "+"', () => {
+      const { slot } = setup([apt('NoShow')], AFTER);
+      const chip = screen.getByRole('button', { name: /Aline — Corte às 08:00/ });
+      expect(chip).toHaveAttribute('data-full-width', 'true');
+      expect(chip.className).toMatch(/\bleft-0\.5\b/);
+      expect(chip.className).toMatch(/\bright-0\.5\b/);
+      expect(chip.className).not.toMatch(/right-\[40%\]/);
+      expect(chip.className).toMatch(/\bz-\[1\]/);
+      expect(within(slot('08:00')).queryByRole('button', { name: /Novo agendamento às 08:00/ })).toBeNull();
+    });
+
+    it('falta encerrada de 60 min sozinha: largura total e sem "+" nos dois horários', () => {
+      const { slot } = setup([{ ...apt('NoShow'), duration_minutes: 60 }], new Date(2026, 0, 5, 10, 0));
+      const chip = screen.getByRole('button', { name: /Aline — Corte às 08:00/ });
+      expect(chip).toHaveAttribute('data-full-width', 'true');
+      expect(within(slot('08:00')).queryByRole('button', { name: /Novo agendamento/ })).toBeNull();
+      expect(within(slot('08:30')).queryByRole('button', { name: /Novo agendamento/ })).toBeNull();
+    });
+
+    it('falta ainda reaproveitável sozinha: continua estreita, com o "+" ao lado', () => {
+      const { slot } = setup([apt('NoShow')]);
+      const chip = screen.getByRole('button', { name: /Aline — Corte às 08:00/ });
+      expect(chip).not.toHaveAttribute('data-full-width');
+      expect(chip.className).toMatch(/\bright-\[40%\]/);
+      expect(within(slot('08:00')).getByRole('button', { name: /Novo agendamento às 08:00/ })).toBeInTheDocument();
+    });
+
+    it('falta encerrada + agendamento ativo no mesmo horário: continua lado a lado', () => {
+      setup([apt('NoShow'), { ...apt('Confirmed'), id: 'a-new', clientName: 'Bruno' }], AFTER);
+      const noShowChip = screen.getByRole('button', { name: /Aline — Corte às 08:00/ });
+      expect(noShowChip).not.toHaveAttribute('data-full-width');
+      expect(noShowChip.className).toMatch(/\bright-\[68%\]/);
+    });
+  });
 });

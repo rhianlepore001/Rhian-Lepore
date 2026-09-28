@@ -274,7 +274,8 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
 
             // onSuccess do pai fecha o modal e refetcha a grade — NÃO chamar onClose
             // em seguida (ele fazia navigate(pathname) e apagava ?date= / estado).
-            onSuccess(dateTime);
+            // id + profissional: a agenda vai até o card criado e o destaca
+            onSuccess(dateTime, { id: appointmentId, professionalId: selectedProId });
         } catch (error) {
             logger.error('Erro ao criar agendamento:', error);
             const ui = mapError(error, 'Não foi possível criar o agendamento. Verifique sua conexão e tente de novo.');

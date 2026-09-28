@@ -51,6 +51,8 @@ export interface AgendaResourceGridProps {
   offHoursSlots?: string[];
   /** Horário final da grade (ex.: "18:00"), exibido no pé da régua. */
   endLabel?: string;
+  /** Agendamento recém-criado: destaque breve (pulso/contorno, ~2s). */
+  highlightAppointmentId?: string | null;
 }
 
 function firstName(fullName: string): string {
@@ -108,6 +110,7 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
   onEmptySlotClick,
   offHoursSlots = [],
   endLabel,
+  highlightAppointmentId = null,
 }) => {
   const { colors, accent } = useBrutalTheme();
   const offHours = new Set(offHoursSlots);
@@ -329,6 +332,8 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                     return (
                       <button
                         key={apt.id}
+                        data-appointment-id={apt.id}
+                        data-highlight={apt.id === highlightAppointmentId ? 'true' : undefined}
                         type="button"
                         onClick={() => onSelectAppointment(apt)}
                         aria-label={`${apt.clientName} — ${apt.service} às ${time}`}
@@ -339,7 +344,7 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                           top: `calc(var(--agenda-slot-h) * ${startIdx} + 2px)`,
                           height: `calc(var(--agenda-slot-h) * ${span} - 4px)`,
                         }}
-                        className={`agenda-event-chip absolute ${layout} overflow-hidden text-left rounded-md border ${cardTokens} px-1.5 py-1 min-h-0 flex flex-col justify-center gap-0.5 transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-accent`}
+                        className={`agenda-event-chip absolute ${layout} ${apt.id === highlightAppointmentId ? 'agenda-card-highlight' : ''} overflow-hidden text-left rounded-md border ${cardTokens} px-1.5 py-1 min-h-0 flex flex-col justify-center gap-0.5 transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-accent`}
                       >
                         <div className="flex items-start justify-between gap-1 min-w-0">
                           <h4 className={`text-xs font-bold truncate leading-tight ${colors.text}`}>{apt.clientName}</h4>

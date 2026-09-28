@@ -17,10 +17,7 @@ const apt = (status: string, time = '08:00'): AgendaGridAppointment => ({
   professional_id: 'm1',
 });
 
-// Relógio antes dos horários do teste (05/01 07:00): faltas ainda reaproveitáveis.
-const BEFORE = new Date(2026, 0, 5, 7, 0);
-
-function setup(appointments: AgendaGridAppointment[], now: Date = BEFORE) {
+function setup(appointments: AgendaGridAppointment[]) {
   const onEmptySlotClick = vi.fn();
   const onSelectAppointment = vi.fn();
   render(
@@ -36,7 +33,6 @@ function setup(appointments: AgendaGridAppointment[], now: Date = BEFORE) {
       onToggleProfessional={vi.fn()}
       onSelectAppointment={onSelectAppointment}
       onEmptySlotClick={onEmptySlotClick}
-      now={now}
     />,
   );
   const slot = (time: string) => document.querySelector(`[data-testid="agenda-col-m1"] [data-agenda-slot="${time}"]`) as HTMLElement;
@@ -105,67 +101,23 @@ describe('AgendaResourceGrid — falta/cancelado liberam o horário', () => {
     expect(chip).not.toHaveAttribute('data-shares-slot');
   });
 
-  it('falta cujo horário já terminou: card visível e clicável, mas sem "+" ao lado', async () => {
-    const { slot, onSelectAppointment } = setup([apt('NoShow')], new Date(2026, 0, 5, 9, 0));
-    expect(within(slot('08:00')).queryByRole('button', { name: /Novo agendamento às 08:00/ })).toBeNull();
-    await userEvent.click(screen.getByRole('button', { name: /Aline — Corte às 08:00/ }));
-    expect(onSelectAppointment).toHaveBeenCalled();
-  });
-
-  it('falta de hoje ainda em andamento (08:00–08:30, agora 08:10): "+" continua', () => {
-    const { slot } = setup([apt('NoShow')], new Date(2026, 0, 5, 8, 10));
-    expect(within(slot('08:00')).getByRole('button', { name: /Novo agendamento às 08:00/ })).toBeInTheDocument();
-  });
-
-  describe('nits do review (#97): regra do "+" e largura da falta encerrada', () => {
-    const AFTER = new Date(2026, 0, 5, 9, 0);
-
-    it('falta encerrada + cancelado no mesmo horário: o "+" do cancelado continua', async () => {
-      const { slot, onEmptySlotClick } = setup([apt('NoShow'), apt('Cancelled')], AFTER);
+  describe('nits do review (#97) — revisto no D1: passado também aceita encaixe', () => {
+    it('falta + cancelado no mesmo horário: o "+" continua', async () => {
+      const { slot, onEmptySlotClick } = setup([apt('NoShow'), apt('Cancelled')]);
       const plus = within(slot('08:00')).getByRole('button', { name: /Novo agendamento às 08:00/ });
       expect(plus).toHaveAttribute('data-freed-slot', 'true');
       await userEvent.click(plus);
       expect(onEmptySlotClick).toHaveBeenCalledWith('m1', '08:00');
     });
 
-    it('falta encerrada + cancelado: a falta não vira largura total (não está sozinha)', () => {
-      setup([apt('NoShow'), { ...apt('Cancelled'), clientName: 'Bruno' }], AFTER);
+    it('falta + cancelado: a falta fica estreita (faixa do "+")', () => {
+      setup([apt('NoShow'), { ...apt('Cancelled'), clientName: 'Bruno' }]);
       const noShowChip = screen.getByRole('button', { name: /Aline — Corte às 08:00/ });
       expect(noShowChip).not.toHaveAttribute('data-full-width');
       expect(noShowChip.className).toMatch(/\bright-\[40%\]/);
     });
 
-    it('cancelado sozinho em horário passado: "+" continua (sem mudança)', () => {
-      const { slot } = setup([apt('Cancelled')], AFTER);
-      expect(within(slot('08:00')).getByRole('button', { name: /Novo agendamento às 08:00/ })).toBeInTheDocument();
-    });
-
-    it('horário vazio em horário passado: "+" normal (sem mudança)', () => {
-      const { slot } = setup([apt('NoShow')], AFTER);
-      const plus = within(slot('08:30')).getByRole('button', { name: /Novo agendamento às 08:30/ });
-      expect(plus).not.toHaveAttribute('data-freed-slot');
-    });
-
-    it('falta encerrada sozinha: largura total (sem faixa vazia à direita) e sem "+"', () => {
-      const { slot } = setup([apt('NoShow')], AFTER);
-      const chip = screen.getByRole('button', { name: /Aline — Corte às 08:00/ });
-      expect(chip).toHaveAttribute('data-full-width', 'true');
-      expect(chip.className).toMatch(/\bleft-0\.5\b/);
-      expect(chip.className).toMatch(/\bright-0\.5\b/);
-      expect(chip.className).not.toMatch(/right-\[40%\]/);
-      expect(chip.className).toMatch(/\bz-\[1\]/);
-      expect(within(slot('08:00')).queryByRole('button', { name: /Novo agendamento às 08:00/ })).toBeNull();
-    });
-
-    it('falta encerrada de 60 min sozinha: largura total e sem "+" nos dois horários', () => {
-      const { slot } = setup([{ ...apt('NoShow'), duration_minutes: 60 }], new Date(2026, 0, 5, 10, 0));
-      const chip = screen.getByRole('button', { name: /Aline — Corte às 08:00/ });
-      expect(chip).toHaveAttribute('data-full-width', 'true');
-      expect(within(slot('08:00')).queryByRole('button', { name: /Novo agendamento/ })).toBeNull();
-      expect(within(slot('08:30')).queryByRole('button', { name: /Novo agendamento/ })).toBeNull();
-    });
-
-    it('falta ainda reaproveitável sozinha: continua estreita, com o "+" ao lado', () => {
+    it('falta sozinha: continua estreita, com o "+" ao lado (nunca largura total)', () => {
       const { slot } = setup([apt('NoShow')]);
       const chip = screen.getByRole('button', { name: /Aline — Corte às 08:00/ });
       expect(chip).not.toHaveAttribute('data-full-width');
@@ -173,8 +125,8 @@ describe('AgendaResourceGrid — falta/cancelado liberam o horário', () => {
       expect(within(slot('08:00')).getByRole('button', { name: /Novo agendamento às 08:00/ })).toBeInTheDocument();
     });
 
-    it('falta encerrada + agendamento ativo no mesmo horário: continua lado a lado', () => {
-      setup([apt('NoShow'), { ...apt('Confirmed'), id: 'a-new', clientName: 'Bruno' }], AFTER);
+    it('falta + agendamento ativo no mesmo horário: continua lado a lado', () => {
+      setup([apt('NoShow'), { ...apt('Confirmed'), id: 'a-new', clientName: 'Bruno' }]);
       const noShowChip = screen.getByRole('button', { name: /Aline — Corte às 08:00/ });
       expect(noShowChip).not.toHaveAttribute('data-full-width');
       expect(noShowChip.className).toMatch(/\bright-\[68%\]/);

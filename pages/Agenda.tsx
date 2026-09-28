@@ -8,7 +8,7 @@ import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { Modal as UiModal } from '../components/ui/Modal';
 import { PageHeader } from '../components/ui/PageHeader';
 import { useToast } from '../components/ui/Toast';
-import { Calendar, Clock, Plus, User, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2, Trash2, Edit2, Tag, Scissors, Info, DollarSign, Phone, Ban } from 'lucide-react';
+import { Calendar, Clock, Plus, User, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2, Trash2, Edit2, Tag, Scissors, Info, DollarSign, Phone, Ban, MoonStar } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -34,11 +34,13 @@ import { cancelAppointment, deleteAppointmentWithFinance, fetchPendingPublicBook
 
 import { buildWhatsAppLink, formatCurrency, formatPhone } from '../utils/formatters';
 import { formatDateForInput, formatLocalDateString, combineDateAndTime } from '../utils/date';
-import { buildAgendaGridSlots } from '../utils/agendaTimeSlots';
+import { buildAgendaDayWindow } from '../utils/agendaDayWindow';
+import { resolveBusinessTimezone } from '../utils/businessTimezone';
+import { useBusinessSettings } from '../hooks/useSettings';
 import { useAppTour } from '../hooks/useAppTour';
 import { logger } from '../utils/Logger';
 import { getVisualStatus, isNoShowStatus, VISUAL_STATUS_CLASSES, VISUAL_STATUS_LABEL } from '../utils/appointmentStatus';
-import { buildNoShowSlotPrefill, findNoShowCoveringSlot, noShowSlotContext, noShowSlotEnded } from '../utils/noShowSlotReuse';
+import { buildNoShowSlotPrefill, findNoShowCoveringSlot, noShowSlotContext } from '../utils/noShowSlotReuse';
 import { useTenantLocale } from '../hooks/useTenantLocale';
 import { useBusinessCopy } from '../hooks/useBusinessCopy';
 
@@ -105,6 +107,9 @@ export const Agenda: React.FC = () => {
     const { user, region, role, companyId, teamMemberId } = useAuth();
     const isStaff = role === 'staff';
     const staffPermission = useStaffAppointmentPermission();
+    // Horário de funcionamento + fuso do negócio (dono e colaborador leem via RLS "company read").
+    const { data: businessSettings } = useBusinessSettings();
+    const shopTimeZone = resolveBusinessTimezone({ timezone: businessSettings?.timezone, region });
     const effectiveUserId = companyId ?? user?.id;
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
@@ -1004,8 +1009,14 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
         setShowNewAppointmentModal(true);
     };
 
-    // Grade padrão 06:00–23:30; madrugada (00:00–05:59) só aparece se houver agendamento
-    const timeSlots = buildAgendaGridSlots(appointments.map((a) => a.appointment_time));
+    // Grade pelo horário de funcionamento do dia; estende para cobrir encaixes fora dele.
+    const dayWindow = buildAgendaDayWindow({
+        dateStr: formatLocalDateString(selectedDate),
+        businessHours: businessSettings?.business_hours,
+        shopTimeZone,
+        appointments,
+    });
+    const timeSlots = dayWindow.slots;
 
     // Filtrar profissionais exibidos — [] = "Todos" (owner e staff).
     const displayedMembers = selectedProfessionalIds.length > 0
@@ -1273,6 +1284,18 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                 </div>
             ) : (
                 <div className="min-w-0 w-full">
+                    {dayWindow.closed && (
+                        <div
+                            data-testid="agenda-closed-day"
+                            className={`mb-2 flex items-center gap-2.5 rounded-xl border px-3 py-2 ${colors.border} ${colors.card}`}
+                        >
+                            <MoonStar className={`w-4 h-4 shrink-0 ${colors.textMuted}`} aria-hidden="true" />
+                            <p className={`text-sm leading-snug ${colors.textSecondary}`}>
+                                <span className={`font-semibold ${colors.text}`}>Fechado neste dia.</span>{' '}
+                                A agenda continua aberta para encaixes.
+                            </p>
+                        </div>
+                    )}
                     <AgendaResourceGrid
                         members={displayedMembers}
                         allMembers={teamMembers}
@@ -1289,6 +1312,8 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                             if (full) setShowingDetailsAppointment(full);
                         }}
                         onEmptySlotClick={openNewAppointmentAt}
+                        offHoursSlots={dayWindow.offHours}
+                        endLabel={dayWindow.endLabel}
                     />
                     <AgendaStatusLegend
                         emptyHint={
@@ -1457,7 +1482,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                 }}
                                 onCancel={() => handleCancelAppointment(detailsApt.id, false, detailsApt.professional_id)}
                                 onClose={() => setShowingDetailsAppointment(null)}
-                                onUseSlot={noShowSlotEnded(detailsApt) ? undefined : () => handleUseNoShowSlot(detailsApt)}
+                                onUseSlot={() => handleUseNoShowSlot(detailsApt)}
                             />
                         </div>
                     </div>
@@ -1648,6 +1673,8 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                     categories={categories}
                     clients={clients}
                     onRefreshClients={fetchClients}
+                    businessHours={businessSettings?.business_hours ?? null}
+                    shopTimeZone={shopTimeZone}
                 />
             )}
 

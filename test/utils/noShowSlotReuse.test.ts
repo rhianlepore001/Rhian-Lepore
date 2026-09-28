@@ -4,7 +4,6 @@ import {
   findNoShowCoveringSlot,
   localHHMM,
   noShowSlotContext,
-  noShowSlotEnded,
   slotConflictMessage,
 } from '@/utils/noShowSlotReuse';
 import { appointmentFreesSlot, isNoShowStatus } from '@/utils/appointmentStatus';
@@ -75,19 +74,10 @@ describe('findNoShowCoveringSlot ("+" ao lado da falta)', () => {
   });
 });
 
-describe('noShowSlotEnded (esconde "Usar este horário" quando o horário já acabou)', () => {
-  const now = new Date(2026, 8, 25, 14, 20); // hoje 14:20
-  const todayAt = (h: number, m = 0) => new Date(2026, 8, 25, h, m).toISOString();
-  it('falta de hoje ainda em andamento ou futura: não terminou', () => {
-    expect(noShowSlotEnded({ appointment_time: todayAt(14, 0) }, now)).toBe(false); // 14:00–14:30
-    expect(noShowSlotEnded({ appointment_time: todayAt(13, 30), duration_minutes: 60 }, now)).toBe(false); // até 14:30
-    expect(noShowSlotEnded({ appointment_time: todayAt(16, 0) }, now)).toBe(false);
-  });
-  it('falta encerrada (hoje mais cedo ou dia passado): terminou', () => {
-    expect(noShowSlotEnded({ appointment_time: todayAt(13, 30) }, now)).toBe(true); // 13:30–14:00
-    expect(noShowSlotEnded({ appointment_time: todayAt(13, 0), duration_minutes: 60 }, now)).toBe(true); // até 14:00
-    expect(noShowSlotEnded({ appointment_time: at(6, 0) }, now)).toBe(true); // 23/08
-    expect(noShowSlotEnded({ appointment_time: 'x' }, now)).toBe(true);
+describe('D1: falta encerrada continua reaproveitável', () => {
+  it('não existe mais a regra que escondia "Usar este horário" para falta passada', async () => {
+    const mod = await import('@/utils/noShowSlotReuse');
+    expect('noShowSlotEnded' in mod).toBe(false);
   });
 });
 

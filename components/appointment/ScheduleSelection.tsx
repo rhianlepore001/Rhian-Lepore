@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { User, Calendar, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
-import { buildManualBookingTimeSlots } from '../../utils/agendaTimeSlots';
+import { User, Calendar, ChevronLeft, ChevronRight, Clock, ChevronDown, MoonStar } from 'lucide-react';
+import { splitWizardTimeSlots } from '../../utils/agendaDayWindow';
+import { formatLocalDateString } from '../../utils/date';
+import type { BusinessHours } from '../../types/settings';
 
 interface ScheduleSelectionProps {
     teamMembers: any[];
@@ -17,12 +19,16 @@ interface ScheduleSelectionProps {
     services: any[];
     selectedServiceIds: string[];
     user: any;
+    /** Horário de funcionamento: horários do expediente primeiro; fora dele sob demanda (encaixe). */
+    businessHours?: BusinessHours | null;
+    shopTimeZone?: string;
 }
 
 /**
  * Seleção de horário para agendamento INTERNO (gestor/colaborador).
- * Não usa get_available_slots / horário de funcionamento — controle total.
- * Booking online continua limitado via PublicBooking + RPC.
+ * Não usa get_available_slots — controle total: qualquer horário do dia,
+ * inclusive passado (encaixe lançado depois) e fora do expediente (seção
+ * "Fora do expediente"). Booking online continua limitado via PublicBooking + RPC.
  */
 export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
     teamMembers,
@@ -34,15 +40,56 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
     setSelectedTime,
     activeCardBg,
     cardBg,
+    businessHours = null,
+    shopTimeZone,
 }) => {
     // Horário pré-preenchido fora da grade de 30 min (ex.: falta às 14:15)
     // entra na lista para aparecer selecionado.
     const [prefilledTime] = useState(selectedTime);
-    const timeSlots = useMemo(() => {
-        const base = buildManualBookingTimeSlots();
-        if (!prefilledTime || base.includes(prefilledTime)) return base;
-        return [...base, prefilledTime].sort();
-    }, [prefilledTime]);
+    const dateStr = formatLocalDateString(selectedDate);
+    const { inHours, outOfHours, closed } = useMemo(
+        () => splitWizardTimeSlots({
+            dateStr,
+            businessHours,
+            shopTimeZone,
+            extraTimes: prefilledTime ? [prefilledTime] : [],
+        }),
+        [dateStr, businessHours, shopTimeZone, prefilledTime],
+    );
+    // Horário escolhido (ex.: "+" da grade às 22:30) fora do expediente: seção já aberta.
+    const [showOffHours, setShowOffHours] = useState(() => !!selectedTime && outOfHours.includes(selectedTime));
+    const offHoursVisible = closed || showOffHours;
+
+    const renderTime = (time: string) => (
+        <button
+            key={time}
+            type="button"
+            onClick={() => setSelectedTime(time)}
+            aria-pressed={selectedTime === time}
+            className={`
+                py-3 px-2 rounded-lg font-mono font-bold text-sm transition-all border
+                ${selectedTime === time
+                    ? activeCardBg
+                    : 'bg-theme-surface border-[var(--color-divider)] text-theme-text hover:border-[var(--color-input-border)] hover:bg-[var(--color-card-hover)]'
+                }
+            `}
+        >
+            {time}
+        </button>
+    );
+    const timeGridClass = 'grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3';
+    // Fora do expediente em ordem, separado em antes da abertura / intervalo / depois do fechamento.
+    const offHoursGroups = useMemo(() => {
+        if (closed || inHours.length === 0) return [{ label: '', times: outOfHours }];
+        const first = inHours[0];
+        const last = inHours[inHours.length - 1];
+        const groups = [
+            { label: 'Antes da abertura', times: outOfHours.filter((t) => t < first) },
+            { label: 'Intervalo', times: outOfHours.filter((t) => t > first && t < last) },
+            { label: 'Depois do fechamento', times: outOfHours.filter((t) => t > last) },
+        ];
+        return groups.filter((g) => g.times.length > 0);
+    }, [closed, inHours, outOfHours]);
 
     const changeDate = (days: number) => {
         const newDate = new Date(selectedDate);
@@ -122,23 +169,41 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                             <p>Selecione um profissional primeiro</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3">
-                            {timeSlots.map(time => (
-                                <button
-                                    key={time}
-                                    type="button"
-                                    onClick={() => setSelectedTime(time)}
-                                    className={`
-                                        py-3 px-2 rounded-lg font-mono font-bold text-sm transition-all border
-                                        ${selectedTime === time
-                                            ? activeCardBg
-                                            : 'bg-theme-surface border-[var(--color-divider)] text-theme-text hover:border-[var(--color-input-border)] hover:bg-[var(--color-card-hover)]'
-                                        }
-                                    `}
+                        <div className="space-y-4">
+                            {closed && (
+                                <p
+                                    data-testid="wizard-closed-day"
+                                    className="flex items-start gap-2 text-sm text-theme-textSecondary"
                                 >
-                                    {time}
+                                    <MoonStar className="w-4 h-4 mt-0.5 shrink-0 text-[var(--color-text-muted)]" aria-hidden="true" />
+                                    <span><span className="font-semibold text-theme-text">Fechado neste dia.</span> Escolha qualquer horário para um encaixe.</span>
+                                </p>
+                            )}
+                            {inHours.length > 0 && <div className={timeGridClass}>{inHours.map(renderTime)}</div>}
+                            {!closed && outOfHours.length > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowOffHours((v) => !v)}
+                                    aria-expanded={showOffHours}
+                                    aria-controls="wizard-off-hours"
+                                    className="w-full flex items-center justify-between gap-2 py-2.5 px-3 rounded-lg border border-dashed border-[var(--color-divider)] text-sm text-theme-textSecondary hover:text-theme-text hover:border-[var(--color-input-border)] transition-colors"
+                                >
+                                    <span>Horários fora do expediente <span className="text-[var(--color-text-muted)]">· encaixe</span></span>
+                                    <ChevronDown className={`w-4 h-4 transition-transform ${showOffHours ? 'rotate-180' : ''}`} aria-hidden="true" />
                                 </button>
-                            ))}
+                            )}
+                            {offHoursVisible && outOfHours.length > 0 && (
+                                <div id="wizard-off-hours" className="space-y-3">
+                                    {offHoursGroups.map((g) => (
+                                        <div key={g.label}>
+                                            {g.label && (
+                                                <p className="text-xs font-mono uppercase tracking-wider text-[var(--color-text-muted)] mb-2">{g.label}</p>
+                                            )}
+                                            <div className={timeGridClass}>{g.times.map(renderTime)}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

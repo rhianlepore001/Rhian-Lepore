@@ -31,6 +31,11 @@ interface CartLine {
   quantity: number;
 }
 
+// Default estável da query de linhas de produto: com o modal fechado
+// (appointment=null) a query fica desabilitada e `= []` criaria um array novo
+// a cada render, redisparando o efeito do carrinho em loop.
+const NO_PENDING_LINES: never[] = [];
+
 /**
  * Traduz um erro da RPC complete_appointment (ou venda de produto) em mensagem
  * PT-BR acionável para o operador. Antes o fluxo só exibia "Erro ao concluir
@@ -118,7 +123,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     includeInactive: false,
   });
 
-  const { data: pendingLines = [], isFetched: pendingLinesFetched } = useAppointmentProductLines(
+  const { data: pendingLines = NO_PENDING_LINES, isFetched: pendingLinesFetched } = useAppointmentProductLines(
     companyId ?? '',
     appointment?.id
   );
@@ -156,7 +161,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   useEffect(() => {
     if (!appointment?.id) {
       cartSeededFor.current = null;
-      setCart([]);
+      setCart(prev => (prev.length === 0 ? prev : []));
       return;
     }
     if (!pendingLinesFetched) return;

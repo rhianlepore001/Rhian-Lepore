@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
@@ -18,10 +18,10 @@ import { ServiceList } from './appointment/ServiceList';
 import { ClientSelection } from './appointment/ClientSelection';
 import { ScheduleSelection } from './appointment/ScheduleSelection';
 import { AppointmentReview } from './appointment/AppointmentReview';
+import { StepHeading } from './appointment/StepHeading';
 import { logger } from '../utils/Logger';
 import { combineDateAndTime, formatLocalDateString } from '../utils/date';
 import { useCreateAppointment } from '../hooks/useScheduling';
-import type { CheckoutPaymentMethod } from '../types/scheduling';
 import { getFirstAvailableProfessional } from '../services/publicBooking';
 import { useToast } from '@/components/ui';
 import { useProducts } from '@/hooks/useCatalog';
@@ -75,9 +75,14 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     const [discount, setDiscount] = useState<string>('0');
     const [notes, setNotes] = useState<string>('');
     const [sendWhatsapp, setSendWhatsapp] = useState(true);
-    const [paymentMethod, setPaymentMethod] = useState<string>('');
     const [autoAssigningPro, setAutoAssigningPro] = useState(false);
     const [selectedProductLines, setSelectedProductLines] = useState<ProductLineSelection[]>([]);
+
+    // Cada passo começa do topo (antes herdava a rolagem do passo anterior)
+    const contentRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (contentRef.current) contentRef.current.scrollTop = 0;
+    }, [step]);
 
     const { data: catalogProducts = [] } = useProducts({
         companyId: companyId ?? user?.id ?? '',
@@ -209,7 +214,8 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                 clientId: selectedClientId,
                 notes: notes || null,
                 customServiceName: isCustomService ? (customServiceName || 'Servico Personalizado') : null,
-                paymentMethod: paymentMethod ? paymentMethod as CheckoutPaymentMethod : null
+                // Forma de pagamento é escolhida em "Confirmar e cobrar": nasce "definir depois"
+                paymentMethod: null
             }) as { success?: boolean; message?: string; booking_id?: string };
 
             if (!result.success) {
@@ -296,7 +302,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
             className="max-w-4xl h-[100dvh] md:h-[85vh] overflow-hidden shadow-promax-depth"
         >
                 {/* HEADER */}
-                <div className={`relative p-6 flex items-center justify-between border-b border-[var(--color-divider)] shrink-0`}>
+                <div className={`relative px-4 py-4 sm:p-6 flex items-center justify-between border-b border-[var(--color-divider)] shrink-0`}>
                     <div>
                         <h2 id="appointment-wizard-title" className={`text-2xl font-heading ${colors.text} uppercase tracking-wider`}>
                             Novo Atendimento
@@ -359,7 +365,7 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                 </div>
 
                 {/* CONTENT AREA */}
-                <div className="flex-1 min-h-0 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-neutral-700">
+                <div ref={contentRef} data-testid="wizard-content" className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-5 sm:p-6 scrollbar-thin scrollbar-thumb-neutral-700">
 
                     {/* STEP 1: CLIENT */}
                     {step === 1 && (
@@ -381,12 +387,17 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                     {/* STEP 2: SERVICES */}
                     {step === 2 && (
                         <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className={`text-2xl font-heading ${colors.text} uppercase tracking-tight`}>Menu de Serviços</h3>
-                                <p className={`${colors.textMuted} text-xs font-mono`}>
-                                    {services.filter(s => activeCategory === 'all' || s.category_id === activeCategory).length} Opções
-                                </p>
-                            </div>
+                            <StepHeading
+                                title="Selecione os serviços"
+                                aside={
+                                    <span className={`${colors.textMuted} text-xs font-mono`}>
+                                        {(() => {
+                                            const n = services.filter(s => activeCategory === 'all' || s.category_id === activeCategory).length;
+                                            return `${n} ${n === 1 ? 'opção' : 'opções'}`;
+                                        })()}
+                                    </span>
+                                }
+                            />
 
                             <ServiceSearchBar
                                 searchQuery={searchQuery}
@@ -482,16 +493,26 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                             notes={notes}
                             setNotes={setNotes}
                             currencySymbol={currencySymbol}
-                            paymentMethod={paymentMethod}
-                            setPaymentMethod={setPaymentMethod}
-                            region={currencyRegion}
                         />
                     )}
 
                 </div>
 
                 {/* FOOTER */}
-                <div className={`p-4 border-t shrink-0 ${isBeauty ? 'border-[var(--color-accent-border)] bg-[var(--color-accent-dim)]' : 'border-[var(--color-border)] bg-[var(--color-bg)]/50'} flex justify-between items-center`}>
+                <div
+                    data-testid="wizard-footer"
+                    className={`px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 border-t shrink-0 ${isBeauty ? 'border-[var(--color-accent-border)] bg-[var(--color-accent-dim)]' : 'border-[var(--color-border)] bg-[var(--color-bg)]/50'}`}
+                >
+                    {/* Confirmar: total sempre visível junto do botão principal */}
+                    {step === 4 && (
+                        <div data-testid="wizard-footer-total" className="flex items-baseline justify-between gap-3 pb-3 mb-3 border-b border-[var(--color-divider)]">
+                            <span className={`text-sm ${colors.textSecondary}`}>Total a receber</span>
+                            <span className="text-xl font-bold font-mono text-theme-accent tabular-nums whitespace-nowrap">
+                                {formatCurrency(finalPrice || 0, currencyRegion)}
+                            </span>
+                        </div>
+                    )}
+                    <div className="flex justify-between items-center">
                     {step > 1 ? (
                         <button
                             type="button"
@@ -526,6 +547,7 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                                 {loading ? <Loader2 className="animate-spin" /> : 'Confirmar Atendimento'}
                             </Button>
                         )}
+                    </div>
                     </div>
                 </div>
         </Modal>

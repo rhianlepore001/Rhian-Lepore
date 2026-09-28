@@ -9,6 +9,7 @@ import { PhoneInput } from '../PhoneInput';
 import { logger } from '../../utils/Logger';
 import { useToast } from '../ui/Toast';
 import { mapError } from '../../utils/mapError';
+import { StepHeading } from './StepHeading';
 
 interface ClientSelectionProps {
     clients: any[];
@@ -72,11 +73,8 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({
     };
 
     return (
-        <div className="max-w-xl mx-auto space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="text-center">
-                <h3 className="text-xl font-bold text-theme-text mb-2">Quem será atendido hoje?</h3>
-                <p className="text-theme-textSecondary">Selecione um cliente existente ou cadastre um novo.</p>
-            </div>
+        <div className="max-w-xl mx-auto space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+            <StepHeading title="Escolha o cliente" hint="Busque pelo nome ou telefone, ou cadastre um novo." className="!mb-0" />
 
             {!isCreatingClient ? (
                 <div className="space-y-4">

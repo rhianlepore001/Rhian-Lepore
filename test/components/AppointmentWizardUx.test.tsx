@@ -145,3 +145,21 @@ describe('AppointmentWizard: rolagem por passo', () => {
     expect(content.scrollTop).toBe(0);
   });
 });
+
+describe('AppointmentWizard: retorno do agendamento criado', () => {
+  it('onSuccess recebe a data/hora e { id, professionalId } do agendamento criado', async () => {
+    mutateAsync.mockReset();
+    onSuccess.mockReset();
+    mutateAsync.mockResolvedValue({ success: true, booking_id: 'apt-123' });
+    render(<AppointmentWizard {...props} initialDate={new Date(2026, 8, 28)} initialProfessionalId="pro-ana" initialTime="18:30" />);
+    await userEvent.click(screen.getByRole('button', { name: 'cliente Bruno' }));
+    await next();
+    await userEvent.click(screen.getByText('Corte Social'));
+    await next();
+    await next();
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar Atendimento' }));
+    const [when, created] = onSuccess.mock.calls[0];
+    expect([when.getDate(), when.getHours(), when.getMinutes()]).toEqual([28, 18, 30]);
+    expect(created).toEqual({ id: 'apt-123', professionalId: 'pro-ana' });
+  });
+});

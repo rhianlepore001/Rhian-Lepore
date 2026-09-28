@@ -11,7 +11,8 @@ export interface Service {
 
 export interface WizardProps {
     onClose: () => void;
-    onSuccess: (date: Date) => void;
+    /** Chamado após criar; `created` identifica o agendamento para a agenda focar nele. */
+    onSuccess: (date: Date, created?: { id?: string; professionalId: string }) => void;
     initialDate?: Date;
     /** Pré-seleção ao abrir a partir da grade da Agenda */
     initialProfessionalId?: string;

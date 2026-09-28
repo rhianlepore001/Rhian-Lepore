@@ -12,6 +12,7 @@ import { Calendar, Clock, Plus, User, Check, X, ChevronLeft, ChevronRight, Histo
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useFocusCreatedAppointment, ensureProfessionalVisible } from '../hooks/useFocusCreatedAppointment';
 import { AppointmentEditModal } from '../components/AppointmentEditModal';
 import { AppointmentWizard } from '../components/AppointmentWizard';
 import { AgendaDayScroller } from '../components/agenda/AgendaDayScroller';
@@ -141,6 +142,8 @@ export const Agenda: React.FC = () => {
     const [historyMonth, setHistoryMonth] = useState(new Date());
     // Filtro de profissionais (multi-select). [] = "Todos" (owner e staff).
     const [selectedProfessionalIds, setSelectedProfessionalIds] = useState<string[]>([]);
+    // Após criar: rolar até o card novo e destacá-lo
+    const { highlightId, focusCreated } = useFocusCreatedAppointment(appointments);
     const [overdueAppointments, setOverdueAppointments] = useState<Appointment[]>([]);
     const [isOverdueLoading, setIsOverdueLoading] = useState(false);
     const [businessName, setBusinessName] = useState(''); // NEW STATE FOR BUSINESS NAME
@@ -1315,6 +1318,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                         onEmptySlotClick={openNewAppointmentAt}
                         offHoursSlots={dayWindow.offHours}
                         endLabel={dayWindow.endLabel}
+                        highlightAppointmentId={highlightId}
                     />
                     <AgendaStatusLegend
                         emptyHint={
@@ -1647,13 +1651,23 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                         setShowNewAppointmentModal(false);
                         setWizardPrefill(null);
                     }}
-                    onSuccess={async (date) => {
+                    onSuccess={async (date, created) => {
                         const newDateStr = formatLocalDateString(date);
                         setShowNewAppointmentModal(false);
                         setWizardPrefill(null);
                         const nextDate = new Date(date);
                         nextDate.setHours(0, 0, 0, 0);
                         setSelectedDate(nextDate);
+                        // Vai até o agendamento criado: dia certo, coluna visível
+                        // (filtro de profissional), rola até o card e destaca ~2s.
+                        if (created?.professionalId) {
+                            setSelectedProfessionalIds((ids) => ensureProfessionalVisible(ids, created.professionalId));
+                        }
+                        focusCreated({
+                            id: created?.id,
+                            professionalId: created?.professionalId,
+                            time: `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`,
+                        });
                         navigate(`/agenda?date=${newDateStr}`, { replace: true });
                         // Refetch com a data do agendamento (evita closure stale de selectedDate)
                         const usedNoShowSlot = !!wizardPrefill?.slotContext;

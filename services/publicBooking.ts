@@ -318,6 +318,30 @@ export async function cancelPublicBooking(bookingId: string, phone: string): Pro
   }
 }
 
+/**
+ * Pedidos cancelados do cliente e se o cancelamento veio do estabelecimento
+ * (get_client_booking_cancellations, item 5b). Sem a RPC (migration ainda não
+ * aplicada) devolve {} e a Minha Área mostra a mensagem neutra.
+ */
+export async function fetchClientBookingCancellations(
+  phone: string,
+  businessId: string,
+): Promise<Record<string, boolean>> {
+  const { data, error } = await supabase.rpc('get_client_booking_cancellations', {
+    p_phone: phone,
+    p_business_id: businessId,
+  });
+  if (error) {
+    if (isMissingRpcError(error)) return {};
+    throw error;
+  }
+  const out: Record<string, boolean> = {};
+  for (const row of (data ?? []) as Array<{ booking_id: string; cancelled_by_business: boolean }>) {
+    out[row.booking_id] = row.cancelled_by_business === true;
+  }
+  return out;
+}
+
 export async function fetchEditBooking(editId: string, businessId: string, phone: string) {
   const { data, error } = await supabase.rpc('get_booking_by_id', {
     p_booking_id: editId,

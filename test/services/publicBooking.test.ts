@@ -4,6 +4,7 @@ import {
   cancelPublicBooking,
   confirmPublicBooking,
   createAcceptedAppointmentFromBooking,
+  fetchClientBookingCancellations,
   fetchPublicClientByPhone,
   getActiveBookingByPhone,
   rejectPublicBooking,
@@ -261,5 +262,30 @@ describe('public booking service', () => {
     expect(supabase.rpc).toHaveBeenCalledWith('accept_public_booking', {
       p_booking_id: 'booking-001',
     });
+  });
+
+  it('busca quem cancelou os pedidos do cliente (item 5b)', async () => {
+    (supabase.rpc as any).mockResolvedValue({
+      data: [
+        { booking_id: 'b1', cancelled_by_business: true },
+        { booking_id: 'b2', cancelled_by_business: false },
+      ],
+      error: null,
+    });
+    await expect(fetchClientBookingCancellations('351912345678', 'business-001')).resolves.toEqual({ b1: true, b2: false });
+    expect(supabase.rpc).toHaveBeenCalledWith('get_client_booking_cancellations', {
+      p_phone: '351912345678',
+      p_business_id: 'business-001',
+    });
+  });
+
+  it('sem a RPC (migration não aplicada) devolve {} em vez de quebrar a Minha Área', async () => {
+    (supabase.rpc as any).mockResolvedValue({ data: null, error: { code: 'PGRST202', message: 'Could not find the function' } });
+    await expect(fetchClientBookingCancellations('351912345678', 'business-001')).resolves.toEqual({});
+  });
+
+  it('propaga outros erros da RPC de cancelamentos', async () => {
+    (supabase.rpc as any).mockResolvedValue({ data: null, error: { code: '42501', message: 'permission denied' } });
+    await expect(fetchClientBookingCancellations('351912345678', 'business-001')).rejects.toMatchObject({ code: '42501' });
   });
 });

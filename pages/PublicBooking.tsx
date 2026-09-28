@@ -505,6 +505,19 @@ export const PublicBooking: React.FC = () => {
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Item 5b: o estabelecimento cancelou/recusou -> recomeça o fluxo com os
+    // mesmos serviços; o cliente escolhe um novo horário.
+    const handleRescheduleCancelled = () => {
+        const ids: string[] = (activeBooking?.service_ids ?? []).filter((id: string) => services.some((s) => s.id === id));
+        setActiveBooking(null);
+        setEditingBookingId(null);
+        setSelectedServices(ids);
+        setSelectedDate(null);
+        setSelectedTime(null);
+        setStep('services');
+        setQuickStep('services');
+    };
+
     const handleCancelBooking = async (bookingId: string) => {
         const phone = customerPhone || client?.phone || '';
         if (!phone) {
@@ -693,6 +706,7 @@ export const PublicBooking: React.FC = () => {
 
     const stepIndex = { services: 0, datetime: 1, contact: 2, success: 3 };
     const currentStepNum = stepIndex[step as keyof typeof stepIndex] ?? 0;
+    const isBookingCancelled = activeBooking?.status === 'cancelled';
     const successCopy = getPublicBookingSuccessCopy({
         isBeauty,
         status: activeBooking?.status,
@@ -1517,7 +1531,7 @@ export const PublicBooking: React.FC = () => {
                                 <div className="max-w-xl mx-auto text-center py-20 animate-reveal-fragment">
                                     <div className="relative inline-block mb-10">
                                         <div className={`w-32 h-32 md:w-36 md:h-36 flex items-center justify-center border-4 animate-scale-check ${accent.bg} ${accentTextOnAccent} rounded-full ${shadow.elevated}`}>
-                                            <Check className="w-16 h-16 md:w-20 md:h-20 stroke-[4]" />
+                                            {isBookingCancelled ? <X className="w-16 h-16 md:w-20 md:h-20 stroke-[4]" /> : <Check className="w-16 h-16 md:w-20 md:h-20 stroke-[4]" />}
                                         </div>
                                         <div className="absolute -top-4 -right-4 animate-bounce delay-100">
                                             <Sparkles className={`w-8 h-8 ${accent.text}`} />
@@ -1568,14 +1582,24 @@ export const PublicBooking: React.FC = () => {
                                     </div>
 
                                     <div className="flex flex-col gap-5">
-                                        <a href={buildWhatsAppLink(business.phone, currencyRegion, successWhatsAppText)} target="_blank" rel="noopener noreferrer"
-                                            className={`group flex items-center justify-center gap-4 py-6 px-10 transition-all duration-200 relative overflow-hidden rounded-2xl ${accent.bg} ${accentTextOnAccent} ${shadow.elevated}`}>
-                                            <div className={`p-2 bg-[var(--color-card-hover)] rounded-lg group-hover:bg-white/20`}>
-                                                <Send className="w-5 h-5" />
-                                            </div>
-                                            <span className="text-sm font-black uppercase tracking-[0.2em]">{successCopy.whatsappCta}</span>
-                                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine pointer-events-none" />
-                                        </a>
+                                        {isBookingCancelled ? (
+                                            <button type="button" onClick={handleRescheduleCancelled} data-testid="booking-cancelled-reschedule"
+                                                className={`group flex items-center justify-center gap-4 py-6 px-10 transition-all duration-200 relative overflow-hidden rounded-2xl ${accent.bg} ${accentTextOnAccent} ${shadow.elevated}`}>
+                                                <div className={`p-2 bg-[var(--color-card-hover)] rounded-lg group-hover:bg-white/20`}>
+                                                    <Calendar className="w-5 h-5" />
+                                                </div>
+                                                <span className="text-sm font-black uppercase tracking-[0.2em]">Reagendar horário</span>
+                                            </button>
+                                        ) : (
+                                            <a href={buildWhatsAppLink(business.phone, currencyRegion, successWhatsAppText)} target="_blank" rel="noopener noreferrer"
+                                                className={`group flex items-center justify-center gap-4 py-6 px-10 transition-all duration-200 relative overflow-hidden rounded-2xl ${accent.bg} ${accentTextOnAccent} ${shadow.elevated}`}>
+                                                <div className={`p-2 bg-[var(--color-card-hover)] rounded-lg group-hover:bg-white/20`}>
+                                                    <Send className="w-5 h-5" />
+                                                </div>
+                                                <span className="text-sm font-black uppercase tracking-[0.2em]">{successCopy.whatsappCta}</span>
+                                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine pointer-events-none" />
+                                            </a>
+                                        )}
 
                                         <button
                                             type="button"
@@ -1776,7 +1800,7 @@ export const PublicBooking: React.FC = () => {
                 <div className="max-w-xl mx-auto text-center py-20 animate-reveal-fragment px-4">
                     <div className="relative inline-block mb-10">
                         <div className={`w-32 h-32 md:w-36 md:h-36 flex items-center justify-center border-4 animate-scale-check ${accent.bg} ${accentTextOnAccent} rounded-full ${shadow.elevated}`}>
-                            <Check className="w-16 h-16 md:w-20 md:h-20 stroke-[4]" />
+                            {isBookingCancelled ? <X className="w-16 h-16 md:w-20 md:h-20 stroke-[4]" /> : <Check className="w-16 h-16 md:w-20 md:h-20 stroke-[4]" />}
                         </div>
                         <div className="absolute -top-4 -right-4 animate-bounce delay-100">
                             <Sparkles className={`w-8 h-8 ${accent.text}`} />
@@ -1827,14 +1851,24 @@ export const PublicBooking: React.FC = () => {
                     </div>
 
                     <div className="flex flex-col gap-5">
-                        <a href={buildWhatsAppLink(business.phone, currencyRegion, successWhatsAppText)} target="_blank" rel="noopener noreferrer"
-                            className={`group flex items-center justify-center gap-4 py-6 px-10 transition-all duration-200 relative overflow-hidden rounded-2xl ${accent.bg} ${accentTextOnAccent} ${shadow.elevated}`}>
-                            <div className={`p-2 bg-[var(--color-card-hover)] rounded-lg group-hover:bg-white/20`}>
-                                <Send className="w-5 h-5" />
-                            </div>
-                            <span className="text-sm font-black uppercase tracking-[0.2em]">{successCopy.whatsappCta}</span>
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine pointer-events-none" />
-                        </a>
+                        {isBookingCancelled ? (
+                            <button type="button" onClick={handleRescheduleCancelled} data-testid="booking-cancelled-reschedule"
+                                className={`group flex items-center justify-center gap-4 py-6 px-10 transition-all duration-200 relative overflow-hidden rounded-2xl ${accent.bg} ${accentTextOnAccent} ${shadow.elevated}`}>
+                                <div className={`p-2 bg-[var(--color-card-hover)] rounded-lg group-hover:bg-white/20`}>
+                                    <Calendar className="w-5 h-5" />
+                                </div>
+                                <span className="text-sm font-black uppercase tracking-[0.2em]">Reagendar horário</span>
+                            </button>
+                        ) : (
+                            <a href={buildWhatsAppLink(business.phone, currencyRegion, successWhatsAppText)} target="_blank" rel="noopener noreferrer"
+                                className={`group flex items-center justify-center gap-4 py-6 px-10 transition-all duration-200 relative overflow-hidden rounded-2xl ${accent.bg} ${accentTextOnAccent} ${shadow.elevated}`}>
+                                <div className={`p-2 bg-[var(--color-card-hover)] rounded-lg group-hover:bg-white/20`}>
+                                    <Send className="w-5 h-5" />
+                                </div>
+                                <span className="text-sm font-black uppercase tracking-[0.2em]">{successCopy.whatsappCta}</span>
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shine pointer-events-none" />
+                            </a>
+                        )}
 
                         <button
                             type="button"

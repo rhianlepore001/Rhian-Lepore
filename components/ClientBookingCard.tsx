@@ -9,6 +9,7 @@ import { cancelPublicBooking } from '../services/publicBooking';
 import { useToast } from './ui/Toast';
 import { logger } from '../utils/Logger';
 import { resolveBusinessTimezone } from '../utils/businessTimezone';
+import { cancellationMessage, rebookPath } from '../utils/clientBookings';
 
 export interface ClientBooking {
     id: string;
@@ -21,6 +22,8 @@ export interface ClientBooking {
     total_price: number;
     duration_minutes: number;
     created_at: string;
+    /** get_client_booking_cancellations: cancelado pelo estabelecimento (item 5b). */
+    cancelled_by_business?: boolean;
 }
 
 interface ClientBookingCardProps {
@@ -78,7 +81,8 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
     const [showConfirm, setShowConfirm] = useState(false);
 
     const isUpcoming = ['pending', 'confirmed'].includes(booking.status);
-    const isPast = !isUpcoming && booking.status !== 'cancelled';
+    const isCancelled = booking.status === 'cancelled';
+    const isPast = !isUpcoming && !isCancelled;
     const statusCfg = STATUS_CONFIG[booking.status] ?? STATUS_CONFIG.completed;
 
     const businessTz = resolveBusinessTimezone({ timezone: timeZone, region });
@@ -249,6 +253,27 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                         >
                             <X className="w-3.5 h-3.5 shrink-0" />
                             Cancelar
+                        </button>
+                    </div>
+                )}
+
+                {isCancelled && (
+                    <div className="space-y-2 pt-1" data-testid="client-booking-cancelled">
+                        <p
+                            className="flex items-start gap-2 px-3 py-2 rounded-xl text-xs leading-snug break-words bg-[var(--color-danger-bg)] text-[var(--color-danger)] border border-[var(--color-danger-border)]"
+                            data-testid="client-booking-cancelled-note"
+                        >
+                            <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-px" aria-hidden="true" />
+                            {cancellationMessage(booking)}
+                        </p>
+                        <button
+                            type="button"
+                            onClick={() => navigate(rebookPath(businessSlug, booking))}
+                            className={`w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 min-h-[44px] rounded-xl text-xs font-bold uppercase tracking-wider bg-theme-accent hover:opacity-90 transition-opacity ${isBeauty ? 'text-[var(--color-text)]' : 'text-[var(--color-on-accent)]'}`}
+                            data-testid="client-booking-reschedule"
+                        >
+                            <Calendar className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                            Reagendar horário
                         </button>
                     </div>
                 )}

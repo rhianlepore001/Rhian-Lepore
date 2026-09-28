@@ -2,6 +2,7 @@ import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { Route, Routes, useLocation } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import { ClientBookingCard, type ClientBooking } from '../../components/ClientBookingCard';
 import { cancelPublicBooking } from '../../services/publicBooking';
@@ -81,5 +82,64 @@ describe('ClientBookingCard', () => {
       'Não foi possível cancelar. Tente de novo ou fale com o salão.',
       'error',
     );
+  });
+});
+
+function LocationProbe() {
+  const loc = useLocation();
+  return <div data-testid="location">{loc.pathname + loc.search}</div>;
+}
+
+function renderCancelled(extra: Partial<ClientBooking>) {
+  return render(
+    <MemoryRouter initialEntries={['/minha-area/barbearia-silva']}>
+      <Routes>
+        <Route
+          path="/minha-area/:slug"
+          element={(
+            <ClientBookingCard
+              booking={{ ...booking, status: 'cancelled', service_ids: ['s1', 's2'], ...extra }}
+              isBeauty={false}
+              businessPhone="11999998888"
+              businessSlug="barbearia-silva"
+              clientName="Zé"
+              clientPhone="11999998888"
+              region="PT"
+              onCancelled={vi.fn()}
+            />
+          )}
+        />
+        <Route path="/book/:slug" element={<LocationProbe />} />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
+
+describe('ClientBookingCard — cancelado (item 5b)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (useToast as ReturnType<typeof vi.fn>).mockReturnValue({ showToast });
+  });
+
+  it('cancelado pelo estabelecimento: CANCELADO + mensagem + Reagendar, sem Editar/Cancelar', () => {
+    renderCancelled({ cancelled_by_business: true });
+    expect(screen.getByText('Cancelado')).toBeInTheDocument();
+    expect(screen.getByTestId('client-booking-cancelled-note')).toHaveTextContent('O estabelecimento cancelou este agendamento.');
+    expect(screen.getByRole('button', { name: /Reagendar horário/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Editar/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Cancelar$/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Repetir este agendamento/ })).toBeNull();
+  });
+
+  it('Reagendar horário abre o booking público com os mesmos serviços', async () => {
+    renderCancelled({ cancelled_by_business: true });
+    await userEvent.click(screen.getByRole('button', { name: /Reagendar horário/ }));
+    expect(screen.getByTestId('location')).toHaveTextContent('/book/barbearia-silva?rebook=s1,s2');
+  });
+
+  it('cancelado sem sinal do estabelecimento (recusado / pelo cliente): mensagem neutra', () => {
+    renderCancelled({ cancelled_by_business: false });
+    expect(screen.getByTestId('client-booking-cancelled-note')).toHaveTextContent('Este agendamento foi cancelado.');
+    expect(screen.getByRole('button', { name: /Reagendar horário/ })).toBeInTheDocument();
   });
 });

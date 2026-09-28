@@ -130,7 +130,44 @@ check "N3: cancel with the booking row locked succeeds" "$cancel_rc" "0"
 check "N3: cancel returns without waiting the whole lock (<4s)" "$(python3 -c "print('yes' if $elapsed < 4 else 'no ($elapsed s)')")" "yes"
 check "N3: lock wait becomes a WARNING inside the trigger" "$(echo "$cancel_out" | grep -c 'lock timeout')" "1"
 check "N3: appointment Cancelled; booking untouched while locked" "$state" "Cancelled/confirmed"
-echo "N3 lock tests: 4 total, $fail failures (cancel took ${elapsed}s)"
+
+# Variante do review: contexto PostgREST (SET ROLE authenticated + JWT do dono)
+# com statement_timeout e lock_timeout de sessão em 8s; o lock_timeout da função
+# (2s) prevalece e o cancelamento termina em ~2s.
+"${PSQL[@]}" <<'SQL'
+INSERT INTO public.public_bookings (id, business_id, customer_phone, customer_name, service_ids, professional_id, appointment_time, total_price, status)
+VALUES ('5000000d-0000-0000-0000-00000000000d', '00000000-0000-0000-0000-0000000000a0', '351912345678', 'Ana', ARRAY['20000000-0000-0000-0000-000000000001'::uuid],
+        '10000000-0000-0000-0000-0000000000a0', now() + interval '11 days', 35, 'confirmed');
+INSERT INTO public.appointments (id, user_id, client_id, professional_id, service, appointment_time, price, status, public_booking_id)
+VALUES ('4000000d-0000-0000-0000-00000000000d', '00000000-0000-0000-0000-0000000000a0', '30000000-0000-0000-0000-000000000001',
+        '10000000-0000-0000-0000-0000000000a0', 'Barba', (SELECT appointment_time FROM public.public_bookings WHERE id = '5000000d-0000-0000-0000-00000000000d'),
+        35, 'Confirmed', '5000000d-0000-0000-0000-00000000000d');
+SQL
+"${PSQL[@]}" -c "BEGIN; SELECT 1 FROM public.public_bookings WHERE id = '5000000d-0000-0000-0000-00000000000d' FOR UPDATE; SELECT pg_sleep(6.5); COMMIT;" >/dev/null &
+locker=$!
+for _ in $(seq 1 50); do
+  held="$("${PSQL[@]}" -At -c "SELECT count(*) FROM pg_stat_activity WHERE query LIKE '%pg_sleep(6.5)%' AND state = 'active' AND pid <> pg_backend_pid()")"
+  [ "$held" = 1 ] && break; sleep 0.1
+done
+t0=$(date +%s.%N)
+set +e
+auth_out="$("${PSQL[@]}" -At <<'SQL' 2>&1
+SET statement_timeout = '8s';
+SET lock_timeout = '8s';
+SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000a0', false) \g /dev/null
+SET ROLE authenticated;
+UPDATE public.appointments SET status = 'Cancelled' WHERE id = '4000000d-0000-0000-0000-00000000000d' RETURNING status;
+SQL
+)"
+auth_rc=$?
+set -e
+auth_elapsed=$(python3 -c "import sys; print(round(float(sys.argv[2]) - float(sys.argv[1]), 1))" "$t0" "$(date +%s.%N)")
+wait "$locker"
+auth_state="$("${PSQL[@]}" -At -c "SELECT (SELECT status FROM public.appointments WHERE id = '4000000d-0000-0000-0000-00000000000d') || '/' || (SELECT status FROM public.public_bookings WHERE id = '5000000d-0000-0000-0000-00000000000d')")"
+check "N3 (authenticated, session timeouts 8s): cancel succeeds and returns the row" "$auth_rc/$(echo "$auth_out" | grep -c '^Cancelled$')" "0/1"
+check "N3 (authenticated, session timeouts 8s): function lock_timeout wins (<4s)" "$(python3 -c "print('yes' if $auth_elapsed < 4 else 'no ($auth_elapsed s)')")" "yes"
+check "N3 (authenticated, session timeouts 8s): WARNING, booking untouched" "$(echo "$auth_out" | grep -c 'lock timeout')/$auth_state" "1/Cancelled/confirmed"
+echo "N3 lock tests: 7 total, $fail failures (cancel took ${elapsed}s; authenticated ${auth_elapsed}s)"
 n3_fail=$fail
 
 # S1 (review do #98): limpeza de dados demo/seed com pedido aceito (agendamento

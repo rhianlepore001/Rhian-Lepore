@@ -42,3 +42,7 @@ Comecar a migracao do fluxo de agendamento publico para o contrato alvo do Rever
 ## Criterio CTO
 
 Esta etapa corrige a regra mais sensivel de edicao: o sistema nao deve sobrescrever historico de appointment. A Fase 3 ainda precisa de validacao E2E/manual do fluxo anonimo + owner para ser considerada concluida em producao.
+
+## Cancelamento pelo salao (item 5b)
+
+- Se o trigger `sync_public_booking_on_appointment_cancel` esbarrar em lock (lock_timeout 2s, migration 20260928130000), o agendamento e cancelado e o horario liberado normalmente, mas o pedido online fica `confirmed` e nao ha retry (aceito por design; fica so o WARNING no log).

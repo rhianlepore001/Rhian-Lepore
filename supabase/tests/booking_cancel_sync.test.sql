@@ -249,6 +249,13 @@ SELECT pg_temp.check('trigger present: AFTER UPDATE OF status, only on -> Cancel
   'CREATE TRIGGER sync_public_booking_on_appointment_cancel AFTER UPDATE OF status ON public.appointments FOR EACH ROW WHEN (((new.status = ''Cancelled''::text) AND (old.status IS DISTINCT FROM ''Cancelled''::text))) EXECUTE FUNCTION sync_public_booking_on_appointment_cancel()');
 SELECT pg_temp.check('item 4 trigger untouched', (SELECT pg_get_triggerdef(oid) FROM pg_trigger WHERE tgname = 'enforce_staff_appointment_edit_scope'),
   'CREATE TRIGGER enforce_staff_appointment_edit_scope BEFORE DELETE OR UPDATE ON public.appointments FOR EACH ROW EXECUTE FUNCTION enforce_staff_appointment_edit_scope()');
+-- 11) N3 (review do #98): lock_timeout na função do trigger ----------------------
+SELECT pg_temp.check('N3: sync function has lock_timeout=2s (proconfig)',
+  COALESCE((SELECT ('lock_timeout=2s' = ANY (proconfig))::text FROM pg_proc WHERE oid = to_regprocedure('public.sync_public_booking_on_appointment_cancel()')), 'missing'), 'true');
+SELECT pg_temp.check('N3: sync function keeps search_path=public',
+  COALESCE((SELECT ('search_path=public' = ANY (proconfig))::text FROM pg_proc WHERE oid = to_regprocedure('public.sync_public_booking_on_appointment_cancel()')), 'missing'), 'true');
+SELECT pg_temp.check('accept_public_booking md5 = prod (after 20260925170000)',
+  md5(pg_get_functiondef('public.accept_public_booking(uuid)'::regprocedure)), '301748caa09eeade5a457ebe297478ba');
 SELECT pg_temp.check('item 4 function untouched (md5 = prod)', (SELECT md5(pg_get_functiondef('public.enforce_staff_appointment_edit_scope()'::regprocedure))), 'f31188aa32bade9349bcb4fb556a4374');
 \o
 

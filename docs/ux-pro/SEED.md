@@ -92,6 +92,11 @@ Script de limpeza a criar junto: `scripts/ux-pro-seed-cleanup.mjs`, com o mesmo 
 DELETE FROM appointments      WHERE user_id     = '<tenant>' AND notes       LIKE '[UXPRO-SEED]%';
 DELETE FROM finance_records   WHERE user_id     = '<tenant>' AND description LIKE '[UXPRO-SEED]%';
 DELETE FROM queue_entries     WHERE business_id = '<tenant>' AND notes       LIKE '[UXPRO-SEED]%';
+-- Pedido aceito vira agendamento SEM o marcador e com appointments.public_booking_id
+-- (FK sem ON DELETE): solta o vínculo antes de apagar os pedidos, senão o DELETE falha.
+UPDATE appointments SET public_booking_id = NULL
+  WHERE user_id = '<tenant>'
+    AND public_booking_id IN (SELECT id FROM public_bookings WHERE business_id = '<tenant>' AND notes LIKE '[UXPRO-SEED]%');
 DELETE FROM public_bookings   WHERE business_id = '<tenant>' AND notes       LIKE '[UXPRO-SEED]%';
 DELETE FROM client_memberships WHERE user_id    = '<tenant>' AND notes       LIKE '[UXPRO-SEED]%';
 DELETE FROM membership_plans  WHERE user_id     = '<tenant>' AND description LIKE '[UXPRO-SEED]%';

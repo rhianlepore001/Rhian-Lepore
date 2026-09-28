@@ -53,7 +53,8 @@ export const createAcceptedAppointmentInputSchema = z.object({
   appointmentTime: z.string().min(1),
   totalPrice: moneyAmountSchema,
   durationMinutes: z.number().int().positive(),
-  preservePublicBookingLink: z.boolean().default(false),
+  // Igual ao accept_public_booking (20260925170000): vínculo gravado sempre.
+  preservePublicBookingLink: z.boolean().default(true),
 });
 
 export type PublicBookingStatus = z.infer<typeof publicBookingStatusSchema>;

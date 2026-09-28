@@ -170,6 +170,36 @@ describe('public booking service', () => {
     }));
   });
 
+  it('fallback do aceite grava public_booking_id por padrão, como o RPC (review #98 N2)', async () => {
+    singleMock.mockResolvedValueOnce({ data: { id: 'appt-002' }, error: null });
+    await createAcceptedAppointmentFromBooking({
+      businessId: 'business-001',
+      clientId: 'client-001',
+      professionalId: 'pro-001',
+      serviceNames: 'Corte',
+      bookingId: 'booking-002',
+      appointmentTime: '2026-05-30T10:00:00-03:00',
+      totalPrice: 80,
+      durationMinutes: 30,
+    });
+    expect(insertMock).toHaveBeenLastCalledWith(expect.objectContaining({ public_booking_id: 'booking-002' }));
+  });
+
+  it('fallback do aceite: preservePublicBookingLink=false explícito continua sem vínculo', async () => {
+    singleMock.mockResolvedValueOnce({ data: { id: 'appt-003' }, error: null });
+    await createAcceptedAppointmentFromBooking({
+      businessId: 'business-001',
+      clientId: 'client-001',
+      serviceNames: 'Corte',
+      bookingId: 'booking-003',
+      appointmentTime: '2026-05-30T10:00:00-03:00',
+      totalPrice: 80,
+      durationMinutes: 30,
+      preservePublicBookingLink: false,
+    });
+    expect(insertMock).toHaveBeenLastCalledWith(expect.not.objectContaining({ public_booking_id: expect.anything() }));
+  });
+
   it('cria appointment aceito sem atualizar historico original', async () => {
     singleMock.mockResolvedValueOnce({ data: { id: 'appt-001' }, error: null });
 

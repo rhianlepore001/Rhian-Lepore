@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Check, AlertTriangle, Clock, Ban, X, Edit2, MessageCircle, Users, Plus } from 'lucide-react';
 import { AgendaEmptySlotCell } from './AgendaEmptySlotCell';
-import { noShowSlotEnded } from '../../utils/noShowSlotReuse';
-import { appointmentFreesSlot, getVisualStatus, isNoShowStatus, VISUAL_STATUS_CLASSES, VISUAL_STATUS_LABEL, type VisualStatus } from '../../utils/appointmentStatus';
+import { appointmentFreesSlot, getVisualStatus, VISUAL_STATUS_CLASSES, VISUAL_STATUS_LABEL, type VisualStatus } from '../../utils/appointmentStatus';
 import { formatCurrency, type Region } from '../../utils/formatters';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 
@@ -48,8 +47,10 @@ export interface AgendaResourceGridProps {
   onToggleProfessional: (id: string) => void;
   onSelectAppointment: (apt: AgendaGridAppointment) => void;
   onEmptySlotClick: (professionalId: string, time: string) => void;
-  /** Relógio (testes). Falta cujo horário já terminou não oferece o "+" ao lado. */
-  now?: Date;
+  /** Linhas fora do horário de funcionamento (hachuradas, ainda clicáveis para encaixe). */
+  offHoursSlots?: string[];
+  /** Horário final da grade (ex.: "18:00"), exibido no pé da régua. */
+  endLabel?: string;
 }
 
 function firstName(fullName: string): string {
@@ -105,11 +106,13 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
   onToggleProfessional,
   onSelectAppointment,
   onEmptySlotClick,
-  now,
+  offHoursSlots = [],
+  endLabel,
 }) => {
-  const nowRef = now ?? new Date();
-  const isEndedNoShow = (apt: AgendaGridAppointment) => isNoShowStatus(apt.status) && noShowSlotEnded(apt, nowRef);
   const { colors, accent } = useBrutalTheme();
+  const offHours = new Set(offHoursSlots);
+  // Com o rótulo de fechamento, a última linha mantém a borda (o rótulo fica abaixo dela).
+  const lastRowBorder = endLabel ? '' : 'last:border-b-0';
   const [addOpen, setAddOpen] = useState(false);
   const addWrapRef = useRef<HTMLDivElement>(null);
 
@@ -181,19 +184,25 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                 </span>
               </button>
             </div>
-            {timeSlots.map((time) => {
-              const isHour = time.endsWith(':00');
+            {timeSlots.map((time, idx) => {
+              // Primeira linha sempre rotulada (grade pode começar às 07:30 por um encaixe).
+              const isHour = time.endsWith(':00') || idx === 0;
               return (
                 <div
                   key={time}
-                  className={`h-12 md:h-14 flex items-start justify-center pt-1.5 border-b ${colors.divider} last:border-b-0`}
+                  className={`h-12 md:h-14 flex items-start justify-center pt-1.5 border-b ${colors.divider} ${lastRowBorder}`}
                 >
                   {isHour && (
-                    <span className={`text-xs font-bold tabular-nums leading-none ${colors.text}`}>{time}</span>
+                    <span className={`text-xs font-bold tabular-nums leading-none ${offHours.has(time) ? colors.textMuted : colors.text}`}>{time}</span>
                   )}
                 </div>
               );
             })}
+            {endLabel && (
+              <div className="h-7 flex items-start justify-center pt-1" data-testid="agenda-grid-end-label">
+                <span className={`text-xs font-bold tabular-nums leading-none ${colors.textMuted}`}>{endLabel}</span>
+              </div>
+            )}
           </div>
 
           {/* Colunas por colaborador (já filtradas) */}
@@ -270,19 +279,18 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                     );
                     // Falta/cancelado não ocupa o horário (mesma regra do banco):
                     // o card continua visível e o "+" aparece ao lado.
+                    // Vale também para horário passado: o barbeiro atende e lança depois (encaixe).
                     const occupied = covering.some((o) => !appointmentFreesSlot(o.apt.status));
                     const freedOnly = !occupied && covering.length > 0;
-                    // Sem "+" só quando o horário tem APENAS falta(s) já encerrada(s)
-                    // (nada a reaproveitar). Com um cancelado junto, o "+" do
-                    // cancelado continua; horário vazio não muda.
-                    const endedNoShow = freedOnly && covering.every((o) => isEndedNoShow(o.apt));
+                    const isOffHours = offHours.has(time);
                     return (
                       <div
                         key={time}
                         data-agenda-slot={time}
-                        className={`relative h-12 md:h-14 w-full border-b ${colors.divider} last:border-b-0`}
+                        data-off-hours={isOffHours ? 'true' : undefined}
+                        className={`relative h-12 md:h-14 w-full border-b ${colors.divider} ${lastRowBorder} ${isOffHours ? 'agenda-slot-off-hours' : ''}`}
                       >
-                        {!occupied && !endedNoShow && (
+                        {!occupied && (
                           <AgendaEmptySlotCell
                             time={time}
                             professionalName={member.name}
@@ -313,11 +321,7 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                     const sharesWithOther = columnOverlays.some(
                       (o) => o !== overlay && appointmentFreesSlot(o.apt.status) !== freesSlot && overlaps(o, overlay),
                     );
-                    // Falta encerrada sozinha no horário: sem "+" ao lado, então
-                    // ocupa a largura toda (sem faixa vazia à direita).
-                    const endedNoShowAlone = isEndedNoShow(apt)
-                      && !columnOverlays.some((o) => o !== overlay && overlaps(o, overlay));
-                    const freedRight = endedNoShowAlone ? 'right-0.5' : sharesWithOther ? 'right-[68%]' : 'right-[40%]';
+                    const freedRight = sharesWithOther ? 'right-[68%]' : 'right-[40%]';
                     const layout = freesSlot
                       ? `left-0.5 ${freedRight} z-[1] opacity-80`
                       : `${sharesWithOther ? 'left-[33%]' : 'left-0.5'} right-0.5 z-[2]`;
@@ -331,7 +335,6 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                         data-agenda-span={span}
                         data-frees-slot={freesSlot ? 'true' : undefined}
                         data-shares-slot={sharesWithOther ? 'true' : undefined}
-                        data-full-width={endedNoShowAlone ? 'true' : undefined}
                         style={{
                           top: `calc(var(--agenda-slot-h) * ${startIdx} + 2px)`,
                           height: `calc(var(--agenda-slot-h) * ${span} - 4px)`,
@@ -400,10 +403,11 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
               {timeSlots.map((time) => (
                 <div
                   key={time}
-                  className={`h-12 md:h-14 border-b ${colors.divider} last:border-b-0 ${colors.surface}`}
+                  className={`h-12 md:h-14 border-b ${colors.divider} ${lastRowBorder} ${colors.surface}`}
                   aria-hidden
                 />
               ))}
+              {endLabel && <div className="h-7" aria-hidden />}
               {addOpen && (
                 <ul
                   role="listbox"

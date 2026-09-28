@@ -231,3 +231,16 @@
     border-color: color-mix(in srgb, var(--color-danger) 38%, transparent);
   }
 }
+
+/* Agenda: linha fora do horário de funcionamento (antes/depois, intervalo,
+   dia fechado). Hachura discreta — convenção de calendário — e a célula
+   continua clicável para encaixe. */
+@layer components {
+  .agenda-slot-off-hours {
+    background-image: repeating-linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-text-muted) 9%, transparent) 0 1px,
+      transparent 1px 7px
+    );
+  }
+}

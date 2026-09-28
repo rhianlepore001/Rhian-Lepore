@@ -74,7 +74,8 @@ describe('Agenda — histórico e "+" da falta', () => {
   });
   it('"+" da grade usa a falta que cobre a linha para o mesmo contexto do "Usar este horário"', () => {
     expect(src).toMatch(/findNoShowCoveringSlot\(appointments, professionalId, selectedDate, time\)/);
-    // "Usar este horário" só enquanto o horário da falta não terminou
-    expect(src).toMatch(/onUseSlot=\{noShowSlotEnded\(detailsApt\) \? undefined : \(\) => handleUseNoShowSlot\(detailsApt\)\}/);
+    // D1: "Usar este horário" sempre (falta passada também aceita encaixe)
+    expect(src).toMatch(/onUseSlot=\{\(\) => handleUseNoShowSlot\(detailsApt\)\}/);
+    expect(src).not.toMatch(/noShowSlotEnded/);
   });
 });

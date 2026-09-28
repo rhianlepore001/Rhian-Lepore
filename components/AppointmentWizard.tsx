@@ -44,7 +44,9 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     services,
     categories = [],
     clients,
-    onRefreshClients
+    onRefreshClients,
+    businessHours = null,
+    shopTimeZone,
 }) => {
     const { user, region, businessName, companyId } = useAuth();
     const { isBeauty, accent, colors } = useBrutalTheme();
@@ -447,6 +449,8 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                             services={services}
                             selectedServiceIds={selectedServiceIds}
                             user={user}
+                            businessHours={businessHours}
+                            shopTimeZone={shopTimeZone}
                         />
                     )}
 

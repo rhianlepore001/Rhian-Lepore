@@ -1,3 +1,5 @@
+import type { BusinessHours } from '../../types/settings';
+
 export interface Service {
     id: string;
     name: string;
@@ -25,4 +27,8 @@ export interface WizardProps {
     categories?: any[];
     clients: any[];
     onRefreshClients: () => void;
+    /** Horário de funcionamento: o passo Horário lista o expediente e oferece encaixe fora dele. */
+    businessHours?: BusinessHours | null;
+    /** Fuso do negócio (IANA) para ler o horário de funcionamento. */
+    shopTimeZone?: string;
 }

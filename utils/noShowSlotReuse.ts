@@ -2,6 +2,7 @@
  * Falta (NoShow) -> "Usar este horário": reaproveita o horário que ficou livre
  * para um NOVO agendamento (qualquer cliente). Pré-preenche só profissional,
  * dia e horário; cliente e serviço ficam em branco. A falta nunca é alterada.
+ * Vale também para falta já encerrada (dia passado): encaixe lançado depois.
  */
 import { isNoShowStatus } from './appointmentStatus';
 
@@ -80,21 +81,6 @@ export function findNoShowCoveringSlot<T extends NoShowSlotSource>(
     const mins = a.duration_minutes && a.duration_minutes > 0 ? Math.max(a.duration_minutes, 30) : 30;
     return start <= slotMs && slotMs < start + mins * 60_000;
   });
-}
-
-/**
- * O horário da falta já terminou? (início + duração, padrão 30 min, antes de
- * `now`). Falta de hoje ainda em andamento ou futura continua reaproveitável;
- * falta de dia passado / já encerrada não oferece "Usar este horário" nem o "+".
- */
-export function noShowSlotEnded(
-  apt: Pick<NoShowSlotSource, 'appointment_time' | 'duration_minutes'>,
-  now: Date = new Date(),
-): boolean {
-  const start = new Date(apt.appointment_time).getTime();
-  if (Number.isNaN(start)) return true;
-  const mins = apt.duration_minutes && apt.duration_minutes > 0 ? apt.duration_minutes : 30;
-  return start + mins * 60_000 < now.getTime();
 }
 
 /** Mensagem padrão de create_secure_booking quando o horário está ocupado. */

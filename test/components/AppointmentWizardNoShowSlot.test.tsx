@@ -101,7 +101,7 @@ describe('AppointmentWizard — "Usar este horário" da falta', () => {
     await userEvent.click(screen.getByRole('button', { name: 'serviço Corte' }));
     await userEvent.click(screen.getByRole('button', { name: 'Continuar' }));
     // Direto no Confirmar (sem passo Horário)
-    expect(screen.queryByText('Horário', { selector: 'h4' })).toBeNull();
+    expect(screen.queryByText('Escolha o horário', { selector: 'h4' })).toBeNull();
     expect(screen.getByRole('button', { name: 'Confirmar Atendimento' })).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar Atendimento' }));
 
@@ -129,7 +129,7 @@ describe('AppointmentWizard — "Usar este horário" da falta', () => {
     await userEvent.click(screen.getByRole('button', { name: 'serviço Corte' }));
     await userEvent.click(screen.getByRole('button', { name: 'Continuar' }));
     await userEvent.click(screen.getByRole('button', { name: /Voltar/ }));
-    expect(screen.getByText('Horário', { selector: 'h4' })).toBeInTheDocument();
+    expect(screen.getByText('Escolha o horário', { selector: 'h4' })).toBeInTheDocument();
     // horário fora da grade de 30 min aparece na lista
     expect(screen.getByRole('button', { name: '14:15' })).toBeInTheDocument();
   });
@@ -157,6 +157,6 @@ describe('AppointmentWizard — "Usar este horário" da falta', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Continuar' }));
     await userEvent.click(screen.getByRole('button', { name: 'serviço Corte' }));
     await userEvent.click(screen.getByRole('button', { name: 'Continuar' }));
-    expect(screen.getByText('Horário', { selector: 'h4' })).toBeInTheDocument();
+    expect(screen.getByText('Escolha o horário', { selector: 'h4' })).toBeInTheDocument();
   });
 });

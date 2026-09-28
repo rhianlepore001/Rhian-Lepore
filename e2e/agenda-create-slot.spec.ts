@@ -38,7 +38,7 @@ async function completeWizardFromClient(page: Page): Promise<string> {
   await expect(page.getByRole('heading', { name: /Novo Atendimento/i })).toBeVisible({ timeout: 8_000 });
 
   // Step 1 — SearchableSelect: botão abre dropdown, input "Buscar..." filtra
-  await expect(page.getByText(/Quem será atendido hoje/i)).toBeVisible({ timeout: 8_000 });
+  await expect(page.getByText(/Escolha o cliente/i)).toBeVisible({ timeout: 8_000 });
   await page.getByRole('button', { name: /Buscar cliente/i }).click();
   const search = page.getByPlaceholder(/^Buscar/i);
   await search.waitFor({ timeout: 5_000 });
@@ -51,7 +51,7 @@ async function completeWizardFromClient(page: Page): Promise<string> {
   await page.getByRole('button', { name: /^Continuar$/i }).click();
 
   // Step 2 — serviço
-  await expect(page.getByText(/Menu de Serviços/i)).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText(/Selecione os serviços/i)).toBeVisible({ timeout: 15_000 });
   await page.getByText('Corte Masculino', { exact: true }).click();
   await page.getByRole('button', { name: /^Continuar$/i }).click();
 
@@ -61,7 +61,7 @@ async function completeWizardFromClient(page: Page): Promise<string> {
   });
   const continueBtn = page.getByRole('button', { name: /^Continuar$/i });
   if (await continueBtn.isDisabled()) {
-    const pro = page.locator('button').filter({ hasText: /Disponível/i }).first();
+    const pro = page.getByTestId('wizard-pro-list').getByRole('button').first();
     if (await pro.isVisible().catch(() => false)) await pro.click();
     if (await continueBtn.isDisabled()) {
       await page.locator('button.font-mono').first().click();
@@ -72,9 +72,9 @@ async function completeWizardFromClient(page: Page): Promise<string> {
 
   // Step 4 — confirmar
   await expect(page.getByRole('button', { name: /Confirmar Atendimento/i })).toBeVisible({ timeout: 10_000 });
-  const toggle = page.locator('input[type="checkbox"]').first();
-  if (await toggle.isVisible().catch(() => false)) {
-    if (await toggle.isChecked()) await toggle.uncheck();
+  const toggle = page.getByRole('checkbox', { name: /WhatsApp/i });
+  if ((await toggle.count()) && (await toggle.isChecked())) {
+    await page.locator('label[for="review-whatsapp-toggle"]').click();
   }
   page.on('popup', async (p) => {
     await p.close().catch(() => undefined);
@@ -95,7 +95,7 @@ test.describe('Agenda — criar agendamento (botão + célula)', () => {
     await expect(page.getByRole('heading', { name: /Novo Atendimento/i })).toBeVisible({
       timeout: 5_000,
     });
-    await expect(page.getByText(/Quem será atendido hoje/i)).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText(/Escolha o cliente/i)).toBeVisible({ timeout: 5_000 });
   });
 
   test('célula da grade cria agendamento e aparece na grade sem F5', async ({ page }) => {

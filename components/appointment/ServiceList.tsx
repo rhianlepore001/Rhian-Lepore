@@ -39,10 +39,17 @@ export const ServiceList: React.FC<ServiceListProps> = ({
     setCustomServicePrice,
     currencySymbol
 }) => {
+    // Nome de categoria desconhecido NUNCA vira um "Serviços" genérico repetido
+    // (era o que o colaborador via quando não conseguia ler as categorias).
+    // - sem nenhuma categoria conhecida: lista única, sem cabeçalhos;
+    // - algumas desconhecidas: agrupadas em "Outros serviços", no fim.
+    const knownCategoryIds = new Set(categories.map(c => c.id));
+    const showGroupHeaders = activeCategory === 'all' && categories.length > 0;
+    const UNCATEGORIZED = 'uncategorized';
+
     const getCategoryName = (catId: string) => {
-        if (catId === 'uncategorized') return 'Outros Serviços';
-        const cat = categories.find(c => c.id === catId);
-        return cat?.name || 'Serviços';
+        if (catId === UNCATEGORIZED) return 'Outros serviços';
+        return categories.find(c => c.id === catId)?.name ?? 'Outros serviços';
     };
 
     // Group services by category with search filter
@@ -57,7 +64,11 @@ export const ServiceList: React.FC<ServiceListProps> = ({
             return matchesCategory && matchesSearch;
         })
         .reduce((acc, service) => {
-            const categoryId = service.category_id || 'uncategorized';
+            const categoryId = !showGroupHeaders
+                ? 'all'
+                : service.category_id && knownCategoryIds.has(service.category_id)
+                    ? service.category_id
+                    : UNCATEGORIZED;
             if (!acc[categoryId]) acc[categoryId] = [];
             acc[categoryId].push(service);
             return acc;
@@ -67,6 +78,13 @@ export const ServiceList: React.FC<ServiceListProps> = ({
     Object.keys(servicesByCategory).forEach(catId => {
         servicesByCategory[catId].sort((a, b) => a.name.localeCompare(b.name));
     });
+
+    // Grupos na ordem das categorias (a mesma dos chips); "Outros serviços" por último
+    const categoryOrder = (id: string) => {
+        if (id === UNCATEGORIZED) return Number.MAX_SAFE_INTEGER;
+        const idx = categories.findIndex(c => c.id === id);
+        return idx === -1 ? Number.MAX_SAFE_INTEGER - 1 : idx;
+    };
 
     const hasServices = Object.keys(servicesByCategory).length > 0;
 
@@ -92,11 +110,17 @@ export const ServiceList: React.FC<ServiceListProps> = ({
         );
     }
 
-    const result = (Object.entries(servicesByCategory) as [string, Service[]][]).map(([categoryId, categoryServices]) => (
-        <div key={categoryId} className="space-y-3">
-            {/* Category Header (only show if not filtering by specific category) */}
-            {activeCategory === 'all' && (
-                <h3 className="text-sm font-mono uppercase tracking-widest pb-2 border-l-2 pl-3 text-theme-textSecondary border-[var(--color-accent-border)]">
+    const groups = (Object.entries(servicesByCategory) as [string, Service[]][])
+        .sort(([a], [b]) => categoryOrder(a) - categoryOrder(b));
+
+    const result = groups.map(([categoryId, categoryServices]) => (
+        <div key={categoryId} className="space-y-2.5">
+            {/* Cabeçalho do grupo (só em "Todos" e quando os nomes são conhecidos) */}
+            {showGroupHeaders && (
+                <h3
+                    data-testid="service-group-header"
+                    className="text-xs font-mono uppercase tracking-widest pl-3 border-l-2 text-theme-textSecondary border-[var(--color-accent-border)]"
+                >
                     {getCategoryName(categoryId)}
                 </h3>
             )}
@@ -110,7 +134,7 @@ export const ServiceList: React.FC<ServiceListProps> = ({
                             key={service.id}
                             onClick={() => toggleService(service.id)}
                             className={`
-                                        relative cursor-pointer transition-all duration-200 group overflow-hidden flex items-center gap-4 p-4
+                                        relative cursor-pointer transition-all duration-200 group overflow-hidden flex items-center gap-3 sm:gap-4 px-3.5 py-3 sm:p-4
                                         rounded-xl border
                                         ${isSelected
                                     ? 'bg-theme-card border-theme-accent shadow-[var(--shadow-card-accent)]'
@@ -119,17 +143,20 @@ export const ServiceList: React.FC<ServiceListProps> = ({
                         >
                             {/* Selection Indicator */}
                             <div className={`
-                                        shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all
+                                        shrink-0 w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center transition-all
                                         ${isSelected
                                     ? 'bg-theme-accent border-theme-accent'
                                     : 'border-[var(--color-input-border)] bg-transparent'}
                                     `}>
-                                {isSelected && <Check className="w-4 h-4 text-[var(--color-bg)]" />}
+                                {isSelected && <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[var(--color-bg)]" />}
                             </div>
 
                             {/* Service Info */}
                             <div className="flex-1 min-w-0">
-                                <h4 className={`font-bold text-base leading-tight truncate ${isSelected ? 'text-theme-accent' : 'text-theme-text'}`}>
+                                <h4
+                                    title={service.name}
+                                    className={`font-bold text-[15px] sm:text-base leading-snug line-clamp-2 break-words ${isSelected ? 'text-theme-accent' : 'text-theme-text'}`}
+                                >
                                     {service.name}
                                 </h4>
                                 {service.description && (
@@ -141,7 +168,7 @@ export const ServiceList: React.FC<ServiceListProps> = ({
 
                             {/* Price and Duration */}
                             <div className="shrink-0 text-right">
-                                <div className="text-lg font-mono font-bold text-theme-text">
+                                <div className="text-base sm:text-lg font-mono font-bold text-theme-text whitespace-nowrap">
                                     {formatCurrency(service.price, currencyRegion)}
                                 </div>
                                 <div className="flex items-center justify-end gap-1 text-theme-textSecondary text-xs font-mono mt-1">
@@ -159,19 +186,19 @@ export const ServiceList: React.FC<ServiceListProps> = ({
     // ADD CUSTOM SERVICE BOX AT THE BOTTOM
     // Updated: Always show custom service option regardless of category filter
     result.push(
-        <div key="custom-service-item" className="mt-8 space-y-3">
-            <h3 className="text-lg font-heading text-theme-text uppercase tracking-tight border-b border-[var(--color-divider)] pb-2">
-                Outros / Personalizado
+        <div key="custom-service-item" className="pt-2 space-y-2.5">
+            <h3 className="text-xs font-mono uppercase tracking-widest pl-3 border-l-2 text-theme-textSecondary border-[var(--color-divider)]">
+                Serviço avulso
             </h3>
             <div
                 className={`
-                        p-4 rounded-xl border transition-all duration-200
+                        px-3.5 py-3 sm:p-4 rounded-xl border transition-all duration-200
                         ${isCustomService
                         ? 'bg-theme-card border-theme-accent shadow-[var(--shadow-card-accent)]'
                         : 'bg-theme-surface border-[var(--color-divider)]'}
                     `}
             >
-                <div className="flex items-center gap-4 mb-4">
+                <div className="flex items-center gap-3 sm:gap-4 mb-3">
                     <div
                         onClick={() => setIsCustomService(!isCustomService)}
                         className={`
@@ -189,7 +216,7 @@ export const ServiceList: React.FC<ServiceListProps> = ({
                             setCustomServiceName(e.target.value);
                             if (!isCustomService) setIsCustomService(true);
                         }}
-                        className="flex-1 bg-transparent border-none text-theme-text focus:outline-none placeholder:text-[var(--color-text-muted)] font-bold text-base"
+                        className="flex-1 min-w-0 bg-transparent border-none text-theme-text focus:outline-none placeholder:text-[var(--color-text-muted)] font-bold text-[15px] sm:text-base"
                         placeholder="Descreva o serviço avulso..."
                     />
                     <div className="flex items-center gap-2">
@@ -206,11 +233,11 @@ export const ServiceList: React.FC<ServiceListProps> = ({
                         />
                     </div>
                 </div>
-                <p className="text-xs text-[var(--color-text-muted)] italic">
-                    * Use esta opção para pacotes, promoções ou serviços não listados.
+                <p className="text-xs text-[var(--color-text-muted)]">
+                    Para pacotes, promoções ou serviços fora da lista.
                 </p>
             </div>
         </div>
     );
-    return <div className="space-y-6 pb-12">{result}</div>;
+    return <div data-testid="service-groups" className="space-y-6 pb-4">{result}</div>;
 };

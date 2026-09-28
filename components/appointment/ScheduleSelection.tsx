@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { User, Calendar, ChevronLeft, ChevronRight, Clock, ChevronDown, MoonStar } from 'lucide-react';
+import { User, ChevronLeft, ChevronRight, ChevronDown, MoonStar } from 'lucide-react';
+import { StepHeading } from './StepHeading';
 import { splitWizardTimeSlots } from '../../utils/agendaDayWindow';
 import { formatLocalDateString } from '../../utils/date';
 import type { BusinessHours } from '../../types/settings';
@@ -98,75 +99,105 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
         setSelectedTime('');
     };
 
-    return (
-        <div className="h-full flex flex-col md:flex-row gap-6 animate-in fade-in slide-in-from-right-4 duration-300">
-            {/* Left: Professionals & Date */}
-            <div className="md:w-1/3 space-y-6">
-                <div>
-                    <h4 className="text-theme-text font-bold mb-3 flex items-center gap-2">
-                        <User className="w-4 h-4" /> Profissional
-                    </h4>
-                    <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
-                        {teamMembers.map(member => (
-                            <button
-                                key={member.id}
-                                onClick={() => setSelectedProId(member.id)}
-                                className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left
-                                    ${selectedProId === member.id ? activeCardBg : `${cardBg} hover:border-[var(--color-input-border)]`}
-                                `}
-                            >
-                                {member.photo_url ? (
-                                    <img src={member.photo_url} className="w-10 h-10 rounded-full object-cover border border-[var(--color-divider)]" alt="" />
-                                ) : (
-                                    <div className="w-10 h-10 rounded-full bg-[var(--color-card-hover)] flex items-center justify-center">
-                                        <User className="w-5 h-5" />
-                                    </div>
-                                )}
-                                <div>
-                                    <p className={`font-bold leading-tight ${selectedProId === member.id ? 'text-[var(--color-on-accent)]' : 'text-theme-text'}`}>{member.name}</p>
-                                    <p className="text-xs opacity-70">Disponível</p>
-                                </div>
-                            </button>
-                        ))}
-                    </div>
-                </div>
+    const isToday = selectedDate.toDateString() === new Date().toDateString();
+    const initials = (name: string) =>
+        (name || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('');
 
-                <div>
-                    <h4 className="text-theme-text font-bold mb-3 flex items-center gap-2">
-                        <Calendar className="w-4 h-4" /> Data
-                    </h4>
-                    <div className={`p-4 rounded-xl border ${cardBg}`}>
-                        <div className="flex items-center justify-between mb-4">
-                            <button type="button" onClick={() => changeDate(-1)} className="p-1 hover:bg-[var(--color-card-hover)] rounded"><ChevronLeft className="w-5 h-5 text-theme-text" /></button>
-                            <span className="text-theme-text font-bold uppercase">{selectedDate.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}</span>
-                            <button type="button" onClick={() => changeDate(1)} className="p-1 hover:bg-[var(--color-card-hover)] rounded"><ChevronRight className="w-5 h-5 text-theme-text" /></button>
-                        </div>
-                        <div className="text-center">
-                            <p className="text-4xl font-heading text-theme-accent">{selectedDate.getDate()}</p>
-                            <p className="text-theme-text uppercase text-sm mb-2">{selectedDate.toLocaleDateString('pt-BR', { weekday: 'long' })}</p>
-                            <button
-                                type="button"
-                                onClick={() => setSelectedDate(new Date())}
-                                className="text-xs underline text-[var(--color-text-muted)] hover:text-theme-text"
-                            >
-                                Ir para Hoje
-                            </button>
-                        </div>
+    return (
+        <div className="flex flex-col md:flex-row md:items-start gap-6 animate-in fade-in slide-in-from-right-4 duration-300">
+            {/* Esquerda: profissional + data (fixa no desktop enquanto os horários rolam) */}
+            <div className="md:w-[22rem] md:shrink-0 space-y-6 md:sticky md:top-0">
+                <section>
+                    <StepHeading level="section" title="Escolha o profissional" />
+                    {/* Sem caixa de rolagem interna: todos os profissionais visíveis */}
+                    <div data-testid="wizard-pro-list" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 gap-2">
+                        {teamMembers.map(member => {
+                            const active = selectedProId === member.id;
+                            return (
+                                <button
+                                    key={member.id}
+                                    type="button"
+                                    aria-pressed={active}
+                                    onClick={() => setSelectedProId(member.id)}
+                                    className={`w-full min-h-[52px] flex items-center gap-2.5 px-2.5 py-2 rounded-xl border transition-colors text-left
+                                        ${active ? activeCardBg : `${cardBg} hover:border-[var(--color-input-border)]`}
+                                    `}
+                                >
+                                    {member.photo_url ? (
+                                        <img src={member.photo_url} className="w-8 h-8 shrink-0 rounded-full object-cover border border-[var(--color-divider)]" alt="" />
+                                    ) : (
+                                        <span
+                                            aria-hidden="true"
+                                            className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center text-xs font-bold ${active ? 'bg-black/15' : 'bg-[var(--color-card-hover)] text-theme-textSecondary'}`}
+                                        >
+                                            {initials(member.name)}
+                                        </span>
+                                    )}
+                                    <span className={`min-w-0 text-sm font-semibold leading-tight line-clamp-2 break-words ${active ? 'text-[var(--color-on-accent)]' : 'text-theme-text'}`}>
+                                        {member.name}
+                                    </span>
+                                </button>
+                            );
+                        })}
                     </div>
-                </div>
+                </section>
+
+                <section>
+                    <StepHeading level="section" title="Selecione a data" />
+                    <div data-testid="wizard-date-picker" className={`flex items-center gap-1 p-1.5 rounded-xl border ${cardBg}`}>
+                        <button
+                            type="button"
+                            aria-label="Dia anterior"
+                            onClick={() => changeDate(-1)}
+                            className="p-2 rounded-lg hover:bg-[var(--color-card-hover)] text-theme-text"
+                        >
+                            <ChevronLeft className="w-5 h-5" />
+                        </button>
+                        <div className="flex-1 min-w-0 flex items-center justify-center gap-3">
+                            <span className="text-3xl leading-none font-heading text-theme-accent tabular-nums">{selectedDate.getDate()}</span>
+                            <span className="min-w-0 text-left leading-tight">
+                                <span className="block text-sm font-semibold text-theme-text truncate">
+                                    {(() => {
+                                        const w = selectedDate.toLocaleDateString('pt-BR', { weekday: 'long' });
+                                        return w.charAt(0).toUpperCase() + w.slice(1);
+                                    })()}
+                                </span>
+                                <span className="block text-xs text-theme-textSecondary truncate">
+                                    {selectedDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+                                    {isToday && ' · hoje'}
+                                </span>
+                            </span>
+                        </div>
+                        <button
+                            type="button"
+                            aria-label="Próximo dia"
+                            onClick={() => changeDate(1)}
+                            className="p-2 rounded-lg hover:bg-[var(--color-card-hover)] text-theme-text"
+                        >
+                            <ChevronRight className="w-5 h-5" />
+                        </button>
+                    </div>
+                    {!isToday && (
+                        <button
+                            type="button"
+                            onClick={() => { setSelectedDate(new Date()); setSelectedTime(''); }}
+                            className="mt-2 text-xs font-semibold text-theme-accent hover:underline"
+                        >
+                            Ir para hoje
+                        </button>
+                    )}
+                </section>
             </div>
 
             {/* Right: Time Slots */}
-            <div className="flex-1 flex flex-col">
-                <h4 className="text-theme-text font-bold mb-3 flex items-center gap-2">
-                    <Clock className="w-4 h-4" /> Horário
-                </h4>
+            <section className="flex-1 min-w-0">
+                <StepHeading level="section" title="Escolha o horário" />
 
-                <div className={`flex-1 rounded-xl border ${cardBg} p-4 overflow-y-auto min-h-[300px]`}>
+                <div className={`rounded-xl border ${cardBg} p-3 sm:p-4`}>
                     {!selectedProId ? (
-                        <div className="h-full flex flex-col items-center justify-center text-[var(--color-text-muted)] gap-2">
+                        <div className="py-10 flex flex-col items-center justify-center text-center text-[var(--color-text-muted)] gap-2">
                             <User className="w-10 h-10 opacity-20" />
-                            <p>Selecione um profissional primeiro</p>
+                            <p className="text-sm">Escolha um profissional para ver os horários.</p>
                         </div>
                     ) : (
                         <div className="space-y-4">
@@ -207,7 +238,7 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                         </div>
                     )}
                 </div>
-            </div>
+            </section>
         </div>
     );
 };

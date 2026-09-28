@@ -1,6 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { AppointmentReview } from './AppointmentReview';
+
+vi.mock('../../hooks/useBrutalTheme', () => ({
+  useBrutalTheme: () => ({ accent: { text: 'text-accent', bg: 'bg-accent' }, colors: {} }),
+}));
 
 // Props mínimas necessárias para o componente renderizar
 const baseProps = {
@@ -8,7 +13,7 @@ const baseProps = {
   selectedClientId: 'c1',
   teamMembers: [{ id: 'p1', name: 'Rhian' }],
   selectedProId: 'p1',
-  selectedDate: new Date('2026-04-07'),
+  selectedDate: new Date('2026-04-07T12:00:00'),
   selectedTime: '10:00',
   cardBg: 'bg-[var(--color-card)]',
   activeCardBg: 'bg-accent-gold',
@@ -19,7 +24,7 @@ const baseProps = {
   currencyRegion: 'BR' as const,
   isBeauty: false,
   accentColor: 'text-accent-gold',
-  sendWhatsapp: false,
+  sendWhatsapp: true,
   setSendWhatsapp: vi.fn(),
   customPrice: '80',
   setCustomPrice: vi.fn(),
@@ -29,54 +34,40 @@ const baseProps = {
   notes: '',
   setNotes: vi.fn(),
   currencySymbol: 'R$',
-  paymentMethod: 'Dinheiro',
-  setPaymentMethod: vi.fn(),
 };
 
-describe('AppointmentReview — métodos de pagamento por region', () => {
-  it('BR: exibe Dinheiro, Pix, Débito e Crédito (sem MBWay)', () => {
-    render(<AppointmentReview {...baseProps} region="BR" />);
-
-    expect(screen.getByText('Dinheiro')).toBeInTheDocument();
-    expect(screen.getByText('Pix')).toBeInTheDocument();
-    expect(screen.getByText('Débito')).toBeInTheDocument();
-    expect(screen.getByText('Crédito')).toBeInTheDocument();
-    expect(screen.queryByText('MBWay')).not.toBeInTheDocument();
+describe('AppointmentReview: passo Confirmar enxuto', () => {
+  it.each(['BR', 'PT'] as const)('%s: sem card "Forma de pagamento" (pagamento é escolhido em "Confirmar e cobrar")', (region) => {
+    render(<AppointmentReview {...baseProps} currencyRegion={region} />);
+    expect(screen.queryByText(/forma de pagamento/i)).not.toBeInTheDocument();
+    for (const label of ['Definir depois', 'Dinheiro', 'Pix', 'MBWay', 'Débito', 'Crédito']) {
+      expect(screen.queryByText(label)).not.toBeInTheDocument();
+    }
   });
 
-  it('PT: exibe Dinheiro, MBWay, Débito e Crédito (sem Pix)', () => {
-    render(<AppointmentReview {...baseProps} region="PT" currencyRegion="PT" currencySymbol="€" />);
-
-    expect(screen.getByText('Dinheiro')).toBeInTheDocument();
-    expect(screen.getByText('MBWay')).toBeInTheDocument();
-    expect(screen.getByText('Débito')).toBeInTheDocument();
-    expect(screen.getByText('Crédito')).toBeInTheDocument();
-    expect(screen.queryByText('Pix')).not.toBeInTheDocument();
+  it('título do passo é instrução curta e o resumo mostra cliente, profissional, data/hora e serviços', () => {
+    render(<AppointmentReview {...baseProps} />);
+    expect(screen.getByRole('heading', { name: 'Confira o atendimento' })).toBeInTheDocument();
+    expect(screen.getByText('João Silva')).toBeInTheDocument();
+    expect(screen.getByText('Rhian')).toBeInTheDocument();
+    expect(screen.getByText(/07\/04\/2026 às 10:00/)).toBeInTheDocument();
+    expect(screen.getByText('Corte Feminino')).toBeInTheDocument();
   });
 
-  it('BR: exibe os botões de pagamento corretos', () => {
-    render(<AppointmentReview {...baseProps} region="BR" />);
-    const paymentButtons = ['Dinheiro', 'Pix', 'Débito', 'Crédito'];
-    paymentButtons.forEach(label => {
-      expect(screen.getByText(label)).toBeInTheDocument();
-    });
+  it('WhatsApp é um interruptor pequeno, é a última seção do passo e alterna o envio', async () => {
+    const setSendWhatsapp = vi.fn();
+    const { container } = render(<AppointmentReview {...baseProps} setSendWhatsapp={setSendWhatsapp} />);
+    const toggle = screen.getByRole('checkbox', { name: /confirmação no whatsapp/i });
+    expect(toggle).toBeChecked();
+    const root = container.firstElementChild as HTMLElement;
+    expect(root.lastElementChild?.contains(toggle)).toBe(true);
+    expect(root.lastElementChild).toHaveAttribute('data-testid', 'review-whatsapp');
+    await userEvent.click(toggle);
+    expect(setSendWhatsapp).toHaveBeenCalledWith(false);
   });
 
-  it('PT: exibe os botões de pagamento corretos', () => {
-    render(<AppointmentReview {...baseProps} region="PT" currencyRegion="PT" currencySymbol="€" />);
-    const paymentButtons = ['Dinheiro', 'MBWay', 'Débito', 'Crédito'];
-    paymentButtons.forEach(label => {
-      expect(screen.getByText(label)).toBeInTheDocument();
-    });
-  });
-
-  it('ícone correto: BR usa 💎 (Pix), PT usa 📱 (MBWay)', () => {
-    const { rerender } = render(<AppointmentReview {...baseProps} region="BR" />);
-    expect(screen.getByText('💎')).toBeInTheDocument(); // Pix
-    expect(screen.queryByText('📱')).not.toBeInTheDocument(); // MBWay ausente
-
-    rerender(<AppointmentReview {...baseProps} region="PT" currencyRegion="PT" currencySymbol="€" />);
-    expect(screen.getByText('📱')).toBeInTheDocument(); // MBWay
-    expect(screen.queryByText('💎')).not.toBeInTheDocument(); // Pix ausente
+  it('sem área de rolagem interna no passo (a rolagem é só a do modal)', () => {
+    const { container } = render(<AppointmentReview {...baseProps} />);
+    expect(container.querySelector('[class*="overflow-y-auto"], [class*="overflow-auto"]')).toBeNull();
   });
 });

@@ -253,7 +253,7 @@ test.describe('Agenda staff — filtro Todos', () => {
     await expect(page.getByTestId(`agenda-col-${SELF_MEMBER_ID}`)).toBeVisible();
 
     await page.getByRole('button', { name: /Novo agendamento às 09:00 com Antonio/i }).click();
-    await expect(page.getByText(/Quem será atendido|Novo Atendimento/i).first()).toBeVisible({
+    await expect(page.getByText(/Escolha o cliente|Novo Atendimento/i).first()).toBeVisible({
       timeout: 8_000,
     });
     await page.screenshot({

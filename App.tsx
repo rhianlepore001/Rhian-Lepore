@@ -12,6 +12,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { DynamicBranding } from './components/DynamicBranding';
 import { DevBugButton } from './components/DevBugButton';
 import { HashRouterSync } from './components/HashRouterSync';
+import { AccessRemovedGate } from './components/auth/AccessRemovedGate';
 import { getBusinessCopy, resolveBusinessTheme } from './utils/businessCopy';
 
 
@@ -291,9 +292,11 @@ const App: React.FC = () => {
             <DynamicBranding />
             <PublicClientProvider>
               <AlertsProvider>
+                <AccessRemovedGate>
                   <AppRoutes />
                   <ActivationBanner />
                   <DevBugButton />
+                </AccessRemovedGate>
               </AlertsProvider>
             </PublicClientProvider>
           </ToastProvider>

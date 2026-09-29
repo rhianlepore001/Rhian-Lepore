@@ -1,0 +1,128 @@
+{
+  "me": {
+    "name": "Ana",
+    "metrics": {
+      "attach": 0.2500,
+      "faltas": 1,
+      "voltou": 6,
+      "maduros": 11,
+      "imaturos": 1,
+      "desfechos": 14,
+      "taxa_faltas": 0.0714,
+      "voltou_taxa": 0.5455,
+      "atendimentos": 12,
+      "sem_desfecho": 1,
+      "ticket_medio": 62.00,
+      "cancelamentos": 1,
+      "tempo_pago_min": 360,
+      "tempo_clube_min": 60,
+      "tempo_total_min": 420,
+      "vendas_produtos": 3,
+      "comissao_periodo": 257.00,
+      "receita_produtos": 90.00,
+      "receita_servicos": 620.00,
+      "atendimentos_clube": 2,
+      "atendimentos_pagos": 10,
+      "taxa_cancelamentos": 0.0714,
+      "visitas_com_produto": 3,
+      "faturamento_por_hora": 103.33,
+      "sem_registro_financeiro": 0
+    },
+    "previous": {
+      "attach": 0.0000,
+      "faltas": 0,
+      "voltou": 6,
+      "maduros": 12,
+      "imaturos": 0,
+      "desfechos": 12,
+      "taxa_faltas": 0.0000,
+      "voltou_taxa": 0.5000,
+      "atendimentos": 12,
+      "sem_desfecho": 0,
+      "ticket_medio": 60.00,
+      "cancelamentos": 0,
+      "tempo_pago_min": 300,
+      "tempo_clube_min": 60,
+      "tempo_total_min": 360,
+      "vendas_produtos": 0,
+      "comissao_periodo": 240.00,
+      "receita_produtos": 0.00,
+      "receita_servicos": 600.00,
+      "atendimentos_clube": 2,
+      "atendimentos_pagos": 10,
+      "taxa_cancelamentos": 0.0000,
+      "visitas_com_produto": 0,
+      "faturamento_por_hora": 120.00,
+      "sem_registro_financeiro": 0
+    },
+    "photo_url": null,
+    "low_sample": false,
+    "professional_id": "20000000-0000-0000-0000-0000000000a1"
+  },
+  "mode": "staff",
+  "trend": [
+    {
+      "month": "2026-04",
+      "comissao": null,
+      "low_sample": true,
+      "atendimentos": 0,
+      "ticket_medio": null
+    },
+    {
+      "month": "2026-05",
+      "comissao": null,
+      "low_sample": true,
+      "atendimentos": 0,
+      "ticket_medio": null
+    },
+    {
+      "month": "2026-06",
+      "comissao": null,
+      "low_sample": true,
+      "atendimentos": 0,
+      "ticket_medio": null
+    },
+    {
+      "month": "2026-07",
+      "comissao": null,
+      "low_sample": true,
+      "atendimentos": 0,
+      "ticket_medio": null
+    },
+    {
+      "month": "2026-08",
+      "comissao": 240.00,
+      "low_sample": false,
+      "atendimentos": 12,
+      "ticket_medio": 60.00
+    },
+    {
+      "month": "2026-09",
+      "comissao": 257.00,
+      "low_sample": false,
+      "atendimentos": 12,
+      "ticket_medio": 62.00
+    }
+  ],
+  "period": {
+    "tz": "America/Sao_Paulo",
+    "end": "2026-09-30",
+    "start": "2026-09-01",
+    "partial": false,
+    "currency": "BRL",
+    "previous": {
+      "end": "2026-08-31",
+      "start": "2026-08-01"
+    }
+  },
+  "top_services": [
+    {
+      "count": 8,
+      "service": "corte"
+    },
+    {
+      "count": 4,
+      "service": "corte+barba"
+    }
+  ]
+}

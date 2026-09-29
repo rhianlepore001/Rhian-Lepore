@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { parseDate } from '../utils/date';
@@ -8,7 +8,7 @@ import { normalizeRegion } from '../utils/formatters';
 import { getTrialEndsAt } from '../constants';
 import { isEmailTakenError } from '../utils/mapError';
 import { classifySignupError, signupError } from '../utils/signupErrors';
-import { resolveStaffLink } from '../utils/staffAccess';
+import { resolveStaffLink, STAFF_LINK_RECHECK_MS, type StaffLinkStatus } from '../utils/staffAccess';
 
 export type UserType = 'barber' | 'beauty';
 export type Region = 'BR' | 'PT';
@@ -76,6 +76,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return (saved as UserType) || null;
   });
   const [loading, setLoading] = useState(true);
+  // Cadastro pelo convite em andamento: o vínculo ainda vai ser gravado por
+  // complete_staff_invite. Enquanto isso, "sem vínculo" não é "acesso removido".
+  const inviteSignupInProgressRef = useRef(false);
 
   const fetchProfileData = async (userId: string) => {
     try {
@@ -127,28 +130,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
           // Busca o cadastro VIVO (ativo ou inativo) vinculado ao staff. Cadastro
           // excluído (deleted_at) não conta: é a mesma regra do get_auth_company_id.
-          const { data: teamMember, error: teamMemberError } = await supabase
-            .from('team_members')
-            .select('id')
-            .eq('staff_user_id', userId)
-            .eq('user_id', profile.company_id)
-            .is('deleted_at', null)
-            .limit(1)
-            .maybeSingle();
+          const lookupStaffLink = async (): Promise<{ status: StaffLinkStatus; memberId: string | null }> => {
+            const { data: teamMember, error: teamMemberError } = await supabase
+              .from('team_members')
+              .select('id')
+              .eq('staff_user_id', userId)
+              .eq('user_id', profile.company_id)
+              .is('deleted_at', null)
+              .limit(1)
+              .maybeSingle();
 
-          let relinkedId: string | null = null;
-          let relinkError: unknown = null;
-          if (!teamMember?.id && !teamMemberError) {
-            const { data: relinked, error } = await supabase.rpc('relink_staff_if_unbound');
-            relinkedId = relinked || null;
-            relinkError = error;
+            let relinkedId: string | null = null;
+            let relinkError: unknown = null;
+            if (!teamMember?.id && !teamMemberError) {
+              const { data: relinked, error } = await supabase.rpc('relink_staff_if_unbound');
+              relinkedId = relinked || null;
+              relinkError = error;
+            }
+            return resolveStaffLink({
+              memberId: teamMember?.id || null,
+              memberError: teamMemberError,
+              relinkedId,
+              relinkError,
+              inviteSignupInProgress: inviteSignupInProgressRef.current,
+            });
+          };
+
+          let link = await lookupStaffLink();
+          if (link.status === 'removed') {
+            // Confere mais uma vez antes de encerrar a sessão: cobre a corrida com o
+            // vínculo do convite gravado por outra aba ou requisição.
+            await new Promise((resolve) => setTimeout(resolve, STAFF_LINK_RECHECK_MS));
+            link = await lookupStaffLink();
           }
-          const link = resolveStaffLink({
-            memberId: teamMember?.id || null,
-            memberError: teamMemberError,
-            relinkedId,
-            relinkError,
-          });
           setTeamMemberId(link.memberId);
 
           if (link.status === 'removed') {
@@ -274,6 +288,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
+    inviteSignupInProgressRef.current = false;
     await supabase.auth.signOut();
     applyPublicAuthTheme();
     setSession(null);
@@ -350,6 +365,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       const isStaffInvite = Boolean(data.companyId && data.teamMemberId);
+      // Fica ligado até o vínculo dar certo (ou logout): se o vínculo falhar, a
+      // sessão continua aberta para o próximo toque refazer o vínculo.
+      if (isStaffInvite) inviteSignupInProgressRef.current = true;
 
       const signUpPayload = {
         email: data.email,
@@ -375,6 +393,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       const applyStaffState = (claimedId: string | null) => {
+        inviteSignupInProgressRef.current = false;
         setCompanyId(data.companyId || null);
         setRole('staff');
         setUserType(data.userType);

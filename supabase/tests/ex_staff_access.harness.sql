@@ -2,6 +2,7 @@
 -- Funções e policies copiadas de prod (pg_get_functiondef / pg_policies em 29/09/2026).
 CREATE ROLE anon NOLOGIN;
 CREATE ROLE authenticated NOLOGIN;
+CREATE ROLE service_role NOLOGIN;
 
 CREATE SCHEMA auth;
 -- Mesma definição do Supabase: claim.sub OU claims->>'sub'
@@ -13,6 +14,10 @@ CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$
 $$;
 GRANT USAGE ON SCHEMA auth TO anon, authenticated;
 GRANT USAGE ON SCHEMA public TO anon, authenticated;
+
+-- auth.users (só o que o relink lê). raw_user_meta_data é editável pelo próprio
+-- usuário (auth.updateUser); created_at não.
+CREATE TABLE auth.users (id uuid PRIMARY KEY, created_at timestamptz NOT NULL DEFAULT now(), raw_user_meta_data jsonb DEFAULT '{}'::jsonb);
 
 CREATE TABLE public.profiles (id text PRIMARY KEY, role text, company_id text, full_name text, business_name text);
 CREATE TABLE public.team_members (
@@ -201,6 +206,9 @@ CREATE POLICY "Users can view their own team members" ON public.team_members FOR
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO anon, authenticated;
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO anon, authenticated;
+-- ACL de prod do relink (proacl em 29/09/2026: postgres, authenticated, service_role)
+REVOKE ALL ON FUNCTION public.relink_staff_if_unbound() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.relink_staff_if_unbound() TO authenticated, service_role;
 
 -- ---------------------------------------------------------------------------
 -- Dados. Empresa A (dono ...a0) e B (dono ...b0).
@@ -208,7 +216,9 @@ GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO anon, authenticated;
 --  a3 staff nunca vinculado        a4 staff excluído (delete_staff_collaborator: staff_user_id NULL)
 --  a5 staff excluído legado (deleted_at, mas staff_user_id ainda aponta p/ ele)
 --  a6 staff com perfil da A e vínculo só na B     a7 staff sem company_id (empresa = ele mesmo)
---  a8 staff recém-cadastrado ainda não vinculado (nome bate com cadastro livre -> relink)
+--  a8 staff recém-cadastrado ainda não vinculado (convite: metadata member_id = a8, conta de 1 h -> relink)
+--  a9 cadastro livre 'Vaga Aberta' (ativo, sem login): alvo das tentativas de relink indevido
+--  a11 conta nova (5 min) com metadata apontando para um cadastro livre da empresa B (b9)
 -- ---------------------------------------------------------------------------
 INSERT INTO public.profiles (id, role, company_id, full_name, business_name) VALUES
   ('00000000-0000-0000-0000-0000000000a0', 'owner', NULL, 'Dono A', 'Barbearia A'),
@@ -221,7 +231,17 @@ INSERT INTO public.profiles (id, role, company_id, full_name, business_name) VAL
   ('00000000-0000-0000-0000-0000000000a5', 'staff', '00000000-0000-0000-0000-0000000000a0', 'Caique', NULL),
   ('00000000-0000-0000-0000-0000000000a6', 'staff', '00000000-0000-0000-0000-0000000000a0', 'Outra Empresa', NULL),
   ('00000000-0000-0000-0000-0000000000a7', 'staff', NULL, 'Sem Empresa', NULL),
-  ('00000000-0000-0000-0000-0000000000a8', 'staff', '00000000-0000-0000-0000-0000000000a0', 'Novo Colaborador', NULL);
+  ('00000000-0000-0000-0000-0000000000a8', 'staff', '00000000-0000-0000-0000-0000000000a0', 'Novo Colaborador', NULL),
+  ('00000000-0000-0000-0000-000000000a11', 'staff', '00000000-0000-0000-0000-0000000000a0', 'Conta Nova', NULL);
+
+INSERT INTO auth.users (id, created_at, raw_user_meta_data)
+SELECT p.id::uuid, now() - interval '30 days', '{}'::jsonb FROM public.profiles p;
+UPDATE auth.users SET created_at = now() - interval '1 hour',
+  raw_user_meta_data = '{"role":"staff","member_id":"10000000-0000-0000-0000-0000000000a8"}'
+  WHERE id = '00000000-0000-0000-0000-0000000000a8';
+UPDATE auth.users SET created_at = now() - interval '5 minutes',
+  raw_user_meta_data = '{"role":"staff","member_id":"10000000-0000-0000-0000-0000000000b9"}'
+  WHERE id = '00000000-0000-0000-0000-000000000a11';
 
 INSERT INTO public.team_members (id, user_id, staff_user_id, name, active, is_owner, deleted_at) VALUES
   ('10000000-0000-0000-0000-0000000000a0', '00000000-0000-0000-0000-0000000000a0', '00000000-0000-0000-0000-0000000000a0', 'Dono A', true, true, NULL),
@@ -231,6 +251,8 @@ INSERT INTO public.team_members (id, user_id, staff_user_id, name, active, is_ow
   ('10000000-0000-0000-0000-0000000000a5', '00000000-0000-0000-0000-0000000000a0', '00000000-0000-0000-0000-0000000000a5', 'Caique', false, false, now() - interval '18 days'),
   ('10000000-0000-0000-0000-0000000000c5', '00000000-0000-0000-0000-0000000000a0', NULL, 'CAÍQUE', true, false, NULL),
   ('10000000-0000-0000-0000-0000000000a8', '00000000-0000-0000-0000-0000000000a0', NULL, 'novo colaborador ', true, false, NULL),
+  ('10000000-0000-0000-0000-0000000000a9', '00000000-0000-0000-0000-0000000000a0', NULL, 'Vaga Aberta', true, false, NULL),
+  ('10000000-0000-0000-0000-0000000000b9', '00000000-0000-0000-0000-0000000000b0', NULL, 'Livre B', true, false, NULL),
   ('10000000-0000-0000-0000-0000000000b0', '00000000-0000-0000-0000-0000000000b0', '00000000-0000-0000-0000-0000000000b0', 'Dono B', true, true, NULL),
   ('10000000-0000-0000-0000-0000000000b6', '00000000-0000-0000-0000-0000000000b0', '00000000-0000-0000-0000-0000000000a6', 'Outra Empresa', true, false, NULL);
 

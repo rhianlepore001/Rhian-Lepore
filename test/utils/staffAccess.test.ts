@@ -21,6 +21,16 @@ describe('resolveStaffLink (S-06: colaborador sem vínculo vivo)', () => {
             .toEqual({ status: 'unknown', memberId: null });
     });
 
+    it('cadastro pelo convite em andamento e ainda sem vínculo → unknown (não desloga no meio do cadastro)', () => {
+        expect(resolveStaffLink({ memberId: null, memberError: null, relinkedId: null, relinkError: null, inviteSignupInProgress: true }))
+            .toEqual({ status: 'unknown', memberId: null });
+    });
+
+    it('cadastro em andamento não esconde um vínculo que já existe', () => {
+        expect(resolveStaffLink({ memberId: 'tm-1', memberError: null, inviteSignupInProgress: true }))
+            .toEqual({ status: 'linked', memberId: 'tm-1' });
+    });
+
     it('erro no relink → unknown', () => {
         expect(resolveStaffLink({ memberId: null, memberError: null, relinkedId: null, relinkError: { message: 'timeout' } }))
             .toEqual({ status: 'unknown', memberId: null });

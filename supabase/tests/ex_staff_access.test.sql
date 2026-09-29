@@ -85,15 +85,52 @@ INSERT INTO results SELECT 'S-04 team_members mantém o ramo staff_user_id = aut
 INSERT INTO results SELECT 'S-04 nenhuma policy criada ou removida (mesmo total de antes)', g = b.fp, g || ' (antes ' || b.fp || ')'
   FROM (SELECT count(*)::text g FROM pg_policies WHERE schemaname = 'public') s, public._baseline b WHERE b.who = 'policies';
 
--- S-05: relink continua funcionando e dá acesso logo depois
+-- S-05b: relink NÃO é porta de volta. O nome do perfil é editável pelo próprio
+-- usuário ("Profiles: own update") e os nomes são públicos em /book/<slug>;
+-- a metadata do auth também é editável (auth.updateUser). Nada disso religa.
+INSERT INTO results SELECT 'S-05b órfão consegue renomear o próprio perfil (policy own update)', g = 'ok:1', g
+  FROM (SELECT pg_temp.run_as('authenticated', '00000000-0000-0000-0000-0000000000a3', $q$UPDATE public.profiles SET full_name = 'Vaga Aberta' WHERE id = '00000000-0000-0000-0000-0000000000a3'$q$) g) s;
+INSERT INTO results SELECT 'S-05b órfão renomeado para um cadastro livre: relink recusado', g IS NULL, COALESCE(g, 'NULL')
+  FROM (SELECT pg_temp.scalar_as('00000000-0000-0000-0000-0000000000a3', 'SELECT public.relink_staff_if_unbound()::text') g) s;
+INSERT INTO results SELECT 'S-05b órfão renomeado para "Novo Colaborador" (repro da revisão): relink recusado', g IS NULL, COALESCE(g, 'NULL')
+  FROM (SELECT pg_temp.run_as('authenticated', '00000000-0000-0000-0000-0000000000a3', $q$UPDATE public.profiles SET full_name = 'Novo Colaborador' WHERE id = '00000000-0000-0000-0000-0000000000a3'$q$) r) x,
+        LATERAL (SELECT pg_temp.scalar_as('00000000-0000-0000-0000-0000000000a3', 'SELECT public.relink_staff_if_unbound()::text') g) s;
+UPDATE auth.users SET raw_user_meta_data = '{"role":"staff","member_id":"10000000-0000-0000-0000-0000000000a9"}'
+  WHERE id = '00000000-0000-0000-0000-0000000000a3'; -- simula auth.updateUser({ data: { member_id } })
+INSERT INTO results SELECT 'S-05b órfão (conta de 30 dias) forja member_id na metadata: relink recusado', g IS NULL, COALESCE(g, 'NULL')
+  FROM (SELECT pg_temp.scalar_as('00000000-0000-0000-0000-0000000000a3', 'SELECT public.relink_staff_if_unbound()::text') g) s;
+INSERT INTO results SELECT 'S-05b depois das tentativas: órfão continua sem empresa e o cadastro livre segue livre', f = 'company=NULL appt=0 cli=0 svc=0 tm=0 fin=0 pb=0 prof=1' AND l IS NULL, f || ' a9.staff_user_id=' || COALESCE(l, 'NULL')
+  FROM (SELECT public._fingerprint('authenticated', '00000000-0000-0000-0000-0000000000a3') f) s,
+       (SELECT staff_user_id::text l FROM public.team_members WHERE id = '10000000-0000-0000-0000-0000000000a9') t;
+INSERT INTO results SELECT 'S-05b conta nova com member_id de OUTRA empresa: relink recusado', g IS NULL, COALESCE(g, 'NULL')
+  FROM (SELECT pg_temp.scalar_as('00000000-0000-0000-0000-000000000a11', 'SELECT public.relink_staff_if_unbound()::text') g) s;
+UPDATE auth.users SET raw_user_meta_data = '{"role":"staff","member_id":"10000000-0000-0000-0000-0000000000a0"}'
+  WHERE id = '00000000-0000-0000-0000-000000000a11';
+INSERT INTO results SELECT 'S-05b conta nova com member_id do DONO: relink recusado', g IS NULL, COALESCE(g, 'NULL')
+  FROM (SELECT pg_temp.scalar_as('00000000-0000-0000-0000-000000000a11', 'SELECT public.relink_staff_if_unbound()::text') g) s;
+UPDATE auth.users SET raw_user_meta_data = '{"role":"staff","member_id":"10000000-0000-0000-0000-0000000000a4"}'
+  WHERE id = '00000000-0000-0000-0000-000000000a11';
+INSERT INTO results SELECT 'S-05b conta nova com member_id de cadastro EXCLUÍDO: relink recusado', g IS NULL, COALESCE(g, 'NULL')
+  FROM (SELECT pg_temp.scalar_as('00000000-0000-0000-0000-000000000a11', 'SELECT public.relink_staff_if_unbound()::text') g) s;
+UPDATE auth.users SET raw_user_meta_data = '{"role":"staff","member_id":"nao-e-uuid"}'
+  WHERE id = '00000000-0000-0000-0000-000000000a11';
+INSERT INTO results SELECT 'S-05b metadata inválida não quebra: NULL', g IS NULL, COALESCE(g, 'NULL')
+  FROM (SELECT pg_temp.scalar_as('00000000-0000-0000-0000-000000000a11', 'SELECT public.relink_staff_if_unbound()::text') g) s;
+
+-- S-05: relink continua funcionando para o cadastro do convite, dentro da
+-- janela do cadastro (conta com até 24 h), e dá acesso logo depois.
 INSERT INTO results SELECT 'S-05 antes do relink: recém-cadastrado ainda sem empresa', g IS NULL, COALESCE(g, 'NULL')
   FROM (SELECT pg_temp.scalar_as('00000000-0000-0000-0000-0000000000a8', 'SELECT public.get_auth_company_id()') g) s;
-INSERT INTO results SELECT 'S-05 relink_staff_if_unbound vincula o recém-cadastrado', g = '10000000-0000-0000-0000-0000000000a8', COALESCE(g, 'NULL')
+INSERT INTO results SELECT 'S-05 relink vincula o recém-cadastrado ao member_id do convite', g = '10000000-0000-0000-0000-0000000000a8', COALESCE(g, 'NULL')
+  FROM (SELECT pg_temp.scalar_as('00000000-0000-0000-0000-0000000000a8', 'SELECT public.relink_staff_if_unbound()::text') g) s;
+INSERT INTO results SELECT 'S-05 relink de novo devolve o mesmo vínculo (idempotente)', g = '10000000-0000-0000-0000-0000000000a8', COALESCE(g, 'NULL')
   FROM (SELECT pg_temp.scalar_as('00000000-0000-0000-0000-0000000000a8', 'SELECT public.relink_staff_if_unbound()::text') g) s;
 INSERT INTO results SELECT 'S-05 depois do relink: acesso à empresa A', f LIKE 'company=00000000-0000-0000-0000-0000000000a0 appt=2 cli=2 svc=2 %', f
   FROM (SELECT public._fingerprint('authenticated', '00000000-0000-0000-0000-0000000000a8') f) s;
-INSERT INTO results SELECT 'S-05 relink NÃO religa o Caique legado (nome com acento difere)', g IS NULL, COALESCE(g, 'NULL')
+INSERT INTO results SELECT 'S-05 relink NÃO religa o Caique legado', g IS NULL, COALESCE(g, 'NULL')
   FROM (SELECT pg_temp.scalar_as('00000000-0000-0000-0000-0000000000a5', 'SELECT public.relink_staff_if_unbound()::text') g) s;
+INSERT INTO results SELECT 'S-05 relink segue sem EXECUTE para anon', NOT g, g::text
+  FROM (SELECT has_function_privilege('anon', 'public.relink_staff_if_unbound()', 'EXECUTE') g) s;
 
 -- S-07: anônimo igual
 INSERT INTO results SELECT 'S-07 anônimo: mesma visão de antes', f = b.fp, f

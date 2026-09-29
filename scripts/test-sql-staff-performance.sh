@@ -4,6 +4,7 @@
 #   scripts/test-sql-staff-performance.sh            # harness + migration (2x) + testes
 #   scripts/test-sql-staff-performance.sh --main     # sem a migration: deve FALHAR
 #   scripts/test-sql-staff-performance.sh --rollback # migration → rollback → migration + testes; funções antigas intactas
+#   scripts/test-sql-staff-performance.sh --bench    # tempo das funções com 12 mil atendimentos (R9.4)
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PGBIN="${PGBIN:-$(ls -d /usr/lib/postgresql/*/bin 2>/dev/null | sort -V | tail -1)}"
@@ -35,4 +36,8 @@ fi
 AFTER="$(snapshot)"
 [ "$BEFORE" = "$AFTER" ] || { echo "FAIL a migration alterou função existente"; diff <(tr ' ' '\n' <<<"$BEFORE") <(tr ' ' '\n' <<<"$AFTER"); exit 1; }
 echo "PASS funções existentes com md5 inalterado"
+if [ "$MODE" = "--bench" ]; then
+  "$PGBIN/psql" -h "$TMP" -p "$PORT" -U postgres -d postgres -v ON_ERROR_STOP=1 -f "$ROOT/supabase/tests/staff_performance.bench.sql" 2>&1 | grep -E "^Time:|ERROR"
+  exit 0
+fi
 "${PSQL[@]}" -At -f "$ROOT/supabase/tests/staff_performance.test.sql" 2>&1 | sed 's/^psql:[^ ]* NOTICE:  /  /; s/^NOTICE:  /  /'

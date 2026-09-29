@@ -185,6 +185,8 @@ DO $$ DECLARE c jsonb; BEGIN
   PERFORM public._t('Ana serviços/produtos', (SELECT (e ->> 'servicos_ciclo')::numeric * 10 + (e ->> 'produtos_ciclo')::numeric FROM jsonb_array_elements(c -> 'members') e WHERE e ->> 'name' = 'Ana'), 103);
   PERFORM public._t('Caio a pagar (avulso de 05/09 23:30 BRT fica no ciclo anterior)', (SELECT (e ->> 'a_pagar_ciclo')::numeric FROM jsonb_array_elements(c -> 'members') e WHERE e ->> 'name' = 'Caio'), 100);
   PERFORM public._t('Caio saldo acumulado', (SELECT (e ->> 'saldo_acumulado')::numeric FROM jsonb_array_elements(c -> 'members') e WHERE e ->> 'name' = 'Caio'), 107);
+  PERFORM public._t('Caio saldo de ciclos anteriores', (SELECT (e ->> 'saldo_anterior')::numeric FROM jsonb_array_elements(c -> 'members') e WHERE e ->> 'name' = 'Caio'), 7);
+  PERFORM public._t('Eva saldo de ciclos anteriores', (SELECT (e ->> 'saldo_anterior')::numeric FROM jsonb_array_elements(c -> 'members') e WHERE e ->> 'name' = 'Eva'), 15);
   PERFORM public._tt('dono fora do repasse', (SELECT e::text FROM jsonb_array_elements(c -> 'members') e WHERE e ->> 'name' = 'Rhian (dono)'), NULL);
   PERFORM public._tt('Duda inativa com saldo aparece', (SELECT e ->> 'inactive' FROM jsonb_array_elements(c -> 'members') e WHERE e ->> 'name' = 'Duda'), 'true');
   PERFORM public._tt('Eva excluída com saldo antigo aparece', (SELECT e ->> 'status' FROM jsonb_array_elements(c -> 'members') e WHERE e ->> 'name' = 'Eva'), 'nada_a_pagar');
@@ -200,6 +202,8 @@ DO $$ DECLARE c jsonb; BEGIN
   PERFORM public._tt('fechado', c -> 'cycle' ->> 'open', 'false');
   PERFORM public._tt('Ana paga', (SELECT e ->> 'status' FROM jsonb_array_elements(c -> 'members') e WHERE e ->> 'name' = 'Ana'), 'pago');
   PERFORM public._t('Caio 7 (borda BRT)', (SELECT (e ->> 'a_pagar_ciclo')::numeric FROM jsonb_array_elements(c -> 'members') e WHERE e ->> 'name' = 'Caio'), 7);
+  PERFORM public._t('Caio: os 100 do ciclo seguinte NÃO são "de ciclos anteriores"', (SELECT (e ->> 'saldo_anterior')::numeric FROM jsonb_array_elements(c -> 'members') e WHERE e ->> 'name' = 'Caio'), 0);
+  PERFORM public._tt('Ana: data do pagamento DESTE ciclo', (SELECT (e ->> 'pago_ciclo_em') IS NOT NULL FROM jsonb_array_elements(c -> 'members') e WHERE e ->> 'name' = 'Ana')::text, 'true');
   PERFORM public._tt('Eva pendente', (SELECT e ->> 'status' FROM jsonb_array_elements(c -> 'members') e WHERE e ->> 'name' = 'Eva'), 'pendente');
   PERFORM public._tt('settle 31 em fev', public._commission_settle_date('2026-02-10', 31)::text, '2026-02-28');
   RAISE NOTICE 'PASS ciclo padrão 06/08–05/09 fechado: Ana Pago (264 = 264), Caio 7, Eva pendente; dia 31 → 28/02';

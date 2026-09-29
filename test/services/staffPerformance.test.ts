@@ -40,7 +40,7 @@ describe('fetchStaffPerformance (get_staff_performance_v1)', () => {
     expect(dono.rank).toBeNull();
     expect(dono.metrics.comissao_periodo).toBe(0);
     expect(r.period).toMatchObject({ start: '2026-09-01', end: '2026-09-30', currency: 'BRL', tz: 'America/Sao_Paulo' });
-    expect(r.team_totals.receita_gerada).toBeGreaterThan(0);
+    expect(r.team_totals?.receita_gerada).toBeGreaterThan(0);
     expect(r.ranking_available).toBe(true);
     expect(r.trend).toBeNull();
   });
@@ -104,7 +104,7 @@ describe('fetchCommissionCycle (get_commission_cycle_v1)', () => {
     expect(c.settlement_day).toBe(5);
     expect(c.totals).toEqual({ a_pagar_ciclo: 677, pendentes: 4, pago_ciclo: 0 });
     const caio = c.members.find((m) => m.name === 'Caio')!;
-    expect(caio).toMatchObject({ a_pagar_ciclo: 100, saldo_acumulado: 107, status: 'pendente', servicos_ciclo: 5 });
+    expect(caio).toMatchObject({ a_pagar_ciclo: 100, saldo_acumulado: 107, saldo_anterior: 7, status: 'pendente', servicos_ciclo: 5, pago_ciclo_em: null });
     const ana = c.members.find((m) => m.name === 'Ana')!;
     expect(ana.ultimo_pagamento).toMatchObject({ amount: 264, end_date: '2026-09-05' });
     expect(c.members.find((m) => m.name === 'Eva')).toMatchObject({ inactive: true, status: 'nada_a_pagar', saldo_acumulado: 15 });

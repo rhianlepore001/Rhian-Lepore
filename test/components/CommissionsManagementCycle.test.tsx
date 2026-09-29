@@ -36,7 +36,8 @@ vi.mock('../../lib/supabase', () => ({
 vi.mock('@/lib/supabase', () => ({
     supabase: { rpc: (...a: unknown[]) => rpc(...(a as [string])), from: (t: string) => query(t) },
 }));
-vi.mock('../../contexts/AuthContext', () => ({ useAuth: () => ({ user: { id: 'owner-1' }, role: 'owner', region: 'BR', userType: 'barber' }) }));
+const AUTH = { user: { id: 'owner-1' }, role: 'owner', region: 'BR', userType: 'barber' }; // referência estável, como no app
+vi.mock('../../contexts/AuthContext', () => ({ useAuth: () => AUTH }));
 vi.mock('../../components/ProfessionalCommissionDetails', () => ({ ProfessionalCommissionDetails: () => <div /> }));
 vi.mock('../../components/CommissionPaymentHistory', () => ({ CommissionPaymentHistory: () => <div /> }));
 vi.mock('../../components/CommissionDetailReport', () => ({
@@ -53,9 +54,10 @@ const closedCycle = () => {
     c.previous_end = '2026-08-05';
     c.next_end = '2026-10-05';
     const set = (name: string, o: Record<string, unknown>) => Object.assign(c.members.find((m: any) => m.name === name), o);
-    set('Ana', { a_pagar_ciclo: 0, status: 'pago', pago_ciclo: 264, pago_calculado: 264 });
-    set('Bruno', { a_pagar_ciclo: 0, status: 'pago_com_ajuste', pago_ciclo: 250, pago_calculado: 257, ultimo_pagamento: { paid_at: '2026-09-07T12:00:00+00:00', amount: 250, start_date: '2026-08-06', end_date: '2026-09-05' } });
-    set('Caio', { a_pagar_ciclo: 7, saldo_acumulado: 107, status: 'pendente', servicos_ciclo: 1 });
+    set('Ana', { a_pagar_ciclo: 0, saldo_anterior: 0, status: 'pago', pago_ciclo: 264, pago_calculado: 264, pago_ciclo_em: '2026-09-06T13:00:00+00:00' });
+    set('Bruno', { a_pagar_ciclo: 0, saldo_anterior: 0, status: 'pago_com_ajuste', pago_ciclo: 250, pago_calculado: 257, pago_ciclo_em: '2026-09-07T12:00:00+00:00', ultimo_pagamento: { paid_at: '2026-09-07T12:00:00+00:00', amount: 250, start_date: '2026-08-06', end_date: '2026-09-05' } });
+    // saldo_acumulado 107 inclui os 100 do ciclo SEGUINTE: não é "de ciclos anteriores".
+    set('Caio', { a_pagar_ciclo: 7, saldo_acumulado: 107, saldo_anterior: 0, status: 'pendente', servicos_ciclo: 1 });
     set('Duda', { a_pagar_ciclo: 0, status: 'nada_a_pagar', servicos_ciclo: 0 });
     c.totals = { a_pagar_ciclo: 7, pendentes: 1, pago_ciclo: 514 };
     return c;
@@ -90,7 +92,7 @@ describe('CommissionsManagement — ciclo do servidor (P1, get_commission_cycle_
         mount();
         const caio = await screen.findByTestId('payout-row-20000000-0000-0000-0000-0000000000c1');
         expect(within(caio).getAllByText(money('100,00')).length).toBeGreaterThan(0);
-        expect(within(caio).getByText(/\+\sR\$\s7,00 de ciclos anteriores/)).toBeInTheDocument();
+        expect(within(caio).getAllByText(/\+\sR\$\s7,00 de ciclos anteriores/).length).toBeGreaterThan(0);
         const ana = screen.getByTestId('payout-row-20000000-0000-0000-0000-0000000000a1');
         expect(within(ana).getByText('10 serviços · 3 produtos neste ciclo')).toBeInTheDocument();
         expect(within(ana).queryByText(/ciclos anteriores/)).toBeNull();
@@ -123,8 +125,10 @@ describe('CommissionsManagement — ciclo do servidor (P1, get_commission_cycle_
         const bruno = screen.getByTestId('payout-row-20000000-0000-0000-0000-0000000000b1');
         expect(within(bruno).getAllByText('Pago com ajuste').length).toBeGreaterThan(0);
         expect(within(bruno).getAllByTitle(/Pago R\$\s250,00 · calculado R\$\s257,00/).length).toBeGreaterThan(0);
+        expect(within(bruno).getAllByText(/Pago em 07\/09 · R\$\s250,00/).length).toBeGreaterThan(0);
         const caio = screen.getByTestId('payout-row-20000000-0000-0000-0000-0000000000c1');
         expect(within(caio).getAllByText('Pendente').length).toBeGreaterThan(0);
+        expect(within(caio).queryByText(/ciclos anteriores/)).toBeNull();
         const duda = screen.getByTestId('payout-row-20000000-0000-0000-0000-0000000000e1');
         expect(within(duda).getAllByText('Nada a pagar').length).toBeGreaterThan(0);
         expect(screen.getByTestId('payout-summary')).toHaveTextContent(/Pago neste ciclo\s*R\$\s514,00/);

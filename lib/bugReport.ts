@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { redactInviteToken } from '../utils/redactUrl';
 
 export type BugReportType = 'bug' | 'idea' | 'question';
 
@@ -56,14 +57,15 @@ startCapturing();
 export function captureContext(): BugContext {
   const doc = typeof document !== 'undefined' ? document.documentElement : null;
   return {
+    // O token do convite (&invite=) nunca vai para o relato.
     route:
       typeof window !== 'undefined'
-        ? window.location.hash || window.location.pathname
+        ? redactInviteToken(window.location.hash || window.location.pathname)
         : '',
     pathname: typeof window !== 'undefined' ? window.location.pathname : '',
-    search: typeof window !== 'undefined' ? window.location.search : '',
-    hash: typeof window !== 'undefined' ? window.location.hash : '',
-    url: typeof window !== 'undefined' ? window.location.href : '',
+    search: typeof window !== 'undefined' ? redactInviteToken(window.location.search) : '',
+    hash: typeof window !== 'undefined' ? redactInviteToken(window.location.hash) : '',
+    url: typeof window !== 'undefined' ? redactInviteToken(window.location.href) : '',
     userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
     viewportWidth: typeof window !== 'undefined' ? window.innerWidth : 0,
     viewportHeight: typeof window !== 'undefined' ? window.innerHeight : 0,
@@ -71,7 +73,7 @@ export function captureContext(): BugContext {
     timestamp: new Date().toISOString(),
     theme: doc ? doc.getAttribute('data-theme') : null,
     mode: doc ? doc.getAttribute('data-mode') : null,
-    consoleErrors: getConsoleErrors(),
+    consoleErrors: getConsoleErrors().map(redactInviteToken),
   };
 }
 

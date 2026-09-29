@@ -25,6 +25,7 @@ export const TeamSettings: React.FC = () => {
     const deleteMemberMutation = useDeleteTeamMember();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingMember, setEditingMember] = useState<any>(null);
+    const [openInvite, setOpenInvite] = useState(false);
     const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
     const { showToast } = useToast();
 
@@ -234,6 +235,7 @@ export const TeamSettings: React.FC = () => {
                                             member={member}
                                             onEdit={(m) => {
                                                 setEditingMember(m);
+                                                setOpenInvite(false);
                                                 setIsModalOpen(true);
                                             }}
                                             onDelete={handleDelete}
@@ -256,10 +258,16 @@ export const TeamSettings: React.FC = () => {
                                             member={member}
                                             onEdit={(m) => {
                                                 setEditingMember(m);
+                                                setOpenInvite(false);
                                                 setIsModalOpen(true);
                                             }}
                                             onDelete={handleDelete}
                                             onSaveCommission={handleSaveCommission}
+                                            onResendInvite={(m) => {
+                                                setEditingMember(m);
+                                                setOpenInvite(true);
+                                                setIsModalOpen(true);
+                                            }}
                                         />
                                     ))}
                                 </div>
@@ -406,7 +414,11 @@ export const TeamSettings: React.FC = () => {
                 {isModalOpen && (
                     <TeamMemberForm
                         initialData={editingMember}
-                        onClose={() => setIsModalOpen(false)}
+                        initialStep={openInvite ? 'invite' : 'form'}
+                        onClose={() => {
+                            setIsModalOpen(false);
+                            setOpenInvite(false);
+                        }}
                         onSave={() => {
                             queryClient.invalidateQueries({ queryKey: ['team', companyId, 'members'] });
                         }}

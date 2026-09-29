@@ -5,6 +5,9 @@ import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { TRIAL_DAYS } from '@/constants';
 
+// Convite com token (invite hardening): links válidos carregam &invite=<64 hex>.
+const INVITE_TOKEN = 'f'.repeat(64);
+
 // Helper para envolver hooks com o provider
 const wrapper = ({ children }: { children: React.ReactNode }) => (
     <AuthProvider>{children}</AuthProvider>
@@ -166,6 +169,8 @@ describe('AuthContext', () => {
                         error: null,
                     });
                 }),
+                is: vi.fn().mockReturnThis(),
+                limit: vi.fn().mockReturnThis(),
                 maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'team-123' }, error: null }),
             };
 
@@ -351,6 +356,7 @@ describe('AuthContext', () => {
                 phone: '11988888888',
                 companyId: 'owner-123',
                 teamMemberId: 'pre-cadastrado-uuid',
+                inviteToken: INVITE_TOKEN,
             });
         });
 
@@ -359,6 +365,7 @@ describe('AuthContext', () => {
             p_company_id: 'owner-123',
             p_member_id: 'pre-cadastrado-uuid',
             p_birth_date: null,
+            p_invite_token: INVITE_TOKEN,
         });
         expect(result.current.role).toBe('staff');
         expect(result.current.teamMemberId).toBe('pre-cadastrado-uuid');
@@ -490,6 +497,8 @@ describe('AuthContext', () => {
                         error: null,
                     });
                 }),
+                is: vi.fn().mockReturnThis(),
+                limit: vi.fn().mockReturnThis(),
                 maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'team-123' }, error: null }),
             };
 
@@ -571,6 +580,7 @@ describe('AuthContext', () => {
                 phone: '',
                 companyId: 'owner-123',
                 teamMemberId: 'member-new-reinvite',
+                inviteToken: INVITE_TOKEN,
             });
         });
 
@@ -639,6 +649,7 @@ describe('AuthContext', () => {
                 phone: '',
                 companyId: 'owner-123',
                 teamMemberId: 'member-new-reinvite',
+                inviteToken: INVITE_TOKEN,
             });
         });
 
@@ -650,6 +661,7 @@ describe('AuthContext', () => {
             p_company_id: 'owner-123',
             p_member_id: 'member-new-reinvite',
             p_email: 'recepcao@example.com',
+            p_invite_token: INVITE_TOKEN,
         });
         const releaseCallIndex = (supabase.rpc as any).mock.calls.findIndex(
             (call: unknown[]) => call[0] === 'release_staff_email_for_reinvite',
@@ -699,6 +711,7 @@ describe('AuthContext', () => {
                 phone: '',
                 companyId: 'owner-123',
                 teamMemberId: 'member-new-reinvite',
+                inviteToken: INVITE_TOKEN,
             });
         });
 
@@ -706,6 +719,7 @@ describe('AuthContext', () => {
             p_company_id: 'owner-123',
             p_member_id: 'member-new-reinvite',
             p_email: 'recepcao@example.com',
+            p_invite_token: INVITE_TOKEN,
         });
         expect(supabase.auth.signOut).toHaveBeenCalled();
         expect(supabase.auth.signUp).toHaveBeenCalledTimes(1);
@@ -746,6 +760,7 @@ describe('AuthContext', () => {
                 phone: '',
                 companyId: '7baee43b-a3b0-4d96-b566-62bc88224f5c',
                 teamMemberId: newMemberId,
+                inviteToken: INVITE_TOKEN,
                 birthDate: '1990-01-01',
             });
         });
@@ -759,6 +774,7 @@ describe('AuthContext', () => {
             p_company_id: '7baee43b-a3b0-4d96-b566-62bc88224f5c',
             p_member_id: newMemberId,
             p_birth_date: '1990-01-01',
+            p_invite_token: INVITE_TOKEN,
         });
         expect(supabase.rpc).not.toHaveBeenCalledWith(
             'release_staff_email_for_reinvite',
@@ -819,6 +835,7 @@ describe('AuthContext', () => {
                 phone: '',
                 companyId: 'owner-stale',
                 teamMemberId: memberId,
+                inviteToken: INVITE_TOKEN,
                 birthDate: '1990-01-01',
             });
         });
@@ -859,6 +876,7 @@ describe('AuthContext', () => {
                 phone: '',
                 companyId: 'owner-used',
                 teamMemberId: 'member-used',
+                inviteToken: INVITE_TOKEN,
                 birthDate: '1990-01-01',
             });
         });
@@ -898,6 +916,7 @@ describe('AuthContext', () => {
                 phone: '',
                 companyId: 'owner-123',
                 teamMemberId: newMemberId,
+                inviteToken: INVITE_TOKEN,
                 birthDate: '1993-06-06',
             });
         });
@@ -911,6 +930,7 @@ describe('AuthContext', () => {
             p_company_id: 'owner-123',
             p_member_id: newMemberId,
             p_birth_date: '1993-06-06',
+            p_invite_token: INVITE_TOKEN,
         });
         expect(supabase.rpc).not.toHaveBeenCalledWith(
             'complete_staff_invite',
@@ -943,6 +963,7 @@ describe('AuthContext', () => {
                 phone: '',
                 companyId: 'owner-123',
                 teamMemberId: 'member-1',
+                inviteToken: INVITE_TOKEN,
                 birthDate: '1993-06-06',
             });
         });
@@ -964,6 +985,7 @@ describe('AuthContext', () => {
             p_company_id: 'owner-123',
             p_member_id: 'member-1',
             p_birth_date: '1993-06-06',
+            p_invite_token: INVITE_TOKEN,
         });
     });
 
@@ -976,6 +998,8 @@ describe('AuthContext', () => {
             const query: any = {
                 select: vi.fn().mockReturnThis(),
                 eq: vi.fn().mockReturnThis(),
+                is: vi.fn().mockReturnThis(),
+                limit: vi.fn().mockReturnThis(),
                 maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
                 single: vi.fn().mockImplementation(() => {
                     if (table === 'profiles' && query.eq.mock.calls.some((call: unknown[]) => call[1] === 'owner-123')) {

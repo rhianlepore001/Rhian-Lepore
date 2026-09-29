@@ -8,6 +8,7 @@ import { normalizeRegion } from '../utils/formatters';
 import { getTrialEndsAt } from '../constants';
 import { isEmailTakenError } from '../utils/mapError';
 import { classifySignupError, signupError } from '../utils/signupErrors';
+import { resolveStaffLink } from '../utils/staffAccess';
 
 export type UserType = 'barber' | 'beauty';
 export type Region = 'BR' | 'PT';
@@ -27,6 +28,9 @@ interface AuthContextType {
   role: 'owner' | 'staff';
   companyId: string | null;
   teamMemberId: string | null;
+  /** Colaborador sem vínculo vivo em team_members: a sessão é encerrada e o app mostra "acesso removido". */
+  accessRemoved: { companyName: string | null } | null;
+  dismissAccessRemoved: () => void;
   isDev: boolean;
   aiosEnabled: boolean;
   setDevUserType: (type: UserType) => void;
@@ -64,6 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [role, setRole] = useState<'owner' | 'staff'>('owner');
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [teamMemberId, setTeamMemberId] = useState<string | null>(null);
+  const [accessRemoved, setAccessRemoved] = useState<{ companyName: string | null } | null>(null);
   const [aiosEnabled, setAiosEnabled] = useState(false);
   const [isDev, setIsDev] = useState(false);
   const [devUserType, setDevUserTypeState] = useState<UserType | null>(() => {
@@ -120,20 +125,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setTrialEndsAt(null);
           }
 
-          // Busca o ID do registro de profissional vinculado ao staff
-          const { data: teamMember } = await supabase
+          // Busca o cadastro VIVO (ativo ou inativo) vinculado ao staff. Cadastro
+          // excluído (deleted_at) não conta: é a mesma regra do get_auth_company_id.
+          const { data: teamMember, error: teamMemberError } = await supabase
             .from('team_members')
             .select('id')
             .eq('staff_user_id', userId)
             .eq('user_id', profile.company_id)
+            .is('deleted_at', null)
+            .limit(1)
             .maybeSingle();
 
-          let resolvedMemberId = teamMember?.id || null;
-          if (!resolvedMemberId) {
-            const { data: relinked } = await supabase.rpc('relink_staff_if_unbound');
-            resolvedMemberId = relinked || null;
+          let relinkedId: string | null = null;
+          let relinkError: unknown = null;
+          if (!teamMember?.id && !teamMemberError) {
+            const { data: relinked, error } = await supabase.rpc('relink_staff_if_unbound');
+            relinkedId = relinked || null;
+            relinkError = error;
           }
-          setTeamMemberId(resolvedMemberId);
+          const link = resolveStaffLink({
+            memberId: teamMember?.id || null,
+            memberError: teamMemberError,
+            relinkedId,
+            relinkError,
+          });
+          setTeamMemberId(link.memberId);
+
+          if (link.status === 'removed') {
+            // Ex-colaborador: o banco já não entrega nada da empresa. Mostra o
+            // motivo e encerra a sessão (o nome vem do perfil do dono quando ainda
+            // legível, senão da RPC pública do convite).
+            let companyName: string | null = ownerProfile?.business_name || null;
+            if (!companyName) {
+              const { data: company } = await supabase.rpc('get_company_for_invite', { p_company_id: profile.company_id });
+              const row = Array.isArray(company) ? company[0] : company;
+              companyName = row?.business_name || null;
+            }
+            setAccessRemoved({ companyName });
+            const { error: signOutError } = await supabase.auth.signOut();
+            // Sem rede o signOut global falha e mantém a sessão: limpa ao menos a local.
+            if (signOutError) await supabase.auth.signOut({ scope: 'local' });
+            return;
+          }
         } else {
           const { data: onboardingProgress, error: onboardingError } = await supabase
             .from('onboarding_progress')
@@ -217,7 +250,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
+  const dismissAccessRemoved = useCallback(() => setAccessRemoved(null), []);
+
   const login = async (email: string, password: string) => {
+    setAccessRemoved(null);
     // 1. Check Rate Limit (Anti-brute force)
     try {
       const { data: allowed } = await supabase.rpc('check_login_rate_limit', { p_email: email });
@@ -529,6 +565,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     role,
     companyId,
     teamMemberId,
+    accessRemoved,
+    dismissAccessRemoved,
     isDev,
     aiosEnabled,
     setDevUserType,
@@ -551,6 +589,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     role,
     companyId,
     teamMemberId,
+    accessRemoved,
+    dismissAccessRemoved,
     isDev,
     aiosEnabled,
     devUserType,

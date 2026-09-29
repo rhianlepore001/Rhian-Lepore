@@ -166,6 +166,8 @@ describe('AuthContext', () => {
                         error: null,
                     });
                 }),
+                is: vi.fn().mockReturnThis(),
+                limit: vi.fn().mockReturnThis(),
                 maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'team-123' }, error: null }),
             };
 
@@ -490,6 +492,8 @@ describe('AuthContext', () => {
                         error: null,
                     });
                 }),
+                is: vi.fn().mockReturnThis(),
+                limit: vi.fn().mockReturnThis(),
                 maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'team-123' }, error: null }),
             };
 
@@ -976,6 +980,8 @@ describe('AuthContext', () => {
             const query: any = {
                 select: vi.fn().mockReturnThis(),
                 eq: vi.fn().mockReturnThis(),
+                is: vi.fn().mockReturnThis(),
+                limit: vi.fn().mockReturnThis(),
                 maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
                 single: vi.fn().mockImplementation(() => {
                     if (table === 'profiles' && query.eq.mock.calls.some((call: unknown[]) => call[1] === 'owner-123')) {

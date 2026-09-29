@@ -77,8 +77,8 @@ const StatusCell: React.FC<{ row: PayoutRowData; theme: ThemeVariant; formatMone
         <span className={`inline-flex flex-col items-end lg:items-start gap-0.5 ${className ?? ''}`} title={title}>
             <Badge variant={s.variant} forceTheme={theme} className="whitespace-nowrap">{s.label}</Badge>
             {paid && (
-                <span className={`text-xs ${colors.textMuted} tabular-nums whitespace-nowrap`}>
-                    Pago em {paid}{c.status === 'pago_com_ajuste' && c.pago_ciclo != null ? ` · ${formatMoney(c.pago_ciclo)}` : ''}
+                <span className={`text-xs leading-snug ${colors.textMuted} tabular-nums text-right lg:text-left`}>
+                    {`Pago em ${paid}${c.status === 'pago_com_ajuste' && c.pago_ciclo != null ? ` · ${formatMoney(c.pago_ciclo).replace(/ /g, '\u00a0')}` : ''}`}
                 </span>
             )}
         </span>

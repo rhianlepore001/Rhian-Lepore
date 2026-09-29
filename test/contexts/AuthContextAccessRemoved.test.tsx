@@ -4,6 +4,9 @@ import React from 'react';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 
+// Convite com token (invite hardening): links válidos carregam &invite=<64 hex>.
+const INVITE_TOKEN = 'f'.repeat(64);
+
 const wrapper = ({ children }: { children: React.ReactNode }) => <AuthProvider>{children}</AuthProvider>;
 
 const STAFF = { id: 'staff-orphan', email: 'orphan@example.com' };
@@ -145,7 +148,7 @@ describe('AuthContext: colaborador sem vínculo vivo (S-06, E2.3)', () => {
         await act(async () => {
             res = await result.current.register({
                 email: 'novo@example.com', password: 'Senha#2026', fullName: 'Novo', businessName: '',
-                userType: 'barber', region: 'PT', phone: '', companyId: 'owner-123', teamMemberId: 'tm-new',
+                userType: 'barber', region: 'PT', phone: '', companyId: 'owner-123', teamMemberId: 'tm-new', inviteToken: INVITE_TOKEN,
             });
         });
         expect(res.error).toBeNull();

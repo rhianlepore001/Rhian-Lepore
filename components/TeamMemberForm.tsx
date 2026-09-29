@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Upload, User, Check, Link as LinkIcon, CheckCircle2, Share2, Copy } from 'lucide-react';
+import { Upload, User, Check, Link as LinkIcon, CheckCircle2, Share2, Copy, RefreshCw } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Modal } from './ui/Modal';
@@ -18,6 +18,8 @@ interface TeamMemberFormProps {
     /** @deprecated Tema vem de useBrutalTheme() / data-theme — prop ignorada */
     accentColor?: string;
     isOwnerForm?: boolean;
+    /** Abre direto no convite (Equipe → "Reenviar convite"). */
+    initialStep?: FormStep;
 }
 
 type FormStep = 'form' | 'invite';
@@ -26,14 +28,16 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     initialData,
     onClose,
     onSave,
-    isOwnerForm = false
+    isOwnerForm = false,
+    initialStep = 'form',
 }) => {
     const { user, fullName, avatarUrl, businessName } = useAuth();
     const { showToast } = useToast();
     const { colors, accent, font } = useBrutalTheme();
     const { rolePlaceholder } = useBusinessCopy();
 
-    const [step, setStep] = useState<FormStep>('form');
+    const canOpenInvite = Boolean(initialData?.id && !initialData?.staff_user_id && !initialData?.is_owner);
+    const [step, setStep] = useState<FormStep>(initialStep === 'invite' && canOpenInvite ? 'invite' : 'form');
     const [createdMemberId, setCreatedMemberId] = useState<string | null>(
         initialData?.id && !initialData?.staff_user_id ? initialData.id : null
     );
@@ -54,7 +58,15 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const inviteMemberId = createdMemberId || (initialData?.staff_user_id ? null : initialData?.id) || null;
-    const { inviteLink, copied: copiedInviteLink, copy: copyInviteLink, share: shareInviteLink } = useCopyInviteLink({
+    const {
+        inviteLink,
+        copied: copiedInviteLink,
+        copy: copyInviteLink,
+        share: shareInviteLink,
+        regenerate: regenerateInviteLink,
+        regenerating: regeneratingInviteLink,
+        inviteError,
+    } = useCopyInviteLink({
         recipientName: name.trim() || undefined,
         memberId: inviteMemberId,
     });
@@ -204,16 +216,21 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
 
                     <div
                         data-testid="invite-link"
+                        aria-live="polite"
                         className={`p-3 rounded-lg border border-dashed ${colors.border} break-all text-xs ${font.mono} ${colors.textSecondary}`}
                     >
-                        {inviteLink || 'Gerando link…'}
+                        {inviteLink || (inviteError ? '—' : 'Gerando link…')}
                     </div>
+                    {inviteError && (
+                        <p role="alert" className="text-xs text-[var(--color-danger)]">{inviteError}</p>
+                    )}
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <Button
                             type="button"
                             variant="primary"
                             fullWidth
+                            disabled={!inviteLink}
                             onClick={() => void copyInviteLink()}
                             icon={copiedInviteLink ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                         >
@@ -223,11 +240,28 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                             type="button"
                             variant="secondary"
                             fullWidth
+                            disabled={!inviteLink}
                             onClick={() => void shareInviteLink()}
                             icon={<Share2 className="w-4 h-4" />}
                         >
                             Enviar
                         </Button>
+                    </div>
+
+                    <div className={`flex flex-col gap-1 border-t ${colors.divider} pt-4 sm:flex-row sm:items-center sm:justify-between sm:gap-3`}>
+                        <p className={`text-xs ${colors.textMuted} leading-relaxed`}>
+                            Vale por 30 dias, para um único cadastro. Um link novo cancela o anterior.
+                        </p>
+                        <button
+                            type="button"
+                            data-testid="invite-regenerate"
+                            onClick={() => void regenerateInviteLink()}
+                            disabled={regeneratingInviteLink || (!inviteLink && !inviteError)}
+                            className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 self-start text-xs font-semibold ${accent.text} underline-offset-4 hover:underline disabled:opacity-50 sm:self-auto`}
+                        >
+                            <RefreshCw className={`w-3.5 h-3.5 ${regeneratingInviteLink ? 'animate-spin' : ''}`} aria-hidden="true" />
+                            Gerar novo link
+                        </button>
                     </div>
 
                     <Button

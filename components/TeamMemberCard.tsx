@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Edit2, Trash2, User, Crown, Percent, Check, Loader2 } from 'lucide-react';
+import { Edit2, Trash2, User, Crown, Percent, Check, Loader2, Link as LinkIcon } from 'lucide-react';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { Button } from './ui/Button';
 import {
@@ -17,6 +17,8 @@ interface TeamMember {
     photo_url: string | null;
     active: boolean;
     is_owner?: boolean;
+    /** Login do colaborador; null = ainda não concluiu o convite. */
+    staff_user_id?: string | null;
     commission_rate?: number | null;
     commission_payment_frequency?: CommissionPaymentFrequency | string | null;
     commission_payment_day?: number | null;
@@ -33,6 +35,8 @@ interface TeamMemberCardProps {
     onEdit: (member: TeamMember) => void;
     onDelete: (id: string) => void;
     onSaveCommission?: (memberId: string, draft: CommissionDraft) => Promise<void>;
+    /** Abre o convite do colaborador que ainda não tem acesso. */
+    onResendInvite?: (member: TeamMember) => void;
     /** @deprecated tema vem do useBrutalTheme; mantido por compat de API */
     accentColor?: string;
 }
@@ -42,6 +46,7 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
     onEdit,
     onDelete,
     onSaveCommission,
+    onResendInvite,
 }) => {
     const { colors, accent, radius, shadow, status } = useBrutalTheme();
     const [editingCommission, setEditingCommission] = useState(false);
@@ -83,6 +88,8 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
     const commissionRate = member.commission_rate ?? 0;
     const schedule = scheduleSummary(member.commission_payment_frequency, member.commission_payment_day);
     const dayOptions = paymentDayOptions(frequency);
+    // Ativo, não é dono e sem login: o convite antigo (sem token) não vale mais.
+    const pendingInvite = !member.is_owner && member.active && member.staff_user_id === null && Boolean(onResendInvite);
 
     return (
         <div className={`
@@ -219,6 +226,31 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
                         >
                             Cancelar
                         </Button>
+                    </div>
+                </div>
+            )}
+
+            {pendingInvite && !editingCommission && (
+                <div className="mt-4 flex items-start gap-2.5" data-testid="invite-pending">
+                    <span aria-hidden="true" className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-warning)]" />
+                    <div className="min-w-0 flex-1 sm:flex sm:items-center sm:justify-between sm:gap-3">
+                        <p className={`text-xs leading-relaxed ${colors.textSecondary}`}>
+                            <span className={`font-semibold ${colors.text}`}>Ainda sem acesso</span>
+                            <span aria-hidden="true"> · </span>
+                            <span>Links antigos deixaram de valer.</span>
+                        </p>
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onResendInvite?.(member);
+                            }}
+                            aria-label={`Reenviar convite para ${member.name}`}
+                            className={`-ml-1 inline-flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-md px-1 text-xs font-semibold ${accent.text} underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] sm:-my-3 sm:ml-0`}
+                        >
+                            <LinkIcon className="w-3.5 h-3.5" aria-hidden="true" />
+                            Reenviar convite
+                        </button>
                     </div>
                 </div>
             )}

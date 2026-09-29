@@ -19,6 +19,10 @@ import {
 } from '../utils/signupErrors';
 import { getBusinessCopy } from '../utils/businessCopy';
 
+// Convite de colaborador: token de 256 bits em hex (staff_invites.token).
+const INVITE_TOKEN_RE = /^[0-9a-f]{64}$/;
+export const STALE_INVITE_MESSAGE = 'Este convite foi atualizado. Peça ao gestor um novo link.';
+
 export const Register: React.FC = () => {
   const navigate = useNavigate();
   const { register, isAuthenticated, role, companyId } = useAuth();
@@ -45,9 +49,13 @@ export const Register: React.FC = () => {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [nameLocked, setNameLocked] = useState(false);
+  // Link antigo (sem token) ou token inválido/vencido/já trocado.
+  const [inviteStale, setInviteStale] = useState(false);
 
   const companyIdFromUrl = searchParams.get('company');
   const memberIdFromUrl = searchParams.get('member');
+  const inviteTokenParam = searchParams.get('invite')?.trim().toLowerCase() ?? '';
+  const inviteTokenFromUrl = INVITE_TOKEN_RE.test(inviteTokenParam) ? inviteTokenParam : null;
   const isInvitedStaff = !!companyIdFromUrl;
   const { isBeauty, colors, accent, font, radius, classes } = useBrutalTheme({ override: userType as ThemeVariant });
   const copy = getBusinessCopy(userType);
@@ -55,7 +63,7 @@ export const Register: React.FC = () => {
   const beautyCopy = getBusinessCopy('beauty');
   const [ownerBusinessName, setOwnerBusinessName] = useState<string>('');
   const [memberRole, setMemberRole] = useState<string>('');
-  const formError = error || inviteError;
+  const formError = error || (inviteStale ? null : inviteError);
   const errorRef = useScrollToError(formError);
 
   useEffect(() => {
@@ -76,12 +84,24 @@ export const Register: React.FC = () => {
     let cancelled = false;
     setInviteLoading(true);
     setInviteError(null);
+    setInviteStale(false);
+
+    const markStale = () => {
+      setInviteError(STALE_INVITE_MESSAGE);
+      setInviteStale(true);
+      setInviteLoading(false);
+    };
 
     const loadInvite = async () => {
       if (memberIdFromUrl) {
+        if (!inviteTokenFromUrl) {
+          markStale();
+          return;
+        }
         const { data, error: rpcError } = await supabase.rpc('get_team_member_for_invite', {
           p_company_id: companyIdFromUrl,
           p_member_id: memberIdFromUrl,
+          p_invite_token: inviteTokenFromUrl,
         });
         if (cancelled) return;
 
@@ -94,8 +114,7 @@ export const Register: React.FC = () => {
 
         const row = Array.isArray(data) ? data[0] : data;
         if (!row) {
-          setInviteError('Convite inválido ou profissional não encontrado.');
-          setInviteLoading(false);
+          markStale();
           return;
         }
         if (row.staff_user_id) {
@@ -134,10 +153,10 @@ export const Register: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [companyIdFromUrl, memberIdFromUrl]);
+  }, [companyIdFromUrl, memberIdFromUrl, inviteTokenFromUrl]);
 
   useEffect(() => {
-    if (!isInvitedStaff || !memberIdFromUrl || !companyIdFromUrl) return;
+    if (!isInvitedStaff || !memberIdFromUrl || !companyIdFromUrl || !inviteTokenFromUrl) return;
     if (!isAuthenticated || role !== 'staff' || companyId !== companyIdFromUrl) return;
     // O submit já vincula o convite; evita um segundo complete_staff_invite concorrente.
     if (submittingRef.current) return;
@@ -147,6 +166,7 @@ export const Register: React.FC = () => {
       .rpc('complete_staff_invite', {
         p_company_id: companyIdFromUrl,
         p_member_id: memberIdFromUrl,
+        p_invite_token: inviteTokenFromUrl,
       })
       .then(({ error: claimError }) => {
         if (cancelled) return;
@@ -160,7 +180,7 @@ export const Register: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [isInvitedStaff, memberIdFromUrl, companyIdFromUrl, isAuthenticated, role, companyId, navigate]);
+  }, [isInvitedStaff, memberIdFromUrl, companyIdFromUrl, inviteTokenFromUrl, isAuthenticated, role, companyId, navigate]);
 
   const showSignupError = (err: unknown) => {
     const view = mapSignupError(err);
@@ -226,6 +246,7 @@ export const Register: React.FC = () => {
         phone: isInvitedStaff ? '' : phone,
         companyId: companyIdFromUrl || undefined,
         teamMemberId: memberIdFromUrl || undefined,
+        inviteToken: inviteTokenFromUrl || undefined,
         birthDate: isInvitedStaff ? birthDate : undefined,
       });
 
@@ -307,6 +328,20 @@ export const Register: React.FC = () => {
 
               {inviteLoading ? (
                 <p className="text-sm text-[var(--color-text-muted)] font-mono">Validando convite…</p>
+              ) : inviteStale ? (
+                <div
+                  role="status"
+                  data-testid="invite-stale"
+                  className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card-hover)] p-4 space-y-3"
+                >
+                  <p className="text-sm font-medium leading-relaxed text-[var(--color-text)]">{STALE_INVITE_MESSAGE}</p>
+                  <p className="text-xs leading-relaxed text-[var(--color-text-muted)]">
+                    O gestor gera o link atual na tela Equipe.
+                  </p>
+                  <Link to="/login" className={`inline-block text-xs font-semibold underline underline-offset-4 ${accent.text}`}>
+                    Já tenho acesso · Entrar
+                  </Link>
+                </div>
               ) : inviteError ? (
                 <p className="text-sm text-[var(--color-text-muted)]">
                   Peça ao gestor um novo link de convite pela tela de Equipe.

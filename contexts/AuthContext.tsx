@@ -49,6 +49,8 @@ interface AuthContextType {
     phone: string;
     companyId?: string;
     teamMemberId?: string;
+    /** Token do convite (&invite= do link); obrigatório no convite de colaborador. */
+    inviteToken?: string;
     birthDate?: string;
   }) => Promise<{ error: any }>;
 }
@@ -357,10 +359,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     phone: string;
     companyId?: string;
     teamMemberId?: string;
+    /** Token do convite (&invite= do link); obrigatório no convite de colaborador. */
+    inviteToken?: string;
     birthDate?: string;
   }) => {
     try {
-      if (data.companyId && !data.teamMemberId) {
+      if (data.companyId && (!data.teamMemberId || !data.inviteToken)) {
         return { error: { code: 'invalid_invite', message: 'Convite inválido. Peça ao gestor um link atualizado.' } };
       }
 
@@ -382,6 +386,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             role: data.companyId ? 'staff' : 'owner',
             company_id: data.companyId || undefined,
             member_id: data.teamMemberId || undefined,
+            invite_token: data.inviteToken || undefined,
           }
         }
       };
@@ -390,6 +395,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         p_company_id: data.companyId,
         p_member_id: data.teamMemberId,
         p_birth_date: data.birthDate || null,
+        p_invite_token: data.inviteToken || null,
       });
 
       const applyStaffState = (claimedId: string | null) => {
@@ -474,6 +480,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           p_company_id: data.companyId,
           p_member_id: data.teamMemberId,
           p_email: existing.data.user.email ?? data.email,
+          p_invite_token: data.inviteToken || null,
         });
         await supabase.auth.signOut();
         if (released !== true) {

@@ -10,8 +10,14 @@
 --   handle_new_user()                                75b03967cb6677fe891bf1d784572f30
 --   release_staff_email_for_reinvite(text,uuid,text) b06c5aa6c727be241fb73372ebd4635d
 --   relink_staff_if_unbound()  (versão do #105)      c64e25092ddda0841c28c1dee441d617
--- Se o #105 também for revertido, rode depois o rollback dele
--- (20260929090000_ex_staff_access_rollback.sql -> relink dc16b8a4...).
+--
+-- ORDEM DO ROLLBACK (obrigatória):
+--   1. ESTE arquivo (#108, 20260929120000_staff_invite_hardening_rollback.sql).
+--   2. Só depois, se o #105 também for revertido:
+--      20260929090000_ex_staff_access_rollback.sql (relink -> dc16b8a4...).
+-- Nunca o inverso: o rollback do #105 primeiro devolveria o relink de prod (sem
+-- token) com o convite do #108 ainda ativo, e este arquivo, rodado depois,
+-- reinstalaria o relink do #105 (desfazendo o rollback do #105).
 -- Sem mudança em team_members/profiles: o rollback é imediato. Os tokens
 -- emitidos se perdem (os links voltam ao formato antigo).
 

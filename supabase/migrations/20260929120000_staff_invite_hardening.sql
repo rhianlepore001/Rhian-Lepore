@@ -90,13 +90,14 @@ BEGIN
     RAISE EXCEPTION 'not_authenticated';
   END IF;
 
-  -- Só o dono da empresa, para um cadastro da própria equipe (não o dele).
+  -- Só o dono da empresa, para um cadastro ativo da própria equipe (não o dele).
   PERFORM 1
   FROM public.team_members tm
   WHERE tm.id = p_member_id
     AND tm.user_id = v_uid::text
     AND COALESCE(tm.is_owner, false) = false
     AND tm.deleted_at IS NULL
+    AND tm.active = true
   FOR UPDATE;
 
   IF NOT FOUND THEN
@@ -149,6 +150,7 @@ BEGIN
     AND tm.user_id = v_uid::text
     AND COALESCE(tm.is_owner, false) = false
     AND tm.deleted_at IS NULL
+    AND tm.active = true
   FOR UPDATE;
 
   IF NOT FOUND THEN

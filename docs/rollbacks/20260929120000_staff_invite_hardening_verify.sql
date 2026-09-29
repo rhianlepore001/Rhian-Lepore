@@ -1,6 +1,9 @@
 -- Verificação pós-aplicação de 20260929120000_staff_invite_hardening.sql.
--- Somente leitura (SELECT/DO sem escrita). Aborta com erro se algo divergir.
+-- Somente leitura: roda dentro de BEGIN READ ONLY ... ROLLBACK (qualquer escrita
+-- falharia e nada é gravado). Aborta com erro se algo divergir.
 -- Esperado: NOTICE "staff_invite verify: OK ..." e nenhuma exceção.
+BEGIN READ ONLY;
+
 DO $verify$
 DECLARE
   r record;
@@ -23,8 +26,8 @@ BEGIN
       ('public.release_staff_email_for_reinvite(text,uuid,text,text)', '02827f53a3104124003f249b47086365', 'authenticated,postgres,service_role'),
       ('public.handle_new_user()', 'c8a7b72f628759face7d157f09e1c3e5', 'authenticated,postgres,service_role'),
       ('public.relink_staff_if_unbound()', 'ed50273d621db87218d84fdd54352ad4', 'authenticated,postgres,service_role'),
-      ('public.get_or_create_staff_invite(uuid)', 'fe69be59e3c5db0de6b98bddcf483f68', 'authenticated,postgres,service_role'),
-      ('public.rotate_staff_invite(uuid)', 'c272a5ab4a6e6285eeb871cb5cade62a', 'authenticated,postgres,service_role'),
+      ('public.get_or_create_staff_invite(uuid)', '71ada961b3a99fbc03895318e84e9349', 'authenticated,postgres,service_role'),
+      ('public.rotate_staff_invite(uuid)', '97908e8f193a35dafb08b8333bc5f33d', 'authenticated,postgres,service_role'),
       ('public.staff_invite_token_is_valid(uuid,text,text)', 'e95c61f275c502f861c817b31d46326d', 'postgres,service_role'),
       ('public.accept_staff_invite(text,uuid)', '1d4a305c3109970f0e004e26fa8ad025', 'postgres,service_role')
     ) AS e(sig, md5, acl)
@@ -69,3 +72,5 @@ BEGIN
   RAISE NOTICE 'staff_invite verify: OK (9 funções com md5/ACL esperados, staff_invites fechada; convites emitidos=%, cadastros ativos sem login aguardando novo link=%)', v_invites, v_pending;
 END
 $verify$;
+
+ROLLBACK;

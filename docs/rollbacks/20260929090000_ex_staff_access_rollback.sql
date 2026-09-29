@@ -5,6 +5,14 @@
 --   relink_staff_if_unbound  dc16b8a430cb52bd154736a642d46104
 -- ACL de relink_staff_if_unbound igual à de prod: authenticated e service_role.
 -- Sem mudança de dados: o rollback é imediato.
+--
+-- ORDEM DO ROLLBACK (obrigatória, com o #108 aplicado):
+--   1. Primeiro o rollback do #108:
+--      20260929120000_staff_invite_hardening_rollback.sql
+--   2. Depois ESTE arquivo (#105).
+-- Rodar este antes do #108 devolveria o relink de prod (sem token) com o convite
+-- do #108 ainda ativo, e o rollback do #108, rodado depois, reinstalaria o relink
+-- do #105. Sem o #108 aplicado, este arquivo roda sozinho.
 
 BEGIN;
 SET LOCAL lock_timeout = '5s';

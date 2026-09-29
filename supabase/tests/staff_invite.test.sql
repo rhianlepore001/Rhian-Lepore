@@ -1,4 +1,4 @@
--- Testes I-01..I-14 do convite com token (20260929120000_staff_invite_hardening).
+-- Testes I-01..I-17 do convite com token (20260929120000_staff_invite_hardening).
 -- Rodar após: ex_staff_access.harness + staff_invite.harness + baseline + #105 + esta migration.
 -- Sem a migration (--pre) os testes têm que FALHAR (evidência de falha primeiro).
 \set ON_ERROR_STOP on
@@ -66,6 +66,10 @@ GRANT ALL ON results TO PUBLIC;
 \set d4 '20000000-0000-0000-0000-0000000000d4'
 \set d5 '20000000-0000-0000-0000-0000000000d5'
 \set d6 '20000000-0000-0000-0000-0000000000d6'
+\set d7 '20000000-0000-0000-0000-0000000000d7'
+\set d8 '20000000-0000-0000-0000-0000000000d8'
+\set d9 '20000000-0000-0000-0000-0000000000d9'
+\set da '20000000-0000-0000-0000-0000000000da'
 \set e1 '20000000-0000-0000-0000-0000000000e1'
 \set f1 '20000000-0000-0000-0000-0000000000f1'
 \set a1 '00000000-0000-0000-0000-0000000000a1'
@@ -78,6 +82,12 @@ GRANT ALL ON results TO PUBLIC;
 \set c7 '30000000-0000-0000-0000-0000000000c7'
 \set c8 '30000000-0000-0000-0000-0000000000c8'
 \set c9 '30000000-0000-0000-0000-0000000000c9'
+\set cb '30000000-0000-0000-0000-0000000000cb'
+\set cc '30000000-0000-0000-0000-0000000000cc'
+\set cf '30000000-0000-0000-0000-0000000000cf'
+\set cg '30000000-0000-0000-0000-0000000000d0'
+\set ch '30000000-0000-0000-0000-0000000000d1'
+\set ci '30000000-0000-0000-0000-0000000000d2'
 
 -- I-01: ex-colaborador cortado (#105) não se vincula a um cadastro livre só com os ids
 INSERT INTO results SELECT 'I-01 ex-colaborador cortado + ids públicos: invalid_invite', g = 'err:invalid_invite', g
@@ -271,6 +281,63 @@ INSERT INTO results SELECT 'I-13 staff_invite_token_is_valid não é executável
 INSERT INTO results SELECT 'I-14 token 64 hex, validade de 30 dias e created_by = dono', g = 'true', g
   FROM (SELECT pg_temp.sq(format($q$SELECT bool_and(token ~ '^[0-9a-f]{64}$' AND expires_at BETWEEN now() + interval '29 days' AND now() + interval '31 days' AND created_by::text = company_id)::text
         FROM public.staff_invites WHERE member_id IN (%L, %L, %L)$q$, :'d1', :'d2', :'e1')) g) s;
+
+-- I-15: só cadastro ATIVO recebe convite (get_or_create e rotate)
+INSERT INTO results SELECT 'I-15 cadastro inativo: get_or_create_staff_invite invalid_invite', g = 'err:invalid_invite', g
+  FROM (SELECT pg_temp.q('authenticated', :'A', format('SELECT public.get_or_create_staff_invite(%L)', :'da')) g) s;
+INSERT INTO results SELECT 'I-15 cadastro inativo: rotate_staff_invite invalid_invite', g = 'err:invalid_invite', g
+  FROM (SELECT pg_temp.q('authenticated', :'A', format('SELECT public.rotate_staff_invite(%L)', :'da')) g) s;
+INSERT INTO results SELECT 'I-15 nenhum convite criado para o inativo', g = '0', g
+  FROM (SELECT pg_temp.sq(format('SELECT count(*)::text FROM public.staff_invites WHERE member_id = %L', :'da')) g) s;
+INSERT INTO results SELECT 'I-15 cadastro excluído: get_or_create e rotate invalid_invite', g = 'err:invalid_invite|err:invalid_invite', g
+  FROM (SELECT pg_temp.q('authenticated', :'A', format('SELECT public.get_or_create_staff_invite(%L)', :'f1')) || '|'
+            || pg_temp.q('authenticated', :'A', format('SELECT public.rotate_staff_invite(%L)', :'f1')) g) s;
+
+-- I-16: duas contas com o MESMO token (a segunda perde; um único vínculo)
+SELECT pg_temp.issue('d7', :'A', :'d7') \g /dev/null
+INSERT INTO results SELECT 'I-16 primeira conta com o token vincula', g = 'ok:' || :'d7', g
+  FROM (SELECT pg_temp.claim(:'cb', :'A', :'d7', pg_temp.t('d7')) g) s;
+INSERT INTO results SELECT 'I-16 segunda conta com o mesmo token: invalid_invite', g = 'err:invalid_invite', g
+  FROM (SELECT pg_temp.claim(:'cc', :'A', :'d7', pg_temp.t('d7')) g) s;
+INSERT INTO results SELECT 'I-16 um único vínculo (primeira conta) e a segunda sem perfil staff', l = :'cb' AND p = 0 AND n = 1, l || ' staff_cc=' || p || ' links=' || n
+  FROM (SELECT pg_temp.linked(:'d7') l,
+               (SELECT count(*) FROM public.profiles WHERE id = :'cc' AND role = 'staff') p,
+               (SELECT count(*) FROM public.team_members WHERE staff_user_id IN (:'cb', :'cc')) n) s;
+INSERT INTO results SELECT 'I-16 segunda conta também não entra por relink nem pela tela do convite', r = 'ok:NULL' AND v = 'ok:' || :'cb', r || ' ' || v
+  FROM (SELECT pg_temp.q('authenticated', :'cc', 'SELECT public.relink_staff_if_unbound()::text') r,
+               pg_temp.q('anon', NULL, format('SELECT staff_user_id::text FROM public.get_team_member_for_invite(%L, %L, %L)', :'A', :'d7', pg_temp.t('d7'))) v) s;
+
+-- I-17: cadastro desativado (d8) ou excluído (d9) DEPOIS de o token ser emitido
+SELECT pg_temp.issue('d8', :'A', :'d8'), pg_temp.issue('d9', :'A', :'d9') \g /dev/null
+-- Contas criadas com o token válido enquanto o cadastro ainda estava ativo (perfil staff, sem vínculo).
+INSERT INTO auth.users (id, email, raw_user_meta_data) VALUES
+  (:'cf', 'hnuf@teste.local', jsonb_build_object('role', 'staff', 'company_id', :'A', 'member_id', :'d8', 'invite_token', pg_temp.t('d8'))),
+  (:'ch', 'hnuh@teste.local', jsonb_build_object('role', 'staff', 'company_id', :'A', 'member_id', :'d9', 'invite_token', pg_temp.t('d9')));
+INSERT INTO results SELECT 'I-17 antes: contas com token válido nascem staff da A', g = 'staff|' || :'A' || ',staff|' || :'A', COALESCE(g, 'NULL')
+  FROM (SELECT string_agg(role || '|' || company_id, ',' ORDER BY id) g FROM public.profiles WHERE id IN (:'cf', :'ch')) s;
+UPDATE public.team_members SET active = false WHERE id = :'d8';
+UPDATE public.team_members SET deleted_at = now() WHERE id = :'d9';
+INSERT INTO results SELECT 'I-17 desativado: complete_staff_invite com o token invalid_invite', g = 'err:invalid_invite', g
+  FROM (SELECT pg_temp.claim(:'cf', :'A', :'d8', pg_temp.t('d8')) g) s;
+INSERT INTO results SELECT 'I-17 excluído: complete_staff_invite com o token invalid_invite', g = 'err:invalid_invite', g
+  FROM (SELECT pg_temp.claim(:'ch', :'A', :'d9', pg_temp.t('d9')) g) s;
+INSERT INTO results SELECT 'I-17 desativado/excluído: relink não vincula', a = 'ok:NULL' AND b = 'ok:NULL', a || ' ' || b
+  FROM (SELECT pg_temp.q('authenticated', :'cf', 'SELECT public.relink_staff_if_unbound()::text') a,
+               pg_temp.q('authenticated', :'ch', 'SELECT public.relink_staff_if_unbound()::text') b) s;
+INSERT INTO results SELECT 'I-17 desativado/excluído: tela do convite não mostra nada', g = 'ok:0|ok:0', g
+  FROM (SELECT pg_temp.q('anon', NULL, format('SELECT count(*)::text FROM public.get_team_member_for_invite(%L, %L, %L)', :'A', :'d8', pg_temp.t('d8'))) || '|'
+            || pg_temp.q('anon', NULL, format('SELECT count(*)::text FROM public.get_team_member_for_invite(%L, %L, %L)', :'A', :'d9', pg_temp.t('d9'))) g) s;
+INSERT INTO auth.users (id, email, raw_user_meta_data) VALUES
+  (:'cg', 'hnug@teste.local', jsonb_build_object('role', 'staff', 'company_id', :'A', 'member_id', :'d8', 'invite_token', pg_temp.t('d8'))),
+  (:'ci', 'hnui@teste.local', jsonb_build_object('role', 'staff', 'company_id', :'A', 'member_id', :'d9', 'invite_token', pg_temp.t('d9')));
+INSERT INTO results SELECT 'I-17 desativado/excluído: cadastro novo com o token vira dono, não staff', g = 'owner|' || :'cg' || ',owner|' || :'ci', COALESCE(g, 'NULL')
+  FROM (SELECT string_agg(role || '|' || company_id, ',' ORDER BY id) g FROM public.profiles WHERE id IN (:'cg', :'ci')) s;
+INSERT INTO results SELECT 'I-17 desativado/excluído: nenhum vínculo e token não consumido', l = 'NULL NULL' AND u = 'false,false', l || ' ' || u
+  FROM (SELECT pg_temp.linked(:'d8') || ' ' || pg_temp.linked(:'d9') l,
+               pg_temp.sq(format('SELECT string_agg((used_at IS NOT NULL)::text, '','') FROM public.staff_invites WHERE member_id IN (%L, %L)', :'d8', :'d9')) u) s;
+INSERT INTO results SELECT 'I-17 desativado depois: dono não reemite nem gira o token', g = 'err:invalid_invite|err:invalid_invite', g
+  FROM (SELECT pg_temp.q('authenticated', :'A', format('SELECT public.get_or_create_staff_invite(%L)', :'d8')) || '|'
+            || pg_temp.q('authenticated', :'A', format('SELECT public.rotate_staff_invite(%L)', :'d8')) g) s;
 
 \set QUIET off
 SELECT CASE WHEN ok THEN 'PASS' ELSE 'FAIL' END AS status, name, left(got, 90) AS got FROM results;

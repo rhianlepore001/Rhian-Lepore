@@ -514,7 +514,7 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON TABLES 
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO anon, authenticated, service_role;
 
 -- Dados do convite (empresa A = ...a0, B = ...b0). Cadastros livres (ativos, sem login):
---  d1..d5 na A; e1 na B. i1 inativo na A.
+--  d1..d9, dc na A; e1 na B. da inativo na A; f1 excluído na A.
 INSERT INTO public.team_members (id, user_id, staff_user_id, name, active, is_owner, deleted_at) VALUES
   ('20000000-0000-0000-0000-0000000000d1', '00000000-0000-0000-0000-0000000000a0', NULL, 'Convite D1', true, false, NULL),
   ('20000000-0000-0000-0000-0000000000d2', '00000000-0000-0000-0000-0000000000a0', NULL, 'Convite D2', true, false, NULL),
@@ -522,6 +522,11 @@ INSERT INTO public.team_members (id, user_id, staff_user_id, name, active, is_ow
   ('20000000-0000-0000-0000-0000000000d4', '00000000-0000-0000-0000-0000000000a0', NULL, 'Convite D4', true, false, NULL),
   ('20000000-0000-0000-0000-0000000000d5', '00000000-0000-0000-0000-0000000000a0', NULL, 'Convite D5', true, false, NULL),
   ('20000000-0000-0000-0000-0000000000d6', '00000000-0000-0000-0000-0000000000a0', NULL, 'Convite D6', true, false, NULL),
+  ('20000000-0000-0000-0000-0000000000d7', '00000000-0000-0000-0000-0000000000a0', NULL, 'Convite D7', true, false, NULL),
+  ('20000000-0000-0000-0000-0000000000d8', '00000000-0000-0000-0000-0000000000a0', NULL, 'Convite D8', true, false, NULL),
+  ('20000000-0000-0000-0000-0000000000d9', '00000000-0000-0000-0000-0000000000a0', NULL, 'Convite D9', true, false, NULL),
+  ('20000000-0000-0000-0000-0000000000dc', '00000000-0000-0000-0000-0000000000a0', NULL, 'Convite DC', true, false, NULL),
+  ('20000000-0000-0000-0000-0000000000da', '00000000-0000-0000-0000-0000000000a0', NULL, 'Inativo DA', false, false, NULL),
   ('20000000-0000-0000-0000-0000000000e1', '00000000-0000-0000-0000-0000000000b0', NULL, 'Convite E1', true, false, NULL),
   ('20000000-0000-0000-0000-0000000000f1', '00000000-0000-0000-0000-0000000000a0', NULL, 'Excluído F1', true, false, now() - interval '1 day');
 
@@ -533,5 +538,9 @@ INSERT INTO auth.users (id, created_at, email, raw_user_meta_data) VALUES
   ('30000000-0000-0000-0000-0000000000c2', now() - interval '2 minutes', 'nova2@teste.local', '{}'),
   ('30000000-0000-0000-0000-0000000000c3', now() - interval '2 minutes', 'nova3@teste.local', '{}'),
   ('30000000-0000-0000-0000-0000000000c4', now() - interval '2 minutes', 'nova4@teste.local', '{}'),
-  ('30000000-0000-0000-0000-0000000000c5', now() - interval '2 minutes', 'nova5@teste.local', '{}');
+  ('30000000-0000-0000-0000-0000000000c5', now() - interval '2 minutes', 'nova5@teste.local', '{}'),
+  ('30000000-0000-0000-0000-0000000000cb', now() - interval '2 minutes', 'novab@teste.local', '{}'),
+  ('30000000-0000-0000-0000-0000000000cc', now() - interval '2 minutes', 'novac@teste.local', '{}'),
+  ('30000000-0000-0000-0000-0000000000cd', now() - interval '2 minutes', 'novad@teste.local', '{}'),
+  ('30000000-0000-0000-0000-0000000000ce', now() - interval '2 minutes', 'novae@teste.local', '{}');
 ALTER TABLE auth.users ENABLE TRIGGER on_auth_user_created;

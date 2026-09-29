@@ -1,6 +1,6 @@
 /**
- * Equipe: colaborador ativo ainda sem login aparece sinalizado (links antigos
- * deixaram de valer) com a ação de reenviar o convite.
+ * Equipe: colaborador ativo ainda sem login aparece sinalizado ("Ainda sem
+ * acesso") com a ação de reenviar o convite.
  */
 import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
@@ -17,7 +17,8 @@ describe('TeamMemberCard: aviso de convite pendente', () => {
         const onResendInvite = vi.fn();
         render(<TeamMemberCard member={{ ...base, staff_user_id: null }} onEdit={vi.fn()} onDelete={vi.fn()} onResendInvite={onResendInvite} />);
         expect(screen.getByText('Ainda sem acesso')).toBeInTheDocument();
-        expect(screen.getByText(/Links antigos deixaram de valer/)).toBeInTheDocument();
+        // Aviso permanente e calmo: sem falar de links antigos.
+        expect(screen.queryByText(/links antigos/i)).not.toBeInTheDocument();
         await userEvent.click(screen.getByRole('button', { name: /Reenviar convite para João Silva/i }));
         expect(onResendInvite).toHaveBeenCalledWith(expect.objectContaining({ id: 'staff-1' }));
     });

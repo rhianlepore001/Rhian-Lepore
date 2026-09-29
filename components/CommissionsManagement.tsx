@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Button } from './ui/Button';
 import { Modal, Skeleton, ErrorState } from '@/components/ui';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
-import { User, Percent, Info as InfoIcon } from 'lucide-react';
+import { User, Percent, Info as InfoIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { InfoButton } from './HelpButtons';
 import { useNavigate } from 'react-router-dom';
 import { ProfessionalCommissionDetails } from './ProfessionalCommissionDetails';
@@ -12,7 +12,9 @@ import { CommissionPaymentHistory } from './CommissionPaymentHistory';
 import { CommissionDetailReport } from './CommissionDetailReport';
 import { useToast } from '@/components/ui';
 import { useTenantLocale } from '../hooks/useTenantLocale';
-import { lastClosedCycle, previousCycle, type CommissionCycle } from '../utils/commissionCycle';
+import { lastClosedCycle, previousCycle, formatCycleLabel, type CommissionCycle } from '../utils/commissionCycle';
+import { fetchCommissionCycle, isRpcUnavailable } from '../services/staffPerformance';
+import type { CommissionCycleResult } from '../types/staffPerformance';
 import { PayoutList, type PayoutRowData } from './commissions/PayoutList';
 import { PaidPaymentsList, type PaidPayment } from './commissions/PaidPaymentsList';
 
@@ -51,9 +53,17 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
     const [paidCommissions, setPaidCommissions] = useState<PaidPayment[]>([]);
     const [paidState, setPaidState] = useState<LoadState>('loading');
 
-    // Ciclo de acerto (datas locais; o servidor assume na P1)
+    // Ciclo de acerto: calculado no servidor, no fuso do tenant (P1, get_commission_cycle_v1).
+    // Sem a RPC (migration ainda não aplicada) cai no cálculo local da P0.
     const [settlementDay, setSettlementDay] = useState<number>(5);
-    const cycle: CommissionCycle = useMemo(() => lastClosedCycle(settlementDay), [settlementDay]);
+    const [cycleData, setCycleData] = useState<CommissionCycleResult | null>(null);
+    const [requestedEnd, setRequestedEnd] = useState<string | null>(null);
+    const cycle: CommissionCycle = useMemo(
+        () => cycleData
+            ? { start: cycleData.cycle.start, end: cycleData.cycle.end, label: formatCycleLabel(cycleData.cycle.start, cycleData.cycle.end) }
+            : lastClosedCycle(settlementDay),
+        [cycleData, settlementDay],
+    );
 
     // Pay modal
     const [payingProfessionalId, setPayingProfessionalId] = useState<string | null>(null);
@@ -81,7 +91,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
 
     useEffect(() => {
         fetchSettlementDay();
-        fetchCommissionsDue();
+        loadPayouts(null);
     }, [user]);
 
     useEffect(() => {
@@ -98,6 +108,75 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
         setSettlementDay(data?.commission_settlement_day_of_month || 5);
     };
 
+    const fetchCpfs = async (ids: string[]) => {
+        const cpfMap: Record<string, string | null> = {};
+        if (ids.length === 0) return cpfMap;
+        const { data: members } = await supabase.from('team_members').select('id, cpf').in('id', ids);
+        (members || []).forEach((m: any) => { cpfMap[m.id] = m.cpf || null; });
+        return cpfMap;
+    };
+
+    /** Carrega a lista do ciclo `end` (null = ciclo padrão do servidor). */
+    const loadPayouts = async (end: string | null = requestedEnd) => {
+        if (!user) return;
+        setLoadState('loading');
+        let result: CommissionCycleResult;
+        try {
+            result = await fetchCommissionCycle(end);
+        } catch (error) {
+            if (isRpcUnavailable(error)) {
+                setCycleData(null);
+                await fetchCommissionsDue();
+                return;
+            }
+            console.error('Error fetching commission cycle:', error);
+            setCommissionsDue([]);
+            setLoadState('error');
+            return;
+        }
+        try {
+            const cpfMap = await fetchCpfs(result.members.map((m) => m.professional_id));
+            setCycleData(result);
+            setSettlementDay(result.settlement_day);
+            setCommissionsDue(result.members.map((m) => ({
+                professional_id: m.professional_id,
+                professional_name: m.name,
+                photo_url: m.photo_url,
+                commission_rate: m.commission_rate,
+                total_due: m.a_pagar_ciclo,
+                services_pending: m.servicos_ciclo,
+                products_pending: m.produtos_ciclo,
+                is_owner: false,
+                total_earnings_month: 0,
+                total_pending_records: 0,
+                total_paid: m.pago_ciclo ?? 0,
+                services_month: m.servicos_ciclo,
+                products_sold_month: m.produtos_ciclo,
+                cpf: cpfMap[m.professional_id] ?? null,
+                cycle: {
+                    status: m.status,
+                    saldo_acumulado: m.saldo_acumulado,
+                    saldo_anterior: m.saldo_anterior,
+                    inactive: m.inactive,
+                    pago_ciclo: m.pago_ciclo,
+                    pago_calculado: m.pago_calculado,
+                    paid_at: m.pago_ciclo_em,
+                },
+            })));
+            setLoadState('ready');
+        } catch (error) {
+            console.error('Error mapping commission cycle:', error);
+            setCommissionsDue([]);
+            setLoadState('error');
+        }
+    };
+
+    const goToCycle = (end: string) => {
+        setRequestedEnd(end);
+        loadPayouts(end);
+    };
+
+    /** Caminho da P0 (sem a RPC da P1): saldo acumulado + ciclo calculado no navegador. */
     const fetchCommissionsDue = async () => {
         if (!user) return;
         setLoadState('loading');
@@ -107,15 +186,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
 
             // Dono não entra na fila de repasse (a RPC devolve is_owner para o filtro).
             const team = (data || []).filter((i: any) => !i.is_owner);
-            const ids = team.map((i: any) => i.professional_id);
-            const cpfMap: Record<string, string | null> = {};
-            if (ids.length > 0) {
-                const { data: members } = await supabase
-                    .from('team_members')
-                    .select('id, cpf')
-                    .in('id', ids);
-                (members || []).forEach((m: any) => { cpfMap[m.id] = m.cpf || null; });
-            }
+            const cpfMap = await fetchCpfs(team.map((i: any) => i.professional_id));
 
             setCommissionsDue(team.map((item: any) => ({
                 ...item,
@@ -186,17 +257,22 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
         openPayModal(professional);
     };
 
-    const applyPaymentCycle = (profId: string, c: CommissionCycle) => {
+    const applyPaymentCycle = (professional: CommissionDue, c: CommissionCycle) => {
         setPaymentStartDate(c.start);
         setPaymentEndDate(c.end);
         setPaymentPeriodLabel(c.label);
-        calculateAmountForDates(profId, c.start, c.end);
+        // Ciclo exibido com dados do servidor: o valor já vem calculado no fuso do tenant.
+        if (cycleData && c.start === cycle.start && c.end === cycle.end) {
+            setPaymentAmount((professional.total_due || 0).toFixed(2));
+            return;
+        }
+        calculateAmountForDates(professional.professional_id, c.start, c.end);
     };
 
     const openPayModal = (professional: CommissionDue) => {
         setSelectedProfessional(professional);
         setPaymentAmount((professional.total_due || 0).toFixed(2));
-        applyPaymentCycle(professional.professional_id, cycle);
+        applyPaymentCycle(professional, cycle);
         setShowPayModal(true);
     };
 
@@ -232,7 +308,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
             setPendingPayProfessional(null);
             setOpenPayAfterRateSave(false);
             showToast(`Taxa de ${updated.professional_name} atualizada para ${rate}%.`, 'success');
-            await fetchCommissionsDue();
+            await loadPayouts();
             if (shouldOpenPay) openPayModal(updated);
         } catch (err: unknown) {
             console.error('Erro ao salvar comissão:', err);
@@ -285,7 +361,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
             showToast(`Comissão de ${selectedProfessional.professional_name} paga com sucesso!`, 'success');
             setShowPayModal(false);
             setSelectedProfessional(null);
-            fetchCommissionsDue();
+            loadPayouts();
             if (onPaymentSuccess) onPaymentSuccess();
         } catch (error: any) {
             console.error('Erro ao registrar pagamento:', error);
@@ -296,7 +372,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
     };
 
     const byId = (row: PayoutRowData) => commissionsDue.find((c) => c.professional_id === row.professional_id)!;
-    const totalDue = commissionsDue.reduce((sum, p) => sum + (p.total_due || 0), 0);
+    const totalDue = cycleData ? cycleData.totals.a_pagar_ciclo : commissionsDue.reduce((sum, p) => sum + (p.total_due || 0), 0);
     const withBalance = commissionsDue.filter((p) => p.total_due > 0).length;
     const subTab = (id: 'pending' | 'paid', label: string) => (
         <button
@@ -321,10 +397,39 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                         <h2 className={`text-xl sm:text-2xl md:text-3xl min-w-0 ${font.heading} ${colors.text} tracking-tight`}>Pagamento de comissão</h2>
                         <InfoButton text="Quanto cada colaborador tem a receber e o registro de cada repasse. O saldo soma as comissões registradas ainda não pagas." />
                     </div>
-                    <p className={`${colors.textSecondary} text-sm mt-1 tabular-nums flex flex-wrap gap-x-2`}>
-                        <span className="whitespace-nowrap">Último ciclo fechado · {cycle.label}</span>
-                        <span className={`whitespace-nowrap ${colors.textMuted}`}>Acerto todo dia {settlementDay}</span>
-                    </p>
+                    {cycleData ? (
+                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                            <div className={`inline-flex items-center border ${colors.border} ${radius.button} ${colors.card}`}>
+                                <button
+                                    type="button"
+                                    aria-label="Ciclo anterior"
+                                    disabled={loadState === 'loading'}
+                                    onClick={() => goToCycle(cycleData.previous_end)}
+                                    className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] md:min-h-[40px] ${colors.textSecondary} ${colors.surfaceHover} disabled:opacity-40`}
+                                >
+                                    <ChevronLeft className="w-4 h-4" aria-hidden="true" />
+                                </button>
+                                <span className={`px-1 text-sm font-semibold ${colors.text} tabular-nums whitespace-nowrap`} aria-live="polite">
+                                    {cycleData.cycle.open ? 'Ciclo em aberto' : 'Ciclo fechado'} · {cycle.label}
+                                </span>
+                                <button
+                                    type="button"
+                                    aria-label="Próximo ciclo"
+                                    disabled={loadState === 'loading' || cycleData.cycle.open}
+                                    onClick={() => goToCycle(cycleData.next_end)}
+                                    className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] md:min-h-[40px] ${colors.textSecondary} ${colors.surfaceHover} disabled:opacity-40 disabled:cursor-not-allowed`}
+                                >
+                                    <ChevronRight className="w-4 h-4" aria-hidden="true" />
+                                </button>
+                            </div>
+                            <span className={`text-sm whitespace-nowrap ${colors.textMuted}`}>Acerto todo dia {settlementDay}</span>
+                        </div>
+                    ) : (
+                        <p className={`${colors.textSecondary} text-sm mt-1 tabular-nums flex flex-wrap gap-x-2`}>
+                            <span className="whitespace-nowrap">Último ciclo fechado · {cycle.label}</span>
+                            <span className={`whitespace-nowrap ${colors.textMuted}`}>Acerto todo dia {settlementDay}</span>
+                        </p>
+                    )}
                 </div>
                 <div role="tablist" aria-label="Repasses" className={`inline-flex gap-1 p-1 ${colors.surface} ${radius.button} w-fit`}>
                     {subTab('pending', 'A pagar')}
@@ -348,7 +453,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                 title="Não foi possível carregar os repasses."
                                 message="Confira a conexão e tente de novo. Nenhum pagamento foi alterado."
                                 retryLabel="Tentar de novo"
-                                onRetry={fetchCommissionsDue}
+                                onRetry={() => loadPayouts()}
                             />
                         </div>
                     )}
@@ -367,7 +472,20 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                     {loadState === 'ready' && commissionsDue.length > 0 && (
                         <>
                             <p className={`text-sm ${colors.textSecondary} flex flex-wrap items-baseline gap-x-2 gap-y-1`} data-testid="payout-summary">
-                                {totalDue > 0 ? (
+                                {cycleData ? (
+                                    cycleData.totals.a_pagar_ciclo > 0 || cycleData.totals.pago_ciclo > 0 ? (
+                                        <>
+                                            <span>A pagar neste ciclo</span>
+                                            <strong className={`${font.mono} text-lg md:text-xl tabular-nums whitespace-nowrap ${colors.text}`}>{formatMoney(cycleData.totals.a_pagar_ciclo)}</strong>
+                                            <span aria-hidden="true">·</span>
+                                            <span className="whitespace-nowrap">{cycleData.totals.pendentes} {cycleData.totals.pendentes === 1 ? 'pendente' : 'pendentes'}</span>
+                                            <span aria-hidden="true" className="hidden sm:inline">·</span>
+                                            <span className="basis-full sm:basis-auto whitespace-nowrap">Pago neste ciclo <span className={`${font.mono} tabular-nums ${colors.text}`}>{formatMoney(cycleData.totals.pago_ciclo)}</span></span>
+                                        </>
+                                    ) : (
+                                        <span>Nenhuma comissão pendente neste ciclo.</span>
+                                    )
+                                ) : totalDue > 0 ? (
                                     <>
                                         <span>A pagar</span>
                                         <strong className={`${font.mono} text-lg md:text-xl tabular-nums whitespace-nowrap ${colors.text}`}>{formatMoney(totalDue)}</strong>
@@ -500,7 +618,10 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                         <div>
                             <p className={`mb-1 text-lg font-bold leading-none ${colors.text}`}>{selectedProfessional.professional_name}</p>
                             <p className={`text-xs ${font.mono} ${colors.textMuted}`}>
-                                Saldo: <span className="text-[var(--color-warning)]">{formatMoney(selectedProfessional.total_due)}</span>
+                                {selectedProfessional.cycle ? 'Neste ciclo' : 'Saldo'}: <span className="text-[var(--color-warning)]">{formatMoney(selectedProfessional.total_due)}</span>
+                                {selectedProfessional.cycle && selectedProfessional.cycle.saldo_acumulado > selectedProfessional.total_due && (
+                                    <> · Saldo total: {formatMoney(selectedProfessional.cycle.saldo_acumulado)}</>
+                                )}
                             </p>
                         </div>
                     </div>
@@ -525,14 +646,14 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                             <div className="grid grid-cols-2 gap-3">
                                 <button
                                     type="button"
-                                    onClick={() => applyPaymentCycle(selectedProfessional.professional_id, cycle)}
+                                    onClick={() => applyPaymentCycle(selectedProfessional, cycle)}
                                     className={`min-h-[44px] rounded-xl ${colors.border} border ${colors.surface} py-2.5 text-xs font-bold uppercase ${colors.textSecondary} transition-all ${colors.surfaceHover} active:scale-95`}
                                 >
-                                    Último ciclo
+                                    {cycleData ? 'Este ciclo' : 'Último ciclo'}
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => applyPaymentCycle(selectedProfessional.professional_id, previousCycle(cycle, settlementDay))}
+                                    onClick={() => applyPaymentCycle(selectedProfessional, previousCycle(cycle, settlementDay))}
                                     className={`min-h-[44px] rounded-xl ${colors.border} border ${colors.surface} py-2.5 text-xs font-bold uppercase ${colors.textSecondary} transition-all ${colors.surfaceHover} active:scale-95`}
                                 >
                                     Ciclo anterior
@@ -570,7 +691,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                     professionalId={detailsProfessional.professional_id}
                     professionalName={detailsProfessional.professional_name}
                     commissionRate={detailsProfessional.commission_rate}
-                    onClose={() => { setShowDetailsModal(false); setDetailsProfessional(null); fetchCommissionsDue(); }}
+                    onClose={() => { setShowDetailsModal(false); setDetailsProfessional(null); loadPayouts(); }}
                     onRateUpdated={(rate) => {
                         setDetailsProfessional((prev) => prev ? { ...prev, commission_rate: rate } : prev);
                         setCommissionsDue((prev) => prev.map((p) =>
@@ -578,7 +699,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                 ? { ...p, commission_rate: rate }
                                 : p
                         ));
-                        fetchCommissionsDue();
+                        loadPayouts();
                     }}
                     accentColor={accentColor}
                     currencySymbol={moneySymbol}

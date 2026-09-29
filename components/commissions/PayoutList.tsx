@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { MoreHorizontal, User } from 'lucide-react';
 import { Badge, Button } from '@/components/ui';
 import { useBrutalTheme, type ThemeVariant } from '../../hooks/useBrutalTheme';
+import type { CycleStatus } from '../../types/staffPerformance';
 
 export interface PayoutRowData {
     professional_id: string;
@@ -11,6 +12,16 @@ export interface PayoutRowData {
     total_due: number;
     services_pending: number;
     products_pending: number;
+    /** P1 (ciclo do servidor): status M2, saldo de ciclos anteriores e selo Inativo. */
+    cycle?: {
+        status: CycleStatus;
+        saldo_acumulado: number;
+        saldo_anterior: number;
+        inactive: boolean;
+        pago_ciclo: number | null;
+        pago_calculado: number;
+        paid_at: string | null;
+    };
 }
 
 interface PayoutListProps {
@@ -32,8 +43,50 @@ export function pendingContext(services: number, products: number): string {
     return `Pendentes: ${plural(services, 'serviço', 'serviços')} · ${plural(products, 'produto', 'produtos')}`;
 }
 
+export function cycleContext(services: number, products: number): string {
+    if (!services && !products) return 'Nenhum lançamento neste ciclo';
+    return `${plural(services, 'serviço', 'serviços')} · ${plural(products, 'produto', 'produtos')} neste ciclo`;
+}
+
+const STATUS: Record<CycleStatus, { label: string; variant: 'warning' | 'success' | 'accent' | 'neutral' }> = {
+    pendente: { label: 'Pendente', variant: 'warning' },
+    pago: { label: 'Pago', variant: 'success' },
+    pago_com_ajuste: { label: 'Pago com ajuste', variant: 'accent' },
+    nada_a_pagar: { label: 'Nada a pagar', variant: 'neutral' },
+};
+
+/** Data local do pagamento ("Pago em 06/09"); o timestamp vem com fuso. */
+const paidDay = (ts: string) => {
+    const d = new Date(ts);
+    return Number.isNaN(d.getTime()) ? null : `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+};
+
+const StatusCell: React.FC<{ row: PayoutRowData; theme: ThemeVariant; formatMoney: (v: number) => string; className?: string }> = ({ row, theme, formatMoney, className }) => {
+    const { colors } = useBrutalTheme({ override: theme });
+    const c = row.cycle;
+    if (!c) {
+        const due = row.total_due > 0;
+        return <Badge variant={due ? 'warning' : 'neutral'} forceTheme={theme} className={className}>{due ? 'Pendente' : 'Em dia'}</Badge>;
+    }
+    const s = STATUS[c.status];
+    const title = c.status === 'pago_com_ajuste' && c.pago_ciclo != null
+        ? `Pago ${formatMoney(c.pago_ciclo)} · calculado ${formatMoney(c.pago_calculado)}`
+        : undefined;
+    const paid = (c.status === 'pago' || c.status === 'pago_com_ajuste') && c.paid_at ? paidDay(c.paid_at) : null;
+    return (
+        <span className={`inline-flex flex-col items-end lg:items-start gap-0.5 ${className ?? ''}`} title={title}>
+            <Badge variant={s.variant} forceTheme={theme} className="whitespace-nowrap">{s.label}</Badge>
+            {paid && (
+                <span className={`text-xs ${colors.textMuted} tabular-nums whitespace-nowrap`}>
+                    Pago em {paid}{c.status === 'pago_com_ajuste' && c.pago_ciclo != null ? ` · ${formatMoney(c.pago_ciclo)}` : ''}
+                </span>
+            )}
+        </span>
+    );
+};
+
 /** Colunas da tabela no desktop (≥1024 px). No mobile a mesma linha vira cartão. */
-const GRID = 'lg:grid lg:grid-cols-[minmax(0,1.6fr)_4.5rem_5rem_5rem_8.5rem_6.5rem_minmax(0,2.3fr)] lg:items-center lg:gap-4';
+const GRID = 'lg:grid lg:grid-cols-[minmax(0,1.5fr)_3.5rem_4.5rem_4.5rem_10rem_8.5rem_minmax(0,2.3fr)] lg:items-center lg:gap-4';
 
 const RowMenu: React.FC<{ row: PayoutRowData; theme: ThemeVariant; onReport: () => void; onHistory: () => void }> = ({ row, theme, onReport, onHistory }) => {
     const { colors, radius } = useBrutalTheme({ override: theme });
@@ -90,6 +143,7 @@ export const PayoutList: React.FC<PayoutListProps> = ({ rows, theme, formatMoney
                 {rows.map((r) => {
                     const due = r.total_due > 0;
                     const paying = payingId === r.professional_id;
+                    const earlier = r.cycle?.saldo_anterior ?? 0;
                     return (
                         <li
                             key={r.professional_id}
@@ -106,7 +160,10 @@ export const PayoutList: React.FC<PayoutListProps> = ({ rows, theme, formatMoney
                                     </span>
                                 )}
                                 <div className="min-w-0 flex-1">
-                                    <p className={`font-semibold ${colors.text} leading-tight break-words`}>{r.professional_name}</p>
+                                    <p className={`font-semibold ${colors.text} leading-tight break-words`}>
+                                        {r.professional_name}
+                                        {r.cycle?.inactive && <Badge variant="neutral" forceTheme={theme} className="ml-2 align-middle">Inativo</Badge>}
+                                    </p>
                                     <p className={`mt-1 text-xs ${colors.textMuted} flex items-center gap-1.5 lg:hidden`}>
                                         <span className="tabular-nums">{r.commission_rate || 0}%</span>
                                         <span aria-hidden="true">·</span>
@@ -118,7 +175,7 @@ export const PayoutList: React.FC<PayoutListProps> = ({ rows, theme, formatMoney
                                 {/* mobile: valor + status à direita, 1ª linha */}
                                 <div className="text-right shrink-0 lg:hidden">
                                     <p className={`${font.mono} text-lg font-bold tabular-nums whitespace-nowrap ${due ? colors.text : colors.textMuted}`}>{formatMoney(r.total_due)}</p>
-                                    <Badge variant={due ? 'warning' : 'neutral'} forceTheme={theme} className="mt-1">{due ? 'Pendente' : 'Em dia'}</Badge>
+                                    <StatusCell row={r} theme={theme} formatMoney={formatMoney} className="mt-1" />
                                 </div>
                             </div>
 
@@ -130,11 +187,19 @@ export const PayoutList: React.FC<PayoutListProps> = ({ rows, theme, formatMoney
                             </div>
                             <span className={`hidden lg:block text-right ${font.mono} tabular-nums text-sm ${colors.textSecondary}`}>{r.services_pending}</span>
                             <span className={`hidden lg:block text-right ${font.mono} tabular-nums text-sm ${colors.textSecondary}`}>{r.products_pending}</span>
-                            <span className={`hidden lg:block text-right ${font.mono} tabular-nums font-bold whitespace-nowrap ${due ? colors.text : colors.textMuted}`}>{formatMoney(r.total_due)}</span>
-                            <span className="hidden lg:block"><Badge variant={due ? 'warning' : 'neutral'} forceTheme={theme}>{due ? 'Pendente' : 'Em dia'}</Badge></span>
+                            <span className="hidden lg:block text-right">
+                                <span className={`block ${font.mono} tabular-nums font-bold whitespace-nowrap ${due ? colors.text : colors.textMuted}`}>{formatMoney(r.total_due)}</span>
+                                {earlier > 0 && <span className={`block mt-0.5 text-xs leading-snug ${colors.textMuted} tabular-nums`}><span className="whitespace-nowrap">+ {formatMoney(earlier)}</span> de ciclos anteriores</span>}
+                            </span>
+                            <span className="hidden lg:block"><StatusCell row={r} theme={theme} formatMoney={formatMoney} /></span>
 
                             {/* contexto (mobile) */}
-                            <p className={`mt-3 text-xs ${colors.textMuted} lg:hidden`}>{pendingContext(r.services_pending, r.products_pending)}</p>
+                            <p className={`mt-3 text-xs ${colors.textMuted} lg:hidden`}>
+                                {r.cycle ? cycleContext(r.services_pending, r.products_pending) : pendingContext(r.services_pending, r.products_pending)}
+                            </p>
+                            {earlier > 0 && (
+                                <p className={`mt-1 text-xs ${colors.textSecondary} tabular-nums lg:hidden`}>+ {formatMoney(earlier)} de ciclos anteriores</p>
+                            )}
 
                             {/* ações */}
                             <div className="mt-3 flex flex-col gap-2 lg:mt-0 lg:flex-row lg:items-center lg:justify-end">

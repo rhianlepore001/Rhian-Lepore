@@ -1,11 +1,10 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { Card } from './ui/Card';
 import { Button } from './ui/Button';
-import { Modal } from '@/components/ui';
+import { Modal, Skeleton, ErrorState } from '@/components/ui';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
-import { User, DollarSign, Loader2, Percent, TrendingUp, Clock, Scissors, Package, Info as InfoIcon, FileText } from 'lucide-react';
+import { User, Percent, Info as InfoIcon } from 'lucide-react';
 import { InfoButton } from './HelpButtons';
 import { useNavigate } from 'react-router-dom';
 import { ProfessionalCommissionDetails } from './ProfessionalCommissionDetails';
@@ -13,34 +12,18 @@ import { CommissionPaymentHistory } from './CommissionPaymentHistory';
 import { CommissionDetailReport } from './CommissionDetailReport';
 import { useToast } from '@/components/ui';
 import { useTenantLocale } from '../hooks/useTenantLocale';
+import { lastClosedCycle, previousCycle, type CommissionCycle } from '../utils/commissionCycle';
+import { PayoutList, type PayoutRowData } from './commissions/PayoutList';
+import { PaidPaymentsList, type PaidPayment } from './commissions/PaidPaymentsList';
 
-interface CommissionDue {
-    professional_id: string;
-    professional_name: string;
-    photo_url: string | null;
+interface CommissionDue extends PayoutRowData {
     is_owner: boolean;
-    total_due: number;
     total_earnings_month: number;
     total_pending_records: number;
-    commission_rate: number;
     total_paid: number;
-    services_pending: number;
-    products_pending: number;
     services_month: number;
     products_sold_month: number;
     cpf?: string | null;
-}
-
-interface CommissionPaid {
-    id: string;
-    collaborator_id: string;
-    professional_name: string;
-    photo_url?: string | null;
-    period_start: string;
-    period_end: string;
-    net_amount: number;
-    commission_percent: number;
-    paid_at: string;
 }
 
 interface CommissionsManagementProps {
@@ -49,48 +32,7 @@ interface CommissionsManagementProps {
     onPaymentSuccess?: () => void;
 }
 
-/** Calcula o período do ciclo mês cheio baseado no dia de acerto.
- *  Ex: settlementDay=5, hoje=16/abr → start=06/mar, end=05/abr */
-function calcCommissionPeriod(settlementDay: number): { start: string; end: string; label: string } {
-    const today = new Date();
-    const day = today.getDate();
-
-    let periodEnd: Date;
-    let periodStart: Date;
-
-    if (day > settlementDay) {
-        // Estamos após o dia de acerto deste mês → período: (sd+1) do mês passado → sd deste mês
-        periodEnd = new Date(today.getFullYear(), today.getMonth(), settlementDay);
-        periodStart = new Date(today.getFullYear(), today.getMonth() - 1, settlementDay + 1);
-    } else {
-        // Ainda não chegou o dia de acerto → período: (sd+1) de 2 meses atrás → sd do mês passado
-        periodEnd = new Date(today.getFullYear(), today.getMonth() - 1, settlementDay);
-        periodStart = new Date(today.getFullYear(), today.getMonth() - 2, settlementDay + 1);
-    }
-
-    const fmt = (d: Date) => d.toISOString().split('T')[0];
-    const fmtLabel = (d: Date) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-
-    return {
-        start: fmt(periodStart),
-        end: fmt(periodEnd),
-        label: `${fmtLabel(periodStart)} → ${fmtLabel(periodEnd)}`
-    };
-}
-
-function MoneyInline({
-    formatted,
-    className = '',
-}: {
-    formatted: string;
-    className?: string;
-}) {
-    return (
-        <span className={`inline-flex items-baseline whitespace-nowrap tabular-nums ${className}`}>
-            {formatted}
-        </span>
-    );
-}
+type LoadState = 'loading' | 'ready' | 'error';
 
 export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ accentColor, currencySymbol, onPaymentSuccess }) => {
     const { user } = useAuth();
@@ -98,23 +40,20 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
     const moneySymbol = tenantSymbol || currencySymbol;
     const navigate = useNavigate();
     const isBeauty = accentColor.includes('beauty');
-    const { colors, accent, font, status } = useBrutalTheme({ override: isBeauty ? 'beauty' as ThemeVariant : 'barber' as ThemeVariant });
-    const accentTextClass = accent.text;
+    const theme: ThemeVariant = isBeauty ? 'beauty' : 'barber';
+    const { colors, font, radius } = useBrutalTheme({ override: theme });
 
-    // Tab state
     const [activeTab, setActiveTab] = useState<'pending' | 'paid'>('pending');
 
-    // Pending tab data
     const [commissionsDue, setCommissionsDue] = useState<CommissionDue[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loadState, setLoadState] = useState<LoadState>('loading');
 
-    // Paid tab data
-    const [paidCommissions, setPaidCommissions] = useState<CommissionPaid[]>([]);
-    const [loadingPaid, setLoadingPaid] = useState(false);
+    const [paidCommissions, setPaidCommissions] = useState<PaidPayment[]>([]);
+    const [paidState, setPaidState] = useState<LoadState>('loading');
 
-    // Settlement cycle
+    // Ciclo de acerto (datas locais; o servidor assume na P1)
     const [settlementDay, setSettlementDay] = useState<number>(5);
-    const [periodLabel, setPeriodLabel] = useState('');
+    const cycle: CommissionCycle = useMemo(() => lastClosedCycle(settlementDay), [settlementDay]);
 
     // Pay modal
     const [payingProfessionalId, setPayingProfessionalId] = useState<string | null>(null);
@@ -156,21 +95,19 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
             .select('commission_settlement_day_of_month')
             .eq('user_id', user.id)
             .maybeSingle();
-        const day = data?.commission_settlement_day_of_month || 5;
-        setSettlementDay(day);
-        const period = calcCommissionPeriod(day);
-        setPeriodLabel(period.label);
+        setSettlementDay(data?.commission_settlement_day_of_month || 5);
     };
 
     const fetchCommissionsDue = async () => {
         if (!user) return;
-        setLoading(true);
+        setLoadState('loading');
         try {
             const { data, error } = await supabase.rpc('get_commissions_due');
             if (error) throw error;
 
-            // Fetch CPF for each professional
-            const ids = (data || []).filter((i: any) => !i.is_owner).map((i: any) => i.professional_id);
+            // Dono não entra na fila de repasse (a RPC devolve is_owner para o filtro).
+            const team = (data || []).filter((i: any) => !i.is_owner);
+            const ids = team.map((i: any) => i.professional_id);
             const cpfMap: Record<string, string | null> = {};
             if (ids.length > 0) {
                 const { data: members } = await supabase
@@ -180,88 +117,86 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                 (members || []).forEach((m: any) => { cpfMap[m.id] = m.cpf || null; });
             }
 
-            const formatted = (data || [])
-                .map((item: any) => ({
-                    ...item,
-                    total_due: Number(item.total_due) || 0,
-                    total_earnings_month: Number(item.total_earnings_month) || 0,
-                    total_paid: Number(item.total_paid) || 0,
-                    commission_rate: Number(item.commission_rate) || 0,
-                    total_pending_records: Number(item.total_pending_records) || 0,
-                    services_pending: Number(item.services_pending) || 0,
-                    products_pending: Number(item.products_pending) || 0,
-                    services_month: Number(item.services_month) || 0,
-                    products_sold_month: Number(item.products_sold_month) || 0,
-                    cpf: cpfMap[item.professional_id] ?? null
-                }))
-                // Dono não entra na fila de repasse; ainda assim a RPC devolve is_owner
-                // para o filtro funcionar sem depender de join client-side.
-                .filter((item: any) => !item.is_owner);
-
-            setCommissionsDue(formatted);
+            setCommissionsDue(team.map((item: any) => ({
+                ...item,
+                total_due: Number(item.total_due) || 0,
+                total_earnings_month: Number(item.total_earnings_month) || 0,
+                total_paid: Number(item.total_paid) || 0,
+                commission_rate: Number(item.commission_rate) || 0,
+                total_pending_records: Number(item.total_pending_records) || 0,
+                services_pending: Number(item.services_pending) || 0,
+                products_pending: Number(item.products_pending) || 0,
+                services_month: Number(item.services_month) || 0,
+                products_sold_month: Number(item.products_sold_month) || 0,
+                cpf: cpfMap[item.professional_id] ?? null,
+            })));
+            setLoadState('ready');
         } catch (error) {
             console.error('Error fetching commissions:', error);
-            showToast('Não foi possível carregar as comissões. Tente novamente.', 'error');
             setCommissionsDue([]);
-        } finally {
-            setLoading(false);
+            setLoadState('error');
         }
     };
 
     const fetchPaidCommissions = async () => {
         if (!user) return;
-        setLoadingPaid(true);
+        setPaidState('loading');
         try {
+            // Colunas reais de commission_payments (B1): professional_id, start_date,
+            // end_date, amount/net_amount, paid_at, user_id (= tenant).
             const { data, error } = await supabase
                 .from('commission_payments')
-                .select(`
-                    id, collaborator_id, period_start, period_end,
-                    net_amount, commission_percent, paid_at,
-                    team_members!collaborator_id (name, photo_url)
-                `)
-                .eq('company_id', user.id)
+                .select('id, professional_id, start_date, end_date, amount, net_amount, paid_at, team_members!professional_id (name, photo_url)')
+                .eq('user_id', user.id)
                 .eq('status', 'paid')
                 .order('paid_at', { ascending: false })
                 .limit(50);
-
             if (error) throw error;
 
-            const formatted = (data || []).map((item: any) => ({
-                ...item,
-                professional_name: item.team_members?.name || '—',
+            setPaidCommissions((data || []).map((item: any) => ({
+                id: item.id,
+                professional_name: item.team_members?.name || 'Colaborador removido',
                 photo_url: item.team_members?.photo_url || null,
-                net_amount: Number(item.net_amount) || 0
-            }));
-            setPaidCommissions(formatted);
+                start_date: item.start_date,
+                end_date: item.end_date,
+                amount: Number(item.net_amount ?? item.amount) || 0,
+                paid_at: item.paid_at,
+            })));
+            setPaidState('ready');
         } catch (error) {
             console.error('Error fetching paid commissions:', error);
-        } finally {
-            setLoadingPaid(false);
+            setPaidCommissions([]);
+            setPaidState('error');
         }
+    };
+
+    const openRatePrompt = (professional: CommissionDue, payAfter: boolean) => {
+        setPendingPayProfessional(professional);
+        setInlineRate(payAfter ? '' : String(professional.commission_rate || 0));
+        setOpenPayAfterRateSave(payAfter);
+        setShowRatePrompt(true);
     };
 
     const handleOpenPayModal = (professional: CommissionDue) => {
         // Guard: colaborador sem % configurado
         if (!professional.commission_rate || professional.commission_rate === 0) {
-            setPendingPayProfessional(professional);
-            setInlineRate('');
-            setOpenPayAfterRateSave(true);
-            setShowRatePrompt(true);
+            openRatePrompt(professional, true);
             return;
         }
         openPayModal(professional);
     };
 
+    const applyPaymentCycle = (profId: string, c: CommissionCycle) => {
+        setPaymentStartDate(c.start);
+        setPaymentEndDate(c.end);
+        setPaymentPeriodLabel(c.label);
+        calculateAmountForDates(profId, c.start, c.end);
+    };
+
     const openPayModal = (professional: CommissionDue) => {
         setSelectedProfessional(professional);
         setPaymentAmount((professional.total_due || 0).toFixed(2));
-
-        const period = calcCommissionPeriod(settlementDay);
-        setPaymentStartDate(period.start);
-        setPaymentEndDate(period.end);
-        setPaymentPeriodLabel(period.label);
-
-        calculateAmountForDates(professional.professional_id, period.start, period.end);
+        applyPaymentCycle(professional.professional_id, cycle);
         setShowPayModal(true);
     };
 
@@ -360,285 +295,125 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
         }
     };
 
-    const totalDueOverall = commissionsDue.reduce((sum, p) => sum + (p.total_due || 0), 0);
-    const totalPaidMonth = commissionsDue.reduce((sum, p) => sum + (p.total_paid || 0), 0);
-    const topPerformer = commissionsDue.length > 0
-        ? [...commissionsDue].sort((a, b) => (b.total_earnings_month || 0) - (a.total_earnings_month || 0))[0]
-        : null;
+    const byId = (row: PayoutRowData) => commissionsDue.find((c) => c.professional_id === row.professional_id)!;
+    const totalDue = commissionsDue.reduce((sum, p) => sum + (p.total_due || 0), 0);
+    const withBalance = commissionsDue.filter((p) => p.total_due > 0).length;
+    const subTab = (id: 'pending' | 'paid', label: string) => (
+        <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === id}
+            onClick={() => setActiveTab(id)}
+            className={`px-4 min-h-[44px] md:min-h-[36px] text-sm font-semibold ${radius.button} transition-colors ${
+                activeTab === id ? `${colors.card} ${colors.text} border ${colors.border}` : `${colors.textMuted} border border-transparent hover:text-theme-text`
+            }`}
+        >
+            {label}
+        </button>
+    );
 
     return (
-        <div className="space-y-6 md:space-y-8 pb-10">
-            {/* Header */}
-            <div className="px-1 md:px-0">
-                <div className="flex items-center gap-1 min-w-0">
-                    <h2 className={`text-xl sm:text-2xl md:text-3xl min-w-0 ${font.heading} ${colors.text} uppercase tracking-tight`}>Gestão de Comissões</h2>
-                    <InfoButton text="Controle total dos repasses da sua equipe. O sistema calcula automaticamente o que cada profissional deve receber com base nas taxas configuradas." />
-                </div>
-                <p className={`${colors.textSecondary} text-sm md:text-base max-w-2xl leading-relaxed`}>
-                    {periodLabel ? `Período atual: ${periodLabel}` : 'Controle financeiro total da sua equipe.'}
-                </p>
-            </div>
-
-            {/* Tabs: Pendente / Pago */}
-            <div className={`flex gap-1 p-1 ${colors.card} rounded-xl ${colors.border} border w-fit`}>
-                {(['pending', 'paid'] as const).map(tab => (
-                    <button
-                        key={tab}
-                        onClick={() => setActiveTab(tab)}
-                        className={`px-5 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
-                            activeTab === tab
-                                ? `${accent.bg} text-[var(--color-on-accent)]`
-                                : `${colors.textMuted} hover:text-theme-text`
-                        }`}
-                    >
-                        {tab === 'pending' ? 'Pendente' : 'Pago'}
-                    </button>
-                ))}
-            </div>
-
-            {/* Pending Tab */}
-            {activeTab === 'pending' && (
-                <>
-                    {/* Metrics */}
-                    {!loading && commissionsDue.length > 0 && (
-                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
-                            <Card variant="outlined" className="p-4 md:p-6 relative" noPadding>
-                                <div className={`p-4 md:p-6`}>
-                                    <div className={`absolute top-0 right-0 w-16 md:w-24 h-16 md:h-24 -mr-6 md:-mr-8 -mt-6 md:-mt-8 opacity-10 rounded-full ${accent.bg}`}></div>
-                                    <p className={`${colors.textMuted} text-xs uppercase ${font.mono} font-bold mb-1 md:mb-2 tracking-wide`}>Pendente</p>
-                                    <h4 className={`text-lg md:text-3xl ${font.mono} font-bold ${totalDueOverall > 0 ? 'text-[var(--color-warning)]' : colors.textMuted}`}>
-                                        <MoneyInline formatted={formatMoney(totalDueOverall || 0)} />
-                                    </h4>
-                                </div>
-                            </Card>
-                            <Card variant="outlined" className="p-4 md:p-6 relative" noPadding>
-                                <div className="p-4 md:p-6">
-                                    <div className="absolute top-0 right-0 w-16 md:w-24 h-16 md:h-24 -mr-6 md:-mr-8 -mt-6 md:-mt-8 opacity-10 rounded-full bg-[var(--color-success)]"></div>
-                                    <p className={`${colors.textMuted} text-xs uppercase ${font.mono} font-bold mb-1 md:mb-2 tracking-wide`}>Pago (mês)</p>
-                                    <h4 className={`text-lg md:text-3xl ${font.mono} font-bold text-[var(--color-success)]`}>
-                                        <MoneyInline formatted={formatMoney(totalPaidMonth || 0)} />
-                                    </h4>
-                                </div>
-                            </Card>
-                            <Card variant="outlined" className="col-span-2 lg:col-span-1 p-4 md:p-6 relative" noPadding>
-                                <div className="p-4 md:p-6">
-                                    <div className="absolute top-0 right-0 w-16 md:w-24 h-16 md:h-24 -mr-6 md:-mr-8 -mt-6 md:-mt-8 opacity-10 rounded-full bg-[var(--color-info)]"></div>
-                                    <p className={`${colors.textMuted} text-xs uppercase ${font.mono} font-bold mb-1 md:mb-2 tracking-wide`}>Destaque</p>
-                                    <h4 className={`text-lg md:text-3xl ${font.mono} font-bold text-[var(--color-info)] truncate`}>
-                                        {topPerformer ? (topPerformer.professional_name?.split(' ')[0] || '-') : '-'}
-                                    </h4>
-                                    <p className={`text-xs ${colors.textMuted} mt-1 ${font.mono} uppercase tracking-wide`}>Melhor desempenho</p>
-                                </div>
-                            </Card>
-                        </div>
-                    )}
-
-                    {/* List */}
-                    <div className={`${colors.surface} border-0 md:border-2 ${colors.border} md:rounded-3xl p-0 md:p-8 overflow-visible`}>
-                        {loading ? (
-                            <div className={`text-center py-24 ${colors.textMuted}`}>
-                                <Loader2 className={`w-12 h-12 mx-auto animate-spin mb-4 ${accentTextClass}`} />
-                                <p className={`${font.mono} uppercase tracking-widest animate-pulse`}>Sincronizando dados...</p>
-                            </div>
-                        ) : commissionsDue.length === 0 ? (
-                            <div className={`text-center py-20 ${colors.card} rounded-2xl border-2 border-dashed ${colors.border} mx-4 md:mx-0`}>
-                                <div className={`w-16 h-16 ${colors.surface} rounded-full flex items-center justify-center mx-auto mb-6`}>
-                                    <User className={`w-8 h-8 ${colors.textMuted}`} />
-                                </div>
-                                <p className={`text-lg font-bold ${colors.text} mb-2 uppercase ${font.heading}`}>Sem colaboradores</p>
-                                <p className={`${colors.textMuted} max-w-sm mx-auto text-sm px-4 mb-6`}>
-                                    Cadastre a equipe em Ajustes → Equipe e defina o % de comissão de cada profissional para acompanhar serviços, histórico e repasses aqui.
-                                </p>
-                                <Button
-                                    variant="secondary"
-                                    onClick={() => navigate('/configuracoes/equipe')}
-                                >
-                                    Ir para Equipe
-                                </Button>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 gap-4 md:gap-6">
-                                {commissionsDue.map(professional => (
-                                    <Card
-                                        key={professional.professional_id}
-                                        variant="outlined"
-                                        className="hover:border-[var(--color-border-strong)] transition-all duration-300"
-                                        noPadding
-                                    >
-                                        <div className="p-4 md:p-6 overflow-visible">
-                                            <div className="flex flex-col gap-5">
-                                                <div className="flex items-start gap-3">
-                                                    <div className="relative shrink-0">
-                                                            {professional.photo_url ? (
-                                                                <img src={professional.photo_url} alt={professional.professional_name} className="w-12 h-12 md:w-16 md:h-16 rounded-xl object-cover border border-[var(--color-border)]" />
-                                                            ) : (
-                                                                <div className={`w-12 h-12 md:w-16 md:h-16 rounded-xl ${colors.surface} ${colors.border} border flex items-center justify-center`}>
-                                                                    <User className={`w-6 h-6 md:w-8 md:h-8 ${colors.textMuted}`} />
-                                                                </div>
-                                                            )}
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    setPendingPayProfessional(professional);
-                                                                    setInlineRate(String(professional.commission_rate || 0));
-                                                                    setOpenPayAfterRateSave(false);
-                                                                    setShowRatePrompt(true);
-                                                                }}
-                                                                className={`absolute -bottom-1 -right-1 min-w-[28px] px-1.5 py-0.5 rounded-full text-xs font-bold border ${colors.card} ${colors.border} ${accentTextClass} hover:scale-105 transition-transform leading-none`}
-                                                                title="Alterar taxa de comissão"
-                                                            >
-                                                                {(professional.commission_rate || 0)}%
-                                                            </button>
-                                                        </div>
-                                                    <div className="min-w-0 flex-1">
-                                                            <h3 className={`text-base md:text-xl font-bold ${colors.text} leading-tight truncate`}>{professional.professional_name}</h3>
-                                                            <p className={`${colors.textMuted} text-xs ${font.mono} mt-1 uppercase tracking-wide flex items-center gap-1 min-w-0`}>
-                                                                <span className="truncate">{(professional.commission_rate || 0) > 0 ? 'Comissão por serviço' : 'Taxa não configurada'}</span>
-                                                                <TrendingUp className="w-2.5 h-2.5 shrink-0" />
-                                                            </p>
-                                                        </div>
-                                                    <div className="shrink-0 text-right pl-1">
-                                                        <p className={`text-xs ${colors.textMuted} ${font.mono} uppercase tracking-wide mb-1`}>Saldo atual</p>
-                                                        <p className={`text-base md:text-2xl ${font.mono} font-bold ${professional.total_due > 0 ? 'text-[var(--color-warning)]' : colors.textMuted}`}>
-                                                            <MoneyInline formatted={formatMoney(professional.total_due || 0)} />
-                                                        </p>
-                                                    </div>
-                                                </div>
-
-                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
-                                                    <div className={`p-2.5 md:p-3 rounded-xl ${colors.inputBg} ${colors.border} border min-w-0`}>
-                                                        <p className={`text-xs ${colors.textMuted} uppercase font-bold mb-1 ${font.mono} tracking-wide`}>Este mês</p>
-                                                        <p className={`text-sm md:text-lg ${font.mono} font-bold ${colors.text}`}>
-                                                            <MoneyInline formatted={formatMoney(professional.total_earnings_month)} />
-                                                        </p>
-                                                    </div>
-                                                    <div className={`p-2.5 md:p-3 rounded-xl ${colors.inputBg} ${colors.border} border min-w-0`}>
-                                                        <p className={`text-xs ${colors.textMuted} uppercase font-bold mb-1 ${font.mono} tracking-wide`}>Liquidado</p>
-                                                        <p className={`text-sm md:text-lg ${font.mono} font-bold ${colors.textSecondary}`}>
-                                                            <MoneyInline formatted={formatMoney(professional.total_paid)} />
-                                                        </p>
-                                                    </div>
-                                                    <div className={`p-2.5 md:p-3 rounded-xl ${colors.inputBg} ${colors.border} border min-w-0`}>
-                                                        <p className={`text-xs ${colors.textMuted} uppercase font-bold mb-1 ${font.mono} tracking-wide flex items-center gap-1`}>
-                                                            <Scissors className="w-3 h-3 shrink-0" /> <span className="truncate">Serviços</span>
-                                                        </p>
-                                                        <p className={`text-sm md:text-lg ${font.mono} font-bold ${colors.text}`}>
-                                                            {professional.services_month || 0}
-                                                            <span className={`${colors.textMuted} text-xs font-normal ml-1`}>
-                                                                ({professional.services_pending || 0} pend.)
-                                                            </span>
-                                                        </p>
-                                                    </div>
-                                                    <div className={`p-2.5 md:p-3 rounded-xl ${colors.inputBg} ${colors.border} border min-w-0`}>
-                                                        <p className={`text-xs ${colors.textMuted} uppercase font-bold mb-1 ${font.mono} tracking-wide flex items-center gap-1`}>
-                                                            <Package className="w-3 h-3 shrink-0" /> <span className="truncate">Produtos</span>
-                                                        </p>
-                                                        <p className={`text-sm md:text-lg ${font.mono} font-bold ${colors.text}`}>
-                                                            {professional.products_sold_month || 0}
-                                                            <span className={`${colors.textMuted} text-xs font-normal ml-1`}>
-                                                                ({professional.products_pending || 0} pend.)
-                                                            </span>
-                                                        </p>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex flex-col gap-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => { setDetailsProfessional(professional); setShowDetailsModal(true); }}
-                                                            className={`flex-1 min-w-0 min-h-[44px] rounded-xl ${colors.surface} ${colors.surfaceHover} ${colors.text} transition-all flex items-center justify-center gap-2 px-3 text-xs ${font.mono} font-bold ${colors.border} border active:scale-95`}
-                                                        >
-                                                            <Scissors className="w-3.5 h-3.5 shrink-0" />
-                                                            <span className="truncate">Serviços e produtos</span>
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => { setDetailsProfessional(professional); setShowReportModal(true); }}
-                                                            className={`shrink-0 min-w-[44px] min-h-[44px] rounded-xl ${colors.surface} ${colors.surfaceHover} ${colors.text} transition-all flex items-center justify-center ${colors.border} border active:scale-95`}
-                                                            title="Relatório detalhado"
-                                                            aria-label="Relatório detalhado"
-                                                        >
-                                                            <FileText className={`w-4 h-4 ${colors.textMuted}`} />
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => { setDetailsProfessional(professional); setShowHistoryModal(true); }}
-                                                            className={`shrink-0 min-w-[44px] min-h-[44px] rounded-xl ${colors.surface} ${colors.surfaceHover} ${colors.text} transition-all flex items-center justify-center ${colors.border} border active:scale-95`}
-                                                            title="Histórico de pagamentos"
-                                                            aria-label="Histórico de pagamentos"
-                                                        >
-                                                            <Clock className={`w-4 h-4 ${colors.textMuted}`} />
-                                                        </button>
-                                                    </div>
-                                                    <Button
-                                                        variant="primary"
-                                                        className="w-full"
-                                                        icon={payingProfessionalId === professional.professional_id ? undefined : <DollarSign className="w-4 h-4" />}
-                                                        onClick={() => handleOpenPayModal(professional)}
-                                                        disabled={!!payingProfessionalId || professional.total_due <= 0}
-                                                        loading={payingProfessionalId === professional.professional_id}
-                                                    >
-                                                        {payingProfessionalId === professional.professional_id ? 'Processando' : 'Pagar comissão'}
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </Card>
-                                ))}
-                            </div>
-                        )}
+        <div className="space-y-5 md:space-y-6 pb-10">
+            {/* Cabeçalho */}
+            <header className="px-1 md:px-0 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                <div className="min-w-0">
+                    <div className="flex items-center gap-1 min-w-0">
+                        <h2 className={`text-xl sm:text-2xl md:text-3xl min-w-0 ${font.heading} ${colors.text} tracking-tight`}>Pagamento de comissão</h2>
+                        <InfoButton text="Quanto cada colaborador tem a receber e o registro de cada repasse. O saldo soma as comissões registradas ainda não pagas." />
                     </div>
-                </>
-            )}
+                    <p className={`${colors.textSecondary} text-sm mt-1 tabular-nums flex flex-wrap gap-x-2`}>
+                        <span className="whitespace-nowrap">Último ciclo fechado · {cycle.label}</span>
+                        <span className={`whitespace-nowrap ${colors.textMuted}`}>Acerto todo dia {settlementDay}</span>
+                    </p>
+                </div>
+                <div role="tablist" aria-label="Repasses" className={`inline-flex gap-1 p-1 ${colors.surface} ${radius.button} w-fit`}>
+                    {subTab('pending', 'A pagar')}
+                    {subTab('paid', 'Pagos')}
+                </div>
+            </header>
 
-            {/* Paid Tab */}
-            {activeTab === 'paid' && (
-                <div className={`${colors.surface} border-0 md:border-2 ${colors.border} md:rounded-3xl p-0 md:p-8`}>
-                    {loadingPaid ? (
-                        <div className="text-center py-24">
-                            <Loader2 className={`w-10 h-10 mx-auto animate-spin mb-4 ${accentTextClass}`} />
-                        </div>
-                    ) : paidCommissions.length === 0 ? (
-                        <div className="text-center py-20">
-                            <p className={colors.textMuted}>Nenhum pagamento registrado ainda.</p>
-                        </div>
-                    ) : (
-                        <div className={`divide-y ${colors.divider}`}>
-                            {paidCommissions.map(item => (
-                                <div key={item.id} className="flex items-center justify-between gap-3 py-4 px-2 md:px-0">
-                                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                                        {item.photo_url ? (
-                                            <img src={item.photo_url} alt={item.professional_name} className={`w-10 h-10 rounded-lg object-cover ${colors.border} border shrink-0`} />
-                                        ) : (
-                                            <div className={`w-10 h-10 rounded-lg ${colors.surface} flex items-center justify-center shrink-0`}>
-                                                <User className={`w-5 h-5 ${colors.textMuted}`} />
-                                            </div>
-                                        )}
-                                        <div className="min-w-0">
-                                            <p className={`${colors.text} font-bold text-sm truncate`}>{item.professional_name}</p>
-                                            <p className={`${colors.textMuted} text-xs ${font.mono}`}>
-                                                {new Date(item.period_start).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} → {new Date(item.period_end).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="text-right shrink-0">
-                                        <p className={`text-[var(--color-success)] ${font.mono} font-bold whitespace-nowrap tabular-nums`}>
-                                            <MoneyInline formatted={formatMoney(item.net_amount)} />
-                                        </p>
-                                        <p className={`${colors.textMuted} text-xs ${font.mono}`}>
-                                            Pago em {new Date(item.paid_at).toLocaleDateString('pt-BR')}
-                                        </p>
-                                        <span className={`inline-block mt-1 px-2 py-0.5 rounded-full ${status.successBg} ${status.success} text-xs font-bold uppercase ${status.successBorder} border`}>
-                                            Pago
-                                        </span>
-                                    </div>
-                                </div>
-                            ))}
+            {activeTab === 'pending' && (
+                <section aria-label="A pagar" className="space-y-4">
+                    {loadState === 'loading' && (
+                        <div className="space-y-3" aria-busy="true">
+                            <Skeleton className="h-6 w-64" />
+                            <Skeleton count={3} className="h-24 lg:h-14 w-full" />
                         </div>
                     )}
-                </div>
+
+                    {loadState === 'error' && (
+                        <div className={`border ${colors.border} ${radius.card} ${colors.card}`}>
+                            <ErrorState
+                                forceTheme={theme}
+                                title="Não foi possível carregar os repasses."
+                                message="Confira a conexão e tente de novo. Nenhum pagamento foi alterado."
+                                retryLabel="Tentar de novo"
+                                onRetry={fetchCommissionsDue}
+                            />
+                        </div>
+                    )}
+
+                    {loadState === 'ready' && commissionsDue.length === 0 && (
+                        <div className={`text-center py-14 px-6 border border-dashed ${colors.border} ${radius.card}`}>
+                            <User className={`w-8 h-8 mx-auto mb-4 ${colors.textMuted}`} aria-hidden="true" />
+                            <p className={`font-semibold ${colors.text} mb-1`}>Sem colaboradores</p>
+                            <p className={`${colors.textMuted} max-w-sm mx-auto text-sm mb-5`}>
+                                Cadastre a equipe em Ajustes → Equipe e defina o % de comissão de cada profissional para acompanhar os repasses aqui.
+                            </p>
+                            <Button variant="secondary" forceTheme={theme} onClick={() => navigate('/configuracoes/equipe')}>Ir para Equipe</Button>
+                        </div>
+                    )}
+
+                    {loadState === 'ready' && commissionsDue.length > 0 && (
+                        <>
+                            <p className={`text-sm ${colors.textSecondary} flex flex-wrap items-baseline gap-x-2 gap-y-1`} data-testid="payout-summary">
+                                {totalDue > 0 ? (
+                                    <>
+                                        <span>A pagar</span>
+                                        <strong className={`${font.mono} text-lg md:text-xl tabular-nums whitespace-nowrap ${colors.text}`}>{formatMoney(totalDue)}</strong>
+                                        <span aria-hidden="true" className="hidden sm:inline">·</span>
+                                        <span className="basis-full sm:basis-auto">{withBalance} {withBalance === 1 ? 'colaborador com saldo' : 'colaboradores com saldo'}</span>
+                                    </>
+                                ) : (
+                                    <span>Nenhuma comissão pendente.</span>
+                                )}
+                            </p>
+                            <PayoutList
+                                rows={commissionsDue}
+                                theme={theme}
+                                formatMoney={formatMoney}
+                                payingId={payingProfessionalId}
+                                onPay={(r) => handleOpenPayModal(byId(r))}
+                                onEditRate={(r) => openRatePrompt(byId(r), false)}
+                                onOpenDetails={(r) => { setDetailsProfessional(byId(r)); setShowDetailsModal(true); }}
+                                onOpenReport={(r) => { setDetailsProfessional(byId(r)); setShowReportModal(true); }}
+                                onOpenHistory={(r) => { setDetailsProfessional(byId(r)); setShowHistoryModal(true); }}
+                            />
+                        </>
+                    )}
+                </section>
             )}
+
+            {activeTab === 'paid' && (
+                <section aria-label="Pagos">
+                    {paidState === 'loading' && <Skeleton count={3} className="h-16 w-full" />}
+                    {paidState === 'error' && (
+                        <div className={`border ${colors.border} ${radius.card} ${colors.card}`}>
+                            <ErrorState forceTheme={theme} title="Não foi possível carregar os pagamentos." message="Confira a conexão e tente de novo." retryLabel="Tentar de novo" onRetry={fetchPaidCommissions} />
+                        </div>
+                    )}
+                    {paidState === 'ready' && paidCommissions.length === 0 && (
+                        <p className={`text-center py-14 text-sm ${colors.textMuted} border border-dashed ${colors.border} ${radius.card}`}>Nenhum pagamento registrado ainda.</p>
+                    )}
+                    {paidState === 'ready' && paidCommissions.length > 0 && (
+                        <PaidPaymentsList items={paidCommissions} theme={theme} formatMoney={formatMoney} />
+                    )}
+                </section>
+            )}
+
+            <p className={`text-xs ${colors.textMuted} px-1 md:px-0`}>
+                Os valores assumem comissão por atendimento. Aluguel de cadeira ainda não é suportado.
+            </p>
 
             {/* Inline Rate Prompt — colaborador sem % */}
             {showRatePrompt && pendingPayProfessional && (
@@ -680,7 +455,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                             disabled={savingRate || !inlineRate}
                             loading={savingRate}
                         >
-                            {savingRate ? 'Salvando...' : 'Confirmar e Pagar'}
+                            {savingRate ? 'Salvando...' : openPayAfterRateSave ? 'Salvar e pagar' : 'Salvar'}
                         </Button>
                     </div>
                 </Modal>
@@ -711,7 +486,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                     }
                 >
                     {paymentPeriodLabel && (
-                        <p className={`mb-6 text-sm ${colors.textMuted}`}>Período: {paymentPeriodLabel}</p>
+                        <p className={`mb-6 text-sm ${colors.textMuted}`}>Ciclo: {paymentPeriodLabel}</p>
                     )}
 
                     <div className={`mb-8 flex items-center gap-4 rounded-2xl ${colors.border} border ${colors.inputBg} p-4`}>
@@ -750,37 +525,17 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                             <div className="grid grid-cols-2 gap-3">
                                 <button
                                     type="button"
-                                    onClick={() => {
-                                        const p = calcCommissionPeriod(settlementDay);
-                                        setPaymentStartDate(p.start);
-                                        setPaymentEndDate(p.end);
-                                        setPaymentPeriodLabel(p.label);
-                                        calculateAmountForDates(selectedProfessional.professional_id, p.start, p.end);
-                                    }}
-                                    className={`rounded-xl ${colors.border} border ${colors.surface} py-2.5 text-xs font-bold uppercase ${colors.textSecondary} transition-all ${colors.surfaceHover} active:scale-95`}
+                                    onClick={() => applyPaymentCycle(selectedProfessional.professional_id, cycle)}
+                                    className={`min-h-[44px] rounded-xl ${colors.border} border ${colors.surface} py-2.5 text-xs font-bold uppercase ${colors.textSecondary} transition-all ${colors.surfaceHover} active:scale-95`}
                                 >
-                                    Período atual
+                                    Último ciclo
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => {
-                                        const current = calcCommissionPeriod(settlementDay);
-                                        const prevEnd = new Date(current.start);
-                                        prevEnd.setDate(prevEnd.getDate() - 1);
-                                        const prevStart = new Date(prevEnd);
-                                        prevStart.setDate(prevStart.getDate() - 30);
-                                        const fmt = (d: Date) => d.toISOString().split('T')[0];
-                                        const fmtLabel = (d: Date) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-                                        const start = fmt(prevStart);
-                                        const end = fmt(prevEnd);
-                                        setPaymentStartDate(start);
-                                        setPaymentEndDate(end);
-                                        setPaymentPeriodLabel(`${fmtLabel(prevStart)} → ${fmtLabel(prevEnd)}`);
-                                        calculateAmountForDates(selectedProfessional.professional_id, start, end);
-                                    }}
-                                    className={`rounded-xl ${colors.border} border ${colors.surface} py-2.5 text-xs font-bold uppercase ${colors.textSecondary} transition-all ${colors.surfaceHover} active:scale-95`}
+                                    onClick={() => applyPaymentCycle(selectedProfessional.professional_id, previousCycle(cycle, settlementDay))}
+                                    className={`min-h-[44px] rounded-xl ${colors.border} border ${colors.surface} py-2.5 text-xs font-bold uppercase ${colors.textSecondary} transition-all ${colors.surfaceHover} active:scale-95`}
                                 >
-                                    Período anterior
+                                    Ciclo anterior
                                 </button>
                             </div>
                             <div className="grid grid-cols-2 gap-3">
@@ -848,9 +603,9 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                     professionalName={detailsProfessional.professional_name}
                     cpf={detailsProfessional.cpf}
                     commissionRate={detailsProfessional.commission_rate}
-                    periodStart={calcCommissionPeriod(settlementDay).start}
-                    periodEnd={calcCommissionPeriod(settlementDay).end}
-                    periodLabel={periodLabel}
+                    periodStart={cycle.start}
+                    periodEnd={cycle.end}
+                    periodLabel={cycle.label}
                     currencySymbol={moneySymbol}
                     accentColor={accentColor}
                     onClose={() => { setShowReportModal(false); setDetailsProfessional(null); }}

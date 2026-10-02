@@ -53,6 +53,8 @@ Script isolado em `scripts/demo-seed/` + doc `docs/demo-seed.md`. Dois tenants f
 
 ## 🛠️ Trabalho recente
 
+- **Bloqueio de agenda por colaborador (2 Out 2026):** branch `cursor/agenda-bloqueio-colaborador-fafc`. Trava rígida: `agenda_blocks` (profissional + starts_at + ends_at, sem motivo), RPCs `create_agenda_block`/`delete_agenda_block`, helper `agenda_interval_blocked` em slots/booking/trigger. Flag `staff_can_block_agenda` default true (staff só a própria coluna; dono qualquer um). UI: + da Agenda com escolha, faixa `agenda-block-band`, card Bloqueios na Equipe, wizard/edição omitem o horário. Booking público herda `get_available_slots`. Migration `20261002120000_agenda_blocks.sql` ainda não aplicada no remoto. Gates locais: typecheck, lint, build; Vitest 994/996 (1 falha pré-existente de data em ClientMembershipPanel; contrato de bloqueio verde).
+
 - **Preços do plano AgendiX (18–20 Set 2026):** Solo R$ 19,99 / € 5,99 e Equipe/Ilimitado R$ 28,99 / € 9,99. Constantes + Price IDs de teste em `utils/planPricing.ts` (Stripe testmode). Em produção Vercel, preferir envs `VITE_STRIPE_PRICE_*` com IDs **live**. Landing de marketing não tem preços no repo.
 - **P0 booking público (18–20 Set 2026):** #87 mergeada. Staff da empresa vê/aceita/recusa solicitações online no tenant; tela pública não diz “confirmado” enquanto pending; criação pública atômica; cancelar na Minha Área com prova de telefone. Migration `20260918190000` no live.
 - **P0 tenant guard em RPCs autenticadas de financeiro/dashboard (18 Set 2026):** #85 mergeada. Núcleo útil do #79 (fechado), sem identity lock. Migration `20260918220000` no remoto. Booking público não foi alterado por esta PR.

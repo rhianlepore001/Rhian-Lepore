@@ -6,6 +6,7 @@ import {
   canCreateAgendaBlock,
   canManageAgendaBlock,
   isAgendaBlockedError,
+  messageForAgendaBlockResultCode,
   normalizeStaffCanBlockAgenda,
 } from '@/utils/agendaBlockPermission';
 
@@ -57,5 +58,11 @@ describe('permissão para bloquear agenda', () => {
     expect(isAgendaBlockedError({ code: 'agenda_blocked' })).toBe(true);
     expect(isAgendaBlockedError({ message: 'horario ocupado' })).toBe(false);
     expect(isAgendaBlockedError(null)).toBe(false);
+  });
+
+  it('traduz códigos de RPC de bloqueio', () => {
+    expect(messageForAgendaBlockResultCode('overlap')).toMatch(/Já existe um bloqueio/);
+    expect(messageForAgendaBlockResultCode('forbidden')).toMatch(/não pode bloquear/);
+    expect(messageForAgendaBlockResultCode('invalid_interval')).toMatch(/depois do início/);
   });
 });

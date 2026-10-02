@@ -50,6 +50,7 @@ import {
     agendaBlockBandLabel,
     canCreateAgendaBlock,
     canManageAgendaBlock,
+    messageForAgendaBlockResultCode,
     normalizeStaffCanBlockAgenda,
 } from '../utils/agendaBlockPermission';
 import { isAgendaBlockConflictResult, type AgendaBlock, type AgendaBlockConflict } from '../types/agendaBlocks';
@@ -1098,7 +1099,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                 return;
             }
             if (result.success === false) {
-                showToast(result.message ?? 'Não foi possível bloquear a agenda.', 'error');
+                showToast(result.message ?? messageForAgendaBlockResultCode(result.code), 'error');
                 return;
             }
             setShowBlockForm(false);

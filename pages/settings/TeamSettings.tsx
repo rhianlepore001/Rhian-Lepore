@@ -24,6 +24,7 @@ import { supabase } from '../../lib/supabase';
 import { mapError, formatUserFacingError } from '../../utils/mapError';
 import { resolveBusinessTimezone } from '../../utils/businessTimezone';
 import { isAgendaBlockConflictResult, type AgendaBlock, type AgendaBlockConflict } from '../../types/agendaBlocks';
+import { messageForAgendaBlockResultCode } from '../../utils/agendaBlockPermission';
 
 export const TeamSettings: React.FC = () => {
     const { companyId, region } = useAuth();
@@ -111,7 +112,7 @@ export const TeamSettings: React.FC = () => {
                 return;
             }
             if (result.success === false) {
-                showToast(result.message ?? 'Não foi possível bloquear a agenda.', 'error');
+                showToast(result.message ?? messageForAgendaBlockResultCode(result.code), 'error');
                 return;
             }
             setBlockFormMemberId(null);

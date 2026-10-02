@@ -74,5 +74,11 @@ describe('mapError', () => {
     expect(out.message).toContain('Remova o bloqueio');
     expect(mapError({ message: 'Este horário está bloqueado. Remova o bloqueio para agendar.' }, 'fallback').message)
       .toContain('bloqueado');
+    const fromTrigger = mapError(
+      { code: '42501', message: 'Este horário está bloqueado. Remova o bloqueio para agendar.' },
+      'fallback',
+    );
+    expect(fromTrigger.message).toContain('Remova o bloqueio');
+    expect(fromTrigger.message).not.toContain('permissão');
   });
 });

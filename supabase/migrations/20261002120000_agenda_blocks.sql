@@ -148,8 +148,8 @@ BEGIN
 END;
 $function$;
 
-REVOKE ALL ON FUNCTION public.staff_can_manage_agenda_block(uuid) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.staff_can_manage_agenda_block(uuid) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.staff_can_manage_agenda_block(uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.staff_can_manage_agenda_block(uuid) TO service_role;
 
 -- 5. create_agenda_block ------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.create_agenda_block(
@@ -180,6 +180,21 @@ BEGIN
   IF NOT public.staff_can_manage_agenda_block(p_professional_id) THEN
     RETURN json_build_object('success', false, 'code', 'forbidden');
   END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM public.team_members tm
+    WHERE tm.id = p_professional_id
+      AND tm.user_id = v_company
+      AND tm.deleted_at IS NULL
+      AND COALESCE(tm.active, true)
+  ) THEN
+    RETURN json_build_object('success', false, 'code', 'forbidden');
+  END IF;
+
+  PERFORM pg_advisory_xact_lock(
+    hashtext('agenda_block:' || v_company),
+    hashtext(p_professional_id::text)
+  );
 
   IF EXISTS (
     SELECT 1 FROM public.agenda_blocks b
@@ -284,6 +299,7 @@ GRANT EXECUTE ON FUNCTION public.delete_agenda_block(uuid) TO authenticated, ser
 CREATE OR REPLACE FUNCTION public.enforce_agenda_block_on_appointments()
 RETURNS trigger
 LANGUAGE plpgsql
+SECURITY DEFINER
 SET search_path TO 'public'
 AS $function$
 DECLARE
@@ -295,19 +311,33 @@ BEGIN
   IF NEW.professional_id IS NULL THEN
     RETURN NEW;
   END IF;
+  -- Atendimento que já ocupava o intervalo (bloqueio com ack) continua editável.
+  -- Recusa só quem entra no bloqueio (INSERT ou mover de horário livre para travado).
+  -- Cancelled/NoShow reativado no intervalo travado NÃO herda o skip.
+  IF TG_OP = 'UPDATE'
+     AND OLD.professional_id IS NOT NULL
+     AND OLD.status NOT IN ('Cancelled', 'NoShow') THEN
+    v_end := OLD.appointment_time + make_interval(mins => GREATEST(COALESCE(OLD.duration_minutes, 30), 1));
+    IF public.agenda_interval_blocked(OLD.user_id, OLD.professional_id, OLD.appointment_time, v_end) THEN
+      RETURN NEW;
+    END IF;
+  END IF;
   v_end := NEW.appointment_time + make_interval(mins => GREATEST(COALESCE(NEW.duration_minutes, 30), 1));
   IF public.agenda_interval_blocked(NEW.user_id, NEW.professional_id, NEW.appointment_time, v_end) THEN
     RAISE EXCEPTION 'agenda_blocked'
-      USING ERRCODE = '42501',
+      USING ERRCODE = 'P0001',
             MESSAGE = 'Este horário está bloqueado. Remova o bloqueio para agendar.';
   END IF;
   RETURN NEW;
 END;
 $function$;
 
+REVOKE ALL ON FUNCTION public.enforce_agenda_block_on_appointments() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.enforce_agenda_block_on_appointments() TO service_role;
+
 DROP TRIGGER IF EXISTS enforce_agenda_block_on_appointments ON public.appointments;
 CREATE TRIGGER enforce_agenda_block_on_appointments
-  BEFORE INSERT OR UPDATE OF appointment_time, professional_id, duration_minutes
+  BEFORE INSERT OR UPDATE OF appointment_time, professional_id, duration_minutes, status
   ON public.appointments
   FOR EACH ROW
   EXECUTE FUNCTION public.enforce_agenda_block_on_appointments();
@@ -315,6 +345,7 @@ CREATE TRIGGER enforce_agenda_block_on_appointments
 CREATE OR REPLACE FUNCTION public.enforce_agenda_block_on_public_bookings()
 RETURNS trigger
 LANGUAGE plpgsql
+SECURITY DEFINER
 SET search_path TO 'public'
 AS $function$
 DECLARE
@@ -323,15 +354,26 @@ BEGIN
   IF NEW.status IS DISTINCT FROM 'pending' AND NEW.status IS DISTINCT FROM 'confirmed' THEN
     RETURN NEW;
   END IF;
+  -- Pedido que já ocupava o intervalo (ex. aceitar pending) não pode ficar preso.
+  IF TG_OP = 'UPDATE'
+     AND OLD.status IN ('pending', 'confirmed') THEN
+    v_end := OLD.appointment_time + make_interval(mins => GREATEST(COALESCE(OLD.duration_minutes, 30), 1));
+    IF public.agenda_interval_blocked(OLD.business_id, OLD.professional_id, OLD.appointment_time, v_end) THEN
+      RETURN NEW;
+    END IF;
+  END IF;
   v_end := NEW.appointment_time + make_interval(mins => GREATEST(COALESCE(NEW.duration_minutes, 30), 1));
   IF public.agenda_interval_blocked(NEW.business_id, NEW.professional_id, NEW.appointment_time, v_end) THEN
     RAISE EXCEPTION 'agenda_blocked'
-      USING ERRCODE = '42501',
+      USING ERRCODE = 'P0001',
             MESSAGE = 'slot_unavailable';
   END IF;
   RETURN NEW;
 END;
 $function$;
+
+REVOKE ALL ON FUNCTION public.enforce_agenda_block_on_public_bookings() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.enforce_agenda_block_on_public_bookings() TO service_role;
 
 DROP TRIGGER IF EXISTS enforce_agenda_block_on_public_bookings ON public.public_bookings;
 CREATE TRIGGER enforce_agenda_block_on_public_bookings
@@ -652,7 +694,7 @@ BEGIN
     WHERE user_id = p_business_id
       AND active = true
       AND deleted_at IS NULL
-    ORDER BY name
+    ORDER BY display_order, name
   LOOP
     SELECT EXISTS (
       SELECT 1 FROM appointments a
@@ -668,6 +710,7 @@ BEGIN
       WHERE pb.business_id = p_business_id
         AND pb.professional_id = v_pro_id
         AND pb.status IN ('pending', 'confirmed')
+        AND NOT (pb.status = 'confirmed' AND public.confirmed_booking_slot_released(pb.business_id, pb.appointment_time, pb.professional_id))
         AND pb.appointment_time < v_end_time
         AND (pb.appointment_time + (COALESCE(pb.duration_minutes, p_duration_min) || ' minutes')::INTERVAL) > p_appointment_time
 
@@ -687,8 +730,7 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.get_first_available_professional(UUID, TIMESTAMPTZ, INT) TO anon, authenticated;
 
--- 10. get_full_dates passa a delegar a get_available_slots (herda bloqueios)
-DROP FUNCTION IF EXISTS public.get_full_dates(uuid, date, date, uuid, integer);
+-- 10. get_full_dates: CREATE OR REPLACE (sem DROP) para herdar get_available_slots
 CREATE OR REPLACE FUNCTION public.get_full_dates(
   p_business_id       UUID,
   p_start_date        DATE,

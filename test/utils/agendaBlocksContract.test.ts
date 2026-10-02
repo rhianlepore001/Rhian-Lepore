@@ -27,6 +27,28 @@ describe('migration 20261002120000_agenda_blocks (contrato)', () => {
     expect(sql).toMatch(/delete_agenda_block/);
     expect(sql).toMatch(/REVOKE ALL ON TABLE public\.agenda_blocks FROM PUBLIC, anon/);
     expect(sql).toMatch(/GRANT SELECT ON TABLE public\.agenda_blocks TO authenticated/);
+    expect(sql).not.toMatch(/DROP FUNCTION IF EXISTS public\.get_full_dates/);
+    expect(sql).toMatch(/TG_OP = 'UPDATE'/);
+    expect(sql).toMatch(/ERRCODE = 'P0001'/);
+    expect(sql).toMatch(/REVOKE ALL ON FUNCTION public\.staff_can_manage_agenda_block\(uuid\) FROM PUBLIC, anon, authenticated/);
+    expect(sql).toMatch(/enforce_agenda_block_on_appointments\(\)[\s\S]*?SECURITY DEFINER/);
+    expect(sql).toMatch(/enforce_agenda_block_on_public_bookings\(\)[\s\S]*?SECURITY DEFINER/);
+    expect(sql).toMatch(/REVOKE ALL ON FUNCTION public\.enforce_agenda_block_on_appointments\(\) FROM PUBLIC, anon, authenticated/);
+    expect(sql).toMatch(/UPDATE OF appointment_time, professional_id, duration_minutes, status/);
+    expect(sql).toMatch(/pg_advisory_xact_lock/);
+    expect(sql).toMatch(/OLD\.status NOT IN \('Cancelled', 'NoShow'\)/);
+  });
+
+  it('rollback restaura create_secure_booking e não fica truncado', () => {
+    const rollback = read('docs/rollbacks/20261002120000_agenda_blocks_rollback.sql');
+    expect(rollback).toMatch(/CREATE OR REPLACE FUNCTION public\.create_secure_booking\(/);
+    expect(rollback).toMatch(/CREATE OR REPLACE FUNCTION public\.get_available_slots\(/);
+    expect(rollback).toMatch(/CREATE OR REPLACE FUNCTION public\.public_booking_slot_busy\(/);
+    expect(rollback).toMatch(/CREATE OR REPLACE FUNCTION public\.get_first_available_professional\(/);
+    expect(rollback).not.toMatch(/CREATE OR \s+CREATE OR REPLACE FUNCTION public\.get_first_available_professional/);
+    expect(rollback).toMatch(/DROP FUNCTION IF EXISTS public\.agenda_interval_blocked/);
+    const restored = rollback.slice(rollback.indexOf('CREATE OR REPLACE FUNCTION public.get_available_slots'));
+    expect(restored).not.toMatch(/agenda_interval_blocked/);
   });
 
   it('slots, busy e create_secure_booking consultam o helper', () => {

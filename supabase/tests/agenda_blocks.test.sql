@@ -235,6 +235,55 @@ SELECT pg_temp.check('ack creates and keeps appointment',
   )->>'success') || ':' || (SELECT count(*)::text FROM appointments WHERE status = 'Confirmed' AND professional_id = '10000000-0000-0000-0000-000000000001')),
   'true:1');
 
+SELECT pg_temp.check('appointment trigger definer',
+  (SELECT prosecdef::text FROM pg_proc
+    WHERE proname = 'enforce_agenda_block_on_appointments'
+      AND pronamespace = 'public'::regnamespace),
+  'true');
+
+-- UPDATE de duração no atendimento que já ocupava o intervalo: não pode travar o card.
+DO $$
+BEGIN
+  UPDATE public.appointments
+     SET duration_minutes = 45
+   WHERE professional_id = '10000000-0000-0000-0000-000000000001'
+     AND status = 'Confirmed'
+     AND appointment_time = pg_temp.at_l((SELECT d FROM ctx), '10:00');
+  INSERT INTO results VALUES ('update existing overlapping apt', 'allowed', 'allowed');
+EXCEPTION WHEN OTHERS THEN
+  INSERT INTO results VALUES ('update existing overlapping apt', SQLERRM, 'allowed');
+END $$;
+
+DO $$
+BEGIN
+  UPDATE public.appointments
+     SET status = 'Cancelled'
+   WHERE professional_id = '10000000-0000-0000-0000-000000000001'
+     AND status = 'Confirmed'
+     AND appointment_time = pg_temp.at_l((SELECT d FROM ctx), '10:00');
+  INSERT INTO results VALUES ('cancel overlapping apt', 'allowed', 'allowed');
+EXCEPTION WHEN OTHERS THEN
+  INSERT INTO results VALUES ('cancel overlapping apt', SQLERRM, 'allowed');
+END $$;
+
+DO $$
+BEGIN
+  UPDATE public.appointments
+     SET status = 'Confirmed'
+   WHERE professional_id = '10000000-0000-0000-0000-000000000001'
+     AND status = 'Cancelled'
+     AND appointment_time = pg_temp.at_l((SELECT d FROM ctx), '10:00');
+  INSERT INTO results VALUES ('reactivate into block', 'allowed', 'blocked');
+EXCEPTION WHEN insufficient_privilege THEN
+  INSERT INTO results VALUES ('reactivate into block', 'blocked', 'blocked');
+WHEN OTHERS THEN
+  IF SQLERRM ILIKE '%agenda_blocked%' THEN
+    INSERT INTO results VALUES ('reactivate into block', 'blocked', 'blocked');
+  ELSE
+    INSERT INTO results VALUES ('reactivate into block', SQLERRM, 'blocked');
+  END IF;
+END $$;
+
 -- Trigger: UPDATE horário para o bloqueio 14:00 P2
 INSERT INTO appointments (id, user_id, client_id, professional_id, service, appointment_time, status, duration_minutes)
 VALUES (

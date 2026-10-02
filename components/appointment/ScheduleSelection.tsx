@@ -29,26 +29,6 @@ interface ScheduleSelectionProps {
     durationMinutes?: number;
 }
 
-interface ScheduleSelectionProps {
-    teamMembers: any[];
-    selectedProId: string;
-    setSelectedProId: (id: string) => void;
-    selectedDate: Date;
-    setSelectedDate: (date: Date) => void;
-    selectedTime: string;
-    setSelectedTime: (time: string) => void;
-    activeCardBg: string;
-    cardBg: string;
-    accentColor: string;
-    isBeauty: boolean;
-    services: any[];
-    selectedServiceIds: string[];
-    user: any;
-    /** Horário de funcionamento: horários do expediente primeiro; fora dele sob demanda (encaixe). */
-    businessHours?: BusinessHours | null;
-    shopTimeZone?: string;
-}
-
 /**
  * Seleção de horário para agendamento INTERNO (gestor/colaborador).
  * Não usa get_available_slots — controle total: qualquer horário do dia,

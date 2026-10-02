@@ -50,6 +50,14 @@ const CODE_MAP: Record<string, string> = {
 function pickCode(raw: RawErrorShape): string {
   const msg = (raw.message ?? '').toLowerCase();
 
+  if (
+    raw.code === 'agenda_blocked'
+    || msg.includes('agenda_blocked')
+    || msg.includes('está bloqueado')
+    || msg.includes('esta bloqueado')
+  ) {
+    return 'agenda_blocked';
+  }
   if (raw.code && CODE_MAP[raw.code]) return raw.code;
   if (
     raw.code === 'email_exists'
@@ -72,14 +80,6 @@ function pickCode(raw: RawErrorShape): string {
   }
   if (msg.includes('booking_not_cancellable')) {
     return 'booking_not_cancellable';
-  }
-  if (
-    raw.code === 'agenda_blocked'
-    || msg.includes('agenda_blocked')
-    || msg.includes('está bloqueado')
-    || msg.includes('esta bloqueado')
-  ) {
-    return 'agenda_blocked';
   }
   if (raw.status === 401) return 'auth_expired';
   if (raw.status === 403) return 'permission_denied';

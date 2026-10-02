@@ -8,6 +8,19 @@ export const DEFAULT_STAFF_CAN_BLOCK_AGENDA = true;
 export const AGENDA_BLOCKED_MESSAGE =
   'Este horário está bloqueado. Remova o bloqueio para agendar.';
 
+export function messageForAgendaBlockResultCode(code: string | undefined): string {
+  switch (code) {
+    case 'overlap':
+      return 'Já existe um bloqueio neste período.';
+    case 'forbidden':
+      return 'Você não pode bloquear a agenda deste profissional.';
+    case 'invalid_interval':
+      return 'O fim precisa ser depois do início.';
+    default:
+      return 'Não foi possível bloquear a agenda.';
+  }
+}
+
 export function normalizeStaffCanBlockAgenda(value: unknown): boolean {
   if (value === false || value === 'false' || value === 0 || value === '0') return false;
   if (value === true || value === 'true' || value === 1 || value === '1') return true;

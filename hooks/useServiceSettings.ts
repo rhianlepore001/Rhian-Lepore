@@ -8,9 +8,10 @@ import {
   fetchServices,
   saveService,
   setServiceActive,
+  updateServiceCategory,
   uploadServiceImage,
 } from '@/services/serviceSettings';
-import type { CreateCategoryInput, SaveServiceInput } from '@/types/serviceSettings';
+import type { CreateCategoryInput, SaveServiceInput, UpdateCategoryInput } from '@/types/serviceSettings';
 
 function serviceSettingsKey(companyId: string) {
   return ['serviceSettings', companyId] as const;
@@ -50,6 +51,18 @@ export function useCreateServiceCategory() {
   return useMutation({
     mutationKey: ['serviceSettings', 'category', 'create'],
     mutationFn: (input: CreateCategoryInput) => createServiceCategory(input),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: serviceSettingsKey(variables.companyId) });
+    },
+  });
+}
+
+export function useUpdateServiceCategory() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ['serviceSettings', 'category', 'update'],
+    mutationFn: (input: UpdateCategoryInput) => updateServiceCategory(input),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: serviceSettingsKey(variables.companyId) });
     },

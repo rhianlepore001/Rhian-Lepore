@@ -39,7 +39,14 @@ export const createCategoryInputSchema = z.object({
   displayOrder: z.number().int().nonnegative(),
 });
 
+export const updateCategoryInputSchema = z.object({
+  companyId: z.string().min(1),
+  categoryId: z.string().min(1),
+  name: z.string().trim().min(1),
+});
+
 export type ServiceCategory = z.infer<typeof serviceCategorySchema>;
 export type ServiceItem = z.infer<typeof serviceItemSchema>;
 export type SaveServiceInput = z.infer<typeof saveServiceInputSchema>;
 export type CreateCategoryInput = z.infer<typeof createCategoryInputSchema>;
+export type UpdateCategoryInput = z.infer<typeof updateCategoryInputSchema>;

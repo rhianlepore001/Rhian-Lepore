@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { Card, Button, ConfirmModal, useToast } from '../../components/ui';
 import { SettingsLayout } from '../../components/SettingsLayout';
-import { Plus, Package, Edit2, Trash2, GripVertical, FolderPlus, Power, HelpCircle } from 'lucide-react';
+import { Plus, Package, Edit2, Trash2, GripVertical, FolderPlus, Power, HelpCircle, Pencil } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import {
     useCreateServiceCategory,
     useDeleteService,
     useDeleteServiceCategory,
+    useUpdateServiceCategory,
     useSetServiceActive,
     useServiceSettings,
 } from '../../hooks/useServiceSettings';
@@ -16,7 +17,7 @@ import { Modal } from '../../components/Modal';
 import { formatCurrency } from '../../utils/formatters';
 import { formatServiceDuration } from '../../utils/serviceDuration';
 import { mapError } from '../../utils/mapError';
-import type { ServiceItem } from '@/types/serviceSettings';
+import type { ServiceCategory, ServiceItem } from '@/types/serviceSettings';
 
 export const ServiceSettings: React.FC = () => {
     const { companyId, user, region } = useAuth();
@@ -24,6 +25,7 @@ export const ServiceSettings: React.FC = () => {
     const { accent, colors, classes } = useBrutalTheme();
     const { categories, services, loading, refetch } = useServiceSettings(effectiveCompanyId);
     const createCategory = useCreateServiceCategory();
+    const updateCategory = useUpdateServiceCategory();
     const deleteCategory = useDeleteServiceCategory();
     const deleteServiceMutation = useDeleteService();
     const setServiceActiveMutation = useSetServiceActive();
@@ -32,21 +34,55 @@ export const ServiceSettings: React.FC = () => {
     const [editingService, setEditingService] = useState<ServiceItem | null>(null);
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState('');
+    const [editingCategory, setEditingCategory] = useState<ServiceCategory | null>(null);
     const [pendingDeleteCategoryId, setPendingDeleteCategoryId] = useState<string | null>(null);
     const [pendingDeleteServiceId, setPendingDeleteServiceId] = useState<string | null>(null);
     const [inactiveInfoServiceId, setInactiveInfoServiceId] = useState<string | null>(null);
     const { showToast } = useToast();
 
-    const handleAddCategory = async () => {
-        if (!newCategoryName.trim() || !effectiveCompanyId) return;
+    const openCategoryModal = (category: ServiceCategory | null = null) => {
+        setEditingCategory(category);
+        setNewCategoryName(category?.name ?? '');
+        setIsCategoryModalOpen(true);
+    };
+
+    const closeCategoryModal = () => {
+        setIsCategoryModalOpen(false);
+        setEditingCategory(null);
+        setNewCategoryName('');
+    };
+
+    const handleSaveCategory = async () => {
+        const trimmedName = newCategoryName.trim();
+        if (!trimmedName || !effectiveCompanyId) return;
+
+        if (editingCategory) {
+            if (trimmedName === editingCategory.name) {
+                closeCategoryModal();
+                return;
+            }
+            try {
+                await updateCategory.mutateAsync({
+                    companyId: effectiveCompanyId,
+                    categoryId: editingCategory.id,
+                    name: trimmedName,
+                });
+                closeCategoryModal();
+                showToast('Categoria renomeada com sucesso!', 'success');
+            } catch (error) {
+                console.error('Error renaming category:', error);
+                showToast(mapError(error, 'Não foi possível renomear a categoria.').message, 'error');
+            }
+            return;
+        }
+
         try {
             await createCategory.mutateAsync({
                 companyId: effectiveCompanyId,
-                name: newCategoryName,
+                name: trimmedName,
                 displayOrder: categories.length,
             });
-            setNewCategoryName('');
-            setIsCategoryModalOpen(false);
+            closeCategoryModal();
             showToast('Categoria criada com sucesso!', 'success');
         } catch (error) {
             console.error('Error adding category:', error);
@@ -122,7 +158,7 @@ export const ServiceSettings: React.FC = () => {
                     <div className="flex gap-3">
                         <Button
                             variant="secondary"
-                            onClick={() => setIsCategoryModalOpen(true)}
+                            onClick={() => openCategoryModal()}
                             className="flex-1 md:flex-none"
                         >
                             <FolderPlus className="w-5 h-5 mr-2" />
@@ -133,7 +169,7 @@ export const ServiceSettings: React.FC = () => {
                             onClick={() => {
                                 if (categories.length === 0) {
                                     showToast('Crie uma categoria antes de adicionar serviços.', 'warning');
-                                    setIsCategoryModalOpen(true);
+                                    openCategoryModal();
                                     return;
                                 }
                                 setEditingService(null);
@@ -161,7 +197,7 @@ export const ServiceSettings: React.FC = () => {
                             Crie categorias (ex: Cabelo, Barba) para agrupar seus serviços.
                         </p>
                         <button
-                            onClick={() => setIsCategoryModalOpen(true)}
+                            onClick={() => openCategoryModal()}
                             className={`px-6 py-3 ${accent.bg} text-[var(--color-bg)] font-bold rounded-xl ${accent.bgHover} transition-colors`}
                         >
                             Criar Primeira Categoria
@@ -187,12 +223,28 @@ export const ServiceSettings: React.FC = () => {
                                         </div>
                                     }
                                     action={
-                                        <button
-                                            onClick={() => handleDeleteCategory(category.id)}
-                                            className={`${colors.textMuted} hover:text-[var(--color-danger)] p-2 transition-colors active:scale-[0.97]`}
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
+                                        <div className="flex items-center gap-1">
+                                            <button
+                                                type="button"
+                                                title="Renomear categoria"
+                                                aria-label={`Renomear categoria ${category.name}`}
+                                                data-testid={`category-rename-${category.id}`}
+                                                onClick={() => openCategoryModal(category)}
+                                                className={`${colors.textMuted} hover:text-theme-text p-2 transition-colors active:scale-[0.97]`}
+                                            >
+                                                <Pencil className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                title="Excluir categoria"
+                                                aria-label={`Excluir categoria ${category.name}`}
+                                                data-testid={`category-delete-${category.id}`}
+                                                onClick={() => handleDeleteCategory(category.id)}
+                                                className={`${colors.textMuted} hover:text-[var(--color-danger)] p-2 transition-colors active:scale-[0.97]`}
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
                                     }
                                 >
                                     <div className={`divide-y ${colors.divider}`}>
@@ -285,20 +337,21 @@ export const ServiceSettings: React.FC = () => {
 
                 <Modal
                     isOpen={isCategoryModalOpen}
-                    onClose={() => setIsCategoryModalOpen(false)}
-                    title="Nova Categoria"
+                    onClose={closeCategoryModal}
+                    title={editingCategory ? 'Renomear Categoria' : 'Nova Categoria'}
                     size="sm"
                     footer={
                         <div className="flex justify-end gap-3">
                             <button
-                                onClick={() => setIsCategoryModalOpen(false)}
+                                onClick={closeCategoryModal}
                                 className={`px-4 py-2 rounded-lg transition-all ${colors.textSecondary} hover:text-theme-text hover:bg-[var(--color-card-hover)]`}
                             >
                                 Cancelar
                             </button>
                             <button
-                                onClick={handleAddCategory}
-                                className={`px-5 py-2.5 font-bold transition-all ${classes.buttonPrimary}`}
+                                onClick={() => void handleSaveCategory()}
+                                disabled={!newCategoryName.trim() || createCategory.isPending || updateCategory.isPending}
+                                className={`px-5 py-2.5 font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${classes.buttonPrimary}`}
                             >
                                 Salvar
                             </button>
@@ -309,6 +362,13 @@ export const ServiceSettings: React.FC = () => {
                         type="text"
                         value={newCategoryName}
                         onChange={e => setNewCategoryName(e.target.value)}
+                        onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                void handleSaveCategory();
+                            }
+                        }}
+                        aria-label="Nome da categoria"
                         placeholder="Ex: Cabelo, Barba, Tratamentos..."
                         className={classes.input}
                         autoFocus

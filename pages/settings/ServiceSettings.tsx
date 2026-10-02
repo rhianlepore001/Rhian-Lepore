@@ -55,6 +55,7 @@ export const ServiceSettings: React.FC = () => {
     const handleSaveCategory = async () => {
         const trimmedName = newCategoryName.trim();
         if (!trimmedName || !effectiveCompanyId) return;
+        if (createCategory.isPending || updateCategory.isPending) return;
 
         if (editingCategory) {
             if (trimmedName === editingCategory.name) {

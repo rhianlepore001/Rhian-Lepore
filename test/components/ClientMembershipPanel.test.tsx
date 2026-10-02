@@ -13,6 +13,9 @@ vi.mock('../../hooks/useMemberships', () => ({
   usePublicPixConfig: () => ({ data: null, isLoading: false }),
 }));
 
+const periodStart = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString();
+const periodEnd = new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString();
+
 const base: PublicClientMembership = {
   membership_id: 'ms-1',
   stored_status: 'active',
@@ -26,11 +29,11 @@ const base: PublicClientMembership = {
   service_names: ['Corte Masculino'],
   usage_limit_per_month: 4,
   usage_this_period: 1,
-  starts_at: '2026-09-01T00:00:00.000Z',
-  current_period_start: '2026-09-01T00:00:00.000Z',
-  current_period_end: '2026-10-01T00:00:00.000Z',
-  next_billing_at: '2026-10-01T00:00:00.000Z',
-  last_paid_at: '2026-09-01T00:00:00.000Z',
+  starts_at: periodStart,
+  current_period_start: periodStart,
+  current_period_end: periodEnd,
+  next_billing_at: periodEnd,
+  last_paid_at: periodStart,
   payment_method: 'pix',
 };
 

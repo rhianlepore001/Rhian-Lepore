@@ -2,10 +2,12 @@ import { supabase } from '@/lib/supabase';
 import {
   createCategoryInputSchema,
   saveServiceInputSchema,
+  updateCategoryInputSchema,
   serviceCategorySchema,
   serviceItemSchema,
   type CreateCategoryInput,
   type SaveServiceInput,
+  type UpdateCategoryInput,
   type ServiceCategory,
   type ServiceItem,
 } from '@/types/serviceSettings';
@@ -40,6 +42,20 @@ export async function createServiceCategory(input: CreateCategoryInput): Promise
       name: parsed.name,
       display_order: parsed.displayOrder,
     })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return serviceCategorySchema.parse(data);
+}
+
+export async function updateServiceCategory(input: UpdateCategoryInput): Promise<ServiceCategory> {
+  const parsed = updateCategoryInputSchema.parse(input);
+  const { data, error } = await supabase
+    .from('service_categories')
+    .update({ name: parsed.name })
+    .eq('id', parsed.categoryId)
+    .eq('user_id', parsed.companyId)
     .select()
     .single();
 

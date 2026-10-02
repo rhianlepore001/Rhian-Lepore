@@ -16,6 +16,8 @@ export function messageForAgendaBlockResultCode(code: string | undefined): strin
       return 'Você não pode bloquear a agenda deste profissional.';
     case 'invalid_interval':
       return 'O fim precisa ser depois do início.';
+    case 'unavailable':
+      return 'Bloqueio de agenda ainda não está disponível neste ambiente.';
     default:
       return 'Não foi possível bloquear a agenda.';
   }

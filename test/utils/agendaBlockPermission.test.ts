@@ -64,5 +64,6 @@ describe('permissão para bloquear agenda', () => {
     expect(messageForAgendaBlockResultCode('overlap')).toMatch(/Já existe um bloqueio/);
     expect(messageForAgendaBlockResultCode('forbidden')).toMatch(/não pode bloquear/);
     expect(messageForAgendaBlockResultCode('invalid_interval')).toMatch(/depois do início/);
+    expect(messageForAgendaBlockResultCode('unavailable')).toMatch(/não está disponível/);
   });
 });

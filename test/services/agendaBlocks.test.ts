@@ -81,4 +81,27 @@ describe('agendaBlocks service', () => {
     await deleteAgendaBlock('b1');
     expect(rpc).toHaveBeenCalledWith('delete_agenda_block', { p_block_id: 'b1' });
   });
+
+  it('lista vazia se a tabela ainda não existe', async () => {
+    order.mockResolvedValueOnce({
+      data: null,
+      error: { code: 'PGRST205', message: "Could not find the table 'public.agenda_blocks' in the schema cache" },
+    });
+    const rows = await fetchAgendaBlocks('biz-1', '2026-10-05T00:00:00.000Z', '2026-10-06T00:00:00.000Z');
+    expect(rows).toEqual([]);
+  });
+
+  it('create devolve unavailable se a RPC ainda não existe', async () => {
+    rpc.mockResolvedValueOnce({
+      data: null,
+      error: { message: 'Could not find the function public.create_agenda_block' },
+    });
+    const result = await createAgendaBlock({
+      professionalId: 'pro-1',
+      startsAt: '2026-10-05T15:00:00.000Z',
+      endsAt: '2026-10-05T16:00:00.000Z',
+    });
+    expect(result.success).toBe(false);
+    if (result.success === false) expect(result.code).toBe('unavailable');
+  });
 });

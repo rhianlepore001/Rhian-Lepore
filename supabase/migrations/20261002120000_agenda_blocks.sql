@@ -36,7 +36,7 @@ CREATE POLICY "agenda_blocks company read"
   ON public.agenda_blocks FOR SELECT TO authenticated
   USING (user_id = get_auth_company_id());
 
-REVOKE ALL ON TABLE public.agenda_blocks FROM PUBLIC, anon;
+REVOKE ALL ON TABLE public.agenda_blocks FROM PUBLIC, anon, authenticated;
 GRANT SELECT ON TABLE public.agenda_blocks TO authenticated;
 GRANT ALL ON TABLE public.agenda_blocks TO service_role;
 
@@ -324,9 +324,10 @@ BEGIN
   END IF;
   v_end := NEW.appointment_time + make_interval(mins => GREATEST(COALESCE(NEW.duration_minutes, 30), 1));
   IF public.agenda_interval_blocked(NEW.user_id, NEW.professional_id, NEW.appointment_time, v_end) THEN
-    RAISE EXCEPTION 'agenda_blocked'
-      USING ERRCODE = 'P0001',
-            MESSAGE = 'Este horário está bloqueado. Remova o bloqueio para agendar.';
+    RAISE EXCEPTION USING
+      ERRCODE = 'P0001',
+      MESSAGE = 'Este horário está bloqueado. Remova o bloqueio para agendar.',
+      HINT = 'agenda_blocked';
   END IF;
   RETURN NEW;
 END;
@@ -364,9 +365,10 @@ BEGIN
   END IF;
   v_end := NEW.appointment_time + make_interval(mins => GREATEST(COALESCE(NEW.duration_minutes, 30), 1));
   IF public.agenda_interval_blocked(NEW.business_id, NEW.professional_id, NEW.appointment_time, v_end) THEN
-    RAISE EXCEPTION 'agenda_blocked'
-      USING ERRCODE = 'P0001',
-            MESSAGE = 'slot_unavailable';
+    RAISE EXCEPTION USING
+      ERRCODE = 'P0001',
+      MESSAGE = 'slot_unavailable',
+      HINT = 'agenda_blocked';
   END IF;
   RETURN NEW;
 END;
@@ -671,95 +673,3 @@ BEGIN
 END;
 $function$;
 
--- 9. get_first_available_professional: pula quem está bloqueado
-CREATE OR REPLACE FUNCTION public.get_first_available_professional(
-  p_business_id       UUID,
-  p_appointment_time  TIMESTAMPTZ,
-  p_duration_min      INT DEFAULT 30
-)
-RETURNS UUID
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-  v_pro_id      UUID;
-  v_end_time    TIMESTAMPTZ;
-  v_is_busy     BOOLEAN;
-BEGIN
-  v_end_time := p_appointment_time + (p_duration_min || ' minutes')::INTERVAL;
-
-  FOR v_pro_id IN
-    SELECT id FROM team_members
-    WHERE user_id = p_business_id
-      AND active = true
-      AND deleted_at IS NULL
-    ORDER BY display_order, name
-  LOOP
-    SELECT EXISTS (
-      SELECT 1 FROM appointments a
-      WHERE a.user_id = p_business_id
-        AND a.professional_id = v_pro_id
-        AND a.status NOT IN ('Cancelled', 'NoShow')
-        AND a.appointment_time < v_end_time
-        AND (a.appointment_time + INTERVAL '30 minutes') > p_appointment_time
-
-      UNION ALL
-
-      SELECT 1 FROM public_bookings pb
-      WHERE pb.business_id = p_business_id
-        AND pb.professional_id = v_pro_id
-        AND pb.status IN ('pending', 'confirmed')
-        AND NOT (pb.status = 'confirmed' AND public.confirmed_booking_slot_released(pb.business_id, pb.appointment_time, pb.professional_id))
-        AND pb.appointment_time < v_end_time
-        AND (pb.appointment_time + (COALESCE(pb.duration_minutes, p_duration_min) || ' minutes')::INTERVAL) > p_appointment_time
-
-      UNION ALL
-
-      SELECT 1 WHERE public.agenda_interval_blocked(p_business_id::text, v_pro_id, p_appointment_time, v_end_time)
-    ) INTO v_is_busy;
-
-    IF NOT v_is_busy THEN
-      RETURN v_pro_id;
-    END IF;
-  END LOOP;
-
-  RETURN NULL;
-END;
-$$;
-
-GRANT EXECUTE ON FUNCTION public.get_first_available_professional(UUID, TIMESTAMPTZ, INT) TO anon, authenticated;
-
--- 10. get_full_dates: CREATE OR REPLACE (sem DROP) para herdar get_available_slots
-CREATE OR REPLACE FUNCTION public.get_full_dates(
-  p_business_id       UUID,
-  p_start_date        DATE,
-  p_end_date          DATE,
-  p_professional_id   UUID    DEFAULT NULL,
-  p_duration_min      INT     DEFAULT 30
-)
-RETURNS TEXT[]
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-  v_current_date   DATE;
-  v_full_dates     TEXT[] := '{}';
-  v_slots_resp     json;
-  v_duration       integer := GREATEST(COALESCE(p_duration_min, 30), 15);
-BEGIN
-  p_end_date := LEAST(p_end_date, p_start_date + INTERVAL '90 days');
-  v_current_date := p_start_date;
-  WHILE v_current_date <= p_end_date LOOP
-    v_slots_resp := public.get_available_slots(p_business_id, v_current_date, p_professional_id, v_duration, false);
-    IF json_array_length(COALESCE(v_slots_resp->'slots', '[]'::json)) = 0 THEN
-      v_full_dates := array_append(v_full_dates, v_current_date::TEXT);
-    END IF;
-    v_current_date := v_current_date + 1;
-  END LOOP;
-  RETURN v_full_dates;
-END;
-$$;
-
-GRANT EXECUTE ON FUNCTION public.get_full_dates(UUID, DATE, DATE, UUID, INT) TO anon, authenticated;

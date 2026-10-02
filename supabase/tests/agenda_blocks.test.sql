@@ -9,7 +9,7 @@ $$;
 
 CREATE OR REPLACE FUNCTION pg_temp.as_user(p_uid text) RETURNS void LANGUAGE plpgsql AS $$
 BEGIN
-  PERFORM set_config('request.jwt.claim.sub', COALESCE(p_uid, ''), true);
+  PERFORM set_config('request.jwt.claim.sub', COALESCE(p_uid, ''), false);
 END $$;
 
 \set OWNER '00000000-0000-0000-0000-00000000000a'
@@ -277,7 +277,7 @@ BEGIN
 EXCEPTION WHEN insufficient_privilege THEN
   INSERT INTO results VALUES ('reactivate into block', 'blocked', 'blocked');
 WHEN OTHERS THEN
-  IF SQLERRM ILIKE '%agenda_blocked%' THEN
+  IF SQLERRM ILIKE '%está bloqueado%' THEN
     INSERT INTO results VALUES ('reactivate into block', 'blocked', 'blocked');
   ELSE
     INSERT INTO results VALUES ('reactivate into block', SQLERRM, 'blocked');
@@ -318,12 +318,79 @@ BEGIN
 EXCEPTION WHEN insufficient_privilege THEN
   INSERT INTO results VALUES ('update into block', 'blocked', 'blocked');
 WHEN OTHERS THEN
-  IF SQLERRM ILIKE '%agenda_blocked%' THEN
+  IF SQLERRM ILIKE '%está bloqueado%' THEN
     INSERT INTO results VALUES ('update into block', 'blocked', 'blocked');
   ELSE
     INSERT INTO results VALUES ('update into block', SQLERRM, 'blocked');
   END IF;
 END $$;
+
+-- Papéis reais (PostgREST): authenticated / anon ----------------------------
+CREATE FUNCTION pg_temp.run_as(p_role text, p_uid text, p_sql text) RETURNS text LANGUAGE plpgsql AS $$
+DECLARE v text;
+BEGIN
+  PERFORM set_config('request.jwt.claim.sub', COALESCE(p_uid, ''), true);
+  EXECUTE format('SET LOCAL ROLE %I', p_role);
+  BEGIN
+    EXECUTE p_sql INTO v;
+    EXECUTE 'RESET ROLE';
+    RETURN v;
+  EXCEPTION WHEN OTHERS THEN
+    EXECUTE 'RESET ROLE';
+    RETURN 'error:' || SQLERRM;
+  END;
+END $$;
+
+SELECT pg_temp.check('authenticated direct insert outside block (Agenda sem RPC)',
+  pg_temp.run_as('authenticated', :'OWNER', format($q$INSERT INTO public.appointments (user_id, client_id, professional_id, service, appointment_time, status, duration_minutes) VALUES ('00000000-0000-0000-0000-00000000000a', '30000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'Corte', %L, 'Confirmed', 30) RETURNING status$q$, pg_temp.at_l((SELECT d FROM ctx), '15:00'))),
+  'Confirmed');
+
+SELECT pg_temp.check('authenticated direct insert into block',
+  pg_temp.run_as('authenticated', :'OWNER', format($q$INSERT INTO public.appointments (user_id, client_id, professional_id, service, appointment_time, status, duration_minutes) VALUES ('00000000-0000-0000-0000-00000000000a', '30000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'Corte', %L, 'Confirmed', 30) RETURNING status$q$, pg_temp.at_l((SELECT d FROM ctx), '10:00'))),
+  'error:Este horário está bloqueado. Remova o bloqueio para agendar.');
+
+SELECT pg_temp.check('anon create_public_booking into block',
+  pg_temp.run_as('anon', NULL, format($q$SELECT status FROM public.create_public_booking('00000000-0000-0000-0000-00000000000a', 'Cliente Novo', '351600000009', ARRAY['20000000-0000-0000-0000-000000000001']::uuid[], '10000000-0000-0000-0000-000000000002'::uuid, %L::timestamptz, 45, 30)$q$, pg_temp.at_l((SELECT d FROM ctx), '15:00'))),
+  'error:slot_unavailable');
+
+SELECT pg_temp.check('anon create_public_booking outside block',
+  pg_temp.run_as('anon', NULL, format($q$SELECT status FROM public.create_public_booking('00000000-0000-0000-0000-00000000000a', 'Cliente Novo', '351600000009', ARRAY['20000000-0000-0000-0000-000000000001']::uuid[], '10000000-0000-0000-0000-000000000002'::uuid, %L::timestamptz, 45, 30)$q$, pg_temp.at_l((SELECT d FROM ctx), '11:00'))),
+  'pending');
+
+SELECT pg_temp.check('any pro: um bloqueado, outro livre -> livre',
+  public.public_booking_slot_busy('00000000-0000-0000-0000-00000000000a', pg_temp.at_l((SELECT d FROM ctx), '14:30'), 30, NULL)::text,
+  'false');
+
+INSERT INTO agenda_blocks (user_id, professional_id, starts_at, ends_at)
+VALUES ('00000000-0000-0000-0000-00000000000a', '10000000-0000-0000-0000-000000000001',
+        pg_temp.at_l((SELECT d FROM ctx), '14:00'), pg_temp.at_l((SELECT d FROM ctx), '15:00'));
+SELECT pg_temp.check('any pro: todos bloqueados -> ocupado',
+  public.public_booking_slot_busy('00000000-0000-0000-0000-00000000000a', pg_temp.at_l((SELECT d FROM ctx), '14:30'), 30, NULL)::text,
+  'true');
+
+INSERT INTO agenda_blocks (user_id, professional_id, starts_at, ends_at)
+VALUES ('00000000-0000-0000-0000-00000000000a', '10000000-0000-0000-0000-000000000001',
+        pg_temp.at_l((SELECT d FROM ctx) + 1, '00:00'), pg_temp.at_l((SELECT d FROM ctx) + 2, '00:00'));
+SELECT pg_temp.check('get_full_dates (live) herda bloqueio de dia inteiro',
+  array_length(public.get_full_dates('00000000-0000-0000-0000-00000000000a'::uuid, (SELECT d FROM ctx) + 1, (SELECT d FROM ctx) + 1, '10000000-0000-0000-0000-000000000001'::uuid, 30), 1)::text,
+  '1');
+SELECT pg_temp.check('get_full_dates outro profissional não fica cheio',
+  array_length(public.get_full_dates('00000000-0000-0000-0000-00000000000a'::uuid, (SELECT d FROM ctx) + 1, (SELECT d FROM ctx) + 1, '10000000-0000-0000-0000-000000000002'::uuid, 30), 1)::text,
+  NULL);
+
+SELECT pg_temp.check('anon sem EXECUTE em create_agenda_block',
+  has_function_privilege('anon', 'public.create_agenda_block(uuid,timestamptz,timestamptz,boolean)', 'EXECUTE')::text, 'false');
+SELECT pg_temp.check('authenticated sem EXECUTE no helper',
+  has_function_privilege('authenticated', 'public.agenda_interval_blocked(text,uuid,timestamptz,timestamptz)', 'EXECUTE')::text, 'false');
+SELECT pg_temp.check('anon sem SELECT em agenda_blocks',
+  has_table_privilege('anon', 'public.agenda_blocks', 'SELECT')::text, 'false');
+SELECT pg_temp.check('authenticated sem INSERT direto em agenda_blocks',
+  has_table_privilege('authenticated', 'public.agenda_blocks', 'INSERT')::text, 'false');
+
+SELECT pg_temp.check('staff não remove bloqueio de outro profissional',
+  pg_temp.run_as('authenticated', :'STAFF', format($q$SELECT public.delete_agenda_block(%L::uuid)->>'code'$q$,
+    (SELECT id FROM agenda_blocks WHERE professional_id = '10000000-0000-0000-0000-000000000001' ORDER BY starts_at DESC LIMIT 1))),
+  'forbidden');
 
 -- Relatório
 SELECT name, got, expected,

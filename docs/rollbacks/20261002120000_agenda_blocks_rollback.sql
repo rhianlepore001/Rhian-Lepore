@@ -1,24 +1,10 @@
--- ROLLBACK de 20261002120000_agenda_blocks
--- 1) Remove tabela/RPCs/triggers/coluna.
--- 2) Restaura get_available_slots, public_booking_slot_busy e create_secure_booking
---    para 20260925160000 (sem agenda_interval_blocked).
--- 3) Restaura get_first_available_professional sem o helper (senão o "qualquer
---    profissional" do booking público quebra).
--- get_full_dates permanece delegando a get_available_slots (sem DROP) e herda o restore.
+-- ROLLBACK de 20261002120000_agenda_blocks (transação única)
+-- 1) Restaura get_available_slots, public_booking_slot_busy e create_secure_booking
+--    para 20260925160000 (md5 = live em 2026-10-02). CREATE OR REPLACE preserva ACL.
+-- 2) Remove triggers, RPCs, helper, tabela e coluna.
+-- get_full_dates e get_first_available_professional não são tocadas pela migration.
 
-DROP TRIGGER IF EXISTS enforce_agenda_block_on_appointments ON public.appointments;
-DROP TRIGGER IF EXISTS enforce_agenda_block_on_public_bookings ON public.public_bookings;
-DROP FUNCTION IF EXISTS public.enforce_agenda_block_on_appointments();
-DROP FUNCTION IF EXISTS public.enforce_agenda_block_on_public_bookings();
-DROP FUNCTION IF EXISTS public.delete_agenda_block(uuid);
-DROP FUNCTION IF EXISTS public.create_agenda_block(uuid, timestamptz, timestamptz, boolean);
-DROP FUNCTION IF EXISTS public.staff_can_manage_agenda_block(uuid);
-DROP FUNCTION IF EXISTS public.agenda_interval_blocked(text, uuid, timestamptz, timestamptz);
-DROP TABLE IF EXISTS public.agenda_blocks;
-
-ALTER TABLE public.business_settings
-  DROP COLUMN IF EXISTS staff_can_block_agenda;
-
+BEGIN;
 
 CREATE OR REPLACE FUNCTION public.get_available_slots(p_business_id uuid, p_date date, p_professional_id uuid DEFAULT NULL::uuid, p_duration_min integer DEFAULT 30, p_is_professional boolean DEFAULT false)
  RETURNS json
@@ -284,56 +270,17 @@ END;
 $function$
 ;
 
-CREATE OR REPLACE FUNCTION public.get_first_available_professional(
-  p_business_id       UUID,
-  p_appointment_time  TIMESTAMPTZ,
-  p_duration_min      INT DEFAULT 30
-)
-RETURNS UUID
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-  v_pro_id      UUID;
-  v_end_time    TIMESTAMPTZ;
-  v_is_busy     BOOLEAN;
-BEGIN
-  v_end_time := p_appointment_time + (p_duration_min || ' minutes')::INTERVAL;
+DROP TRIGGER IF EXISTS enforce_agenda_block_on_appointments ON public.appointments;
+DROP TRIGGER IF EXISTS enforce_agenda_block_on_public_bookings ON public.public_bookings;
+DROP FUNCTION IF EXISTS public.enforce_agenda_block_on_appointments();
+DROP FUNCTION IF EXISTS public.enforce_agenda_block_on_public_bookings();
+DROP FUNCTION IF EXISTS public.delete_agenda_block(uuid);
+DROP FUNCTION IF EXISTS public.create_agenda_block(uuid, timestamptz, timestamptz, boolean);
+DROP FUNCTION IF EXISTS public.staff_can_manage_agenda_block(uuid);
+DROP FUNCTION IF EXISTS public.agenda_interval_blocked(text, uuid, timestamptz, timestamptz);
+DROP TABLE IF EXISTS public.agenda_blocks;
 
-  FOR v_pro_id IN
-    SELECT id FROM team_members
-    WHERE user_id = p_business_id
-      AND active = true
-      AND deleted_at IS NULL
-    ORDER BY display_order, name
-  LOOP
-    SELECT EXISTS (
-      SELECT 1 FROM appointments a
-      WHERE a.user_id = p_business_id
-        AND a.professional_id = v_pro_id
-        AND a.status NOT IN ('Cancelled', 'NoShow')
-        AND a.appointment_time < v_end_time
-        AND (a.appointment_time + INTERVAL '30 minutes') > p_appointment_time
+ALTER TABLE public.business_settings
+  DROP COLUMN IF EXISTS staff_can_block_agenda;
 
-      UNION ALL
-
-      SELECT 1 FROM public_bookings pb
-      WHERE pb.business_id = p_business_id
-        AND pb.professional_id = v_pro_id
-        AND pb.status IN ('pending', 'confirmed')
-        AND NOT (pb.status = 'confirmed' AND public.confirmed_booking_slot_released(pb.business_id, pb.appointment_time, pb.professional_id))
-        AND pb.appointment_time < v_end_time
-        AND (pb.appointment_time + (COALESCE(pb.duration_minutes, p_duration_min) || ' minutes')::INTERVAL) > p_appointment_time
-    ) INTO v_is_busy;
-
-    IF NOT v_is_busy THEN
-      RETURN v_pro_id;
-    END IF;
-  END LOOP;
-
-  RETURN NULL;
-END;
-$$;
-
-GRANT EXECUTE ON FUNCTION public.get_first_available_professional(UUID, TIMESTAMPTZ, INT) TO anon, authenticated;
+COMMIT;

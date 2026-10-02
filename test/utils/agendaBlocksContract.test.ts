@@ -25,7 +25,7 @@ describe('migration 20261002120000_agenda_blocks (contrato)', () => {
     expect(sql).toMatch(/agenda_interval_blocked/);
     expect(sql).toMatch(/create_agenda_block/);
     expect(sql).toMatch(/delete_agenda_block/);
-    expect(sql).toMatch(/REVOKE ALL ON TABLE public\.agenda_blocks FROM PUBLIC, anon/);
+    expect(sql).toMatch(/REVOKE ALL ON TABLE public\.agenda_blocks FROM PUBLIC, anon, authenticated;/);
     expect(sql).toMatch(/GRANT SELECT ON TABLE public\.agenda_blocks TO authenticated/);
     expect(sql).not.toMatch(/DROP FUNCTION IF EXISTS public\.get_full_dates/);
     expect(sql).toMatch(/TG_OP = 'UPDATE'/);
@@ -37,6 +37,12 @@ describe('migration 20261002120000_agenda_blocks (contrato)', () => {
     expect(sql).toMatch(/UPDATE OF appointment_time, professional_id, duration_minutes, status/);
     expect(sql).toMatch(/pg_advisory_xact_lock/);
     expect(sql).toMatch(/OLD\.status NOT IN \('Cancelled', 'NoShow'\)/);
+    expect(sql).not.toMatch(/RAISE EXCEPTION '[^']*'\s+USING[^;]*MESSAGE/);
+  });
+
+  it('não redefine get_full_dates nem get_first_available_professional (live: date[] / random)', () => {
+    expect(sql).not.toMatch(/FUNCTION public\.get_full_dates/);
+    expect(sql).not.toMatch(/FUNCTION public\.get_first_available_professional/);
   });
 
   it('rollback restaura create_secure_booking e não fica truncado', () => {
@@ -44,11 +50,17 @@ describe('migration 20261002120000_agenda_blocks (contrato)', () => {
     expect(rollback).toMatch(/CREATE OR REPLACE FUNCTION public\.create_secure_booking\(/);
     expect(rollback).toMatch(/CREATE OR REPLACE FUNCTION public\.get_available_slots\(/);
     expect(rollback).toMatch(/CREATE OR REPLACE FUNCTION public\.public_booking_slot_busy\(/);
-    expect(rollback).toMatch(/CREATE OR REPLACE FUNCTION public\.get_first_available_professional\(/);
-    expect(rollback).not.toMatch(/CREATE OR \s+CREATE OR REPLACE FUNCTION public\.get_first_available_professional/);
+    expect(rollback).not.toMatch(/FUNCTION public\.get_first_available_professional/);
+    expect(rollback).not.toMatch(/FUNCTION public\.get_full_dates/);
     expect(rollback).toMatch(/DROP FUNCTION IF EXISTS public\.agenda_interval_blocked/);
-    const restored = rollback.slice(rollback.indexOf('CREATE OR REPLACE FUNCTION public.get_available_slots'));
+    const restored = rollback.slice(
+      rollback.indexOf('CREATE OR REPLACE FUNCTION public.get_available_slots'),
+      rollback.indexOf('DROP TRIGGER'),
+    );
+    expect(restored).toMatch(/create_secure_booking/);
     expect(restored).not.toMatch(/agenda_interval_blocked/);
+    expect(rollback).toMatch(/^BEGIN;$/m);
+    expect(rollback).toMatch(/^COMMIT;$/m);
   });
 
   it('slots, busy e create_secure_booking consultam o helper', () => {

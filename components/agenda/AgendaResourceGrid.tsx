@@ -4,6 +4,7 @@ import { AgendaEmptySlotCell } from './AgendaEmptySlotCell';
 import { appointmentFreesSlot, getVisualStatus, VISUAL_STATUS_CLASSES, VISUAL_STATUS_LABEL, type VisualStatus } from '../../utils/appointmentStatus';
 import { formatCurrency, type Region } from '../../utils/formatters';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
+import { blockToSlotRangeOnViewDay } from '../../utils/agendaBlockRange';
 
 const VISUAL_STATUS_ICON: Record<VisualStatus, React.ComponentType<{ className?: string }>> = {
   completed: Check,
@@ -32,6 +33,13 @@ export interface AgendaGridMember {
   photo_url?: string;
 }
 
+export interface AgendaGridBlock {
+  id: string;
+  professional_id: string;
+  starts_at: string;
+  ends_at: string;
+}
+
 export interface AgendaResourceGridProps {
   /** Colunas visíveis (já filtradas pelo pai). */
   members: AgendaGridMember[];
@@ -53,6 +61,11 @@ export interface AgendaResourceGridProps {
   endLabel?: string;
   /** Agendamento recém-criado: destaque breve (pulso/contorno, ~2s). */
   highlightAppointmentId?: string | null;
+  /** Dia visível (YYYY-MM-DD local) para posicionar bloqueios na grade. */
+  dateStr?: string;
+  blocks?: AgendaGridBlock[];
+  onSelectBlock?: (block: AgendaGridBlock) => void;
+  blockCaption?: (professionalId: string) => string;
 }
 
 function firstName(fullName: string): string {
@@ -111,6 +124,10 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
   offHoursSlots = [],
   endLabel,
   highlightAppointmentId = null,
+  dateStr,
+  blocks = [],
+  onSelectBlock,
+  blockCaption = () => 'Bloqueado',
 }) => {
   const { colors, accent } = useBrutalTheme();
   const offHours = new Set(offHoursSlots);
@@ -228,6 +245,15 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
               .sort((a, b) => Number(appointmentFreesSlot(b.apt.status)) - Number(appointmentFreesSlot(a.apt.status)));
             const overlaps = (a: { startIdx: number; span: number }, b: { startIdx: number; span: number }) =>
               a.startIdx < b.startIdx + b.span && b.startIdx < a.startIdx + a.span;
+            const columnBlocks = dateStr
+              ? blocks
+                .filter((b) => b.professional_id === member.id)
+                .map((b) => {
+                  const range = blockToSlotRangeOnViewDay(b, dateStr, timeSlots);
+                  return range ? { block: b, ...range } : null;
+                })
+                .filter((o): o is { block: AgendaGridBlock; startIdx: number; span: number } => o !== null)
+              : [];
 
             return (
               <div
@@ -283,7 +309,10 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                     // Falta/cancelado não ocupa o horário (mesma regra do banco):
                     // o card continua visível e o "+" aparece ao lado.
                     // Vale também para horário passado: o barbeiro atende e lança depois (encaixe).
-                    const occupied = covering.some((o) => !appointmentFreesSlot(o.apt.status));
+                    const blockedHere = columnBlocks.some(
+                      (b) => slotIdx >= b.startIdx && slotIdx < b.startIdx + b.span,
+                    );
+                    const occupied = covering.some((o) => !appointmentFreesSlot(o.apt.status)) || blockedHere;
                     const freedOnly = !occupied && covering.length > 0;
                     const isOffHours = offHours.has(time);
                     return (
@@ -305,6 +334,25 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                     );
                   })}
 
+                  {columnBlocks.map(({ block, startIdx, span }) => (
+                    <button
+                      key={block.id}
+                      type="button"
+                      data-testid="agenda-block-band"
+                      data-block-id={block.id}
+                      aria-label={blockCaption(member.id)}
+                      onClick={() => onSelectBlock?.(block)}
+                      style={{
+                        top: `calc(var(--agenda-slot-h) * ${startIdx} + 2px)`,
+                        height: `calc(var(--agenda-slot-h) * ${span} - 4px)`,
+                      }}
+                      className="agenda-block-band absolute left-0.5 right-0.5 z-[1] overflow-hidden rounded-md border border-[color-mix(in_srgb,var(--color-text-muted)_35%,transparent)] px-1.5 py-1 min-h-0 flex items-center justify-center text-left"
+                    >
+                      <span className={`text-xs font-bold uppercase tracking-wide ${colors.textMuted}`}>
+                        {blockCaption(member.id)}
+                      </span>
+                    </button>
+                  ))}
                   {columnOverlays.map((overlay) => {
                     const { apt, startIdx, span } = overlay;
                     const time = timeSlots[startIdx];

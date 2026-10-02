@@ -3,12 +3,15 @@ import { CalendarCog, Check, Loader2 } from 'lucide-react';
 import { Card, useToast } from '../ui';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
-import { useBusinessSettings, useUpdateStaffAppointmentEditScope } from '../../hooks/useSettings';
+import { useBusinessSettings, useUpdateStaffAppointmentEditScope, useUpdateStaffCanBlockAgenda } from '../../hooks/useSettings';
 import {
   STAFF_APPOINTMENT_EDIT_SCOPE_OPTIONS,
   normalizeStaffAppointmentEditScope,
   type StaffAppointmentEditScope,
 } from '../../utils/staffAppointmentPermission';
+import { normalizeStaffCanBlockAgenda } from '../../utils/agendaBlockPermission';
+import { SettingsRow } from '../ui/SettingsRow';
+import { SettingsSwitch } from '../SettingsSwitch';
 
 /**
  * Configurações › Equipe: o dono escolhe o que os colaboradores podem fazer com
@@ -21,17 +24,43 @@ export const StaffAppointmentPermissionSection: React.FC = () => {
   const { showToast } = useToast();
   const { data: settings, isLoading } = useBusinessSettings();
   const updateScope = useUpdateStaffAppointmentEditScope();
+  const updateCanBlock = useUpdateStaffCanBlockAgenda();
 
   // Coluna só existe após a migration; antes disso a opção fica travada no padrão.
   const columnMissing = !!settings && !Object.prototype.hasOwnProperty.call(settings, 'staff_appointment_edit_scope');
+  const blockColumnMissing = !!settings && !Object.prototype.hasOwnProperty.call(settings, 'staff_can_block_agenda');
   const saved = normalizeStaffAppointmentEditScope(settings?.staff_appointment_edit_scope);
+  const savedCanBlock = normalizeStaffCanBlockAgenda(settings?.staff_can_block_agenda);
   const [selected, setSelected] = useState<StaffAppointmentEditScope>(saved);
+  const [canBlock, setCanBlock] = useState(savedCanBlock);
 
   useEffect(() => {
     setSelected(saved);
   }, [saved]);
 
+  useEffect(() => {
+    setCanBlock(savedCanBlock);
+  }, [savedCanBlock]);
+
   if (role !== 'owner') return null;
+
+  const handleBlockToggle = async (next: boolean) => {
+    if (next === canBlock || updateCanBlock.isPending || blockColumnMissing) return;
+    const previous = canBlock;
+    setCanBlock(next);
+    try {
+      const result = await updateCanBlock.mutateAsync(next);
+      if (result === 'unsupported') {
+        setCanBlock(previous);
+        showToast('Essa opção fica disponível após a próxima atualização do sistema.', 'info');
+        return;
+      }
+      showToast('Permissão da equipe atualizada.', 'success');
+    } catch {
+      setCanBlock(previous);
+      showToast('Não foi possível salvar a permissão. Tente novamente.', 'error');
+    }
+  };
 
   const handleChange = async (next: StaffAppointmentEditScope) => {
     if (next === selected || updateScope.isPending || columnMissing) return;
@@ -107,6 +136,27 @@ export const StaffAppointmentPermissionSection: React.FC = () => {
           </p>
         )}
       </div>
+      </Card>
+      <Card title={<span id="staff-can-block-title">Bloqueio de agenda</span>}>
+        <SettingsRow
+          label="Colaboradores podem bloquear a própria agenda"
+          help="Ligada: cada um trava e destrava só a própria coluna. Desligada: só você bloqueia. Os bloqueios que já existem continuam valendo."
+        >
+          <SettingsSwitch
+            id="staff-can-block-agenda"
+            checked={canBlock}
+            onChange={handleBlockToggle}
+            ariaLabel="Colaboradores podem bloquear a própria agenda"
+          />
+        </SettingsRow>
+        {blockColumnMissing && (
+          <p className={`text-xs ${colors.textMuted}`} data-testid="staff-can-block-pending">
+            A escolha fica disponível após a próxima atualização do sistema.
+          </p>
+        )}
+        {(updateCanBlock.isPending || isLoading) && (
+          <span className="sr-only">Salvando permissão de bloqueio</span>
+        )}
       </Card>
     </section>
   );

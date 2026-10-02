@@ -41,6 +41,11 @@ export const businessSettingsSchema = z.object({
    * (normalizado em utils/staffAppointmentPermission).
    */
   staff_appointment_edit_scope: z.string().nullable().optional(),
+  /**
+   * Se o colaborador pode criar/remover bloqueio na própria agenda.
+   * Só existe depois da migration de agenda_blocks; default no produto é true.
+   */
+  staff_can_block_agenda: z.boolean().nullable().optional(),
   created_at: z.string().nullable().optional(),
   updated_at: z.string().nullable().optional(),
 });

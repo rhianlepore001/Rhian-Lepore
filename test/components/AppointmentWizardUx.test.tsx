@@ -16,6 +16,7 @@ vi.mock('../../hooks/useBrutalTheme', () => ({
 }));
 vi.mock('../../hooks/useBusinessCopy', () => ({ useBusinessCopy: () => ({ establishmentFallback: 'barbearia' }) }));
 vi.mock('../../hooks/useScheduling', () => ({ useCreateAppointment: () => ({ mutateAsync }) }));
+vi.mock('../../hooks/useAgendaBlocks', () => ({ useAgendaBlocks: () => ({ data: [] }) }));
 vi.mock('../../services/publicBooking', () => ({ getFirstAvailableProfessional: vi.fn() }));
 vi.mock('../../components/ui', () => ({ useToast: () => ({ showToast }) }));
 vi.mock('../../components/ui/Toast', () => ({ useToast: () => ({ showToast }) }));

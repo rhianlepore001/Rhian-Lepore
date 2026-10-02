@@ -26,6 +26,8 @@ import { getFirstAvailableProfessional } from '../services/publicBooking';
 import { useToast } from '@/components/ui';
 import { useProducts } from '@/hooks/useCatalog';
 import { slotConflictMessage } from '../utils/noShowSlotReuse';
+import { useAgendaBlocks } from '../hooks/useAgendaBlocks';
+import { AGENDA_BLOCKED_MESSAGE, isAgendaBlockedError } from '../utils/agendaBlockPermission';
 import { setAppointmentProductLines } from '@/services/catalog';
 import {
     ProductLinesPicker,
@@ -182,6 +184,8 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     ]);
 
     const finalPrice = parseFloat(customPrice || '0') * (1 - (parseFloat(discount || '0') / 100));
+    const durationMinutes = selectedServicesDetails.reduce((sum, s) => sum + (s.duration_minutes || 30), 0) || 30;
+    const { data: agendaBlocks = [] } = useAgendaBlocks(formatLocalDateString(selectedDate));
 
     const handleSubmit = async () => {
         if (!selectedClientId || !selectedDate || !selectedTime || !selectedProId) return;
@@ -194,8 +198,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
 
             const serviceNames = selectedServicesDetails.map(s => s.name).join(', ');
 
-            // Calculate total duration for availability check
-            const duration = selectedServicesDetails.reduce((sum, s) => sum + (s.duration_minutes || 30), 0);
+            const duration = durationMinutes;
 
             const client = clients.find(c => c.id === selectedClientId);
 
@@ -216,13 +219,17 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                 customServiceName: isCustomService ? (customServiceName || 'Servico Personalizado') : null,
                 // Forma de pagamento é escolhida em "Confirmar e cobrar": nasce "definir depois"
                 paymentMethod: null
-            }) as { success?: boolean; message?: string; booking_id?: string };
+            }) as { success?: boolean; message?: string; booking_id?: string; code?: string };
 
             if (!result.success) {
-                // Mensagem clara (ex.: serviço de 60 min num horário liberado de 30 min
-                // com outro agendamento ou pedido online dentro da duração).
+                const blocked = result.code === 'agenda_blocked' || isAgendaBlockedError(result);
                 const proName = teamMembers.find(m => m.id === selectedProId)?.name;
-                showToast(slotConflictMessage(duration || 30, proName, result.message), 'warning');
+                showToast(
+                    blocked
+                        ? AGENDA_BLOCKED_MESSAGE
+                        : slotConflictMessage(duration || 30, proName, result.message),
+                    'warning',
+                );
                 setLoading(false);
                 return;
             }
@@ -463,6 +470,8 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                             user={user}
                             businessHours={businessHours}
                             shopTimeZone={shopTimeZone}
+                            blocks={agendaBlocks}
+                            durationMinutes={durationMinutes}
                         />
                     )}
 

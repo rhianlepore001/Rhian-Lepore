@@ -95,4 +95,20 @@ describe('ScheduleSelection — horários seguem o expediente, encaixe fora dele
     await userEvent.click(early);
     expect(setSelectedTime).toHaveBeenCalledWith('00:30');
   });
+
+  it('omite horários que cruzam um bloqueio daquele profissional', () => {
+    const dateStr = `${MONDAY.getFullYear()}-${String(MONDAY.getMonth() + 1).padStart(2, '0')}-${String(MONDAY.getDate()).padStart(2, '0')}`;
+    setup({
+      blocks: [{
+        professional_id: 'p1',
+        starts_at: new Date(`${dateStr}T12:00:00`).toISOString(),
+        ends_at: new Date(`${dateStr}T13:00:00`).toISOString(),
+      }],
+      durationMinutes: 30,
+    });
+    expect(timeBtn('12:00')).toBeNull();
+    expect(timeBtn('12:30')).toBeNull();
+    expect(timeBtn('11:30')).toBeInTheDocument();
+    expect(timeBtn('13:00')).toBeInTheDocument();
+  });
 });

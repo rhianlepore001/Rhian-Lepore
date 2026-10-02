@@ -1,3 +1,5 @@
+import { AGENDA_BLOCKED_MESSAGE } from './agendaBlockPermission';
+
 /**
  * Mapa de erro: traduz exceções do Supabase/JS em copy humana PT-BR + código curto
  * para suporte. Nunca renderize `error.message` cru no JSX — passe por aqui.
@@ -38,6 +40,7 @@ const CODE_MAP: Record<string, string> = {
   '42501': 'Você não tem permissão para essa ação.',
   slot_unavailable: 'Este horário acabou de ser ocupado. Escolha outro.',
   booking_not_cancellable: 'Não foi possível cancelar este agendamento. Tente de novo ou fale com o salão.',
+  agenda_blocked: AGENDA_BLOCKED_MESSAGE,
 
   // PostgREST
   PGRST116: 'Não encontramos esse registro.',
@@ -69,6 +72,14 @@ function pickCode(raw: RawErrorShape): string {
   }
   if (msg.includes('booking_not_cancellable')) {
     return 'booking_not_cancellable';
+  }
+  if (
+    raw.code === 'agenda_blocked'
+    || msg.includes('agenda_blocked')
+    || msg.includes('está bloqueado')
+    || msg.includes('esta bloqueado')
+  ) {
+    return 'agenda_blocked';
   }
   if (raw.status === 401) return 'auth_expired';
   if (raw.status === 403) return 'permission_denied';

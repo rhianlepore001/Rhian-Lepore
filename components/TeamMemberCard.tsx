@@ -35,6 +35,7 @@ interface TeamMemberCardProps {
     onSaveCommission?: (memberId: string, draft: CommissionDraft) => Promise<void>;
     /** @deprecated tema vem do useBrutalTheme; mantido por compat de API */
     accentColor?: string;
+    children?: React.ReactNode;
 }
 
 export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
@@ -42,6 +43,7 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
     onEdit,
     onDelete,
     onSaveCommission,
+    children,
 }) => {
     const { colors, accent, radius, shadow, status } = useBrutalTheme();
     const [editingCommission, setEditingCommission] = useState(false);
@@ -222,6 +224,8 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
                     </div>
                 </div>
             )}
+
+            {children}
 
             <div className={`mt-5 pt-4 border-t ${colors.divider} flex flex-wrap justify-end items-center gap-2`}>
                 {!member.is_owner && onSaveCommission && !editingCommission && (

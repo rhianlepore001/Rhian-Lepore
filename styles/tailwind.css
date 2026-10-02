@@ -258,4 +258,14 @@
       transparent 1px 7px
     );
   }
+
+  /* Bloqueio de agenda: hachura no sentido oposto e mais densa que o expediente. */
+  .agenda-block-band {
+    background-color: color-mix(in srgb, var(--color-text-muted) 12%, var(--color-card));
+    background-image: repeating-linear-gradient(
+      45deg,
+      color-mix(in srgb, var(--color-text-muted) 22%, transparent) 0 2px,
+      transparent 2px 6px
+    );
+  }
 }

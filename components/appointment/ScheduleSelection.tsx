@@ -4,6 +4,7 @@ import { StepHeading } from './StepHeading';
 import { splitWizardTimeSlots } from '../../utils/agendaDayWindow';
 import { formatLocalDateString } from '../../utils/date';
 import type { BusinessHours } from '../../types/settings';
+import { slotOverlapsBlocks } from '../../utils/agendaBlockRange';
 
 interface ScheduleSelectionProps {
     teamMembers: any[];
@@ -23,6 +24,9 @@ interface ScheduleSelectionProps {
     /** Horário de funcionamento: horários do expediente primeiro; fora dele sob demanda (encaixe). */
     businessHours?: BusinessHours | null;
     shopTimeZone?: string;
+    /** Bloqueios do profissional: esses horários somem da lista (trava rígida). */
+    blocks?: Array<{ professional_id: string; starts_at: string; ends_at: string }>;
+    durationMinutes?: number;
 }
 
 /**
@@ -43,6 +47,8 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
     cardBg,
     businessHours = null,
     shopTimeZone,
+    blocks = [],
+    durationMinutes = 30,
 }) => {
     // Horário pré-preenchido fora da grade de 30 min (ex.: falta às 14:15)
     // entra na lista para aparecer selecionado.
@@ -57,6 +63,13 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
         }),
         [dateStr, businessHours, shopTimeZone, prefilledTime],
     );
+    const tz = shopTimeZone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const isBlockedTime = (time: string) => {
+        if (!selectedProId || blocks.length === 0) return false;
+        return slotOverlapsBlocks(dateStr, time, durationMinutes || 30, blocks, selectedProId, tz);
+    };
+    const inHoursOpen = inHours.filter((t) => !isBlockedTime(t));
+    const outOfHoursOpen = outOfHours.filter((t) => !isBlockedTime(t));
     // Horário escolhido (ex.: "+" da grade às 22:30) fora do expediente: seção já aberta.
     const [showOffHours, setShowOffHours] = useState(() => !!selectedTime && outOfHours.includes(selectedTime));
     const offHoursVisible = closed || showOffHours;
@@ -81,16 +94,16 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
     const timeGridClass = 'grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3';
     // Fora do expediente em ordem, separado em antes da abertura / intervalo / depois do fechamento.
     const offHoursGroups = useMemo(() => {
-        if (closed || inHours.length === 0) return [{ label: '', times: outOfHours }];
+        if (closed || inHours.length === 0) return [{ label: '', times: outOfHoursOpen }];
         const first = inHours[0];
         const last = inHours[inHours.length - 1];
         const groups = [
-            { label: 'Antes da abertura', times: outOfHours.filter((t) => t < first) },
-            { label: 'Intervalo', times: outOfHours.filter((t) => t > first && t < last) },
-            { label: 'Depois do fechamento', times: outOfHours.filter((t) => t > last) },
+            { label: 'Antes da abertura', times: outOfHoursOpen.filter((t) => t < first) },
+            { label: 'Intervalo', times: outOfHoursOpen.filter((t) => t > first && t < last) },
+            { label: 'Depois do fechamento', times: outOfHoursOpen.filter((t) => t > last) },
         ];
         return groups.filter((g) => g.times.length > 0);
-    }, [closed, inHours, outOfHours]);
+    }, [closed, inHours, outOfHoursOpen]);
 
     const changeDate = (days: number) => {
         const newDate = new Date(selectedDate);
@@ -210,8 +223,8 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                                     <span><span className="font-semibold text-theme-text">Fechado neste dia.</span> Escolha qualquer horário para um encaixe.</span>
                                 </p>
                             )}
-                            {inHours.length > 0 && <div className={timeGridClass}>{inHours.map(renderTime)}</div>}
-                            {!closed && outOfHours.length > 0 && (
+                            {inHoursOpen.length > 0 && <div className={timeGridClass}>{inHoursOpen.map(renderTime)}</div>}
+                            {!closed && outOfHoursOpen.length > 0 && (
                                 <button
                                     type="button"
                                     onClick={() => setShowOffHours((v) => !v)}
@@ -223,7 +236,7 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                                     <ChevronDown className={`w-4 h-4 transition-transform ${showOffHours ? 'rotate-180' : ''}`} aria-hidden="true" />
                                 </button>
                             )}
-                            {offHoursVisible && outOfHours.length > 0 && (
+                            {offHoursVisible && outOfHoursOpen.length > 0 && (
                                 <div id="wizard-off-hours" className="space-y-3">
                                     {offHoursGroups.map((g) => (
                                         <div key={g.label}>

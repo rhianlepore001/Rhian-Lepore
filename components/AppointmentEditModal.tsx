@@ -11,6 +11,9 @@ import { useToast } from './ui';
 import { formatDateForInput, combineDateAndTime } from '../utils/date';
 import { buildManualBookingTimeSlots } from '../utils/agendaTimeSlots';
 import { isStaffEditForbiddenError, STAFF_EDIT_FORBIDDEN_MESSAGE } from '../utils/staffAppointmentPermission';
+import { AGENDA_BLOCKED_MESSAGE, isAgendaBlockedError } from '../utils/agendaBlockPermission';
+import { useAgendaBlocks } from '../hooks/useAgendaBlocks';
+import { slotOverlapsBlocks } from '../utils/agendaBlockRange';
 
 import { SearchableSelect } from './SearchableSelect';
 import { useProducts } from '@/hooks/useCatalog';
@@ -30,6 +33,7 @@ interface Appointment {
     status: string;
     professional_id: string | null;
     notes?: string;
+    duration_minutes?: number;
 }
 
 interface TeamMember {
@@ -41,6 +45,7 @@ interface Service {
     id: string;
     name: string;
     price: number;
+    duration_minutes?: number;
 }
 
 interface Client {
@@ -195,6 +200,18 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     const [priceBeforeDiscount, setPriceBeforeDiscount] = useState(initialPriceBeforeDiscount);
     const [finalPriceInput, setFinalPriceInput] = useState(appointment.price.toFixed(2));
     const [discountPercentage, setDiscountPercentage] = useState(initialDiscountPercentage);
+    const { data: agendaBlocks = [] } = useAgendaBlocks(selectedDate);
+    const durationMin = appointment.duration_minutes
+        || services.filter((s) => selectedServices.includes(s.id)).reduce((sum, s) => sum + (s.duration_minutes || 30), 0)
+        || 30;
+    const visibleTimeSlots = useMemo(() => {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        return timeSlots.filter((t) => {
+            if (t === initialTime || t === selectedTime) return true;
+            if (!selectedProfessional) return true;
+            return !slotOverlapsBlocks(selectedDate, t, durationMin, agendaBlocks, selectedProfessional, tz);
+        });
+    }, [timeSlots, selectedDate, selectedTime, selectedProfessional, durationMin, agendaBlocks, initialTime]);
 
     // 1. Update Base Price and Reference Price when services change
     useEffect(() => {
@@ -303,7 +320,9 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
             showToast(
                 isStaffEditForbiddenError(error)
                     ? STAFF_EDIT_FORBIDDEN_MESSAGE
-                    : 'Não foi possível salvar as alterações. Tente novamente.',
+                    : isAgendaBlockedError(error)
+                        ? AGENDA_BLOCKED_MESSAGE
+                        : 'Não foi possível salvar as alterações. Tente novamente.',
                 'error',
             );
         } finally {
@@ -467,7 +486,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                                 disabled={loading}
                             >
                                 <option value="">Selecione</option>
-                                {timeSlots.map(time => (
+                                {visibleTimeSlots.map(time => (
                                     <option key={time} value={time}>{time}</option>
                                 ))}
                             </select>

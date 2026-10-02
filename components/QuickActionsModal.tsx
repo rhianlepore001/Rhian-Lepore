@@ -1,11 +1,13 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import FocusTrap from 'focus-trap-react';
-import { Calendar, DollarSign, X } from 'lucide-react';
+import { Ban, Calendar, DollarSign, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
+import { useBusinessSettings } from '../hooks/useSettings';
+import { canCreateAgendaBlock, normalizeStaffCanBlockAgenda } from '../utils/agendaBlockPermission';
 
 interface QuickActionsModalProps {
     onClose: () => void;
@@ -13,10 +15,15 @@ interface QuickActionsModalProps {
 
 export const QuickActionsModal: React.FC<QuickActionsModalProps> = ({ onClose }) => {
     const navigate = useNavigate();
-    const { role } = useAuth();
+    const { role, teamMemberId } = useAuth();
     const { setModalOpen } = useUI();
     const { colors, accent, status, radius, shadow } = useBrutalTheme();
     const isStaff = role === 'staff';
+    const { data: settings, isLoading: settingsLoading } = useBusinessSettings();
+    const staffCanBlock = settingsLoading && isStaff
+        ? false
+        : normalizeStaffCanBlockAgenda(settings?.staff_can_block_agenda);
+    const showBlock = canCreateAgendaBlock({ role, staffCanBlock, teamMemberId });
 
     useEffect(() => {
         setModalOpen(true);
@@ -53,7 +60,7 @@ export const QuickActionsModal: React.FC<QuickActionsModalProps> = ({ onClose })
                     </button>
                 </div>
 
-                <div className={`p-4 grid gap-4 ${isStaff ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                <div className={`p-4 grid gap-4 ${isStaff && !showBlock ? 'grid-cols-1' : 'grid-cols-2'}`}>
                     <button
                         onClick={() => handleAction('/agenda?new=true')}
                         className={`animate-in fade-in duration-300 delay-[0ms] flex min-h-[144px] flex-col items-center justify-center p-5 ${radius.card} border transition-all duration-200 active:scale-95 hover:scale-[1.02] ${accent.border} bg-[var(--color-card-hover)] hover:bg-[var(--color-accent-dim)] ${accent.shadow}`}
@@ -64,6 +71,21 @@ export const QuickActionsModal: React.FC<QuickActionsModalProps> = ({ onClose })
                         <span className={`font-bold text-sm ${colors.text} text-center`}>Novo Atendimento</span>
                         <span className={`text-xs font-mono ${colors.textMuted} uppercase mt-1`}>Agenda</span>
                     </button>
+
+                    {showBlock && (
+                        <button
+                            type="button"
+                            data-testid="quick-action-block-agenda"
+                            onClick={() => handleAction('/agenda?block=true')}
+                            className={`animate-in fade-in duration-300 delay-[25ms] flex min-h-[144px] flex-col items-center justify-center p-5 ${radius.card} border transition-all duration-200 active:scale-95 hover:scale-[1.02] ${colors.border} bg-[var(--color-card-hover)] hover:bg-[var(--color-card-hover)]`}
+                        >
+                            <div className={`p-3 ${radius.card} mb-3 ${colors.card} ${colors.textMuted}`}>
+                                <Ban className="w-8 h-8" />
+                            </div>
+                            <span className={`font-bold text-sm ${colors.text} text-center`}>Bloquear agenda</span>
+                            <span className={`text-xs font-mono ${colors.textMuted} uppercase mt-1`}>Agenda</span>
+                        </button>
+                    )}
 
                     {!isStaff && (
                         <button

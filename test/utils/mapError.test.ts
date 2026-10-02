@@ -67,4 +67,18 @@ describe('mapError', () => {
     expect(isEmailTakenError({ message: 'User already registered' })).toBe(true);
     expect(isEmailTakenError({ code: 'invalid_login' })).toBe(false);
   });
+
+  it('traduz agenda_blocked para copy de trava rígida', () => {
+    const out = mapError({ code: 'agenda_blocked', message: 'agenda_blocked' }, 'fallback');
+    expect(out.message).toContain('está bloqueado');
+    expect(out.message).toContain('Remova o bloqueio');
+    expect(mapError({ message: 'Este horário está bloqueado. Remova o bloqueio para agendar.' }, 'fallback').message)
+      .toContain('bloqueado');
+    const fromTrigger = mapError(
+      { code: '42501', message: 'Este horário está bloqueado. Remova o bloqueio para agendar.' },
+      'fallback',
+    );
+    expect(fromTrigger.message).toContain('Remova o bloqueio');
+    expect(fromTrigger.message).not.toContain('permissão');
+  });
 });

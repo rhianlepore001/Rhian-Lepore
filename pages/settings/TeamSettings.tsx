@@ -13,19 +13,36 @@ import { useQueryClient } from '@tanstack/react-query';
 import { TeamMemberCard, type CommissionDraft } from '../../components/TeamMemberCard';
 import { TeamMemberForm } from '../../components/TeamMemberForm';
 import { StaffAppointmentPermissionSection } from '../../components/settings/StaffAppointmentPermissionSection';
+import { TeamMemberBlocksSection } from '../../components/agenda/TeamMemberBlocksSection';
+import { AgendaBlockForm } from '../../components/agenda/AgendaBlockForm';
+import {
+    useUpcomingAgendaBlocks,
+    useCreateAgendaBlock,
+    useDeleteAgendaBlock,
+} from '../../hooks/useAgendaBlocks';
 import { supabase } from '../../lib/supabase';
 import { mapError, formatUserFacingError } from '../../utils/mapError';
+import { resolveBusinessTimezone } from '../../utils/businessTimezone';
+import { isAgendaBlockConflictResult, type AgendaBlock, type AgendaBlockConflict } from '../../types/agendaBlocks';
+import { messageForAgendaBlockResultCode } from '../../utils/agendaBlockPermission';
 
 export const TeamSettings: React.FC = () => {
-    const { companyId } = useAuth();
+    const { companyId, region } = useAuth();
     const { accent, colors, classes } = useBrutalTheme();
     const queryClient = useQueryClient();
     const { data: members = [], isLoading: loading } = useTeamMembers();
     const { data: settingsData } = useBusinessSettings();
     const deleteMemberMutation = useDeleteTeamMember();
+    const { data: upcomingBlocks = [] } = useUpcomingAgendaBlocks();
+    const createBlock = useCreateAgendaBlock();
+    const deleteBlock = useDeleteAgendaBlock();
+    const shopTimeZone = resolveBusinessTimezone({ timezone: settingsData?.timezone, region });
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingMember, setEditingMember] = useState<any>(null);
     const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+    const [blockFormMemberId, setBlockFormMemberId] = useState<string | null>(null);
+    const [blockConflicts, setBlockConflicts] = useState<AgendaBlockConflict[] | undefined>();
+    const [unlockTarget, setUnlockTarget] = useState<AgendaBlock | null>(null);
     const { showToast } = useToast();
 
     const [settlementDay, setSettlementDay] = useState<number | string>(5);
@@ -70,6 +87,51 @@ export const TeamSettings: React.FC = () => {
             showToast(message, 'error');
         } finally {
             setPendingDeleteId(null);
+        }
+    };
+
+    const blocksForMember = (memberId: string) =>
+        upcomingBlocks.filter((b) => b.professional_id === memberId);
+
+    const todayStr = () => {
+        const d = new Date();
+        const pad = (n: number) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    };
+
+    const handleCreateBlock = async (input: {
+        professionalId: string;
+        startsAt: string;
+        endsAt: string;
+        acknowledgeConflicts: boolean;
+    }) => {
+        try {
+            const result = await createBlock.mutateAsync(input);
+            if (isAgendaBlockConflictResult(result)) {
+                setBlockConflicts(result.items);
+                return;
+            }
+            if (result.success === false) {
+                showToast(result.message ?? messageForAgendaBlockResultCode(result.code), 'error');
+                return;
+            }
+            setBlockFormMemberId(null);
+            setBlockConflicts(undefined);
+            showToast('Agenda bloqueada.', 'success');
+        } catch (error) {
+            showToast(formatUserFacingError(mapError(error, 'Não foi possível bloquear a agenda.')), 'error');
+        }
+    };
+
+    const confirmUnlock = async () => {
+        if (!unlockTarget) return;
+        try {
+            await deleteBlock.mutateAsync(unlockTarget.id);
+            showToast('Agenda desbloqueada.', 'success');
+        } catch (error) {
+            showToast(formatUserFacingError(mapError(error, 'Não foi possível desbloquear.')), 'error');
+        } finally {
+            setUnlockTarget(null);
         }
     };
 
@@ -237,7 +299,18 @@ export const TeamSettings: React.FC = () => {
                                                 setIsModalOpen(true);
                                             }}
                                             onDelete={handleDelete}
-                                        />
+                                        >
+                                            <TeamMemberBlocksSection
+                                                memberName={member.name}
+                                                blocks={blocksForMember(member.id)}
+                                                timeZone={shopTimeZone}
+                                                onCreate={() => {
+                                                    setBlockConflicts(undefined);
+                                                    setBlockFormMemberId(member.id);
+                                                }}
+                                                onUnlock={setUnlockTarget}
+                                            />
+                                        </TeamMemberCard>
                                     ))}
                                 </div>
                             </section>
@@ -260,7 +333,18 @@ export const TeamSettings: React.FC = () => {
                                             }}
                                             onDelete={handleDelete}
                                             onSaveCommission={handleSaveCommission}
-                                        />
+                                        >
+                                            <TeamMemberBlocksSection
+                                                memberName={member.name}
+                                                blocks={blocksForMember(member.id)}
+                                                timeZone={shopTimeZone}
+                                                onCreate={() => {
+                                                    setBlockConflicts(undefined);
+                                                    setBlockFormMemberId(member.id);
+                                                }}
+                                                onUnlock={setUnlockTarget}
+                                            />
+                                        </TeamMemberCard>
                                     ))}
                                 </div>
                             </section>
@@ -401,6 +485,33 @@ export const TeamSettings: React.FC = () => {
                     loading={deleteMemberMutation.isPending}
                     onCancel={() => setPendingDeleteId(null)}
                     onConfirm={() => void confirmDelete()}
+                />
+
+                <ConfirmModal
+                    open={!!unlockTarget}
+                    title="Desbloquear agenda"
+                    message="Quem tiver permissão volta a poder marcar neste período."
+                    confirmLabel="Desbloquear"
+                    variant="danger"
+                    loading={deleteBlock.isPending}
+                    onCancel={() => setUnlockTarget(null)}
+                    onConfirm={() => void confirmUnlock()}
+                />
+
+                <AgendaBlockForm
+                    open={!!blockFormMemberId}
+                    onClose={() => {
+                        setBlockFormMemberId(null);
+                        setBlockConflicts(undefined);
+                    }}
+                    members={cardMembers.map((m) => ({ id: m.id, name: m.name }))}
+                    showProfessionalSelect={false}
+                    professionalId={blockFormMemberId ?? ''}
+                    initialDate={todayStr()}
+                    timeZone={shopTimeZone}
+                    submitting={createBlock.isPending}
+                    conflicts={blockConflicts}
+                    onSubmit={handleCreateBlock}
                 />
 
                 {isModalOpen && (

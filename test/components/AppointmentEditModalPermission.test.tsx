@@ -42,6 +42,7 @@ vi.mock('../../components/ui/Button', () => ({
   ),
 }));
 vi.mock('@/hooks/useCatalog', () => ({ useProducts: () => ({ data: [] }) }));
+vi.mock('../../hooks/useAgendaBlocks', () => ({ useAgendaBlocks: () => ({ data: [] }) }));
 vi.mock('@/services/catalog', () => ({
   listAppointmentProductLines: vi.fn().mockResolvedValue([]),
   setAppointmentProductLines: vi.fn().mockResolvedValue([]),

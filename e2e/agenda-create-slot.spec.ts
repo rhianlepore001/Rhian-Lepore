@@ -92,6 +92,10 @@ test.describe('Agenda — criar agendamento (botão + célula)', () => {
     await navAgenda(page);
 
     await page.locator('#btn-new-appointment').click();
+    const choice = page.getByTestId('agenda-choice-new-appointment');
+    if (await choice.isVisible({ timeout: 2_000 }).catch(() => false)) {
+      await choice.click();
+    }
     await expect(page.getByRole('heading', { name: /Novo Atendimento/i })).toBeVisible({
       timeout: 5_000,
     });
@@ -110,6 +114,10 @@ test.describe('Agenda — criar agendamento (botão + célula)', () => {
     const slotTime = timeMatch?.[1] ?? '';
 
     await emptySlot.click();
+    const choice = page.getByTestId('agenda-choice-new-appointment');
+    if (await choice.isVisible({ timeout: 2_000 }).catch(() => false)) {
+      await choice.click();
+    }
     const clientName = await completeWizardFromClient(page);
 
     // Wizard fecha sem F5

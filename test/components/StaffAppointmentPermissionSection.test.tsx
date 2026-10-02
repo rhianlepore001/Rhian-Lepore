@@ -4,12 +4,14 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 const state: { role: string; settings: Record<string, unknown> | null } = { role: 'owner', settings: null };
 const mutateAsync = vi.fn();
+const mutateCanBlock = vi.fn();
 const showToast = vi.fn();
 
 vi.mock('../../contexts/AuthContext', () => ({ useAuth: () => ({ role: state.role }) }));
 vi.mock('../../hooks/useSettings', () => ({
   useBusinessSettings: () => ({ data: state.settings, isLoading: false }),
   useUpdateStaffAppointmentEditScope: () => ({ mutateAsync, isPending: false }),
+  useUpdateStaffCanBlockAgenda: () => ({ mutateAsync: mutateCanBlock, isPending: false }),
 }));
 vi.mock('../../hooks/useBrutalTheme', () => ({
   useBrutalTheme: () => ({ colors: { text: '', textMuted: '', textSecondary: '', border: '' }, accent: { text: '', border: '', bgDim: '' } }),
@@ -29,6 +31,7 @@ describe('Configurações › Equipe — permissão de edição de agendamentos'
     state.role = 'owner';
     state.settings = { user_id: 'owner-1', staff_appointment_edit_scope: 'none' };
     mutateAsync.mockResolvedValue('saved');
+    mutateCanBlock.mockResolvedValue('saved');
   });
 
   it('dono vê as três opções em pt-BR, com "Não podem editar" marcado por padrão', () => {
@@ -77,5 +80,15 @@ describe('Configurações › Equipe — permissão de edição de agendamentos'
     state.role = 'staff';
     const { container } = render(<StaffAppointmentPermissionSection />);
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it('interruptor de bloquear agenda começa ligado e salva ao desligar', async () => {
+    state.settings = { user_id: 'owner-1', staff_appointment_edit_scope: 'none', staff_can_block_agenda: true };
+    render(<StaffAppointmentPermissionSection />);
+    expect(screen.getByText('Colaboradores podem bloquear a própria agenda')).toBeInTheDocument();
+    const toggle = screen.getByLabelText('Colaboradores podem bloquear a própria agenda') as HTMLInputElement;
+    expect(toggle.checked).toBe(true);
+    fireEvent.click(toggle);
+    await waitFor(() => expect(mutateCanBlock).toHaveBeenCalledWith(false));
   });
 });

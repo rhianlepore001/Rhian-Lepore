@@ -17,6 +17,9 @@ import { AppointmentEditModal } from '../components/AppointmentEditModal';
 import { AppointmentWizard } from '../components/AppointmentWizard';
 import { AgendaDayScroller } from '../components/agenda/AgendaDayScroller';
 import { AgendaResourceGrid } from '../components/agenda/AgendaResourceGrid';
+import { AgendaCreateChoice } from '../components/agenda/AgendaCreateChoice';
+import { AgendaBlockForm } from '../components/agenda/AgendaBlockForm';
+import { AgendaBlockDetails } from '../components/agenda/AgendaBlockDetails';
 import { AgendaStatusLegend } from '../components/agenda/AgendaStatusLegend';
 import { AgendaPublicBookings } from '../components/agenda/AgendaPublicBookings';
 import { AgendaPublicLinkBar } from '../components/agenda/AgendaPublicLinkBar';
@@ -38,6 +41,19 @@ import { formatDateForInput, formatLocalDateString, combineDateAndTime } from '.
 import { buildAgendaDayWindow } from '../utils/agendaDayWindow';
 import { resolveBusinessTimezone } from '../utils/businessTimezone';
 import { useBusinessSettings } from '../hooks/useSettings';
+import {
+    useAgendaBlocks,
+    useCreateAgendaBlock,
+    useDeleteAgendaBlock,
+} from '../hooks/useAgendaBlocks';
+import {
+    agendaBlockBandLabel,
+    canCreateAgendaBlock,
+    canManageAgendaBlock,
+    messageForAgendaBlockResultCode,
+    normalizeStaffCanBlockAgenda,
+} from '../utils/agendaBlockPermission';
+import { isAgendaBlockConflictResult, type AgendaBlock, type AgendaBlockConflict } from '../types/agendaBlocks';
 import { useAppTour } from '../hooks/useAppTour';
 import { logger } from '../utils/Logger';
 import { getVisualStatus, isNoShowStatus, VISUAL_STATUS_CLASSES, VISUAL_STATUS_LABEL } from '../utils/appointmentStatus';
@@ -111,6 +127,8 @@ export const Agenda: React.FC = () => {
     // Horário de funcionamento + fuso do negócio (dono e colaborador leem via RLS "company read").
     const { data: businessSettings } = useBusinessSettings();
     const shopTimeZone = resolveBusinessTimezone({ timezone: businessSettings?.timezone, region });
+    const staffCanBlock = normalizeStaffCanBlockAgenda(businessSettings?.staff_can_block_agenda);
+    const canOpenBlockFromPlus = canCreateAgendaBlock({ role, staffCanBlock, teamMemberId });
     const effectiveUserId = companyId ?? user?.id;
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
@@ -124,6 +142,10 @@ export const Agenda: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [fetchError, setFetchError] = useState<string | null>(null);
     const [selectedDate, setSelectedDate] = useState(getInitialDate(searchParams));
+    const agendaDateStr = formatLocalDateString(selectedDate);
+    const { data: agendaBlocks = [] } = useAgendaBlocks(agendaDateStr);
+    const createBlock = useCreateAgendaBlock();
+    const deleteBlock = useDeleteAgendaBlock();
     const [showNewAppointmentModal, setShowNewAppointmentModal] = useState(false);
     /**
      * Prefill do wizard: célula vazia da grade (profissional + horário) ou
@@ -136,6 +158,13 @@ export const Agenda: React.FC = () => {
         date?: Date;
         slotContext?: string;
     } | null>(null);
+    const [showCreateChoice, setShowCreateChoice] = useState(false);
+    const [choiceFromSlot, setChoiceFromSlot] = useState(false);
+    const [showBlockForm, setShowBlockForm] = useState(false);
+    const [blockProfessionalId, setBlockProfessionalId] = useState('');
+    const [blockInitialTime, setBlockInitialTime] = useState<string | undefined>();
+    const [blockConflicts, setBlockConflicts] = useState<AgendaBlockConflict[] | undefined>();
+    const [selectedBlock, setSelectedBlock] = useState<AgendaBlock | null>(null);
     const [showHistoryModal, setShowHistoryModal] = useState(false);
     const [showAllAppointmentsModal, setShowAllAppointmentsModal] = useState(false);
     const [historyAppointments, setHistoryAppointments] = useState<Appointment[]>([]);
@@ -311,19 +340,42 @@ export const Agenda: React.FC = () => {
         }
     }, [showNewAppointmentModal, selectedDate, selectedProfessionalIds, teamMembers, isStaff, teamMemberId]);
 
-    // Deep-link: ?new=true (QuickActions etc.) e clientId/service do CRM
+    // Deep-link: ?new=true (QuickActions etc.), ?block=true e clientId/service do CRM
     useEffect(() => {
         const clientIdParam = searchParams.get('clientId');
         const serviceNameParam = searchParams.get('service');
         const isNewQuery = searchParams.get('new') === 'true';
+        const isBlockQuery = searchParams.get('block') === 'true';
 
         if (isNewQuery) {
             setWizardPrefill(null);
             setShowNewAppointmentModal(true);
-            // Preserva date= e demais params; só remove new
             const next = new URLSearchParams(searchParams);
             next.delete('new');
             navigate({ search: next.toString() }, { replace: true });
+        }
+
+        if (isBlockQuery) {
+            if (!canOpenBlockFromPlus) {
+                const next = new URLSearchParams(searchParams);
+                next.delete('block');
+                navigate({ search: next.toString() }, { replace: true });
+            } else {
+                const proId = isStaff && teamMemberId
+                    ? teamMemberId
+                    : selectedProfessionalIds.length === 1
+                        ? selectedProfessionalIds[0]
+                        : teamMembers[0]?.id ?? '';
+                if (proId) {
+                    setBlockConflicts(undefined);
+                    setBlockInitialTime(undefined);
+                    setBlockProfessionalId(proId);
+                    setShowBlockForm(true);
+                    const next = new URLSearchParams(searchParams);
+                    next.delete('block');
+                    navigate({ search: next.toString() }, { replace: true });
+                }
+            }
         }
 
         if (clientIdParam && clients.length > 0) {
@@ -336,7 +388,7 @@ export const Agenda: React.FC = () => {
             }
             setShowNewAppointmentModal(true);
         }
-    }, [searchParams, clients, services]);
+    }, [searchParams, clients, services, canOpenBlockFromPlus, isStaff, teamMemberId, selectedProfessionalIds, teamMembers]);
 
     const fetchData = async (dateOverride?: Date) => {
         setLoading(true);
@@ -995,6 +1047,80 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
         setShowNewAppointmentModal(true);
     };
 
+    const defaultBlockProfessionalId = () => {
+        if (isStaff && teamMemberId) return teamMemberId;
+        if (selectedProfessionalIds.length === 1) return selectedProfessionalIds[0];
+        return teamMembers[0]?.id ?? '';
+    };
+
+    const openEmptySlot = (professionalId: string, time: string) => {
+        const noShow = findNoShowCoveringSlot(appointments, professionalId, selectedDate, time);
+        setWizardPrefill({
+            professionalId,
+            time,
+            slotContext: noShow ? noShowSlotContext(noShow) : undefined,
+        });
+        const canBlockHere = canCreateAgendaBlock({
+            role,
+            staffCanBlock,
+            teamMemberId,
+            professionalId,
+        });
+        if (canBlockHere) {
+            setBlockProfessionalId(professionalId);
+            setBlockInitialTime(time);
+            setChoiceFromSlot(true);
+            setShowCreateChoice(true);
+        } else {
+            setShowNewAppointmentModal(true);
+        }
+    };
+
+    const openBlockFormFromChoice = () => {
+        setShowCreateChoice(false);
+        setBlockConflicts(undefined);
+        if (!choiceFromSlot) {
+            setBlockInitialTime(undefined);
+            setBlockProfessionalId(defaultBlockProfessionalId());
+        }
+        setShowBlockForm(true);
+    };
+
+    const handleCreateAgendaBlock = async (input: {
+        professionalId: string;
+        startsAt: string;
+        endsAt: string;
+        acknowledgeConflicts: boolean;
+    }) => {
+        try {
+            const result = await createBlock.mutateAsync(input);
+            if (isAgendaBlockConflictResult(result)) {
+                setBlockConflicts(result.items);
+                return;
+            }
+            if (result.success === false) {
+                showToast(result.message ?? messageForAgendaBlockResultCode(result.code), 'error');
+                return;
+            }
+            setShowBlockForm(false);
+            setBlockConflicts(undefined);
+            showToast('Agenda bloqueada.', 'success');
+        } catch (error) {
+            showToast(formatUserFacingError(mapError(error, 'Não foi possível bloquear a agenda.')), 'error');
+        }
+    };
+
+    const handleUnlockBlock = async () => {
+        if (!selectedBlock) return;
+        try {
+            await deleteBlock.mutateAsync(selectedBlock.id);
+            setSelectedBlock(null);
+            showToast('Agenda desbloqueada.', 'success');
+        } catch (error) {
+            showToast(formatUserFacingError(mapError(error, 'Não foi possível desbloquear.')), 'error');
+        }
+    };
+
     /**
      * Falta (NoShow) -> "Usar este horário": abre o wizard de NOVO agendamento
      * no mesmo profissional/dia/horário, com cliente e serviço em branco
@@ -1154,14 +1280,20 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                             >
                                 <span className="hidden md:inline">Todos Agendamentos</span>
                             </Button>
-                            <div className="hidden md:contents">
+                            <div className="contents">
                                 <Button
                                     id="btn-new-appointment"
                                     variant="primary"
                                     icon={<Plus />}
+                                    className="flex-1 md:flex-none"
                                     onClick={() => {
                                         setWizardPrefill(null);
-                                        setShowNewAppointmentModal(true);
+                                        if (canOpenBlockFromPlus) {
+                                            setChoiceFromSlot(false);
+                                            setShowCreateChoice(true);
+                                        } else {
+                                            setShowNewAppointmentModal(true);
+                                        }
                                     }}
                                 >
                                     Novo Agendamento
@@ -1315,10 +1447,19 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                             const full = appointments.find((a) => a.id === apt.id);
                             if (full) setShowingDetailsAppointment(full);
                         }}
-                        onEmptySlotClick={openNewAppointmentAt}
+                        onEmptySlotClick={openEmptySlot}
                         offHoursSlots={dayWindow.offHours}
                         endLabel={dayWindow.endLabel}
                         highlightAppointmentId={highlightId}
+                        dateStr={agendaDateStr}
+                        blocks={agendaBlocks}
+                        onSelectBlock={(block) => setSelectedBlock(block as AgendaBlock)}
+                        blockCaption={(professionalId) => agendaBlockBandLabel({
+                            role,
+                            staffCanBlock,
+                            teamMemberId,
+                            professionalId,
+                        })}
                     />
                     <AgendaStatusLegend
                         emptyHint={
@@ -1643,6 +1784,59 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                         </div>
 
             </UiModal>
+
+            <AgendaCreateChoice
+                open={showCreateChoice}
+                onClose={() => setShowCreateChoice(false)}
+                canBlock={choiceFromSlot
+                    ? canCreateAgendaBlock({
+                        role,
+                        staffCanBlock,
+                        teamMemberId,
+                        professionalId: wizardPrefill?.professionalId ?? blockProfessionalId,
+                    })
+                    : canOpenBlockFromPlus}
+                source={choiceFromSlot ? 'slot' : 'plus'}
+                onNewAppointment={() => {
+                    setShowCreateChoice(false);
+                    setShowNewAppointmentModal(true);
+                }}
+                onBlockAgenda={openBlockFormFromChoice}
+            />
+
+            <AgendaBlockForm
+                open={showBlockForm}
+                onClose={() => {
+                    setShowBlockForm(false);
+                    setBlockConflicts(undefined);
+                }}
+                members={teamMembers}
+                showProfessionalSelect={!isStaff && !choiceFromSlot}
+                professionalId={blockProfessionalId}
+                onProfessionalIdChange={setBlockProfessionalId}
+                initialDate={agendaDateStr}
+                initialTime={blockInitialTime}
+                timeZone={shopTimeZone}
+                submitting={createBlock.isPending}
+                conflicts={blockConflicts}
+                onSubmit={handleCreateAgendaBlock}
+            />
+
+            <AgendaBlockDetails
+                open={!!selectedBlock}
+                block={selectedBlock}
+                professionalName={teamMembers.find((m) => m.id === selectedBlock?.professional_id)?.name}
+                timeZone={shopTimeZone}
+                canUnlock={!!selectedBlock && canManageAgendaBlock({
+                    role,
+                    staffCanBlock,
+                    teamMemberId,
+                    professionalId: selectedBlock.professional_id,
+                })}
+                unlocking={deleteBlock.isPending}
+                onClose={() => setSelectedBlock(null)}
+                onUnlock={() => { void handleUnlockBlock(); }}
+            />
 
             {/* New Appointment Wizard */}
             {showNewAppointmentModal && (

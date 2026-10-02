@@ -111,6 +111,30 @@ export async function updateStaffAppointmentEditScope(
   return 'saved';
 }
 
+export type StaffCanBlockAgendaSaveResult = 'saved' | 'unsupported';
+
+function isMissingStaffCanBlockColumn(error: { code?: string; message?: string }): boolean {
+  if (error.code === '42703' || error.code === 'PGRST204') {
+    return /staff_can_block_agenda/i.test(error.message ?? '') || !error.message;
+  }
+  return false;
+}
+
+export async function updateStaffCanBlockAgenda(
+  companyId: string,
+  enabled: boolean,
+): Promise<StaffCanBlockAgendaSaveResult> {
+  const { error } = await supabase
+    .from('business_settings')
+    .upsert({ user_id: companyId, staff_can_block_agenda: enabled }, { onConflict: 'user_id' });
+
+  if (error) {
+    if (isMissingStaffCanBlockColumn(error)) return 'unsupported';
+    throw error;
+  }
+  return 'saved';
+}
+
 export async function fetchProfileFields(
   userId: string,
 ): Promise<ProfileFields | null> {

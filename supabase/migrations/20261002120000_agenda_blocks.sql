@@ -1,5 +1,5 @@
 -- =============================================================================
--- Bloqueio de agenda por colaborador (trava rígida, sem motivo, sem encaixe)
+-- Bloqueio de agenda por colaborador (trava rígida, sem justificativa, sem encaixe)
 -- =============================================================================
 -- ROLLBACK: docs/rollbacks/20261002120000_agenda_blocks_rollback.sql
 -- =============================================================================
@@ -27,7 +27,7 @@ CREATE INDEX IF NOT EXISTS agenda_blocks_lookup_idx
   ON public.agenda_blocks (user_id, professional_id, starts_at);
 
 COMMENT ON TABLE public.agenda_blocks IS
-  'Intervalo [starts_at, ends_at) em que o profissional não recebe agendamento. Sem motivo. Mutação só via RPC.';
+  'Intervalo [starts_at, ends_at) em que o profissional não recebe agendamento. Sem justificativa. Mutação só via RPC.';
 
 ALTER TABLE public.agenda_blocks ENABLE ROW LEVEL SECURITY;
 

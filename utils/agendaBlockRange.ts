@@ -29,6 +29,54 @@ export function intervalsOverlap(
   return as < be && ae > bs;
 }
 
+export const BLOCK_START_ADJUSTED_MESSAGE =
+  'O início do bloqueio já passou. Ajustamos para agora — confira e confirme de novo.';
+
+export const BLOCK_START_IN_PAST_MESSAGE = 'O início do bloqueio já passou.';
+
+export const BLOCK_PERIOD_ENDED_MESSAGE = 'Esse período já terminou.';
+
+const START_TOLERANCE_MS = 5 * 60_000;
+
+export type AgendaBlockStartDecision =
+  | { action: 'submit' }
+  | { action: 'adjust'; startsAt: string; message: string }
+  | { action: 'refuse'; message: string };
+
+/**
+ * B-21/B-22: início de hoje que já passou vira agora e pede confirmação.
+ * Outro dia, ou fim já no passado, recusa sem dizer que ajustou.
+ */
+export function classifyAgendaBlockStart(input: {
+  startsAt: string;
+  endsAt: string;
+  timeZone: string;
+  now?: Date;
+}): AgendaBlockStartDecision {
+  const now = input.now ?? new Date();
+  const start = new Date(input.startsAt);
+  const end = new Date(input.endsAt);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    return { action: 'refuse', message: 'Não foi possível bloquear. Confira as datas.' };
+  }
+  if (end.getTime() <= now.getTime()) {
+    return { action: 'refuse', message: BLOCK_PERIOD_ENDED_MESSAGE };
+  }
+  if (start.getTime() >= now.getTime() - START_TOLERANCE_MS) {
+    return { action: 'submit' };
+  }
+  const startDay = getDateStringInTimeZone(start, input.timeZone);
+  const today = getDateStringInTimeZone(now, input.timeZone);
+  if (startDay === today) {
+    return {
+      action: 'adjust',
+      startsAt: now.toISOString(),
+      message: BLOCK_START_ADJUSTED_MESSAGE,
+    };
+  }
+  return { action: 'refuse', message: BLOCK_START_IN_PAST_MESSAGE };
+}
+
 export function buildAgendaBlockRange(input: {
   kind: AgendaBlockKind;
   startDate: string;

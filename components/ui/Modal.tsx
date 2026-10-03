@@ -148,7 +148,7 @@ export const Modal: React.FC<ModalProps> = ({
                     'p-1.5 rounded-lg transition-colors duration-150',
                     colors.textMuted,
                     'hover:bg-[var(--color-card-hover)]',
-                    'min-h-[44px] min-w-[44px] md:min-h-[36px] md:min-w-[36px]',
+                    'min-h-[44px] min-w-[44px]',
                     'inline-flex items-center justify-center',
                   ].join(' ')}
                   aria-label="Fechar"

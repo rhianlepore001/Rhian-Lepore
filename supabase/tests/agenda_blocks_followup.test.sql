@@ -63,6 +63,12 @@ SELECT pg_temp.check('B-35 horário original preservado',
 SELECT pg_temp.check('B-30 só status dentro do bloqueio',
   pg_temp.try($q$UPDATE public.appointments SET status = 'Confirmed' WHERE id = '40000000-0000-0000-0000-000000000001'$q$),
   'ok');
+SELECT pg_temp.check('B-30 duração maior dentro do bloqueio',
+  pg_temp.try($q$UPDATE public.appointments SET duration_minutes = 240 WHERE id = '40000000-0000-0000-0000-000000000001'$q$),
+  'error:Horário bloqueado na agenda de Diego. Para agendar, remova o bloqueio primeiro.');
+SELECT pg_temp.check('B-30 duração original permanece',
+  (SELECT duration_minutes::text FROM public.appointments WHERE id = '40000000-0000-0000-0000-000000000001'),
+  '30');
 
 -- B-41
 INSERT INTO public.agenda_blocks (user_id, professional_id, starts_at, ends_at)
@@ -98,7 +104,10 @@ SELECT pg_temp.check('B-19 início 10 dias atrás',
   'block_starts_in_past');
 SELECT pg_temp.check('B-19 mensagem',
   (public.create_agenda_block(:'PRO2', now() - interval '10 days', now() - interval '9 days', false)->>'message'),
-  'O início do bloqueio já passou. Ajustamos para agora — confira e confirme de novo.');
+  'Esse período já terminou.');
+SELECT pg_temp.check('B-19 início antigo ainda em curso não ajusta',
+  (public.create_agenda_block(:'PRO2', now() - interval '10 days', now() + interval '1 day', false)->>'message'),
+  'O início do bloqueio já passou.');
 SELECT pg_temp.check('B-19 intervalo já terminado',
   (public.create_agenda_block(:'PRO2', now() - interval '4 minutes', now() - interval '1 minute', false)->>'code'),
   'block_starts_in_past');
@@ -130,14 +139,79 @@ SELECT pg_temp.check('B-20 mensagem e lista nova',
   (SELECT (r->>'message') || ':' || ((r->'items')::jsonb @> '[{"id":"40000000-0000-0000-0000-0000000000b2"}]'::jsonb)::text
    FROM (SELECT public.create_agenda_block(:'PRO1', now() + interval '20 days', now() + interval '20 days 2 hours', true, ARRAY['40000000-0000-0000-0000-0000000000b1']::uuid[]) AS r) s),
   'Entrou um novo atendimento nesse período. Revise a lista e confirme de novo.:true');
-SELECT pg_temp.check('B-20 ack sem lista ainda cria (compatível)',
-  (public.create_agenda_block(:'PRO2', now() + interval '40 days', now() + interval '40 days 1 hour', true, NULL)->>'success'),
-  'true');
+SELECT pg_temp.check('B-20 ack sem lista não cria',
+  (SELECT (r->>'success') || ':' || (r->>'code') || ':' ||
+     (SELECT count(*)::text FROM public.agenda_blocks b
+      WHERE b.professional_id = :'PRO1'
+        AND b.starts_at < now() + interval '20 days 2 hours'
+        AND b.ends_at > now() + interval '20 days')
+   FROM (SELECT public.create_agenda_block(:'PRO1', now() + interval '20 days', now() + interval '20 days 2 hours', true, NULL) AS r) s),
+  'false:conflicts:0');
 SELECT pg_temp.check('B-20 confirmação com a lista nova cria e não cancela',
   (SELECT (public.create_agenda_block(:'PRO1', now() + interval '20 days', now() + interval '20 days 2 hours', true,
       ARRAY['40000000-0000-0000-0000-0000000000b1','40000000-0000-0000-0000-0000000000b2']::uuid[])->>'success')
     || ':' || (SELECT count(*)::text FROM public.appointments WHERE id IN ('40000000-0000-0000-0000-0000000000b1','40000000-0000-0000-0000-0000000000b2') AND status IN ('Confirmed','Pending'))),
   'true:2');
+
+-- B-03: bloqueios podem se sobrepor
+SELECT pg_temp.check('B-03 bloqueios sobrepostos',
+  (SELECT (public.create_agenda_block(:'PRO2', now() + interval '15 days', now() + interval '15 days 2 hours', false)->>'success')
+    || ':' || (public.create_agenda_block(:'PRO2', now() + interval '15 days 1 hour', now() + interval '15 days 3 hours', false)->>'success')),
+  'true:true');
+
+-- B-21/B-22: dia inteiro de hoje (00:00) e período já passado no mesmo dia
+DO $$
+DECLARE
+  v_tz text := 'Europe/Lisbon';
+  v_day_start timestamptz := date_trunc('day', timezone(v_tz, now())) AT TIME ZONE v_tz;
+  v_day_end timestamptz := v_day_start + interval '1 day';
+  v_noon timestamptz := v_day_start + interval '12 hours';
+  r json;
+  v_code text;
+  v_msg text;
+BEGIN
+  r := public.create_agenda_block('10000000-0000-0000-0000-000000000002', v_day_start, v_day_end, false);
+  IF v_day_start < now() - interval '5 minutes' THEN
+    v_code := 'block_start_adjusted';
+    v_msg := 'O início do bloqueio já passou. Ajustamos para agora — confira e confirme de novo.';
+  ELSE
+    v_code := 'created';
+    v_msg := 'created';
+  END IF;
+  INSERT INTO results VALUES (
+    'B-21 dia inteiro hoje',
+    COALESCE(r->>'code', CASE WHEN r->>'success' = 'true' THEN 'created' ELSE 'fail' END),
+    v_code
+  );
+  INSERT INTO results VALUES ('B-21 mensagem', COALESCE(r->>'message', 'created'), v_msg);
+  IF r->>'code' = 'block_start_adjusted' THEN
+    IF (r->>'starts_at')::timestamptz BETWEEN now() - interval '5 seconds' AND now() + interval '5 seconds' THEN
+      INSERT INTO results VALUES ('B-22 início efetivo é agora', 'now', 'now');
+    ELSE
+      INSERT INTO results VALUES ('B-22 início efetivo é agora', COALESCE(r->>'starts_at', 'null'), 'now');
+    END IF;
+    r := public.create_agenda_block('10000000-0000-0000-0000-000000000002', now(), v_day_end, false);
+  END IF;
+  INSERT INTO results VALUES ('B-22 segunda confirmação cria', COALESCE(r->>'success', 'false'), 'true');
+
+  r := public.create_agenda_block('10000000-0000-0000-0000-000000000002', v_noon, v_noon + interval '2 hours', false);
+  IF v_noon + interval '2 hours' <= now() THEN
+    v_code := 'block_starts_in_past';
+    v_msg := 'Esse período já terminou.';
+  ELSIF v_noon < now() - interval '5 minutes' THEN
+    v_code := 'block_start_adjusted';
+    v_msg := 'O início do bloqueio já passou. Ajustamos para agora — confira e confirme de novo.';
+  ELSE
+    v_code := 'created';
+    v_msg := 'created';
+  END IF;
+  INSERT INTO results VALUES (
+    'B-22 período 12:00',
+    COALESCE(r->>'code', CASE WHEN r->>'success' = 'true' THEN 'created' ELSE 'fail' END),
+    v_code
+  );
+  INSERT INTO results VALUES ('B-22 período 12:00 mensagem', COALESCE(r->>'message', 'created'), v_msg);
+END $$;
 
 -- C-B17 / B-51
 DELETE FROM public.agenda_blocks WHERE professional_id = :'PRO2' AND starts_at > now() + interval '4 days';
@@ -164,6 +238,12 @@ SELECT pg_temp.check('B-44 atribuído ao livre',
 SELECT pg_temp.check('B-44 link mostra o profissional',
   (SELECT professional_name FROM public.get_client_bookings_history('351600000099', '00000000-0000-0000-0000-00000000000a') LIMIT 1),
   'Bruna');
+SELECT pg_temp.check('B-44 insert direto sem profissional atribui',
+  pg_temp.try(format($q$INSERT INTO public.public_bookings (business_id, customer_name, customer_phone, service_ids, professional_id, appointment_time, total_price, status, duration_minutes) VALUES (%L, 'Cliente Direto', '351600000088', ARRAY[%L]::uuid[], NULL, now() + interval '12 days', 45, 'pending', 30)$q$, :'OWNER', :'SVC')),
+  'ok');
+SELECT pg_temp.check('B-44 insert direto ficou com o dono',
+  (SELECT professional_id::text FROM public.public_bookings WHERE customer_phone = '351600000088'),
+  '10000000-0000-0000-0000-000000000001');
 
 -- M1 no insert direto
 SELECT pg_temp.check('M1 insert no bloqueio',

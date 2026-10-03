@@ -3,7 +3,8 @@ import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Select } from '../ui/Select';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
-import { buildAgendaBlockRange, type AgendaBlockKind } from '../../utils/agendaBlockRange';
+import { buildAgendaBlockRange, classifyAgendaBlockStart, type AgendaBlockKind } from '../../utils/agendaBlockRange';
+import { formatTimeInTimeZone } from '../../utils/businessTimezone';
 import type { AgendaBlockConflict } from '../../types/agendaBlocks';
 
 export interface AgendaBlockFormMember {
@@ -24,6 +25,8 @@ export interface AgendaBlockFormProps {
   timeZone: string;
   submitting?: boolean;
   conflicts?: AgendaBlockConflict[];
+  /** Erro do servidor, ao lado do início — sem toast por cima dos botões. */
+  fieldError?: string | null;
   onSubmit: (input: {
     professionalId: string;
     startsAt: string;
@@ -38,6 +41,12 @@ const KINDS: { value: AgendaBlockKind; label: string }[] = [
   { value: 'full_day', label: 'Dia inteiro' },
   { value: 'multi_day', label: 'Vários dias' },
 ];
+
+function formatIsoDate(iso: string): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return '';
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
 
 function defaultEndTime(start?: string): string {
   if (!start || !/^\d{2}:\d{2}$/.test(start)) return '13:00';
@@ -60,6 +69,7 @@ export const AgendaBlockForm: React.FC<AgendaBlockFormProps> = ({
   timeZone,
   submitting = false,
   conflicts,
+  fieldError = null,
   onSubmit,
 }) => {
   const { colors, classes } = useBrutalTheme();
@@ -69,6 +79,8 @@ export const AgendaBlockForm: React.FC<AgendaBlockFormProps> = ({
   const [startTime, setStartTime] = useState(initialTime || '12:00');
   const [endTime, setEndTime] = useState(defaultEndTime(initialTime || '12:00'));
   const [error, setError] = useState<string | null>(null);
+  const [startError, setStartError] = useState<string | null>(null);
+  const [awaitingAdjust, setAwaitingAdjust] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -78,6 +90,8 @@ export const AgendaBlockForm: React.FC<AgendaBlockFormProps> = ({
     setStartTime(initialTime || '12:00');
     setEndTime(defaultEndTime(initialTime || '12:00'));
     setError(null);
+    setStartError(null);
+    setAwaitingAdjust(false);
   }, [open, initialDate, initialTime]);
 
   const pendingConflicts = conflicts && conflicts.length > 0;
@@ -101,16 +115,36 @@ export const AgendaBlockForm: React.FC<AgendaBlockFormProps> = ({
         setError('Escolha o profissional.');
         return;
       }
+      const decision = classifyAgendaBlockStart({ ...range, timeZone });
+      let startsAt = range.startsAt;
+      if (decision.action === 'refuse') {
+        setStartError(decision.message);
+        setAwaitingAdjust(false);
+        return;
+      }
+      if (decision.action === 'adjust' && !awaitingAdjust) {
+        setAwaitingAdjust(true);
+        setStartError(decision.message);
+        if (kind === 'hours') {
+          const hm = formatTimeInTimeZone(decision.startsAt, timeZone);
+          setStartTime(hm);
+          if (endTime <= hm) setEndTime(defaultEndTime(hm));
+        }
+        return;
+      }
+      if (decision.action === 'adjust') {
+        startsAt = decision.startsAt;
+      }
       await onSubmit({
         professionalId,
-        startsAt: range.startsAt,
+        startsAt,
         endsAt: range.endsAt,
         acknowledgeConflicts: acknowledge,
         confirmedConflictIds: acknowledge ? (conflicts ?? []).map((item) => item.id) : undefined,
       });
     } catch (e) {
       const msg = e instanceof Error ? e.message : '';
-      if (msg.includes('invalid_block')) setError('O fim precisa ser depois do início.');
+      if (msg.includes('invalid_block')) setError('O fim do bloqueio precisa ser depois do início.');
       else setError('Não foi possível bloquear. Confira as datas.');
     }
   };
@@ -124,9 +158,11 @@ export const AgendaBlockForm: React.FC<AgendaBlockFormProps> = ({
       footer={
         pendingConflicts ? (
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end w-full">
-            <Button variant="ghost" onClick={onClose} disabled={submitting}>Cancelar</Button>
+            <Button variant="ghost" size="lg" className="w-full sm:w-auto" onClick={onClose} disabled={submitting}>Cancelar</Button>
             <Button
               data-testid="agenda-block-confirm-conflicts"
+              size="lg"
+              className="w-full sm:w-auto"
               onClick={() => handleSubmit(true)}
               loading={submitting}
             >
@@ -135,9 +171,11 @@ export const AgendaBlockForm: React.FC<AgendaBlockFormProps> = ({
           </div>
         ) : (
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end w-full">
-            <Button variant="ghost" onClick={onClose} disabled={submitting}>Cancelar</Button>
+            <Button variant="ghost" size="lg" className="w-full sm:w-auto" onClick={onClose} disabled={submitting}>Cancelar</Button>
             <Button
               data-testid="agenda-block-submit"
+              size="lg"
+              className="w-full sm:w-auto"
               onClick={() => handleSubmit(false)}
               loading={submitting}
             >
@@ -167,7 +205,7 @@ export const AgendaBlockForm: React.FC<AgendaBlockFormProps> = ({
                 <label
                   key={k.value}
                   data-testid={`agenda-block-kind-${k.value}`}
-                  className={`flex items-center justify-center min-h-[44px] rounded-xl border px-2 py-2 text-center text-xs font-semibold cursor-pointer ${
+                  className={`flex items-center justify-center min-h-[48px] rounded-xl border px-1 py-2 text-center text-xs font-semibold leading-none whitespace-nowrap cursor-pointer ${
                     checked ? 'border-[var(--color-accent)] bg-[var(--color-accent-dim)]' : colors.border
                   }`}
                 >
@@ -187,16 +225,29 @@ export const AgendaBlockForm: React.FC<AgendaBlockFormProps> = ({
         </fieldset>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
+          <div className={kind === 'hours' ? '' : 'sm:col-span-2'}>
             <label className={classes.label} htmlFor="agenda-block-start-date">Início</label>
-            <input
-              id="agenda-block-start-date"
-              data-testid="agenda-block-start-date"
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-full min-h-[44px] mt-1.5 px-3 rounded-lg bg-[var(--color-input-bg)] border border-[var(--color-input-border)] text-theme-text"
-            />
+            <div className="relative mt-1.5">
+              <input
+                id="agenda-block-start-date"
+                data-testid="agenda-block-start-date"
+                type="date"
+                lang="pt-BR"
+                value={startDate}
+                aria-invalid={Boolean(startError || fieldError) || undefined}
+                aria-describedby={startError || fieldError ? 'agenda-block-start-error' : undefined}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  setAwaitingAdjust(false);
+                  setStartError(null);
+                }}
+                className="w-full min-h-[48px] px-3 rounded-lg bg-[var(--color-input-bg)] border border-[var(--color-input-border)] text-transparent caret-transparent"
+              />
+              <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-theme-text">
+                {formatIsoDate(startDate)}
+                {awaitingAdjust ? ` · ${formatTimeInTimeZone(new Date(), timeZone)}` : ''}
+              </span>
+            </div>
           </div>
           {kind === 'hours' && (
             <div>
@@ -206,7 +257,12 @@ export const AgendaBlockForm: React.FC<AgendaBlockFormProps> = ({
                 data-testid="agenda-block-start-time"
                 type="time"
                 value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
+                aria-invalid={Boolean(startError || fieldError) || undefined}
+                onChange={(e) => {
+                  setStartTime(e.target.value);
+                  setAwaitingAdjust(false);
+                  setStartError(null);
+                }}
                 className="w-full min-h-[44px] mt-1.5 px-3 rounded-lg bg-[var(--color-input-bg)] border border-[var(--color-input-border)] text-theme-text"
               />
             </div>
@@ -238,6 +294,17 @@ export const AgendaBlockForm: React.FC<AgendaBlockFormProps> = ({
             </div>
           )}
         </div>
+
+        {(startError || fieldError) && (
+          <p
+            id="agenda-block-start-error"
+            className="text-sm text-[var(--color-danger)]"
+            data-testid="agenda-block-start-error"
+            role="alert"
+          >
+            {startError || fieldError}
+          </p>
+        )}
 
         <p className={`text-xs ${colors.textMuted}`}>
           Ninguém agenda neste período — nem pelo link, nem pela agenda. Os atendimentos já marcados continuam.

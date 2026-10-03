@@ -38,12 +38,14 @@ export function messageForAgendaBlockResultCode(code: string | undefined): strin
     case 'overlap':
       return 'Já existe um bloqueio neste período.';
     case 'forbidden':
-      return 'Você não pode bloquear a agenda deste profissional.';
+      return 'Você não tem permissão para bloquear esta agenda.';
     case 'invalid_interval':
       return 'O fim do bloqueio precisa ser depois do início.';
     case 'block_too_long':
       return 'Um bloqueio pode ter no máximo 366 dias.';
     case 'block_starts_in_past':
+      return 'O início do bloqueio já passou.';
+    case 'block_start_adjusted':
       return 'O início do bloqueio já passou. Ajustamos para agora — confira e confirme de novo.';
     case 'block_finished':
       return 'Este bloqueio já terminou e fica só no histórico.';

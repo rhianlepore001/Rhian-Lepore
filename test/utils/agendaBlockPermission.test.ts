@@ -62,10 +62,11 @@ describe('permissão para bloquear agenda', () => {
 
   it('traduz códigos de RPC de bloqueio', () => {
     expect(messageForAgendaBlockResultCode('overlap')).toMatch(/Já existe um bloqueio/);
-    expect(messageForAgendaBlockResultCode('forbidden')).toMatch(/não pode bloquear/);
+    expect(messageForAgendaBlockResultCode('forbidden')).toBe('Você não tem permissão para bloquear esta agenda.');
     expect(messageForAgendaBlockResultCode('invalid_interval')).toBe('O fim do bloqueio precisa ser depois do início.');
     expect(messageForAgendaBlockResultCode('block_too_long')).toBe('Um bloqueio pode ter no máximo 366 dias.');
-    expect(messageForAgendaBlockResultCode('block_starts_in_past')).toBe('O início do bloqueio já passou. Ajustamos para agora — confira e confirme de novo.');
+    expect(messageForAgendaBlockResultCode('block_starts_in_past')).toBe('O início do bloqueio já passou.');
+    expect(messageForAgendaBlockResultCode('block_start_adjusted')).toBe('O início do bloqueio já passou. Ajustamos para agora — confira e confirme de novo.');
     expect(messageForAgendaBlockResultCode('block_finished')).toBe('Este bloqueio já terminou e fica só no histórico.');
     expect(messageForAgendaBlockResultCode('block_conflicts_changed')).toBe('Entrou um novo atendimento nesse período. Revise a lista e confirme de novo.');
     expect(messageForAgendaBlockResultCode('unavailable')).toMatch(/não está disponível/);

@@ -165,6 +165,8 @@ export const Agenda: React.FC = () => {
     const [blockProfessionalId, setBlockProfessionalId] = useState('');
     const [blockInitialTime, setBlockInitialTime] = useState<string | undefined>();
     const [blockConflicts, setBlockConflicts] = useState<AgendaBlockConflict[] | undefined>();
+    const [blockFormError, setBlockFormError] = useState<string | null>(null);
+    const [acceptBlockError, setAcceptBlockError] = useState<{ id: string; message: string } | null>(null);
     const [selectedBlock, setSelectedBlock] = useState<AgendaBlock | null>(null);
     const [showHistoryModal, setShowHistoryModal] = useState(false);
     const [showAllAppointmentsModal, setShowAllAppointmentsModal] = useState(false);
@@ -661,6 +663,7 @@ export const Agenda: React.FC = () => {
     const handleAcceptBooking = async (booking: any) => {
         if (!user || !effectiveUserId || isProcessing) return;
         setIsProcessing(true);
+        setAcceptBlockError(null);
 
         try {
             let serviceNames = '';
@@ -806,7 +809,11 @@ export const Agenda: React.FC = () => {
         } catch (error) {
             logger.error('Error accepting booking', error);
             const blocked = messageForBookingAcceptError(error, booking.professional_name);
-            showToast(blocked ?? 'Erro ao aceitar agendamento.', 'error');
+            if (blocked) {
+                setAcceptBlockError({ id: booking.id, message: blocked });
+            } else {
+                showToast('Erro ao aceitar agendamento.', 'error');
+            }
         } finally {
             setIsProcessing(false);
         }
@@ -1081,6 +1088,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
     const openBlockFormFromChoice = () => {
         setShowCreateChoice(false);
         setBlockConflicts(undefined);
+        setBlockFormError(null);
         if (!choiceFromSlot) {
             setBlockInitialTime(undefined);
             setBlockProfessionalId(defaultBlockProfessionalId());
@@ -1105,11 +1113,17 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                 return;
             }
             if (result.success === false) {
-                showToast(result.message ?? messageForAgendaBlockResultCode(result.code), 'error');
+                const message = result.message ?? messageForAgendaBlockResultCode(result.code);
+                if (result.code === 'block_start_adjusted' || result.code === 'block_starts_in_past' || result.code === 'invalid_interval' || result.code === 'block_too_long') {
+                    setBlockFormError(message);
+                    return;
+                }
+                showToast(message, 'error');
                 return;
             }
             setShowBlockForm(false);
             setBlockConflicts(undefined);
+            setBlockFormError(null);
             showToast('Agenda bloqueada.', 'success');
         } catch (error) {
             showToast(formatUserFacingError(mapError(error, 'Não foi possível bloquear a agenda.')), 'error');
@@ -1401,6 +1415,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                 currencyRegion={currencyRegion}
                 onAccept={handleAcceptBooking}
                 onReject={handleRejectBooking}
+                acceptError={acceptBlockError}
             />
 
             {/* Grid Time View */}
@@ -1815,6 +1830,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                 onClose={() => {
                     setShowBlockForm(false);
                     setBlockConflicts(undefined);
+                    setBlockFormError(null);
                 }}
                 members={teamMembers}
                 showProfessionalSelect={!isStaff && !choiceFromSlot}
@@ -1825,6 +1841,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                 timeZone={shopTimeZone}
                 submitting={createBlock.isPending}
                 conflicts={blockConflicts}
+                fieldError={blockFormError}
                 onSubmit={handleCreateAgendaBlock}
             />
 

@@ -165,9 +165,30 @@ SELECT pg_temp.check('staff cannot create other',
     '10000000-0000-0000-0000-000000000001'::uuid,
     pg_temp.at_l((SELECT d FROM ctx), '10:00'),
     pg_temp.at_l((SELECT d FROM ctx), '11:00'),
-    false
+    false,
+    NULL
   )->>'code'),
   'forbidden');
+SELECT pg_temp.check('B-16 texto',
+  (public.create_agenda_block(
+    '10000000-0000-0000-0000-000000000001'::uuid,
+    pg_temp.at_l((SELECT d FROM ctx), '10:00'),
+    pg_temp.at_l((SELECT d FROM ctx), '11:00'),
+    false,
+    NULL
+  )->>'message'),
+  'Você não tem permissão para bloquear esta agenda.');
+SELECT pg_temp.as_user(:'OWNER');
+SELECT pg_temp.check('B-17 texto',
+  (public.create_agenda_block(
+    '10000000-0000-0000-0000-000000000001'::uuid,
+    pg_temp.at_l((SELECT d FROM ctx), '12:00'),
+    pg_temp.at_l((SELECT d FROM ctx), '11:00'),
+    false,
+    NULL
+  )->>'message'),
+  'O fim do bloqueio precisa ser depois do início.');
+SELECT pg_temp.as_user(:'STAFF');
 
 -- Flag off
 SELECT pg_temp.as_user(:'OWNER');
@@ -204,7 +225,7 @@ SELECT pg_temp.check('secure booking blocked',
     45, 30, 'Confirmed',
     '30000000-0000-0000-0000-000000000001'::uuid
   )->>'code'),
-  'agenda_blocked');
+  'professional_blocked');
 
 -- Conflitos: appointment + create sem ack
 INSERT INTO appointments (user_id, client_id, professional_id, service, appointment_time, status, duration_minutes)
@@ -231,7 +252,10 @@ SELECT pg_temp.check('ack creates and keeps appointment',
     '10000000-0000-0000-0000-000000000001'::uuid,
     pg_temp.at_l((SELECT d FROM ctx), '09:30'),
     pg_temp.at_l((SELECT d FROM ctx), '10:30'),
-    true
+    true,
+    ARRAY(SELECT id FROM appointments
+      WHERE professional_id = '10000000-0000-0000-0000-000000000001'
+        AND appointment_time = pg_temp.at_l((SELECT d FROM ctx), '10:00'))
   )->>'success') || ':' || (SELECT count(*)::text FROM appointments WHERE status = 'Confirmed' AND professional_id = '10000000-0000-0000-0000-000000000001')),
   'true:1');
 
@@ -241,7 +265,7 @@ SELECT pg_temp.check('appointment trigger definer',
       AND pronamespace = 'public'::regnamespace),
   'true');
 
--- UPDATE de duração no atendimento que já ocupava o intervalo: não pode travar o card.
+-- B-30: aumentar a duração de quem já está no bloqueio volta a checar o intervalo.
 DO $$
 BEGIN
   UPDATE public.appointments
@@ -249,9 +273,13 @@ BEGIN
    WHERE professional_id = '10000000-0000-0000-0000-000000000001'
      AND status = 'Confirmed'
      AND appointment_time = pg_temp.at_l((SELECT d FROM ctx), '10:00');
-  INSERT INTO results VALUES ('update existing overlapping apt', 'allowed', 'allowed');
+  INSERT INTO results VALUES ('update existing overlapping apt', 'allowed', 'blocked');
 EXCEPTION WHEN OTHERS THEN
-  INSERT INTO results VALUES ('update existing overlapping apt', SQLERRM, 'allowed');
+  IF SQLERRM ILIKE '%Horário bloqueado na agenda%' THEN
+    INSERT INTO results VALUES ('update existing overlapping apt', 'blocked', 'blocked');
+  ELSE
+    INSERT INTO results VALUES ('update existing overlapping apt', SQLERRM, 'blocked');
+  END IF;
 END $$;
 
 DO $$
@@ -277,7 +305,7 @@ BEGIN
 EXCEPTION WHEN insufficient_privilege THEN
   INSERT INTO results VALUES ('reactivate into block', 'blocked', 'blocked');
 WHEN OTHERS THEN
-  IF SQLERRM ILIKE '%está bloqueado%' THEN
+  IF SQLERRM ILIKE '%Horário bloqueado na agenda%' THEN
     INSERT INTO results VALUES ('reactivate into block', 'blocked', 'blocked');
   ELSE
     INSERT INTO results VALUES ('reactivate into block', SQLERRM, 'blocked');
@@ -318,7 +346,7 @@ BEGIN
 EXCEPTION WHEN insufficient_privilege THEN
   INSERT INTO results VALUES ('update into block', 'blocked', 'blocked');
 WHEN OTHERS THEN
-  IF SQLERRM ILIKE '%está bloqueado%' THEN
+  IF SQLERRM ILIKE '%Horário bloqueado na agenda%' THEN
     INSERT INTO results VALUES ('update into block', 'blocked', 'blocked');
   ELSE
     INSERT INTO results VALUES ('update into block', SQLERRM, 'blocked');
@@ -347,7 +375,7 @@ SELECT pg_temp.check('authenticated direct insert outside block (Agenda sem RPC)
 
 SELECT pg_temp.check('authenticated direct insert into block',
   pg_temp.run_as('authenticated', :'OWNER', format($q$INSERT INTO public.appointments (user_id, client_id, professional_id, service, appointment_time, status, duration_minutes) VALUES ('00000000-0000-0000-0000-00000000000a', '30000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'Corte', %L, 'Confirmed', 30) RETURNING status$q$, pg_temp.at_l((SELECT d FROM ctx), '10:00'))),
-  'error:Este horário está bloqueado. Remova o bloqueio para agendar.');
+  'error:Horário bloqueado na agenda de P1. Para agendar, remova o bloqueio primeiro.');
 
 SELECT pg_temp.check('anon create_public_booking into block',
   pg_temp.run_as('anon', NULL, format($q$SELECT status FROM public.create_public_booking('00000000-0000-0000-0000-00000000000a', 'Cliente Novo', '351600000009', ARRAY['20000000-0000-0000-0000-000000000001']::uuid[], '10000000-0000-0000-0000-000000000002'::uuid, %L::timestamptz, 45, 30)$q$, pg_temp.at_l((SELECT d FROM ctx), '15:00'))),
@@ -379,7 +407,7 @@ SELECT pg_temp.check('get_full_dates outro profissional não fica cheio',
   NULL);
 
 SELECT pg_temp.check('anon sem EXECUTE em create_agenda_block',
-  has_function_privilege('anon', 'public.create_agenda_block(uuid,timestamptz,timestamptz,boolean)', 'EXECUTE')::text, 'false');
+  has_function_privilege('anon', 'public.create_agenda_block(uuid,timestamptz,timestamptz,boolean,uuid[])', 'EXECUTE')::text, 'false');
 SELECT pg_temp.check('authenticated sem EXECUTE no helper',
   has_function_privilege('authenticated', 'public.agenda_interval_blocked(text,uuid,timestamptz,timestamptz)', 'EXECUTE')::text, 'false');
 SELECT pg_temp.check('anon sem SELECT em agenda_blocks',

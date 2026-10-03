@@ -9,6 +9,11 @@
 
 ---
 
+## Bloqueio de agenda — correção do #117 (3 Out 2026)
+
+Branch `cursor/agenda-blocks-acceptance-followup-e54d`. #115 (fila/Completed) não foi alterado.
+Dia inteiro começando hoje pede confirmação e passa a valer a partir de agora (formulário e `create_agenda_block`). `agenda_any_professional_busy` ganhou limite inferior de 1 dia. Ack sem lista de conflitos não cria. Aumentar duração dentro do bloqueio volta a ser recusado. Bloqueios podem se sobrepor. Insert direto de pedido sem profissional atribui o primeiro livre. Rollback confere md5 de 8 funções.
+
 ## 🎨 Design System v1.1 — F0–F4 CONCLUÍDAS (12 Jul 2026, branch `design/ds-v1.1-polish`)
 
 Auditoria de design (`design-audit.md` + `dashboard-proposal.html` + `components-showcase.html`) implementada em 4 commits (F0–F3):

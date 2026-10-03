@@ -2,7 +2,8 @@
 -- ROLLBACK de 20261003120000_agenda_blocks_acceptance_followup
 -- =============================================================================
 -- Volta as funções ao corpo do #113 / live lido em 2026-10-03.
--- O trigger de appointments volta ao md5 150219aaaec7688797ec0e09229d8da5.
+-- O rollback confere o md5 das 8 funções restauradas.
+-- enforce_agenda_block_on_appointments volta a 150219aaaec7688797ec0e09229d8da5.
 -- Se 20261003090000 tiver sido aplicada e este rollback rodar por cima, a fila
 -- volta a falhar no bloqueio: reaplique 20261003090000 para manter B-41.
 -- Nenhuma linha de agenda_blocks é apagada. O índice novo sai.
@@ -1148,5 +1149,37 @@ GRANT EXECUTE ON FUNCTION public.create_public_booking(text, text, text, uuid[],
 
 DROP FUNCTION IF EXISTS public.agenda_any_professional_busy(text, timestamptz, timestamptz);
 DROP INDEX IF EXISTS public.agenda_blocks_professional_id_idx;
+
+-- Confere o corpo restaurado das 8 funções (não só o trigger de appointments).
+DO $verify$
+DECLARE
+  v_got text;
+  v_expected text := $md5$create_agenda_block=4ca66817d4c7453c060df13e95df208f
+create_public_booking=4f8eca2e78c1acf0a27c3d99f2f69bd6
+create_secure_booking=d969b63cc4725c904164451006127eea
+delete_agenda_block=f161c0cdf5868403f9f3a8cfa613320d
+enforce_agenda_block_on_appointments=150219aaaec7688797ec0e09229d8da5
+enforce_agenda_block_on_public_bookings=ef82f24f283c21d6a37ab0f4bb53b134
+get_available_slots=1040ec012729035f3000c94ae8debb61
+public_booking_slot_busy=042e4ac7aae805011c3220bc2e6757b3$md5$;
+BEGIN
+  SELECT string_agg(p.proname || '=' || md5(pg_get_functiondef(p.oid)), E'\n' ORDER BY p.proname)
+    INTO v_got
+  FROM pg_proc p
+  WHERE p.oid IN (
+    'public.enforce_agenda_block_on_appointments()'::regprocedure,
+    'public.enforce_agenda_block_on_public_bookings()'::regprocedure,
+    'public.create_agenda_block(uuid,timestamptz,timestamptz,boolean)'::regprocedure,
+    'public.delete_agenda_block(uuid)'::regprocedure,
+    'public.get_available_slots(uuid,date,uuid,integer,boolean)'::regprocedure,
+    'public.public_booking_slot_busy(text,timestamptz,integer,uuid)'::regprocedure,
+    'public.create_secure_booking(uuid,uuid,text,text,text,timestamptz,text[],numeric,integer,text,uuid,text,text,text)'::regprocedure,
+    'public.create_public_booking(text,text,text,uuid[],uuid,timestamptz,numeric,integer,jsonb)'::regprocedure
+  );
+  IF btrim(v_got) IS DISTINCT FROM btrim(v_expected) THEN
+    RAISE EXCEPTION E'rollback md5 divergente\ngot:\n%\nexpected:\n%', v_got, btrim(v_expected);
+  END IF;
+END
+$verify$;
 
 COMMIT;

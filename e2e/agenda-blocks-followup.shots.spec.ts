@@ -16,6 +16,7 @@ async function shot(page: Page, name: string) {
 }
 
 test.describe('follow-up bloqueio — copy M2 e bloqueio no passado', () => {
+  test.use({ locale: 'pt-BR' });
   let guard: ProdWriteGuard;
 
   test.beforeEach(async ({ page }) => {
@@ -40,7 +41,7 @@ test.describe('follow-up bloqueio — copy M2 e bloqueio no passado', () => {
             duration_minutes: 30,
             professional_id: '10000000-0000-0000-0000-000000000001',
             professional_name: 'Diego',
-            service_ids: [],
+            service_ids: ['20000000-0000-0000-0000-000000000001'],
             status: 'pending',
           }],
         });
@@ -58,9 +59,9 @@ test.describe('follow-up bloqueio — copy M2 e bloqueio no passado', () => {
         await expect(accept).toBeVisible({ timeout: 20000 });
         await shot(page, `${role}-${width}-1-pedido.png`);
         await accept.click();
-        const toast = page.getByText(M2);
+        const cardError = page.getByTestId('agenda-public-booking-accept-error');
         if (phase === 'after') {
-          await expect(toast).toBeVisible({ timeout: 10000 });
+          await expect(cardError).toHaveText(M2, { timeout: 10000 });
         }
         await shot(page, `${role}-${width}-2-m2.png`);
       });
@@ -79,10 +80,19 @@ test.describe('follow-up bloqueio — copy M2 e bloqueio no passado', () => {
           await blockChoice.click();
         }
         await expect(page.getByTestId('agenda-block-form')).toBeVisible({ timeout: 15000 });
+        await page.getByTestId('agenda-block-kind-full_day').click();
         await shot(page, `${role}-${width}-3-form.png`);
         await page.getByTestId('agenda-block-submit').click();
         if (phase === 'after') {
-          await expect(page.getByText(PAST)).toBeVisible({ timeout: 10000 });
+          const startError = page.getByTestId('agenda-block-start-error');
+          await expect(startError).toHaveText(PAST, { timeout: 10000 });
+          const submit = page.getByTestId('agenda-block-submit');
+          const cancel = page.getByRole('button', { name: 'Cancelar' });
+          await expect(submit).toBeVisible();
+          await expect(cancel).toBeVisible();
+          const errorBox = await startError.boundingBox();
+          const submitBox = await submit.boundingBox();
+          expect(errorBox && submitBox && errorBox.y + errorBox.height <= submitBox.y + 1).toBeTruthy();
         }
         await shot(page, `${role}-${width}-4-passado.png`);
       });

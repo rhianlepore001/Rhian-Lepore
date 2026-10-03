@@ -42,6 +42,7 @@ AS $function$
         WHERE a.user_id = p_user_id
           AND a.professional_id = tm.id
           AND COALESCE(a.status, '') NOT IN ('Cancelled', 'NoShow')
+          AND a.appointment_time > p_starts_at - interval '1 day'
           AND a.appointment_time < p_ends_at
           AND (a.appointment_time + make_interval(mins => GREATEST(COALESCE(a.duration_minutes, 30), 1))) > p_starts_at
       )
@@ -51,6 +52,7 @@ AS $function$
           AND pb.professional_id = tm.id
           AND pb.status IN ('pending', 'confirmed')
           AND NOT (pb.status = 'confirmed' AND public.confirmed_booking_slot_released(pb.business_id, pb.appointment_time, pb.professional_id))
+          AND pb.appointment_time > p_starts_at - interval '1 day'
           AND pb.appointment_time < p_ends_at
           AND (pb.appointment_time + make_interval(mins => GREATEST(COALESCE(pb.duration_minutes, 30), 1))) > p_starts_at
       )
@@ -61,6 +63,7 @@ AS $function$
       WHERE a.user_id = p_user_id
         AND a.professional_id IS NULL
         AND COALESCE(a.status, '') NOT IN ('Cancelled', 'NoShow')
+        AND a.appointment_time > p_starts_at - interval '1 day'
         AND a.appointment_time < p_ends_at
         AND (a.appointment_time + make_interval(mins => GREATEST(COALESCE(a.duration_minutes, 30), 1))) > p_starts_at
       UNION ALL
@@ -69,6 +72,7 @@ AS $function$
         AND pb.professional_id IS NULL
         AND pb.status IN ('pending', 'confirmed')
         AND NOT (pb.status = 'confirmed' AND public.confirmed_booking_slot_released(pb.business_id, pb.appointment_time, pb.professional_id))
+        AND pb.appointment_time > p_starts_at - interval '1 day'
         AND pb.appointment_time < p_ends_at
         AND (pb.appointment_time + make_interval(mins => GREATEST(COALESCE(pb.duration_minutes, 30), 1))) > p_starts_at
     ) unassigned
@@ -78,8 +82,8 @@ $function$;
 REVOKE ALL ON FUNCTION public.agenda_any_professional_busy(text, timestamptz, timestamptz) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.agenda_any_professional_busy(text, timestamptz, timestamptz) TO service_role;
 
--- Trigger: revalida o intervalo NOVO quando hora ou profissional mudam (B-35/B-38).
--- Completed passa (B-41). Quem já estava no bloqueio e só muda status/duração segue (B-30).
+-- Trigger: revalida o intervalo NOVO quando hora, profissional ou duração mudam (B-30/B-35/B-38).
+-- Completed passa (B-41). Só status, com o anterior ainda ocupando, segue (B-42 recusa reabrir).
 CREATE OR REPLACE FUNCTION public.enforce_agenda_block_on_appointments()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -88,7 +92,6 @@ SET search_path TO 'public'
 AS $function$
 DECLARE
   v_end timestamptz;
-  v_old_end timestamptz;
   v_name text;
 BEGIN
   IF NEW.status IN ('Cancelled', 'NoShow', 'Completed') THEN
@@ -105,16 +108,6 @@ BEGIN
      AND NEW.duration_minutes IS NOT DISTINCT FROM OLD.duration_minutes
      AND OLD.status NOT IN ('Cancelled', 'NoShow', 'Completed') THEN
     RETURN NEW;
-  END IF;
-  IF TG_OP = 'UPDATE'
-     AND NEW.appointment_time IS NOT DISTINCT FROM OLD.appointment_time
-     AND NEW.professional_id IS NOT DISTINCT FROM OLD.professional_id
-     AND OLD.professional_id IS NOT NULL
-     AND OLD.status NOT IN ('Cancelled', 'NoShow', 'Completed') THEN
-    v_old_end := OLD.appointment_time + make_interval(mins => GREATEST(COALESCE(OLD.duration_minutes, 30), 1));
-    IF public.agenda_interval_blocked(OLD.user_id, OLD.professional_id, OLD.appointment_time, v_old_end) THEN
-      RETURN NEW;
-    END IF;
   END IF;
 
   PERFORM pg_advisory_xact_lock(hashtextextended(NEW.user_id, 0));
@@ -147,7 +140,6 @@ SET search_path TO 'public'
 AS $function$
 DECLARE
   v_end timestamptz;
-  v_old_end timestamptz;
 BEGIN
   IF NEW.status IS DISTINCT FROM 'pending' AND NEW.status IS DISTINCT FROM 'confirmed' THEN
     RETURN NEW;
@@ -158,17 +150,23 @@ BEGIN
      AND NEW.duration_minutes IS NOT DISTINCT FROM OLD.duration_minutes THEN
     RETURN NEW;
   END IF;
-  IF TG_OP = 'UPDATE'
-     AND NEW.appointment_time IS NOT DISTINCT FROM OLD.appointment_time
-     AND NEW.professional_id IS NOT DISTINCT FROM OLD.professional_id
-     AND OLD.status IN ('pending', 'confirmed') THEN
-    v_old_end := OLD.appointment_time + make_interval(mins => GREATEST(COALESCE(OLD.duration_minutes, 30), 1));
-    IF public.agenda_interval_blocked(OLD.business_id, OLD.professional_id, OLD.appointment_time, v_old_end) THEN
-      RETURN NEW;
-    END IF;
-  END IF;
 
   PERFORM pg_advisory_xact_lock(hashtextextended(NEW.business_id, 0));
+
+  -- B-44: insert direto sem profissional recebe o primeiro livre (ou slot_unavailable).
+  IF NEW.professional_id IS NULL THEN
+    NEW.professional_id := public.get_first_available_professional(
+      NEW.business_id::uuid,
+      NEW.appointment_time,
+      NEW.duration_minutes
+    );
+    IF NEW.professional_id IS NULL THEN
+      RAISE EXCEPTION USING
+        ERRCODE = 'P0001',
+        MESSAGE = 'slot_unavailable',
+        HINT = 'slot_unavailable';
+    END IF;
+  END IF;
 
   v_end := NEW.appointment_time + make_interval(mins => GREATEST(COALESCE(NEW.duration_minutes, 30), 1));
   IF public.agenda_interval_blocked(NEW.business_id, NEW.professional_id, NEW.appointment_time, v_end) THEN
@@ -201,6 +199,7 @@ SET search_path TO 'public'
 AS $function$
 DECLARE
   v_company text;
+  v_tz text;
   v_id uuid;
   v_conflicts json;
   v_ids uuid[];
@@ -222,11 +221,31 @@ BEGIN
     RETURN json_build_object('success', false, 'code', 'block_too_long', 'message', 'Um bloqueio pode ter no máximo 366 dias.');
   END IF;
 
-  IF p_ends_at <= now() OR p_starts_at < now() - interval '5 minutes' THEN
+  v_tz := public.business_timezone(v_company);
+
+  IF p_ends_at <= now() THEN
     RETURN json_build_object(
       'success', false,
       'code', 'block_starts_in_past',
-      'message', 'O início do bloqueio já passou. Ajustamos para agora — confira e confirme de novo.'
+      'message', 'Esse período já terminou.'
+    );
+  END IF;
+
+  -- B-21/B-22: hoje e ainda em curso → não grava; devolve o início em agora para confirmar.
+  IF p_starts_at < now() - interval '5 minutes' THEN
+    IF (p_starts_at AT TIME ZONE v_tz)::date = (now() AT TIME ZONE v_tz)::date THEN
+      RETURN json_build_object(
+        'success', false,
+        'code', 'block_start_adjusted',
+        'message', 'O início do bloqueio já passou. Ajustamos para agora — confira e confirme de novo.',
+        'starts_at', now(),
+        'ends_at', p_ends_at
+      );
+    END IF;
+    RETURN json_build_object(
+      'success', false,
+      'code', 'block_starts_in_past',
+      'message', 'O início do bloqueio já passou.'
     );
   END IF;
 
@@ -241,16 +260,6 @@ BEGIN
   END IF;
 
   PERFORM pg_advisory_xact_lock(hashtextextended(v_company, 0));
-
-  IF EXISTS (
-    SELECT 1 FROM public.agenda_blocks b
-    WHERE b.user_id = v_company
-      AND b.professional_id = p_professional_id
-      AND b.starts_at < p_ends_at
-      AND b.ends_at > p_starts_at
-  ) THEN
-    RETURN json_build_object('success', false, 'code', 'overlap', 'message', 'Já existe um bloqueio neste período.');
-  END IF;
 
   SELECT COALESCE(json_agg(item), '[]'::json), COALESCE(array_agg(cid), '{}'::uuid[])
     INTO v_conflicts, v_ids
@@ -292,6 +301,15 @@ BEGIN
 
   IF cardinality(v_ids) > 0 AND NOT COALESCE(p_acknowledge_conflicts, false) THEN
     RETURN json_build_object('success', false, 'code', 'conflicts', 'items', v_conflicts);
+  END IF;
+
+  IF cardinality(v_ids) > 0 AND p_confirmed_conflict_ids IS NULL THEN
+    RETURN json_build_object(
+      'success', false,
+      'code', 'conflicts',
+      'message', 'Confirme a lista de atendimentos deste período.',
+      'items', v_conflicts
+    );
   END IF;
 
   IF cardinality(v_ids) > 0

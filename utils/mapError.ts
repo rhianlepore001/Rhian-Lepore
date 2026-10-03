@@ -52,6 +52,7 @@ const CODE_MAP: Record<string, string> = {
   block_finished: messageForAgendaBlockResultCode('block_finished'),
   block_too_long: messageForAgendaBlockResultCode('block_too_long'),
   block_starts_in_past: messageForAgendaBlockResultCode('block_starts_in_past'),
+  block_start_adjusted: messageForAgendaBlockResultCode('block_start_adjusted'),
   block_conflicts_changed: messageForAgendaBlockResultCode('block_conflicts_changed'),
 
   // PostgREST
@@ -75,7 +76,7 @@ function pickCode(raw: RawErrorShape): string {
   ) {
     return 'professional_blocked';
   }
-  if (raw.code === 'block_finished' || raw.code === 'block_too_long' || raw.code === 'block_starts_in_past' || raw.code === 'block_conflicts_changed') {
+  if (raw.code === 'block_finished' || raw.code === 'block_too_long' || raw.code === 'block_starts_in_past' || raw.code === 'block_start_adjusted' || raw.code === 'block_conflicts_changed') {
     return raw.code;
   }
   if (msg.includes('este bloqueio já terminou')) return 'block_finished';

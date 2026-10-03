@@ -98,7 +98,8 @@ describe('staffPerformanceView — deltas (R3.15)', () => {
 
     it('base quase vazia (ex. +241%) não aparece como melhor', () => {
         expect(moneyDelta(341, 100, { prevSample: 2, formatMoney: brl })).toEqual({ text: 'sem base de comparação', tone: 'neutral', label: 'sem_base' });
-        expect(moneyDelta(341, 100, { prevSample: 11, formatMoney: brl })).toMatchObject({ tone: 'good', label: 'melhor' });
+        expect(moneyDelta(1313, 385, { prevSample: 12, formatMoney: brl })).toEqual({ text: 'sem base de comparação', tone: 'neutral', label: 'sem_base' });
+        expect(moneyDelta(408, 360, { prevSample: 11, formatMoney: brl })).toMatchObject({ tone: 'good', label: 'melhor' });
     });
 
     it('taxas em p.p.; para faltas, cair é bom', () => {

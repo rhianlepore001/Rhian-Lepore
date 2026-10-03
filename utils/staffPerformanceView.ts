@@ -168,6 +168,7 @@ export function valueDelta(
     if (opts.prevSample < MIN_SAMPLE) return NO_BASE;
     const diff = curr - prev;
     const rel = diff / Math.abs(prev);
+    if (Math.abs(prev) < Math.abs(curr) * 0.5 && Math.abs(rel) >= 1) return NO_BASE;
     const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '=';
     const sign = diff > 0 ? '+' : diff < 0 ? MINUS : '';
     const text = `${arrow} ${sign}${opts.format(Math.abs(diff))} (${sign}${Math.round(Math.abs(rel) * 100)}%)`;

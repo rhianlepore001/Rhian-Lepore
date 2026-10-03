@@ -13,6 +13,11 @@ describe('cancellationPolicyCopy — PR-1 / D3', () => {
     expect(text).toBe(GENERATED_CANCELLATION_POLICY_TEXT);
     expect(text.toLowerCase()).not.toContain('50%');
     expect(text.toLowerCase()).not.toContain('cobrança de');
+    expect(text).not.toMatch(/24h|48h|72h/i);
+  });
+
+  it('texto gerado D3 não promete multa por 24h/50%', () => {
+    expect(GENERATED_CANCELLATION_POLICY_TEXT).not.toMatch(/24h|50%|cobrança integral|reembolso/i);
   });
 
   it('chaves moderate e strict também viram a regra real, sem multa prometida', () => {

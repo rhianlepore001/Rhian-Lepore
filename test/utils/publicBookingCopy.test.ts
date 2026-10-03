@@ -52,6 +52,19 @@ describe('publicBookingCopy', () => {
       'Olá, Barbearia São João ✂️! Fiz um agendamento online para Barba com Qualquer profissional em 03/10/2026 às 15:13. Pode confirmar, por favor?',
     );
   });
+
+  it('WhatsApp trata profissional em branco como Qualquer profissional', () => {
+    const text = getPublicBookingAwaitingWhatsAppText({
+      businessName: 'Corte Fino',
+      dateLabel: '18/09/2026',
+      timeLabel: '10:00',
+      serviceLabel: 'Corte tesoura',
+      professionalName: '   ',
+    });
+    expect(text).toBe(
+      'Olá, Corte Fino! Fiz um agendamento online para Corte tesoura com Qualquer profissional em 18/09/2026 às 10:00. Pode confirmar, por favor?',
+    );
+  });
 });
 
 describe('publicBookingCopy — cancelado (item 5b)', () => {

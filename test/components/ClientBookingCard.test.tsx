@@ -255,6 +255,15 @@ describe('ClientBookingCard — PR-1 cards honestos e WhatsApp', () => {
     expect(screen.queryByRole('button', { name: /^WhatsApp$/ })).toBeNull();
   });
 
+  it('telefone do negócio em branco também esconde Pedir confirmação', () => {
+    renderPr1Card({
+      status: 'pending',
+      appointment_time: '2026-10-10T14:00:00.000Z',
+      businessPhone: '',
+    });
+    expect(screen.queryByRole('button', { name: /Pedir confirmação/ })).toBeNull();
+  });
+
   it('no_show mostra Não compareceu com tom neutro e CTA para remarcar', () => {
     renderPr1Card({
       status: 'no_show',
@@ -265,5 +274,14 @@ describe('ClientBookingCard — PR-1 cards honestos e WhatsApp', () => {
     expect(screen.getByRole('button', { name: /Agendar horário/ })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Editar/ })).toBeNull();
     expect(screen.queryByRole('button', { name: /^Cancelar$/ })).toBeNull();
+  });
+
+  it('status noshow (sem underscore) usa o mesmo card D2 de não compareceu', () => {
+    renderPr1Card({
+      status: 'noshow',
+      appointment_time: '2026-10-02T15:00:00.000Z',
+    });
+    expect(screen.getByText('Não compareceu')).toBeInTheDocument();
+    expect(screen.getByText('Sentimos sua falta. Quer marcar outro horário?')).toBeInTheDocument();
   });
 });

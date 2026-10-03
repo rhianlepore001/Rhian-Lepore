@@ -10,6 +10,7 @@ import {
   rejectPublicBooking,
   submitPublicBooking,
   fetchAvailableSlots,
+  fetchFullDates,
 } from '@/services/publicBooking';
 import { supabase } from '@/lib/supabase';
 
@@ -350,6 +351,15 @@ describe('public booking service', () => {
     expect(supabase.rpc).toHaveBeenNthCalledWith(2, 'get_available_slots', expect.objectContaining({
       p_business_id: 'business-001',
       p_date: '2026-10-03',
+    }));
+  });
+
+  it('busca dias cheios via get_full_dates_v2', async () => {
+    (supabase.rpc as any).mockResolvedValue({ data: ['2026-10-03'], error: null });
+    await expect(fetchFullDates('business-001', '2026-10-03', '2026-10-10', null, 30)).resolves.toEqual(['2026-10-03']);
+    expect(supabase.rpc).toHaveBeenCalledWith('get_full_dates_v2', expect.objectContaining({
+      p_business_id: 'business-001',
+      p_start_date: '2026-10-03',
     }));
   });
 });

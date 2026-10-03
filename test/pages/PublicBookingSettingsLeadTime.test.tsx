@@ -31,8 +31,8 @@ vi.mock('../../components/SettingsLayout', () => ({
   SettingsLayout: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 vi.mock('../../components/SettingsSection', () => ({
-  SettingsSection: ({ children, title }: { children: React.ReactNode; title?: React.ReactNode }) => (
-    <section><h2>{title}</h2>{children}</section>
+  SettingsSection: ({ children, title, description }: { children: React.ReactNode; title?: React.ReactNode; description?: string }) => (
+    <section><h2>{title}</h2>{description ? <p>{description}</p> : null}{children}</section>
   ),
 }));
 vi.mock('../../components/SettingsSwitch', () => ({
@@ -71,6 +71,7 @@ describe('PublicBookingSettings — antecedência mínima', () => {
     expect(screen.getByTestId('lead-time-preset-16')).toBeInTheDocument();
     expect(screen.getByTestId('lead-time-preset-24')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Outro/ })).toBeInTheDocument();
+    expect(screen.getByText(/padrão 2h/)).toBeInTheDocument();
   });
 
   it('valor 8h salvo já vem marcado', () => {
@@ -94,5 +95,14 @@ describe('PublicBookingSettings — antecedência mínima', () => {
     expect(updateProfile).toHaveBeenCalledWith(expect.objectContaining({
       booking_lead_time_hours: 8,
     }));
+  });
+
+  it('Outro vazio mostra erro e não salva', async () => {
+    render(<PublicBookingSettings />);
+    fireEvent.click(screen.getByTestId('lead-time-preset-custom'));
+    expect(screen.getByTestId('booking-lead-time-custom')).toHaveValue(null);
+    fireEvent.click(screen.getByRole('button', { name: /Salvar Alterações/ }));
+    expect(await screen.findByTestId('lead-time-custom-error')).toHaveTextContent('Informe as horas de antecedência');
+    expect(updateProfile).not.toHaveBeenCalled();
   });
 });

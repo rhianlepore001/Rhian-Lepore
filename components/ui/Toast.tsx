@@ -15,12 +15,14 @@ interface ToastItem {
   message: string;
   type: ToastType;
   action?: ToastAction;
+  placement: 'top' | 'bottom';
 }
 
 export interface ShowToastOptions {
   type?: ToastType;
   durationMs?: number;
   action?: ToastAction;
+  placement?: 'top' | 'bottom';
 }
 
 interface ToastContextValue {
@@ -125,9 +127,10 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         ? options.durationMs ?? defaultDuration
         : durationMsLegacy ?? defaultDuration;
       const action = options?.action;
+      const placement: 'top' | 'bottom' = options?.placement ?? 'top';
 
       const id = ++idRef.current;
-      setToasts(prev => [...prev, { id, message, type, action }]);
+      setToasts(prev => [...prev, { id, message, type, action, placement }]);
       if (durationMs > 0) {
         window.setTimeout(() => dismiss(id), durationMs);
       }
@@ -136,6 +139,10 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   );
 
   const value = useMemo(() => ({ showToast }), [showToast]);
+  const placement = toasts[toasts.length - 1]?.placement ?? 'top';
+  const stackClass = placement === 'bottom'
+    ? 'fixed bottom-0 right-0 left-0 sm:left-auto flex flex-col items-center sm:items-end gap-2 p-4 pb-[calc(5.75rem+env(safe-area-inset-bottom))] sm:pb-6 pointer-events-none'
+    : 'fixed top-0 right-0 left-0 sm:left-auto flex flex-col items-center sm:items-end gap-2 p-4 pt-[calc(0.75rem+env(safe-area-inset-top))] pointer-events-none';
 
   return (
     <ToastContext.Provider value={value}>
@@ -143,7 +150,8 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       {typeof document !== 'undefined' &&
         createPortal(
           <div
-            className="fixed top-0 right-0 left-0 sm:left-auto flex flex-col items-center sm:items-end gap-2 p-4 pt-[calc(0.75rem+env(safe-area-inset-top))] pointer-events-none"
+            className={stackClass}
+            data-toast-placement={placement}
             style={{ zIndex: 'var(--z-toast)' }}
             aria-live="polite"
           >

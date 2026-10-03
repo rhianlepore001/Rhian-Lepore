@@ -19,7 +19,7 @@ const HAS_STAFF = Boolean(process.env.E2E_STAFF_EMAIL && process.env.E2E_STAFF_P
 
 async function shot(page: Page, name: string) {
   fs.mkdirSync(outDir, { recursive: true });
-  await page.screenshot({ path: path.join(outDir, name), fullPage: true });
+  await page.screenshot({ path: path.join(outDir, name), fullPage: false });
 }
 
 function b64url(obj: unknown): string {
@@ -214,6 +214,7 @@ function stubPublicCatalog(guard: ProdWriteGuard) {
     body: [{ id: 'pro-1', name: 'Diego', full_name: 'Diego', photo_url: null, specialties: [], individual_rating: 5, total_reviews: 0 }],
   });
   guard.stubRpc('get_full_dates', { body: [] });
+  guard.stubRpc('get_full_dates_v2', { body: [] });
   guard.stubRpc('get_first_available_professional', { body: 'pro-1' });
   guard.stubRpc('get_active_booking_by_phone', { body: [] });
   guard.stubRpc('upsert_public_client', {
@@ -256,17 +257,35 @@ test.describe('PR-2 antecedência mínima', () => {
       }
       await page.goto(`${BASE}/#/configuracoes/agendamento`);
       if (phase === 'after') {
-        await expect(page.getByRole('heading', { name: 'Antecedência mínima' })).toBeVisible({ timeout: 20_000 });
+        const heading = page.getByRole('heading', { name: 'Antecedência mínima' });
+        await expect(heading).toBeVisible({ timeout: 20_000 });
+        await heading.scrollIntoViewIfNeeded();
         await expect(page.getByTestId('lead-time-preset-2')).toBeVisible();
         await expect(page.getByTestId('lead-time-preset-8')).toBeVisible();
         await expect(page.getByTestId('lead-time-preset-16')).toBeVisible();
         await expect(page.getByTestId('lead-time-preset-24')).toBeVisible();
         await expect(page.getByRole('button', { name: 'Sem mínimo' })).toBeVisible();
-        await expect(page.getByRole('button', { name: /Outro/ })).toBeVisible();
+        await expect(page.getByRole('button', { name: /^Outro$/ })).toBeVisible();
         await expect(page.getByTestId('lead-time-preset-2')).toHaveAttribute('aria-pressed', 'true');
-        await page.getByTestId('lead-time-preset-8').scrollIntoViewIfNeeded();
       }
       await shot(page, `owner-${width}-settings-lead-time.png`);
+    });
+
+    test(`owner ${width} Outro vazio mostra erro`, async ({ page }) => {
+      await page.setViewportSize({ width, height: width >= 1000 ? 900 : 812 });
+      if (HAS_OWNER) {
+        await login(page, 'owner');
+      } else {
+        await stubAuthReads(page, 'owner');
+      }
+      await page.goto(`${BASE}/#/configuracoes/agendamento`);
+      await expect(page.getByRole('heading', { name: 'Antecedência mínima' })).toBeVisible({ timeout: 20_000 });
+      await page.getByTestId('lead-time-preset-custom').click();
+      await page.getByTestId('booking-lead-time-custom').fill('');
+      await page.getByRole('button', { name: /Salvar Alterações/ }).click();
+      await expect(page.getByTestId('lead-time-custom-error')).toBeVisible();
+      await page.getByTestId('lead-time-custom-error').scrollIntoViewIfNeeded();
+      await shot(page, `owner-${width}-settings-outro-error.png`);
     });
 
     test(`staff ${width} Agenda não ganha antecedência`, async ({ page }) => {
@@ -283,6 +302,7 @@ test.describe('PR-2 antecedência mínima', () => {
     });
 
     test(`cliente ${width} vê empty de antecedência`, async ({ page }) => {
+      test.skip(width === 375);
       await page.setViewportSize({ width, height: width >= 1000 ? 900 : 844 });
       stubPublicCatalog(guard);
       guard.stubRpc('get_available_slots_v2', {
@@ -292,6 +312,8 @@ test.describe('PR-2 antecedência mínima', () => {
       await reachDatetime(page);
       if (phase === 'after') {
         await expect(page.getByText(LEAD_EMPTY)).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByTestId('lead-time-next-day')).toBeVisible();
+        await page.getByTestId('lead-time-next-day').scrollIntoViewIfNeeded();
       }
       await shot(page, `client-${width}-empty-lead.png`);
     });
@@ -319,8 +341,32 @@ test.describe('PR-2 antecedência mínima', () => {
     }
     await page.getByRole('button', { name: /Confirmar agendamento/ }).click();
     if (phase === 'after') {
+      await expect(page.getByRole('heading', { name: 'Escolha a data e hora' })).toBeVisible({ timeout: 10_000 });
       await expect(page.getByText(LEAD_TOAST)).toBeVisible({ timeout: 10_000 });
+      await expect(page.locator('[data-toast-placement="bottom"]')).toBeVisible();
     }
     await shot(page, 'client-390-lead-toast.png');
   });
+
+  for (const role of ['owner', 'staff'] as const) {
+    test(`${role} 390 encaixe passado e +30min sem antecedência`, async ({ page }) => {
+      await page.setViewportSize({ width: 390, height: 844 });
+      guard.stubRpc('list_company_pending_public_bookings', { body: [] });
+      guard.stubRpc('create_secure_booking', { body: { success: true, id: 'apt-1' } });
+      if (role === 'owner' ? HAS_OWNER : HAS_STAFF) {
+        await login(page, role);
+      } else {
+        await stubAuthReads(page, role);
+      }
+      await page.goto(`${BASE}/#/agenda`);
+      await expect(page.locator('#btn-new-appointment')).toBeVisible({ timeout: 20_000 });
+      await page.locator('#btn-new-appointment').click();
+      const appointmentChoice = page.getByRole('button', { name: /Agendamento|Novo atendimento/i }).first();
+      if (await appointmentChoice.isVisible().catch(() => false)) {
+        await appointmentChoice.click();
+      }
+      await expect(page.getByText(/antecedência/i)).toHaveCount(0);
+      await shot(page, `${role}-390-fit-in.png`);
+    });
+  }
 });

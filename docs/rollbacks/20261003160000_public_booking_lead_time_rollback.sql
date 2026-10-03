@@ -11,8 +11,12 @@ BEGIN;
 
 DROP TRIGGER IF EXISTS enforce_lead_time_on_public_bookings ON public.public_bookings;
 DROP FUNCTION IF EXISTS public.enforce_lead_time_on_public_bookings();
+DROP FUNCTION IF EXISTS public.get_full_dates_v2(uuid, date, date, uuid, integer);
 DROP FUNCTION IF EXISTS public.get_available_slots_v2(uuid, date, uuid, integer, boolean);
 DROP FUNCTION IF EXISTS public.public_booking_lead_time_hours(text);
+
+ALTER TABLE public.profiles
+  DROP CONSTRAINT IF EXISTS booking_lead_time_hours_range;
 
 DO $$
 BEGIN

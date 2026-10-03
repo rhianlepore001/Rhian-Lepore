@@ -52,6 +52,16 @@ describe('mapError', () => {
     expect(out.code).toBe('#leadtime');
   });
 
+  it('lead_time_violation sem DETAIL não cai no 2h hardcoded', () => {
+    const out = mapError({
+      code: 'P0001',
+      message: 'lead_time_violation',
+      hint: 'lead_time_violation',
+    }, 'fallback');
+    expect(out.message).toBe('Esse horário precisa ser marcado com mais antecedência');
+    expect(out.message).not.toContain('2h');
+  });
+
   it('traduz slot_unavailable para copy de horário ocupado', () => {
     const out = mapError({ message: 'slot_unavailable' }, 'fallback');
     expect(out.message).toContain('horário acabou de ser ocupado');

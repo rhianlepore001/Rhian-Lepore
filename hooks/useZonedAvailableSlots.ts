@@ -10,6 +10,7 @@ interface Params {
     professionalId: string | null;
     durationMinutes: number;
     timezone: string;
+    refreshKey?: number;
 }
 
 const EMPTY: AvailableSlotsResult = {
@@ -26,7 +27,7 @@ const EMPTY: AvailableSlotsResult = {
  * substituída) são ignoradas pelo flag `cancelled`, então a última dependência
  * sempre vence, independentemente da ordem de chegada das respostas.
  */
-export function useZonedAvailableSlots({ businessId, dateStr, professionalId, durationMinutes, timezone }: Params): AvailableSlotsResult {
+export function useZonedAvailableSlots({ businessId, dateStr, professionalId, durationMinutes, timezone, refreshKey = 0 }: Params): AvailableSlotsResult {
     const [result, setResult] = useState<AvailableSlotsResult>(EMPTY);
 
     useEffect(() => {
@@ -50,7 +51,7 @@ export function useZonedAvailableSlots({ businessId, dateStr, professionalId, du
         };
     // durationMinutes fica fora de propósito: mesmo comportamento de antes
     // (a duração é escolhida antes do passo de data).
-    }, [businessId, dateStr, professionalId, timezone]);
+    }, [businessId, dateStr, professionalId, timezone, refreshKey]);
 
     return result;
 }

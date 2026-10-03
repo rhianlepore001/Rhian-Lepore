@@ -26,6 +26,11 @@ describe('migration 20261003160000_public_booking_lead_time (contrato)', () => {
     expect(sql).toMatch(/business_timezone/);
     expect(sql).toMatch(/p_is_professional/);
     expect(sql).toMatch(/GRANT EXECUTE ON FUNCTION public\.get_available_slots_v2/);
+    expect(sql).toMatch(/get_full_dates_v2/);
+    expect(sql).toMatch(/booking_lead_time_hours_range/);
+    expect(sql).toMatch(/get_auth_company_id\(\)::text/);
+    expect(sql).toMatch(/COALESCE\(NEW\.status, 'pending'\)/);
+    expect(sql).toMatch(/UPDATE OF appointment_time, status/);
     for (const needle of FORBIDDEN) {
       expect(sql).not.toContain(needle);
     }
@@ -42,7 +47,9 @@ describe('migration 20261003160000_public_booking_lead_time (contrato)', () => {
     const rollback = read(ROLLBACK);
     expect(rollback).toMatch(/DROP TRIGGER IF EXISTS enforce_lead_time_on_public_bookings/);
     expect(rollback).toMatch(/DROP FUNCTION IF EXISTS public\.get_available_slots_v2/);
+    expect(rollback).toMatch(/DROP FUNCTION IF EXISTS public\.get_full_dates_v2/);
     expect(rollback).toMatch(/DROP FUNCTION IF EXISTS public\.enforce_lead_time_on_public_bookings/);
+    expect(rollback).toMatch(/DROP CONSTRAINT IF EXISTS booking_lead_time_hours_range/);
     expect(rollback).not.toMatch(/DROP COLUMN/);
     for (const needle of FORBIDDEN) {
       expect(rollback).not.toContain(needle);

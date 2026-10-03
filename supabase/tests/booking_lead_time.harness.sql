@@ -6,6 +6,13 @@ UPDATE public.profiles
 SET booking_lead_time_hours = 2
 WHERE id = '00000000-0000-0000-0000-00000000000a';
 
+INSERT INTO public.profiles (id, role, company_id, region, booking_lead_time_hours)
+VALUES ('00000000-0000-0000-0000-00000000000b', 'staff', '00000000-0000-0000-0000-00000000000a', 'PT', 2)
+ON CONFLICT (id) DO UPDATE SET
+  role = 'staff',
+  company_id = '00000000-0000-0000-0000-00000000000a',
+  booking_lead_time_hours = 2;
+
 INSERT INTO public.business_settings (user_id, timezone, business_hours)
 VALUES (
   '00000000-0000-0000-0000-00000000000a',
@@ -23,3 +30,7 @@ VALUES (
 ON CONFLICT (user_id) DO UPDATE SET
   timezone = EXCLUDED.timezone,
   business_hours = EXCLUDED.business_hours;
+
+GRANT INSERT, UPDATE ON public.public_bookings TO anon;
+GRANT EXECUTE ON FUNCTION public.create_secure_booking(uuid, uuid, text, text, text, timestamptz, text[], numeric, integer, text, uuid, text, text, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.get_auth_company_id() TO authenticated, service_role;

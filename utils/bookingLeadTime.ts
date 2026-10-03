@@ -6,6 +6,7 @@ export type LeadTimePresetHours = (typeof LEAD_TIME_PRESETS)[number];
 
 export const DEFAULT_BOOKING_LEAD_TIME_HOURS = 2;
 export const MAX_BOOKING_LEAD_TIME_HOURS = 720;
+export const SEE_TOMORROW_MAX_LEAD_HOURS = 16;
 
 export function isLeadTimePreset(hours: number): hours is LeadTimePresetHours {
   return (LEAD_TIME_PRESETS as readonly number[]).includes(hours);
@@ -21,15 +22,33 @@ export function clampLeadTimeHours(value: number): number {
   return Math.min(MAX_BOOKING_LEAD_TIME_HOURS, Math.max(0, Math.trunc(value)));
 }
 
-export function leadTimeViolationMessage(hours: number): string {
+export function parseCustomLeadTimeHours(raw: string): number | null {
+  const trimmed = raw.trim();
+  if (trimmed === '') return null;
+  const parsed = Number.parseInt(trimmed, 10);
+  if (!Number.isFinite(parsed) || parsed < 0) return null;
+  return clampLeadTimeHours(parsed);
+}
+
+export const LEAD_TIME_CUSTOM_EMPTY_ERROR = 'Informe as horas de antecedência';
+
+export function leadTimeViolationMessage(hours: number | null | undefined): string {
+  if (hours == null || !Number.isFinite(hours) || hours < 0) {
+    return 'Esse horário precisa ser marcado com mais antecedência';
+  }
   return `Esse horário precisa ser marcado com pelo menos ${hours}h de antecedência`;
 }
 
 export function leadTimeEmptySlotsMessage(hours: number, isToday: boolean): string {
+  const tomorrow = hours <= SEE_TOMORROW_MAX_LEAD_HOURS;
   if (isToday) {
-    return `Hoje não há horários com ${hours}h de antecedência. Veja amanhã.`;
+    return tomorrow
+      ? `Hoje não há horários com ${hours}h de antecedência. Veja amanhã.`
+      : `Hoje não há horários com ${hours}h de antecedência. Escolha outro dia.`;
   }
-  return `Não há horários com ${hours}h de antecedência neste dia.`;
+  return tomorrow
+    ? `Não há horários com ${hours}h de antecedência neste dia.`
+    : `Não há horários com ${hours}h de antecedência neste dia. Escolha outro dia.`;
 }
 
 export function isLeadTimeViolationError(error: unknown): boolean {
@@ -43,7 +62,7 @@ export function isLeadTimeViolationError(error: unknown): boolean {
   return blob.includes('lead_time_violation');
 }
 
-export function leadTimeHoursFromError(error: unknown, fallback = DEFAULT_BOOKING_LEAD_TIME_HOURS): number {
+export function leadTimeHoursFromError(error: unknown, fallback: number | null = null): number | null {
   const raw = error && typeof error === 'object' ? error as { details?: string } : {};
   const parsed = Number.parseInt(String(raw.details ?? ''), 10);
   if (Number.isFinite(parsed) && parsed >= 0) return parsed;

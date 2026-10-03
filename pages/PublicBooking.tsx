@@ -28,7 +28,7 @@ import { buildWhatsAppLink, formatCurrency, formatDuration, Region } from '../ut
 import { capBookingDuration } from '../utils/serviceDuration';
 import { logger } from '../utils/Logger';
 import { useZonedAvailableSlots } from '../hooks/useZonedAvailableSlots';
-import { fetchEditBooking, fetchPublicClientByPhone, fetchClientByPhone, fetchPublicBookingById, fetchFullDates, getFirstAvailableProfessional, uploadClientPhoto, upsertPublicClientSession } from '../services/publicBooking';
+import { fetchEditBooking, fetchPublicClientByPhone, fetchClientByPhone, fetchPublicBookingById, fetchFullDates, findNextDateWithSlots, getFirstAvailableProfessional, uploadClientPhoto, upsertPublicClientSession } from '../services/publicBooking';
 import { shouldLandOnClientArea } from '../utils/publicBookingLanding';
 import { getPublicBookingAwaitingWhatsAppText, getPublicBookingSuccessCopy } from '../utils/publicBookingCopy';
 import { isSlotUnavailableError } from '../utils/supabaseRpc';
@@ -144,6 +144,8 @@ export const PublicBooking: React.FC = () => {
     const [selectedProfessional, setSelectedProfessional] = useState<string | null>(proIdParam || null);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [selectedTime, setSelectedTime] = useState<string | null>(null);
+    const [slotsRefreshKey, setSlotsRefreshKey] = useState(0);
+    const [nextDayBusy, setNextDayBusy] = useState(false);
     const [fullDates, setFullDates] = useState<string[]>([]);
     const [acceptedPolicy, setAcceptedPolicy] = useState(false);
     const [acceptedMarketing, setAcceptedMarketing] = useState(false);
@@ -503,11 +505,48 @@ export const PublicBooking: React.FC = () => {
         professionalId: selectedProfessional === 'any' ? null : selectedProfessional,
         durationMinutes: calculateDuration(),
         timezone: businessTimezone,
+        refreshKey: slotsRefreshKey,
     });
     const availableSlots = slotsResult.slots;
     const leadEmptyMessage = slotsResult.emptyReason === 'lead_time'
         ? leadTimeEmptySlotsMessage(slotsResult.leadTimeHours, selectedDateStr === businessToday)
         : undefined;
+
+    const handleSeeNextDay = async () => {
+        if (!businessId || !selectedDateStr) return;
+        setNextDayBusy(true);
+        try {
+            const next = await findNextDateWithSlots(
+                businessId,
+                selectedDateStr,
+                selectedProfessional === 'any' ? null : selectedProfessional,
+                calculateDuration(),
+                businessTimezone,
+            );
+            if (!next) {
+                showToast('Não há horários nos próximos 14 dias. Escolha outro dia no calendário.', { type: 'info', placement: 'bottom' });
+                return;
+            }
+            setSelectedDate(dateStringToLocalDate(next));
+            setSelectedTime(null);
+        } catch {
+            showToast('Não foi possível buscar o próximo dia. Tente outro dia no calendário.', { type: 'error', placement: 'bottom' });
+        } finally {
+            setNextDayBusy(false);
+        }
+    };
+
+    const leadEmptyAction = slotsResult.emptyReason === 'lead_time' ? (
+        <button
+            type="button"
+            data-testid="lead-time-next-day"
+            onClick={() => { void handleSeeNextDay(); }}
+            disabled={nextDayBusy}
+            className={`px-4 py-3 min-h-[44px] text-sm font-semibold rounded-xl ${classes.buttonPrimary} disabled:opacity-50`}
+        >
+            {nextDayBusy ? 'Buscando…' : 'Ver próximo dia com horário'}
+        </button>
+    ) : undefined;
 
     const professionalCategories = Array.from(new Set((professionals || []).flatMap((p: any) => p.specialties || []))).filter(Boolean);
     const filteredProfessionals = activeProfessionalCategory === 'all'
@@ -701,7 +740,14 @@ export const PublicBooking: React.FC = () => {
         } catch (error: any) {
             logger.error('Error creating booking', error);
             if (isLeadTimeViolationError(error)) {
-                showToast(leadTimeViolationMessage(leadTimeHoursFromError(error, slotsResult.leadTimeHours)), 'error');
+                setSelectedTime(null);
+                setQuickStep('datetime');
+                setStep('datetime');
+                setSlotsRefreshKey((key) => key + 1);
+                showToast(
+                    leadTimeViolationMessage(leadTimeHoursFromError(error, slotsResult.leadTimeHours)),
+                    { type: 'error', placement: 'bottom' },
+                );
             } else if (isSlotUnavailableError(error)) {
                 showToast('Este horário acabou de ser ocupado. Escolha outro.', 'error');
             } else {
@@ -1104,7 +1150,7 @@ export const PublicBooking: React.FC = () => {
                             </div>
                             {selectedDate && (
                                 <div className="animate-reveal-fragment duration-700 max-w-2xl mx-auto">
-                                    <TimeGrid selectedTime={selectedTime} onTimeSelect={setSelectedTime} availableSlots={availableSlots} emptyMessage={leadEmptyMessage} forceTheme={themeOverride} />
+                                    <TimeGrid selectedTime={selectedTime} onTimeSelect={setSelectedTime} availableSlots={availableSlots} emptyMessage={leadEmptyMessage} emptyAction={leadEmptyAction} forceTheme={themeOverride} />
                                 </div>
                             )}
                         </div>
@@ -1520,7 +1566,7 @@ export const PublicBooking: React.FC = () => {
                                                                     setMessages(prev => [...prev, { id: Date.now().toString(), text: `Agendar para dia ${selectedDate.toLocaleDateString('pt-BR')} às ${time}`, isAssistant: false }, { id: (Date.now() + 1).toString(), text: isLogged ? "Estamos quase concluindo! Como você já tem cadastro, verifique os detalhes abaixo e confirme o seu agendamento." : "Estamos quase concluindo! Agora, para confirmar seu agendamento, informe seus dados de contato.", isAssistant: true, type: 'contact' }]);
                                                                     setStep('contact');
                                                                 }
-                                                            }} availableSlots={availableSlots} emptyMessage={leadEmptyMessage} forceTheme={themeOverride} />
+                                                            }} availableSlots={availableSlots} emptyMessage={leadEmptyMessage} emptyAction={leadEmptyAction} forceTheme={themeOverride} />
                                                         </div>
                                                     )}
                                                 </div>

@@ -26,9 +26,15 @@ describe('bookingLeadTime copy e presets', () => {
     );
   });
 
-  it('empty state de hoje cita a antecedência e manda ver amanhã', () => {
+  it('empty state de hoje cita a antecedência e manda ver amanhã até 16h', () => {
     expect(leadTimeEmptySlotsMessage(8, true)).toBe(
       'Hoje não há horários com 8h de antecedência. Veja amanhã.',
+    );
+    expect(leadTimeEmptySlotsMessage(16, true)).toBe(
+      'Hoje não há horários com 16h de antecedência. Veja amanhã.',
+    );
+    expect(leadTimeEmptySlotsMessage(24, true)).toBe(
+      'Hoje não há horários com 24h de antecedência. Escolha outro dia.',
     );
     expect(leadTimeEmptySlotsMessage(2, false)).toBe(
       'Não há horários com 2h de antecedência neste dia.',
@@ -46,5 +52,10 @@ describe('bookingLeadTime copy e presets', () => {
     expect(clampLeadTimeHours(3.9)).toBe(3);
     expect(clampLeadTimeHours(-4)).toBe(0);
     expect(clampLeadTimeHours(9000)).toBe(720);
+  });
+
+  it('mensagem de recusa sem horas não inventa 2h', () => {
+    expect(leadTimeViolationMessage(null)).toBe('Esse horário precisa ser marcado com mais antecedência');
+    expect(leadTimeHoursFromError({ message: 'lead_time_violation' })).toBeNull();
   });
 });

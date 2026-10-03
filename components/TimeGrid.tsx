@@ -21,6 +21,7 @@ interface TimeGridProps {
     availableSlots?: string[];
     forceTheme?: ThemeVariant;
     emptyMessage?: string;
+    emptyAction?: React.ReactNode;
 }
 
 export const TimeGrid: React.FC<TimeGridProps> = ({
@@ -32,6 +33,7 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
     ],
     forceTheme,
     emptyMessage,
+    emptyAction,
 }) => {
     const { colors, accent, font, classes, density } = useBrutalTheme({ override: forceTheme });
     const hoverBg = `hover:bg-[var(--color-accent-dim)]`;
@@ -135,6 +137,11 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
                         </p>
                         {!emptyMessage && (
                             <p className={`${colors.textMuted} text-xs mt-2 opacity-70`}>Tente selecionar outro dia.</p>
+                        )}
+                        {emptyAction && (
+                            <div className="mt-4 flex justify-center">
+                                {emptyAction}
+                            </div>
                         )}
                     </div>
                 )}

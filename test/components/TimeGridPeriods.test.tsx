@@ -85,4 +85,17 @@ describe('TimeGrid — rótulo do grupo segue a hora real dos slots', () => {
     );
     expect(screen.queryByText('Tente selecionar outro dia.')).toBeNull();
   });
+
+  it('empty state aceita CTA de próximo dia', () => {
+    render(
+      <TimeGrid
+        selectedTime={null}
+        onTimeSelect={() => undefined}
+        availableSlots={[]}
+        emptyMessage="Hoje não há horários com 8h de antecedência. Veja amanhã."
+        emptyAction={<button type="button">Ver próximo dia com horário</button>}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'Ver próximo dia com horário' })).toBeInTheDocument();
+  });
 });

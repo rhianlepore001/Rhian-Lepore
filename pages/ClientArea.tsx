@@ -7,7 +7,8 @@ import { usePublicClient } from '../contexts/PublicClientContext';
 import { useBusinessProfileBySlug, useBusinessSettings } from '../hooks/usePublicBooking';
 import { ClientBookingCard, ClientBooking } from '../components/ClientBookingCard';
 import { fetchClientBookingCancellations } from '../services/publicBooking';
-import { splitClientBookings, withCancellationInfo } from '../utils/clientBookings';
+import { pendingAwaitingBanner, splitClientBookings, withCancellationInfo } from '../utils/clientBookings';
+import { usePublicBusinessCopy } from '../hooks/useBusinessCopy';
 import { PhoneInput } from '../components/PhoneInput';
 import {
     Calendar, History, User, LogOut, ArrowRight,
@@ -133,6 +134,7 @@ export const ClientArea: React.FC = () => {
     };
 
     const isBeauty = business?.user_type === 'beauty';
+    const { businessNoun } = usePublicBusinessCopy(business?.user_type);
     const region = (business?.region as 'BR' | 'PT') ?? 'BR';
     const businessTimezone = resolveBusinessTimezone({
         timezone: (businessSettings as { timezone?: string | null } | null | undefined)?.timezone,
@@ -302,6 +304,7 @@ export const ClientArea: React.FC = () => {
         history: historyBookings,
     } = splitClientBookings(bookings);
     const historySlice = historyBookings.slice(0, historyPage * ITEMS_PER_PAGE);
+    const pendingUpcomingCount = upcomingBookings.filter(b => b.status === 'pending').length;
 
     if (businessLoading || clientLoading) {
         return (
@@ -590,12 +593,15 @@ export const ClientArea: React.FC = () => {
                 ) : (
                     <>
                         {activeTab === 'upcoming' && (
-                            <div className="space-y-4 animate-in fade-in duration-200">
-                                {upcomingBookings.some(b => b.status === 'pending') && (
-                                    <div className="flex items-start gap-2 px-3 py-2 rounded-xl border bg-[var(--color-warning-bg)] border-[var(--color-warning-border)] text-[var(--color-warning)]">
+                            <div className="space-y-4 animate-in fade-in duration-200" data-testid="client-upcoming-list">
+                                {pendingUpcomingCount > 0 && (
+                                    <div
+                                        className="flex items-start gap-2 px-3 py-2 rounded-xl border bg-[var(--color-warning-bg)] border-[var(--color-warning-border)] text-[var(--color-warning)]"
+                                        data-testid="client-pending-banner"
+                                    >
                                         <Clock className="w-4 h-4 shrink-0 mt-0.5" />
                                         <p className="text-xs leading-snug break-words">
-                                            Aguardando confirmação. Use o WhatsApp no card para agilizar.
+                                            {pendingAwaitingBanner(businessNoun, pendingUpcomingCount)}
                                         </p>
                                     </div>
                                 )}
@@ -621,6 +627,7 @@ export const ClientArea: React.FC = () => {
                                             timeZone={businessTimezone}
                                             onCancelled={handleBookingCancelled}
                                             allowEdit={business?.allow_client_rescheduling ?? true}
+                                            businessName={business.business_name}
                                         />
                                     ))
                                 )}
@@ -628,7 +635,7 @@ export const ClientArea: React.FC = () => {
                         )}
 
                         {activeTab === 'history' && (
-                            <div className="space-y-4 animate-in fade-in duration-200">
+                            <div className="space-y-4 animate-in fade-in duration-200" data-testid="client-history-list">
                                 {historyBookings.length === 0 ? (
                                     <EmptyState
                                         icon={<History className="w-10 h-10" />}
@@ -651,6 +658,7 @@ export const ClientArea: React.FC = () => {
                                                 region={region}
                                                 timeZone={businessTimezone}
                                                 onCancelled={handleBookingCancelled}
+                                                businessName={business.business_name}
                                             />
                                         ))}
                                         {historySlice.length < historyBookings.length && (

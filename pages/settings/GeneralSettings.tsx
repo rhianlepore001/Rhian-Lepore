@@ -23,6 +23,12 @@ import {
     resolveBusinessTimezone,
     isSelectableTimeZone,
 } from '../../utils/businessTimezone';
+import {
+    CANCELLATION_POLICY_NOTES_HINT,
+    GENERATED_CANCELLATION_POLICY_TEXT,
+    composeCancellationPolicyForSave,
+    splitCancellationPolicyForEditor,
+} from '../../utils/cancellationPolicyCopy';
 
 export const GeneralSettings: React.FC = () => {
     const { user, companyId, region, updateRegion } = useAuth();
@@ -40,7 +46,6 @@ export const GeneralSettings: React.FC = () => {
     const [coverPreview, setCoverPreview] = useState<string | null>(null);
 
     const [cancellationPolicy, setCancellationPolicy] = useState('');
-    const [policyTemplate, setPolicyTemplate] = useState('flexible');
 
     const [businessHours, setBusinessHours] = useState<Record<string, { isOpen: boolean; blocks: { start: string; end: string }[] }>>({
         mon: { isOpen: true, blocks: [{ start: '09:00', end: '18:00' }] },
@@ -72,12 +77,6 @@ export const GeneralSettings: React.FC = () => {
     const savedTimezone = resolveBusinessTimezone({ timezone: storedTimezone, region: profile?.region ?? region });
     const timezoneDirty = timezoneOverride !== null && timezoneOverride !== savedTimezone;
 
-    const policyTemplates: Record<string, string> = {
-        flexible: 'Cancelamentos podem ser feitos com até 24h de antecedência sem custo. Cancelamentos com menos de 24h terão cobrança de 50% do valor.',
-        moderate: 'Cancelamentos devem ser feitos com 48h de antecedência. Cancelamentos tardios terão cobrança integral.',
-        strict: 'Cancelamentos com menos de 72h de antecedência não terão reembolso. Reagendamentos são permitidos uma vez.'
-    };
-
     const loading = !settings && !profile;
 
     const initialValuesRef = React.useRef<{
@@ -106,7 +105,7 @@ export const GeneralSettings: React.FC = () => {
 
     React.useEffect(() => {
         if (settings) {
-            setCancellationPolicy(settings.cancellation_policy ?? policyTemplates.flexible);
+            setCancellationPolicy(splitCancellationPolicyForEditor(settings.cancellation_policy).notes);
             if (settings.business_hours) setBusinessHours(settings.business_hours as any);
         }
     }, [settings]);
@@ -222,7 +221,7 @@ export const GeneralSettings: React.FC = () => {
             updateRegion(selectedRegion);
 
             await updateSettingsMutation.mutateAsync({
-                cancellation_policy: cancellationPolicy,
+                cancellation_policy: composeCancellationPolicyForSave(cancellationPolicy),
                 business_hours: businessHours as any,
             });
 
@@ -271,11 +270,6 @@ export const GeneralSettings: React.FC = () => {
             setSaveStatus('error');
             showToast('Não foi possível salvar as configurações. Tente novamente.', 'error');
         }
-    };
-
-    const handlePolicyTemplateChange = (type: string) => {
-        setPolicyTemplate(type);
-        setCancellationPolicy(policyTemplates[type]);
     };
 
     if (loading) {
@@ -478,41 +472,36 @@ export const GeneralSettings: React.FC = () => {
                     />
                 </SettingsSection>
 
+                <div data-testid="cancellation-policy-section">
                 <SettingsSection title="Política de Cancelamento">
-                    <div className="flex flex-wrap gap-2 mb-4">
-                        {[
-                            { id: 'flexible', label: 'Flexível', desc: '24h' },
-                            { id: 'moderate', label: 'Moderada', desc: '48h' },
-                            { id: 'strict', label: 'Rígida', desc: '72h' }
-                        ].map(template => (
-                            <button
-                                key={template.id}
-                                onClick={() => handlePolicyTemplateChange(template.id)}
-                                className={`
-                                    px-3 py-2 rounded-xl text-sm border transition-all active:scale-[0.97]
-                                    ${policyTemplate === template.id
-                                        ? `${accent.bgDim} ${accent.borderDim} ${accent.text} ${accent.shadow}`
-                                        : `${colors.inputBg} ${colors.border} ${colors.textMuted} hover:text-theme-textSecondary hover:bg-[var(--color-card-hover)]`
-                                    }
-                                `}
-                            >
-                                <span className="block font-bold">{template.label}</span>
-                                <span className="text-xs opacity-70">{template.desc}</span>
-                            </button>
-                        ))}
+                    <div
+                        className="rounded-2xl border border-theme-border bg-theme-surface px-4 py-3.5 space-y-1.5"
+                        data-testid="cancellation-policy-generated"
+                    >
+                        <p className={`${colors.textMuted} text-xs font-semibold uppercase tracking-[0.14em]`}>
+                            O que o cliente lê
+                        </p>
+                        <p className={`${colors.text} text-sm leading-relaxed`}>
+                            {GENERATED_CANCELLATION_POLICY_TEXT}
+                        </p>
                     </div>
-
+                    <label className={`${classes.label} mt-4 block`} htmlFor="cancellation-policy-notes">
+                        Observações (opcional)
+                    </label>
                     <textarea
+                        id="cancellation-policy-notes"
+                        data-testid="cancellation-policy-notes"
                         value={cancellationPolicy}
                         onChange={e => setCancellationPolicy(e.target.value)}
-                        rows={4}
-                        placeholder="Descreva sua política de cancelamento..."
+                        rows={3}
+                        placeholder="Ex.: avisar pelo WhatsApp se for atrasar."
                         className={classes.input}
                     />
-                    <p className={`${colors.textMuted} text-xs mt-2 italic px-1`}>
-                        Você pode editar o texto acima para personalizar sua política.
+                    <p className={`${colors.textMuted} text-xs mt-2 leading-relaxed`} data-testid="cancellation-policy-notes-hint">
+                        {CANCELLATION_POLICY_NOTES_HINT}
                     </p>
                 </SettingsSection>
+                </div>
 
                 <SaveFooter
                     onSave={handleSave}

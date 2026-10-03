@@ -129,8 +129,8 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
                 )}
 
                 {availableSlots.length === 0 && (
-                    <div className="text-center py-8" data-testid="time-grid-empty">
-                        <p className={`${colors.textMuted} text-sm`}>
+                    <div className="text-center py-8 px-2" data-testid="time-grid-empty">
+                        <p className={`${emptyMessage ? colors.text : colors.textMuted} text-sm leading-relaxed`}>
                             {emptyMessage ?? 'Nenhum horário disponível para esta data.'}
                         </p>
                         {!emptyMessage && (

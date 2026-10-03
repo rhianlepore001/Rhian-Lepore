@@ -36,6 +36,8 @@ import { filterBookableServices } from '../utils/filterBookableServices';
 import { confirmPublicBooking, createAcceptedAppointmentFromBooking, rejectPublicBooking, acceptCompanyPublicBooking } from '../services/publicBooking';
 import { copyBookingProductsToAppointment } from '../services/catalog';
 import { cancelAppointment, deleteAppointmentWithFinance, fetchPendingPublicBookings } from '../services/scheduling';
+import { usePendingPublicBookingsLive } from '../hooks/usePendingPublicBookingsLive';
+import { mergePendingPublicBooking } from '../utils/bookingRealtime';
 
 import { buildWhatsAppLink, formatCurrency, formatPhone } from '../utils/formatters';
 import { formatDateForInput, formatLocalDateString, combineDateAndTime } from '../utils/date';
@@ -248,26 +250,16 @@ export const Agenda: React.FC = () => {
         }
     }, [searchParams]);
 
-    // Real-time subscription for public bookings
-    useEffect(() => {
-        if (!user || !effectiveUserId) return;
-
-        const subscription = supabase
-            .channel('public_bookings_agenda')
-            .on('postgres_changes', {
-                event: '*',
-                schema: 'public',
-                table: 'public_bookings',
-                filter: `business_id=eq.${effectiveUserId}`
-            }, () => {
-                fetchPublicBookings();
-            })
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(subscription);
-        };
-    }, [user, effectiveUserId]);
+    usePendingPublicBookingsLive(
+        user && effectiveUserId ? effectiveUserId : null,
+        () => {
+            void fetchPublicBookings();
+        },
+        Boolean(user && effectiveUserId),
+        (row) => {
+            setPublicBookings((prev) => mergePendingPublicBooking(prev, row as typeof prev[number]));
+        },
+    );
 
     useEffect(() => {
         if (user && effectiveUserId) {
@@ -558,7 +550,7 @@ export const Agenda: React.FC = () => {
     const fetchPublicBookings = async () => {
         if (!user || !effectiveUserId) return;
         const data = await fetchPendingPublicBookings(effectiveUserId);
-        setPublicBookings(data);
+        setPublicBookings(data ?? []);
     };
 
     const fetchClients = async () => {

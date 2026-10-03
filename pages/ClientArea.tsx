@@ -8,6 +8,8 @@ import { useBusinessProfileBySlug, useBusinessSettings } from '../hooks/usePubli
 import { ClientBookingCard, ClientBooking } from '../components/ClientBookingCard';
 import { fetchClientBookingCancellations } from '../services/publicBooking';
 import { pendingAwaitingBanner, splitClientBookings, withCancellationInfo } from '../utils/clientBookings';
+import { applyBookingStatusEvent } from '../utils/bookingRealtime';
+import { useBookingStatusLive } from '../hooks/useBookingStatusLive';
 import { usePublicBusinessCopy } from '../hooks/useBusinessCopy';
 import { PhoneInput } from '../components/PhoneInput';
 import {
@@ -151,9 +153,9 @@ export const ClientArea: React.FC = () => {
         html.setAttribute('data-mode', isBeauty ? 'light' : 'dark');
     }, [business, isBeauty]);
 
-    const fetchBookings = useCallback(async () => {
+    const fetchBookings = useCallback(async (opts?: { silent?: boolean }) => {
         if (!sessionClient || !business) return;
-        setBookingsLoading(true);
+        if (!opts?.silent) setBookingsLoading(true);
         try {
             const [historyRes, cancelledByBusiness] = await Promise.all([
                 supabase.rpc('get_client_bookings_history', {
@@ -166,45 +168,15 @@ export const ClientArea: React.FC = () => {
             if (historyRes.error) throw historyRes.error;
             setBookings(withCancellationInfo((historyRes.data as ClientBooking[]) ?? [], cancelledByBusiness));
         } catch {
-            setBookings([]);
+            if (!opts?.silent) setBookings([]);
         } finally {
-            setBookingsLoading(false);
+            if (!opts?.silent) setBookingsLoading(false);
         }
     }, [sessionClient, business]);
 
     useEffect(() => {
-        fetchBookings();
+        void fetchBookings();
     }, [fetchBookings]);
-
-    useEffect(() => {
-        if (!sessionClient || !business) return;
-
-        const channel = supabase
-            .channel(`public_bookings_${sessionClient.phone}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'public_bookings',
-                    filter: `customer_phone=eq.${sessionClient.phone}`,
-                },
-                (payload) => {
-                    const updated = payload.new;
-                    setBookings(prev =>
-                        prev.map(b => b.id === updated.id
-                            ? { ...b, status: updated.status, appointment_time: updated.appointment_time }
-                            : b
-                        )
-                    );
-                }
-            )
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, [sessionClient, business]);
 
     const handleBookingCancelled = (id: string) => {
         setBookings(prev =>
@@ -305,6 +277,21 @@ export const ClientArea: React.FC = () => {
     } = splitClientBookings(bookings);
     const historySlice = historyBookings.slice(0, historyPage * ITEMS_PER_PAGE);
     const pendingUpcomingCount = upcomingBookings.filter(b => b.status === 'pending').length;
+    const liveBookingIds = useMemo(
+        () => upcomingBookings.map((booking) => booking.id),
+        [upcomingBookings],
+    );
+
+    useBookingStatusLive(
+        liveBookingIds,
+        (event) => {
+            setBookings((prev) => applyBookingStatusEvent(prev, event));
+        },
+        () => {
+            void fetchBookings({ silent: true });
+        },
+        Boolean(sessionClient && business),
+    );
 
     if (businessLoading || clientLoading) {
         return (

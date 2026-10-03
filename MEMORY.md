@@ -9,6 +9,10 @@
 
 ---
 
+## PR-3 overhaul booking — status ao vivo (3 Out 2026, NÃO merge)
+
+Branch `feat/overhaul-pr3-realtime-status`. Broadcast `booking:<id>` (payload id/status/appointment_time/op/at) + publication de `public_bookings` para o dono. Fallback 30s + refetch em visibility/online/erro de canal. Não aplicar em prod neste PR. Prints em `/opt/cursor/artifacts/screenshots/pr3-realtime/`.
+
 ## PR-1 overhaul booking — copy/cards (3 Out 2026, NÃO merge)
 
 Branch `feat/overhaul-pr1-copy-cards`, draft https://github.com/rhianlepore001/Rhian-Lepore/pull/119. Revisão 2: sem caixa «Cancelado.» duplicada, ícone Calendar nos 4 Agendar de novo, toggle alinhado ao row de e-mail, aviso pending com substantivo do negócio + plural, data minúscula no WhatsApp. Pendência PR-6: RPCs devem aplicar `enable_self_rescheduling` no servidor. Não rebasear (#120/#121). Prints em `/opt/cursor/artifacts/pr1/`.

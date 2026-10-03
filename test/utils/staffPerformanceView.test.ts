@@ -88,17 +88,22 @@ describe('staffPerformanceView — deltas (R3.15)', () => {
         expect(moneyDelta(300, 360, { prevSample: 11, formatMoney: brl })).toEqual({ text: '▼ −R$ 60,00 (−17%)', tone: 'bad', label: 'pior' });
     });
 
-    it('neutro: |Δ%| < 5%, anterior com < 8 atendimentos; "novo" quando o anterior é 0', () => {
+    it('neutro: |Δ%| < 5%; "novo" quando o anterior é 0', () => {
         expect(moneyDelta(370, 360, { prevSample: 11, formatMoney: brl })).toMatchObject({ tone: 'neutral', label: 'estável' });
-        expect(moneyDelta(408, 360, { prevSample: 5, formatMoney: brl })).toEqual({ text: 'sem base de comparação', tone: 'neutral', label: 'sem_base' });
         expect(moneyDelta(408, 0, { prevSample: 11, formatMoney: brl })).toEqual({ text: 'novo', tone: 'neutral', label: 'novo' });
         expect(moneyDelta(null, 360, { prevSample: 11, formatMoney: brl })).toBeNull();
         expect(moneyDelta(408, null, { prevSample: 0, formatMoney: brl })).toBeNull();
     });
 
-    it('base quase vazia (ex. +241%) não aparece como melhor', () => {
-        expect(moneyDelta(341, 100, { prevSample: 2, formatMoney: brl })).toEqual({ text: 'sem base de comparação', tone: 'neutral', label: 'sem_base' });
-        expect(moneyDelta(1313, 385, { prevSample: 12, formatMoney: brl })).toEqual({ text: 'sem base de comparação', tone: 'neutral', label: 'sem_base' });
+    it('amostra < 8: mostra o número em cinza, sem melhor/pior; queda simétrica também', () => {
+        expect(moneyDelta(408, 360, { prevSample: 5, formatMoney: brl })).toEqual({ text: '▲ +R$ 48,00 (+13%)', tone: 'neutral', label: 'sem_base' });
+        expect(moneyDelta(300, 360, { prevSample: 5, formatMoney: brl })).toEqual({ text: '▼ −R$ 60,00 (−17%)', tone: 'neutral', label: 'sem_base' });
+        expect(moneyDelta(341, 100, { prevSample: 2, formatMoney: brl })).toMatchObject({ tone: 'neutral', label: 'sem_base' });
+    });
+
+    it('1313 vs 385 com amostra suficiente é melhor +241%; a queda simétrica é pior', () => {
+        expect(moneyDelta(1313, 385, { prevSample: 12, formatMoney: brl })).toEqual({ text: '▲ +R$ 928,00 (+241%)', tone: 'good', label: 'melhor' });
+        expect(moneyDelta(385, 1313, { prevSample: 12, formatMoney: brl })).toEqual({ text: '▼ −R$ 928,00 (−71%)', tone: 'bad', label: 'pior' });
         expect(moneyDelta(408, 360, { prevSample: 11, formatMoney: brl })).toMatchObject({ tone: 'good', label: 'melhor' });
     });
 

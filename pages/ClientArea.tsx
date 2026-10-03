@@ -122,7 +122,9 @@ export const ClientArea: React.FC = () => {
         sessionClient?.phone ?? null
     );
     const { data: clubPlans } = usePublicMembershipPlans(businessId);
-    const clubActive = (clubPlans?.length ?? 0) > 0;
+    const clubOffered = (clubPlans?.length ?? 0) > 0;
+    const isClubMember = membership?.effective_status === 'active';
+    const openClubTab = () => setActiveTab('club');
     const cancelMembership = useCancelPublicClientMembership(
         sessionClient?.business_id ?? business?.id ?? null,
         sessionClient?.phone ?? null
@@ -624,7 +626,9 @@ export const ClientArea: React.FC = () => {
                                             onCancelled={handleBookingCancelled}
                                             allowEdit={business?.allow_client_rescheduling ?? true}
                                             businessName={business.business_name}
-                                            clubActive={clubActive}
+                                            clubOffered={clubOffered}
+                                            isClubMember={isClubMember}
+                                            onOpenClub={openClubTab}
                                         />
                                     ))
                                 )}
@@ -656,7 +660,9 @@ export const ClientArea: React.FC = () => {
                                                 timeZone={businessTimezone}
                                                 onCancelled={handleBookingCancelled}
                                                 businessName={business.business_name}
-                                            clubActive={clubActive}
+                                                clubOffered={clubOffered}
+                                                isClubMember={isClubMember}
+                                                onOpenClub={openClubTab}
                                             />
                                         ))}
                                         {historySlice.length < historyBookings.length && (

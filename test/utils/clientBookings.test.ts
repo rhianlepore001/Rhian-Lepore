@@ -4,6 +4,7 @@ import {
   CANCELLED_GENERIC_MESSAGE,
   cancellationMessage,
   clubSentence,
+  clubInviteSentence,
   CLUB_SENTENCE,
   completedRebookLabel,
   completedThankYou,
@@ -134,15 +135,28 @@ describe('clientBookings — PR-4 Finalizado / Não compareceu', () => {
     expect(NO_SHOW_MESSAGE).toBe('Sentimos sua falta. Quer marcar outro horário?');
   });
 
-  it('frases do Clube só existem com Clube ativo', () => {
-    expect(clubSentence('completed', false)).toBeNull();
-    expect(clubSentence('no_show', false)).toBeNull();
-    expect(clubSentence('cancelled', false)).toBeNull();
-    expect(clubSentence('confirmed', false)).toBeNull();
-    expect(clubSentence('completed', true)).toBe(CLUB_SENTENCE.completed);
-    expect(clubSentence('no_show', true)).toBe(CLUB_SENTENCE.no_show);
-    expect(clubSentence('cancelled', true)).toBe(CLUB_SENTENCE.cancelled);
-    expect(clubSentence('confirmed', true)).toBe(CLUB_SENTENCE.confirmed);
-    expect(clubSentence('pending', true)).toBeNull();
+  it('frases do Clube: membro ativo vs convite vs Clube desligado', () => {
+    const off = { clubOffered: false, isMember: false, businessName: 'Barbearia São João' };
+    const invite = { clubOffered: true, isMember: false, businessName: 'Barbearia São João' };
+    const member = { clubOffered: true, isMember: true, businessName: 'Barbearia São João' };
+    expect(clubSentence('completed', off)).toBeNull();
+    expect(clubSentence('no_show', off)).toBeNull();
+    expect(clubSentence('cancelled', off)).toBeNull();
+    expect(clubSentence('confirmed', off)).toBeNull();
+    expect(clubSentence('completed', invite)).toBe('Conheça o Clube da Barbearia São João');
+    expect(clubSentence('no_show', invite)).toBe(clubInviteSentence('Barbearia São João'));
+    expect(clubSentence('cancelled', invite)).toBe(clubInviteSentence('Barbearia São João'));
+    expect(clubSentence('confirmed', invite)).toBe(clubInviteSentence('Barbearia São João'));
+    expect(clubSentence('completed', member)).toBe(CLUB_SENTENCE.completed);
+    expect(clubSentence('no_show', member)).toBe(CLUB_SENTENCE.no_show);
+    expect(clubSentence('cancelled', member)).toBe(CLUB_SENTENCE.cancelled);
+    expect(clubSentence('confirmed', member)).toBe(CLUB_SENTENCE.confirmed);
+    expect(clubSentence('pending', member)).toBeNull();
+    expect(clubSentence('pending', invite)).toBeNull();
+    expect(CLUB_SENTENCE.completed).toBe('Seu Clube segue ativo.');
+    expect(CLUB_SENTENCE.completed).not.toMatch(/visita entrou/i);
+    expect(CLUB_SENTENCE.confirmed).toBe('Seu Clube está ativo neste horário.');
+    expect(CLUB_SENTENCE.no_show).toBe('Seu Clube continua ativo.');
+    expect(CLUB_SENTENCE.cancelled).toBe('Seu Clube segue valendo.');
   });
 });

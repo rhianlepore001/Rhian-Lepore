@@ -374,9 +374,22 @@ describe('ClientBookingCard — PR-1 cards honestos e WhatsApp', () => {
 });
 
 function renderPr4(
-  extra: Partial<ClientBooking> & { clubActive?: boolean; timeZone?: string } = {},
+  extra: Partial<ClientBooking> & {
+    clubOffered?: boolean;
+    isClubMember?: boolean;
+    onOpenClub?: () => void;
+    timeZone?: string;
+    businessName?: string;
+  } = {},
 ) {
-  const { clubActive = false, timeZone = 'America/Sao_Paulo', ...bookingExtra } = extra;
+  const {
+    clubOffered = false,
+    isClubMember = false,
+    onOpenClub,
+    timeZone = 'America/Sao_Paulo',
+    businessName,
+    ...bookingExtra
+  } = extra;
   return render(
     <MemoryRouter initialEntries={['/minha-area/barbearia-sao-joao']}>
       <Routes>
@@ -392,7 +405,10 @@ function renderPr4(
               clientPhone="11999998888"
               region="BR"
               timeZone={timeZone}
-              clubActive={clubActive}
+              clubOffered={clubOffered}
+              isClubMember={isClubMember}
+              onOpenClub={onOpenClub}
+              businessName={businessName}
               onCancelled={vi.fn()}
             />
           )}
@@ -461,36 +477,46 @@ describe('ClientBookingCard — PR-4 Finalizado / Não compareceu / Clube', () =
     expect(screen.getByTestId('location')).toHaveTextContent('/book/barbearia-sao-joao?rebook=s1,s2&pro=p1');
   });
 
-  it('Clube ligado mostra frase própria em cada estado; desligado some', () => {
+  it('Clube: membro ativo vê frase verdadeira; não-membro vê convite; desligado some', () => {
     const { unmount } = renderPr4({
       status: 'completed',
       appointment_time: '2026-10-03T14:00:00.000Z',
-      clubActive: true,
+      clubOffered: true,
+      isClubMember: true,
     });
-    expect(screen.getByTestId('client-booking-club')).toHaveTextContent('Esta visita entrou no seu Clube.');
+    expect(screen.getByTestId('client-booking-club')).toHaveTextContent('Seu Clube segue ativo.');
     unmount();
 
+    const onOpenClub = vi.fn();
     renderPr4({
       status: 'no_show',
       appointment_time: '2026-10-02T15:00:00.000Z',
-      clubActive: true,
+      clubOffered: true,
+      isClubMember: false,
+      businessName: 'Barbearia São João',
+      onOpenClub,
     });
-    expect(screen.getByTestId('client-booking-club')).toHaveTextContent('Seu Clube continua ativo.');
+    const invite = screen.getByTestId('client-booking-club');
+    expect(invite).toHaveTextContent('Conheça o Clube da Barbearia São João');
+    fireEvent.click(invite);
+    expect(onOpenClub).toHaveBeenCalledTimes(1);
   });
 
-  it('confirmado e cancelado também têm frase do Clube quando o negócio tem Clube', () => {
+  it('membro ativo: confirmado e cancelado sem promessa de desconto; sem Clube some', () => {
     const { unmount } = renderPr4({
       status: 'confirmed',
       appointment_time: '2026-10-10T14:00:00.000Z',
-      clubActive: true,
+      clubOffered: true,
+      isClubMember: true,
     });
-    expect(screen.getByTestId('client-booking-club')).toHaveTextContent('Seu Clube cobre este horário.');
+    expect(screen.getByTestId('client-booking-club')).toHaveTextContent('Seu Clube está ativo neste horário.');
     unmount();
 
     renderPr4({
       status: 'cancelled',
       appointment_time: '2026-10-10T14:00:00.000Z',
-      clubActive: true,
+      clubOffered: true,
+      isClubMember: true,
     });
     expect(screen.getByTestId('client-booking-club')).toHaveTextContent('Seu Clube segue valendo.');
   });

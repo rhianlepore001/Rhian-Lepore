@@ -54,20 +54,33 @@ export const NEXT_SLOT_CTA = 'Agendar próximo horário';
 export const SLOT_CTA = 'Agendar horário';
 export const NO_SHOW_MESSAGE = 'Sentimos sua falta. Quer marcar outro horário?';
 
+/** Frases para membro com effective_status = active. Sem acúmulo de visita nem desconto. */
 export const CLUB_SENTENCE: Record<'confirmed' | 'completed' | 'no_show' | 'cancelled', string> = {
-  confirmed: 'Seu Clube cobre este horário.',
-  completed: 'Esta visita entrou no seu Clube.',
+  confirmed: 'Seu Clube está ativo neste horário.',
+  completed: 'Seu Clube segue ativo.',
   no_show: 'Seu Clube continua ativo.',
   cancelled: 'Seu Clube segue valendo.',
 };
 
-export function clubSentence(status: string, clubActive: boolean): string | null {
-  if (!clubActive) return null;
+export interface ClubSentenceOpts {
+  clubOffered: boolean;
+  isMember: boolean;
+  businessName?: string;
+}
+
+export function clubInviteSentence(businessName?: string): string {
+  const name = (businessName ?? '').trim();
+  return name ? `Conheça o Clube da ${name}` : 'Conheça o Clube';
+}
+
+export function clubSentence(status: string, opts: ClubSentenceOpts): string | null {
+  if (!opts.clubOffered) return null;
   const key = status.trim().toLowerCase();
-  if (key === 'confirmed' || key === 'completed' || key === 'no_show' || key === 'cancelled') {
-    return CLUB_SENTENCE[key];
+  if (key !== 'confirmed' && key !== 'completed' && key !== 'no_show' && key !== 'cancelled') {
+    return null;
   }
-  return null;
+  if (opts.isMember) return CLUB_SENTENCE[key];
+  return clubInviteSentence(opts.businessName);
 }
 
 export function completedThankYou(clientName: string): string {

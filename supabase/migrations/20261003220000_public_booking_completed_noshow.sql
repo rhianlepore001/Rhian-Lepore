@@ -8,7 +8,9 @@
 --    (#98, 20260925170000). Fila (settle_queue_ticket) grava appointments.status
 --    = 'Completed' no INSERT — o trigger também dispara em INSERT.
 -- 3) get_client_bookings_history_v2: mesma assinatura/security de v1 + status
---    derivado. v1 permanece intacta.
+--    derivado. v1 permanece intacta. WHERE lista por igualdade de dígitos
+--    (não phones_match/last-8). Inferência legado ainda usa phones_match.
+--    Pedido cancelled não é ressuscitado pelo trigger de outcome.
 --
 -- Multi-serviço (um pedido, N agendamentos ligados):
 --   completed = todos os ligados não-Cancelled estão Completed (e há pelo menos um);
@@ -67,6 +69,11 @@ BEGIN
       RETURN NULL;
     END IF;
 
+    -- Cancelado pelo cliente/dono não volta por toque no appointment.
+    IF v_current = 'cancelled' THEN
+      RETURN NULL;
+    END IF;
+
     SELECT
       count(*)::int,
       count(*) FILTER (WHERE l.status IS DISTINCT FROM 'Cancelled')::int,
@@ -86,9 +93,11 @@ BEGIN
       v_next := 'completed';
     ELSIF v_noshow > 0 AND v_completed = 0 THEN
       v_next := 'no_show';
-    ELSIF v_current IN ('completed', 'no_show', 'cancelled')
+    ELSIF v_current IN ('completed', 'no_show')
           AND (v_confirmed > 0 OR v_completed > 0) THEN
-      -- undo Faltou / reabrir após Complete, ou mistura Completed+NoShow
+      -- undo Faltou / reabrir após Complete, ou mistura Completed+NoShow.
+      -- cancelled nunca entra aqui: pedido cancelado pelo cliente/dono
+      -- não é ressuscitado por toque no appointment.
       v_next := 'confirmed';
     ELSE
       v_next := v_current;
@@ -239,7 +248,10 @@ BEGIN
     pb.created_at
   FROM public_bookings pb
   LEFT JOIN team_members tm ON tm.id = pb.professional_id
-  WHERE public.phones_match(pb.customer_phone, p_phone)
+  WHERE regexp_replace(COALESCE(pb.customer_phone, ''), '\D', '', 'g') <> ''
+    AND regexp_replace(COALESCE(p_phone, ''), '\D', '', 'g') <> ''
+    AND regexp_replace(COALESCE(pb.customer_phone, ''), '\D', '', 'g')
+      = regexp_replace(COALESCE(p_phone, ''), '\D', '', 'g')
     AND pb.business_id = p_business_id::text
   ORDER BY pb.appointment_time DESC;
 END;

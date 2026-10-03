@@ -11,7 +11,7 @@
 
 ## PR-4 overhaul booking — Finalizado / Não compareceu (3 Out 2026, NÃO merge)
 
-Branch `feat/overhaul-pr4-completed-noshow`. Status `no_show` na constraint de `public_bookings`; trigger appointments→pedido para Completed/NoShow/undo/cancel-após-finalizar; RPC `get_client_bookings_history_v2` infere na leitura (v1 intacta). Fila grava `appointments.status = 'Completed'`. Não aplicar em prod neste PR.
+Branch `feat/overhaul-pr4-completed-noshow`. Status `no_show` na constraint de `public_bookings`; trigger appointments→pedido para Completed/NoShow/undo (só a partir de completed/no_show; cancelled não ressuscita); RPC `get_client_bookings_history_v2` infere na leitura (v1 intacta; listagem por dígitos, não last-8). Fila grava `appointments.status = 'Completed'`. Copy do Clube: membro ativo = frases factuais; senão convite à aba Clube. Não aplicar em prod neste PR.
 
 ## PR-3 overhaul booking — status ao vivo (3 Out 2026, NÃO merge)
 

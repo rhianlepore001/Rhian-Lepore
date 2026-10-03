@@ -111,6 +111,7 @@ function stubClient(
   guard.stubRpc('get_client_booking_cancellations', { body: {} });
   guard.stubRpc('get_public_membership_plans', { body: clubOn ? [CLUB_PLAN] : [] });
   guard.stubRpc('get_public_client_membership', { body: null });
+  guard.stubRpc('get_public_pix_config', { body: null });
   guard.stubRpc('find_active_queue_entry_by_phone', { body: [] });
 }
 
@@ -238,10 +239,12 @@ test.describe('PR-4 Finalizado / Não compareceu', () => {
       const bookingsRef = { rows: [{ ...BOOKING_DONE }, { ...BOOKING_NOSHOW }] as unknown[] };
       const guard = await openHistory(page, bookingsRef, true);
       await expect(page.getByTestId('client-booking-club').first()).toBeVisible();
-      await expect(page.getByText('Esta visita entrou no seu Clube.')).toBeVisible();
-      await expect(page.getByText('Seu Clube continua ativo.')).toBeVisible();
+      await expect(page.getByText('Conheça o Clube da Barbearia São João').first()).toBeVisible();
+      await expect(page.getByText('Esta visita entrou no seu Clube.')).toHaveCount(0);
       await page.locator('[data-testid="client-history-list"]').evaluate((el) => el.scrollIntoView({ block: 'start' }));
       await shot(page, `clube-on-${vp.name}`);
+      await page.getByTestId('client-booking-club').first().click();
+      await expect(page.getByTestId('client-history-list')).toHaveCount(0);
       guard.assertNoLeak();
     });
 

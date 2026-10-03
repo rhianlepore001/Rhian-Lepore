@@ -52,8 +52,11 @@ interface ClientBookingCardProps {
     /** Fuso IANA do negócio; horários são exibidos nele (não no do navegador). */
     timeZone?: string;
     allowEdit?: boolean;
-    /** Negócio tem Clube (há plano público ativo). */
-    clubActive?: boolean;
+    /** Negócio oferece Clube (há plano público ativo). */
+    clubOffered?: boolean;
+    /** Cliente com membership effective_status = active. */
+    isClubMember?: boolean;
+    onOpenClub?: () => void;
     onCancelled: (bookingId: string) => void;
 }
 
@@ -106,7 +109,9 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
     region = 'BR',
     timeZone,
     allowEdit = true,
-    clubActive = false,
+    clubOffered = false,
+    isClubMember = false,
+    onOpenClub,
     onCancelled,
 }) => {
     const navigate = useNavigate();
@@ -140,13 +145,29 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
     const formattedTime = appointmentDate.toLocaleTimeString('pt-BR', {
         timeZone: businessTz, hour: '2-digit', minute: '2-digit'
     });
-    const clubLine = clubSentence(isNoShow ? 'no_show' : isCompleted ? 'completed' : statusKey, clubActive);
+    const clubLine = clubSentence(
+        isNoShow ? 'no_show' : isCompleted ? 'completed' : statusKey,
+        { clubOffered, isMember: isClubMember, businessName },
+    );
     const completedCta = completedRebookLabel(booking.appointment_time, businessTz);
+    const clubNoteClass = 'flex items-center gap-1.5 text-xs leading-snug text-theme-textSecondary';
     const clubNote = clubLine ? (
-        <p data-testid="client-booking-club" className="flex items-center gap-1.5 text-xs leading-snug text-theme-textSecondary">
-            <Crown className="w-3.5 h-3.5 shrink-0 text-theme-accent" aria-hidden="true" />
-            {clubLine}
-        </p>
+        !isClubMember && onOpenClub ? (
+            <button
+                type="button"
+                data-testid="client-booking-club"
+                onClick={onOpenClub}
+                className={`${clubNoteClass} text-left hover:text-theme-text`}
+            >
+                <Crown className="w-3.5 h-3.5 shrink-0 text-theme-accent" aria-hidden="true" />
+                {clubLine}
+            </button>
+        ) : (
+            <p data-testid="client-booking-club" className={clubNoteClass}>
+                <Crown className="w-3.5 h-3.5 shrink-0 text-theme-accent" aria-hidden="true" />
+                {clubLine}
+            </p>
+        )
     ) : null;
 
     const handleCancel = async () => {

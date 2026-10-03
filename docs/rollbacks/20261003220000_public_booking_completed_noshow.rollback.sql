@@ -1,6 +1,9 @@
 -- ROLLBACK de 20261003220000_public_booking_completed_noshow
 -- Idempotente. Não toca #120 (reschedule), #121 (lead time) nem #122 (broadcast).
 -- no_show volta para confirmed antes de restaurar a constraint antiga.
+--
+-- ANTES de aplicar: reverter o frontend (Minha Área chama get_client_bookings_history_v2;
+-- esta rotina dá DROP nessa RPC). Sem o revert, a área do cliente quebra.
 
 BEGIN;
 

@@ -372,7 +372,7 @@ test.describe('PR-1 overhaul copy/cards', () => {
       await expect(page.getByRole('button', { name: /Editar/ })).toHaveCount(0);
       await expect(page.getByRole('button', { name: /^Cancelar$/ })).toHaveCount(0);
       await expect(page.getByRole('button', { name: /Reagendar horário/ })).toBeVisible();
-      await shot(page, `after-client-historico-${vp.name}`, '[data-testid="client-history-list"]');
+      await shot(page, `after-client-historico-${vp.name}`);
     });
 
     test(`público diretrizes ${vp.name}`, async ({ page }) => {

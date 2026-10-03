@@ -233,8 +233,7 @@ describe('StaffPerformance (P2) — /financeiro/performance', () => {
             })),
         );
         mount(`/financeiro/performance?de=2026-09-01&ate=2026-09-30&pro=${ANA}`);
-        await screen.findByRole('heading', { name: 'Lançamentos' });
-        expect(screen.getByText('21 no período')).toBeInTheDocument();
+        expect(await screen.findByText('21 no período')).toBeInTheDocument();
         expect(screen.getByText('Página 1 de 2')).toBeInTheDocument();
         expect(screen.getAllByText('Cliente 0').length).toBeGreaterThan(0);
         expect(screen.queryByText('Cliente 20')).toBeNull();

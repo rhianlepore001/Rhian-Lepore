@@ -34,9 +34,16 @@ describe('clientBookings (Minha Área, item 5b)', () => {
     expect(activeUpcoming.map((x) => x.id)).toEqual(['future-confirmed', 'future-pending']);
   });
 
-  it('histórico continua igual (sem cancelados)', () => {
+  it('histórico inclui o cancelado no passado (não some das duas abas)', () => {
     const { history } = splitClientBookings(bookings, NOW);
-    expect(history.map((x) => x.id)).toEqual(['past-confirmed', 'past-completed']);
+    expect(history.map((x) => x.id)).toEqual(['past-cancelled', 'past-confirmed', 'past-completed']);
+    expect(history.find((x) => x.id === 'past-cancelled')?.status).toBe('cancelled');
+  });
+
+  it('cancelado no passado não aparece em Próximos', () => {
+    const { upcoming, history } = splitClientBookings(bookings, NOW);
+    expect(upcoming.map((x) => x.id)).not.toContain('past-cancelled');
+    expect(history.map((x) => x.id)).toContain('past-cancelled');
   });
 
   it('mensagem: estabelecimento cancelou vs neutra', () => {

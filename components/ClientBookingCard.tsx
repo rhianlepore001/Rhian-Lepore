@@ -33,6 +33,8 @@ interface ClientBookingCardProps {
     businessSlug: string;
     clientName: string;
     clientPhone: string;
+    /** Nome do estabelecimento (cadastro). Usado no WhatsApp de "Pedir confirmação". */
+    businessName?: string;
     region?: Region;
     /** Fuso IANA do negócio; horários são exibidos nele (não no do navegador). */
     timeZone?: string;

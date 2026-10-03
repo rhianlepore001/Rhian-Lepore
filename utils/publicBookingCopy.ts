@@ -61,6 +61,22 @@ export function getPublicBookingAwaitingWhatsAppText(input: {
   businessName: string;
   dateLabel: string;
   timeLabel: string;
+  serviceLabel?: string;
+  professionalName?: string | null;
 }): string {
   return `Olá, eu fiz um agendamento online na *${input.businessName}* (para ${input.dateLabel} às ${input.timeLabel}) e estou aguardando a sua confirmação.`;
+}
+
+export function getOwnerAcceptWhatsAppText(_input: {
+  isBeauty: boolean;
+  customerName: string;
+  businessName: string;
+  appointmentTime: string;
+  timeZone: string;
+  serviceNames: string;
+  priceLabel: string;
+  currencySymbol: string;
+  establishmentFallback: string;
+}): string {
+  throw new Error('not implemented');
 }

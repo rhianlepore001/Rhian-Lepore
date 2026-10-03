@@ -1,6 +1,6 @@
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
@@ -18,7 +18,7 @@ vi.mock('../../components/ui/Toast', () => ({
 
 const booking: ClientBooking = {
   id: 'b1',
-  appointment_time: '2026-09-08T10:00:00',
+  appointment_time: '2026-12-08T10:00:00.000Z',
   status: 'pending',
   service_ids: ['s1'],
   service_names: ['Corte Teste Automatizado'],
@@ -141,5 +141,129 @@ describe('ClientBookingCard — cancelado (item 5b)', () => {
     renderCancelled({ cancelled_by_business: false });
     expect(screen.getByTestId('client-booking-cancelled-note')).toHaveTextContent('Este agendamento foi cancelado.');
     expect(screen.getByRole('button', { name: /Reagendar horário/ })).toBeInTheDocument();
+  });
+});
+
+function renderPr1Card(
+  extra: Partial<ClientBooking> & { businessPhone?: string | null; businessName?: string } = {},
+) {
+  const { businessPhone = '11999998888', businessName = 'Barbearia São João ✂️', ...bookingExtra } = extra;
+  return render(
+    <MemoryRouter>
+      <ClientBookingCard
+        booking={{ ...booking, ...bookingExtra }}
+        isBeauty={false}
+        businessPhone={businessPhone}
+        businessSlug="barbearia-sao-joao"
+        clientName="Zé"
+        clientPhone="11999998888"
+        region="PT"
+        timeZone="Europe/Lisbon"
+        onCancelled={vi.fn()}
+        businessName={businessName}
+      />
+    </MemoryRouter>,
+  );
+}
+
+describe('ClientBookingCard — PR-1 cards honestos e WhatsApp', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (useToast as ReturnType<typeof vi.fn>).mockReturnValue({ showToast });
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-10-03T12:00:00.000Z'));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('pedido confirmado no passado: selo Horário passou, sem Editar nem Cancelar', () => {
+    renderPr1Card({
+      status: 'confirmed',
+      appointment_time: '2026-10-02T15:00:00.000Z',
+    });
+    expect(screen.getByText('Horário passou')).toBeInTheDocument();
+    expect(screen.queryByText('Confirmado')).toBeNull();
+    expect(screen.queryByRole('button', { name: /Editar/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Cancelar$/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Pedir confirmação/ })).toBeNull();
+  });
+
+  it('pedido pending no passado também perde Editar/Cancelar e mostra Horário passou', () => {
+    renderPr1Card({
+      status: 'pending',
+      appointment_time: '2026-10-02T10:00:00.000Z',
+    });
+    expect(screen.getByText('Horário passou')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Editar/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Cancelar$/ })).toBeNull();
+  });
+
+  it('Pedir confirmação abre WhatsApp com nome do negócio, serviço, profissional, data e hora no fuso', async () => {
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    const appointmentTime = '2026-10-10T14:00:00.000Z';
+    renderPr1Card({
+      status: 'pending',
+      appointment_time: appointmentTime,
+      service_names: ['Corte tesoura'],
+      professional_name: 'Mário',
+      businessName: 'Barbearia São João ✂️',
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: /Pedir confirmação/ }), { delay: null });
+
+    const url = decodeURIComponent(String(open.mock.calls[0]?.[0] ?? ''));
+    const dateObj = new Date(appointmentTime);
+    const dateLabel = dateObj.toLocaleDateString('pt-BR', {
+      timeZone: 'Europe/Lisbon', weekday: 'short', day: '2-digit', month: 'short',
+    });
+    const timeLabel = dateObj.toLocaleTimeString('pt-BR', {
+      timeZone: 'Europe/Lisbon', hour: '2-digit', minute: '2-digit',
+    });
+    expect(url).toContain(
+      `Olá, Barbearia São João ✂️! Fiz um agendamento online para Corte tesoura com Mário em ${dateLabel} às ${timeLabel}. Pode confirmar, por favor?`,
+    );
+    expect(url.toLowerCase()).not.toContain('o salão');
+    expect(url.toLowerCase()).not.toContain('barbearia silva');
+    open.mockRestore();
+  });
+
+  it('profissional vazio na mensagem vira Qualquer profissional', async () => {
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    renderPr1Card({
+      status: 'pending',
+      appointment_time: '2026-10-10T14:00:00.000Z',
+      service_names: ['Barba'],
+      professional_name: null,
+      businessName: 'Corte Fino',
+    });
+    await userEvent.click(screen.getByRole('button', { name: /Pedir confirmação/ }), { delay: null });
+    const url = decodeURIComponent(String(open.mock.calls[0]?.[0] ?? ''));
+    expect(url).toContain('com Qualquer profissional');
+    expect(url.toLowerCase()).not.toContain('o salão');
+    open.mockRestore();
+  });
+
+  it('sem telefone do negócio o Pedir confirmação some', () => {
+    renderPr1Card({
+      status: 'pending',
+      appointment_time: '2026-10-10T14:00:00.000Z',
+      businessPhone: null,
+    });
+    expect(screen.queryByRole('button', { name: /Pedir confirmação/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^WhatsApp$/ })).toBeNull();
+  });
+
+  it('no_show mostra Não compareceu com tom neutro e CTA para remarcar', () => {
+    renderPr1Card({
+      status: 'no_show',
+      appointment_time: '2026-10-02T15:00:00.000Z',
+    });
+    expect(screen.getByText('Não compareceu')).toBeInTheDocument();
+    expect(screen.getByText('Sentimos sua falta. Quer marcar outro horário?')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Agendar horário/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Editar/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Cancelar$/ })).toBeNull();
   });
 });

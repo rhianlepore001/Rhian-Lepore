@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const from = vi.fn();
 vi.mock('@/lib/supabase', () => ({ supabase: { from: (...a: unknown[]) => from(...a) } }));
 
-import { fetchPerformanceLedger } from '../../services/performanceLedger';
+import { fetchPerformanceLedger, ledgerBounds } from '../../services/performanceLedger';
 
 function chain(result: { data: unknown; error: unknown }) {
     const q: Record<string, unknown> = {};
@@ -41,6 +41,7 @@ describe('fetchPerformanceLedger (R7.6)', () => {
             professionalId: 'ana',
             start: '2026-09-01',
             end: '2026-09-30',
+            tz: 'America/Sao_Paulo',
         });
 
         expect(from).toHaveBeenCalledTimes(2);
@@ -48,8 +49,8 @@ describe('fetchPerformanceLedger (R7.6)', () => {
         expect(from).toHaveBeenCalledWith('product_sales');
         expect(apts.eq).toHaveBeenCalledWith('user_id', 'owner-1');
         expect(apts.eq).toHaveBeenCalledWith('professional_id', 'ana');
-        expect(apts.gte).toHaveBeenCalledWith('appointment_time', '2026-09-01T00:00:00');
-        expect(apts.lt).toHaveBeenCalledWith('appointment_time', '2026-10-01T00:00:00');
+        expect(apts.gte).toHaveBeenCalledWith('appointment_time', '2026-09-01T00:00:00-03:00');
+        expect(apts.lt).toHaveBeenCalledWith('appointment_time', '2026-10-01T00:00:00-03:00');
         expect(sales.eq).toHaveBeenCalledWith('company_id', 'owner-1');
         expect(rows).toHaveLength(3);
         expect(rows[0]).toMatchObject({ kind: 'atendimento', title: 'Corte', amount: 50, clientName: 'Cliente A' });
@@ -70,11 +71,22 @@ describe('fetchPerformanceLedger (R7.6)', () => {
             clients: { name: `Pessoa ${i}` },
         }));
         from.mockImplementation((t: string) => chain({ data: t === 'appointments' ? many : [], error: null }));
-        const rows = await fetchPerformanceLedger({ companyId: 'o', professionalId: 'p', start: '2026-09-01', end: '2026-09-30' });
+        const rows = await fetchPerformanceLedger({ companyId: 'o', professionalId: 'p', start: '2026-09-01', end: '2026-09-30', tz: 'America/Sao_Paulo' });
         expect(rows).toHaveLength(25);
         expect(spy.mock.calls.flat().join(' ')).not.toMatch(/Pessoa/);
         expect(err.mock.calls.flat().join(' ')).not.toMatch(/Pessoa/);
         spy.mockRestore();
         err.mockRestore();
+    });
+
+    it('limites no fuso do tenant: São Paulo (−03) e Lisboa (borda WEST→WET)', () => {
+        expect(ledgerBounds('2026-09-01', '2026-09-30', 'America/Sao_Paulo')).toEqual({
+            from: '2026-09-01T00:00:00-03:00',
+            to: '2026-10-01T00:00:00-03:00',
+        });
+        expect(ledgerBounds('2026-10-25', '2026-10-25', 'Europe/Lisbon')).toEqual({
+            from: '2026-10-25T00:00:00+01:00',
+            to: '2026-10-26T00:00:00+00:00',
+        });
     });
 });

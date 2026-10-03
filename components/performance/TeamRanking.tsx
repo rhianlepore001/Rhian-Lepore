@@ -77,27 +77,34 @@ export const TeamRanking: React.FC<TeamRankingProps> = ({ members, minSample, pr
         <>
             {/* mobile/tablet: um cartão por colaborador, 5 números fixos */}
             <ol className="space-y-3 lg:hidden" aria-label="Colaboradores">
-                {sorted.map((m) => {
+                {sorted.map((m, i) => {
                     const cells = cellsFor(m, formatMoney);
+                    const muted = m.rank == null;
+                    const fence = muted && (i === 0 || sorted[i - 1].rank != null);
                     return (
-                        <li key={m.professional_id} data-testid={`member-${m.professional_id}`} className={`p-4 border ${colors.border} ${radius.card} ${colors.card}`}>
-                            <div className="flex items-center gap-3">
-                                <Position m={m} minSample={minSample} />
-                                <Link to={hrefFor(m.professional_id)} className={`min-w-0 flex-1 min-h-[44px] inline-flex items-center font-semibold ${colors.text} hover:underline underline-offset-4 break-words`}>
-                                    {m.name}
-                                </Link>
-                            </div>
-                            <p className={`mt-1 text-sm leading-snug ${colors.textSecondary}`}>{summarySentence(m, { formatMoney, minSample, previousName })}</p>
-                            <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3.5">
-                                {cells.map((c, i) => (
-                                    <div key={c.key} className={`min-w-0 ${i === 4 ? 'col-span-2' : ''}`}>
-                                        <dt className={head}>{c.label}</dt>
-                                        <dd className={`mt-0.5 ${font.mono} tabular-nums font-semibold ${colors.text} whitespace-nowrap`}>{c.value}</dd>
-                                        <dd><DeltaText delta={c.delta} /></dd>
-                                    </div>
-                                ))}
-                            </dl>
-                        </li>
+                        <React.Fragment key={m.professional_id}>
+                            {fence && (
+                                <li className={`pt-1 text-xs uppercase tracking-wide ${font.label} ${colors.textMuted}`} aria-hidden="true">Fora do ranking</li>
+                            )}
+                            <li data-testid={`member-${m.professional_id}`} data-unranked={muted || undefined} className={`p-4 border ${colors.border} ${radius.card} ${colors.card} ${muted ? 'opacity-60' : ''}`}>
+                                <div className="flex items-center gap-3">
+                                    <Position m={m} minSample={minSample} />
+                                    <Link to={hrefFor(m.professional_id)} className={`min-w-0 flex-1 min-h-[44px] inline-flex items-center font-semibold ${muted ? colors.textSecondary : colors.text} hover:underline underline-offset-4 break-words`}>
+                                        {m.name}
+                                    </Link>
+                                </div>
+                                <p className={`mt-1 text-sm leading-snug ${colors.textSecondary}`}>{summarySentence(m, { formatMoney, minSample, previousName })}</p>
+                                <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3.5">
+                                    {cells.map((c, idx) => (
+                                        <div key={c.key} className={`min-w-0 ${idx === 4 ? 'col-span-2' : ''}`}>
+                                            <dt className={head}>{c.label}</dt>
+                                            <dd className={`mt-0.5 ${font.mono} tabular-nums font-semibold ${muted ? colors.textSecondary : colors.text} whitespace-nowrap`}>{c.value}</dd>
+                                            <dd><DeltaText delta={c.delta} /></dd>
+                                        </div>
+                                    ))}
+                                </dl>
+                            </li>
+                        </React.Fragment>
                     );
                 })}
             </ol>
@@ -120,25 +127,33 @@ export const TeamRanking: React.FC<TeamRankingProps> = ({ members, minSample, pr
                         </tr>
                     </thead>
                     <tbody>
-                        {sorted.map((m) => {
+                        {sorted.map((m, i) => {
                             const cells = cellsFor(m, formatMoney);
                             const ranked = m.rank != null;
+                            const fence = !ranked && (i === 0 || sorted[i - 1].rank != null);
                             return (
-                                <tr key={m.professional_id} data-testid={`member-${m.professional_id}`} className={`border-b last:border-b-0 ${colors.divider} ${colors.surfaceHover} align-top`}>
-                                    <td className="px-5 py-3.5"><Position m={m} minSample={minSample} /></td>
-                                    <td className="px-3 py-3.5 min-w-[11rem]">
-                                        <Link to={hrefFor(m.professional_id)} className={`font-semibold ${ranked ? colors.text : colors.textSecondary} hover:underline underline-offset-4 ${accent.ring}`}>
-                                            {m.name}
-                                        </Link>
-                                    </td>
-                                    {cells.map((c) => (
-                                        <td key={c.key} className="px-3 py-3.5 text-right">
-                                            <span className={`block ${font.mono} tabular-nums whitespace-nowrap ${c.key === 'retorno_por_hora' && ranked ? `font-bold ${colors.text}` : colors.textSecondary}`}>{c.value}</span>
-                                            <DeltaText delta={c.delta} className="justify-end" />
+                                <React.Fragment key={m.professional_id}>
+                                    {fence && (
+                                        <tr>
+                                            <td colSpan={8} className={`px-5 py-2 text-xs uppercase tracking-wide ${font.label} ${colors.textMuted}`}>Fora do ranking</td>
+                                        </tr>
+                                    )}
+                                    <tr data-testid={`member-${m.professional_id}`} data-unranked={ranked ? undefined : true} className={`border-b last:border-b-0 ${colors.divider} ${colors.surfaceHover} align-top ${ranked ? '' : 'opacity-60'}`}>
+                                        <td className="px-5 py-3.5"><Position m={m} minSample={minSample} /></td>
+                                        <td className="px-3 py-3.5 min-w-[11rem]">
+                                            <Link to={hrefFor(m.professional_id)} className={`font-semibold ${ranked ? colors.text : colors.textSecondary} hover:underline underline-offset-4 ${accent.ring}`}>
+                                                {m.name}
+                                            </Link>
                                         </td>
-                                    ))}
-                                    <td className={`px-3 pr-5 py-3.5 text-right ${font.mono} tabular-nums ${colors.textSecondary}`}>{m.metrics.atendimentos}</td>
-                                </tr>
+                                        {cells.map((c) => (
+                                            <td key={c.key} className="px-3 py-3.5 text-right">
+                                                <span className={`block ${font.mono} tabular-nums whitespace-nowrap ${c.key === 'retorno_por_hora' && ranked ? `font-bold ${colors.text}` : colors.textSecondary}`}>{c.value}</span>
+                                                <DeltaText delta={c.delta} className="justify-end" />
+                                            </td>
+                                        ))}
+                                        <td className={`px-3 pr-5 py-3.5 text-right ${font.mono} tabular-nums ${colors.textSecondary}`}>{m.metrics.atendimentos}</td>
+                                    </tr>
+                                </React.Fragment>
                             );
                         })}
                     </tbody>

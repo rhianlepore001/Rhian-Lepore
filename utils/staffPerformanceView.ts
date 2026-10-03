@@ -144,14 +144,16 @@ export const plural = (n: number, one: string, many: string) => `${n} ${n === 1 
 
 // ---- Deltas (R3.15) ----
 export type Tone = 'good' | 'bad' | 'neutral';
-export interface Delta { text: string; tone: Tone; label: 'melhor' | 'pior' | 'estável' | 'novo' }
+export interface Delta { text: string; tone: Tone; label: 'melhor' | 'pior' | 'estável' | 'novo' | 'sem_base' }
 
 interface DeltaOpts { prevSample: number; lowerIsBetter?: boolean }
 const MIN_SAMPLE = 8;
 const MINUS = '\u2212';
+const NO_BASE: Delta = { text: 'sem base de comparação', tone: 'neutral', label: 'sem_base' };
 
 function tone(diff: number, rel: number, { prevSample, lowerIsBetter }: DeltaOpts): Pick<Delta, 'tone' | 'label'> {
-    if (prevSample < MIN_SAMPLE || Math.abs(rel) < 0.05 || diff === 0) return { tone: 'neutral', label: 'estável' };
+    if (prevSample < MIN_SAMPLE) return { tone: 'neutral', label: 'sem_base' };
+    if (Math.abs(rel) < 0.05 || diff === 0) return { tone: 'neutral', label: 'estável' };
     const good = lowerIsBetter ? diff < 0 : diff > 0;
     return good ? { tone: 'good', label: 'melhor' } : { tone: 'bad', label: 'pior' };
 }
@@ -163,6 +165,7 @@ export function valueDelta(
 ): Delta | null {
     if (curr == null || prev == null) return null;
     if (prev === 0) return curr === 0 ? null : { text: 'novo', tone: 'neutral', label: 'novo' };
+    if (opts.prevSample < MIN_SAMPLE) return NO_BASE;
     const diff = curr - prev;
     const rel = diff / Math.abs(prev);
     const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '=';
@@ -182,6 +185,7 @@ export function moneyDelta(
 /** Taxas: diferença em pontos percentuais ("▲ +5 p.p."). */
 export function rateDelta(curr: number | null | undefined, prev: number | null | undefined, opts: DeltaOpts): Delta | null {
     if (curr == null || prev == null) return null;
+    if (opts.prevSample < MIN_SAMPLE) return NO_BASE;
     const pp = Math.round((curr - prev) * 100);
     const rel = prev === 0 ? (curr === 0 ? 0 : 1) : (curr - prev) / prev;
     if (pp === 0) return { text: '= 0 p.p.', tone: 'neutral', label: 'estável' };

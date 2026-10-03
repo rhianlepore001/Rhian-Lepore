@@ -101,9 +101,9 @@ export const MemberDetail: React.FC<MemberDetailProps> = ({ member: m, data, aga
         { label: 'Atendimentos', info: 'atendimentos', main: `${plural(x.atendimentos, 'atendimento', 'atendimentos')}${x.atendimentos_clube ? ` · ${x.atendimentos_clube} do Clube` : ''}` },
         { label: 'Tempo de cadeira (agendado)', info: 'tempo', main: `${formatHours(x.tempo_total_min)}${x.tempo_clube_min ? ` (${formatHours(x.tempo_clube_min)} do Clube)` : ''}` },
         {
-            label: 'Faltas · Cancelamentos',
+            label: 'Faltas e cancelamentos',
             info: 'faltas',
-            main: x.desfechos ? `Faltas ${formatPercent(x.taxa_faltas)} (${x.faltas} de ${x.desfechos}) · Cancel. ${formatPercent(x.taxa_cancelamentos)} (${x.cancelamentos} de ${x.desfechos})` : 'Nenhum horário com desfecho',
+            main: x.desfechos ? `Faltas ${formatPercent(x.taxa_faltas)} (${x.faltas} de ${x.desfechos}) · Cancelamentos ${formatPercent(x.taxa_cancelamentos)} (${x.cancelamentos} de ${x.desfechos})` : 'Nenhum horário com desfecho',
             extra: x.sem_desfecho ? plural(x.sem_desfecho, 'sem desfecho', 'sem desfecho') : null,
         },
         {
@@ -121,10 +121,12 @@ export const MemberDetail: React.FC<MemberDetailProps> = ({ member: m, data, aga
                 <button type="button" onClick={onBack} className={`inline-flex items-center gap-1.5 min-h-[44px] text-sm ${accent.text} hover:underline underline-offset-4`}>
                     <ArrowLeft className="w-4 h-4" aria-hidden="true" /> Toda a equipe
                 </button>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                    <h2 className={`${font.heading} text-xl lg:text-2xl font-bold tracking-tight ${colors.text}`}>{m.name}</h2>
-                    {m.rank != null && <span className={`${font.mono} text-sm tabular-nums ${colors.textSecondary}`}>{rankLabel(m.rank)} no ranking</span>}
-                    {badge && <Badge variant="neutral">{badge}</Badge>}
+                <div className="flex flex-col gap-1.5 min-w-0">
+                    <h2 className={`${font.heading} text-lg sm:text-xl lg:text-2xl font-bold tracking-tight ${colors.text} break-words`}>{m.name}</h2>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        {m.rank != null && <span className={`${font.mono} text-sm tabular-nums ${colors.textSecondary}`}>{rankLabel(m.rank)} no ranking</span>}
+                        {badge && <Badge variant="neutral">{badge}</Badge>}
+                    </div>
                 </div>
                 <p className={`text-sm leading-relaxed ${colors.textSecondary} max-w-3xl`}>{summarySentence(m, { formatMoney, minSample: data.min_sample, previousName })}</p>
             </div>
@@ -226,6 +228,7 @@ export const MemberDetail: React.FC<MemberDetailProps> = ({ member: m, data, aga
                 professionalId={m.professional_id}
                 start={data.period.start}
                 end={data.period.end}
+                tz={data.period.tz}
                 formatMoney={formatMoney}
             />
 

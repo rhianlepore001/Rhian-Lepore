@@ -109,6 +109,10 @@ describe('StaffPerformance (P2) — /financeiro/performance', () => {
         expect(screen.getAllByText('Amostra baixa (5 de 8)').length).toBeGreaterThan(0);
         expect(screen.getAllByText('Dono').length).toBeGreaterThan(0);
         expect(screen.getAllByText('Inativo').length).toBeGreaterThan(0);
+        expect(screen.getAllByText('Fora do ranking').length).toBeGreaterThan(0);
+        const caio = team.members.find((m) => m.name === 'Caio')!;
+        expect(screen.getAllByTestId(`member-${caio.professional_id}`).every((el) => el.getAttribute('data-unranked') === 'true')).toBe(true);
+        expect(screen.getAllByTestId(`member-${ANA}`).every((el) => !el.getAttribute('data-unranked'))).toBe(true);
         expect(screen.getAllByText(/Ana deixou R\$ 408,00 para a casa em 12 atendimentos \(R\$ 68,00 por hora\), 13% a mais que em agosto\./).length).toBeGreaterThan(0);
         expect(screen.getByText('Sem profissional')).toBeInTheDocument();
         expect(screen.queryByText(/melhor funcionário/i)).not.toBeInTheDocument();
@@ -145,6 +149,8 @@ describe('StaffPerformance (P2) — /financeiro/performance', () => {
 
         expect(screen.getByText('12 atendimentos · 2 do Clube')).toBeInTheDocument();
         expect(screen.getByText('7h (1h do Clube)')).toBeInTheDocument();
+        expect(screen.getByText(/Cancelamentos/)).toBeInTheDocument();
+        expect(screen.queryByText('Cancel.')).toBeNull();
         expect(screen.getByText('3 de 12 com produto (25%)')).toBeInTheDocument();
         expect(screen.getAllByTestId('trend-month')).toHaveLength(6);
         expect(screen.getByText('corte')).toBeInTheDocument();
@@ -234,6 +240,9 @@ describe('StaffPerformance (P2) — /financeiro/performance', () => {
         );
         mount(`/financeiro/performance?de=2026-09-01&ate=2026-09-30&pro=${ANA}`);
         expect(await screen.findByText('21 no período')).toBeInTheDocument();
+        expect(fetchPerformanceLedger).toHaveBeenCalledWith(expect.objectContaining({
+            start: '2026-09-01', end: '2026-09-30', tz: 'America/Sao_Paulo',
+        }));
         expect(screen.getByText('Página 1 de 2')).toBeInTheDocument();
         expect(screen.getAllByText('Cliente 0').length).toBeGreaterThan(0);
         expect(screen.queryByText('Cliente 20')).toBeNull();

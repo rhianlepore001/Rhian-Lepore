@@ -618,7 +618,7 @@ useEffect(() => {
           { id: 'overview', label: isStaff ? 'Meu Financeiro' : 'Visão Geral', icon: <Calendar className="w-3.5 h-3.5" /> },
           ...(!isStaff ? [
             { id: 'commissions', label: 'Pagamento de comissão', shortLabel: 'Pagamentos', icon: <Users className="w-3.5 h-3.5" /> },
-            { id: 'history', label: 'Histórico', icon: <History className="w-3.5 h-3.5" /> },
+            { id: 'history', label: 'Histórico', shortLabel: 'Histórico', icon: <History className="w-3.5 h-3.5" /> },
           ] : []),
         ]}
         activeTab={activeTab}

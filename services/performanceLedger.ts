@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import { parseLocalISODate, toLocalISODate } from '@/utils/commissionCycle';
+import { addDaysToDateString, isValidTimeZone, zonedDateTimeToIso } from '@/utils/businessTimezone';
 
 export type LedgerKind = 'atendimento' | 'produto';
 
@@ -18,13 +18,19 @@ export interface PerformanceLedgerParams {
   professionalId: string;
   start: string;
   end: string;
+  tz: string;
 }
 
 const PAGE = 20;
+const FALLBACK_TZ = 'America/Sao_Paulo';
 
-function nextDay(iso: string): string {
-  const d = parseLocalISODate(iso);
-  return toLocalISODate(new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1));
+/** Limites [start 00:00, end+1 00:00) no fuso do tenant — nunca meia-noite ingênua. */
+export function ledgerBounds(start: string, end: string, tz: string): { from: string; to: string } {
+  const zone = isValidTimeZone(tz) ? tz : FALLBACK_TZ;
+  return {
+    from: zonedDateTimeToIso(start, '00:00', zone),
+    to: zonedDateTimeToIso(addDaysToDateString(end, 1), '00:00', zone),
+  };
 }
 
 function clientOf(row: { clients?: { name?: string } | { name?: string }[] | null }): string | null {
@@ -35,8 +41,7 @@ function clientOf(row: { clients?: { name?: string } | { name?: string }[] | nul
 
 /** Duas queries (atendimentos + produtos). Sem N+1. Sem log de nome de cliente. */
 export async function fetchPerformanceLedger(params: PerformanceLedgerParams): Promise<LedgerRow[]> {
-  const from = `${params.start}T00:00:00`;
-  const to = `${nextDay(params.end)}T00:00:00`;
+  const { from, to } = ledgerBounds(params.start, params.end, params.tz);
   const [aptRes, saleRes] = await Promise.all([
     supabase
       .from('appointments')

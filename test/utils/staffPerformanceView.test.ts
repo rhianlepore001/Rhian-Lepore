@@ -90,10 +90,15 @@ describe('staffPerformanceView — deltas (R3.15)', () => {
 
     it('neutro: |Δ%| < 5%, anterior com < 8 atendimentos; "novo" quando o anterior é 0', () => {
         expect(moneyDelta(370, 360, { prevSample: 11, formatMoney: brl })).toMatchObject({ tone: 'neutral', label: 'estável' });
-        expect(moneyDelta(408, 360, { prevSample: 5, formatMoney: brl })).toMatchObject({ tone: 'neutral' });
+        expect(moneyDelta(408, 360, { prevSample: 5, formatMoney: brl })).toEqual({ text: 'sem base de comparação', tone: 'neutral', label: 'sem_base' });
         expect(moneyDelta(408, 0, { prevSample: 11, formatMoney: brl })).toEqual({ text: 'novo', tone: 'neutral', label: 'novo' });
         expect(moneyDelta(null, 360, { prevSample: 11, formatMoney: brl })).toBeNull();
         expect(moneyDelta(408, null, { prevSample: 0, formatMoney: brl })).toBeNull();
+    });
+
+    it('base quase vazia (ex. +241%) não aparece como melhor', () => {
+        expect(moneyDelta(341, 100, { prevSample: 2, formatMoney: brl })).toEqual({ text: 'sem base de comparação', tone: 'neutral', label: 'sem_base' });
+        expect(moneyDelta(341, 100, { prevSample: 11, formatMoney: brl })).toMatchObject({ tone: 'good', label: 'melhor' });
     });
 
     it('taxas em p.p.; para faltas, cair é bom', () => {

@@ -157,6 +157,7 @@ export const PayoutList: React.FC<PayoutListProps> = ({ rows, theme, formatMoney
     const { colors, font, radius, accent, isBeauty } = useBrutalTheme({ override: theme });
     const lgRadius = isBeauty ? 'lg:rounded-2xl' : 'lg:rounded-lg';
     const head = `${font.mono} text-xs uppercase tracking-wide ${colors.textMuted}`;
+    const firstDueId = rows.find((x) => payoutDueAmount(x) > 0)?.professional_id;
     return (
         <div className={`lg:border lg:border-theme-border lg:bg-theme-card ${lgRadius}`}>
             <div className={`hidden ${GRID} px-5 py-3 border-b ${colors.border}`} aria-hidden="true">
@@ -176,6 +177,7 @@ export const PayoutList: React.FC<PayoutListProps> = ({ rows, theme, formatMoney
                     const paying = payingId === r.professional_id;
                     const earlier = r.cycle?.saldo_anterior ?? 0;
                     const priorOnly = earlier > 0 && r.total_due <= 0;
+                    const emphasize = due && r.professional_id === firstDueId;
                     return (
                         <li
                             key={r.professional_id}
@@ -243,7 +245,7 @@ export const PayoutList: React.FC<PayoutListProps> = ({ rows, theme, formatMoney
                             {/* ações */}
                             <div className="mt-3 flex flex-col gap-2 lg:mt-0 lg:flex-row lg:items-center lg:justify-end">
                                 <Button
-                                    variant={due ? 'primary' : 'secondary'}
+                                    variant={emphasize ? 'primary' : 'secondary'}
                                     size="sm"
                                     forceTheme={theme}
                                     className="w-full lg:w-auto lg:min-w-[112px] min-h-[44px]"

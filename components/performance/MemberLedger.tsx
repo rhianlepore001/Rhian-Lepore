@@ -8,6 +8,7 @@ interface MemberLedgerProps {
   professionalId: string;
   start: string;
   end: string;
+  tz: string;
   formatMoney: (v: number) => string;
 }
 
@@ -17,7 +18,7 @@ function dayLabel(iso: string): string {
   return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
-export const MemberLedger: React.FC<MemberLedgerProps> = ({ companyId, professionalId, start, end, formatMoney }) => {
+export const MemberLedger: React.FC<MemberLedgerProps> = ({ companyId, professionalId, start, end, tz, formatMoney }) => {
   const { colors, font, radius } = useBrutalTheme();
   const [rows, setRows] = useState<LedgerRow[] | null>(null);
   const [error, setError] = useState(false);
@@ -28,7 +29,7 @@ export const MemberLedger: React.FC<MemberLedgerProps> = ({ companyId, professio
     setRows(null);
     setError(false);
     setPage(1);
-    fetchPerformanceLedger({ companyId, professionalId, start, end })
+    fetchPerformanceLedger({ companyId, professionalId, start, end, tz })
       .then((data) => { if (alive) setRows(data); })
       .catch((err: unknown) => {
         console.error('performance_ledger falhou');
@@ -36,7 +37,7 @@ export const MemberLedger: React.FC<MemberLedgerProps> = ({ companyId, professio
         if (alive) setError(true);
       });
     return () => { alive = false; };
-  }, [companyId, professionalId, start, end]);
+  }, [companyId, professionalId, start, end, tz]);
 
   const sliced = rows ? pageLedger(rows, page) : null;
 

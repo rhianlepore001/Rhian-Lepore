@@ -39,10 +39,54 @@ async function shot(page: Page, name: string) {
 }
 
 async function settle(page: Page) {
-  await page.evaluate(() => new Promise<void>((resolve) => {
-    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
-  }));
-  await page.waitForTimeout(300);
+  await page.mouse.move(0, 0);
+  await page.evaluate(() => {
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && active !== document.body) active.blur();
+    return new Promise<void>((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+    });
+  });
+  await page.waitForTimeout(450);
+}
+
+const FIT_NOW = new Date('2026-10-03T07:00:00.000Z');
+const FIT_PAST_ISO = '2026-10-03T05:30:00.000Z';
+const FIT_SOON_ISO = '2026-10-03T07:30:00.000Z';
+
+function fitInAppointments() {
+  return [
+    {
+      id: 'apt-past',
+      user_id: OWNER_ID,
+      service: 'Corte',
+      appointment_time: FIT_PAST_ISO,
+      price: 45,
+      status: 'Confirmed',
+      professional_id: SELF_MEMBER_ID,
+      duration_minutes: 30,
+      notes: null,
+      edited_at: null,
+      origin: 'agenda',
+      client_id: 'c-past',
+      clients: { name: 'Encaixe passado', id: 'c-past', phone: '351600000090' },
+    },
+    {
+      id: 'apt-soon',
+      user_id: OWNER_ID,
+      service: 'Corte',
+      appointment_time: FIT_SOON_ISO,
+      price: 45,
+      status: 'Confirmed',
+      professional_id: SELF_MEMBER_ID,
+      duration_minutes: 30,
+      notes: null,
+      edited_at: null,
+      origin: 'agenda',
+      client_id: 'c-soon',
+      clients: { name: 'Encaixe 30min', id: 'c-soon', phone: '351600000030' },
+    },
+  ];
 }
 
 function lisbonToday(): string {
@@ -409,52 +453,23 @@ test.describe('PR-2 antecedência mínima', () => {
   for (const role of ['owner', 'staff'] as const) {
     test(`${role} 390 encaixe passado e +30min sem antecedência`, async ({ page }) => {
       await page.setViewportSize({ width: 390, height: 844 });
-      const pastIso = new Date(Date.now() - 90 * 60 * 1000).toISOString();
-      const soonIso = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+      await page.clock.setFixedTime(FIT_NOW);
       guard.stubRpc('list_company_pending_public_bookings', { body: [] });
       if (role === 'owner' ? HAS_OWNER : HAS_STAFF) {
         await login(page, role);
       } else {
-        await stubAuthReads(page, role, {
-          appointments: [
-            {
-              id: 'apt-past',
-              user_id: OWNER_ID,
-              service: 'Corte',
-              appointment_time: pastIso,
-              price: 45,
-              status: 'Confirmed',
-              professional_id: SELF_MEMBER_ID,
-              duration_minutes: 30,
-              notes: null,
-              edited_at: null,
-              origin: 'agenda',
-              client_id: 'c-past',
-              clients: { name: 'Encaixe passado', id: 'c-past', phone: '351600000090' },
-            },
-            {
-              id: 'apt-soon',
-              user_id: OWNER_ID,
-              service: 'Corte',
-              appointment_time: soonIso,
-              price: 45,
-              status: 'Confirmed',
-              professional_id: SELF_MEMBER_ID,
-              duration_minutes: 30,
-              notes: null,
-              edited_at: null,
-              origin: 'agenda',
-              client_id: 'c-soon',
-              clients: { name: 'Encaixe 30min', id: 'c-soon', phone: '351600000030' },
-            },
-          ],
-        });
+        await stubAuthReads(page, role, { appointments: fitInAppointments() });
       }
-      await page.goto(`${BASE}/#/agenda`);
+      await page.goto(`${BASE}/#/agenda?date=2026-10-03`);
       await expect(page.locator('#btn-new-appointment')).toBeVisible({ timeout: 20_000 });
-      await expect(page.getByText('Encaixe passado')).toBeVisible({ timeout: 15_000 });
-      await expect(page.getByText('Encaixe 30min')).toBeVisible();
+      const pastCard = page.locator('[data-appointment-id="apt-past"]');
+      const soonCard = page.locator('[data-appointment-id="apt-soon"]');
+      await expect(pastCard).toBeVisible({ timeout: 15_000 });
+      await expect(soonCard).toBeVisible();
+      await expect(pastCard.getByText('Encaixe passado')).toBeVisible();
+      await expect(soonCard.getByText('Encaixe 30min')).toBeVisible();
       await expect(page.getByText(/antecedência/i)).toHaveCount(0);
+      await page.evaluate(() => window.scrollTo(0, 0));
       await shot(page, `${role}-390-fit-in.png`);
     });
   }

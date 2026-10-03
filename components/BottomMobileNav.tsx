@@ -100,7 +100,7 @@ export const BottomMobileNav: React.FC = () => {
                         <div className={`p-1.5 rounded-xl transition-all ${isActive('/meus-insights') ? 'bg-[var(--color-card-hover)]' : ''}`}>
                             <TrendingUp className="w-5 h-5" strokeWidth={isActive('/meus-insights') ? 2.5 : 2} aria-hidden="true" />
                         </div>
-                        <span className="text-[10px] font-bold tracking-tight leading-tight text-center max-w-full">Meus resultados</span>
+                        <span className="text-xs font-bold tracking-tight leading-tight text-center max-w-full px-0.5">Meus resultados</span>
                     </button>
                 )}
 

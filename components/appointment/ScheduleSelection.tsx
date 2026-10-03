@@ -288,7 +288,7 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                             <ChevronRight className="w-5 h-5" />
                         </button>
                     </div>
-                    {!isToday && (
+                    {!isToday && !compact && (
                         <button
                             type="button"
                             onClick={() => { setSelectedDate(new Date()); setSelectedTime(''); }}
@@ -308,7 +308,7 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                 <div
                     ref={gridScrollRef}
                     data-testid="reschedule-time-grid"
-                    className={`rounded-xl border ${cardBg} p-3 sm:p-4 ${compact ? 'min-h-0 flex-1 overflow-y-auto overscroll-contain max-md:min-h-[14rem] max-md:max-h-[16.5rem] md:max-h-[min(18rem,46dvh)]' : ''}`}
+                    className={`rounded-xl border ${cardBg} p-3 sm:p-4 ${compact ? 'min-h-0 flex-1 overflow-y-auto overscroll-contain max-md:min-h-[15rem] max-md:max-h-[17.5rem] md:max-h-[min(18rem,46dvh)]' : ''}`}
                 >
                     {!selectedProId ? (
                         <div className="py-10 flex flex-col items-center justify-center text-center text-[var(--color-text-muted)] gap-2">

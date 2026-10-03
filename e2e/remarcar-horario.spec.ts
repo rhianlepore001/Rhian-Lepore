@@ -133,7 +133,9 @@ test.describe('PR C — Remarcar horário', () => {
         for (let i = 0; i < n; i++) {
           const b = await slotButtons.nth(i).boundingBox();
           if (!b || !gridBox) continue;
-          if (b.y >= gridBox.y - 1 && b.y + b.height <= gridBox.y + gridBox.height + 1) {
+          const top = Math.max(b.y, gridBox.y);
+          const bottom = Math.min(b.y + b.height, gridBox.y + gridBox.height);
+          if (bottom - top >= b.height * 0.9) {
             rowYs.add(Math.round(b.y));
           }
         }

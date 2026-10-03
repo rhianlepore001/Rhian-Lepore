@@ -69,11 +69,8 @@ async function pickTime(page: Page, name: string) {
     if (!(grid instanceof HTMLElement) || !(el instanceof HTMLElement)) return;
     const box = grid.getBoundingClientRect();
     const r = el.getBoundingClientRect();
-    const padding = 8;
-    let delta = 0;
-    if (r.top < box.top + padding) delta = r.top - box.top - padding;
-    else if (r.bottom > box.bottom - padding) delta = r.bottom - box.bottom + padding;
-    if (delta) grid.scrollTop += delta;
+    const delta = r.top - box.top - (grid.clientHeight / 2) + (el.clientHeight / 2);
+    if (Math.abs(delta) > 4) grid.scrollTop += delta;
   });
   await btn.click({ force: true });
   await settle(page);

@@ -19,13 +19,13 @@ export interface AgendaBlockConflict {
 
 export type CreateAgendaBlockResult =
   | { success: true; id: string }
-  | { success: false; code: 'conflicts'; items: AgendaBlockConflict[] }
+  | { success: false; code: 'conflicts' | 'block_conflicts_changed'; items: AgendaBlockConflict[]; message?: string }
   | { success: false; code: string; message?: string };
 
 export function isAgendaBlockConflictResult(
   result: CreateAgendaBlockResult,
-): result is { success: false; code: 'conflicts'; items: AgendaBlockConflict[] } {
+): result is { success: false; code: 'conflicts' | 'block_conflicts_changed'; items: AgendaBlockConflict[]; message?: string } {
   return result.success === false
-    && result.code === 'conflicts'
+    && (result.code === 'conflicts' || result.code === 'block_conflicts_changed')
     && Array.isArray((result as { items?: unknown }).items);
 }

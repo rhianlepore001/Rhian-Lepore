@@ -34,12 +34,14 @@ export async function createAgendaBlock(input: {
   startsAt: string;
   endsAt: string;
   acknowledgeConflicts?: boolean;
+  confirmedConflictIds?: string[];
 }): Promise<CreateAgendaBlockResult> {
   const { data, error } = await supabase.rpc('create_agenda_block', {
     p_professional_id: input.professionalId,
     p_starts_at: input.startsAt,
     p_ends_at: input.endsAt,
     p_acknowledge_conflicts: input.acknowledgeConflicts ?? false,
+    p_confirmed_conflict_ids: input.confirmedConflictIds ?? null,
   });
   if (error) {
     if (isMissingRpcError(error)) {
@@ -55,8 +57,10 @@ export async function deleteAgendaBlock(blockId: string): Promise<void> {
     p_block_id: blockId,
   });
   if (error) throw error;
-  const result = data as { success?: boolean; code?: string } | null;
+  const result = data as { success?: boolean; code?: string; message?: string } | null;
   if (result && result.success === false) {
-    throw new Error(result.code ?? 'delete_agenda_block_failed');
+    const err = new Error(result.message ?? result.code ?? 'delete_agenda_block_failed') as Error & { code?: string };
+    err.code = result.code;
+    throw err;
   }
 }

@@ -51,6 +51,7 @@ import {
     canCreateAgendaBlock,
     canManageAgendaBlock,
     messageForAgendaBlockResultCode,
+    messageForBookingAcceptError,
     normalizeStaffCanBlockAgenda,
 } from '../utils/agendaBlockPermission';
 import { isAgendaBlockConflictResult, type AgendaBlock, type AgendaBlockConflict } from '../types/agendaBlocks';
@@ -804,7 +805,8 @@ export const Agenda: React.FC = () => {
             }
         } catch (error) {
             logger.error('Error accepting booking', error);
-            showToast('Erro ao aceitar agendamento.', 'error');
+            const blocked = messageForBookingAcceptError(error, booking.professional_name);
+            showToast(blocked ?? 'Erro ao aceitar agendamento.', 'error');
         } finally {
             setIsProcessing(false);
         }
@@ -1091,11 +1093,15 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
         startsAt: string;
         endsAt: string;
         acknowledgeConflicts: boolean;
+        confirmedConflictIds?: string[];
     }) => {
         try {
             const result = await createBlock.mutateAsync(input);
             if (isAgendaBlockConflictResult(result)) {
                 setBlockConflicts(result.items);
+                if (result.code === 'block_conflicts_changed') {
+                    showToast(result.message ?? messageForAgendaBlockResultCode(result.code), 'error');
+                }
                 return;
             }
             if (result.success === false) {

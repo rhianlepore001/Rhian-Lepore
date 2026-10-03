@@ -29,6 +29,7 @@ export interface AgendaBlockFormProps {
     startsAt: string;
     endsAt: string;
     acknowledgeConflicts: boolean;
+    confirmedConflictIds?: string[];
   }) => void | Promise<void>;
 }
 
@@ -105,6 +106,7 @@ export const AgendaBlockForm: React.FC<AgendaBlockFormProps> = ({
         startsAt: range.startsAt,
         endsAt: range.endsAt,
         acknowledgeConflicts: acknowledge,
+        confirmedConflictIds: acknowledge ? (conflicts ?? []).map((item) => item.id) : undefined,
       });
     } catch (e) {
       const msg = e instanceof Error ? e.message : '';

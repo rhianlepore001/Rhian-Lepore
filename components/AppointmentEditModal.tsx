@@ -11,7 +11,7 @@ import { useToast } from './ui';
 import { formatDateForInput, combineDateAndTime } from '../utils/date';
 import { buildManualBookingTimeSlots } from '../utils/agendaTimeSlots';
 import { isStaffEditForbiddenError, STAFF_EDIT_FORBIDDEN_MESSAGE } from '../utils/staffAppointmentPermission';
-import { AGENDA_BLOCKED_MESSAGE, isAgendaBlockedError } from '../utils/agendaBlockPermission';
+import { agendaBlockedMessage, isAgendaBlockedError } from '../utils/agendaBlockPermission';
 import { useAgendaBlocks } from '../hooks/useAgendaBlocks';
 import { slotOverlapsBlocks } from '../utils/agendaBlockRange';
 
@@ -321,7 +321,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                 isStaffEditForbiddenError(error)
                     ? STAFF_EDIT_FORBIDDEN_MESSAGE
                     : isAgendaBlockedError(error)
-                        ? AGENDA_BLOCKED_MESSAGE
+                        ? agendaBlockedMessage(teamMembers.find(m => m.id === selectedProfessional)?.name || 'profissional')
                         : 'Não foi possível salvar as alterações. Tente novamente.',
                 'error',
             );

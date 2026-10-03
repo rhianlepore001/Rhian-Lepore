@@ -57,6 +57,7 @@ describe('agendaBlocks service', () => {
       p_starts_at: '2026-10-05T15:00:00.000Z',
       p_ends_at: '2026-10-05T16:00:00.000Z',
       p_acknowledge_conflicts: false,
+      p_confirmed_conflict_ids: null,
     });
     expect(result).toEqual({ success: true, id: 'b1' });
   });

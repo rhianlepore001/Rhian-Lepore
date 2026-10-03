@@ -7,7 +7,7 @@
 import { test, expect, type Page, type Route } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
-import { installProdWriteGuard } from './helpers/prodWriteGuard';
+import { installProdWriteGuard, type ProdWriteGuard } from './helpers/prodWriteGuard';
 
 const BASE = process.env.E2E_BASE_URL || 'http://localhost:3000';
 const PROJECT_REF = 'lcqwrngscsziysyfhpfj';
@@ -117,7 +117,17 @@ const SETTINGS_PUBLIC = {
   },
 };
 
-async function mockPublicClient(page: Page, bookings: unknown[]) {
+function stubClientRpcs(guard: ProdWriteGuard, bookingsRef: { rows: unknown[] }) {
+  guard.stubRpc('get_public_profile_by_slug', { body: PROFILE_PUBLIC });
+  guard.stubRpc('get_public_business_settings_json', { body: SETTINGS_PUBLIC });
+  guard.stubRpc('get_client_bookings_history', () => ({ body: bookingsRef.rows }));
+  guard.stubRpc('get_client_booking_cancellations', { body: {} });
+  guard.stubRpc('get_public_membership_plans', { body: [] });
+  guard.stubRpc('get_public_client_membership', { body: null });
+  guard.stubRpc('find_active_queue_entry_by_phone', { body: [] });
+}
+
+async function mockPublicClient(page: Page, bookingsRef: { rows: unknown[] }) {
   const sessionClient = { id: 'cli-1', name: 'Zé Cliente', phone: '11999998888', business_id: BIZ_ID };
   await page.addInitScript(
     ({ bizId, client }) => {
@@ -128,11 +138,9 @@ async function mockPublicClient(page: Page, bookings: unknown[]) {
 
   await page.route(`**/${PROJECT_REF}.supabase.co/**`, async (route) => {
     const req = route.request();
-    const url = new URL(req.url());
-    const pathname = url.pathname;
-    const rpc = pathname.match(/\/rpc\/([^/?]+)/)?.[1];
-
-    if (req.method() === 'OPTIONS') {
+    const method = req.method();
+    const pathname = new URL(req.url()).pathname;
+    if (method === 'OPTIONS') {
       await route.fulfill({
         status: 204,
         headers: {
@@ -143,20 +151,19 @@ async function mockPublicClient(page: Page, bookings: unknown[]) {
       });
       return;
     }
-
-    if (rpc === 'get_public_profile_by_slug') return fulfillJson(route, PROFILE_PUBLIC);
-    if (rpc === 'get_public_business_settings_json') return fulfillJson(route, SETTINGS_PUBLIC);
-    if (rpc === 'get_client_bookings_history') return fulfillJson(route, bookings);
-    if (rpc === 'get_client_booking_cancellations') return fulfillJson(route, {});
-    if (rpc === 'get_public_membership_plans') return fulfillJson(route, []);
-    if (rpc === 'get_public_client_membership') return fulfillJson(route, null);
-    if (rpc === 'find_active_queue_entry_by_phone') return fulfillJson(route, []);
-    if (pathname.includes('/rest/v1/')) return fulfillJson(route, []);
-    await fulfillJson(route, {});
+    if (method === 'GET' || method === 'HEAD') {
+      await fulfillJson(route, []);
+      return;
+    }
+    if (pathname.includes('/auth/')) {
+      await fulfillJson(route, {});
+      return;
+    }
+    await route.fallback();
   });
 }
 
-async function mockOwnerAgenda(page: Page) {
+async function mockOwnerAgenda(page: Page, pendingRef: { rows: unknown[] }) {
   const accessToken = fakeJwt(OWNER_ID, 'owner.pr3@example.test');
   const session = {
     access_token: accessToken,
@@ -186,7 +193,6 @@ async function mockOwnerAgenda(page: Page) {
     const req = route.request();
     const url = new URL(req.url());
     const pathname = url.pathname;
-    const rpc = pathname.match(/\/rpc\/([^/?]+)/)?.[1];
 
     if (req.method() === 'OPTIONS') {
       await route.fulfill({
@@ -203,8 +209,10 @@ async function mockOwnerAgenda(page: Page) {
       return fulfillJson(route, session);
     }
     if (pathname.includes('/auth/v1/user')) return fulfillJson(route, session.user);
-    if (rpc === 'list_company_pending_public_bookings') return fulfillJson(route, []);
-    if (rpc === 'list_agenda_blocks') return fulfillJson(route, []);
+    if (req.method() !== 'GET' && req.method() !== 'HEAD') {
+      await route.fallback();
+      return;
+    }
     if (pathname.includes('/rest/v1/profiles')) {
       return fulfillJson(route, [{
         id: OWNER_ID,
@@ -264,7 +272,7 @@ async function mockOwnerAgenda(page: Page) {
     if (pathname.includes('/rest/v1/clients')) return fulfillJson(route, []);
     if (pathname.includes('/rest/v1/agenda_blocks')) return fulfillJson(route, []);
     if (pathname.includes('/rest/v1/')) return fulfillJson(route, []);
-    await fulfillJson(route, {});
+    await route.fallback();
   });
 }
 
@@ -316,7 +324,9 @@ test.describe('PR-3 status ao vivo', () => {
       const guard = await installProdWriteGuard(page);
       await page.clock.setFixedTime(new Date('2026-10-03T12:00:00.000Z'));
       await page.setViewportSize({ width: vp.width, height: vp.height });
-      await mockPublicClient(page, [BOOKING_PENDING, BOOKING_OTHER]);
+      const bookingsRef = { rows: [{ ...BOOKING_PENDING }, { ...BOOKING_OTHER }] as unknown[] };
+      stubClientRpcs(guard, bookingsRef);
+      await mockPublicClient(page, bookingsRef);
 
       await page.goto(`${BASE}/#/minha-area/pr3-live`, { waitUntil: 'domcontentloaded' });
       const pendingCard = page.locator(`[data-booking-id="${BOOKING_PENDING.id}"]`);
@@ -325,6 +335,10 @@ test.describe('PR-3 status ao vivo', () => {
       await expect(otherCard.getByText('Aguardando')).toBeVisible();
       await shot(page, `client-before-${vp.name}`, `[data-booking-id="${BOOKING_PENDING.id}"]`);
 
+      bookingsRef.rows = [
+        { ...BOOKING_PENDING, status: 'confirmed' },
+        { ...BOOKING_OTHER },
+      ];
       await dispatchBookingStatus(page, {
         id: BOOKING_PENDING.id,
         status: 'confirmed',
@@ -337,6 +351,10 @@ test.describe('PR-3 status ao vivo', () => {
       await expect(otherCard.getByText('Aguardando')).toBeVisible();
       await shot(page, `client-after-confirm-${vp.name}`, `[data-booking-id="${BOOKING_PENDING.id}"]`);
 
+      bookingsRef.rows = [
+        { ...BOOKING_PENDING, status: 'confirmed' },
+        { ...BOOKING_OTHER, status: 'cancelled' },
+      ];
       await dispatchBookingStatus(page, {
         id: BOOKING_OTHER.id,
         status: 'cancelled',
@@ -344,7 +362,7 @@ test.describe('PR-3 status ao vivo', () => {
         op: 'UPDATE',
         at: '2026-10-03T12:00:02.000Z',
       });
-      await expect(otherCard.getByText('Cancelado')).toBeVisible({ timeout: 3_000 });
+      await expect(otherCard.getByText('Cancelado', { exact: true })).toBeVisible({ timeout: 3_000 });
       await expect(pendingCard.getByText('Confirmado')).toBeVisible();
       guard.assertNoLeak();
     });
@@ -353,21 +371,25 @@ test.describe('PR-3 status ao vivo', () => {
       const guard = await installProdWriteGuard(page);
       await page.clock.setFixedTime(new Date('2026-10-03T12:00:00.000Z'));
       await page.setViewportSize({ width: vp.width, height: vp.height });
-      await mockOwnerAgenda(page);
+      const pending = { rows: [] as unknown[] };
+      guard.stubRpc('list_company_pending_public_bookings', () => ({ body: pending.rows }));
+      guard.stubRpc('list_agenda_blocks', { body: [] });
+      await mockOwnerAgenda(page, pending);
 
       await page.goto(`${BASE}/#/agenda`, { waitUntil: 'domcontentloaded' });
       await expect(page.getByRole('heading', { name: /Agenda/i }).first()).toBeVisible({ timeout: 30_000 });
       await expect(page.getByTestId('agenda-public-bookings')).toHaveCount(0);
 
+      pending.rows = [OWNER_REQUEST];
       await page.evaluate((row) => {
         window.dispatchEvent(new CustomEvent('agendix:public-booking-change', {
           detail: { eventType: 'INSERT', new: row },
         }));
       }, OWNER_REQUEST);
 
-      await expect(page.getByTestId('agenda-public-bookings')).toBeVisible({ timeout: 3_000 });
+      await expect(page.getByTestId(`agenda-public-booking-${OWNER_REQUEST.id}`)).toBeVisible({ timeout: 3_000 });
       await expect(page.getByText('Carla Online')).toBeVisible();
-      await expect(page.getByText('1 solicitação online')).toBeVisible();
+      await expect(page.getByText(/1 solicitação online/)).toBeVisible();
       await shot(page, `owner-request-${vp.name}`, '[data-testid="agenda-public-bookings"]');
       guard.assertNoLeak();
     });

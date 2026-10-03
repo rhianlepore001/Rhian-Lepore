@@ -1,4 +1,4 @@
--- Rollback EXATO de 20261003103000_commissions_owner_only.sql
+-- Rollback EXATO de 20261003100000_commissions_owner_only.sql
 -- Restaura as 3 RPCs de comissão com o texto de pg_get_functiondef de prod
 -- (lido em 29/09/2026). md5(pg_get_functiondef) esperado depois do rollback:
 --   get_commissions_due() = 1bc9f34247a83770550e0be36b7fd3dd

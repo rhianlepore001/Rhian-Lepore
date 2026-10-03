@@ -98,7 +98,7 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                 {blocked ? (
                     <span className="flex flex-col items-center leading-tight gap-0.5">
                         <span className="line-through">{time}</span>
-                        <span className="text-[10px] font-sans font-semibold uppercase tracking-wide">Bloqueado</span>
+                        <span className="text-xs font-sans font-semibold uppercase tracking-wide">Bloqueado</span>
                     </span>
                 ) : time}
             </button>

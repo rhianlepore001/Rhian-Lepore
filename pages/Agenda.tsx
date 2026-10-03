@@ -61,6 +61,7 @@ import { logger } from '../utils/Logger';
 import { getVisualStatus, isNoShowStatus, VISUAL_STATUS_CLASSES, VISUAL_STATUS_LABEL } from '../utils/appointmentStatus';
 import { buildNoShowSlotPrefill, findNoShowCoveringSlot, noShowSlotContext } from '../utils/noShowSlotReuse';
 import { useTenantLocale } from '../hooks/useTenantLocale';
+import { useBusinessCopy } from '../hooks/useBusinessCopy';
 import { formatRescheduleHistoryLine } from '../utils/rescheduleCopy';
 
 interface Appointment {

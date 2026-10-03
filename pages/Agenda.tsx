@@ -61,6 +61,7 @@ import { getVisualStatus, isNoShowStatus, VISUAL_STATUS_CLASSES, VISUAL_STATUS_L
 import { buildNoShowSlotPrefill, findNoShowCoveringSlot, noShowSlotContext } from '../utils/noShowSlotReuse';
 import { useTenantLocale } from '../hooks/useTenantLocale';
 import { useBusinessCopy } from '../hooks/useBusinessCopy';
+import { getOwnerAcceptWhatsAppText } from '../utils/publicBookingCopy';
 
 interface Appointment {
     id: string;
@@ -769,27 +770,18 @@ export const Agenda: React.FC = () => {
             }
 
             const phone = booking.customer_phone;
-            const dateObj = new Date(booking.appointment_time);
-            const formattedDate = dateObj.toLocaleDateString('pt-BR');
-            const formattedTime = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-            const establishment = businessName;
             const formattedPrice = booking.total_price.toFixed(2).replace('.', ',');
-
-            const message = isBeauty
-                ? `Olá ${booking.customer_name}! Tudo bem? ✨\n` +
-                `Sua reserva na *${establishment || 'Estética'}* está confirmada!\n` +
-                `📅 *${formattedDate}* às *${formattedTime}*\n` +
-                `💼 *Serviço*: ${serviceNames}\n` +
-                `💰 *Valor*: ${currencySymbol} ${formattedPrice}\n` +
-                `📍  Local: estamos te esperando!\n\n` +
-                `Estamos preparando tudo para te receber com a melhor experiência. Até logo! 💖`
-                : `Fala, ${booking.customer_name}! Seu horário está garantido! 🛡️ \n` +
-                `Marque na sua agenda:\n` +
-                `🗓️  *${formattedDate}* às *${formattedTime}*\n` +
-                `✂️  *Serviço*: ${serviceNames}\n` +
-                `💰 *Valor*: ${currencySymbol} ${formattedPrice}\n` +
-                `📍  Onde: *${establishment || copy.establishmentFallback}*.\n\n` +
-                `Prepare-se para o trato! Nos vemos em breve. 👋`;
+            const message = getOwnerAcceptWhatsAppText({
+                isBeauty,
+                customerName: booking.customer_name,
+                businessName: businessName,
+                appointmentTime: booking.appointment_time,
+                timeZone: shopTimeZone,
+                serviceNames,
+                priceLabel: formattedPrice,
+                currencySymbol,
+                establishmentFallback: copy.establishmentFallback,
+            });
 
             fetchData();
 

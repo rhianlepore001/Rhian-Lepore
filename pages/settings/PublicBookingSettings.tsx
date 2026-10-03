@@ -12,7 +12,7 @@ import { SettingsRow } from '../../components/ui/SettingsRow';
 
 export const PublicBookingSettings: React.FC = () => {
     const { user } = useAuth();
-    const { accent, colors } = useBrutalTheme();
+    const { colors } = useBrutalTheme();
     const { data: settings } = useBusinessSettings();
     const { data: profile } = useProfileFields();
     const updateSettingsMutation = useUpdateBusinessSettings();
@@ -162,8 +162,8 @@ export const PublicBookingSettings: React.FC = () => {
                             </div>
                         </SettingsRow>
                         <ToggleRow
-                            title="Reagendamento Autônomo"
-                            description="Cliente reagenda sozinho via link de e-mail."
+                            title="Cliente pode editar o próprio agendamento na Minha Área"
+                            description="Liga ou desliga o botão Editar nos pedidos da Minha Área. Não envia e-mail."
                             checked={enableSelfRescheduling}
                             onChange={setEnableSelfRescheduling}
                         />

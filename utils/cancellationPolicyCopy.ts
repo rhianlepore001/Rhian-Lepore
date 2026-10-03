@@ -13,17 +13,43 @@ export const LEGACY_CANCELLATION_POLICY_TEMPLATES: Record<'flexible' | 'moderate
     'Cancelamentos com menos de 72h de antecedência não terão reembolso. Reagendamentos são permitidos uma vez.',
 };
 
-export function resolveCancellationPolicyDisplay(_stored: string | null | undefined): string {
-  throw new Error('not implemented');
+const POLICY_KEYS = new Set(['flexible', 'moderate', 'strict']);
+
+function normalizePolicy(stored: string | null | undefined): string {
+  return (stored ?? '').trim();
 }
 
-export function splitCancellationPolicyForEditor(_stored: string | null | undefined): {
+function isLegacyCancellationPolicy(stored: string | null | undefined): boolean {
+  const raw = normalizePolicy(stored);
+  if (!raw) return true;
+  if (POLICY_KEYS.has(raw.toLowerCase())) return true;
+  return Object.values(LEGACY_CANCELLATION_POLICY_TEMPLATES).includes(raw);
+}
+
+export function splitCancellationPolicyForEditor(stored: string | null | undefined): {
   generated: string;
   notes: string;
 } {
-  throw new Error('not implemented');
+  const generated = GENERATED_CANCELLATION_POLICY_TEXT;
+  const raw = normalizePolicy(stored);
+  if (!raw || isLegacyCancellationPolicy(raw)) {
+    return { generated, notes: '' };
+  }
+  if (raw === generated) {
+    return { generated, notes: '' };
+  }
+  if (raw.startsWith(generated)) {
+    return { generated, notes: raw.slice(generated.length).trim() };
+  }
+  return { generated, notes: raw };
 }
 
-export function composeCancellationPolicyForSave(_notes: string): string {
-  throw new Error('not implemented');
+export function resolveCancellationPolicyDisplay(stored: string | null | undefined): string {
+  const { generated, notes } = splitCancellationPolicyForEditor(stored);
+  return notes ? `${generated}\n\n${notes}` : generated;
+}
+
+export function composeCancellationPolicyForSave(notes: string): string {
+  const trimmed = notes.trim();
+  return trimmed || GENERATED_CANCELLATION_POLICY_TEXT;
 }

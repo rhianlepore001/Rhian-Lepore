@@ -31,6 +31,7 @@ import { useZonedAvailableSlots } from '../hooks/useZonedAvailableSlots';
 import { fetchEditBooking, fetchPublicClientByPhone, fetchClientByPhone, fetchPublicBookingById, fetchFullDates, getFirstAvailableProfessional, uploadClientPhoto, upsertPublicClientSession } from '../services/publicBooking';
 import { shouldLandOnClientArea } from '../utils/publicBookingLanding';
 import { getPublicBookingAwaitingWhatsAppText, getPublicBookingSuccessCopy } from '../utils/publicBookingCopy';
+import { resolveCancellationPolicyDisplay } from '../utils/cancellationPolicyCopy';
 import { isSlotUnavailableError } from '../utils/supabaseRpc';
 import { Checkbox, ConfirmModal, useToast } from '@/components/ui';
 import { PublicBookingMemberships } from '@/components/membership/PublicBookingMemberships';
@@ -726,6 +727,12 @@ export const PublicBooking: React.FC = () => {
             ? bookedAt.toLocaleDateString('pt-BR', { timeZone: businessTimezone })
             : selectedDate?.toLocaleDateString('pt-BR') ?? '',
         timeLabel: successTime ?? '',
+        serviceLabel: services.filter(s => selectedServices.includes(s.id)).map(s => s.name).join(', '),
+        professionalName: selectedProfessional && selectedProfessional !== 'any'
+            ? (professionals.find(p => p.id === selectedProfessional)?.name
+                || professionals.find(p => p.id === selectedProfessional)?.full_name
+                || null)
+            : null,
     });
 
     // Quick flow stepper data
@@ -1936,10 +1943,9 @@ export const PublicBooking: React.FC = () => {
                                 Políticas Administrativas
                             </h3>
                             <div className={`leading-relaxed ${colors.textSecondary} max-h-[50vh] overflow-y-auto pr-4 custom-scrollbar`}>
-                                {businessSettings?.cancellation_policy ?
-                                    <p className="whitespace-pre-wrap">{businessSettings.cancellation_policy}</p> :
-                                    <p>Nossos profissionais reservam tempo exclusivo para você. Cancelamentos devem ser realizados com antecedência mínima de 24h. O não comparecimento impacta a logística de nossa equipe.</p>
-                                }
+                                <p className="whitespace-pre-wrap" data-testid="public-cancellation-policy">
+                                    {resolveCancellationPolicyDisplay(businessSettings?.cancellation_policy)}
+                                </p>
                             </div>
                             <button onClick={() => setShowPolicyModal(false)}
                                 className={`w-full py-4 ${classes.buttonPrimary}`}>

@@ -621,6 +621,7 @@ export const ClientArea: React.FC = () => {
                                             timeZone={businessTimezone}
                                             onCancelled={handleBookingCancelled}
                                             allowEdit={business?.allow_client_rescheduling ?? true}
+                                            businessName={business.business_name}
                                         />
                                     ))
                                 )}
@@ -651,6 +652,7 @@ export const ClientArea: React.FC = () => {
                                                 region={region}
                                                 timeZone={businessTimezone}
                                                 onCancelled={handleBookingCancelled}
+                                                businessName={business.business_name}
                                             />
                                         ))}
                                         {historySlice.length < historyBookings.length && (

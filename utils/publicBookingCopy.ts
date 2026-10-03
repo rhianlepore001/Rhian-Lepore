@@ -1,3 +1,5 @@
+import { formatTimeInTimeZone } from './businessTimezone';
+
 export function getPublicBookingSuccessCopy(input: {
   isBeauty: boolean;
   status?: string | null;
@@ -64,10 +66,13 @@ export function getPublicBookingAwaitingWhatsAppText(input: {
   serviceLabel?: string;
   professionalName?: string | null;
 }): string {
-  return `Olá, eu fiz um agendamento online na *${input.businessName}* (para ${input.dateLabel} às ${input.timeLabel}) e estou aguardando a sua confirmação.`;
+  const businessName = input.businessName.trim() || 'estabelecimento';
+  const serviceLabel = (input.serviceLabel ?? '').trim() || 'serviço';
+  const professional = (input.professionalName ?? '').trim() || 'Qualquer profissional';
+  return `Olá, ${businessName}! Fiz um agendamento online para ${serviceLabel} com ${professional} em ${input.dateLabel} às ${input.timeLabel}. Pode confirmar, por favor?`;
 }
 
-export function getOwnerAcceptWhatsAppText(_input: {
+export function getOwnerAcceptWhatsAppText(input: {
   isBeauty: boolean;
   customerName: string;
   businessName: string;
@@ -78,5 +83,30 @@ export function getOwnerAcceptWhatsAppText(_input: {
   currencySymbol: string;
   establishmentFallback: string;
 }): string {
-  throw new Error('not implemented');
+  const dateObj = new Date(input.appointmentTime);
+  const formattedDate = dateObj.toLocaleDateString('pt-BR', { timeZone: input.timeZone });
+  const formattedTime = formatTimeInTimeZone(dateObj, input.timeZone);
+  const establishment = input.businessName.trim();
+
+  if (input.isBeauty) {
+    return (
+      `Olá ${input.customerName}! Tudo bem? ✨\n` +
+      `Sua reserva na *${establishment || 'Estética'}* está confirmada!\n` +
+      `📅 *${formattedDate}* às *${formattedTime}*\n` +
+      `💼 *Serviço*: ${input.serviceNames}\n` +
+      `💰 *Valor*: ${input.currencySymbol} ${input.priceLabel}\n` +
+      `📍  Local: estamos te esperando!\n\n` +
+      `Estamos preparando tudo para te receber com a melhor experiência. Até logo! 💖`
+    );
+  }
+
+  return (
+    `Fala, ${input.customerName}! Seu horário está garantido! 🛡️ \n` +
+    `Marque na sua agenda:\n` +
+    `🗓️  *${formattedDate}* às *${formattedTime}*\n` +
+    `✂️  *Serviço*: ${input.serviceNames}\n` +
+    `💰 *Valor*: ${input.currencySymbol} ${input.priceLabel}\n` +
+    `📍  Onde: *${establishment || input.establishmentFallback}*.\n\n` +
+    `Prepare-se para o trato! Nos vemos em breve. 👋`
+  );
 }

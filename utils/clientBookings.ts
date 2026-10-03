@@ -4,7 +4,7 @@
  * Item 5b: quando o estabelecimento cancela (ou recusa) um pedido, o cliente
  * precisa ver o cancelamento e poder reagendar. Pedidos cancelados com horário
  * ainda no futuro aparecem em "Próximos" como CANCELADO (não contam como
- * agendamento ativo); os passados continuam fora das listas, como antes.
+ * agendamento ativo); os passados vão para "Histórico".
  */
 
 export interface ClientBookingLike {
@@ -38,9 +38,9 @@ export function splitClientBookings<T extends ClientBookingLike>(bookings: T[], 
   const upcoming = bookings
     .filter((b) => (isActiveBookingStatus(b.status) || isCancelledBooking(b)) && isFuture(b))
     .sort((a, b) => new Date(a.appointment_time).getTime() - new Date(b.appointment_time).getTime());
-  // Histórico inalterado: concluídos + não cancelados que já passaram.
+  // Histórico: tudo que já passou (incluindo cancelado) + concluídos futuros.
   const history = bookings.filter((b) =>
-    b.status === 'completed' || (!isCancelledBooking(b) && !isFuture(b)),
+    b.status === 'completed' || !isFuture(b),
   );
   return { upcoming, activeUpcoming, history };
 }

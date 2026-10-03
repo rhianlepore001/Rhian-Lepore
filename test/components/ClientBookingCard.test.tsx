@@ -1,7 +1,7 @@
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import { ClientBookingCard, type ClientBooking } from '../../components/ClientBookingCard';
@@ -211,7 +211,7 @@ describe('ClientBookingCard — PR-1 cards honestos e WhatsApp', () => {
       businessName: 'Barbearia São João ✂️',
     });
 
-    await userEvent.click(screen.getByRole('button', { name: /Pedir confirmação/ }), { delay: null });
+    fireEvent.click(screen.getByRole('button', { name: /Pedir confirmação/ }));
 
     const url = decodeURIComponent(String(open.mock.calls[0]?.[0] ?? ''));
     const dateObj = new Date(appointmentTime);
@@ -238,7 +238,7 @@ describe('ClientBookingCard — PR-1 cards honestos e WhatsApp', () => {
       professional_name: null,
       businessName: 'Corte Fino',
     });
-    await userEvent.click(screen.getByRole('button', { name: /Pedir confirmação/ }), { delay: null });
+    fireEvent.click(screen.getByRole('button', { name: /Pedir confirmação/ }));
     const url = decodeURIComponent(String(open.mock.calls[0]?.[0] ?? ''));
     expect(url).toContain('com Qualquer profissional');
     expect(url.toLowerCase()).not.toContain('o salão');

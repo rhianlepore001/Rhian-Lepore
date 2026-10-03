@@ -1,12 +1,12 @@
 ﻿import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { PageHeader } from '../components/ui/PageHeader';
 import { Button, Modal, Table, Badge, ConfirmModal, useToast, ErrorState, SkeletonCard } from '@/components/ui';
 import type { TableColumn } from '@/components/ui';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
-import { Wallet, TrendingUp, TrendingDown, Calendar, Download, Filter, Users, History, Trash2, Plus, Check, Smartphone, Banknote, CreditCard, User, Clock, Scissors } from 'lucide-react';
+import { Wallet, TrendingUp, TrendingDown, Calendar, Download, Filter, Users, History, Trash2, Plus, Check, Smartphone, Banknote, CreditCard, User, Clock, Scissors, BarChart3 } from 'lucide-react';
 import { FinanceCashflowChart } from '../components/finance/FinanceCashflowChart';
 import { AIAssistantButton } from '../components/HelpButtons';
 import { CommissionsManagement } from '../components/CommissionsManagement';
@@ -91,6 +91,7 @@ const FinanceKpi: React.FC<FinanceKpiProps> = ({
 export const Finance: React.FC = () => {
   const { user, region, role, companyId, teamMemberId } = useAuth();
 const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -113,7 +114,7 @@ const [searchParams, setSearchParams] = useSearchParams();
   const [filterPaymentMethod, setFilterPaymentMethod] = useState<string>('all');
   // Staff não vê aba de comissões nem histórico
   const isStaff = role === 'staff';
-  const [activeTab, setActiveTab] = useState<FinanceTabType>('overview');
+  const [activeTab, setActiveTab] = useState<FinanceTabType>(() => (searchParams.get('tab') === 'commissions' ? 'commissions' : 'overview'));
 
   // New Transaction Modal State
   const [showNewTransactionModal, setShowNewTransactionModal] = useState(false);
@@ -587,6 +588,11 @@ useEffect(() => {
             <Button variant="ghost" size="sm" icon={<Download className="h-4 w-4" />} onClick={handleExport}>
               Exportar
             </Button>
+            {!isStaff && (
+              <Button variant="ghost" size="sm" icon={<BarChart3 className="h-4 w-4" />} onClick={() => navigate('/financeiro/performance')}>
+                Performance da equipe
+              </Button>
+            )}
           </>
         }
         action={

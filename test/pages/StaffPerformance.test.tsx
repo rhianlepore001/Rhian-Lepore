@@ -2,10 +2,14 @@ import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
-import team from '../fixtures/staffPerformance/team.json';
-import detail from '../fixtures/staffPerformance/detail.json';
+import teamJson from '../fixtures/staffPerformance/team.json';
+import detailJson from '../fixtures/staffPerformance/detail.json';
+import { ownerPerformanceSchema } from '../../types/staffPerformance';
 
 const fetchStaffPerformance = vi.fn();
+// O service real valida com zod; o mock devolve o mesmo formato já validado.
+const team = ownerPerformanceSchema.parse(teamJson);
+const detail = ownerPerformanceSchema.parse(detailJson);
 vi.mock('@/services/staffPerformance', async (orig) => ({
     ...(await orig<typeof import('../../services/staffPerformance')>()),
     fetchStaffPerformance: (...a: unknown[]) => fetchStaffPerformance(...a),
@@ -41,7 +45,7 @@ const mount = (url = '/financeiro/performance?de=2026-09-01&ate=2026-09-30') =>
 const emptyTeam = () => {
     const t = structuredClone(team) as any;
     t.members = t.members.map((m: any) => ({ ...m, rank: null, eligible: false, metrics: { ...m.metrics, atendimentos: 0, retorno: null, retorno_por_hora: null, ticket_medio: null } }));
-    t.team_totals = { ...t.team_totals, atendimentos: 0, retorno: null };
+    t.team_totals = { ...t.team_totals, atendimentos: 0, vendas_produtos: 0, avulsos: 0, retorno: null };
     t.unassigned = null;
     t.ranking_available = false;
     return t;
@@ -187,7 +191,8 @@ describe('StaffPerformance (P2) — /financeiro/performance', () => {
         mount();
         const q = await screen.findByTestId('data-quality');
         expect(q).toHaveTextContent('Atenção aos dados deste período');
-        expect(q).toHaveTextContent('4 atendimentos sem registro financeiro: comissão não calculada');
+        // soma da equipe: os 4 de Ana + os de "Sem profissional"
+        expect(q).toHaveTextContent(`${4 + team.unassigned!.sem_registro_financeiro} atendimentos sem registro financeiro: comissão não calculada`);
         expect(q).toHaveTextContent('Conclua pelo botão Concluir e cobrar para registrar a comissão.');
     });
 

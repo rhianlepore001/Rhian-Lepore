@@ -12,7 +12,7 @@ import { SettingsRow } from '../../components/ui/SettingsRow';
 
 export const PublicBookingSettings: React.FC = () => {
     const { user } = useAuth();
-    const { accent, colors } = useBrutalTheme();
+    const { colors } = useBrutalTheme();
     const { data: settings } = useBusinessSettings();
     const { data: profile } = useProfileFields();
     const updateSettingsMutation = useUpdateBusinessSettings();
@@ -151,6 +151,7 @@ export const PublicBookingSettings: React.FC = () => {
                     </SettingsSection>
                 </div>
 
+                <div data-testid="self-reschedule-section">
                 <SettingsSection title="Automação e Lembretes">
                     <div className="space-y-2 divide-y divide-[var(--color-divider)]">
                         <SettingsRow
@@ -161,14 +162,20 @@ export const PublicBookingSettings: React.FC = () => {
                                 <SettingsSwitch checked={false} onChange={() => undefined} />
                             </div>
                         </SettingsRow>
-                        <ToggleRow
-                            title="Reagendamento Autônomo"
-                            description="Cliente reagenda sozinho via link de e-mail."
-                            checked={enableSelfRescheduling}
-                            onChange={setEnableSelfRescheduling}
-                        />
+                        <SettingsRow
+                            label="Cliente pode editar na Minha Área"
+                            help="Mostra o botão Editar nos agendamentos futuros da Minha Área."
+                            data-testid="self-reschedule-row"
+                        >
+                                <SettingsSwitch
+                                    checked={enableSelfRescheduling}
+                                    onChange={setEnableSelfRescheduling}
+                                    ariaLabel="Cliente pode editar na Minha Área"
+                                />
+                            </SettingsRow>
                     </div>
                 </SettingsSection>
+                </div>
 
                 <div className="flex justify-end pt-4">
                     <Button

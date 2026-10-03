@@ -10,6 +10,7 @@ interface SettingsRowProps {
   /** Controle à direita: switch, select, botão etc. */
   children?: React.ReactNode;
   className?: string;
+  'data-testid'?: string;
 }
 
 /**
@@ -22,11 +23,12 @@ interface SettingsRowProps {
  */
 export const SettingsRow: React.FC<SettingsRowProps> = ({
   label, help, icon: Icon, children, className = '',
+  'data-testid': testId,
 }) => {
   const { colors, accent } = useBrutalTheme();
 
   return (
-    <div className={`flex items-center justify-between gap-4 py-4 first:pt-0 last:pb-0 ${className}`}>
+    <div data-testid={testId} className={`flex items-center justify-between gap-4 py-4 first:pt-0 last:pb-0 ${className}`}>
       <div className="flex items-start gap-3 min-w-0">
         {Icon && (
           <div className={`p-2 rounded-lg ${accent.bgDim} ${accent.text} shrink-0`}>

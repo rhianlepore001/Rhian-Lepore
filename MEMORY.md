@@ -9,6 +9,10 @@
 
 ---
 
+## PR-1 overhaul booking — copy/cards (3 Out 2026, NÃO merge)
+
+Branch `feat/overhaul-pr1-copy-cards`, draft https://github.com/rhianlepore001/Rhian-Lepore/pull/119. Revisão 2: sem caixa «Cancelado.» duplicada, ícone Calendar nos 4 Agendar de novo, toggle alinhado ao row de e-mail, aviso pending com substantivo do negócio + plural, data minúscula no WhatsApp. Pendência PR-6: RPCs devem aplicar `enable_self_rescheduling` no servidor. Não rebasear (#120/#121). Prints em `/opt/cursor/artifacts/pr1/`.
+
 ## Bloqueio de agenda — correção do #117 (3 Out 2026)
 
 Branch `cursor/agenda-blocks-acceptance-followup-e54d`. #115 (fila/Completed) não foi alterado.

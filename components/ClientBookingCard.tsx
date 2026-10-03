@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Calendar, Clock, User, MessageSquare,
-    Edit3, X, CheckCircle, AlertCircle, Loader2
+    Edit3, X, CheckCircle, AlertCircle, Loader2, Crown
 } from 'lucide-react';
 import { formatCurrency, buildWhatsAppLink, Region } from '../utils/formatters';
 import { cancelPublicBooking } from '../services/publicBooking';
@@ -142,6 +142,12 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
     });
     const clubLine = clubSentence(isNoShow ? 'no_show' : isCompleted ? 'completed' : statusKey, clubActive);
     const completedCta = completedRebookLabel(booking.appointment_time, businessTz);
+    const clubNote = clubLine ? (
+        <p data-testid="client-booking-club" className="flex items-center gap-1.5 text-xs leading-snug text-theme-textSecondary">
+            <Crown className="w-3.5 h-3.5 shrink-0 text-theme-accent" aria-hidden="true" />
+            {clubLine}
+        </p>
+    ) : null;
 
     const handleCancel = async () => {
         if (!clientPhone) {
@@ -309,11 +315,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                     </div>
                 )}
 
-                {isUpcoming && statusKey === 'confirmed' && clubLine && (
-                    <p data-testid="client-booking-club" className="text-xs leading-snug text-theme-textSecondary">
-                        {clubLine}
-                    </p>
-                )}
+                {isUpcoming && statusKey === 'confirmed' && clubNote}
 
                 {isFutureCancelled && (
                     <div className="space-y-2 pt-1" data-testid="client-booking-cancelled">
@@ -324,11 +326,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                             <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-px" aria-hidden="true" />
                             {cancellationMessage(booking)}
                         </p>
-                        {clubLine && (
-                            <p data-testid="client-booking-club" className="text-xs leading-snug text-theme-textSecondary">
-                                {clubLine}
-                            </p>
-                        )}
+                        {clubNote}
                         <button
                             type="button"
                             onClick={handleRebook}
@@ -351,11 +349,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                                 {PAST_CANCELLED_BY_BUSINESS_MESSAGE}
                             </p>
                         )}
-                        {clubLine && (
-                            <p data-testid="client-booking-club" className="text-xs leading-snug text-theme-textSecondary">
-                                {clubLine}
-                            </p>
-                        )}
+                        {clubNote}
                         <button
                             type="button"
                             onClick={handleRebook}
@@ -377,11 +371,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                             <CheckCircle className="w-3.5 h-3.5 shrink-0 mt-px" aria-hidden="true" />
                             {completedThankYou(clientName)}
                         </p>
-                        {clubLine && (
-                            <p data-testid="client-booking-club" className="text-xs leading-snug text-theme-textSecondary">
-                                {clubLine}
-                            </p>
-                        )}
+                        {clubNote}
                         <button
                             type="button"
                             onClick={handleRebook}
@@ -404,11 +394,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                             <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-px" aria-hidden="true" />
                             {NO_SHOW_MESSAGE}
                         </p>
-                        {clubLine && (
-                            <p data-testid="client-booking-club" className="text-xs leading-snug text-theme-textSecondary">
-                                {clubLine}
-                            </p>
-                        )}
+                        {clubNote}
                         <button
                             type="button"
                             onClick={handleRebook}

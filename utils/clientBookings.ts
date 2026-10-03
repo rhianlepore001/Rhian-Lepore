@@ -132,12 +132,11 @@ export function rebookPath(
   slug: string,
   booking: Pick<ClientBookingLike, 'service_ids' | 'professional_id'>,
 ): string {
-  const params = new URLSearchParams();
   const ids = (booking.service_ids ?? []).filter(Boolean);
-  if (ids.length > 0) params.set('rebook', ids.join(','));
-  if (booking.professional_id) params.set('pro', booking.professional_id);
-  const query = params.toString();
-  return query ? `/book/${slug}?${query}` : `/book/${slug}`;
+  const parts: string[] = [];
+  if (ids.length > 0) parts.push(`rebook=${ids.join(',')}`);
+  if (booking.professional_id) parts.push(`pro=${booking.professional_id}`);
+  return parts.length > 0 ? `/book/${slug}?${parts.join('&')}` : `/book/${slug}`;
 }
 
 /** Junta o resultado de get_client_booking_cancellations nos pedidos. */

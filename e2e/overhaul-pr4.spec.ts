@@ -240,6 +240,7 @@ test.describe('PR-4 Finalizado / Não compareceu', () => {
       await expect(page.getByTestId('client-booking-club').first()).toBeVisible();
       await expect(page.getByText('Esta visita entrou no seu Clube.')).toBeVisible();
       await expect(page.getByText('Seu Clube continua ativo.')).toBeVisible();
+      await page.locator('[data-testid="client-history-list"]').evaluate((el) => el.scrollIntoView({ block: 'start' }));
       await shot(page, `clube-on-${vp.name}`);
       guard.assertNoLeak();
     });

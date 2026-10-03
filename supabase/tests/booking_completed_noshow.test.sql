@@ -198,9 +198,11 @@ BEGIN
   SELECT status INTO v_status FROM public.public_bookings WHERE id = v_bk;
   PERFORM pg_temp.check('fila INSERT Completed espelha completed', v_status, 'completed');
 
-  -- 7) Inferência legado (sem public_booking_id): 43 confirmed passados
+  -- 7) Inferência legado (sem public_booking_id): 43 confirmed passados.
+  -- Simula prod: appointments Completed já existiam ANTES deste PR (trigger desligado).
   -- 21 com appointment Completed → v2 completed (Finalizado)
   -- 22 sem Completed → v2 confirmed (Horário passou)
+  ALTER TABLE public.appointments DISABLE TRIGGER sync_public_booking_on_appointment_outcome;
   FOR v_i IN 1..43 LOOP
     INSERT INTO public.public_bookings (
       id, business_id, customer_phone, customer_name, service_ids, professional_id,
@@ -222,6 +224,7 @@ BEGIN
       );
     END IF;
   END LOOP;
+  ALTER TABLE public.appointments ENABLE TRIGGER sync_public_booking_on_appointment_outcome;
 
   SELECT
     count(*) FILTER (WHERE h.status = 'completed'),

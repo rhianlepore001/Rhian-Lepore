@@ -234,8 +234,8 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
       preventClose={submitting}
       bodyClassName="flex flex-col min-h-0 overflow-hidden p-5 md:p-6"
       footer={(
-        <div className="flex flex-col gap-3 w-full">
-          <div className="md:hidden">{summaryBlock}</div>
+        <div className={`flex flex-col w-full ${formError ? 'gap-2' : 'gap-3'}`}>
+          <div className="md:hidden">{formError ? null : summaryBlock}</div>
           {hasPhone && (
             <label className="flex items-start gap-2.5 text-sm cursor-pointer">
               <input

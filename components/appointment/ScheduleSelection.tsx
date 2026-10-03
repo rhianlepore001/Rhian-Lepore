@@ -121,9 +121,8 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
         let inner = 0;
         const outer = requestAnimationFrame(() => {
             inner = requestAnimationFrame(() => {
-                const targetTime = selectedTime || currentSlotTime;
-                const el = (targetTime
-                    ? box.querySelector(`[data-time="${targetTime}"]`)
+                const el = (currentSlotTime
+                    ? box.querySelector(`[data-time="${currentSlotTime}"]`)
                     : currentSlotRef.current) as HTMLElement | null;
                 if (!el) return;
                 const elRect = el.getBoundingClientRect();
@@ -136,7 +135,7 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
             cancelAnimationFrame(outer);
             cancelAnimationFrame(inner);
         };
-    }, [dateStr, selectedProId, selectedTime, currentSlotTime, closed, offHoursVisible, compact]);
+    }, [dateStr, selectedProId, currentSlotTime, closed, offHoursVisible, compact]);
 
     const renderTime = (time: string) => {
         const blocked = isBlockedTime(time);
@@ -308,7 +307,7 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                 <div
                     ref={gridScrollRef}
                     data-testid="reschedule-time-grid"
-                    className={`rounded-xl border ${cardBg} p-3 sm:p-4 ${compact ? 'min-h-0 flex-1 overflow-y-auto overscroll-contain max-md:min-h-[5.75rem] max-md:max-h-[11rem] md:max-h-[min(18rem,46dvh)]' : ''}`}
+                    className={`rounded-xl border ${cardBg} p-3 sm:p-4 ${compact ? 'min-h-0 flex-1 overflow-y-auto overscroll-contain max-md:min-h-[7.5rem] max-md:max-h-[12rem] md:max-h-[min(18rem,46dvh)]' : ''}`}
                 >
                     {!selectedProId ? (
                         <div className="py-10 flex flex-col items-center justify-center text-center text-[var(--color-text-muted)] gap-2">

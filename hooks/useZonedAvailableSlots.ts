@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { fetchAvailableSlots } from '../services/publicBooking';
+import { fetchAvailableSlots, type AvailableSlotsResult } from '../services/publicBooking';
+import { DEFAULT_BOOKING_LEAD_TIME_HOURS } from '../utils/bookingLeadTime';
 import { isZonedSlotInPast } from '../utils/businessTimezone';
 
 interface Params {
@@ -9,7 +10,14 @@ interface Params {
     professionalId: string | null;
     durationMinutes: number;
     timezone: string;
+    refreshKey?: number;
 }
+
+const EMPTY: AvailableSlotsResult = {
+    slots: [],
+    leadTimeHours: DEFAULT_BOOKING_LEAD_TIME_HOURS,
+    emptyReason: null,
+};
 
 /**
  * Horários livres do dia, já sem os que passaram no fuso do negócio.
@@ -19,21 +27,23 @@ interface Params {
  * substituída) são ignoradas pelo flag `cancelled`, então a última dependência
  * sempre vence, independentemente da ordem de chegada das respostas.
  */
-export function useZonedAvailableSlots({ businessId, dateStr, professionalId, durationMinutes, timezone }: Params): string[] {
-    const [slots, setSlots] = useState<string[]>([]);
+export function useZonedAvailableSlots({ businessId, dateStr, professionalId, durationMinutes, timezone, refreshKey = 0 }: Params): AvailableSlotsResult {
+    const [result, setResult] = useState<AvailableSlotsResult>(EMPTY);
 
     useEffect(() => {
         if (!businessId || !dateStr) return undefined;
         let cancelled = false;
 
         fetchAvailableSlots(businessId, dateStr, professionalId, durationMinutes)
-            .then((list) => {
+            .then((payload) => {
                 if (cancelled) return;
-                // Rótulos "HH:MM" são hora local do negócio.
-                setSlots(list.filter((slot) => !isZonedSlotInPast(dateStr, slot, timezone)));
+                setResult({
+                    ...payload,
+                    slots: payload.slots.filter((slot) => !isZonedSlotInPast(dateStr, slot, timezone)),
+                });
             })
             .catch(() => {
-                if (!cancelled) setSlots([]);
+                if (!cancelled) setResult(EMPTY);
             });
 
         return () => {
@@ -41,7 +51,7 @@ export function useZonedAvailableSlots({ businessId, dateStr, professionalId, du
         };
     // durationMinutes fica fora de propósito: mesmo comportamento de antes
     // (a duração é escolhida antes do passo de data).
-    }, [businessId, dateStr, professionalId, timezone]);
+    }, [businessId, dateStr, professionalId, timezone, refreshKey]);
 
-    return slots;
+    return result;
 }

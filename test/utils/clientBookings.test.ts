@@ -3,6 +3,11 @@ import {
   CANCELLED_BY_BUSINESS_MESSAGE,
   CANCELLED_GENERIC_MESSAGE,
   cancellationMessage,
+  formatClientCardDate,
+  formatClientCardDateInSentence,
+  PAST_CANCELLED_BY_BUSINESS_MESSAGE,
+  pendingAwaitingBanner,
+  REBOOK_LABEL,
   rebookPath,
   splitClientBookings,
   withCancellationInfo,
@@ -34,9 +39,16 @@ describe('clientBookings (Minha Área, item 5b)', () => {
     expect(activeUpcoming.map((x) => x.id)).toEqual(['future-confirmed', 'future-pending']);
   });
 
-  it('histórico continua igual (sem cancelados)', () => {
+  it('histórico inclui o cancelado no passado (não some das duas abas)', () => {
     const { history } = splitClientBookings(bookings, NOW);
-    expect(history.map((x) => x.id)).toEqual(['past-confirmed', 'past-completed']);
+    expect(history.map((x) => x.id)).toEqual(['past-cancelled', 'past-confirmed', 'past-completed']);
+    expect(history.find((x) => x.id === 'past-cancelled')?.status).toBe('cancelled');
+  });
+
+  it('cancelado no passado não aparece em Próximos', () => {
+    const { upcoming, history } = splitClientBookings(bookings, NOW);
+    expect(upcoming.map((x) => x.id)).not.toContain('past-cancelled');
+    expect(history.map((x) => x.id)).toContain('past-cancelled');
   });
 
   it('mensagem: estabelecimento cancelou vs neutra', () => {
@@ -49,6 +61,30 @@ describe('clientBookings (Minha Área, item 5b)', () => {
   it('Reagendar abre o fluxo do mesmo negócio com os mesmos serviços', () => {
     expect(rebookPath('barbeariasilva', { service_ids: ['s1', 's2'] })).toBe('/book/barbeariasilva?rebook=s1,s2');
     expect(rebookPath('barbeariasilva', { service_ids: [] })).toBe('/book/barbeariasilva');
+  });
+
+  it('rótulo único de remarcar e linha do cancelado pelo estabelecimento', () => {
+    expect(REBOOK_LABEL).toBe('Agendar de novo');
+    expect(PAST_CANCELLED_BY_BUSINESS_MESSAGE).toBe('O estabelecimento cancelou este horário.');
+  });
+
+  it('data do card: weekday capitalizado, de e mês minúsculos; no WhatsApp o weekday fica minúsculo', () => {
+    const label = formatClientCardDate(new Date('2026-10-10T14:00:00.000Z'), 'Europe/Lisbon');
+    expect(label).toMatch(/^Sáb/);
+    expect(label).toMatch(/10 de out/);
+    expect(label).not.toMatch(/De Out/);
+    expect(label).not.toMatch(/ de Out/);
+    expect(label).not.toMatch(/De out/);
+    expect(formatClientCardDateInSentence(new Date('2026-10-10T14:00:00.000Z'), 'Europe/Lisbon')).toBe(
+      label.replace(/^Sáb/, 'sáb'),
+    );
+  });
+
+  it('aviso de pending usa o substantivo do negócio e pluraliza horários', () => {
+    expect(pendingAwaitingBanner('barbearia', 1)).toBe('A barbearia ainda não confirmou este horário.');
+    expect(pendingAwaitingBanner('barbearia', 2)).toBe('A barbearia ainda não confirmou estes horários.');
+    expect(pendingAwaitingBanner('salão', 1)).toBe('O salão ainda não confirmou este horário.');
+    expect(pendingAwaitingBanner('studio', 1)).toBe('O estabelecimento ainda não confirmou este horário.');
   });
 
   it('junta quem cancelou só nos cancelados', () => {

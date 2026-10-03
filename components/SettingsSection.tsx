@@ -26,9 +26,11 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({
   return (
     <Card
       title={
-        <div className="flex items-center gap-2">
-          <span>{title}</span>
-        </div>
+        typeof title === 'string' ? title : (
+          <div className="flex items-center gap-2">
+            <span>{title}</span>
+          </div>
+        )
       }
       action={action}
       noPadding={noPadding}

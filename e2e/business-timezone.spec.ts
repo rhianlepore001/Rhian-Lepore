@@ -68,8 +68,9 @@ async function openBooking(browser: Browser, browserZone: string, sc: Scenario) 
       case 'get_full_dates':
         return ok(route, ['2026-09-27']); // domingo fechado
       case 'get_available_slots':
+      case 'get_available_slots_v2':
         slotCalls.push(body?.p_date);
-        return ok(route, { slots: body?.p_date === '2026-09-27' ? [] : DAY_SLOTS });
+        return ok(route, { slots: body?.p_date === '2026-09-27' ? [] : DAY_SLOTS, lead_time_hours: 0, empty_reason: null });
       case 'get_first_available_professional':
         return ok(route, 'pro-1');
       case 'get_active_booking_by_phone':

@@ -81,13 +81,13 @@ P -f "$ROOT/supabase/tests/reschedule_appointment.test.sql"
 echo "reschedule idempotente; testes ok"
 
 LEAD_MIG=""
-LEAD_PATH="supabase/migrations/20261003160000_public_booking_lead_time.sql"
-if git -C "$ROOT" show 5003482:"$LEAD_PATH" > "$TMP/lead_time.sql" 2>/dev/null; then
+LEAD_PATH="supabase/migrations/20261003152759_public_booking_lead_time.sql"
+if [ -f "$ROOT/$LEAD_PATH" ]; then
+  LEAD_MIG="$ROOT/$LEAD_PATH"
+  echo "H1: migration #121 @$LEAD_PATH (depois de $MIG)"
+elif git -C "$ROOT" show origin/main:"$LEAD_PATH" > "$TMP/lead_time.sql" 2>/dev/null; then
   LEAD_MIG="$TMP/lead_time.sql"
-  echo "H1: migration #121 @5003482"
-elif git -C "$ROOT" show origin/feat/overhaul-pr2-lead-time:"$LEAD_PATH" > "$TMP/lead_time.sql" 2>/dev/null; then
-  LEAD_MIG="$TMP/lead_time.sql"
-  echo "H1: migration #121 @origin/feat/overhaul-pr2-lead-time"
+  echo "H1: migration #121 @origin/main:$LEAD_PATH"
 else
   LEAD_MIG="$(ls -1 "$ROOT"/supabase/migrations/*_public_booking_lead_time.sql 2>/dev/null | sort | tail -1 || true)"
 fi

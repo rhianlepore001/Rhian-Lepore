@@ -4,7 +4,7 @@
  * Item 5b: quando o estabelecimento cancela (ou recusa) um pedido, o cliente
  * precisa ver o cancelamento e poder reagendar. Pedidos cancelados com horário
  * ainda no futuro aparecem em "Próximos" como CANCELADO (não contam como
- * agendamento ativo); os passados continuam fora das listas, como antes.
+ * agendamento ativo); os passados vão para "Histórico".
  */
 
 export interface ClientBookingLike {
@@ -38,15 +38,45 @@ export function splitClientBookings<T extends ClientBookingLike>(bookings: T[], 
   const upcoming = bookings
     .filter((b) => (isActiveBookingStatus(b.status) || isCancelledBooking(b)) && isFuture(b))
     .sort((a, b) => new Date(a.appointment_time).getTime() - new Date(b.appointment_time).getTime());
-  // Histórico inalterado: concluídos + não cancelados que já passaram.
+  // Histórico: tudo que já passou (incluindo cancelado) + concluídos futuros.
   const history = bookings.filter((b) =>
-    b.status === 'completed' || (!isCancelledBooking(b) && !isFuture(b)),
+    b.status === 'completed' || !isFuture(b),
   );
   return { upcoming, activeUpcoming, history };
 }
 
 export const CANCELLED_BY_BUSINESS_MESSAGE = 'O estabelecimento cancelou este agendamento.';
 export const CANCELLED_GENERIC_MESSAGE = 'Este agendamento foi cancelado.';
+export const PAST_CANCELLED_BY_BUSINESS_MESSAGE = 'O estabelecimento cancelou este horário.';
+export const REBOOK_LABEL = 'Agendar de novo';
+
+/** Data do card: 'Sáb., 10 de out.' — weekday capitalizado; 'de' e mês em minúsculas. */
+export function formatClientCardDate(date: Date, timeZone: string): string {
+  const raw = date.toLocaleDateString('pt-BR', {
+    timeZone,
+    weekday: 'short',
+    day: '2-digit',
+    month: 'short',
+  });
+  const lowered = raw.toLocaleLowerCase('pt-BR');
+  return lowered.replace(/^(\p{L})/u, (ch) => ch.toLocaleUpperCase('pt-BR'));
+}
+
+/** Mesma data, para o meio da frase do WhatsApp: 'sáb., 10 de out.' */
+export function formatClientCardDateInSentence(date: Date, timeZone: string): string {
+  return formatClientCardDate(date, timeZone).replace(/^(\p{L})/u, (ch) => ch.toLocaleLowerCase('pt-BR'));
+}
+
+/** Aviso acima dos cards pending na Minha Área. */
+export function pendingAwaitingBanner(businessNoun: string, pendingCount: number): string {
+  const who = businessNoun === 'salão'
+    ? 'O salão'
+    : businessNoun === 'barbearia'
+      ? 'A barbearia'
+      : 'O estabelecimento';
+  const what = pendingCount > 1 ? 'estes horários' : 'este horário';
+  return `${who} ainda não confirmou ${what}.`;
+}
 
 export function cancellationMessage(booking: Pick<ClientBookingLike, 'cancelled_by_business'>): string {
   return booking.cancelled_by_business ? CANCELLED_BY_BUSINESS_MESSAGE : CANCELLED_GENERIC_MESSAGE;

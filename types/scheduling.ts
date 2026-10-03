@@ -6,6 +6,7 @@ export const appointmentStatusSchema = z.enum([
   'Pending',
   'Completed',
   'Cancelled',
+  'NoShow',
 ]);
 
 export const checkoutPaymentMethodSchema = z.enum([

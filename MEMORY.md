@@ -9,6 +9,10 @@
 
 ---
 
+## PR-1 overhaul booking — copy/cards (3 Out 2026, NÃO merge)
+
+Branch `feat/overhaul-pr1-copy-cards`, draft https://github.com/rhianlepore001/Rhian-Lepore/pull/119. Revisão 2: sem caixa «Cancelado.» duplicada, ícone Calendar nos 4 Agendar de novo, toggle alinhado ao row de e-mail, aviso pending com substantivo do negócio + plural, data minúscula no WhatsApp. Pendência PR-6: RPCs devem aplicar `enable_self_rescheduling` no servidor. Não rebasear (#120/#121). Prints em `/opt/cursor/artifacts/pr1/`.
+
 ## Bloqueio de agenda — correção do #117 (3 Out 2026)
 
 Branch `cursor/agenda-blocks-acceptance-followup-e54d`. #115 (fila/Completed) não foi alterado.
@@ -58,9 +62,9 @@ Script isolado em `scripts/demo-seed/` + doc `docs/demo-seed.md`. Dois tenants f
 
 ## 🛠️ Trabalho recente
 
-- **PR-2 antecedência mínima (3 Out 2026, NÃO merge / NÃO apply em prod):** branch `feat/overhaul-pr2-lead-time`, PR #121. Re-review @acc1113: trigger isenta só dono (`auth.uid()::text = NEW.business_id`) ou `team_members` ativo (`staff_user_id`, `deleted_at IS NULL`); ex-staff com `company_id` órfão cai em `lead_time_violation`. `get_full_dates_v2` cap 62 dias; `findNextDateWithSlots` uma RPC. Ajustes compactos, Outro com `h`/`0 a 720`, empty outline, toast com portal próprio. Prints em `/opt/cursor/artifacts/screenshots/pr2-lead-time/after/`. D1: `profiles.booking_lead_time_hours` já = 2 nos tenants; a regra passa a valer sem backfill. Banco aditivo `20261003160000_public_booking_lead_time`. Corpos de `create_public_booking` / `create_secure_booking` / `get_available_slots` / `enforce_agenda_block_on_appointments` intocados (md5 no harness). Rollback: `docs/rollbacks/20261003160000_public_booking_lead_time_rollback.sql`. Agenda da equipe e encaixe #101 não entram no trigger. **#120 aplica primeiro.**
+- **PR-2 antecedência mínima (3 Out 2026, mergeada em `main` `94ea09c`, aplicada em prod como versão `20261003152759`):** PR #121. Trigger isenta dono (`auth.uid()::text = NEW.business_id`) ou `team_members` ativo (`staff_user_id`, `deleted_at IS NULL`); ex-staff cai em `lead_time_violation`. Recusa: alerta inline. Toast com portal próprio (placement top/bottom). Migration `supabase/migrations/20261003152759_public_booking_lead_time.sql`. Rollback: `docs/rollbacks/20261003152759_public_booking_lead_time_rollback.sql`. Agenda da equipe e encaixe #101 não entram no trigger.
 
-- **Remarcar horário / PR C (3 Out 2026, NÃO merge / NÃO apply em prod):** branch `feat/remarcar-horario`, PR #120. Migration `20261003150000_reschedule_appointment.sql`. Review 2: H1 sonda o trigger #121 se a função existir (sem grep de `get_auth_company_id`); ocupação do modal busca o dia no fuso da loja (fila + `public_bookings`); erro inline; toast global não é reposicionado (placement fica no #121). Rollback em `docs/rollbacks/20261003150000_reschedule_appointment.rollback.sql`. Aceite em `docs/specs/remarcar-ACCEPTANCE.md`. Playwright mockado (zero escrita em prod). Follow-up: guarda de UPDATE direto (M4).
+- **Remarcar horário / PR C (3 Out 2026, NÃO merge / NÃO apply em prod):** branch `feat/remarcar-horario`, PR #120, com `main` `94ea09c` (#119+#121) mesclada. Migration `20261003150000_reschedule_appointment.sql` (filename até o apply; #121 no repo já é `20261003152759` e ordena depois). H1 sonda o trigger se a função existir. Ocupação do modal busca o dia no fuso da loja (fila + `public_bookings`). Erro inline; toast usa placement do #121. Rollback em `docs/rollbacks/20261003150000_reschedule_appointment.rollback.sql`. Aceite em `docs/specs/remarcar-ACCEPTANCE.md`. Playwright mockado. Follow-up: guarda de UPDATE direto (M4).
 
 - **Performance dos colaboradores (3 Out 2026, NÃO merge / NÃO apply em prod):** stack rebaseada na `main` `9926787`. #106 migration `20261003103000`; #109 `pay_commission_v1` preenche colunas NOT NULL de prod (`payment_date`, `barber_name`, `net_amount`, `description`, `commission_paid_at`) e filtra `COALESCE(commission_paid,false)=false`. Harness usa md5 de prod `b8a54fe3` / `1588d011`. PRs #106 #109 #114 #116.
 

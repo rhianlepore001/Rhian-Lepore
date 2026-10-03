@@ -10,6 +10,7 @@ import {
   type SubmitPublicBookingInput,
 } from '@/types/publicBooking';
 import { filterBookableServices } from '@/utils/filterBookableServices';
+import { addDaysToDateString } from '@/utils/businessTimezone';
 
 function firstRpcRow<T>(data: T[] | T | null | undefined): T | null {
   if (Array.isArray(data)) return data[0] ?? null;
@@ -395,29 +396,72 @@ export async function fetchPublicBookingById(
   return data?.[0] ?? null;
 }
 
-export async function fetchAvailableSlots(businessId: string, date: string, professionalId: string | null, durationMin: number) {
-  const { data, error } = await supabase.rpc('get_available_slots', {
+export type AvailableSlotsEmptyReason = 'lead_time' | null;
+
+export interface AvailableSlotsResult {
+  slots: string[];
+  leadTimeHours: number;
+  emptyReason: AvailableSlotsEmptyReason;
+}
+
+function parseAvailableSlotsPayload(data: { slots?: string[]; lead_time_hours?: number; empty_reason?: string } | null): AvailableSlotsResult {
+  return {
+    slots: (data?.slots || []) as string[],
+    leadTimeHours: Number(data?.lead_time_hours ?? 0),
+    emptyReason: data?.empty_reason === 'lead_time' ? 'lead_time' : null,
+  };
+}
+
+export async function fetchAvailableSlots(businessId: string, date: string, professionalId: string | null, durationMin: number): Promise<AvailableSlotsResult> {
+  const args = {
     p_business_id: businessId,
     p_date: date,
     p_professional_id: professionalId,
     p_duration_min: durationMin,
-  });
+  };
+  const { data, error } = await supabase.rpc('get_available_slots_v2', args);
+  if (!error) return parseAvailableSlotsPayload(data);
 
-  if (error) throw error;
-  return (data?.slots || []) as string[];
+  if (!isMissingRpcError(error)) throw error;
+
+  const fallback = await supabase.rpc('get_available_slots', args);
+  if (fallback.error) throw fallback.error;
+  return parseAvailableSlotsPayload(fallback.data);
 }
 
 export async function fetchFullDates(businessId: string, startDate: string, endDate: string, professionalId: string | null, durationMin: number) {
-  const { data, error } = await supabase.rpc('get_full_dates', {
+  const args = {
     p_business_id: businessId,
     p_start_date: startDate,
     p_end_date: endDate,
     p_professional_id: professionalId,
     p_duration_min: durationMin,
-  });
+  };
+  const { data, error } = await supabase.rpc('get_full_dates_v2', args);
+  if (!error) return data as string[];
+  if (!isMissingRpcError(error)) throw error;
 
-  if (error) throw error;
-  return data as string[];
+  const fallback = await supabase.rpc('get_full_dates', args);
+  if (fallback.error) throw fallback.error;
+  return fallback.data as string[];
+}
+
+export async function findNextDateWithSlots(
+  businessId: string,
+  fromDate: string,
+  professionalId: string | null,
+  durationMin: number,
+  _timezone?: string,
+  maxDays = 14,
+): Promise<string | null> {
+  const start = addDaysToDateString(fromDate, 1);
+  const end = addDaysToDateString(fromDate, maxDays);
+  const full = new Set(await fetchFullDates(businessId, start, end, professionalId, durationMin) ?? []);
+  for (let i = 1; i <= maxDays; i += 1) {
+    const day = addDaysToDateString(fromDate, i);
+    if (!full.has(day)) return day;
+  }
+  return null;
 }
 
 export async function fetchBusinessProfileBySlug(slug: string) {

@@ -47,7 +47,7 @@ export const StaffInsights: React.FC = () => {
   if (!teamMemberId) {
     return (
       <div className="space-y-6 pb-28">
-        <PageHeader title="Meus Resultados" subtitle="Seus atendimentos, produtos e comissões" />
+        <PageHeader title="Meus resultados" subtitle="Seus atendimentos, produtos e comissões" />
         <EmptyState icon={TrendingUp} bordered title="Perfil ainda não vinculado" description="Peça ao responsável para te adicionar na equipe. Assim que estiver vinculado, seus resultados aparecem aqui." />
       </div>
     );
@@ -68,7 +68,7 @@ export const StaffInsights: React.FC = () => {
   return (
     <div className="space-y-6 md:space-y-8 pb-28">
       <PageHeader
-        title={firstName ? `Meus Resultados — ${firstName}` : 'Meus Resultados'}
+        title={firstName ? `Meus resultados — ${firstName}` : 'Meus resultados'}
         subtitle={<span className="first-letter:uppercase">{periodLabel}</span>}
         meta={
           <div className="flex gap-2 w-full overflow-x-auto pb-1">
@@ -126,8 +126,8 @@ export const StaffInsights: React.FC = () => {
       {status === 'ready' && x && !empty && (
         <div className="space-y-5">
           <section aria-label="Números do período" className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {card('Atendimentos', 'atendimentos', String(x.atendimentos), `${x.atendimentos} atendimentos${x.atendimentos_clube ? ` · ${x.atendimentos_clube} do Clube` : ''}`, moneyDelta(x.atendimentos, prev?.atendimentos, { prevSample, formatMoney: (n) => String(n) }))}
-            {card('Faturamento por hora', 'faturamento_por_hora', x.faturamento_por_hora == null ? '—' : `${formatMoney(x.faturamento_por_hora)}/h`, x.tempo_pago_min ? formatHours(x.tempo_pago_min) : 'sem tempo pago', moneyDelta(x.faturamento_por_hora, prev?.faturamento_por_hora, { prevSample, formatMoney }))}
+            {card('Atendimentos', 'atendimentos', String(x.atendimentos), x.atendimentos_clube ? `${x.atendimentos_clube} do Clube` : 'concluídos', moneyDelta(x.atendimentos, prev?.atendimentos, { prevSample, formatMoney: (n) => String(n) }))}
+            {card('Faturamento por hora', 'faturamento_por_hora', x.faturamento_por_hora == null ? '—' : `${formatMoney(x.faturamento_por_hora)}/h`, x.tempo_pago_min ? `${formatHours(x.tempo_pago_min)} de cadeira paga` : 'sem tempo pago', moneyDelta(x.faturamento_por_hora, prev?.faturamento_por_hora, { prevSample, formatMoney }))}
             {card('Ticket médio', 'ticket_medio', x.ticket_medio == null ? '—' : formatMoney(x.ticket_medio), x.atendimentos_pagos ? `${x.atendimentos_pagos} pagos` : 'nenhum atendimento pago', moneyDelta(x.ticket_medio, prev?.ticket_medio, { prevSample, formatMoney }))}
             {card('Voltou a agendar', 'voltou', formatPercent(x.voltou_taxa), x.maduros ? `${x.voltou} de ${x.maduros}` : null, rateDelta(x.voltou_taxa, prev?.voltou_taxa, { prevSample }))}
           </section>
@@ -138,8 +138,8 @@ export const StaffInsights: React.FC = () => {
               <p className={`mt-2 text-sm ${colors.text}`}>{`${formatHours(x.tempo_total_min)}${x.tempo_clube_min ? ` (${formatHours(x.tempo_clube_min)} do Clube)` : ''}`}</p>
             </div>
             <div className={`p-4 sm:border-l ${colors.divider}`}>
-              <div className="flex items-center justify-between"><span className={`text-xs uppercase tracking-wide ${font.label} ${colors.textMuted}`}>Faltas · Cancelamentos</span><MetricInfo id="faltas" /></div>
-              <p className={`mt-2 text-sm ${colors.text}`}>{x.desfechos ? `Faltas ${formatPercent(x.taxa_faltas)} (${x.faltas} de ${x.desfechos}) · Cancel. ${formatPercent(x.taxa_cancelamentos)} (${x.cancelamentos} de ${x.desfechos})` : 'Nenhum desfecho'}</p>
+              <div className="flex items-center justify-between"><span className={`text-xs uppercase tracking-wide ${font.label} ${colors.textMuted}`}>Faltas e cancelamentos</span><MetricInfo id="faltas" /></div>
+              <p className={`mt-2 text-sm ${colors.text}`}>{x.desfechos ? `Faltas ${formatPercent(x.taxa_faltas)} (${x.faltas} de ${x.desfechos}) · Cancelamentos ${formatPercent(x.taxa_cancelamentos)} (${x.cancelamentos} de ${x.desfechos})` : 'Nenhum desfecho'}</p>
               {x.sem_desfecho > 0 && <p className={`mt-1 text-xs ${colors.textMuted}`}>{x.sem_desfecho} sem desfecho</p>}
             </div>
             <div className={`p-4 lg:border-l ${colors.divider}`}>

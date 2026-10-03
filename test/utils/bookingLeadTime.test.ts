@@ -41,6 +41,15 @@ describe('bookingLeadTime copy e presets', () => {
     );
   });
 
+  it('com CTA omite Veja amanhã', () => {
+    expect(leadTimeEmptySlotsMessage(8, true, { hasCta: true })).toBe(
+      'Hoje não há horários com 8h de antecedência.',
+    );
+    expect(leadTimeEmptySlotsMessage(8, false, { hasCta: true })).toBe(
+      'Não há horários com 8h de antecedência neste dia.',
+    );
+  });
+
   it('detecta lead_time_violation e lê as horas do DETAIL', () => {
     const err = { code: 'P0001', message: 'lead_time_violation', details: '16', hint: 'lead_time_violation' };
     expect(isLeadTimeViolationError(err)).toBe(true);

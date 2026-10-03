@@ -100,7 +100,8 @@ describe('PublicBookingSettings — antecedência mínima', () => {
   it('Outro vazio mostra erro e não salva', async () => {
     render(<PublicBookingSettings />);
     fireEvent.click(screen.getByTestId('lead-time-preset-custom'));
-    expect(screen.getByTestId('booking-lead-time-custom')).toHaveValue(null);
+    expect(screen.getByTestId('booking-lead-time-custom')).toHaveValue('');
+    expect(screen.getByTestId('lead-time-custom-hint')).toHaveTextContent('0 a 720');
     fireEvent.click(screen.getByRole('button', { name: /Salvar Alterações/ }));
     expect(await screen.findByTestId('lead-time-custom-error')).toHaveTextContent('Informe as horas de antecedência');
     expect(updateProfile).not.toHaveBeenCalled();

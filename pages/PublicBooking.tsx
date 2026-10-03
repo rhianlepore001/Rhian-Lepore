@@ -38,7 +38,7 @@ import {
     leadTimeHoursFromError,
     leadTimeViolationMessage,
 } from '../utils/bookingLeadTime';
-import { Checkbox, ConfirmModal, useToast } from '@/components/ui';
+import { Checkbox, ConfirmModal, Button, useToast } from '@/components/ui';
 import { PublicBookingMemberships } from '@/components/membership/PublicBookingMemberships';
 import FocusTrap from 'focus-trap-react';
 
@@ -509,7 +509,7 @@ export const PublicBooking: React.FC = () => {
     });
     const availableSlots = slotsResult.slots;
     const leadEmptyMessage = slotsResult.emptyReason === 'lead_time'
-        ? leadTimeEmptySlotsMessage(slotsResult.leadTimeHours, selectedDateStr === businessToday)
+        ? leadTimeEmptySlotsMessage(slotsResult.leadTimeHours, selectedDateStr === businessToday, { hasCta: true })
         : undefined;
 
     const handleSeeNextDay = async () => {
@@ -537,15 +537,16 @@ export const PublicBooking: React.FC = () => {
     };
 
     const leadEmptyAction = slotsResult.emptyReason === 'lead_time' ? (
-        <button
+        <Button
             type="button"
+            variant="outline"
             data-testid="lead-time-next-day"
             onClick={() => { void handleSeeNextDay(); }}
             disabled={nextDayBusy}
-            className={`px-4 py-3 min-h-[44px] text-sm font-semibold rounded-xl ${classes.buttonPrimary} disabled:opacity-50`}
+            className="shadow-none"
         >
             {nextDayBusy ? 'Buscando…' : 'Ver próximo dia com horário'}
-        </button>
+        </Button>
     ) : undefined;
 
     const professionalCategories = Array.from(new Set((professionals || []).flatMap((p: any) => p.specialties || []))).filter(Boolean);

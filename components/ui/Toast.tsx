@@ -139,26 +139,40 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   );
 
   const value = useMemo(() => ({ showToast }), [showToast]);
-  const placement = toasts[toasts.length - 1]?.placement ?? 'top';
-  const stackClass = placement === 'bottom'
-    ? 'fixed bottom-0 right-0 left-0 sm:left-auto flex flex-col items-center sm:items-end gap-2 p-4 pb-[calc(5.75rem+env(safe-area-inset-bottom))] sm:pb-6 pointer-events-none'
-    : 'fixed top-0 right-0 left-0 sm:left-auto flex flex-col items-center sm:items-end gap-2 p-4 pt-[calc(0.75rem+env(safe-area-inset-top))] pointer-events-none';
+  const topToasts = toasts.filter((toast) => toast.placement === 'top');
+  const bottomToasts = toasts.filter((toast) => toast.placement === 'bottom');
 
   return (
     <ToastContext.Provider value={value}>
       {children}
       {typeof document !== 'undefined' &&
         createPortal(
-          <div
-            className={stackClass}
-            data-toast-placement={placement}
-            style={{ zIndex: 'var(--z-toast)' }}
-            aria-live="polite"
-          >
-            {toasts.map(toast => (
-              <ToastView key={toast.id} toast={toast} onDismiss={dismiss} />
-            ))}
-          </div>,
+          <>
+            {topToasts.length > 0 && (
+              <div
+                className="fixed top-0 right-0 left-0 sm:left-auto flex flex-col items-center sm:items-end gap-2 p-4 pt-[calc(0.75rem+env(safe-area-inset-top))] pointer-events-none"
+                data-toast-placement="top"
+                style={{ zIndex: 'var(--z-toast)' }}
+                aria-live="polite"
+              >
+                {topToasts.map((toast) => (
+                  <ToastView key={toast.id} toast={toast} onDismiss={dismiss} />
+                ))}
+              </div>
+            )}
+            {bottomToasts.length > 0 && (
+              <div
+                className="fixed bottom-0 right-0 left-0 sm:left-auto flex flex-col items-center sm:items-end gap-2 p-4 pb-[calc(5.75rem+env(safe-area-inset-bottom))] sm:pb-6 pointer-events-none"
+                data-toast-placement="bottom"
+                style={{ zIndex: 'var(--z-toast)' }}
+                aria-live="polite"
+              >
+                {bottomToasts.map((toast) => (
+                  <ToastView key={toast.id} toast={toast} onDismiss={dismiss} />
+                ))}
+              </div>
+            )}
+          </>,
           document.body
         )}
     </ToastContext.Provider>

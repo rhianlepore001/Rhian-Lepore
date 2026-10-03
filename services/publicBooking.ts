@@ -10,7 +10,7 @@ import {
   type SubmitPublicBookingInput,
 } from '@/types/publicBooking';
 import { filterBookableServices } from '@/utils/filterBookableServices';
-import { addDaysToDateString, isZonedSlotInPast } from '@/utils/businessTimezone';
+import { addDaysToDateString } from '@/utils/businessTimezone';
 
 function firstRpcRow<T>(data: T[] | T | null | undefined): T | null {
   if (Array.isArray(data)) return data[0] ?? null;
@@ -451,14 +451,15 @@ export async function findNextDateWithSlots(
   fromDate: string,
   professionalId: string | null,
   durationMin: number,
-  timezone: string,
+  _timezone?: string,
   maxDays = 14,
 ): Promise<string | null> {
+  const start = addDaysToDateString(fromDate, 1);
+  const end = addDaysToDateString(fromDate, maxDays);
+  const full = new Set(await fetchFullDates(businessId, start, end, professionalId, durationMin) ?? []);
   for (let i = 1; i <= maxDays; i += 1) {
     const day = addDaysToDateString(fromDate, i);
-    const payload = await fetchAvailableSlots(businessId, day, professionalId, durationMin);
-    const open = payload.slots.filter((slot) => !isZonedSlotInPast(day, slot, timezone));
-    if (open.length > 0) return day;
+    if (!full.has(day)) return day;
   }
   return null;
 }

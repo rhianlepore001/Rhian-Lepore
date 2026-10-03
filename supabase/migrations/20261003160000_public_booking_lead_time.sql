@@ -11,9 +11,11 @@
 --
 -- O atalho public_bookings_insert_anon fura a RPC, por isso a regra vive
 -- num trigger BEFORE INSERT/UPDATE OF appointment_time, status. A Agenda
--- (appointments, inclusive encaixe no passado do #101) e o staff/dono do
--- mesmo tenant (auth.uid + get_auth_company_id) não são afetados — o
--- Remarcar (#120, 20261003150000) aplica primeiro e atualiza
+-- (appointments, inclusive encaixe no passado do #101) não é tocada.
+-- Staff/dono só passam no trigger se auth.uid() = business_id (dono) ou
+-- se existe team_members ativo, não apagado, com staff_user_id = auth.uid()
+-- nesse negócio. Ex-staff (company_id órfão) continua sujeito à regra.
+-- O Remarcar (#120, 20261003150000) aplica primeiro e atualiza
 -- public_bookings.appointment_time no pedido vinculado.
 --
 -- get_available_slots_v2 envolve a v1 e filtra >= now() + lead no fuso do
@@ -170,6 +172,7 @@ DECLARE
   v_slots_resp json;
   v_duration integer := GREATEST(COALESCE(p_duration_min, 30), 15);
 BEGIN
+  p_end_date := LEAST(p_end_date, (p_start_date + 61)::date);
   FOR v_date IN SELECT (generate_series(p_start_date, p_end_date, '1 day'::interval))::date
   LOOP
     v_slots_resp := public.get_available_slots_v2(
@@ -198,8 +201,18 @@ DECLARE
   v_was_active boolean;
   v_now_active boolean;
 BEGIN
-  IF auth.uid() IS NOT NULL
-     AND COALESCE(public.get_auth_company_id()::text, auth.uid()::text) = NEW.business_id THEN
+  IF auth.uid() IS NOT NULL AND auth.uid()::text = NEW.business_id THEN
+    RETURN NEW;
+  END IF;
+
+  IF auth.uid() IS NOT NULL AND EXISTS (
+    SELECT 1
+    FROM public.team_members tm
+    WHERE tm.staff_user_id = auth.uid()
+      AND tm.user_id = NEW.business_id
+      AND tm.active IS TRUE
+      AND tm.deleted_at IS NULL
+  ) THEN
     RETURN NEW;
   END IF;
 

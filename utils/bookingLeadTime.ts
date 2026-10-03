@@ -31,6 +31,7 @@ export function parseCustomLeadTimeHours(raw: string): number | null {
 }
 
 export const LEAD_TIME_CUSTOM_EMPTY_ERROR = 'Informe as horas de antecedência';
+export const LEAD_TIME_CUSTOM_RANGE_HINT = '0 a 720';
 
 export function leadTimeViolationMessage(hours: number | null | undefined): string {
   if (hours == null || !Number.isFinite(hours) || hours < 0) {
@@ -39,7 +40,16 @@ export function leadTimeViolationMessage(hours: number | null | undefined): stri
   return `Esse horário precisa ser marcado com pelo menos ${hours}h de antecedência`;
 }
 
-export function leadTimeEmptySlotsMessage(hours: number, isToday: boolean): string {
+export function leadTimeEmptySlotsMessage(
+  hours: number,
+  isToday: boolean,
+  opts?: { hasCta?: boolean },
+): string {
+  if (opts?.hasCta) {
+    return isToday
+      ? `Hoje não há horários com ${hours}h de antecedência.`
+      : `Não há horários com ${hours}h de antecedência neste dia.`;
+  }
   const tomorrow = hours <= SEE_TOMORROW_MAX_LEAD_HOURS;
   if (isToday) {
     return tomorrow

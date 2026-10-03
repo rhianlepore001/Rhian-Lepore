@@ -92,7 +92,7 @@ describe('TimeGrid — rótulo do grupo segue a hora real dos slots', () => {
         selectedTime={null}
         onTimeSelect={() => undefined}
         availableSlots={[]}
-        emptyMessage="Hoje não há horários com 8h de antecedência. Veja amanhã."
+        emptyMessage="Hoje não há horários com 8h de antecedência."
         emptyAction={<button type="button">Ver próximo dia com horário</button>}
       />,
     );

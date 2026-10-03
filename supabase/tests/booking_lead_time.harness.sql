@@ -13,6 +13,13 @@ ON CONFLICT (id) DO UPDATE SET
   company_id = '00000000-0000-0000-0000-00000000000a',
   booking_lead_time_hours = 2;
 
+INSERT INTO public.profiles (id, role, company_id, region, booking_lead_time_hours)
+VALUES ('00000000-0000-0000-0000-00000000000c', 'staff', '00000000-0000-0000-0000-00000000000a', 'PT', 2)
+ON CONFLICT (id) DO UPDATE SET
+  role = 'staff',
+  company_id = '00000000-0000-0000-0000-00000000000a',
+  booking_lead_time_hours = 2;
+
 INSERT INTO public.business_settings (user_id, timezone, business_hours)
 VALUES (
   '00000000-0000-0000-0000-00000000000a',

@@ -11,6 +11,7 @@ import {
   submitPublicBooking,
   fetchAvailableSlots,
   fetchFullDates,
+  findNextDateWithSlots,
 } from '@/services/publicBooking';
 import { supabase } from '@/lib/supabase';
 
@@ -360,6 +361,17 @@ describe('public booking service', () => {
     expect(supabase.rpc).toHaveBeenCalledWith('get_full_dates_v2', expect.objectContaining({
       p_business_id: 'business-001',
       p_start_date: '2026-10-03',
+    }));
+  });
+
+  it('findNextDateWithSlots usa um get_full_dates_v2 e devolve o primeiro dia livre', async () => {
+    (supabase.rpc as any).mockResolvedValue({ data: ['2026-10-04'], error: null });
+    await expect(findNextDateWithSlots('business-001', '2026-10-03', null, 30, 'Europe/Lisbon')).resolves.toBe('2026-10-05');
+    expect(supabase.rpc).toHaveBeenCalledTimes(1);
+    expect(supabase.rpc).toHaveBeenCalledWith('get_full_dates_v2', expect.objectContaining({
+      p_business_id: 'business-001',
+      p_start_date: '2026-10-04',
+      p_end_date: '2026-10-17',
     }));
   });
 });

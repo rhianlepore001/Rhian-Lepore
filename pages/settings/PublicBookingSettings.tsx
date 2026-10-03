@@ -9,7 +9,7 @@ import { PublicLinkCard } from '../../components/PublicLinkCard';
 import { SettingsSection } from '../../components/SettingsSection';
 import { SettingsSwitch } from '../../components/SettingsSwitch';
 import { SettingsRow } from '../../components/ui/SettingsRow';
-import { LEAD_TIME_PRESETS, clampLeadTimeHours, isLeadTimePreset, leadTimePresetLabel, parseCustomLeadTimeHours, LEAD_TIME_CUSTOM_EMPTY_ERROR } from '../../utils/bookingLeadTime';
+import { LEAD_TIME_PRESETS, clampLeadTimeHours, isLeadTimePreset, leadTimePresetLabel, parseCustomLeadTimeHours, LEAD_TIME_CUSTOM_EMPTY_ERROR, LEAD_TIME_CUSTOM_RANGE_HINT } from '../../utils/bookingLeadTime';
 
 export const PublicBookingSettings: React.FC = () => {
     const { user } = useAuth();
@@ -129,12 +129,12 @@ export const PublicBookingSettings: React.FC = () => {
                 </SettingsSection>
 
                 <div data-testid="lead-time-section" className="scroll-mt-[14rem] md:scroll-mt-8">
-                <SettingsSection
-                    title="Antecedência mínima"
-                    description="O cliente só marca pelo link com essa antecedência (padrão 2h). Quem marca pela Agenda — você e a equipe — não é afetado."
-                >
+                <SettingsSection title="Antecedência mínima">
                     <div className="space-y-4">
-                        <div className="grid grid-cols-3 gap-2" role="group" aria-label="Antecedência mínima">
+                        <p className={`${colors.textMuted} text-xs leading-relaxed`}>
+                            O cliente só marca pelo link com essa antecedência (padrão 2h). Quem marca pela Agenda — você e a equipe — não é afetado.
+                        </p>
+                        <div className="grid grid-cols-3 gap-2 md:flex md:flex-wrap md:max-w-xl" role="group" aria-label="Antecedência mínima">
                             {LEAD_TIME_PRESETS.map((hours) => {
                                 const pressed = !leadTimeCustom && leadTimeHours === hours;
                                 return (
@@ -149,7 +149,7 @@ export const PublicBookingSettings: React.FC = () => {
                                             setLeadTimeCustomDraft('');
                                             setLeadTimeCustomError(null);
                                         }}
-                                        className={`w-full px-2 py-3 min-h-[44px] text-xs font-semibold rounded-xl transition-all border ${
+                                        className={`min-h-[44px] px-3 py-2.5 text-sm font-semibold rounded-xl transition-all border w-full md:w-auto ${
                                             pressed
                                                 ? `${accent.bgDim} ${accent.border} ${accent.text}`
                                                 : `${colors.inputBg} ${colors.border} ${colors.textMuted}`
@@ -168,7 +168,7 @@ export const PublicBookingSettings: React.FC = () => {
                                     setLeadTimeCustomDraft(isLeadTimePreset(leadTimeHours) ? '' : String(leadTimeHours));
                                     setLeadTimeCustomError(null);
                                 }}
-                                className={`w-full px-2 py-3 min-h-[44px] text-xs font-semibold rounded-xl transition-all border ${
+                                className={`min-h-[44px] px-3 py-2.5 text-sm font-semibold rounded-xl transition-all border w-full md:w-auto ${
                                     leadTimeCustom
                                         ? `${accent.bgDim} ${accent.border} ${accent.text}`
                                         : `${colors.inputBg} ${colors.border} ${colors.textMuted}`
@@ -178,25 +178,29 @@ export const PublicBookingSettings: React.FC = () => {
                             </button>
                         </div>
                         {leadTimeCustom && (
-                            <label className="block">
+                            <label className="block max-w-xs">
                                 <span className={classes.label}>Horas de antecedência</span>
-                                <input
-                                    id="booking-lead-time-custom"
-                                    data-testid="booking-lead-time-custom"
-                                    type="number"
-                                    inputMode="numeric"
-                                    min={0}
-                                    max={720}
-                                    step={1}
-                                    value={leadTimeCustomDraft}
-                                    aria-invalid={Boolean(leadTimeCustomError)}
-                                    aria-describedby={leadTimeCustomError ? 'lead-time-custom-error' : undefined}
-                                    onChange={(e) => {
-                                        setLeadTimeCustomDraft(e.target.value);
-                                        if (leadTimeCustomError) setLeadTimeCustomError(null);
-                                    }}
-                                    className={`${classes.input} mt-1`}
-                                />
+                                <div className="relative mt-1">
+                                    <input
+                                        id="booking-lead-time-custom"
+                                        data-testid="booking-lead-time-custom"
+                                        type="text"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
+                                        value={leadTimeCustomDraft}
+                                        aria-invalid={Boolean(leadTimeCustomError)}
+                                        aria-describedby="lead-time-custom-hint"
+                                        onChange={(e) => {
+                                            setLeadTimeCustomDraft(e.target.value.replace(/[^\d]/g, ''));
+                                            if (leadTimeCustomError) setLeadTimeCustomError(null);
+                                        }}
+                                        className={`${classes.input} pr-9 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
+                                    />
+                                    <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-sm ${colors.textMuted}`} aria-hidden="true">h</span>
+                                </div>
+                                <p id="lead-time-custom-hint" data-testid="lead-time-custom-hint" className={`mt-1 text-xs ${colors.textMuted}`}>
+                                    {LEAD_TIME_CUSTOM_RANGE_HINT}
+                                </p>
                                 {leadTimeCustomError && (
                                     <p id="lead-time-custom-error" data-testid="lead-time-custom-error" role="alert" className="mt-2 text-sm text-[var(--color-danger)]">
                                         {leadTimeCustomError}

@@ -28,7 +28,10 @@ describe('migration 20261003160000_public_booking_lead_time (contrato)', () => {
     expect(sql).toMatch(/GRANT EXECUTE ON FUNCTION public\.get_available_slots_v2/);
     expect(sql).toMatch(/get_full_dates_v2/);
     expect(sql).toMatch(/booking_lead_time_hours_range/);
-    expect(sql).toMatch(/get_auth_company_id\(\)::text/);
+    expect(sql).toMatch(/auth\.uid\(\)::text = NEW\.business_id/);
+    expect(sql).toMatch(/tm\.staff_user_id = auth\.uid\(\)/);
+    expect(sql).toMatch(/tm\.deleted_at IS NULL/);
+    expect(sql).toMatch(/p_end_date := LEAST/);
     expect(sql).toMatch(/COALESCE\(NEW\.status, 'pending'\)/);
     expect(sql).toMatch(/UPDATE OF appointment_time, status/);
     for (const needle of FORBIDDEN) {

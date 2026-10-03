@@ -20,7 +20,10 @@ GRANT EXECUTE ON FUNCTION pg_temp.try(text) TO PUBLIC;
 
 \set OWNER '00000000-0000-0000-0000-00000000000a'
 \set STAFF '00000000-0000-0000-0000-00000000000b'
+\set EXSTAFF '00000000-0000-0000-0000-00000000000c'
 \set PRO1 '10000000-0000-0000-0000-000000000001'
+\set STAFFPRO '10000000-0000-0000-0000-00000000000b'
+\set EXPRO '10000000-0000-0000-0000-00000000000c'
 \set CLIENT '30000000-0000-0000-0000-000000000001'
 \set SVC '20000000-0000-0000-0000-000000000001'
 \set BK1 '70000000-0000-0000-0000-0000000000aa'
@@ -33,9 +36,18 @@ ON CONFLICT (id) DO UPDATE SET role = 'owner', region = 'PT', booking_lead_time_
 INSERT INTO public.profiles (id, role, company_id, region, booking_lead_time_hours)
 VALUES (:'STAFF', 'staff', :'OWNER', 'PT', 2)
 ON CONFLICT (id) DO UPDATE SET role = 'staff', company_id = EXCLUDED.company_id, booking_lead_time_hours = 2;
+INSERT INTO public.profiles (id, role, company_id, region, booking_lead_time_hours)
+VALUES (:'EXSTAFF', 'staff', :'OWNER', 'PT', 2)
+ON CONFLICT (id) DO UPDATE SET role = 'staff', company_id = EXCLUDED.company_id, booking_lead_time_hours = 2;
 INSERT INTO public.team_members (id, user_id, name, active, is_owner, display_order, staff_user_id) VALUES
   (:'PRO1', :'OWNER', 'Diego', true, true, 0, :'OWNER'::uuid)
 ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, active = true, deleted_at = NULL, staff_user_id = EXCLUDED.staff_user_id;
+INSERT INTO public.team_members (id, user_id, name, active, is_owner, display_order, staff_user_id, deleted_at) VALUES
+  (:'STAFFPRO', :'OWNER', 'Mario', true, false, 1, :'STAFF'::uuid, NULL)
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, active = true, deleted_at = NULL, staff_user_id = EXCLUDED.staff_user_id;
+INSERT INTO public.team_members (id, user_id, name, active, is_owner, display_order, staff_user_id, deleted_at) VALUES
+  (:'EXPRO', :'OWNER', 'Ex', false, false, 2, :'EXSTAFF'::uuid, now())
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, active = false, deleted_at = now(), staff_user_id = EXCLUDED.staff_user_id;
 INSERT INTO public.services VALUES (:'SVC', :'OWNER', 'Corte', 45, 30) ON CONFLICT (id) DO NOTHING;
 INSERT INTO public.clients (id, user_id, name, phone) VALUES (:'CLIENT', :'OWNER', 'Aline', '351600000001') ON CONFLICT (id) DO NOTHING;
 INSERT INTO public.business_settings (user_id, timezone, business_hours) VALUES (
@@ -142,11 +154,11 @@ SET ROLE authenticated;
 SELECT pg_temp.check('staff UPDATE confirmed +45min',
   pg_temp.try(format($q$UPDATE public.public_bookings SET appointment_time = now() + interval '45 minutes', status = 'confirmed' WHERE id = %L$q$, :'BK1')),
   'ok');
-SELECT pg_temp.check('reschedule #120 UPDATE linked booking',
+SELECT pg_temp.check('reschedule #120 UPDATE linked booking +30min',
   pg_temp.try(format($q$
     INSERT INTO public.appointments (user_id, client_id, professional_id, appointment_time, status, duration_minutes, public_booking_id)
     VALUES (%L, %L, %L, now() + interval '3 hours', 'Confirmed', 30, %L);
-    UPDATE public.public_bookings SET appointment_time = now() + interval '45 minutes'
+    UPDATE public.public_bookings SET appointment_time = now() + interval '30 minutes'
     WHERE id = %L
   $q$, :'OWNER', :'CLIENT', :'PRO1', :'BK1', :'BK1')),
   'ok');
@@ -159,6 +171,14 @@ SELECT pg_temp.check('staff create_secure_booking status/client null +40min',
     now() + interval '40 minutes', ARRAY[:'SVC'], 45, 30, NULL, NULL
   )->>'success'),
   'true');
+RESET ROLE;
+
+-- Ex-staff: company_id órfão NÃO isenta (sem team_members ativo)
+SELECT set_config('request.jwt.claim.sub', :'EXSTAFF', false);
+SET ROLE authenticated;
+SELECT pg_temp.check('ex-staff UPDATE +30min',
+  pg_temp.try(format($q$UPDATE public.public_bookings SET appointment_time = now() + interval '30 minutes' WHERE id = %L$q$, :'BK1')),
+  'error:lead_time_violation');
 RESET ROLE;
 
 -- C4: Agenda / encaixe no passado NÃO usa o trigger (appointments)
@@ -228,6 +248,18 @@ SELECT pg_temp.check('v2 profissional ignora antecedência (passado incluso)',
   'true');
 
 UPDATE public.profiles SET booking_lead_time_hours = 2 WHERE id = :'OWNER';
+
+SELECT pg_temp.check('full_dates v2 cap 62 dias',
+  (
+    SELECT (cardinality(public.get_full_dates_v2(
+      :'OWNER'::uuid,
+      (timezone('Europe/Lisbon', now()))::date,
+      ((timezone('Europe/Lisbon', now()))::date + 120),
+      :'PRO1'::uuid,
+      30
+    )) <= 62)::text
+  ),
+  'true');
 
 \o
 SELECT name, CASE WHEN got IS NOT DISTINCT FROM expected THEN 'ok' ELSE 'FAIL' END AS status, got, expected

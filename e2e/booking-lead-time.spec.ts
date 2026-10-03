@@ -13,7 +13,6 @@ const OWNER_ID = '2310b54d-5963-4dc6-9afb-8f308116a698';
 const STAFF_ID = '6fc5cf83-b7b6-4be7-9ba7-414d9d2e92f1';
 const SELF_MEMBER_ID = 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee';
 const LEAD_TOAST = 'Esse horário precisa ser marcado com pelo menos 8h de antecedência';
-const LEAD_EMPTY = 'Hoje não há horários com 8h de antecedência. Veja amanhã.';
 const HAS_OWNER = Boolean(process.env.E2E_OWNER_EMAIL && process.env.E2E_OWNER_PASS);
 const HAS_STAFF = Boolean(process.env.E2E_STAFF_EMAIL && process.env.E2E_STAFF_PASS);
 
@@ -35,7 +34,28 @@ async function reveal(page: Page, testId: string) {
 
 async function shot(page: Page, name: string) {
   fs.mkdirSync(outDir, { recursive: true });
-  await page.screenshot({ path: path.join(outDir, name), fullPage: false });
+  await settle(page);
+  await page.screenshot({ path: path.join(outDir, name), fullPage: false, animations: 'disabled' });
+}
+
+async function settle(page: Page) {
+  await page.evaluate(async () => {
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+    });
+    const animations = typeof document.getAnimations === 'function' ? document.getAnimations() : [];
+    await Promise.all(animations.map((a) => a.finished.catch(() => undefined)));
+  });
+  await page.waitForTimeout(400);
+}
+
+function lisbonToday(): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Lisbon',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
 }
 
 function b64url(obj: unknown): string {
@@ -94,7 +114,11 @@ async function injectSession(page: Page, session: ReturnType<typeof fakeSession>
   );
 }
 
-async function stubAuthReads(page: Page, role: 'owner' | 'staff') {
+async function stubAuthReads(
+  page: Page,
+  role: 'owner' | 'staff',
+  extras?: { appointments?: unknown[] },
+) {
   const session = fakeSession(
     role === 'owner' ? OWNER_ID : STAFF_ID,
     role === 'owner' ? 'owner.lead@example.test' : 'staff.lead@example.test',
@@ -175,6 +199,10 @@ async function stubAuthReads(page: Page, role: 'owner' | 'staff') {
     }
     if (pathname.includes('/rest/v1/onboarding_progress')) {
       await fulfillJson(route, [{ is_completed: true }]);
+      return;
+    }
+    if (pathname.includes('/rest/v1/appointments')) {
+      await fulfillJson(route, extras?.appointments ?? []);
       return;
     }
     if (pathname.includes('/rest/v1/business_settings')) {
@@ -299,6 +327,7 @@ test.describe('PR-2 antecedência mínima', () => {
       await page.getByTestId('booking-lead-time-custom').fill('');
       await page.getByRole('button', { name: /Salvar Alterações/ }).click();
       await expect(page.getByTestId('lead-time-custom-error')).toBeVisible();
+      await expect(page.getByTestId('lead-time-custom-hint')).toHaveTextContent('0 a 720');
       await reveal(page, 'lead-time-section');
       await shot(page, `owner-${width}-settings-outro-error.png`);
     });
@@ -319,15 +348,20 @@ test.describe('PR-2 antecedência mínima', () => {
     test(`cliente ${width} vê empty de antecedência`, async ({ page }) => {
       test.skip(width === 375);
       await page.setViewportSize({ width, height: width >= 1000 ? 900 : 844 });
+      const today = lisbonToday();
       stubPublicCatalog(guard);
+      guard.stubRpc('get_full_dates_v2', { body: [today] });
+      guard.stubRpc('get_full_dates', { body: [today] });
       guard.stubRpc('get_available_slots_v2', {
         body: { slots: [], lead_time_hours: 8, empty_reason: 'lead_time' },
       });
       guard.stubRpc('get_available_slots', { body: { slots: [] } });
       await reachDatetime(page);
       if (phase === 'after') {
-        await expect(page.getByText(LEAD_EMPTY)).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByTestId('time-grid-empty')).toBeVisible({ timeout: 15_000 });
         await expect(page.getByTestId('lead-time-next-day')).toBeVisible();
+        await expect(page.getByText('Veja amanhã.')).toHaveCount(0);
+        await expect(page.locator(`button[data-date="${today}"]`)).toBeDisabled();
         await page.getByRole('heading', { name: 'Escolha a data e hora' }).evaluate((el) => {
           el.scrollIntoView({ block: 'start', inline: 'nearest' });
         });
@@ -339,13 +373,23 @@ test.describe('PR-2 antecedência mínima', () => {
   test('cliente 390 toast lead_time_violation ao confirmar', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     stubPublicCatalog(guard);
-    guard.stubRpc('get_available_slots_v2', {
-      body: { slots: ['18:00'], lead_time_hours: 8, empty_reason: null },
-    });
-    guard.stubRpc('get_available_slots', { body: { slots: ['18:00'] } });
-    guard.stubRpc('create_public_booking', {
-      status: 400,
-      body: { message: 'lead_time_violation', details: '8', hint: 'lead_time_violation', code: 'P0001' },
+    let bookingAttempted = false;
+    guard.stubRpc('get_available_slots_v2', () => (
+      bookingAttempted
+        ? { body: { slots: [], lead_time_hours: 8, empty_reason: 'lead_time' } }
+        : { body: { slots: ['18:00'], lead_time_hours: 8, empty_reason: null } }
+    ));
+    guard.stubRpc('get_available_slots', () => (
+      bookingAttempted
+        ? { body: { slots: [] } }
+        : { body: { slots: ['18:00'] } }
+    ));
+    guard.stubRpc('create_public_booking', () => {
+      bookingAttempted = true;
+      return {
+        status: 400,
+        body: { message: 'lead_time_violation', details: '8', hint: 'lead_time_violation', code: 'P0001' },
+      };
     });
     await reachDatetime(page);
     await page.getByRole('button', { name: '18:00' }).click();
@@ -361,6 +405,7 @@ test.describe('PR-2 antecedência mínima', () => {
       await expect(page.getByRole('heading', { name: 'Escolha a data e hora' })).toBeVisible({ timeout: 10_000 });
       await expect(page.getByText(LEAD_TOAST)).toBeVisible({ timeout: 10_000 });
       await expect(page.locator('[data-toast-placement="bottom"]')).toBeVisible();
+      await expect(page.getByRole('button', { name: '18:00' })).toHaveCount(0);
     }
     await shot(page, 'client-390-lead-toast.png');
   });
@@ -368,26 +413,51 @@ test.describe('PR-2 antecedência mínima', () => {
   for (const role of ['owner', 'staff'] as const) {
     test(`${role} 390 encaixe passado e +30min sem antecedência`, async ({ page }) => {
       await page.setViewportSize({ width: 390, height: 844 });
+      const pastIso = new Date(Date.now() - 90 * 60 * 1000).toISOString();
+      const soonIso = new Date(Date.now() + 30 * 60 * 1000).toISOString();
       guard.stubRpc('list_company_pending_public_bookings', { body: [] });
-      guard.stubRpc('create_secure_booking', { body: { success: true, id: 'apt-1' } });
       if (role === 'owner' ? HAS_OWNER : HAS_STAFF) {
         await login(page, role);
       } else {
-        await stubAuthReads(page, role);
+        await stubAuthReads(page, role, {
+          appointments: [
+            {
+              id: 'apt-past',
+              user_id: OWNER_ID,
+              service: 'Corte',
+              appointment_time: pastIso,
+              price: 45,
+              status: 'Confirmed',
+              professional_id: SELF_MEMBER_ID,
+              duration_minutes: 30,
+              notes: null,
+              edited_at: null,
+              origin: 'agenda',
+              client_id: 'c-past',
+              clients: { name: 'Encaixe passado', id: 'c-past', phone: '351600000090' },
+            },
+            {
+              id: 'apt-soon',
+              user_id: OWNER_ID,
+              service: 'Corte',
+              appointment_time: soonIso,
+              price: 45,
+              status: 'Confirmed',
+              professional_id: SELF_MEMBER_ID,
+              duration_minutes: 30,
+              notes: null,
+              edited_at: null,
+              origin: 'agenda',
+              client_id: 'c-soon',
+              clients: { name: 'Encaixe 30min', id: 'c-soon', phone: '351600000030' },
+            },
+          ],
+        });
       }
       await page.goto(`${BASE}/#/agenda`);
       await expect(page.locator('#btn-new-appointment')).toBeVisible({ timeout: 20_000 });
-      await page.locator('#btn-new-appointment').click();
-      const choice = page.getByTestId('agenda-choice-new-appointment');
-      const wizardTitle = page.getByText(/Novo Atendimento/i);
-      try {
-        await choice.waitFor({ state: 'visible', timeout: 8_000 });
-        await choice.click();
-      } catch {
-        /* wizard opened directly */
-      }
-      await expect(wizardTitle.first()).toBeVisible({ timeout: 15_000 });
-      await expect(page.getByText(/Novo Atendimento/i).first()).toBeVisible({ timeout: 15_000 });
+      await expect(page.getByText('Encaixe passado')).toBeVisible({ timeout: 15_000 });
+      await expect(page.getByText('Encaixe 30min')).toBeVisible();
       await expect(page.getByText(/antecedência/i)).toHaveCount(0);
       await shot(page, `${role}-390-fit-in.png`);
     });

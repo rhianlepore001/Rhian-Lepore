@@ -1,4 +1,4 @@
--- Testes de 20260929110000_commissions_owner_only (rodar via scripts/test-sql-commissions-owner-only.sh).
+-- Testes de 20261003100000_commissions_owner_only (rodar via scripts/test-sql-commissions-owner-only.sh).
 -- Cada bloco imprime PASS ou aborta com FAIL (ON_ERROR_STOP).
 \set A0 '00000000-0000-0000-0000-0000000000a0'
 \set A1 '00000000-0000-0000-0000-0000000000a1'

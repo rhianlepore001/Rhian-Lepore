@@ -1,4 +1,4 @@
--- Harness (Postgres local descartável) para 20260929110000_commissions_owner_only.
+-- Harness (Postgres local descartável) para 20261003100000_commissions_owner_only.
 -- Funções copiadas de prod (pg_get_functiondef em 29/09/2026, md5 conferido no script).
 CREATE ROLE anon NOLOGIN;
 CREATE ROLE authenticated NOLOGIN;

@@ -14,8 +14,8 @@ trap cleanup EXIT
 "$PGBIN/initdb" -D "$TMP/data" -U postgres -A trust >/dev/null
 "$PGBIN/pg_ctl" -D "$TMP/data" -o "-p $PORT -k $TMP -c listen_addresses=''" -l "$TMP/log" start >/dev/null
 PSQL=("$PGBIN/psql" -h "$TMP" -p "$PORT" -U postgres -d postgres -v ON_ERROR_STOP=1 -q)
-MIG="$ROOT/supabase/migrations/20260929110000_commissions_owner_only.sql"
-RB="$ROOT/docs/rollbacks/20260929110000_commissions_owner_only_rollback.sql"
+MIG="$ROOT/supabase/migrations/20261003100000_commissions_owner_only.sql"
+RB="$ROOT/docs/rollbacks/20261003100000_commissions_owner_only_rollback.sql"
 # md5(pg_get_functiondef) em prod, lido em 29/09/2026 via SELECT
 declare -A PROD_MD5=(
   ["get_commissions_due()"]="1bc9f34247a83770550e0be36b7fd3dd"

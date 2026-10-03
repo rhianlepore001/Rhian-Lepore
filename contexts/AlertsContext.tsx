@@ -185,7 +185,7 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
 
     const refreshAlerts = async () => {
-        // Só o dono lê comissões da equipe (RPCs negam colaborador desde 20260929110000).
+        // Só o dono lê comissões da equipe (RPCs negam colaborador desde 20261003100000).
         // Espera o perfil: no login o papel começa como 'owner' até o perfil carregar.
         if (!user || authLoading || !companyId || role !== 'owner') {
             setAlerts([]);

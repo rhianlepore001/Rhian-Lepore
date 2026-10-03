@@ -1,11 +1,21 @@
--- Rollback EXATO de 20260929110000_commissions_owner_only.sql
--- Restaura as 3 RPCs de comissão com o texto de pg_get_functiondef de prod
--- (lido em 29/09/2026). md5(pg_get_functiondef) esperado depois do rollback:
---   get_commissions_due() = 1bc9f34247a83770550e0be36b7fd3dd
---   get_professional_commission_details(uuid,uuid,date,date) = 0786c74526378c31e3f2b79327795bd0
---   get_professional_finance_summary(uuid,uuid,date,date) = 5bddbd851bd951479dd344ad59da03cf
--- ATENÇÃO: o corpo de get_commissions_due em prod usa CRLF; este arquivo
--- preserva os \r de propósito (senão o md5 muda). Não normalize fins de linha.
+-- =============================================================================
+-- P-SEC: comissões da equipe só para o dono (ACCEPTANCE.md, B3 / R8.3)
+-- =============================================================================
+-- Problema: get_commissions_due, get_professional_commission_details e
+-- get_professional_finance_summary (SECURITY DEFINER, EXECUTE p/ authenticated)
+-- só resolviam o tenant, sem conferir o papel. Um colaborador (e um
+-- ex-colaborador ainda ligado à empresa) lia pela API saldo, comissão e % de
+-- TODOS os colegas. Probe em prod (transação com ROLLBACK, staff de QA):
+-- 11 linhas, 10 de outros colaboradores.
+--
+-- Correção: mesmo corpo de prod + 1 checagem logo depois da resolução do
+-- tenant: get_auth_role() precisa ser 'owner', senão 42501. Nada mais muda
+-- (colunas, cálculo, search_path, SECURITY DEFINER, grants).
+-- Não toca get_auth_company_id (PR #105) nem mark_commissions_as_paid (já
+-- bloqueia staff). Funciona antes ou depois do #105.
+-- Rollback exato: docs/rollbacks/20261003100000_commissions_owner_only_rollback.sql
+-- =============================================================================
+
 BEGIN;
 SET LOCAL lock_timeout = '5s';
 
@@ -25,6 +35,10 @@ BEGIN
 
   IF v_auth_company_id IS NULL THEN
     RAISE EXCEPTION 'Usuario autenticado obrigatorio.'
+      USING ERRCODE = 'insufficient_privilege';
+  END IF;
+  IF public.get_auth_role() IS DISTINCT FROM 'owner' THEN
+    RAISE EXCEPTION 'Apenas o dono pode ver as comissões da equipe.'
       USING ERRCODE = 'insufficient_privilege';
   END IF;
 
@@ -134,6 +148,10 @@ BEGIN
     RAISE EXCEPTION 'Usuario autenticado obrigatorio.'
       USING ERRCODE = 'insufficient_privilege';
   END IF;
+  IF public.get_auth_role() IS DISTINCT FROM 'owner' THEN
+    RAISE EXCEPTION 'Apenas o dono pode ver as comissões da equipe.'
+      USING ERRCODE = 'insufficient_privilege';
+  END IF;
   RETURN public.get_professional_commission_details__tenant_unsafe(v_auth_company_id::uuid, p_professional_id, p_start_date, p_end_date);
 END;
 $function$;
@@ -150,6 +168,10 @@ BEGIN
   v_auth_company_id := COALESCE(get_auth_company_id()::TEXT, auth.uid()::TEXT);
   IF v_auth_company_id IS NULL THEN
     RAISE EXCEPTION 'Usuario autenticado obrigatorio.'
+      USING ERRCODE = 'insufficient_privilege';
+  END IF;
+  IF public.get_auth_role() IS DISTINCT FROM 'owner' THEN
+    RAISE EXCEPTION 'Apenas o dono pode ver as comissões da equipe.'
       USING ERRCODE = 'insufficient_privilege';
   END IF;
   RETURN public.get_professional_finance_summary__tenant_unsafe(v_auth_company_id::uuid, p_professional_id, p_start_date, p_end_date);

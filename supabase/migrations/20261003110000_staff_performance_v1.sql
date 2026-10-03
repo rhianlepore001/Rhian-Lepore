@@ -40,7 +40,10 @@ AS $$
 $$;
 
 -- Agregados por "balde": id do colaborador do tenant, NULL = "Sem profissional".
-CREATE OR REPLACE FUNCTION public._staff_perf_raw(p_tenant text, p_from timestamptz, p_to timestamptz, p_now timestamptz)
+DROP FUNCTION IF EXISTS public._staff_perf_raw(text, timestamptz, timestamptz, timestamptz);
+CREATE OR REPLACE FUNCTION public._staff_perf_raw(
+  p_tenant text, p_from timestamptz, p_to timestamptz, p_now timestamptz,
+  p_month_tz text DEFAULT NULL)
 RETURNS TABLE(bucket uuid, m jsonb)
 LANGUAGE sql
 STABLE
@@ -55,7 +58,9 @@ ap AS (
          COALESCE(a.price, 0) AS price,
          GREATEST(COALESCE(a.duration_minutes, 0), 0) AS dur,
          lower(btrim(COALESCE(a.payment_method, ''))) = 'membership' AS clube,
-         tm.id AS bucket, COALESCE(tm.is_owner, false) AS is_owner
+         tm.id AS bucket, COALESCE(tm.is_owner, false) AS is_owner,
+         CASE WHEN p_month_tz IS NULL THEN NULL::date
+              ELSE (date_trunc('month', a.appointment_time AT TIME ZONE p_month_tz))::date END AS month_key
   FROM public.appointments a
   LEFT JOIN tm ON tm.id = a.professional_id
   WHERE a.user_id = p_tenant AND a.appointment_time >= p_from AND a.appointment_time < p_to
@@ -78,7 +83,7 @@ fr1 AS (
 ),
 dup AS (SELECT frs.appointment_id FROM frs GROUP BY frs.appointment_id HAVING count(*) > 1),
 svc AS (
-  SELECT d.bucket,
+  SELECT d.bucket, d.month_key,
     count(*) AS atendimentos,
     count(*) FILTER (WHERE d.clube) AS atendimentos_clube,
     count(*) FILTER (WHERE d.pago) AS atendimentos_pagos,
@@ -90,7 +95,7 @@ svc AS (
     count(*) FILTER (WHERE d.pago AND f.appointment_id IS NULL) AS sem_registro_financeiro,
     count(*) FILTER (WHERE EXISTS (SELECT 1 FROM dup WHERE dup.appointment_id = d.id)) AS duplicadas,
     count(*) FILTER (WHERE EXISTS (SELECT 1 FROM public.product_sales ps
-                                   WHERE ps.appointment_id = d.id AND ps.company_id::text = p_tenant)) AS visitas_com_produto,
+                                   WHERE ps.appointment_id = d.id AND ps.company_id = p_tenant::uuid)) AS visitas_com_produto,
     count(*) FILTER (WHERE d.anchor <= p_now - interval '48 hours') AS maduros,
     count(*) FILTER (WHERE d.anchor <= p_now - interval '48 hours' AND EXISTS (
       SELECT 1 FROM public.appointments b
@@ -100,18 +105,20 @@ svc AS (
         AND b.appointment_time <= d.anchor + interval '45 days'
         AND b.created_at <= d.anchor + interval '48 hours')) AS voltou
   FROM done d LEFT JOIN fr1 f ON f.appointment_id = d.id
-  GROUP BY d.bucket
+  GROUP BY d.bucket, d.month_key
 ),
 outc AS (
-  SELECT ap.bucket,
+  SELECT ap.bucket, ap.month_key,
     count(*) FILTER (WHERE ap.status = 'NoShow') AS faltas,
     count(*) FILTER (WHERE ap.status = 'Cancelled') AS cancelamentos,
     count(*) FILTER (WHERE ap.status IN ('Completed', 'NoShow', 'Cancelled')) AS desfechos,
     count(*) FILTER (WHERE ap.status IN ('Confirmed', 'Pending') AND ap.appointment_time < p_now) AS sem_desfecho
-  FROM ap GROUP BY ap.bucket
+  FROM ap GROUP BY ap.bucket, ap.month_key
 ),
 avl AS (  -- receitas avulsas atribuídas (sem atendimento, sem venda de produto)
   SELECT tm.id AS bucket,
+    CASE WHEN p_month_tz IS NULL THEN NULL::date
+         ELSE (date_trunc('month', fr.created_at AT TIME ZONE p_month_tz))::date END AS month_key,
     COALESCE(sum(fr.revenue), 0) AS receita_avulsa,
     COALESCE(sum(CASE WHEN tm.is_owner THEN 0 ELSE COALESCE(fr.commission_value, 0) END), 0) AS comissao_avulsa,
     count(*) AS avulsos
@@ -119,23 +126,28 @@ avl AS (  -- receitas avulsas atribuídas (sem atendimento, sem venda de produto
   WHERE fr.user_id = p_tenant AND fr.type = 'revenue' AND fr.appointment_id IS NULL
     AND fr.created_at >= p_from AND fr.created_at < p_to
     AND NOT EXISTS (SELECT 1 FROM public.product_sales ps WHERE ps.finance_record_id = fr.id)
-  GROUP BY tm.id
+  GROUP BY 1, 2
 ),
 prd AS (
   SELECT tm.id AS bucket,
+    CASE WHEN p_month_tz IS NULL THEN NULL::date
+         ELSE (date_trunc('month', ps.created_at AT TIME ZONE p_month_tz))::date END AS month_key,
     COALESCE(sum(ps.total_revenue), 0) AS receita_produtos,
     COALESCE(sum(ps.total_cost), 0) AS custo_produtos,
     COALESCE(sum(CASE WHEN COALESCE(tm.is_owner, false) THEN 0 ELSE ps.commission_value END), 0) AS comissao_produtos,
     count(*) AS vendas_produtos
   FROM public.product_sales ps LEFT JOIN tm ON tm.id = ps.professional_id
-  WHERE ps.company_id::text = p_tenant AND ps.created_at >= p_from AND ps.created_at < p_to
-  GROUP BY tm.id
+  WHERE ps.company_id = p_tenant::uuid AND ps.created_at >= p_from AND ps.created_at < p_to
+  GROUP BY 1, 2
 ),
 keys AS (
-  SELECT bucket FROM svc UNION SELECT bucket FROM outc UNION SELECT bucket FROM avl UNION SELECT bucket FROM prd
+  SELECT bucket, month_key FROM svc
+  UNION SELECT bucket, month_key FROM outc
+  UNION SELECT bucket, month_key FROM avl
+  UNION SELECT bucket, month_key FROM prd
 ),
 raw AS (
-  SELECT k.bucket,
+  SELECT k.bucket, k.month_key,
     COALESCE(s.atendimentos, 0) AS atendimentos, COALESCE(s.atendimentos_clube, 0) AS atendimentos_clube,
     COALESCE(s.atendimentos_pagos, 0) AS atendimentos_pagos, COALESCE(s.receita_servicos, 0) AS receita_servicos,
     COALESCE(s.tempo_total_min, 0) AS tempo_total_min, COALESCE(s.tempo_pago_min, 0) AS tempo_pago_min,
@@ -150,10 +162,10 @@ raw AS (
     COALESCE(p.receita_produtos, 0) AS receita_produtos, COALESCE(p.custo_produtos, 0) AS custo_produtos,
     COALESCE(p.comissao_produtos, 0) AS comissao_produtos, COALESCE(p.vendas_produtos, 0) AS vendas_produtos
   FROM keys k
-  LEFT JOIN svc s ON s.bucket IS NOT DISTINCT FROM k.bucket
-  LEFT JOIN outc o ON o.bucket IS NOT DISTINCT FROM k.bucket
-  LEFT JOIN avl v ON v.bucket IS NOT DISTINCT FROM k.bucket
-  LEFT JOIN prd p ON p.bucket IS NOT DISTINCT FROM k.bucket
+  LEFT JOIN svc s ON s.bucket IS NOT DISTINCT FROM k.bucket AND s.month_key IS NOT DISTINCT FROM k.month_key
+  LEFT JOIN outc o ON o.bucket IS NOT DISTINCT FROM k.bucket AND o.month_key IS NOT DISTINCT FROM k.month_key
+  LEFT JOIN avl v ON v.bucket IS NOT DISTINCT FROM k.bucket AND v.month_key IS NOT DISTINCT FROM k.month_key
+  LEFT JOIN prd p ON p.bucket IS NOT DISTINCT FROM k.bucket AND p.month_key IS NOT DISTINCT FROM k.month_key
 )
 SELECT r.bucket, jsonb_build_object(
   'atendimentos', r.atendimentos,
@@ -190,12 +202,13 @@ SELECT r.bucket, jsonb_build_object(
   'receita_gerada', round(r.receita_servicos + r.receita_produtos + r.receita_avulsa, 2),
   'comissao_periodo', round(r.comissao_servicos + r.comissao_produtos + r.comissao_avulsa, 2),
   'sem_registro_financeiro', r.sem_registro_financeiro,
-  'duplicadas', r.duplicadas
+  'duplicadas', r.duplicadas,
+  'month', to_char(r.month_key, 'YYYY-MM')
 )
 FROM (
   SELECT * FROM raw
   UNION ALL  -- linha da equipe inteira (bucket = uuid nulo-zero), soma de todos os baldes
-  SELECT '00000000-0000-0000-0000-000000000000'::uuid,
+  SELECT '00000000-0000-0000-0000-000000000000'::uuid, NULL::date,
     COALESCE(sum(atendimentos), 0), COALESCE(sum(atendimentos_clube), 0), COALESCE(sum(atendimentos_pagos), 0),
     COALESCE(sum(receita_servicos), 0), COALESCE(sum(tempo_total_min), 0), COALESCE(sum(tempo_pago_min), 0),
     COALESCE(sum(tempo_clube_min), 0), COALESCE(sum(comissao_servicos), 0), COALESCE(sum(sem_registro_financeiro), 0),
@@ -205,6 +218,7 @@ FROM (
     COALESCE(sum(receita_produtos), 0), COALESCE(sum(custo_produtos), 0), COALESCE(sum(comissao_produtos), 0),
     COALESCE(sum(vendas_produtos), 0)
   FROM raw
+  WHERE p_month_tz IS NULL
 ) r
 CROSS JOIN LATERAL (
   SELECT r.receita_servicos + r.receita_avulsa + r.receita_produtos
@@ -242,8 +256,8 @@ DECLARE
     'tempo_clube_min','faturamento_por_hora','ticket_medio','faltas','cancelamentos','desfechos','taxa_faltas',
     'taxa_cancelamentos','sem_desfecho','visitas_com_produto','attach','receita_produtos','vendas_produtos',
     'maduros','voltou','voltou_taxa','imaturos','comissao_periodo','sem_registro_financeiro'];
-  v_month date;
-  i int;
+  v_trend_from timestamptz;
+  v_trend_to timestamptz;
 BEGIN
   IF p_start IS NULL OR p_end IS NULL OR p_start > p_end THEN
     RAISE EXCEPTION 'Período inválido: início deve ser menor ou igual ao fim.' USING ERRCODE = '22023';
@@ -284,22 +298,25 @@ BEGIN
     'previous', CASE WHEN p_compare THEN jsonb_build_object('start', v_prev_start, 'end', v_prev_end) END);
 
   IF p_professional_id IS NOT NULL THEN
-    v_trend := '[]'::jsonb;
-    FOR i IN REVERSE 5..0 LOOP
-      v_month := (date_trunc('month', p_end) - make_interval(months => i))::date;
-      v_trend := v_trend || (
-        SELECT jsonb_build_array(jsonb_build_object(
-          'month', to_char(v_month, 'YYYY-MM'),
-          'retorno', r.m -> 'retorno',
-          'ticket_medio', r.m -> 'ticket_medio',
-          'comissao', r.m -> 'comissao_periodo',
-          'atendimentos', COALESCE((r.m ->> 'atendimentos')::int, 0),
-          'low_sample', COALESCE((r.m ->> 'atendimentos')::int, 0) < c_min_sample)
-          - CASE WHEN p_staff THEN 'retorno' ELSE '' END)
-        FROM (SELECT (SELECT x.m FROM public._staff_perf_raw(p_tenant, v_month::timestamp AT TIME ZONE v_tz,
-                        (v_month + interval '1 month')::timestamp AT TIME ZONE v_tz, p_now) x
-                      WHERE x.bucket = p_professional_id) AS m) r);
-    END LOOP;
+    v_trend_from := (date_trunc('month', p_end) - interval '5 months')::timestamp AT TIME ZONE v_tz;
+    v_trend_to := (date_trunc('month', p_end) + interval '1 month')::timestamp AT TIME ZONE v_tz;
+    SELECT COALESCE(jsonb_agg(item ORDER BY item ->> 'month'), '[]'::jsonb) INTO v_trend
+    FROM (
+      SELECT jsonb_build_object(
+        'month', to_char(gs, 'YYYY-MM'),
+        'retorno', r.m -> 'retorno',
+        'ticket_medio', r.m -> 'ticket_medio',
+        'comissao', r.m -> 'comissao_periodo',
+        'atendimentos', COALESCE((r.m ->> 'atendimentos')::int, 0),
+        'low_sample', COALESCE((r.m ->> 'atendimentos')::int, 0) < c_min_sample)
+        - CASE WHEN p_staff THEN 'retorno' ELSE '' END AS item
+      FROM generate_series(
+        date_trunc('month', p_end) - interval '5 months',
+        date_trunc('month', p_end),
+        interval '1 month') AS gs
+      LEFT JOIN public._staff_perf_raw(p_tenant, v_trend_from, v_trend_to, p_now, v_tz) r
+        ON r.bucket = p_professional_id AND r.m ->> 'month' = to_char(gs, 'YYYY-MM')
+    ) s;
     SELECT COALESCE(jsonb_agg(jsonb_build_object('service', t.service, 'count', t.n) ORDER BY t.n DESC, t.service), '[]'::jsonb)
       INTO v_top
     FROM (
@@ -483,7 +500,7 @@ BEGIN
       'servicos_ciclo', r.servicos_ciclo, 'produtos_ciclo', r.produtos_ciclo,
       'pago_ciclo', round(r.pago_ciclo, 2), 'pago_ciclo_em', r.pago_ciclo_em, 'pago_calculado', round(r.pago_calculado, 2),
       'status', CASE
-        WHEN r.a_pagar_ciclo > 0 THEN 'pendente'
+        WHEN r.a_pagar_ciclo > 0 OR r.saldo_anterior > 0 THEN 'pendente'
         WHEN r.pago_ciclo IS NOT NULL AND abs(r.pago_ciclo - r.pago_calculado) <= 0.01 THEN 'pago'
         WHEN r.pago_ciclo IS NOT NULL THEN 'pago_com_ajuste'
         ELSE 'nada_a_pagar' END,
@@ -564,13 +581,13 @@ END;
 $$;
 
 REVOKE ALL ON FUNCTION public._staff_perf_tz(text) FROM PUBLIC, anon, authenticated;
-REVOKE ALL ON FUNCTION public._staff_perf_raw(text, timestamptz, timestamptz, timestamptz) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public._staff_perf_raw(text, timestamptz, timestamptz, timestamptz, text) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public._staff_performance_core(text, date, date, uuid, boolean, timestamptz, boolean) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public._commission_cycle_core(text, date, timestamptz) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public._commission_settle_date(date, int) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public._commission_settle_date(date, int) TO service_role;
 GRANT EXECUTE ON FUNCTION public._staff_perf_tz(text) TO service_role;
-GRANT EXECUTE ON FUNCTION public._staff_perf_raw(text, timestamptz, timestamptz, timestamptz) TO service_role;
+GRANT EXECUTE ON FUNCTION public._staff_perf_raw(text, timestamptz, timestamptz, timestamptz, text) TO service_role;
 GRANT EXECUTE ON FUNCTION public._staff_performance_core(text, date, date, uuid, boolean, timestamptz, boolean) TO service_role;
 GRANT EXECUTE ON FUNCTION public._commission_cycle_core(text, date, timestamptz) TO service_role;
 

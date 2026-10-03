@@ -48,6 +48,14 @@ export function cycleContext(services: number, products: number): string {
     return `${plural(services, 'serviço', 'serviços')} · ${plural(products, 'produto', 'produtos')} neste ciclo`;
 }
 
+/** Valor efetivamente devido: ciclo atual, ou saldo de ciclos anteriores se o ciclo estiver zerado. */
+export function payoutDueAmount(row: PayoutRowData): number {
+    if (row.total_due > 0) return row.total_due;
+    const earlier = row.cycle?.saldo_anterior ?? 0;
+    if (earlier > 0) return row.cycle?.saldo_acumulado ?? earlier;
+    return 0;
+}
+
 const STATUS: Record<CycleStatus, { label: string; variant: 'warning' | 'success' | 'accent' | 'neutral' }> = {
     pendente: { label: 'Pendente', variant: 'warning' },
     pago: { label: 'Pago', variant: 'success' },
@@ -68,17 +76,18 @@ const StatusCell: React.FC<{ row: PayoutRowData; theme: ThemeVariant; formatMone
         const due = row.total_due > 0;
         return <Badge variant={due ? 'warning' : 'neutral'} forceTheme={theme} className={className}>{due ? 'Pendente' : 'Em dia'}</Badge>;
     }
-    const s = STATUS[c.status];
-    const title = c.status === 'pago_com_ajuste' && c.pago_ciclo != null
+    const status: CycleStatus = c.status === 'nada_a_pagar' && c.saldo_anterior > 0 ? 'pendente' : c.status;
+    const s = STATUS[status];
+    const title = status === 'pago_com_ajuste' && c.pago_ciclo != null
         ? `Pago ${formatMoney(c.pago_ciclo)} · calculado ${formatMoney(c.pago_calculado)}`
         : undefined;
-    const paid = (c.status === 'pago' || c.status === 'pago_com_ajuste') && c.paid_at ? paidDay(c.paid_at) : null;
+    const paid = (status === 'pago' || status === 'pago_com_ajuste') && c.paid_at ? paidDay(c.paid_at) : null;
     return (
         <span className={`inline-flex flex-col items-end lg:items-start gap-0.5 ${className ?? ''}`} title={title}>
             <Badge variant={s.variant} forceTheme={theme} className="whitespace-nowrap">{s.label}</Badge>
             {paid && (
                 <span className={`text-xs leading-snug ${colors.textMuted} tabular-nums text-right lg:text-left`}>
-                    {`Pago em ${paid}${c.status === 'pago_com_ajuste' && c.pago_ciclo != null ? ` · ${formatMoney(c.pago_ciclo).replace(/ /g, '\u00a0')}` : ''}`}
+                    {`Pago em ${paid}${status === 'pago_com_ajuste' && c.pago_ciclo != null ? ` · ${formatMoney(c.pago_ciclo).replace(/ /g, '\u00a0')}` : ''}`}
                 </span>
             )}
         </span>
@@ -141,7 +150,8 @@ export const PayoutList: React.FC<PayoutListProps> = ({ rows, theme, formatMoney
             </div>
             <ul className={`space-y-3 lg:space-y-0 lg:divide-y lg:divide-[var(--color-divider)]`}>
                 {rows.map((r) => {
-                    const due = r.total_due > 0;
+                    const payable = payoutDueAmount(r);
+                    const due = payable > 0;
                     const paying = payingId === r.professional_id;
                     const earlier = r.cycle?.saldo_anterior ?? 0;
                     return (
@@ -174,7 +184,7 @@ export const PayoutList: React.FC<PayoutListProps> = ({ rows, theme, formatMoney
                                 </div>
                                 {/* mobile: valor + status à direita, 1ª linha */}
                                 <div className="text-right shrink-0 lg:hidden">
-                                    <p className={`${font.mono} text-lg font-bold tabular-nums whitespace-nowrap ${due ? colors.text : colors.textMuted}`}>{formatMoney(r.total_due)}</p>
+                                    <p className={`${font.mono} text-lg font-bold tabular-nums whitespace-nowrap ${due ? colors.text : colors.textMuted}`}>{formatMoney(r.total_due > 0 ? r.total_due : payable)}</p>
                                     <StatusCell row={r} theme={theme} formatMoney={formatMoney} className="mt-1" />
                                 </div>
                             </div>
@@ -188,7 +198,7 @@ export const PayoutList: React.FC<PayoutListProps> = ({ rows, theme, formatMoney
                             <span className={`hidden lg:block text-right ${font.mono} tabular-nums text-sm ${colors.textSecondary}`}>{r.services_pending}</span>
                             <span className={`hidden lg:block text-right ${font.mono} tabular-nums text-sm ${colors.textSecondary}`}>{r.products_pending}</span>
                             <span className="hidden lg:block text-right">
-                                <span className={`block ${font.mono} tabular-nums font-bold whitespace-nowrap ${due ? colors.text : colors.textMuted}`}>{formatMoney(r.total_due)}</span>
+                                <span className={`block ${font.mono} tabular-nums font-bold whitespace-nowrap ${due ? colors.text : colors.textMuted}`}>{formatMoney(r.total_due > 0 ? r.total_due : payable)}</span>
                                 {earlier > 0 && <span className={`block mt-0.5 text-xs leading-snug ${colors.textMuted} tabular-nums`}><span className="whitespace-nowrap">+ {formatMoney(earlier)}</span> de ciclos anteriores</span>}
                             </span>
                             <span className="hidden lg:block"><StatusCell row={r} theme={theme} formatMoney={formatMoney} /></span>

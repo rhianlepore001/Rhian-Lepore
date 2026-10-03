@@ -7,6 +7,7 @@ DROP FUNCTION IF EXISTS public.get_staff_performance_v1(date, date, uuid, boolea
 DROP FUNCTION IF EXISTS public._commission_cycle_core(text, date, timestamptz);
 DROP FUNCTION IF EXISTS public._commission_settle_date(date, int);
 DROP FUNCTION IF EXISTS public._staff_performance_core(text, date, date, uuid, boolean, timestamptz, boolean);
+DROP FUNCTION IF EXISTS public._staff_perf_raw(text, timestamptz, timestamptz, timestamptz, text);
 DROP FUNCTION IF EXISTS public._staff_perf_raw(text, timestamptz, timestamptz, timestamptz);
 DROP FUNCTION IF EXISTS public._staff_perf_tz(text);
 DROP INDEX IF EXISTS public.idx_appointments_user_client_time;

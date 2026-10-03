@@ -6,7 +6,7 @@
     "start": "2026-09-06"
   },
   "totals": {
-    "pendentes": 4,
+    "pendentes": 5,
     "pago_ciclo": 0,
     "a_pagar_ciclo": 677.00
   },
@@ -86,7 +86,7 @@
     },
     {
       "name": "Eva",
-      "status": "nada_a_pagar",
+      "status": "pendente",
       "inactive": true,
       "photo_url": null,
       "pago_ciclo": null,

@@ -189,9 +189,9 @@ DO $$ DECLARE c jsonb; BEGIN
   PERFORM public._t('Eva saldo de ciclos anteriores', (SELECT (e ->> 'saldo_anterior')::numeric FROM jsonb_array_elements(c -> 'members') e WHERE e ->> 'name' = 'Eva'), 15);
   PERFORM public._tt('dono fora do repasse', (SELECT e::text FROM jsonb_array_elements(c -> 'members') e WHERE e ->> 'name' = 'Rhian (dono)'), NULL);
   PERFORM public._tt('Duda inativa com saldo aparece', (SELECT e ->> 'inactive' FROM jsonb_array_elements(c -> 'members') e WHERE e ->> 'name' = 'Duda'), 'true');
-  PERFORM public._tt('Eva excluída com saldo antigo aparece', (SELECT e ->> 'status' FROM jsonb_array_elements(c -> 'members') e WHERE e ->> 'name' = 'Eva'), 'nada_a_pagar');
+  PERFORM public._tt('Eva excluída com saldo antigo aparece pendente', (SELECT e ->> 'status' FROM jsonb_array_elements(c -> 'members') e WHERE e ->> 'name' = 'Eva'), 'pendente');
   PERFORM public._t('total a pagar', (c -> 'totals' ->> 'a_pagar_ciclo')::numeric, 677);
-  PERFORM public._t('pendentes', (c -> 'totals' ->> 'pendentes')::numeric, 4);
+  PERFORM public._t('pendentes', (c -> 'totals' ->> 'pendentes')::numeric, 5);
   RAISE NOTICE 'PASS ciclo 06/09–05/10: Ana 257 (10 serviços + 3 produtos, sem despesa), Caio 100 (+7 do ciclo anterior), dono fora, inativos com saldo aparecem, total 677';
 END $$;
 

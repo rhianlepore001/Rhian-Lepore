@@ -84,7 +84,7 @@ describe('CommissionsManagement — ciclo do servidor (P1, get_commission_cycle_
         const summary = screen.getByTestId('payout-summary');
         expect(summary).toHaveTextContent('A pagar neste ciclo');
         expect(summary).toHaveTextContent(money('677,00'));
-        expect(summary).toHaveTextContent('4 pendentes');
+        expect(summary).toHaveTextContent('5 pendentes');
         expect(summary).toHaveTextContent(/Pago neste ciclo\s*R\$\s0,00/);
     });
 
@@ -100,7 +100,13 @@ describe('CommissionsManagement — ciclo do servidor (P1, get_commission_cycle_
         expect(within(duda).getByText('Inativo')).toBeInTheDocument();
         expect(screen.queryByText(/dono/i)).toBeNull();
         const eva = screen.getByTestId('payout-row-20000000-0000-0000-0000-0000000000f1');
-        expect(within(eva).getByRole('button', { name: /Nada a pagar/ })).toBeDisabled();
+        expect(within(eva).getAllByText('Pendente').length).toBeGreaterThan(0);
+        expect(within(eva).getAllByText(/\+\sR\$\s15,00 de ciclos anteriores/).length).toBeGreaterThan(0);
+        expect(within(eva).getByRole('button', { name: /Pagar Eva/ })).toBeEnabled();
+        expect(within(eva).getAllByText(money('15,00')).length).toBeGreaterThan(0);
+        fireEvent.click(within(eva).getByRole('button', { name: /Pagar Eva/ }));
+        expect(await screen.findByText('Ciclo: 06/09 – 05/10')).toBeInTheDocument();
+        expect((screen.getByDisplayValue('15.00') as HTMLInputElement).value).toBe('15.00');
     });
 
     it('‹ vai para o ciclo anterior do servidor; › fica desabilitado no ciclo em aberto', async () => {
@@ -157,7 +163,7 @@ describe('CommissionsManagement — ciclo do servidor (P1, get_commission_cycle_
 
     it('ciclo sem nada a pagar: "Nenhuma comissão pendente neste ciclo." (R6.9)', async () => {
         const empty = structuredClone(openCycle) as any;
-        empty.members.forEach((m: any) => { m.a_pagar_ciclo = 0; m.saldo_acumulado = 0; m.status = 'nada_a_pagar'; });
+        empty.members.forEach((m: any) => { m.a_pagar_ciclo = 0; m.saldo_acumulado = 0; m.saldo_anterior = 0; m.status = 'nada_a_pagar'; });
         empty.totals = { a_pagar_ciclo: 0, pendentes: 0, pago_ciclo: 0 };
         cycles.default = { data: empty, error: null };
         mount();

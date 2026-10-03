@@ -15,7 +15,7 @@ import { useTenantLocale } from '../hooks/useTenantLocale';
 import { lastClosedCycle, previousCycle, formatCycleLabel, type CommissionCycle } from '../utils/commissionCycle';
 import { fetchCommissionCycle, isRpcUnavailable } from '../services/staffPerformance';
 import type { CommissionCycleResult } from '../types/staffPerformance';
-import { PayoutList, type PayoutRowData } from './commissions/PayoutList';
+import { PayoutList, payoutDueAmount, type PayoutRowData } from './commissions/PayoutList';
 import { PaidPaymentsList, type PaidPayment } from './commissions/PaidPaymentsList';
 
 interface CommissionDue extends PayoutRowData {
@@ -263,7 +263,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
         setPaymentPeriodLabel(c.label);
         // Ciclo exibido com dados do servidor: o valor já vem calculado no fuso do tenant.
         if (cycleData && c.start === cycle.start && c.end === cycle.end) {
-            setPaymentAmount((professional.total_due || 0).toFixed(2));
+            setPaymentAmount(payoutDueAmount(professional).toFixed(2));
             return;
         }
         calculateAmountForDates(professional.professional_id, c.start, c.end);
@@ -271,7 +271,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
 
     const openPayModal = (professional: CommissionDue) => {
         setSelectedProfessional(professional);
-        setPaymentAmount((professional.total_due || 0).toFixed(2));
+        setPaymentAmount(payoutDueAmount(professional).toFixed(2));
         applyPaymentCycle(professional, cycle);
         setShowPayModal(true);
     };

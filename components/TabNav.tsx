@@ -20,7 +20,7 @@ export const TabNav: React.FC<TabNavProps> = ({ tabs, activeTab, onChange, accen
   return (
     <div className={`relative ${className || ''}`}>
       <div className="overflow-x-auto pb-1 -mb-1 hide-scrollbar">
-        <div role="tablist" className="inline-flex bg-[var(--color-bg)]/40 border border-[var(--color-text)]/[0.06] rounded-full p-1">
+        <div role="tablist" className="inline-flex flex-wrap sm:flex-nowrap bg-[var(--color-bg)]/40 border border-[var(--color-text)]/[0.06] rounded-full p-1">
           {tabs.map(tab => (
             <button
               key={tab.id}
@@ -28,7 +28,7 @@ export const TabNav: React.FC<TabNavProps> = ({ tabs, activeTab, onChange, accen
               aria-selected={activeTab === tab.id}
               aria-label={tab.shortLabel ? tab.label : undefined}
               onClick={() => onChange(tab.id)}
-              className={`flex items-center gap-1.5 rounded-full px-4 py-2 min-h-[44px] font-mono text-xs uppercase tracking-wide transition-all duration-200 whitespace-nowrap ${
+              className={`flex items-center gap-1 rounded-full px-2.5 sm:px-4 py-2 min-h-[44px] font-mono text-xs uppercase tracking-normal sm:tracking-wide transition-all duration-200 whitespace-nowrap ${
                 activeTab === tab.id
                   ? `${accentBg} text-[var(--color-bg)] font-semibold`
                   : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-card-hover)]'
@@ -46,7 +46,7 @@ export const TabNav: React.FC<TabNavProps> = ({ tabs, activeTab, onChange, accen
         </div>
       </div>
       {/* Indica que há mais abas fora da viewport (scroll horizontal) */}
-      <div className="pointer-events-none absolute right-0 top-0 bottom-1 w-8 bg-gradient-to-l from-[var(--color-bg)] to-transparent sm:hidden" />
+      <div className="pointer-events-none absolute right-0 top-0 bottom-1 w-6 bg-gradient-to-l from-[var(--color-bg)] to-transparent hidden" />
     </div>
   );
 };

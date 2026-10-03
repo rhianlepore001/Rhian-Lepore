@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { MoreHorizontal, User } from 'lucide-react';
 import { Badge, Button } from '@/components/ui';
 import { useBrutalTheme, type ThemeVariant } from '../../hooks/useBrutalTheme';
@@ -35,7 +36,8 @@ interface PayoutListProps {
     settledIds?: ReadonlySet<string>;
     onPay: (row: PayoutRowData) => void;
     onEditRate: (row: PayoutRowData) => void;
-    onOpenDetails: (row: PayoutRowData) => void;
+    /** Link "Ver histórico e análise" → Performance do colaborador no ciclo (R6.4). */
+    analysisHref: (row: PayoutRowData) => string;
     onOpenReport: (row: PayoutRowData) => void;
     onOpenHistory: (row: PayoutRowData) => void;
 }
@@ -151,10 +153,11 @@ const RowMenu: React.FC<{ row: PayoutRowData; theme: ThemeVariant; onReport: () 
     );
 };
 
-export const PayoutList: React.FC<PayoutListProps> = ({ rows, theme, formatMoney, payingId, settledIds, onPay, onEditRate, onOpenDetails, onOpenReport, onOpenHistory }) => {
+export const PayoutList: React.FC<PayoutListProps> = ({ rows, theme, formatMoney, payingId, settledIds, onPay, onEditRate, analysisHref, onOpenReport, onOpenHistory }) => {
     const { colors, font, radius, accent, isBeauty } = useBrutalTheme({ override: theme });
     const lgRadius = isBeauty ? 'lg:rounded-2xl' : 'lg:rounded-lg';
     const head = `${font.mono} text-xs uppercase tracking-wide ${colors.textMuted}`;
+    const firstDueId = rows.find((x) => payoutDueAmount(x) > 0)?.professional_id;
     return (
         <div className={`lg:border lg:border-theme-border lg:bg-theme-card ${lgRadius}`}>
             <div className={`hidden ${GRID} px-5 py-3 border-b ${colors.border}`} aria-hidden="true">
@@ -174,6 +177,7 @@ export const PayoutList: React.FC<PayoutListProps> = ({ rows, theme, formatMoney
                     const paying = payingId === r.professional_id;
                     const earlier = r.cycle?.saldo_anterior ?? 0;
                     const priorOnly = earlier > 0 && r.total_due <= 0;
+                    const emphasize = due && r.professional_id === firstDueId;
                     return (
                         <li
                             key={r.professional_id}
@@ -241,7 +245,7 @@ export const PayoutList: React.FC<PayoutListProps> = ({ rows, theme, formatMoney
                             {/* ações */}
                             <div className="mt-3 flex flex-col gap-2 lg:mt-0 lg:flex-row lg:items-center lg:justify-end">
                                 <Button
-                                    variant={due ? 'primary' : 'secondary'}
+                                    variant={emphasize ? 'primary' : 'secondary'}
                                     size="sm"
                                     forceTheme={theme}
                                     className="w-full lg:w-auto lg:min-w-[112px] min-h-[44px]"
@@ -253,13 +257,12 @@ export const PayoutList: React.FC<PayoutListProps> = ({ rows, theme, formatMoney
                                     {paying ? 'Processando' : due ? 'Pagar' : 'Nada a pagar'}
                                 </Button>
                                 <div className="flex items-center gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => onOpenDetails(r)}
-                                        className={`flex-1 lg:flex-none text-left lg:text-right text-sm ${accent.text} min-h-[44px] px-1 underline-offset-4 hover:underline whitespace-nowrap`}
+                                    <Link
+                                        to={analysisHref(r)}
+                                        className={`flex-1 lg:flex-none inline-flex items-center lg:justify-end text-sm ${accent.text} min-h-[44px] px-1 underline-offset-4 hover:underline whitespace-nowrap`}
                                     >
                                         Ver histórico e análise
-                                    </button>
+                                    </Link>
                                     <RowMenu row={r} theme={theme} onReport={() => onOpenReport(r)} onHistory={() => onOpenHistory(r)} />
                                 </div>
                             </div>

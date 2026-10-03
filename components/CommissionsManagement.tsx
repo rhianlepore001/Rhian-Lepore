@@ -7,7 +7,6 @@ import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { User, Percent, Info as InfoIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { InfoButton } from './HelpButtons';
 import { useNavigate } from 'react-router-dom';
-import { ProfessionalCommissionDetails } from './ProfessionalCommissionDetails';
 import { CommissionPaymentHistory } from './CommissionPaymentHistory';
 import { CommissionDetailReport } from './CommissionDetailReport';
 import { useToast } from '@/components/ui';
@@ -88,7 +87,6 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
     const { showToast } = useToast();
 
     // Modals
-    const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [showHistoryModal, setShowHistoryModal] = useState(false);
     const [showReportModal, setShowReportModal] = useState(false);
     const [detailsProfessional, setDetailsProfessional] = useState<CommissionDue | null>(null);
@@ -584,7 +582,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                 settledIds={settledIds}
                                 onPay={(r) => handleOpenPayModal(byId(r))}
                                 onEditRate={(r) => openRatePrompt(byId(r), false)}
-                                onOpenDetails={(r) => { setDetailsProfessional(byId(r)); setShowDetailsModal(true); }}
+                                analysisHref={(r) => `/financeiro/performance?de=${cycle.start}&ate=${cycle.end}&pro=${encodeURIComponent(r.professional_id)}`}
                                 onOpenReport={(r) => { setDetailsProfessional(byId(r)); setShowReportModal(true); }}
                                 onOpenHistory={(r) => { setDetailsProfessional(byId(r)); setShowHistoryModal(true); }}
                             />
@@ -764,27 +762,6 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                         </p>
                     </div>
                 </Modal>
-            )}
-
-            {/* Professional Details Modal */}
-            {showDetailsModal && detailsProfessional && (
-                <ProfessionalCommissionDetails
-                    professionalId={detailsProfessional.professional_id}
-                    professionalName={detailsProfessional.professional_name}
-                    commissionRate={detailsProfessional.commission_rate}
-                    onClose={() => { setShowDetailsModal(false); setDetailsProfessional(null); loadPayouts(); }}
-                    onRateUpdated={(rate) => {
-                        setDetailsProfessional((prev) => prev ? { ...prev, commission_rate: rate } : prev);
-                        setCommissionsDue((prev) => prev.map((p) =>
-                            p.professional_id === detailsProfessional.professional_id
-                                ? { ...p, commission_rate: rate }
-                                : p
-                        ));
-                        loadPayouts();
-                    }}
-                    accentColor={accentColor}
-                    currencySymbol={moneySymbol}
-                />
             )}
 
             {/* Payment History Modal */}

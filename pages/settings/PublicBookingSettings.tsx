@@ -149,7 +149,7 @@ export const PublicBookingSettings: React.FC = () => {
                                             setLeadTimeCustomDraft('');
                                             setLeadTimeCustomError(null);
                                         }}
-                                        className={`min-h-[44px] px-3 py-2.5 text-sm font-semibold rounded-xl transition-all border w-full md:w-auto ${
+                                        className={`min-h-[44px] px-2 sm:px-3 py-2.5 text-xs sm:text-sm font-semibold rounded-xl transition-all border w-full md:w-auto whitespace-nowrap ${
                                             pressed
                                                 ? `${accent.bgDim} ${accent.border} ${accent.text}`
                                                 : `${colors.inputBg} ${colors.border} ${colors.textMuted}`
@@ -168,7 +168,7 @@ export const PublicBookingSettings: React.FC = () => {
                                     setLeadTimeCustomDraft(isLeadTimePreset(leadTimeHours) ? '' : String(leadTimeHours));
                                     setLeadTimeCustomError(null);
                                 }}
-                                className={`min-h-[44px] px-3 py-2.5 text-sm font-semibold rounded-xl transition-all border w-full md:w-auto ${
+                                className={`min-h-[44px] px-2 sm:px-3 py-2.5 text-xs sm:text-sm font-semibold rounded-xl transition-all border w-full md:w-auto whitespace-nowrap ${
                                     leadTimeCustom
                                         ? `${accent.bgDim} ${accent.border} ${accent.text}`
                                         : `${colors.inputBg} ${colors.border} ${colors.textMuted}`

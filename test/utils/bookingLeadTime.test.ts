@@ -46,7 +46,7 @@ describe('bookingLeadTime copy e presets', () => {
       'Hoje não há horários com 8h de antecedência.',
     );
     expect(leadTimeEmptySlotsMessage(8, false, { hasCta: true })).toBe(
-      'Não há horários com 8h de antecedência neste dia.',
+      'Sem horários com 8h de antecedência.',
     );
   });
 

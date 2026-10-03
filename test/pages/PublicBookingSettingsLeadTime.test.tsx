@@ -66,6 +66,7 @@ describe('PublicBookingSettings — antecedência mínima', () => {
     render(<PublicBookingSettings />);
     expect(screen.getByRole('heading', { name: 'Antecedência mínima' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Sem mínimo' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: 'Sem mínimo' })).toHaveClass('whitespace-nowrap');
     expect(screen.getByTestId('lead-time-preset-2')).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByTestId('lead-time-preset-8')).toBeInTheDocument();
     expect(screen.getByTestId('lead-time-preset-16')).toBeInTheDocument();

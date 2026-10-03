@@ -146,6 +146,7 @@ export const PublicBooking: React.FC = () => {
     const [selectedTime, setSelectedTime] = useState<string | null>(null);
     const [slotsRefreshKey, setSlotsRefreshKey] = useState(0);
     const [nextDayBusy, setNextDayBusy] = useState(false);
+    const [leadTimeAlert, setLeadTimeAlert] = useState<string | null>(null);
     const [fullDates, setFullDates] = useState<string[]>([]);
     const [acceptedPolicy, setAcceptedPolicy] = useState(false);
     const [acceptedMarketing, setAcceptedMarketing] = useState(false);
@@ -524,13 +525,14 @@ export const PublicBooking: React.FC = () => {
                 businessTimezone,
             );
             if (!next) {
-                showToast('Não há horários nos próximos 14 dias. Escolha outro dia no calendário.', { type: 'info', placement: 'bottom' });
+                showToast('Não há horários nos próximos 14 dias. Escolha outro dia no calendário.', { type: 'info' });
                 return;
             }
+            setLeadTimeAlert(null);
             setSelectedDate(dateStringToLocalDate(next));
             setSelectedTime(null);
         } catch {
-            showToast('Não foi possível buscar o próximo dia. Tente outro dia no calendário.', { type: 'error', placement: 'bottom' });
+            showToast('Não foi possível buscar o próximo dia. Tente outro dia no calendário.', 'error');
         } finally {
             setNextDayBusy(false);
         }
@@ -745,9 +747,8 @@ export const PublicBooking: React.FC = () => {
                 setQuickStep('datetime');
                 setStep('datetime');
                 setSlotsRefreshKey((key) => key + 1);
-                showToast(
+                setLeadTimeAlert(
                     leadTimeViolationMessage(leadTimeHoursFromError(error, slotsResult.leadTimeHours)),
-                    { type: 'error', placement: 'bottom' },
                 );
             } else if (isSlotUnavailableError(error)) {
                 showToast('Este horário acabou de ser ocupado. Escolha outro.', 'error');
@@ -1147,11 +1148,11 @@ export const PublicBooking: React.FC = () => {
                                 <p className={`${colors.textMuted} text-sm`}>Selecione o melhor dia e horário para você.</p>
                             </div>
                             <div className="max-w-2xl mx-auto">
-                                <CalendarPicker selectedDate={selectedDate} onDateSelect={setSelectedDate} forceTheme={themeOverride} fullDates={fullDates} today={businessToday} />
+                                <CalendarPicker selectedDate={selectedDate} onDateSelect={(date) => { setLeadTimeAlert(null); setSelectedDate(date); }} forceTheme={themeOverride} fullDates={fullDates} today={businessToday} />
                             </div>
                             {selectedDate && (
                                 <div className="animate-reveal-fragment duration-700 max-w-2xl mx-auto">
-                                    <TimeGrid selectedTime={selectedTime} onTimeSelect={setSelectedTime} availableSlots={availableSlots} emptyMessage={leadEmptyMessage} emptyAction={leadEmptyAction} forceTheme={themeOverride} />
+                                    <TimeGrid selectedTime={selectedTime} onTimeSelect={setSelectedTime} availableSlots={availableSlots} emptyMessage={leadEmptyMessage} emptyAction={leadEmptyAction} alertMessage={leadTimeAlert} forceTheme={themeOverride} />
                                 </div>
                             )}
                         </div>
@@ -1552,12 +1553,13 @@ export const PublicBooking: React.FC = () => {
                                                 <div className="w-full space-y-8 md:space-y-12 max-w-2xl mx-auto">
                                                     <div className={`${colors.card} ${colors.border} border-2 p-6 md:p-8 ${shadow.elevated} rounded-2xl`}>
                                                         <h3 className={`mb-8 ${colors.text} font-heading text-xl text-center md:text-left`}>Seleção de Agenda</h3>
-                                                        <CalendarPicker selectedDate={selectedDate} onDateSelect={setSelectedDate} forceTheme={themeOverride} fullDates={fullDates} today={businessToday} />
+                                                        <CalendarPicker selectedDate={selectedDate} onDateSelect={(date) => { setLeadTimeAlert(null); setSelectedDate(date); }} forceTheme={themeOverride} fullDates={fullDates} today={businessToday} />
                                                     </div>
                                                     {selectedDate && (
                                                         <div className="animate-reveal-fragment duration-700">
                                                             <h4 className={`mb-6 ${accent.text} font-heading text-lg text-center md:text-left`}>Horários Disponíveis</h4>
                                                             <TimeGrid selectedTime={selectedTime} onTimeSelect={(time) => {
+                                                                setLeadTimeAlert(null);
                                                                 setSelectedTime(time);
                                                                 const isLogged = !!client;
                                                                 if (editingBookingId) {
@@ -1567,7 +1569,7 @@ export const PublicBooking: React.FC = () => {
                                                                     setMessages(prev => [...prev, { id: Date.now().toString(), text: `Agendar para dia ${selectedDate.toLocaleDateString('pt-BR')} às ${time}`, isAssistant: false }, { id: (Date.now() + 1).toString(), text: isLogged ? "Estamos quase concluindo! Como você já tem cadastro, verifique os detalhes abaixo e confirme o seu agendamento." : "Estamos quase concluindo! Agora, para confirmar seu agendamento, informe seus dados de contato.", isAssistant: true, type: 'contact' }]);
                                                                     setStep('contact');
                                                                 }
-                                                            }} availableSlots={availableSlots} emptyMessage={leadEmptyMessage} emptyAction={leadEmptyAction} forceTheme={themeOverride} />
+                                                            }} availableSlots={availableSlots} emptyMessage={leadEmptyMessage} emptyAction={leadEmptyAction} alertMessage={leadTimeAlert} forceTheme={themeOverride} />
                                                         </div>
                                                     )}
                                                 </div>

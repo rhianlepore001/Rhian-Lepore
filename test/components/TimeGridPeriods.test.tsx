@@ -98,4 +98,20 @@ describe('TimeGrid — rótulo do grupo segue a hora real dos slots', () => {
     );
     expect(screen.getByRole('button', { name: 'Ver próximo dia com horário' })).toBeInTheDocument();
   });
+
+  it('alerta de antecedência fica no topo do card', () => {
+    render(
+      <TimeGrid
+        selectedTime={null}
+        onTimeSelect={() => undefined}
+        availableSlots={[]}
+        emptyMessage="Sem horários com 8h de antecedência."
+        emptyAction={<button type="button">Ver próximo dia com horário</button>}
+        alertMessage="Esse horário precisa ser marcado com pelo menos 8h de antecedência"
+      />,
+    );
+    const alert = screen.getByTestId('lead-time-alert');
+    expect(alert).toHaveAttribute('role', 'alert');
+    expect(alert).toHaveTextContent('Esse horário precisa ser marcado com pelo menos 8h de antecedência');
+  });
 });

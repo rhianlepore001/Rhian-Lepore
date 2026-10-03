@@ -348,6 +348,7 @@ test.describe('PR-2 antecedência mínima', () => {
         await expect(page.getByTestId('lead-time-preset-16')).toBeVisible();
         await expect(page.getByTestId('lead-time-preset-24')).toBeVisible();
         await expect(page.getByRole('button', { name: 'Sem mínimo' })).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Sem mínimo' })).toHaveCSS('white-space', 'nowrap');
         await expect(page.getByRole('button', { name: /^Outro$/ })).toBeVisible();
         await expect(page.getByTestId('lead-time-preset-2')).toHaveAttribute('aria-pressed', 'true');
       }
@@ -443,9 +444,14 @@ test.describe('PR-2 antecedência mínima', () => {
     await page.getByRole('button', { name: /Confirmar agendamento/ }).click();
     if (phase === 'after') {
       await expect(page.getByRole('heading', { name: 'Escolha a data e hora' })).toBeVisible({ timeout: 10_000 });
-      await expect(page.getByText(LEAD_TOAST)).toBeVisible({ timeout: 10_000 });
-      await expect(page.locator('[data-toast-placement="bottom"]')).toBeVisible();
+      await expect(page.getByTestId('lead-time-alert')).toBeVisible({ timeout: 10_000 });
+      await expect(page.getByText(LEAD_TOAST)).toBeVisible();
+      await expect(page.getByTestId('lead-time-next-day')).toBeVisible();
+      await expect(page.locator('[data-toast-placement="bottom"]')).toHaveCount(0);
       await expect(page.getByRole('button', { name: '18:00' })).toHaveCount(0);
+      await page.getByRole('heading', { name: 'Escolha a data e hora' }).evaluate((el) => {
+        el.scrollIntoView({ block: 'start', inline: 'nearest' });
+      });
     }
     await shot(page, 'client-390-lead-toast.png');
   });

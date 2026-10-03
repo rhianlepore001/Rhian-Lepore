@@ -48,7 +48,7 @@ export function leadTimeEmptySlotsMessage(
   if (opts?.hasCta) {
     return isToday
       ? `Hoje não há horários com ${hours}h de antecedência.`
-      : `Não há horários com ${hours}h de antecedência neste dia.`;
+      : `Sem horários com ${hours}h de antecedência.`;
   }
   const tomorrow = hours <= SEE_TOMORROW_MAX_LEAD_HOURS;
   if (isToday) {

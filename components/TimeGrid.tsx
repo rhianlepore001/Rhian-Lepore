@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock } from 'lucide-react';
+import { Clock, TriangleAlert } from 'lucide-react';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { Card } from './ui/Card';
 
@@ -22,6 +22,7 @@ interface TimeGridProps {
     forceTheme?: ThemeVariant;
     emptyMessage?: string;
     emptyAction?: React.ReactNode;
+    alertMessage?: string | null;
 }
 
 export const TimeGrid: React.FC<TimeGridProps> = ({
@@ -34,6 +35,7 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
     forceTheme,
     emptyMessage,
     emptyAction,
+    alertMessage,
 }) => {
     const { colors, accent, font, classes, density } = useBrutalTheme({ override: forceTheme });
     const hoverBg = `hover:bg-[var(--color-accent-dim)]`;
@@ -102,6 +104,17 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
                     <h3 className={`${colors.text} font-heading text-lg font-bold`}>Horários disponíveis</h3>
                 </div>
 
+                {alertMessage ? (
+                    <div
+                        role="alert"
+                        data-testid="lead-time-alert"
+                        className="mb-4 flex items-start gap-2 rounded-xl border px-3 py-2.5 border-[var(--color-danger-border)] bg-[var(--color-danger-bg)]"
+                    >
+                        <TriangleAlert className="w-4 h-4 shrink-0 mt-0.5 text-[var(--color-danger)]" aria-hidden="true" />
+                        <p className="text-sm leading-snug text-[var(--color-danger)] text-balance">{alertMessage}</p>
+                    </div>
+                ) : null}
+
                 {displayMorning.length > 0 && (
                     <div className="mb-4">
                         <p className={`${colors.textMuted} text-xs ${font.mono} mb-2`}>{firstGroupLabel}</p>
@@ -131,8 +144,8 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
                 )}
 
                 {availableSlots.length === 0 && (
-                    <div className="text-center py-8 px-2" data-testid="time-grid-empty">
-                        <p className={`${emptyMessage ? colors.text : colors.textMuted} text-sm leading-relaxed`}>
+                    <div className={`text-center px-2 ${alertMessage ? 'py-4' : 'py-8'}`} data-testid="time-grid-empty">
+                        <p className={`${emptyMessage ? colors.text : colors.textMuted} text-sm leading-relaxed text-balance`}>
                             {emptyMessage ?? 'Nenhum horário disponível para esta data.'}
                         </p>
                         {!emptyMessage && (

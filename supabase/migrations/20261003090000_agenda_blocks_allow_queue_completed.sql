@@ -6,7 +6,7 @@
 -- bloqueio ativo. Completed não ocupa horário (ACCEPTANCE 0.6 / B-30 / B-40),
 -- então passa direto. Só muda a primeira condição do trigger.
 --
--- ROLLBACK: docs/rollbacks/20261003110000_agenda_blocks_allow_queue_completed_rollback.sql
+-- ROLLBACK: docs/rollbacks/20261003090000_agenda_blocks_allow_queue_completed_rollback.sql
 -- =============================================================================
 
 BEGIN;

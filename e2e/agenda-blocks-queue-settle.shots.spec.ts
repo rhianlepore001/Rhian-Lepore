@@ -3,7 +3,7 @@
  * Toda escrita em prod é bloqueada (e2e/helpers/prodWriteGuard.ts); o retorno de
  * settle_queue_ticket é simulado com a resposta exata do live:
  *   SHOT_PHASE=before → erro do trigger ("Este horário está bloqueado...")
- *   SHOT_PHASE=after  → 204 (comportamento com 20261003110000)
+ *   SHOT_PHASE=after  → 204 (comportamento com 20261003090000)
  * A comanda aberta é injetada na resposta GET de queue_entries (não grava nada).
  *
  *   SHOT_PHASE=before SHOT_DIR=/opt/cursor/artifacts/screenshots/pr1/before \

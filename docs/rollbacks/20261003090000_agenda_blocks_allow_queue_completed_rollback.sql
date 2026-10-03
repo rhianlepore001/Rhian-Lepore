@@ -1,5 +1,5 @@
 -- =============================================================================
--- ROLLBACK de 20261003110000_agenda_blocks_allow_queue_completed
+-- ROLLBACK de 20261003090000_agenda_blocks_allow_queue_completed
 -- =============================================================================
 -- Volta enforce_agenda_block_on_appointments() ao corpo de 20261002120000
 -- (live em 2026-10-03, md5 de pg_get_functiondef 150219aaaec7688797ec0e09229d8da5).

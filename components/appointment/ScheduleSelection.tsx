@@ -116,7 +116,7 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
     useEffect(() => {
         const el = currentSlotRef.current;
         if (el && typeof el.scrollIntoView === 'function') {
-            el.scrollIntoView({ block: 'center', inline: 'nearest' });
+            el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
         }
     }, [dateStr, selectedProId, closed, offHoursVisible]);
 
@@ -142,7 +142,9 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                 aria-label={aria}
                 data-slot-state={tag ? tag.toLowerCase() : selected ? 'selected' : undefined}
                 className={`
-                    min-h-[44px] h-[44px] px-1.5 rounded-lg font-mono font-bold text-sm transition-all border inline-flex items-center justify-center gap-1 whitespace-nowrap
+                    min-h-[44px] h-[44px] max-h-[44px] w-full min-w-0 px-1 rounded-lg font-mono font-bold transition-all border
+                    inline-flex flex-col items-center justify-center gap-0.5 overflow-hidden
+                    ${tag ? 'text-xs leading-none' : 'text-sm leading-none'}
                     ${blocked
                         ? 'bg-theme-surface border-[var(--color-divider)] text-theme-textSecondary cursor-not-allowed'
                         : busy
@@ -155,9 +157,9 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                     }
                 `}
             >
-                <span className={disabled || (current && !selected) ? 'line-through decoration-theme-textSecondary' : undefined}>{time}</span>
+                <span className={`tabular-nums ${disabled || (current && !selected) ? 'line-through decoration-theme-textSecondary decoration-1' : ''}`}>{time}</span>
                 {tag && (
-                    <span className={`text-xs font-sans font-semibold tracking-wide ${selected ? 'text-[var(--color-on-accent)]' : ''}`}>
+                    <span className={`text-xs font-sans font-semibold tracking-wide leading-none ${selected ? 'text-[var(--color-on-accent)]' : ''}`}>
                         {tag}
                     </span>
                 )}

@@ -29,7 +29,7 @@ async function settle(page: Page) {
       try { a.finish(); } catch { /* ignore */ }
     });
   });
-  await page.waitForTimeout(160);
+  await page.waitForTimeout(280);
 }
 
 async function shot(page: Page, name: string) {
@@ -215,6 +215,8 @@ test.describe('PR C — Remarcar horário', () => {
     await expect(page.getByTestId('reschedule-modal-body').getByRole('button', { name: /Bruna/ })).toBeDisabled();
     await expect(page.getByTestId('reschedule-modal-body').getByRole('button', { name: /Bob/ }).first()).toBeEnabled();
     await expect(page.getByTestId('reschedule-current')).toContainText('com Bob');
+    await page.getByTestId('reschedule-lock-pro-note').scrollIntoViewIfNeeded();
+    await settle(page);
     await shot(page, 'staff-own-390-3-seletor-travado.png');
   });
 
@@ -229,6 +231,8 @@ test.describe('PR C — Remarcar horário', () => {
     await expect(page.getByTestId('reschedule-modal-body').getByRole('button', { name: /Bruna/ })).toHaveAttribute('aria-pressed', 'true');
     await page.getByTestId('reschedule-modal-body').getByRole('button', { name: '11:30' }).click();
     await expect(page.getByTestId('reschedule-summary').first()).toContainText('Bruna');
+    await page.getByTestId('wizard-pro-list').scrollIntoViewIfNeeded();
+    await settle(page);
     await shot(page, 'staff-all-390-3-troca-profissional.png');
   });
 
@@ -239,13 +243,13 @@ test.describe('PR C — Remarcar horário', () => {
       body: {
         success: true,
         id: '50000000-0000-4000-8000-000000000001',
-        appointment_time: '2026-08-24T09:30:00.000Z',
+        appointment_time: '2027-10-10T09:30:00.000Z',
         professional_id: '10000000-0000-4000-8000-000000000001',
       },
     });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`${BASE}/#/minha-area/barbearia-bob`, { waitUntil: 'domcontentloaded' });
-    await expect(page.getByText(/11:30|10:30/).first()).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText(/10:30/).first()).toBeVisible({ timeout: 20_000 });
     await shot(page, 'client-390-c-r09-horario-novo.png');
   });
 });

@@ -317,7 +317,7 @@ export async function installRemarcarMocks(
           clients: { id: CLIENT_BUSY_ID, name: 'Carla Costa', phone: '+351619923490' },
         },
       ];
-      const idEq = search.match(/id=eq\.([0-9a-f-]+)/i)?.[1];
+      const idEq = search.match(/(?:^|[?&])id=eq\.([0-9a-f-]+)/i)?.[1];
       await fulfillJson(route, idEq ? rows.filter((r) => r.id === idEq) : rows);
       return;
     }

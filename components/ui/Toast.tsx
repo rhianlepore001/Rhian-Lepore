@@ -154,12 +154,16 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         createPortal(
           <div
             data-toast-viewport
+            data-toast-dock={dockBottom ? 'modal' : 'page'}
             className={
               dockBottom
-                ? 'fixed bottom-0 right-0 left-0 sm:left-auto flex flex-col items-center sm:items-end gap-2 p-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pointer-events-none'
+                ? 'fixed right-0 left-0 sm:left-auto flex flex-col items-center sm:items-end gap-2 p-4 pointer-events-none'
                 : 'fixed top-0 right-0 left-0 sm:left-auto flex flex-col items-center sm:items-end gap-2 p-4 pt-[calc(0.75rem+env(safe-area-inset-top))] pointer-events-none'
             }
-            style={{ zIndex: 'var(--z-toast)' }}
+            style={{
+              zIndex: 'var(--z-toast)',
+              ...(dockBottom ? { bottom: '8.75rem', top: 'auto' } : {}),
+            }}
             aria-live="polite"
           >
             {toasts.map(toast => (

@@ -21,12 +21,15 @@ async function reveal(page: Page, testId: string) {
   const loc = page.getByTestId(testId);
   await loc.waitFor({ timeout: 20_000 });
   await loc.evaluate((el) => {
-    el.scrollIntoView({ block: 'start', inline: 'nearest' });
-    if (window.innerWidth < 768) {
-      const sticky = 220;
-      const after = el.getBoundingClientRect().top;
-      window.scrollBy({ top: after - sticky, behavior: 'instant' });
+    if (window.innerWidth >= 768) {
+      const heading = el.querySelector('h3') ?? el;
+      heading.scrollIntoView({ block: 'center', inline: 'nearest' });
+      return;
     }
+    el.scrollIntoView({ block: 'start', inline: 'nearest' });
+    const sticky = 220;
+    const after = el.getBoundingClientRect().top;
+    window.scrollBy({ top: after - sticky, behavior: 'instant' });
   });
 }
 

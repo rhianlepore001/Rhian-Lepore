@@ -20,7 +20,16 @@ const HAS_STAFF = Boolean(process.env.E2E_STAFF_EMAIL && process.env.E2E_STAFF_P
 async function reveal(page: Page, testId: string) {
   const loc = page.getByTestId(testId);
   await loc.waitFor({ timeout: 20_000 });
-  await loc.evaluate((el) => el.scrollIntoView({ block: 'start', inline: 'nearest' }));
+  await loc.evaluate((el) => {
+    const sticky = 220;
+    const top = el.getBoundingClientRect().top + window.scrollY - sticky;
+    window.scrollTo({ top: Math.max(0, top), behavior: 'instant' });
+    el.scrollIntoView({ block: 'start', inline: 'nearest' });
+    const after = el.getBoundingClientRect().top;
+    if (after < sticky - 8) {
+      window.scrollBy({ top: after - sticky, behavior: 'instant' });
+    }
+  });
 }
 
 async function shot(page: Page, name: string) {
@@ -369,13 +378,15 @@ test.describe('PR-2 antecedência mínima', () => {
       await expect(page.locator('#btn-new-appointment')).toBeVisible({ timeout: 20_000 });
       await page.locator('#btn-new-appointment').click();
       const choice = page.getByTestId('agenda-choice-new-appointment');
+      const wizardTitle = page.getByText(/Novo Atendimento/i);
       try {
-        await choice.waitFor({ state: 'visible', timeout: 4_000 });
+        await choice.waitFor({ state: 'visible', timeout: 8_000 });
         await choice.click();
       } catch {
         /* wizard opened directly */
       }
-      await expect(page.getByText(/Novo atendimento|Cliente|Horário|Serviço/i).first()).toBeVisible({ timeout: 15_000 });
+      await expect(wizardTitle.first()).toBeVisible({ timeout: 15_000 });
+      await expect(page.getByText(/Novo Atendimento/i).first()).toBeVisible({ timeout: 15_000 });
       await expect(page.getByText(/antecedência/i)).toHaveCount(0);
       await shot(page, `${role}-390-fit-in.png`);
     });

@@ -128,7 +128,7 @@ export const PublicBookingSettings: React.FC = () => {
                     />
                 </SettingsSection>
 
-                <div data-testid="lead-time-section" className="scroll-mt-24">
+                <div data-testid="lead-time-section" className="scroll-mt-[14rem] md:scroll-mt-8">
                 <SettingsSection
                     title="Antecedência mínima"
                     description="O cliente só marca pelo link com essa antecedência (padrão 2h). Quem marca pela Agenda — você e a equipe — não é afetado."

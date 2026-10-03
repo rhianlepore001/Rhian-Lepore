@@ -370,7 +370,7 @@ export async function installRemarcarMocks(
       return;
     }
 
-    if (url.includes('realtime') || pathname.includes('/realtime')) {
+    if (req.url().includes('realtime') || pathname.includes('/realtime')) {
       await route.abort('blockedbyclient');
       return;
     }

@@ -20,13 +20,18 @@ DECLARE
 BEGIN
   EXECUTE 'SET LOCAL ROLE authenticated';
   v_json := public.reschedule_appointment(p_id, p_time, p_pro);
+  EXECUTE 'RESET ROLE';
   RETURN 'ok:' || COALESCE(v_json->>'success', 'null');
 EXCEPTION WHEN undefined_function THEN
+  EXECUTE 'RESET ROLE';
   RETURN 'error:missing_rpc';
 WHEN insufficient_privilege THEN
-  RETURN 'error:denied|' || SQLERRM;
+  GET STACKED DIAGNOSTICS v_msg = MESSAGE_TEXT, v_hint = PG_EXCEPTION_HINT;
+  EXECUTE 'RESET ROLE';
+  RETURN 'error:' || COALESCE(NULLIF(v_hint, ''), 'denied') || '|' || v_msg;
 WHEN OTHERS THEN
   GET STACKED DIAGNOSTICS v_msg = MESSAGE_TEXT, v_hint = PG_EXCEPTION_HINT;
+  EXECUTE 'RESET ROLE';
   RETURN 'error:' || COALESCE(NULLIF(v_hint, ''), 'nohint') || '|' || v_msg;
 END $$;
 
@@ -43,8 +48,8 @@ DECLARE
   v_pro text := '10000000-0000-0000-0000-000000000001';
   v_client text := '30000000-0000-0000-0000-000000000001';
   v_svc text := '20000000-0000-0000-0000-000000000001';
-  v_apt uuid := '50000000-0000-0000-0000-0000000000h1';
-  v_pb uuid := '70000000-0000-0000-0000-0000000000h1';
+  v_apt uuid := '50000000-0000-0000-0000-0000000000c9';
+  v_pb uuid := '70000000-0000-0000-0000-0000000000c9';
   v_got text;
   v_lead_fn regprocedure;
 BEGIN

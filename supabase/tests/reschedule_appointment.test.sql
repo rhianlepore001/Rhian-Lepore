@@ -26,13 +26,18 @@ DECLARE
 BEGIN
   EXECUTE 'SET LOCAL ROLE authenticated';
   v_json := public.reschedule_appointment(p_id, p_time, p_pro);
+  EXECUTE 'RESET ROLE';
   RETURN 'ok:' || COALESCE(v_json->>'success', 'null');
 EXCEPTION WHEN undefined_function THEN
+  EXECUTE 'RESET ROLE';
   RETURN 'error:missing_rpc';
 WHEN insufficient_privilege THEN
-  RETURN 'error:denied|' || SQLERRM;
+  GET STACKED DIAGNOSTICS v_msg = MESSAGE_TEXT, v_hint = PG_EXCEPTION_HINT;
+  EXECUTE 'RESET ROLE';
+  RETURN 'error:' || COALESCE(NULLIF(v_hint, ''), 'denied') || '|' || v_msg;
 WHEN OTHERS THEN
   GET STACKED DIAGNOSTICS v_msg = MESSAGE_TEXT, v_hint = PG_EXCEPTION_HINT;
+  EXECUTE 'RESET ROLE';
   RETURN 'error:' || COALESCE(NULLIF(v_hint, ''), 'nohint') || '|' || v_msg;
 END $$;
 

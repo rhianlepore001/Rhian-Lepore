@@ -114,7 +114,10 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
     const currentSlotRef = useRef<HTMLButtonElement | null>(null);
 
     useEffect(() => {
-        currentSlotRef.current?.scrollIntoView({ block: 'center', inline: 'nearest' });
+        const el = currentSlotRef.current;
+        if (el && typeof el.scrollIntoView === 'function') {
+            el.scrollIntoView({ block: 'center', inline: 'nearest' });
+        }
     }, [dateStr, selectedProId, closed, offHoursVisible]);
 
     const renderTime = (time: string) => {

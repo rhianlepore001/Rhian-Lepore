@@ -7,6 +7,7 @@ import detailJson from '../fixtures/staffPerformance/detail.json';
 import { ownerPerformanceSchema } from '../../types/staffPerformance';
 
 const fetchStaffPerformance = vi.fn();
+const fetchPerformanceLedger = vi.fn();
 // O service real valida com zod; o mock devolve o mesmo formato já validado.
 const team = ownerPerformanceSchema.parse(teamJson);
 const detail = ownerPerformanceSchema.parse(detailJson);
@@ -17,6 +18,25 @@ vi.mock('@/services/staffPerformance', async (orig) => ({
 vi.mock('../../services/staffPerformance', async (orig) => ({
     ...(await orig<typeof import('../../services/staffPerformance')>()),
     fetchStaffPerformance: (...a: unknown[]) => fetchStaffPerformance(...a),
+}));
+vi.mock('@/services/performanceLedger', () => ({
+    fetchPerformanceLedger: (...a: unknown[]) => fetchPerformanceLedger(...a),
+    pageLedger: (rows: unknown[], page: number) => {
+        const pages = Math.max(1, Math.ceil(rows.length / 20));
+        const p = Math.min(Math.max(page, 1), pages);
+        return { items: rows.slice((p - 1) * 20, p * 20), pages, page: p };
+    },
+    LEDGER_PAGE: 20,
+}));
+vi.mock('../../services/performanceLedger', () => ({
+    fetchPerformanceLedger: (...a: unknown[]) => fetchPerformanceLedger(...a),
+    pageLedger: (rows: unknown[], page: number) => {
+        const PAGE = 20;
+        const pages = Math.max(1, Math.ceil(rows.length / PAGE));
+        const p = Math.min(Math.max(page, 1), pages);
+        return { items: rows.slice((p - 1) * PAGE, p * PAGE), pages, page: p };
+    },
+    LEDGER_PAGE: 20,
 }));
 const AUTH = { user: { id: 'owner-1' }, role: 'owner', region: 'BR', userType: 'barber', isAuthenticated: true, loading: false };
 vi.mock('../../contexts/AuthContext', () => ({ useAuth: () => AUTH }));
@@ -59,6 +79,8 @@ describe('StaffPerformance (P2) — /financeiro/performance', () => {
         vi.setSystemTime(new Date(2026, 9, 2, 12));
         fetchStaffPerformance.mockReset();
         fetchStaffPerformance.mockImplementation(async (p: { professionalId?: string | null }) => (p.professionalId ? detail : team));
+        fetchPerformanceLedger.mockReset();
+        fetchPerformanceLedger.mockResolvedValue([]);
     });
     afterEach(() => { vi.useRealTimers(); process.env.TZ = originalTz; });
 
@@ -194,6 +216,39 @@ describe('StaffPerformance (P2) — /financeiro/performance', () => {
         // soma da equipe: os 4 de Ana + os de "Sem profissional"
         expect(q).toHaveTextContent(`${4 + team.unassigned!.sem_registro_financeiro} atendimentos sem registro financeiro: comissão não calculada`);
         expect(q).toHaveTextContent('Conclua pelo botão Concluir e cobrar para registrar a comissão.');
+    });
+
+    it('detalhe: lançamentos paginados (20) e vazio honesto, sem PII no console', async () => {
+        const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
+        const err = vi.spyOn(console, 'error').mockImplementation(() => {});
+        fetchPerformanceLedger.mockResolvedValue(
+            Array.from({ length: 21 }, (_, i) => ({
+                id: `a${i}`,
+                kind: 'atendimento',
+                at: '2026-09-02T13:00:00-03:00',
+                title: 'Corte',
+                amount: 50,
+                clientName: `Cliente ${i}`,
+                club: false,
+            })),
+        );
+        mount(`/financeiro/performance?de=2026-09-01&ate=2026-09-30&pro=${ANA}`);
+        await screen.findByRole('heading', { name: 'Lançamentos' });
+        expect(screen.getByText('21 no período')).toBeInTheDocument();
+        expect(screen.getByText('Página 1 de 2')).toBeInTheDocument();
+        expect(screen.getAllByText('Cliente 0').length).toBeGreaterThan(0);
+        expect(screen.queryByText('Cliente 20')).toBeNull();
+        fireEvent.click(screen.getByRole('button', { name: 'Próxima' }));
+        expect(screen.getByText('Cliente 20')).toBeInTheDocument();
+        expect(spy.mock.calls.flat().join(' ')).not.toMatch(/Cliente/);
+        expect(err.mock.calls.flat().join(' ')).not.toMatch(/Cliente/);
+        spy.mockRestore();
+        err.mockRestore();
+    });
+
+    it('detalhe: lançamentos vazios', async () => {
+        mount(`/financeiro/performance?de=2026-09-01&ate=2026-09-30&pro=${ANA}`);
+        expect(await screen.findByText('Nenhum lançamento neste período.')).toBeInTheDocument();
     });
 
     it('link "← Pagamento de comissão" volta ao Financeiro', async () => {

@@ -17,6 +17,7 @@ import {
     type Delta,
 } from '../../utils/staffPerformanceView';
 import { DeltaText } from './DeltaText';
+import { MemberLedger } from './MemberLedger';
 import { MetricInfo, type MetricId } from './MetricInfo';
 
 interface MemberDetailProps {
@@ -25,6 +26,7 @@ interface MemberDetailProps {
     against: string | null;
     previousName: string | null;
     formatMoney: (v: number) => string;
+    companyId: string;
     onBack: () => void;
     onOpenHistory: () => void;
     onOpenReport: () => void;
@@ -75,7 +77,7 @@ const TrendChart: React.FC<{ title: string; points: PerformanceTrendPoint[]; pic
     );
 };
 
-export const MemberDetail: React.FC<MemberDetailProps> = ({ member: m, data, against, previousName, formatMoney, onBack, onOpenHistory, onOpenReport }) => {
+export const MemberDetail: React.FC<MemberDetailProps> = ({ member: m, data, against, previousName, formatMoney, companyId, onBack, onOpenHistory, onOpenReport }) => {
     const { colors, font, radius, accent } = useBrutalTheme();
     const [showMath, setShowMath] = useState(false);
     const x = m.metrics;
@@ -218,6 +220,14 @@ export const MemberDetail: React.FC<MemberDetailProps> = ({ member: m, data, aga
                     )}
                 </section>
             </div>
+
+            <MemberLedger
+                companyId={companyId}
+                professionalId={m.professional_id}
+                start={data.period.start}
+                end={data.period.end}
+                formatMoney={formatMoney}
+            />
 
             {!m.is_owner && (
                 <section aria-label="Pagamentos" className={`flex flex-col sm:flex-row sm:items-center gap-3 border ${colors.border} ${radius.card} px-4 py-3.5 lg:px-5`}>

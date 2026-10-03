@@ -200,6 +200,7 @@ export const StaffPerformance: React.FC = () => {
                     against={against}
                     previousName={previousName}
                     formatMoney={formatMoney}
+                    companyId={user?.id ?? ''}
                     onBack={() => go({ ...filters, pro: null })}
                     onOpenHistory={() => setModal('history')}
                     onOpenReport={openReport}

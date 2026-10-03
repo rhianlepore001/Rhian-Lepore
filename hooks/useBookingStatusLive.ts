@@ -35,6 +35,15 @@ export function useBookingStatusLive(
 
     const ids = idsKey.split('\0');
     let alive = true;
+    const healthById = new Map<string, boolean>();
+
+    const recomputeHealth = () => {
+      if (!alive) return;
+      const states = ids.map((id) => healthById.get(id));
+      if (states.some((state) => state === false)) setHealthy(false);
+      else if (states.every((state) => state === true)) setHealthy(true);
+    };
+
     const channels = ids.map((id) =>
       supabase
         .channel(bookingRealtimeTopic(id), { config: { private: true } })
@@ -44,31 +53,38 @@ export function useBookingStatusLive(
         })
         .subscribe((status) => {
           if (!alive) return;
-          if (status === 'SUBSCRIBED') setHealthy(true);
+          if (status === 'SUBSCRIBED') healthById.set(id, true);
           else if (UNHEALTHY.has(status)) {
-            setHealthy(false);
+            healthById.set(id, false);
             onRefetchRef.current();
+          } else {
+            return;
           }
+          recomputeHealth();
         }),
     );
 
-    const onTestEvent = (nativeEvent: Event) => {
-      const event = parseBookingRealtimeEvent((nativeEvent as CustomEvent).detail);
-      if (event && ids.includes(event.id)) onEventRef.current(event);
-    };
     const onVisible = () => {
       if (document.visibilityState === 'visible') onRefetchRef.current();
     };
     const onOnline = () => onRefetchRef.current();
-
-    window.addEventListener(BOOKING_STATUS_LIVE_EVENT, onTestEvent);
     document.addEventListener('visibilitychange', onVisible);
     window.addEventListener('online', onOnline);
+
+    let detachTest: (() => void) | undefined;
+    if (import.meta.env.DEV) {
+      const onTestEvent = (nativeEvent: Event) => {
+        const event = parseBookingRealtimeEvent((nativeEvent as CustomEvent).detail);
+        if (event && ids.includes(event.id)) onEventRef.current(event);
+      };
+      window.addEventListener(BOOKING_STATUS_LIVE_EVENT, onTestEvent);
+      detachTest = () => window.removeEventListener(BOOKING_STATUS_LIVE_EVENT, onTestEvent);
+    }
 
     return () => {
       alive = false;
       setHealthy(null);
-      window.removeEventListener(BOOKING_STATUS_LIVE_EVENT, onTestEvent);
+      detachTest?.();
       document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('online', onOnline);
       channels.forEach((channel) => {

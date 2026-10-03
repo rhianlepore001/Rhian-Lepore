@@ -1,6 +1,6 @@
 export const BOOKING_REALTIME_EVENT = 'booking_status';
-export const BOOKING_STATUS_LIVE_EVENT = 'agendix:booking-status';
-export const PUBLIC_BOOKING_CHANGE_LIVE_EVENT = 'agendix:public-booking-change';
+export const BOOKING_STATUS_LIVE_EVENT = import.meta.env.DEV ? 'agendix:booking-status' : '';
+export const PUBLIC_BOOKING_CHANGE_LIVE_EVENT = import.meta.env.DEV ? 'agendix:public-booking-change' : '';
 export const BOOKING_LIVE_POLL_MS = 30_000;
 
 export const bookingRealtimeTopic = (bookingId: string) => `booking:${bookingId}`;

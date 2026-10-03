@@ -70,22 +70,26 @@ export function usePendingPublicBookingsLive(
         }
       });
 
-    const onTestEvent = (nativeEvent: Event) => {
-      applyPayload((nativeEvent as CustomEvent).detail as PostgresChangePayload);
-    };
     const onVisible = () => {
       if (document.visibilityState === 'visible') onRefreshRef.current();
     };
     const onOnline = () => onRefreshRef.current();
-
-    window.addEventListener(PUBLIC_BOOKING_CHANGE_LIVE_EVENT, onTestEvent);
     document.addEventListener('visibilitychange', onVisible);
     window.addEventListener('online', onOnline);
+
+    let detachTest: (() => void) | undefined;
+    if (import.meta.env.DEV) {
+      const onTestEvent = (nativeEvent: Event) => {
+        applyPayload((nativeEvent as CustomEvent).detail as PostgresChangePayload);
+      };
+      window.addEventListener(PUBLIC_BOOKING_CHANGE_LIVE_EVENT, onTestEvent);
+      detachTest = () => window.removeEventListener(PUBLIC_BOOKING_CHANGE_LIVE_EVENT, onTestEvent);
+    }
 
     return () => {
       alive = false;
       setHealthy(null);
-      window.removeEventListener(PUBLIC_BOOKING_CHANGE_LIVE_EVENT, onTestEvent);
+      detachTest?.();
       document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('online', onOnline);
       void supabase.removeChannel(channel);

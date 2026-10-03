@@ -97,6 +97,25 @@ describe('useBookingStatusLive', () => {
     expect(channels.has(bookingRealtimeTopic(ID_B))).toBe(true);
   });
 
+  it('dois ids: um CHANNEL_ERROR e o outro SUBSCRIBED mantém o polling', () => {
+    const onRefetch = vi.fn();
+    renderHook(() => useBookingStatusLive([ID_A, ID_B], vi.fn(), onRefetch));
+
+    act(() => {
+      channels.get(bookingRealtimeTopic(ID_A))?.status?.('CHANNEL_ERROR');
+    });
+    expect(onRefetch).toHaveBeenCalled();
+
+    act(() => {
+      channels.get(bookingRealtimeTopic(ID_B))?.status?.('SUBSCRIBED');
+    });
+    onRefetch.mockClear();
+    act(() => {
+      vi.advanceTimersByTime(BOOKING_LIVE_POLL_MS);
+    });
+    expect(onRefetch).toHaveBeenCalledTimes(1);
+  });
+
   it('CHANNEL_ERROR dispara refetch e polling a cada 30s até o canal voltar', () => {
     const onRefetch = vi.fn();
     renderHook(() => useBookingStatusLive([ID_A], vi.fn(), onRefetch));

@@ -6,6 +6,7 @@ import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 export type MetricId =
     | 'retorno'
     | 'retorno_por_hora'
+    | 'faturamento_por_hora'
     | 'ticket_medio'
     | 'voltou'
     | 'faltas'
@@ -25,6 +26,13 @@ export const METRIC_HELP: Record<MetricId, Help> = {
         formula: 'Serviços + Produtos + Lançamentos avulsos − Comissões − Custo dos produtos.',
         base: 'Atendimentos concluídos no período, pela data do atendimento. Produtos e avulsos pela data da venda.',
         notes: 'Antes das despesas fixas (aluguel, luz). Atendimentos do Clube não entram na receita. A comissão do dono conta como zero. Nada é estimado: atendimento sem registro financeiro entra com comissão zero e aparece no aviso de dados.',
+    },
+    faturamento_por_hora: {
+        title: 'Faturamento por hora',
+        question: 'Quanto cada hora de cadeira faturou em serviços?',
+        formula: 'Receita de serviços pagos ÷ horas dos atendimentos pagos.',
+        base: 'Duração marcada de cada atendimento pago (não mede o tempo real).',
+        notes: 'Atendimentos do Clube e com preço zero ficam fora. Não é o retorno da casa.',
     },
     retorno_por_hora: {
         title: 'Retorno por hora',

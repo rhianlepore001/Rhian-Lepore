@@ -165,6 +165,7 @@ export function valueDelta(
     if (curr == null || prev == null) return null;
     if (prev === 0) return curr === 0 ? null : { text: 'novo', tone: 'neutral', label: 'novo' };
     const diff = curr - prev;
+    if (diff === 0) return { text: 'igual', tone: 'neutral', label: 'estável' };
     const rel = diff / Math.abs(prev);
     const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '=';
     const sign = diff > 0 ? '+' : diff < 0 ? MINUS : '';

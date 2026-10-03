@@ -127,7 +127,7 @@ export const StaffInsights: React.FC = () => {
         <div className="space-y-5">
           <section aria-label="Números do período" className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {card('Atendimentos', 'atendimentos', String(x.atendimentos), `${x.atendimentos} atendimentos${x.atendimentos_clube ? ` · ${x.atendimentos_clube} do Clube` : ''}`, moneyDelta(x.atendimentos, prev?.atendimentos, { prevSample, formatMoney: (n) => String(n) }))}
-            {card('Faturamento por hora', 'retorno_por_hora', x.faturamento_por_hora == null ? '—' : `${formatMoney(x.faturamento_por_hora)}/h`, x.tempo_pago_min ? formatHours(x.tempo_pago_min) : 'sem tempo pago', moneyDelta(x.faturamento_por_hora, prev?.faturamento_por_hora, { prevSample, formatMoney }))}
+            {card('Faturamento por hora', 'faturamento_por_hora', x.faturamento_por_hora == null ? '—' : `${formatMoney(x.faturamento_por_hora)}/h`, x.tempo_pago_min ? formatHours(x.tempo_pago_min) : 'sem tempo pago', moneyDelta(x.faturamento_por_hora, prev?.faturamento_por_hora, { prevSample, formatMoney }))}
             {card('Ticket médio', 'ticket_medio', x.ticket_medio == null ? '—' : formatMoney(x.ticket_medio), x.atendimentos_pagos ? `${x.atendimentos_pagos} pagos` : 'nenhum atendimento pago', moneyDelta(x.ticket_medio, prev?.ticket_medio, { prevSample, formatMoney }))}
             {card('Voltou a agendar', 'voltou', formatPercent(x.voltou_taxa), x.maduros ? `${x.voltou} de ${x.maduros}` : null, rateDelta(x.voltou_taxa, prev?.voltou_taxa, { prevSample }))}
           </section>

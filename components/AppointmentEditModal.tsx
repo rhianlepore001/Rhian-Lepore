@@ -347,10 +347,10 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
 
                     {/* Profissional · Data · Horário — só leitura no fuso da loja */}
                     <div>
-                        <div className="flex items-center justify-between gap-3">
-                            <p className={`${labelStyles} mb-0 inline-flex items-center gap-1.5`} id="appt-schedule-label">
+                        <div className="flex items-center justify-between gap-2">
+                            <p className={`text-xs font-medium ${colors.textMuted} mb-0 inline-flex items-center gap-1.5 whitespace-nowrap min-w-0`} id="appt-schedule-label">
                                 Profissional · Data · Horário
-                                <Lock className="h-3.5 w-3.5 text-theme-accent" aria-hidden="true" />
+                                <Lock className="h-3.5 w-3.5 text-theme-accent shrink-0" aria-hidden="true" />
                             </p>
                             {onReschedule && (
                                 <Button
@@ -358,7 +358,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                                     variant="secondary"
                                     data-testid="edit-reschedule-link"
                                     onClick={onReschedule}
-                                    className="min-h-[44px] shrink-0"
+                                    className="min-h-[44px] shrink-0 px-3"
                                 >
                                     Remarcar
                                 </Button>

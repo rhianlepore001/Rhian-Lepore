@@ -217,7 +217,7 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
           <span>{formatRescheduleInstant(selectedInstant.toISOString(), shopTimeZone, destName)}</span>
         </div>
       )}
-      {isPast && (
+      {isPast && !formError && (
         <p data-testid="reschedule-past-note" className={`text-xs leading-snug ${colors.textMuted}`}>
           {RESCHEDULE_PAST_NOTE}
         </p>
@@ -232,6 +232,7 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
       title={RESCHEDULE_MODAL_TITLE}
       size="2xl"
       preventClose={submitting}
+      bodyClassName="flex flex-col min-h-0 overflow-hidden p-5 md:p-6"
       footer={(
         <div className="flex flex-col gap-3 w-full">
           <div className="md:hidden">{summaryBlock}</div>
@@ -268,10 +269,10 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
         </div>
       )}
     >
-      <div data-testid="reschedule-modal-body" className="space-y-4">
+      <div data-testid="reschedule-modal-body" className="flex flex-col min-h-0 flex-1 gap-4">
         <div
           data-testid="reschedule-current"
-          className="flex items-start gap-3 rounded-xl border border-theme-accent/40 bg-[var(--color-accent-dim)] px-3.5 py-2.5"
+          className="flex items-start gap-3 rounded-xl border border-theme-accent/40 bg-[var(--color-accent-dim)] px-3.5 py-2 shrink-0"
         >
           <CalendarClock className="w-5 h-5 mt-0.5 shrink-0 text-theme-accent" aria-hidden="true" />
           <p className={`text-sm font-medium leading-snug ${colors.text}`}>
@@ -284,7 +285,7 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
         </div>
 
         {lockProfessional && (
-          <p data-testid="reschedule-lock-pro-note" className={`text-xs ${colors.textMuted}`}>
+          <p data-testid="reschedule-lock-pro-note" className={`text-xs ${colors.textMuted} shrink-0`}>
             Você pode remarcar os seus agendamentos, mas não passá-los para outro profissional.
           </p>
         )}

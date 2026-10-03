@@ -116,14 +116,27 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
 
     useEffect(() => {
         if (!compact) return;
-        const el = currentSlotRef.current;
         const box = gridScrollRef.current;
-        if (!el || !box) return;
-        const elRect = el.getBoundingClientRect();
-        const boxRect = box.getBoundingClientRect();
-        const delta = elRect.top - boxRect.top - (box.clientHeight / 2) + (el.clientHeight / 2);
-        box.scrollTop = Math.max(0, box.scrollTop + delta);
-    }, [dateStr, selectedProId, closed, offHoursVisible, compact]);
+        if (!box) return;
+        let inner = 0;
+        const outer = requestAnimationFrame(() => {
+            inner = requestAnimationFrame(() => {
+                const targetTime = selectedTime || currentSlotTime;
+                const el = (targetTime
+                    ? box.querySelector(`[data-time="${targetTime}"]`)
+                    : currentSlotRef.current) as HTMLElement | null;
+                if (!el) return;
+                const elRect = el.getBoundingClientRect();
+                const boxRect = box.getBoundingClientRect();
+                const delta = elRect.top - boxRect.top - (box.clientHeight / 2) + (el.clientHeight / 2);
+                box.scrollTop = Math.max(0, box.scrollTop + delta);
+            });
+        });
+        return () => {
+            cancelAnimationFrame(outer);
+            cancelAnimationFrame(inner);
+        };
+    }, [dateStr, selectedProId, selectedTime, currentSlotTime, closed, offHoursVisible, compact]);
 
     const renderTime = (time: string) => {
         const blocked = isBlockedTime(time);
@@ -154,6 +167,7 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                 onClick={() => { if (!disabled) setSelectedTime(time); }}
                 aria-pressed={selected}
                 aria-label={aria}
+                data-time={time}
                 data-slot-state={tag ? tag.toLowerCase() : selected ? 'selected' : undefined}
                 className={`
                     min-h-[44px] h-[44px] max-h-[44px] w-full min-w-0 px-1 rounded-lg font-mono font-bold transition-all border
@@ -199,13 +213,13 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
         (name || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('');
 
     return (
-        <div className={`flex flex-col md:flex-row md:items-start animate-in fade-in slide-in-from-right-4 duration-300 ${compact ? 'gap-4 md:gap-6' : 'gap-6'}`}>
+        <div className={`flex flex-col md:flex-row md:items-start animate-in fade-in slide-in-from-right-4 duration-300 ${compact ? 'gap-4 md:gap-6 min-h-0 flex-1' : 'gap-6'}`}>
             {/* Esquerda: profissional + data (fixa no desktop enquanto os horários rolam) */}
-            <div className={`md:w-[22rem] md:shrink-0 md:sticky md:top-0 ${compact ? 'space-y-4' : 'space-y-6'}`}>
+            <div className={`md:w-[22rem] md:shrink-0 md:sticky md:top-0 shrink-0 ${compact ? 'space-y-3 md:space-y-4' : 'space-y-6'}`}>
                 <section>
                     <StepHeading level="section" title="Escolha o profissional" />
                     {/* Sem caixa de rolagem interna: todos os profissionais visíveis */}
-                    <div data-testid="wizard-pro-list" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 gap-2">
+                    <div data-testid="wizard-pro-list" className={`grid gap-2 ${compact ? 'grid-cols-3 md:grid-cols-2' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-2'}`}>
                         {teamMembers.map(member => {
                             const active = selectedProId === member.id;
                             return (
@@ -241,17 +255,17 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
 
                 <section>
                     <StepHeading level="section" title="Selecione a data" />
-                    <div data-testid="wizard-date-picker" className={`flex items-center gap-1 p-1.5 rounded-xl border ${cardBg}`}>
+                    <div data-testid="wizard-date-picker" className={`flex items-center gap-1 rounded-xl border ${cardBg} ${compact ? 'p-1' : 'p-1.5'}`}>
                         <button
                             type="button"
                             aria-label="Dia anterior"
                             onClick={() => changeDate(-1)}
-                            className="p-2 rounded-lg hover:bg-[var(--color-card-hover)] text-theme-text"
+                            className={`${compact ? 'p-1.5' : 'p-2'} rounded-lg hover:bg-[var(--color-card-hover)] text-theme-text`}
                         >
                             <ChevronLeft className="w-5 h-5" />
                         </button>
                         <div className="flex-1 min-w-0 flex items-center justify-center gap-3">
-                            <span className="text-3xl leading-none font-heading text-theme-accent tabular-nums">{selectedDate.getDate()}</span>
+                            <span className={`${compact ? 'text-2xl' : 'text-3xl'} leading-none font-heading text-theme-accent tabular-nums`}>{selectedDate.getDate()}</span>
                             <span className="min-w-0 text-left leading-tight">
                                 <span className="block text-sm font-semibold text-theme-text truncate">
                                     {(() => {
@@ -288,13 +302,13 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
             </div>
 
             {/* Right: Time Slots */}
-            <section className="flex-1 min-w-0">
+            <section className={`flex-1 min-w-0 ${compact ? 'min-h-0 flex flex-col' : ''}`}>
                 <StepHeading level="section" title="Escolha o horário" />
 
                 <div
                     ref={gridScrollRef}
                     data-testid="reschedule-time-grid"
-                    className={`rounded-xl border ${cardBg} p-3 sm:p-4 ${compact ? 'max-h-[min(18rem,46dvh)] overflow-y-auto overscroll-contain' : ''}`}
+                    className={`rounded-xl border ${cardBg} p-3 sm:p-4 ${compact ? 'min-h-0 flex-1 overflow-y-auto overscroll-contain max-md:min-h-[5.75rem] max-md:max-h-[11rem] md:max-h-[min(18rem,46dvh)]' : ''}`}
                 >
                     {!selectedProId ? (
                         <div className="py-10 flex flex-col items-center justify-center text-center text-[var(--color-text-muted)] gap-2">

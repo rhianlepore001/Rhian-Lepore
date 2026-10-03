@@ -81,10 +81,10 @@ BEGIN
   ON CONFLICT (id) DO UPDATE SET role = EXCLUDED.role, company_id = EXCLUDED.company_id, region = 'PT';
 
   INSERT INTO public.team_members (id, user_id, name, staff_user_id, active, is_owner, deleted_at) VALUES
-    (v_pro, v_owner, 'Diego', NULL, true, true, NULL),
-    (v_pro_staff, v_owner, 'Bruna', v_staff::uuid, true, false, NULL),
-    (v_pro_inact, v_owner, 'Inativo', v_inactive::uuid, false, false, NULL),
-    (v_pro_ex, v_owner, 'Ex', v_exstaff::uuid, true, false, now())
+    (v_pro::uuid, v_owner, 'Diego', NULL, true, true, NULL),
+    (v_pro_staff::uuid, v_owner, 'Bruna', v_staff::uuid, true, false, NULL),
+    (v_pro_inact::uuid, v_owner, 'Inativo', v_inactive::uuid, false, false, NULL),
+    (v_pro_ex::uuid, v_owner, 'Ex', v_exstaff::uuid, true, false, now())
   ON CONFLICT (id) DO UPDATE SET
     name = EXCLUDED.name,
     staff_user_id = EXCLUDED.staff_user_id,

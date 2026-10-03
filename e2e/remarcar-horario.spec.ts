@@ -62,6 +62,23 @@ async function openReschedule(page: Page) {
   await settle(page);
 }
 
+async function pickTime(page: Page, name: string) {
+  const btn = page.getByTestId('reschedule-modal-body').getByRole('button', { name });
+  await btn.evaluate((el) => {
+    const grid = el.closest('[data-testid="reschedule-time-grid"]');
+    if (!(grid instanceof HTMLElement) || !(el instanceof HTMLElement)) return;
+    const box = grid.getBoundingClientRect();
+    const r = el.getBoundingClientRect();
+    const padding = 8;
+    let delta = 0;
+    if (r.top < box.top + padding) delta = r.top - box.top - padding;
+    else if (r.bottom > box.bottom - padding) delta = r.bottom - box.bottom + padding;
+    if (delta) grid.scrollTop += delta;
+  });
+  await btn.click({ force: true });
+  await settle(page);
+}
+
 test.describe('PR C — Remarcar horário', () => {
   test.use({ locale: 'pt-BR', timezoneId: 'Europe/Lisbon' });
   test.setTimeout(120_000);
@@ -96,7 +113,7 @@ test.describe('PR C — Remarcar horário', () => {
       await expect(page.getByRole('button', { name: '16:00 Ocupado' })).toBeDisabled();
       await expect(page.getByRole('button', { name: /12:00 Bloqueado/ })).toBeDisabled();
       await shot(page, `owner-${width}-3-remarcar-modal.png`);
-      await page.getByTestId('reschedule-modal-body').getByRole('button', { name: '11:30' }).click();
+      await pickTime(page, '11:30');
       await expect(page.getByTestId('reschedule-confirm')).toBeEnabled();
       await expect(page.getByTestId('reschedule-summary').first()).toContainText('De');
       await expect(page.getByTestId('reschedule-summary').first()).toContainText('Para');
@@ -134,7 +151,7 @@ test.describe('PR C — Remarcar horário', () => {
       await openAgenda(page, width);
       await openDetails(page);
       await openReschedule(page);
-      await page.getByTestId('reschedule-modal-body').getByRole('button', { name: '11:30' }).click();
+      await pickTime(page, '11:30');
 
       guard.setRpc({
         status: 400,
@@ -145,7 +162,7 @@ test.describe('PR C — Remarcar horário', () => {
       await expect(page.getByRole('button', { name: '11:30 Ocupado' })).toBeDisabled();
       await shot(page, `owner-${width}-6-conflito.png`);
 
-      await page.getByTestId('reschedule-modal-body').getByRole('button', { name: '13:00' }).click();
+      await pickTime(page, '13:00');
       await expect(page.getByTestId('reschedule-inline-error')).toHaveCount(0);
       guard.setRpc({
         status: 200,
@@ -163,7 +180,7 @@ test.describe('PR C — Remarcar horário', () => {
     await openAgenda(page, 390);
     await openDetails(page);
     await openReschedule(page);
-    await page.getByTestId('reschedule-modal-body').getByRole('button', { name: '11:30' }).click();
+    await pickTime(page, '11:30');
 
     guard.setRpc({
       status: 400,
@@ -175,7 +192,7 @@ test.describe('PR C — Remarcar horário', () => {
     await expect(page.getByRole('button', { name: '11:30 Ocupado' })).toBeDisabled();
     await shot(page, 'owner-390-6-conflito.png');
 
-    await page.getByTestId('reschedule-modal-body').getByRole('button', { name: '13:00' }).click();
+    await pickTime(page, '13:00');
     await expect(page.getByTestId('reschedule-inline-error')).toHaveCount(0);
     guard.setRpc({
       status: 400,
@@ -200,7 +217,7 @@ test.describe('PR C — Remarcar horário', () => {
     await openAgenda(page, 390);
     await openDetails(page);
     await openReschedule(page);
-    await page.getByTestId('reschedule-modal-body').getByRole('button', { name: '05:00' }).click();
+    await pickTime(page, '05:00');
     await expect(page.getByTestId('reschedule-past-note').first()).toHaveText(PAST);
     await expect(page.getByTestId('reschedule-confirm')).toBeEnabled();
     await shot(page, 'owner-390-9-passado-selecionado.png');
@@ -241,9 +258,8 @@ test.describe('PR C — Remarcar horário', () => {
     await expect(page.getByTestId('reschedule-lock-pro-note')).toHaveCount(0);
     await page.getByTestId('reschedule-modal-body').getByRole('button', { name: /Bruna/ }).click();
     await expect(page.getByTestId('reschedule-modal-body').getByRole('button', { name: /Bruna/ })).toHaveAttribute('aria-pressed', 'true');
-    await page.getByTestId('reschedule-modal-body').getByRole('button', { name: '11:30' }).click();
+    await pickTime(page, '11:30');
     await expect(page.getByTestId('reschedule-summary').first()).toContainText('Bruna');
-    await page.getByTestId('wizard-pro-list').scrollIntoViewIfNeeded();
     await settle(page);
     await shot(page, 'staff-all-390-3-troca-profissional.png');
   });

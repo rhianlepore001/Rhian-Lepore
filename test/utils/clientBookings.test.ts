@@ -4,7 +4,9 @@ import {
   CANCELLED_GENERIC_MESSAGE,
   cancellationMessage,
   formatClientCardDate,
-  PAST_CANCELLED_SHORT_MESSAGE,
+  formatClientCardDateInSentence,
+  PAST_CANCELLED_BY_BUSINESS_MESSAGE,
+  pendingAwaitingBanner,
   REBOOK_LABEL,
   rebookPath,
   splitClientBookings,
@@ -61,18 +63,28 @@ describe('clientBookings (Minha Área, item 5b)', () => {
     expect(rebookPath('barbeariasilva', { service_ids: [] })).toBe('/book/barbeariasilva');
   });
 
-  it('rótulo único de remarcar e linha curta do cancelado passado', () => {
+  it('rótulo único de remarcar e linha do cancelado pelo estabelecimento', () => {
     expect(REBOOK_LABEL).toBe('Agendar de novo');
-    expect(PAST_CANCELLED_SHORT_MESSAGE).toBe('Cancelado.');
+    expect(PAST_CANCELLED_BY_BUSINESS_MESSAGE).toBe('O estabelecimento cancelou este horário.');
   });
 
-  it('data do card: weekday capitalizado, de e mês minúsculos', () => {
+  it('data do card: weekday capitalizado, de e mês minúsculos; no WhatsApp o weekday fica minúsculo', () => {
     const label = formatClientCardDate(new Date('2026-10-10T14:00:00.000Z'), 'Europe/Lisbon');
     expect(label).toMatch(/^Sáb/);
     expect(label).toMatch(/10 de out/);
     expect(label).not.toMatch(/De Out/);
     expect(label).not.toMatch(/ de Out/);
     expect(label).not.toMatch(/De out/);
+    expect(formatClientCardDateInSentence(new Date('2026-10-10T14:00:00.000Z'), 'Europe/Lisbon')).toBe(
+      label.replace(/^Sáb/, 'sáb'),
+    );
+  });
+
+  it('aviso de pending usa o substantivo do negócio e pluraliza horários', () => {
+    expect(pendingAwaitingBanner('barbearia', 1)).toBe('A barbearia ainda não confirmou este horário.');
+    expect(pendingAwaitingBanner('barbearia', 2)).toBe('A barbearia ainda não confirmou estes horários.');
+    expect(pendingAwaitingBanner('salão', 1)).toBe('O salão ainda não confirmou este horário.');
+    expect(pendingAwaitingBanner('studio', 1)).toBe('O estabelecimento ainda não confirmou este horário.');
   });
 
   it('junta quem cancelou só nos cancelados', () => {

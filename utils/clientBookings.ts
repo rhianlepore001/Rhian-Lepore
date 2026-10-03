@@ -47,7 +47,7 @@ export function splitClientBookings<T extends ClientBookingLike>(bookings: T[], 
 
 export const CANCELLED_BY_BUSINESS_MESSAGE = 'O estabelecimento cancelou este agendamento.';
 export const CANCELLED_GENERIC_MESSAGE = 'Este agendamento foi cancelado.';
-export const PAST_CANCELLED_SHORT_MESSAGE = 'Cancelado.';
+export const PAST_CANCELLED_BY_BUSINESS_MESSAGE = 'O estabelecimento cancelou este horário.';
 export const REBOOK_LABEL = 'Agendar de novo';
 
 /** Data do card: 'Sáb., 10 de out.' — weekday capitalizado; 'de' e mês em minúsculas. */
@@ -60,6 +60,22 @@ export function formatClientCardDate(date: Date, timeZone: string): string {
   });
   const lowered = raw.toLocaleLowerCase('pt-BR');
   return lowered.replace(/^(\p{L})/u, (ch) => ch.toLocaleUpperCase('pt-BR'));
+}
+
+/** Mesma data, para o meio da frase do WhatsApp: 'sáb., 10 de out.' */
+export function formatClientCardDateInSentence(date: Date, timeZone: string): string {
+  return formatClientCardDate(date, timeZone).replace(/^(\p{L})/u, (ch) => ch.toLocaleLowerCase('pt-BR'));
+}
+
+/** Aviso acima dos cards pending na Minha Área. */
+export function pendingAwaitingBanner(businessNoun: string, pendingCount: number): string {
+  const who = businessNoun === 'salão'
+    ? 'O salão'
+    : businessNoun === 'barbearia'
+      ? 'A barbearia'
+      : 'O estabelecimento';
+  const what = pendingCount > 1 ? 'estes horários' : 'este horário';
+  return `${who} ainda não confirmou ${what}.`;
 }
 
 export function cancellationMessage(booking: Pick<ClientBookingLike, 'cancelled_by_business'>): string {

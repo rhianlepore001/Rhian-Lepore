@@ -2,14 +2,21 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Calendar, Clock, User, MessageSquare,
-    Edit3, X, RefreshCw, CheckCircle, AlertCircle, Loader2
+    Edit3, X, CheckCircle, AlertCircle, Loader2
 } from 'lucide-react';
 import { formatCurrency, buildWhatsAppLink, Region } from '../utils/formatters';
 import { cancelPublicBooking } from '../services/publicBooking';
 import { useToast } from './ui/Toast';
 import { logger } from '../utils/Logger';
 import { resolveBusinessTimezone } from '../utils/businessTimezone';
-import { cancellationMessage, formatClientCardDate, PAST_CANCELLED_SHORT_MESSAGE, REBOOK_LABEL, rebookPath } from '../utils/clientBookings';
+import {
+    cancellationMessage,
+    formatClientCardDate,
+    formatClientCardDateInSentence,
+    PAST_CANCELLED_BY_BUSINESS_MESSAGE,
+    REBOOK_LABEL,
+    rebookPath,
+} from '../utils/clientBookings';
 import { getPublicBookingAwaitingWhatsAppText } from '../utils/publicBookingCopy';
 
 export interface ClientBooking {
@@ -121,6 +128,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
     const businessTz = resolveBusinessTimezone({ timezone: timeZone, region });
     const appointmentDate = new Date(booking.appointment_time);
     const formattedDate = formatClientCardDate(appointmentDate, businessTz);
+    const dateInSentence = formatClientCardDateInSentence(appointmentDate, businessTz);
     const formattedTime = appointmentDate.toLocaleTimeString('pt-BR', {
         timeZone: businessTz, hour: '2-digit', minute: '2-digit'
     });
@@ -151,7 +159,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
 
     const handleWhatsApp = () => {
         if (!businessPhone) return;
-        const msg = `Olá! Sou ${clientName} e tenho uma dúvida sobre meu agendamento de ${formattedDate} às ${formattedTime}.`;
+        const msg = `Olá! Sou ${clientName} e tenho uma dúvida sobre meu agendamento de ${dateInSentence} às ${formattedTime}.`;
         window.open(buildWhatsAppLink(businessPhone, region, msg), '_blank', 'noopener,noreferrer');
     };
 
@@ -161,7 +169,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
             businessName: businessName ?? '',
             serviceLabel: booking.service_names.filter(Boolean).join(', '),
             professionalName: booking.professional_name,
-            dateLabel: formattedDate,
+            dateLabel: dateInSentence,
             timeLabel: formattedTime,
         });
         window.open(buildWhatsAppLink(businessPhone, region, msg), '_blank', 'noopener,noreferrer');
@@ -313,14 +321,14 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
 
                 {isPastCancelled && (
                     <div className="space-y-2 pt-1" data-testid="client-booking-cancelled">
-                        <p
-                            className="px-3 py-2 rounded-xl text-xs leading-snug text-theme-textSecondary bg-theme-surface border border-theme-border"
-                            data-testid="client-booking-cancelled-note"
-                        >
-                            {booking.cancelled_by_business
-                                ? 'O estabelecimento cancelou.'
-                                : PAST_CANCELLED_SHORT_MESSAGE}
-                        </p>
+                        {booking.cancelled_by_business && (
+                            <p
+                                className="text-xs leading-snug text-theme-textSecondary"
+                                data-testid="client-booking-cancelled-note"
+                            >
+                                {PAST_CANCELLED_BY_BUSINESS_MESSAGE}
+                            </p>
+                        )}
                         <button
                             type="button"
                             onClick={handleRebook}
@@ -356,7 +364,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                         onClick={handleRebook}
                         className="w-full flex items-center justify-center gap-2 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold bg-theme-surface text-theme-text hover:bg-[var(--color-card-hover)] border border-theme-border"
                     >
-                        <RefreshCw className="w-3.5 h-3.5" />
+                        <Calendar className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                         {REBOOK_LABEL}
                     </button>
                 )}

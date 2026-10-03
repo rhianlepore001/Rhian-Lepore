@@ -5,7 +5,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import { ClientBookingCard, type ClientBooking } from '../../components/ClientBookingCard';
-import { formatClientCardDate } from '../../utils/clientBookings';
+import { formatClientCardDate, formatClientCardDateInSentence } from '../../utils/clientBookings';
 import { cancelPublicBooking } from '../../services/publicBooking';
 import { useToast } from '../../components/ui/Toast';
 
@@ -223,12 +223,16 @@ describe('ClientBookingCard — PR-1 cards honestos e WhatsApp', () => {
     const url = decodeURIComponent(String(open.mock.calls[0]?.[0] ?? ''));
     const dateObj = new Date(appointmentTime);
     const dateLabel = formatClientCardDate(dateObj, 'Europe/Lisbon');
+    const dateInSentence = formatClientCardDateInSentence(dateObj, 'Europe/Lisbon');
     const timeLabel = dateObj.toLocaleTimeString('pt-BR', {
       timeZone: 'Europe/Lisbon', hour: '2-digit', minute: '2-digit',
     });
     expect(url).toContain(
-      `Olá, Barbearia São João ✂️! Fiz um agendamento online para Corte tesoura com Mário em ${dateLabel} às ${timeLabel}. Pode confirmar, por favor?`,
+      `Olá, Barbearia São João ✂️! Fiz um agendamento online para Corte tesoura com Mário em ${dateInSentence} às ${timeLabel}. Pode confirmar, por favor?`,
     );
+    expect(dateInSentence).toMatch(/^sáb/);
+    expect(dateLabel).toMatch(/^Sáb/);
+    expect(screen.getByText(dateLabel)).toBeInTheDocument();
     expect(String(open.mock.calls[0]?.[0] ?? '')).toContain('https://wa.me/351');
     expect(dateLabel).toMatch(/de out\./);
     expect(dateLabel).not.toMatch(/De Out/);
@@ -322,16 +326,29 @@ describe('ClientBookingCard — PR-1 cards honestos e WhatsApp', () => {
     expect(screen.queryByText(/De Out/)).toBeNull();
   });
 
-  it('cancelado no passado: faixa neutra, linha curta, CTA secundário', () => {
+  it('cancelado no passado pelo cliente: só o selo, sem caixa Cancelado.', () => {
     const { container } = renderPr1Card({
       status: 'cancelled',
       appointment_time: '2026-09-20T10:00:00.000Z',
     });
     expect(screen.getByText('Cancelado')).toBeInTheDocument();
-    expect(screen.getByTestId('client-booking-cancelled-note')).toHaveTextContent('Cancelado.');
-    expect(screen.getByTestId('client-booking-cancelled-note').className).not.toMatch(/danger/);
+    expect(screen.queryByTestId('client-booking-cancelled-note')).toBeNull();
+    expect(screen.queryByText('Cancelado.')).toBeNull();
     expect(screen.getByRole('button', { name: /^Agendar de novo$/ }).className).not.toMatch(/theme-accent/);
     expect(container.querySelector('[data-booking-status="cancelled_quiet"]')).toBeTruthy();
+  });
+
+  it('cancelado no passado pelo estabelecimento: uma linha mudo', () => {
+    renderPr1Card({
+      status: 'cancelled',
+      appointment_time: '2026-09-20T10:00:00.000Z',
+      cancelled_by_business: true,
+    });
+    expect(screen.getByTestId('client-booking-cancelled-note')).toHaveTextContent(
+      'O estabelecimento cancelou este horário.',
+    );
+    expect(screen.getByTestId('client-booking-cancelled-note').className).not.toMatch(/danger/);
+    expect(screen.getByRole('button', { name: /^Agendar de novo$/ })).toBeInTheDocument();
   });
 
   it('confirmado futuro: WhatsApp em largura total com DDI 351, sem Pedir confirmação', () => {
@@ -346,8 +363,11 @@ describe('ClientBookingCard — PR-1 cards honestos e WhatsApp', () => {
     expect(wa.className).toMatch(/col-span-2/);
     fireEvent.click(wa);
     const url = String(open.mock.calls[0]?.[0] ?? '');
+    const decoded = decodeURIComponent(url);
     expect(url).toContain('https://wa.me/351912345678');
     expect(url).not.toMatch(/wa\.me\/912345678/);
+    expect(decoded).toMatch(/de sáb\., 10 de out\./);
+    expect(decoded).not.toMatch(/de Sáb/);
     open.mockRestore();
   });
 });

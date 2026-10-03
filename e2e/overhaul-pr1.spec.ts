@@ -409,9 +409,16 @@ test.describe('PR-1 overhaul copy/cards', () => {
       expect(waPending).toContain('Olá, Barbearia São João ✂️!');
       expect(waPending).toContain('Corte tesoura');
       expect(waPending).toContain('Mário');
+      expect(waPending).toMatch(/em sáb\., 10 de out\./);
+      expect(waPending).not.toMatch(/em Sáb/);
+      expect(page.getByText(/Sáb\., 10 de out\./).first()).toBeVisible();
       expect(waPending.toLowerCase()).not.toContain('o salão');
       expect(waPending.toLowerCase()).not.toContain('barbearia silva');
+      await expect(page.getByTestId('client-pending-banner')).toHaveText(
+        'A barbearia ainda não confirmou este horário.',
+      );
       await shot(page, `after-proximos-pending-${vp.name}`, '[data-booking-id="bk-future-pending"]');
+      await shot(page, `after-pending-banner-${vp.name}`, '[data-testid="client-pending-banner"]');
 
       await page.getByRole('button', { name: /^WhatsApp$/ }).click();
       const openedConfirmed = await page.evaluate(() => (window as Window & { __openedUrls?: string[] }).__openedUrls ?? []);
@@ -425,7 +432,7 @@ test.describe('PR-1 overhaul copy/cards', () => {
       await expect(page.getByText('Cancelado', { exact: true })).toBeVisible();
       await expect(page.getByText('Não compareceu')).toBeVisible();
       await expect(page.getByText('Sentimos sua falta. Quer marcar outro horário?')).toBeVisible();
-      await expect(page.getByText('Cancelado.')).toBeVisible();
+      await expect(page.getByText('Cancelado.')).toHaveCount(0);
       await expect(page.getByTestId('client-history-list').getByRole('button', { name: /Editar/ })).toHaveCount(0);
       await expect(page.getByTestId('client-history-list').getByRole('button', { name: /^Cancelar$/ })).toHaveCount(0);
       await expect(page.getByTestId('client-history-list').getByRole('button', { name: /^Agendar de novo$/ })).toHaveCount(3);
@@ -465,11 +472,9 @@ test.describe('PR-1 overhaul copy/cards', () => {
       await shot(page, `after-owner-geral-${vp.name}`, '[data-testid="cancellation-policy-section"]');
 
       await page.goto(`${BASE}/#/configuracoes/agendamento`, { waitUntil: 'domcontentloaded' });
-      const toggle = page.getByTestId('self-reschedule-title');
+      const toggle = page.getByText('Cliente pode editar na Minha Área', { exact: true });
       await expect(toggle).toBeVisible({ timeout: 20_000 });
-      await expect(toggle).toHaveText('Cliente pode editar na Minha Área');
-      const titleBox = await toggle.boundingBox();
-      expect(titleBox?.height ?? 99).toBeLessThan(28);
+      await expect(page.getByLabel('Cliente pode editar na Minha Área')).toBeVisible();
       await expect(page.getByText('Mostra o botão Editar nos agendamentos futuros da Minha Área.')).toBeVisible();
       await expect(page.getByText('Reagendamento Autônomo')).toHaveCount(0);
       await expect(page.getByText(/Não envia e-mail/)).toHaveCount(0);

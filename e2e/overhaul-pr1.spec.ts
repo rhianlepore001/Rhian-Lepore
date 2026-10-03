@@ -314,7 +314,8 @@ async function walkPublicQuickToPolicy(page: Page) {
   await page.getByRole('button', { name: /^Continuar$/ }).click();
 
   await expect(page.getByText('Qualquer profissional')).toBeVisible({ timeout: 15_000 });
-  await page.getByRole('button', { name: /^Mário$/ }).click();
+  await page.getByRole('button', { name: 'Qualquer profissional' }).click();
+  await expect(page.getByRole('button', { name: /^Continuar$/ })).toBeEnabled();
   await page.getByRole('button', { name: /^Continuar$/ }).click();
 
   const enabledDate = page.locator('button[data-date]:not([disabled])').first();

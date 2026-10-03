@@ -13,7 +13,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useStaffPerformance } from '../hooks/useStaffPerformance';
 import { supabase } from '../lib/supabase';
-import { formatCurrency, getCurrencySymbol } from '../utils/formatters';
+import { useTenantLocale } from '../hooks/useTenantLocale';
+import { getCurrencySymbol } from '../utils/formatters';
 import {
     comparisonLabel,
     detectPreset,
@@ -33,6 +34,7 @@ const BASE = '/financeiro/performance';
 
 export const StaffPerformance: React.FC = () => {
     const { user } = useAuth();
+    const { formatMoney, region: localeRegion } = useTenantLocale();
     const { colors, font, radius, isBeauty } = useBrutalTheme();
     const location = useLocation();
     const navigate = useNavigate();
@@ -77,9 +79,7 @@ export const StaffPerformance: React.FC = () => {
     const go = (next: Filters) => navigate({ pathname: BASE, search: `?${filtersToSearch(next)}` });
     const hrefFor = (pro: string) => `${BASE}?${filtersToSearch({ ...filters, pro })}`;
 
-    const currency = data?.period.currency;
-    const region = currency === 'EUR' ? 'PT' : 'BR';
-    const formatMoney = (v: number) => formatCurrency(v, region);
+    const region = localeRegion;
     const against = compare && data?.period.previous ? comparisonLabel(data.period.previous) : null;
     const previousName = compare ? previousMonthName(data?.period.previous) : null;
     const preset = detectPreset(filters.start, filters.end, today, settlementDay);
@@ -129,7 +129,7 @@ export const StaffPerformance: React.FC = () => {
     );
 
     return (
-        <div className="space-y-5 lg:space-y-6 pb-24">
+        <div className="space-y-5 lg:space-y-6 pb-28 lg:pb-16">
             <Link to="/financeiro?tab=commissions" className={`inline-flex items-center gap-1.5 min-h-[44px] -mb-2 text-sm ${colors.textSecondary} hover:text-theme-text`}>
                 <ArrowLeft className="w-4 h-4" aria-hidden="true" /> Pagamento de comissão
             </Link>

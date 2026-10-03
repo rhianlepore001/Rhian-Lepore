@@ -314,7 +314,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                 {isPastCancelled && (
                     <div className="space-y-2 pt-1" data-testid="client-booking-cancelled">
                         <p
-                            className="text-xs leading-snug text-theme-textSecondary"
+                            className="px-3 py-2 rounded-xl text-xs leading-snug text-theme-textSecondary bg-theme-surface border border-theme-border"
                             data-testid="client-booking-cancelled-note"
                         >
                             {booking.cancelled_by_business

@@ -337,6 +337,14 @@ async function settleAnimations(page: Page) {
 async function shot(page: Page, name: string, selector?: string) {
   fs.mkdirSync(ARTIFACTS, { recursive: true });
   await settleAnimations(page);
+  if (selector === '[data-testid="client-history-list"]' || selector === '[data-testid="client-upcoming-list"]') {
+    const sticky = page.locator('header.sticky');
+    if (await sticky.count()) {
+      await sticky.evaluate((el) => {
+        (el as HTMLElement).style.position = 'static';
+      });
+    }
+  }
   const dest = path.join(ARTIFACTS, `${name}.png`);
   if (selector) {
     const loc = page.locator(selector).first();

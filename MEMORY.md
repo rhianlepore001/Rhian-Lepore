@@ -58,6 +58,8 @@ Script isolado em `scripts/demo-seed/` + doc `docs/demo-seed.md`. Dois tenants f
 
 ## 🛠️ Trabalho recente
 
+- **Performance dos colaboradores (3 Out 2026, NÃO merge / NÃO apply em prod):** stack rebaseada na `main` `9926787`. #106 migration `20261003103000`; #109 `pay_commission_v1` preenche colunas NOT NULL de prod (`payment_date`, `barber_name`, `net_amount`, `description`, `commission_paid_at`) e filtra `COALESCE(commission_paid,false)=false`. Harness usa md5 de prod `b8a54fe3` / `1588d011`. PRs #106 #109 #114 #116.
+
 - **Follow-up do bloqueio (3 Out 2026, não aplicado no live):** migration `20261003120000_agenda_blocks_acceptance_followup` cobre B-18/19/20/25, revalidação ao mover horário (B-35/38/46), trava por empresa (B-54..56), “qualquer profissional” (B-44/51) e M1/M2/M3. Rollback em `docs/rollbacks/`. Harness: `scripts/test-sql-agenda-blocks-followup.sh`.
 
 - **Hotfix fila × bloqueio (3 Out 2026):** `settle_queue_ticket` grava `Completed` em `now()` e o trigger de `agenda_blocks` recusava. Migration aditiva `20261003090000_agenda_blocks_allow_queue_completed` deixa `Completed` passar e impede reabrir `Completed` → `Confirmed` dentro do bloqueio. Rollback em `docs/rollbacks/`. **Não aplicada no live** neste PR. Harness: `scripts/test-sql-agenda-blocks-queue.sh`.

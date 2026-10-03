@@ -1,0 +1,18 @@
+-- Rollback de 20261003110000_staff_performance_v1.sql (só remove o que a migration criou).
+-- Nenhuma função existente foi alterada pela migration, então não há o que restaurar.
+BEGIN;
+SET LOCAL lock_timeout = '5s';
+DROP FUNCTION IF EXISTS public.pay_commission_v1(uuid, date, date);
+DROP FUNCTION IF EXISTS public.preview_commission_pay_v1(uuid, date, date);
+DROP FUNCTION IF EXISTS public._pay_commission_core(text, uuid, date, date, boolean);
+DROP FUNCTION IF EXISTS public.get_commission_cycle_v1(date);
+DROP FUNCTION IF EXISTS public.get_staff_performance_v1(date, date, uuid, boolean);
+DROP FUNCTION IF EXISTS public._commission_cycle_core(text, date, timestamptz);
+DROP FUNCTION IF EXISTS public._commission_settle_date(date, int);
+DROP FUNCTION IF EXISTS public._staff_performance_core(text, date, date, uuid, boolean, timestamptz, boolean);
+DROP FUNCTION IF EXISTS public._staff_perf_raw(text, timestamptz, timestamptz, timestamptz, text);
+DROP FUNCTION IF EXISTS public._staff_perf_raw(text, timestamptz, timestamptz, timestamptz);
+DROP FUNCTION IF EXISTS public._staff_perf_tz(text);
+DROP INDEX IF EXISTS public.idx_appointments_user_client_time;
+DROP INDEX IF EXISTS public.idx_product_sales_finance_record_id;
+COMMIT;

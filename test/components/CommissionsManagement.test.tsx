@@ -8,7 +8,12 @@ type Call = { table: string; select?: string; filters: [string, string, unknown]
 const calls: Call[] = [];
 let tableData: Record<string, { data: unknown; error: unknown }> = {};
 let rpcResult: { data: unknown; error: unknown } = { data: [], error: null };
-const rpc = vi.fn(async () => rpcResult);
+// P1: a aba lê get_commission_cycle_v1; aqui simulamos a migration ainda não aplicada
+// (PGRST202), e a tela cai no caminho da P0 (get_commissions_due + ciclo local).
+const rpc = vi.fn(async (name: string) =>
+    name === 'get_commission_cycle_v1'
+        ? { data: null, error: { code: 'PGRST202', message: 'Could not find the function public.get_commission_cycle_v1' } }
+        : rpcResult);
 
 function query(table: string) {
     const call: Call = { table, filters: [] };
@@ -30,7 +35,7 @@ function query(table: string) {
 }
 
 vi.mock('../../lib/supabase', () => ({
-    supabase: { rpc: (...a: unknown[]) => rpc(...(a as [])), from: (t: string) => query(t) },
+    supabase: { rpc: (...a: unknown[]) => rpc(...(a as [string])), from: (t: string) => query(t) },
 }));
 const AUTH = { user: { id: 'owner-1' }, role: 'owner', region: 'BR', userType: 'barber' };
 vi.mock('../../contexts/AuthContext', () => ({ useAuth: () => AUTH }));
@@ -64,7 +69,7 @@ const mount = () => render(
     <MemoryRouter><ToastProvider><CommissionsManagement accentColor="accent-gold" currencySymbol="R$" /></ToastProvider></MemoryRouter>,
 );
 
-describe('CommissionsManagement — aba Pagamento de comissão (P0)', () => {
+describe('CommissionsManagement — aba Pagamento de comissão (P0; fallback sem a RPC da P1)', () => {
     const originalTz = process.env.TZ;
     beforeEach(() => {
         calls.length = 0;

@@ -1,8 +1,10 @@
 import { supabase } from '@/lib/supabase';
 import {
   commissionCycleSchema,
+  payPreviewSchema,
   staffPerformanceResultSchema,
   type CommissionCycleResult,
+  type PayPreview,
   type StaffPerformanceResult,
 } from '@/types/staffPerformance';
 
@@ -55,4 +57,26 @@ export async function fetchCommissionCycle(cycleEnd?: string | null): Promise<Co
   const { data, error } = await supabase.rpc('get_commission_cycle_v1', { p_cycle_end: cycleEnd ?? null });
   if (error) raise(error);
   return commissionCycleSchema.parse(data);
+}
+
+/** Quanto a pay_commission_v1 marcará neste intervalo (fuso do tenant). */
+export async function previewCommissionPay(professionalId: string, start: string, end: string): Promise<PayPreview> {
+  const { data, error } = await supabase.rpc('preview_commission_pay_v1', {
+    p_professional_id: professionalId,
+    p_start: start,
+    p_end: end,
+  });
+  if (error) raise(error);
+  return payPreviewSchema.parse(data);
+}
+
+/** Marca e registra a despesa = SUM marcado. 0 = no-op. */
+export async function payCommission(professionalId: string, start: string, end: string): Promise<PayPreview> {
+  const { data, error } = await supabase.rpc('pay_commission_v1', {
+    p_professional_id: professionalId,
+    p_start: start,
+    p_end: end,
+  });
+  if (error) raise(error);
+  return payPreviewSchema.parse(data);
 }

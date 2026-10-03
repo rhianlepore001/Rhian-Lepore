@@ -224,30 +224,143 @@ DO $$ DECLARE e jsonb; BEGIN
 END $$;
 ROLLBACK;
 
--- 11b) Pagar o saldo anterior da Eva marca o lançamento e ela some da fila
+-- 11b) pay_commission_v1 no saldo anterior da Eva: marca, status Nada a pagar, 2º click no-op
 BEGIN;
-SELECT public.mark_commissions_as_paid(
-  '10000000-0000-0000-0000-000000000001',
-  '20000000-0000-0000-0000-0000000000f1',
-  15, '2026-08-20', '2026-09-05');
-DO $$ DECLARE e jsonb; unpaid int; expenses int; BEGIN
+DO $$ DECLARE e jsonb; unpaid int; expenses int; pays int; first jsonb; second jsonb;
+  eva uuid := '20000000-0000-0000-0000-0000000000f1';
+BEGIN
+  PERFORM set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
+  SET ROLE authenticated;
+  first := public.pay_commission_v1(eva, '2026-08-20', '2026-09-05');
+  RESET ROLE;
+  PERFORM public._t('Eva pay amount == marcado', (first ->> 'amount')::numeric, 15);
   SELECT count(*) INTO unpaid FROM public.finance_records
-   WHERE professional_id = '20000000-0000-0000-0000-0000000000f1' AND type = 'revenue' AND NOT commission_paid;
+   WHERE professional_id = eva AND type = 'revenue' AND NOT commission_paid;
   PERFORM public._t('Eva: lançamento anterior marcado', unpaid, 0);
   SELECT x INTO e FROM jsonb_array_elements(public._commission_cycle_core('10000000-0000-0000-0000-000000000001', '2026-10-05', '2026-10-02 12:00:00-03') -> 'members') x WHERE x ->> 'name' = 'Eva';
   PERFORM public._tt('Eva após pagar saldo anterior', COALESCE(e ->> 'status', 'ausente'), 'nada_a_pagar');
   PERFORM public._t('Eva a pagar ciclo', COALESCE((e ->> 'a_pagar_ciclo')::numeric, 0), 0);
   PERFORM public._t('Eva saldo anterior zerado', COALESCE((e ->> 'saldo_anterior')::numeric, 0), 0);
-  SELECT count(*) INTO expenses FROM public.finance_records
-   WHERE professional_id = '20000000-0000-0000-0000-0000000000f1' AND type = 'expense';
-  PERFORM public.mark_commissions_as_paid(
-    '10000000-0000-0000-0000-000000000001',
-    '20000000-0000-0000-0000-0000000000f1',
-    15, '2026-08-20', '2026-09-05');
-  PERFORM public._t('Eva: segundo pagamento é idempotente',
-    (SELECT count(*) FROM public.finance_records WHERE professional_id = '20000000-0000-0000-0000-0000000000f1' AND type = 'expense'),
-    expenses);
-  RAISE NOTICE 'PASS Eva: pagar 15 de 20/08–05/09 marca o registro e status Nada a pagar; segundo pay não duplica';
+  SELECT count(*) INTO expenses FROM public.finance_records WHERE professional_id = eva AND type = 'expense';
+  SELECT count(*) INTO pays FROM public.commission_payments WHERE professional_id = eva;
+  PERFORM public._t('Eva: 1 despesa = amount marcado', expenses, 1);
+  PERFORM public._t('Eva: 1 commission_payment', pays, 1);
+  PERFORM set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
+  SET ROLE authenticated;
+  second := public.pay_commission_v1(eva, '2026-08-20', '2026-09-05');
+  RESET ROLE;
+  PERFORM public._t('Eva: segundo pay amount 0', (second ->> 'amount')::numeric, 0);
+  PERFORM public._t('Eva: segundo pagamento é no-op',
+    (SELECT count(*) FROM public.finance_records WHERE professional_id = eva AND type = 'expense'), expenses);
+  RAISE NOTICE 'PASS Eva: pay_commission_v1 15 de 20/08–05/09 marca e Nada a pagar; segundo pay é no-op';
+END $$;
+ROLLBACK;
+
+-- 11c) Overpays do review: prod mark vs pay_commission_v1 (fuso do tenant, amount = marcado)
+BEGIN;
+INSERT INTO public.profiles VALUES ('70000000-0000-0000-0000-000000000001','owner','70000000-0000-0000-0000-000000000001','BR');
+INSERT INTO public.business_settings (user_id, timezone, commission_settlement_day_of_month)
+VALUES ('70000000-0000-0000-0000-000000000001','America/Sao_Paulo',5);
+INSERT INTO public.team_members (id,user_id,name,is_owner,active,deleted_at,commission_rate) VALUES
+ ('71000000-0000-0000-0000-000000000001','70000000-0000-0000-0000-000000000001','Multi',false,true,null,40),
+ ('71000000-0000-0000-0000-000000000002','70000000-0000-0000-0000-000000000001','EvaLike',false,false,now(),40),
+ ('71000000-0000-0000-0000-000000000003','70000000-0000-0000-0000-000000000001','Partial',false,true,null,40),
+ ('71000000-0000-0000-0000-000000000004','70000000-0000-0000-0000-000000000001','Borda',false,true,null,40),
+ ('71000000-0000-0000-0000-000000000005','70000000-0000-0000-0000-000000000001','Dono',true,true,null,0);
+CREATE FUNCTION pg_temp.fr7(pro int, ts text, cv numeric, paid boolean DEFAULT false) RETURNS void LANGUAGE sql AS $$
+  INSERT INTO public.finance_records (user_id, professional_id, type, revenue, commission_value, commission_paid, created_at)
+  VALUES ('70000000-0000-0000-0000-000000000001', ('71000000-0000-0000-0000-00000000000'||pro)::uuid, 'revenue', cv*2.5, cv, paid,
+          (ts::timestamp AT TIME ZONE 'America/Sao_Paulo')) $$;
+SELECT pg_temp.fr7(1,'2026-06-10 15:00',10), pg_temp.fr7(1,'2026-07-10 15:00',20), pg_temp.fr7(1,'2026-08-20 15:00',30), pg_temp.fr7(1,'2026-09-20 15:00',40);
+SELECT pg_temp.fr7(2,'2026-07-15 15:00',15), pg_temp.fr7(2,'2026-09-20 15:00',10);
+SELECT pg_temp.fr7(3,'2026-08-10 15:00',25,true), pg_temp.fr7(3,'2026-08-25 15:00',12);
+SELECT pg_temp.fr7(4,'2026-08-05 22:30',7), pg_temp.fr7(4,'2026-08-20 15:00',50), pg_temp.fr7(4,'2026-09-05 22:30',9);
+SELECT pg_temp.fr7(5,'2026-08-20 15:00',99);
+
+DO $$ DECLARE
+  t text := '70000000-0000-0000-0000-000000000001';
+  multi uuid := '71000000-0000-0000-0000-000000000001';
+  eva uuid := '71000000-0000-0000-0000-000000000002';
+  partial uuid := '71000000-0000-0000-0000-000000000003';
+  borda uuid := '71000000-0000-0000-0000-000000000004';
+  dono uuid := '71000000-0000-0000-0000-000000000005';
+  c jsonb; r jsonb; marked numeric; pays int; unpaid numeric;
+BEGIN
+  c := public._commission_cycle_core(t, NULL, '2026-10-03 15:00+00');
+  PERFORM public._tt('ciclo padrão probe', c -> 'cycle' ->> 'end', '2026-09-05');
+  PERFORM public._t('Multi ciclo/anterior/acumulado',
+    (SELECT (x->>'a_pagar_ciclo')::numeric*10000 + (x->>'saldo_anterior')::numeric*100 + (x->>'saldo_acumulado')::numeric
+       FROM jsonb_array_elements(c->'members') x WHERE x->>'name'='Multi'), 30*10000 + 30*100 + 100);
+  PERFORM public._t('EvaLike acumulado 25 / anterior 15',
+    (SELECT (x->>'saldo_acumulado')::numeric*100 + (x->>'saldo_anterior')::numeric FROM jsonb_array_elements(c->'members') x WHERE x->>'name'='EvaLike'), 2515);
+
+  -- prod mark documenta o overpay (a): UI mandaria 70, marca 30
+  marked := public.mark_commissions_as_paid(t, multi, 70, '2026-06-10', '2026-08-05');
+  PERFORM public._t('prod Multi: marca 30 de 70 enviados', marked, 30);
+  PERFORM public._t('prod Multi: despesa 70 mesmo assim',
+    (SELECT sum(commission_value) FROM public.finance_records WHERE professional_id = multi AND type='expense'), 70);
+  DELETE FROM public.commission_payments WHERE professional_id = multi;
+  DELETE FROM public.finance_records WHERE professional_id = multi AND type='expense';
+  UPDATE public.finance_records SET commission_paid = false WHERE professional_id = multi AND type='revenue';
+
+  -- (a) Multi: ciclo atual 30; passado Jun+Jul = 30 (não 70)
+  r := public._pay_commission_core(t, multi, '2026-08-06', '2026-09-05', false);
+  PERFORM public._t('preview Multi ciclo', (r->>'amount')::numeric, 30);
+  r := public._pay_commission_core(t, multi, '2026-08-06', '2026-09-05', true);
+  PERFORM public._t('pay Multi ciclo == marcado', (r->>'amount')::numeric, 30);
+  r := public._pay_commission_core(t, multi, '2026-06-10', '2026-08-05', false);
+  PERFORM public._t('preview Multi passado (não usa acumulado 70)', (r->>'amount')::numeric, 30);
+  r := public._pay_commission_core(t, multi, '2026-06-10', '2026-08-05', true);
+  PERFORM public._t('pay Multi passado', (r->>'amount')::numeric, 30);
+  SELECT COALESCE(sum(commission_value),0) INTO unpaid FROM public.finance_records
+   WHERE professional_id = multi AND type='revenue' AND NOT commission_paid;
+  PERFORM public._t('Multi sobra só set/20 (40)', unpaid, 40);
+  SELECT count(*) INTO pays FROM public.commission_payments WHERE professional_id = multi;
+  PERFORM public._t('Multi 2 pagamentos = 60',
+    (SELECT sum(amount) FROM public.commission_payments WHERE professional_id = multi), 60);
+
+  -- (b) inativa com lançamento no ciclo aberto: preview do passado = 15, não 25
+  r := public._pay_commission_core(t, eva, '2026-07-15', '2026-08-05', false);
+  PERFORM public._t('preview EvaLike passado', (r->>'amount')::numeric, 15);
+  r := public._pay_commission_core(t, eva, '2026-07-15', '2026-08-05', true);
+  PERFORM public._t('pay EvaLike == 15 marcado', (r->>'amount')::numeric, 15);
+  SELECT COALESCE(sum(commission_value),0) INTO unpaid FROM public.finance_records
+   WHERE professional_id = eva AND type='revenue' AND NOT commission_paid;
+  PERFORM public._t('EvaLike sobra o ciclo aberto (10)', unpaid, 10);
+
+  -- (c) 22:30 BRT no último dia: fuso do tenant marca 59 (50+9), não deixa 9
+  r := public._pay_commission_core(t, borda, '2026-08-06', '2026-09-05', false);
+  PERFORM public._t('preview Borda ciclo (inclui 05/09 22:30 BRT)', (r->>'amount')::numeric, 59);
+  r := public._pay_commission_core(t, borda, '2026-08-06', '2026-09-05', true);
+  PERFORM public._t('pay Borda ciclo', (r->>'amount')::numeric, 59);
+  r := public._pay_commission_core(t, borda, '2026-08-05', '2026-08-05', true);
+  PERFORM public._t('pay Borda borda 05/08 22:30 BRT', (r->>'amount')::numeric, 7);
+  SELECT COALESCE(sum(commission_value),0) INTO unpaid FROM public.finance_records
+   WHERE professional_id = borda AND type='revenue' AND NOT commission_paid;
+  PERFORM public._t('Borda sem leftover', unpaid, 0);
+  r := public._pay_commission_core(t, borda, '2026-08-06', '2026-09-05', true);
+  PERFORM public._t('Borda 2º click no-op', (r->>'amount')::numeric, 0);
+  PERFORM public._t('Borda sem despesa extra',
+    (SELECT count(*) FROM public.finance_records WHERE professional_id = borda AND type='expense'), 2);
+
+  -- parcial: 25 já pago, 12 aberto
+  r := public._pay_commission_core(t, partial, '2026-08-06', '2026-09-05', true);
+  PERFORM public._t('Partial só o não pago', (r->>'amount')::numeric, 12);
+  PERFORM public._t('Partial payment == marcado',
+    (SELECT amount FROM public.commission_payments WHERE professional_id = partial), 12);
+
+  -- ativo current+past já coberto em Multi; dono excluído
+  r := public._pay_commission_core(t, dono, '2026-08-06', '2026-09-05', true);
+  PERFORM public._t('dono excluído amount 0', (r->>'amount')::numeric, 0);
+  PERFORM public._t('dono sem payment',
+    (SELECT count(*) FROM public.commission_payments WHERE professional_id = dono), 0);
+
+  -- amount retornado == SUM marcado sempre
+  PERFORM public._t('payments Multi+Eva+Borda+Partial == marked',
+    (SELECT COALESCE(sum(amount),0) FROM public.commission_payments WHERE user_id = t),
+    30+30+15+59+7+12);
+
+  RAISE NOTICE 'PASS pay_commission_v1: Multi 30+30, EvaLike 15, Borda 59+7, Partial 12, dono 0; 2º click no-op; amount==marcado';
 END $$;
 ROLLBACK;
 
@@ -280,6 +393,8 @@ DO $$ DECLARE j jsonb; k text; BEGIN
 END $$;
 SELECT public._denied($q$SELECT public.get_staff_performance_v1('2026-09-01','2026-09-30','20000000-0000-0000-0000-0000000000b1')$q$, 'staff pede colega');
 SELECT public._denied($q$SELECT public.get_commission_cycle_v1()$q$, 'staff pede ciclo');
+SELECT public._denied($q$SELECT public.pay_commission_v1('20000000-0000-0000-0000-0000000000a1','2026-09-06','2026-10-05')$q$, 'staff paga');
+SELECT public._denied($q$SELECT public.preview_commission_pay_v1('20000000-0000-0000-0000-0000000000a1','2026-09-06','2026-10-05')$q$, 'staff preview');
 SELECT set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-0000000000f1', false) AS _ \gset
 SELECT public._denied($q$SELECT public.get_staff_performance_v1('2026-09-01','2026-09-30')$q$, 'ex-staff (vínculo excluído)');
 SELECT set_config('request.jwt.claim.sub', '30000000-0000-0000-0000-0000000000b1', false) AS _ \gset
@@ -295,10 +410,10 @@ RESET ROLE;
 DO $$ DECLARE r record; BEGIN
   FOR r IN SELECT p.oid::regprocedure AS f, p.proname, p.prosecdef, p.proconfig FROM pg_proc p
            WHERE p.pronamespace = 'public'::regnamespace
-             AND p.proname IN ('get_staff_performance_v1','get_commission_cycle_v1','_staff_performance_core','_commission_cycle_core','_staff_perf_raw','_staff_perf_tz','_commission_settle_date') LOOP
+             AND p.proname IN ('get_staff_performance_v1','get_commission_cycle_v1','_staff_performance_core','_commission_cycle_core','_staff_perf_raw','_staff_perf_tz','_commission_settle_date','_pay_commission_core','preview_commission_pay_v1','pay_commission_v1') LOOP
     IF has_function_privilege('anon', r.f, 'EXECUTE') THEN RAISE EXCEPTION 'FAIL anon executa %', r.f; END IF;
     IF r.proname LIKE '\_%' AND has_function_privilege('authenticated', r.f, 'EXECUTE') THEN RAISE EXCEPTION 'FAIL authenticated executa interna %', r.f; END IF;
-    IF r.proname LIKE 'get\_%' AND NOT has_function_privilege('authenticated', r.f, 'EXECUTE') THEN RAISE EXCEPTION 'FAIL authenticated sem EXECUTE em %', r.f; END IF;
+    IF (r.proname LIKE 'get\_%' OR r.proname LIKE 'pay\_%' OR r.proname LIKE 'preview\_%') AND NOT has_function_privilege('authenticated', r.f, 'EXECUTE') THEN RAISE EXCEPTION 'FAIL authenticated sem EXECUTE em %', r.f; END IF;
     IF r.proconfig IS DISTINCT FROM ARRAY['search_path=public'] THEN RAISE EXCEPTION 'FAIL search_path %', r.f; END IF;
     IF r.proname <> '_commission_settle_date' AND NOT r.prosecdef THEN RAISE EXCEPTION 'FAIL não é DEFINER %', r.f; END IF;
   END LOOP;

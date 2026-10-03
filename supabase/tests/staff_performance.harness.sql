@@ -38,23 +38,26 @@ AS $$ SELECT role FROM public.profiles WHERE id = auth.uid()::text $$;
 CREATE FUNCTION public.get_commissions_due() RETURNS int LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
 AS $$ SELECT 1 $$;
 
--- Espelho do contrato de prod: marca created_at::date no intervalo; não duplica se já estiver pago.
+-- Cópia fiel de prod (mark_commissions_as_paid__tenant_unsafe): SEMPRE insere
+-- pagamento+despesa com p_amount; marca por created_at::date no TZ da sessão (UTC).
+-- Sem short-circuit quando n=0 — o harness não pode esconder overpay.
 CREATE FUNCTION public.mark_commissions_as_paid(
   p_user_id text, p_professional_id uuid, p_amount numeric, p_start_date date, p_end_date date)
-RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-DECLARE n int;
+RETURNS numeric LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE marked numeric;
 BEGIN
-  UPDATE public.finance_records
-     SET commission_paid = true
-   WHERE user_id = p_user_id AND professional_id = p_professional_id
-     AND type = 'revenue' AND commission_paid = false
-     AND created_at::date BETWEEN p_start_date AND p_end_date;
-  GET DIAGNOSTICS n = ROW_COUNT;
-  IF n = 0 THEN RETURN; END IF;
-  INSERT INTO public.finance_records (user_id, professional_id, type, revenue, commission_value, commission_paid, created_at)
-  VALUES (p_user_id, p_professional_id, 'expense', 0, p_amount, true, now());
   INSERT INTO public.commission_payments (user_id, professional_id, amount, start_date, end_date, status, paid_at)
   VALUES (p_user_id, p_professional_id, p_amount, p_start_date, p_end_date, 'paid', now());
+  WITH u AS (
+    UPDATE public.finance_records SET commission_paid = TRUE
+     WHERE user_id = p_user_id AND professional_id = p_professional_id
+       AND created_at::date >= p_start_date AND created_at::date <= p_end_date
+       AND commission_paid = FALSE AND type = 'revenue'
+     RETURNING commission_value)
+  SELECT COALESCE(sum(commission_value), 0) INTO marked FROM u;
+  INSERT INTO public.finance_records (user_id, professional_id, revenue, commission_value, type, created_at, commission_paid)
+  VALUES (p_user_id, p_professional_id, 0, p_amount, 'expense', now(), TRUE);
+  RETURN marked;
 END;
 $$;
 

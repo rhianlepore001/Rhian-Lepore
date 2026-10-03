@@ -176,6 +176,15 @@ export const commissionCycleSchema = z.object({
   totals: z.object({ a_pagar_ciclo: z.number(), pendentes: int, pago_ciclo: z.number() }),
 });
 
+export const payPreviewSchema = z.object({
+  amount: z.number(),
+  count: z.number().int(),
+  start: isoDate,
+  end: isoDate,
+  tz: z.string().optional(),
+});
+
 export type CycleStatus = z.infer<typeof cycleStatusSchema>;
 export type CycleMember = z.infer<typeof cycleMemberSchema>;
 export type CommissionCycleResult = z.infer<typeof commissionCycleSchema>;
+export type PayPreview = z.infer<typeof payPreviewSchema>;

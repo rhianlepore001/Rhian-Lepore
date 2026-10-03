@@ -1,14 +1,18 @@
 -- =============================================================================
 -- P1: get_staff_performance_v1 + get_commission_cycle_v1 (ACCEPTANCE.md §4, §8, §9)
 -- =============================================================================
--- Só ADITIVO: 7 funções novas + 2 índices. Nenhuma função existente é alterada.
+-- Só ADITIVO: 10 funções novas + 2 índices. Nenhuma função existente é alterada
+-- (mark_commissions_as_paid de prod permanece: outras telas ainda podem chamá-la).
 --   _staff_perf_tz(text)                 fuso do tenant (business_settings → região)
 --   _staff_perf_raw(...)                 agregados por colaborador (interna)
 --   _staff_performance_core(..., p_now)  payload (interna; o harness fixa o "agora")
 --   _commission_settle_date(date, int)   dia de acerto do mês (interna)
 --   _commission_cycle_core(..., p_now)   ciclo de acerto (interna)
+--   _pay_commission_core(...)            marca no fuso do tenant; paga o SUM marcado
 --   get_staff_performance_v1(...)        RPC pública: dono (equipe) ou colaborador (só ele)
 --   get_commission_cycle_v1(...)         RPC pública: só dono
+--   preview_commission_pay_v1(...)       quanto seria marcado no intervalo (dono)
+--   pay_commission_v1(...)               paga exatamente o preview (dono; no-op se 0)
 -- As internas não têm EXECUTE para anon/authenticated.
 -- Regras: período pela data LOCAL do atendimento; receita = appointments.price
 -- (nunca total_price); comissão = finance_records.commission_value só de
@@ -601,5 +605,125 @@ REVOKE ALL ON FUNCTION public.get_staff_performance_v1(date, date, uuid, boolean
 REVOKE ALL ON FUNCTION public.get_commission_cycle_v1(date) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.get_staff_performance_v1(date, date, uuid, boolean) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.get_commission_cycle_v1(date) TO authenticated, service_role;
+
+-- Paga o SUM do que o fuso do tenant realmente marca. Sem p_amount do cliente.
+-- mark_commissions_as_paid de prod NÃO é alterada (created_at::date em UTC + insert
+-- mesmo quando n=0). Esta RPC é o caminho novo da aba de repasse.
+CREATE OR REPLACE FUNCTION public._pay_commission_core(
+  p_tenant text, p_professional_id uuid, p_start date, p_end date, p_commit boolean)
+RETURNS jsonb
+LANGUAGE plpgsql
+VOLATILE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_tz text := public._staff_perf_tz(p_tenant);
+  v_from timestamptz;
+  v_to timestamptz;
+  v_amount numeric := 0;
+  v_count int := 0;
+  v_is_owner boolean;
+BEGIN
+  IF p_start IS NULL OR p_end IS NULL OR p_start > p_end THEN
+    RAISE EXCEPTION 'Intervalo inválido.' USING ERRCODE = '22023';
+  END IF;
+
+  SELECT COALESCE(tm.is_owner, false) INTO v_is_owner
+    FROM public.team_members tm
+   WHERE tm.id = p_professional_id AND tm.user_id = p_tenant;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Colaborador não encontrado.' USING ERRCODE = '22023';
+  END IF;
+  IF v_is_owner THEN
+    RETURN jsonb_build_object('amount', 0, 'count', 0, 'start', p_start, 'end', p_end, 'tz', v_tz);
+  END IF;
+
+  v_from := p_start::timestamp AT TIME ZONE v_tz;
+  v_to := (p_end + 1)::timestamp AT TIME ZONE v_tz;
+
+  IF NOT p_commit THEN
+    SELECT COALESCE(round(sum(COALESCE(fr.commission_value, 0)), 2), 0), count(*)
+      INTO v_amount, v_count
+      FROM public.finance_records fr
+     WHERE fr.user_id = p_tenant AND fr.professional_id = p_professional_id
+       AND fr.type = 'revenue' AND fr.commission_paid IS NOT TRUE
+       AND COALESCE(fr.commission_value, 0) > 0
+       AND fr.created_at >= v_from AND fr.created_at < v_to;
+    RETURN jsonb_build_object('amount', v_amount, 'count', v_count, 'start', p_start, 'end', p_end, 'tz', v_tz);
+  END IF;
+
+  WITH locked AS (
+    SELECT fr.id
+      FROM public.finance_records fr
+     WHERE fr.user_id = p_tenant AND fr.professional_id = p_professional_id
+       AND fr.type = 'revenue' AND fr.commission_paid IS NOT TRUE
+       AND COALESCE(fr.commission_value, 0) > 0
+       AND fr.created_at >= v_from AND fr.created_at < v_to
+     FOR UPDATE OF fr
+  ),
+  upd AS (
+    UPDATE public.finance_records f
+       SET commission_paid = true
+     WHERE f.id IN (SELECT id FROM locked)
+     RETURNING COALESCE(f.commission_value, 0) AS cv
+  )
+  SELECT COALESCE(round(sum(cv), 2), 0), count(*) INTO v_amount, v_count FROM upd;
+
+  IF v_amount <= 0 THEN
+    RETURN jsonb_build_object('amount', 0, 'count', 0, 'start', p_start, 'end', p_end, 'tz', v_tz);
+  END IF;
+
+  INSERT INTO public.commission_payments (user_id, professional_id, amount, start_date, end_date, status, paid_at)
+  VALUES (p_tenant, p_professional_id, v_amount, p_start, p_end, 'paid', now());
+  INSERT INTO public.finance_records (user_id, professional_id, type, revenue, commission_value, commission_paid, created_at)
+  VALUES (p_tenant, p_professional_id, 'expense', 0, v_amount, true, now());
+
+  RETURN jsonb_build_object('amount', v_amount, 'count', v_count, 'start', p_start, 'end', p_end, 'tz', v_tz);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.preview_commission_pay_v1(
+  p_professional_id uuid, p_start date, p_end date)
+RETURNS jsonb
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_uid uuid := auth.uid();
+BEGIN
+  IF v_uid IS NULL OR NOT EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = v_uid::text AND p.role = 'owner') THEN
+    RAISE EXCEPTION 'Apenas o dono pode ver o preview do repasse.' USING ERRCODE = 'insufficient_privilege';
+  END IF;
+  RETURN public._pay_commission_core(v_uid::text, p_professional_id, p_start, p_end, false);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.pay_commission_v1(
+  p_professional_id uuid, p_start date, p_end date)
+RETURNS jsonb
+LANGUAGE plpgsql
+VOLATILE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_uid uuid := auth.uid();
+BEGIN
+  IF v_uid IS NULL OR NOT EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = v_uid::text AND p.role = 'owner') THEN
+    RAISE EXCEPTION 'Apenas o dono pode pagar comissões.' USING ERRCODE = 'insufficient_privilege';
+  END IF;
+  RETURN public._pay_commission_core(v_uid::text, p_professional_id, p_start, p_end, true);
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public._pay_commission_core(text, uuid, date, date, boolean) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public._pay_commission_core(text, uuid, date, date, boolean) TO service_role;
+REVOKE ALL ON FUNCTION public.preview_commission_pay_v1(uuid, date, date) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.pay_commission_v1(uuid, date, date) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.preview_commission_pay_v1(uuid, date, date) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.pay_commission_v1(uuid, date, date) TO authenticated, service_role;
 
 COMMIT;

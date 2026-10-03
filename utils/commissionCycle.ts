@@ -31,6 +31,24 @@ export function formatDayMonth(iso: string): string {
     return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}`;
 }
 
+/** "AAAA-MM-DD" → "dd/mm/aaaa" (input pt-BR). */
+export function formatIsoToBr(iso: string): string {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return '';
+    return `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
+}
+
+/** "dd/mm/aaaa" → "AAAA-MM-DD", ou null se a data não existir. */
+export function parseBrToIso(br: string): string | null {
+    const m = br.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (!m) return null;
+    const d = Number(m[1]);
+    const mo = Number(m[2]);
+    const y = Number(m[3]);
+    const dt = new Date(y, mo - 1, d);
+    if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d) return null;
+    return `${y}-${pad(mo)}-${pad(d)}`;
+}
+
 export function formatCycleLabel(start: string, end: string): string {
     return `${formatDayMonth(start)} – ${formatDayMonth(end)}`;
 }

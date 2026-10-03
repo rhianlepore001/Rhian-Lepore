@@ -52,15 +52,14 @@ export function cycleContext(services: number, products: number): string {
     return `${plural(services, 'serviço', 'serviços')} · ${plural(products, 'produto', 'produtos')} neste ciclo`;
 }
 
-/** Valor efetivamente devido: ciclo atual, ou saldo de ciclos anteriores se o ciclo estiver zerado. */
+/** Valor efetivamente devido neste clique: ciclo atual, ou só o saldo anterior (nunca o acumulado). */
 export function payoutDueAmount(row: PayoutRowData): number {
     if (row.total_due > 0) return row.total_due;
     const earlier = row.cycle?.saldo_anterior ?? 0;
-    if (earlier > 0) return row.cycle?.saldo_acumulado ?? earlier;
-    return 0;
+    return earlier > 0 ? earlier : 0;
 }
 
-/** Intervalo enviado a mark_commissions_as_paid: cobre o lançamento mais antigo quando só há saldo anterior. */
+/** Intervalo enviado a pay_commission_v1: cobre o lançamento mais antigo quando só há saldo anterior. */
 export function payoutPaymentRange(
     row: PayoutRowData,
     cycle: { start: string; end: string },
@@ -226,14 +225,17 @@ export const PayoutList: React.FC<PayoutListProps> = ({ rows, theme, formatMoney
                             <span className="hidden lg:block"><StatusCell row={r} theme={theme} formatMoney={formatMoney} /></span>
 
                             {/* contexto (mobile) */}
-                            <p className={`mt-3 text-xs ${colors.textMuted} lg:hidden`}>
-                                {r.cycle ? cycleContext(r.services_pending, r.products_pending) : pendingContext(r.services_pending, r.products_pending)}
-                            </p>
-                            {earlier > 0 && r.total_due > 0 && (
-                                <p className={`mt-1 text-xs ${colors.textSecondary} tabular-nums lg:hidden`}>+ {formatMoney(earlier)} de ciclos anteriores</p>
-                            )}
-                            {priorOnly && (
-                                <p className={`mt-1 text-xs ${colors.textSecondary} lg:hidden`}>de ciclos anteriores</p>
+                            {priorOnly ? (
+                                <p className={`mt-3 text-xs ${colors.textSecondary} tabular-nums lg:hidden`}>{formatMoney(payable)} de ciclos anteriores</p>
+                            ) : (
+                                <>
+                                    <p className={`mt-3 text-xs ${colors.textMuted} lg:hidden`}>
+                                        {r.cycle ? cycleContext(r.services_pending, r.products_pending) : pendingContext(r.services_pending, r.products_pending)}
+                                    </p>
+                                    {earlier > 0 && r.total_due > 0 && (
+                                        <p className={`mt-1 text-xs ${colors.textSecondary} tabular-nums lg:hidden`}>+ {formatMoney(earlier)} de ciclos anteriores</p>
+                                    )}
+                                </>
                             )}
 
                             {/* ações */}

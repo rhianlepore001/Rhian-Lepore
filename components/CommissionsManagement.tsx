@@ -12,8 +12,8 @@ import { CommissionPaymentHistory } from './CommissionPaymentHistory';
 import { CommissionDetailReport } from './CommissionDetailReport';
 import { useToast } from '@/components/ui';
 import { useTenantLocale } from '../hooks/useTenantLocale';
-import { lastClosedCycle, previousCycle, formatCycleLabel, type CommissionCycle } from '../utils/commissionCycle';
-import { fetchCommissionCycle, isRpcUnavailable } from '../services/staffPerformance';
+import { lastClosedCycle, formatCycleLabel, formatIsoToBr, parseBrToIso, type CommissionCycle } from '../utils/commissionCycle';
+import { fetchCommissionCycle, isRpcUnavailable, payCommission, previewCommissionPay } from '../services/staffPerformance';
 import type { CommissionCycleResult } from '../types/staffPerformance';
 import { PayoutList, payoutDueAmount, payoutPaymentRange, type PayoutRowData } from './commissions/PayoutList';
 import { PaidPaymentsList, type PaidPayment } from './commissions/PaidPaymentsList';
@@ -74,6 +74,9 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
     const [paymentStartDate, setPaymentStartDate] = useState('');
     const [paymentEndDate, setPaymentEndDate] = useState('');
     const [paymentPeriodLabel, setPaymentPeriodLabel] = useState('');
+    const [startDraft, setStartDraft] = useState('');
+    const [endDraft, setEndDraft] = useState('');
+    const [previewing, setPreviewing] = useState(false);
 
     // Inline % prompt
     const [showRatePrompt, setShowRatePrompt] = useState(false);
@@ -260,32 +263,78 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
         openPayModal(professional);
     };
 
-    const applyPaymentCycle = (professional: CommissionDue, c: CommissionCycle) => {
-        setPaymentStartDate(c.start);
-        setPaymentEndDate(c.end);
-        setPaymentPeriodLabel(c.label);
-        // Ciclo exibido com dados do servidor: o valor já vem calculado no fuso do tenant.
-        if (cycleData && c.start === cycle.start && c.end === cycle.end) {
-            setPaymentAmount(payoutDueAmount(professional).toFixed(2));
+    const applyDates = (start: string, end: string, professional: CommissionDue) => {
+        setPaymentStartDate(start);
+        setPaymentEndDate(end);
+        setStartDraft(formatIsoToBr(start));
+        setEndDraft(formatIsoToBr(end));
+        setPaymentPeriodLabel(formatCycleLabel(start, end));
+        void refreshPreview(professional.professional_id, start, end);
+    };
+
+    const refreshPreview = async (profId: string, start: string, end: string) => {
+        if (!start || !end || start > end) {
+            setPaymentAmount('0.00');
             return;
         }
-        calculateAmountForDates(professional.professional_id, c.start, c.end);
+        if (!cycleData) {
+            await calculateAmountForDates(profId, start, end);
+            return;
+        }
+        setPreviewing(true);
+        try {
+            const preview = await previewCommissionPay(profId, start, end);
+            setPaymentAmount(Number(preview.amount).toFixed(2));
+        } catch (error) {
+            if (isRpcUnavailable(error)) {
+                await calculateAmountForDates(profId, start, end);
+                return;
+            }
+            console.error('Error previewing commission pay:', error);
+            setPaymentAmount('0.00');
+        } finally {
+            setPreviewing(false);
+        }
+    };
+
+    const commitDraftDate = (which: 'start' | 'end') => {
+        if (!selectedProfessional) return;
+        const raw = which === 'start' ? startDraft : endDraft;
+        const iso = parseBrToIso(raw);
+        if (!iso) {
+            if (which === 'start') setStartDraft(formatIsoToBr(paymentStartDate));
+            else setEndDraft(formatIsoToBr(paymentEndDate));
+            return;
+        }
+        const start = which === 'start' ? iso : paymentStartDate;
+        const end = which === 'end' ? iso : paymentEndDate;
+        applyDates(start, end, selectedProfessional);
     };
 
     const openPayModal = (professional: CommissionDue) => {
         setSelectedProfessional(professional);
         if (!cycleData) {
+            const start = cycle.start;
+            const end = cycle.end;
             setPaymentAmount(payoutDueAmount(professional).toFixed(2));
-            applyPaymentCycle(professional, cycle);
+            setPaymentStartDate(start);
+            setPaymentEndDate(end);
+            setStartDraft(formatIsoToBr(start));
+            setEndDraft(formatIsoToBr(end));
+            setPaymentPeriodLabel(formatCycleLabel(start, end));
             setShowPayModal(true);
+            void calculateAmountForDates(professional.professional_id, start, end);
             return;
         }
         const range = payoutPaymentRange(professional, cycle, cycleData.previous_end);
         setPaymentAmount(range.amount.toFixed(2));
         setPaymentStartDate(range.start);
         setPaymentEndDate(range.end);
+        setStartDraft(formatIsoToBr(range.start));
+        setEndDraft(formatIsoToBr(range.end));
         setPaymentPeriodLabel(formatCycleLabel(range.start, range.end));
         setShowPayModal(true);
+        void refreshPreview(professional.professional_id, range.start, range.end);
     };
 
     const handleSaveInlineRate = async () => {
@@ -358,17 +407,30 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
         }
         if (payingProfessionalId || settledIds.has(selectedProfessional.professional_id)) return;
 
+        if (Number(paymentAmount) <= 0) {
+            showToast('Nada a marcar neste período.', 'error');
+            return;
+        }
         setPayingProfessionalId(selectedProfessional.professional_id);
         try {
-            const { error } = await supabase.rpc('mark_commissions_as_paid', {
-                p_user_id: user.id,
-                p_professional_id: selectedProfessional.professional_id,
-                p_amount: parseFloat(paymentAmount),
-                p_start_date: paymentStartDate,
-                p_end_date: paymentEndDate
-            });
-
-            if (error) throw error;
+            let paid = Number(paymentAmount);
+            if (cycleData) {
+                const result = await payCommission(selectedProfessional.professional_id, paymentStartDate, paymentEndDate);
+                paid = Number(result.amount);
+            } else {
+                const { error } = await supabase.rpc('mark_commissions_as_paid', {
+                    p_user_id: user.id,
+                    p_professional_id: selectedProfessional.professional_id,
+                    p_amount: paid,
+                    p_start_date: paymentStartDate,
+                    p_end_date: paymentEndDate,
+                });
+                if (error) throw error;
+            }
+            if (paid <= 0) {
+                showToast('Nada a marcar neste período.', 'error');
+                return;
+            }
 
             const paidId = selectedProfessional.professional_id;
             setSettledIds((prev) => {
@@ -614,7 +676,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                 variant="primary"
                                 className="order-1 flex-1 md:order-2"
                                 onClick={handlePayCommissions}
-                                disabled={!!payingProfessionalId}
+                                disabled={!!payingProfessionalId || previewing || Number(paymentAmount) <= 0}
                                 loading={payingProfessionalId === selectedProfessional.professional_id}
                             >
                                 {payingProfessionalId === selectedProfessional.professional_id ? 'Confirmando...' : 'Pagar agora'}
@@ -623,7 +685,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                     }
                 >
                     {paymentPeriodLabel && (
-                        <p className={`mb-6 text-sm ${colors.textMuted}`}>Ciclo: {paymentPeriodLabel}</p>
+                        <p className={`mb-6 text-sm ${colors.textMuted}`}>Período: {paymentPeriodLabel}</p>
                     )}
 
                     <div className={`mb-8 flex items-center gap-4 rounded-2xl ${colors.border} border ${colors.inputBg} p-4`}>
@@ -651,10 +713,11 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                 Valor a ser liquidado ({moneySymbol})
                             </label>
                             <input
-                                type="number"
+                                type="text"
+                                inputMode="decimal"
+                                readOnly
                                 value={paymentAmount}
-                                onChange={(e) => setPaymentAmount(e.target.value)}
-                                step="0.01"
+                                aria-busy={previewing}
                                 className={`w-full rounded-2xl border-2 ${colors.border} ${colors.inputBg} p-4 ${font.mono} text-2xl ${colors.text} transition-all focus:border-[var(--color-success)] focus:outline-none`}
                                 placeholder="0.00"
                             />
@@ -663,32 +726,24 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                         <div className="space-y-3">
                             <label className={`block text-xs ${font.mono} uppercase tracking-widest ${colors.textMuted}`}>Intervalo de referência</label>
                             <div className="grid grid-cols-2 gap-3">
-                                <button
-                                    type="button"
-                                    onClick={() => applyPaymentCycle(selectedProfessional, cycle)}
-                                    className={`min-h-[44px] rounded-xl ${colors.border} border ${colors.surface} py-2.5 text-xs font-bold uppercase ${colors.textSecondary} transition-all ${colors.surfaceHover} active:scale-95`}
-                                >
-                                    {cycleData ? 'Este ciclo' : 'Último ciclo'}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => applyPaymentCycle(selectedProfessional, previousCycle(cycle, settlementDay))}
-                                    className={`min-h-[44px] rounded-xl ${colors.border} border ${colors.surface} py-2.5 text-xs font-bold uppercase ${colors.textSecondary} transition-all ${colors.surfaceHover} active:scale-95`}
-                                >
-                                    Ciclo anterior
-                                </button>
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
                                 <input
-                                    type="date"
-                                    value={paymentStartDate}
-                                    onChange={(e) => { setPaymentStartDate(e.target.value); calculateAmountForDates(selectedProfessional.professional_id, e.target.value, paymentEndDate); }}
+                                    type="text"
+                                    inputMode="numeric"
+                                    aria-label="Data inicial"
+                                    placeholder="dd/mm/aaaa"
+                                    value={startDraft}
+                                    onChange={(e) => setStartDraft(e.target.value)}
+                                    onBlur={() => commitDraftDate('start')}
                                     className={`w-full rounded-xl ${colors.border} border ${colors.inputBg} p-3 text-xs ${colors.text} outline-none focus:ring-1 focus:ring-[var(--color-input-focus)]`}
                                 />
                                 <input
-                                    type="date"
-                                    value={paymentEndDate}
-                                    onChange={(e) => { setPaymentEndDate(e.target.value); calculateAmountForDates(selectedProfessional.professional_id, paymentStartDate, e.target.value); }}
+                                    type="text"
+                                    inputMode="numeric"
+                                    aria-label="Data final"
+                                    placeholder="dd/mm/aaaa"
+                                    value={endDraft}
+                                    onChange={(e) => setEndDraft(e.target.value)}
+                                    onBlur={() => commitDraftDate('end')}
                                     className={`w-full rounded-xl ${colors.border} border ${colors.inputBg} p-3 text-xs ${colors.text} outline-none focus:ring-1 focus:ring-[var(--color-input-focus)]`}
                                 />
                             </div>

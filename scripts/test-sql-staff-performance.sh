@@ -17,7 +17,8 @@ trap cleanup EXIT
 PSQL=("$PGBIN/psql" -h "$TMP" -p "$PORT" -U postgres -d postgres -v ON_ERROR_STOP=1 -q)
 MIG="$ROOT/supabase/migrations/20261003110000_staff_performance_v1.sql"
 RB="$ROOT/docs/rollbacks/20261003110000_staff_performance_v1_rollback.sql"
-snapshot() { "${PSQL[@]}" -At -c "SELECT string_agg(p.oid::regprocedure::text || '=' || md5(pg_get_functiondef(p.oid)), ' ' ORDER BY 1) FROM pg_proc p WHERE p.pronamespace = 'public'::regnamespace AND p.proname NOT IN ('get_staff_performance_v1','get_commission_cycle_v1','_staff_performance_core','_commission_cycle_core','_staff_perf_raw','_staff_perf_tz','_commission_settle_date')"; }
+NEW_FNS="'get_staff_performance_v1','get_commission_cycle_v1','_staff_performance_core','_commission_cycle_core','_staff_perf_raw','_staff_perf_tz','_commission_settle_date','_pay_commission_core','preview_commission_pay_v1','pay_commission_v1'"
+snapshot() { "${PSQL[@]}" -At -c "SELECT string_agg(p.oid::regprocedure::text || '=' || md5(pg_get_functiondef(p.oid)), ' ' ORDER BY 1) FROM pg_proc p WHERE p.pronamespace = 'public'::regnamespace AND p.proname NOT IN ($NEW_FNS)"; }
 "${PSQL[@]}" -f "$ROOT/supabase/tests/staff_performance.harness.sql"
 BEFORE="$(snapshot)"
 MODE="${1:-}"
@@ -27,9 +28,9 @@ if [ "$MODE" != "--main" ]; then
 fi
 if [ "$MODE" = "--rollback" ]; then
   "${PSQL[@]}" -f "$RB"
-  LEFT="$("${PSQL[@]}" -At -c "SELECT (SELECT count(*) FROM pg_proc WHERE proname IN ('get_staff_performance_v1','get_commission_cycle_v1','_staff_performance_core','_commission_cycle_core','_staff_perf_raw','_staff_perf_tz','_commission_settle_date')) + (SELECT count(*) FROM pg_indexes WHERE indexname IN ('idx_appointments_user_client_time','idx_product_sales_finance_record_id'))")"
+  LEFT="$("${PSQL[@]}" -At -c "SELECT (SELECT count(*) FROM pg_proc WHERE proname IN ($NEW_FNS)) + (SELECT count(*) FROM pg_indexes WHERE indexname IN ('idx_appointments_user_client_time','idx_product_sales_finance_record_id'))")"
   [ "$LEFT" = "0" ] || { echo "FAIL rollback deixou $LEFT objetos"; exit 1; }
-  echo "PASS rollback: 7 funções e 2 índices removidos"
+  echo "PASS rollback: 10 funções e 2 índices removidos"
   "${PSQL[@]}" -f "$MIG"
   echo "PASS reaplicação depois do rollback"
 fi

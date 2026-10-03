@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { payoutDueAmount, payoutPaymentRange, type PayoutRowData } from '../../components/commissions/PayoutList';
+import { formatIsoToBr, parseBrToIso } from '../../utils/commissionCycle';
 
 const cycle = { start: '2026-09-06', end: '2026-10-05' };
 const previousEnd = '2026-09-05';
@@ -61,5 +62,23 @@ describe('payoutPaymentRange — saldo de ciclos anteriores', () => {
             end: '2026-10-05',
             amount: 257,
         });
+    });
+
+    it('não usa saldo_acumulado quando só há saldo anterior (overpay Multi/EvaLike)', () => {
+        expect(payoutDueAmount(eva({ cycle: { ...eva().cycle!, saldo_acumulado: 25, saldo_anterior: 15 } }))).toBe(15);
+        expect(payoutDueAmount(eva({
+            cycle: { ...eva().cycle!, saldo_acumulado: 70, saldo_anterior: 30, primeiro_nao_pago: '2026-06-10' },
+        }))).toBe(30);
+        expect(payoutPaymentRange(eva({
+            cycle: { ...eva().cycle!, saldo_acumulado: 70, saldo_anterior: 30, primeiro_nao_pago: '2026-06-10' },
+        }), cycle, previousEnd)).toEqual({ start: '2026-06-10', end: '2026-09-05', amount: 30 });
+    });
+});
+
+describe('datas pt-BR do modal', () => {
+    it('formata e lê dd/mm/aaaa sem aceitar 31/02', () => {
+        expect(formatIsoToBr('2026-08-20')).toBe('20/08/2026');
+        expect(parseBrToIso('20/08/2026')).toBe('2026-08-20');
+        expect(parseBrToIso('31/02/2026')).toBeNull();
     });
 });

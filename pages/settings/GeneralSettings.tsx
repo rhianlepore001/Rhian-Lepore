@@ -471,6 +471,7 @@ export const GeneralSettings: React.FC = () => {
                     />
                 </SettingsSection>
 
+                <div data-testid="cancellation-policy-section">
                 <SettingsSection title="Política de Cancelamento">
                     <div
                         className="rounded-2xl border border-theme-border bg-theme-surface px-4 py-3.5 space-y-1.5"
@@ -495,10 +496,8 @@ export const GeneralSettings: React.FC = () => {
                         placeholder="Ex.: avisar pelo WhatsApp se for atrasar."
                         className={classes.input}
                     />
-                    <p className={`${colors.textMuted} text-xs mt-2 leading-relaxed px-1`}>
-                        Sem cobrança automática. O cliente cancela pela Minha Área enquanto o horário não passou.
-                    </p>
                 </SettingsSection>
+                </div>
 
                 <SaveFooter
                     onSave={handleSave}

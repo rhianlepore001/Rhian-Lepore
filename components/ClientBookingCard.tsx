@@ -254,7 +254,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                             <button
                                 type="button"
                                 onClick={handleConfirmWhatsApp}
-                                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl text-xs font-semibold bg-[var(--color-success)] text-[#FFFFFF] col-span-2"
+                                className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl text-xs font-semibold col-span-2 bg-theme-accent hover:opacity-90 transition-opacity ${isBeauty ? 'text-[var(--color-text)]' : 'text-[var(--color-on-accent)]'}`}
                             >
                                 <MessageSquare className="w-3.5 h-3.5 shrink-0" />
                                 Pedir confirmação
@@ -293,7 +293,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                         <button
                             type="button"
                             onClick={() => navigate(rebookPath(businessSlug, booking))}
-                            className={`w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 min-h-[44px] rounded-xl text-xs font-bold uppercase tracking-wider bg-theme-accent hover:opacity-90 transition-opacity ${isBeauty ? 'text-[var(--color-text)]' : 'text-[var(--color-on-accent)]'}`}
+                            className={`w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold bg-theme-accent hover:opacity-90 transition-opacity ${isBeauty ? 'text-[var(--color-text)]' : 'text-[var(--color-on-accent)]'}`}
                             data-testid="client-booking-reschedule"
                         >
                             <Calendar className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
@@ -311,7 +311,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                         <button
                             type="button"
                             onClick={() => navigate(rebookPath(businessSlug, booking))}
-                            className={`w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 min-h-[44px] rounded-xl text-xs font-bold uppercase tracking-wider bg-theme-accent hover:opacity-90 transition-opacity ${isBeauty ? 'text-[var(--color-text)]' : 'text-[var(--color-on-accent)]'}`}
+                            className={`w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold bg-theme-accent hover:opacity-90 transition-opacity ${isBeauty ? 'text-[var(--color-text)]' : 'text-[var(--color-on-accent)]'}`}
                         >
                             <Calendar className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                             Agendar horário
@@ -323,7 +323,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                     <button
                         onClick={handleRebook}
                         className={`
-                            w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all
+                            w-full flex items-center justify-center gap-2 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold transition-all
                             ${isBeauty
                                 ? 'bg-theme-surface text-theme-text hover:bg-[var(--color-card-hover)]'
                                 : 'bg-theme-surface text-theme-text hover:bg-[var(--color-card-hover)] border border-theme-border'

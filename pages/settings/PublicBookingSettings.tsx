@@ -151,6 +151,7 @@ export const PublicBookingSettings: React.FC = () => {
                     </SettingsSection>
                 </div>
 
+                <div data-testid="self-reschedule-section">
                 <SettingsSection title="Automação e Lembretes">
                     <div className="space-y-2 divide-y divide-[var(--color-divider)]">
                         <SettingsRow
@@ -169,6 +170,7 @@ export const PublicBookingSettings: React.FC = () => {
                         />
                     </div>
                 </SettingsSection>
+                </div>
 
                 <div className="flex justify-end pt-4">
                     <Button

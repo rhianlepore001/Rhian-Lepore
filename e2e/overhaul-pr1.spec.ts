@@ -302,9 +302,17 @@ async function mockSupabase(page: Page, role: 'anon' | 'owner' | 'staff', opts: 
   });
 }
 
-async function shot(page: Page, name: string) {
+async function shot(page: Page, name: string, selector?: string) {
   fs.mkdirSync(ARTIFACTS, { recursive: true });
-  await page.screenshot({ path: path.join(ARTIFACTS, `${name}.png`), fullPage: true });
+  const dest = path.join(ARTIFACTS, `${name}.png`);
+  if (selector) {
+    const loc = page.locator(selector).first();
+    await loc.scrollIntoViewIfNeeded();
+    await loc.screenshot({ path: dest });
+    return;
+  }
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.screenshot({ path: dest, fullPage: true });
 }
 
 async function walkPublicQuickToPolicy(page: Page) {
@@ -377,7 +385,7 @@ test.describe('PR-1 overhaul copy/cards', () => {
       await expect(page.getByTestId('public-cancellation-policy')).toHaveText(GENERATED_POLICY);
       await expect(page.getByText('flexible', { exact: true })).toHaveCount(0);
       await expect(page.getByText(/cobrança de 50%/i)).toHaveCount(0);
-      await shot(page, `after-public-policy-${vp.name}`);
+      await shot(page, `after-public-policy-${vp.name}`, '[data-policy-dialog]');
     });
 
     test(`dono Ajustes ${vp.name}`, async ({ page }) => {
@@ -387,18 +395,16 @@ test.describe('PR-1 overhaul copy/cards', () => {
       await page.goto(`${BASE}/#/configuracoes/geral`, { waitUntil: 'domcontentloaded' });
       const policyBox = page.getByTestId('cancellation-policy-generated');
       await expect(policyBox).toBeVisible({ timeout: 20_000 });
-      await policyBox.scrollIntoViewIfNeeded();
       await expect(page.getByText(GENERATED_POLICY)).toBeVisible();
       await expect(page.getByText('Flexível')).toHaveCount(0);
       await expect(page.getByText('24h')).toHaveCount(0);
-      await shot(page, `after-owner-geral-${vp.name}`);
+      await shot(page, `after-owner-geral-${vp.name}`, '[data-testid="cancellation-policy-section"]');
 
       await page.goto(`${BASE}/#/configuracoes/agendamento`, { waitUntil: 'domcontentloaded' });
       const toggle = page.getByText('Cliente pode editar o próprio agendamento na Minha Área');
       await expect(toggle).toBeVisible({ timeout: 20_000 });
-      await toggle.scrollIntoViewIfNeeded();
       await expect(page.getByText('Reagendamento Autônomo')).toHaveCount(0);
-      await shot(page, `after-owner-agendamento-${vp.name}`);
+      await shot(page, `after-owner-agendamento-${vp.name}`, '[data-testid="self-reschedule-section"]');
     });
 
     test(`dono Agenda ${vp.name}`, async ({ page }) => {

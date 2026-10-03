@@ -20,7 +20,7 @@ interface AlertsContextType {
 const AlertsContext = createContext<AlertsContextType | undefined>(undefined);
 
 export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const { user, role, companyId } = useAuth();
+    const { user, role, companyId, loading: authLoading } = useAuth();
     const { formatMoney } = useTenantLocale();
     const [alerts, setAlerts] = useState<Alert[]>([]);
     const [loading, setLoading] = useState(true);
@@ -185,7 +185,9 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
 
     const refreshAlerts = async () => {
-        if (!user || role === 'staff') {
+        // Só o dono lê comissões da equipe (RPCs negam colaborador desde 20261003100000).
+        // Espera o perfil: no login o papel começa como 'owner' até o perfil carregar.
+        if (!user || authLoading || !companyId || role !== 'owner') {
             setAlerts([]);
             setLoading(false);
             return;
@@ -252,7 +254,7 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             supabase.removeChannel(subscription);
             supabase.removeChannel(updateSubscription);
         };
-    }, [user, role, companyId]);
+    }, [user, role, companyId, authLoading]);
 
     return (
         <AlertsContext.Provider value={{ alerts, loading, refreshAlerts }}>

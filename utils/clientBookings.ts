@@ -12,6 +12,7 @@ export interface ClientBookingLike {
   appointment_time: string;
   status: string;
   service_ids: string[];
+  professional_id?: string | null;
   cancelled_by_business?: boolean;
 }
 
@@ -38,9 +39,9 @@ export function splitClientBookings<T extends ClientBookingLike>(bookings: T[], 
   const upcoming = bookings
     .filter((b) => (isActiveBookingStatus(b.status) || isCancelledBooking(b)) && isFuture(b))
     .sort((a, b) => new Date(a.appointment_time).getTime() - new Date(b.appointment_time).getTime());
-  // Histórico: tudo que já passou (incluindo cancelado) + concluídos futuros.
+  // Histórico: passou + concluídos/faltas (mesmo se o horário ainda for "futuro").
   const history = bookings.filter((b) =>
-    b.status === 'completed' || !isFuture(b),
+    b.status === 'completed' || b.status === 'no_show' || !isFuture(b),
   );
   return { upcoming, activeUpcoming, history };
 }
@@ -49,6 +50,63 @@ export const CANCELLED_BY_BUSINESS_MESSAGE = 'O estabelecimento cancelou este ag
 export const CANCELLED_GENERIC_MESSAGE = 'Este agendamento foi cancelado.';
 export const PAST_CANCELLED_BY_BUSINESS_MESSAGE = 'O estabelecimento cancelou este horário.';
 export const REBOOK_LABEL = 'Agendar de novo';
+export const NEXT_SLOT_CTA = 'Agendar próximo horário';
+export const SLOT_CTA = 'Agendar horário';
+export const NO_SHOW_MESSAGE = 'Sentimos sua falta. Quer marcar outro horário?';
+
+/** Frases para membro com effective_status = active. Sem acúmulo de visita nem desconto. */
+export const CLUB_SENTENCE: Record<'confirmed' | 'completed' | 'no_show' | 'cancelled', string> = {
+  confirmed: 'Seu Clube está ativo neste horário.',
+  completed: 'Seu Clube segue ativo.',
+  no_show: 'Seu Clube continua ativo.',
+  cancelled: 'Seu Clube segue valendo.',
+};
+
+export interface ClubSentenceOpts {
+  clubOffered: boolean;
+  isMember: boolean;
+  businessName?: string;
+}
+
+export function clubInviteSentence(businessName?: string): string {
+  const name = (businessName ?? '').trim();
+  return name ? `Conheça o Clube da ${name}` : 'Conheça o Clube';
+}
+
+export function clubSentence(status: string, opts: ClubSentenceOpts): string | null {
+  if (!opts.clubOffered) return null;
+  const key = status.trim().toLowerCase();
+  if (key !== 'confirmed' && key !== 'completed' && key !== 'no_show' && key !== 'cancelled') {
+    return null;
+  }
+  if (opts.isMember) return CLUB_SENTENCE[key];
+  return clubInviteSentence(opts.businessName);
+}
+
+export function completedThankYou(clientName: string): string {
+  const first = clientName.trim().split(/\s+/)[0] ?? '';
+  if (!first) return 'Obrigado pela visita!';
+  const named = first.charAt(0).toLocaleUpperCase('pt-BR') + first.slice(1).toLocaleLowerCase('pt-BR');
+  return `Obrigado pela visita, ${named}!`;
+}
+
+/** Dia civil no fuso do negócio (não o do navegador). */
+export function businessCalendarDay(date: Date, timeZone: string): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+}
+
+export function isSameBusinessDay(appointmentIso: string, timeZone: string, now: Date = new Date()): boolean {
+  return businessCalendarDay(new Date(appointmentIso), timeZone) === businessCalendarDay(now, timeZone);
+}
+
+export function completedRebookLabel(appointmentIso: string, timeZone: string, now: Date = new Date()): string {
+  return isSameBusinessDay(appointmentIso, timeZone, now) ? NEXT_SLOT_CTA : SLOT_CTA;
+}
 
 /** Data do card: 'Sáb., 10 de out.' — weekday capitalizado; 'de' e mês em minúsculas. */
 export function formatClientCardDate(date: Date, timeZone: string): string {
@@ -82,10 +140,16 @@ export function cancellationMessage(booking: Pick<ClientBookingLike, 'cancelled_
   return booking.cancelled_by_business ? CANCELLED_BY_BUSINESS_MESSAGE : CANCELLED_GENERIC_MESSAGE;
 }
 
-/** Fluxo público do mesmo negócio com os mesmos serviços pré-selecionados. */
-export function rebookPath(slug: string, booking: Pick<ClientBookingLike, 'service_ids'>): string {
+/** Fluxo público do mesmo negócio, serviços e profissional pré-selecionados. */
+export function rebookPath(
+  slug: string,
+  booking: Pick<ClientBookingLike, 'service_ids' | 'professional_id'>,
+): string {
   const ids = (booking.service_ids ?? []).filter(Boolean);
-  return ids.length > 0 ? `/book/${slug}?rebook=${ids.join(',')}` : `/book/${slug}`;
+  const parts: string[] = [];
+  if (ids.length > 0) parts.push(`rebook=${ids.join(',')}`);
+  if (booking.professional_id) parts.push(`pro=${booking.professional_id}`);
+  return parts.length > 0 ? `/book/${slug}?${parts.join('&')}` : `/book/${slug}`;
 }
 
 /** Junta o resultado de get_client_booking_cancellations nos pedidos. */

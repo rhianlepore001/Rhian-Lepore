@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Calendar, Clock, User, MessageSquare,
-    Edit3, X, CheckCircle, AlertCircle, Loader2
+    Edit3, X, CheckCircle, AlertCircle, Loader2, Crown
 } from 'lucide-react';
 import { formatCurrency, buildWhatsAppLink, Region } from '../utils/formatters';
 import { cancelPublicBooking } from '../services/publicBooking';
@@ -11,11 +11,16 @@ import { logger } from '../utils/Logger';
 import { resolveBusinessTimezone } from '../utils/businessTimezone';
 import {
     cancellationMessage,
+    clubSentence,
+    completedRebookLabel,
+    completedThankYou,
     formatClientCardDate,
     formatClientCardDateInSentence,
+    NO_SHOW_MESSAGE,
     PAST_CANCELLED_BY_BUSINESS_MESSAGE,
     REBOOK_LABEL,
     rebookPath,
+    SLOT_CTA,
 } from '../utils/clientBookings';
 import { getPublicBookingAwaitingWhatsAppText } from '../utils/publicBookingCopy';
 
@@ -47,6 +52,11 @@ interface ClientBookingCardProps {
     /** Fuso IANA do negócio; horários são exibidos nele (não no do navegador). */
     timeZone?: string;
     allowEdit?: boolean;
+    /** Negócio oferece Clube (há plano público ativo). */
+    clubOffered?: boolean;
+    /** Cliente com membership effective_status = active. */
+    isClubMember?: boolean;
+    onOpenClub?: () => void;
     onCancelled: (bookingId: string) => void;
 }
 
@@ -62,8 +72,8 @@ const STATUS_CONFIG: Record<string, { label: string; className: string; icon: Re
         icon: <CheckCircle className="w-3 h-3" />,
     },
     completed: {
-        label: 'Concluído',
-        className: 'bg-theme-surface text-theme-textSecondary border border-theme-border',
+        label: 'Finalizado',
+        className: 'bg-[var(--color-success-bg)] text-[var(--color-success)] border border-[var(--color-success-border)]',
         icon: <CheckCircle className="w-3 h-3" />,
     },
     cancelled: {
@@ -99,6 +109,9 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
     region = 'BR',
     timeZone,
     allowEdit = true,
+    clubOffered = false,
+    isClubMember = false,
+    onOpenClub,
     onCancelled,
 }) => {
     const navigate = useNavigate();
@@ -115,7 +128,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
     const isUpcoming = ['pending', 'confirmed'].includes(statusKey) && !appointmentPassed;
     const isPastSlot = ['pending', 'confirmed'].includes(statusKey) && appointmentPassed;
     const isCompleted = statusKey === 'completed';
-    const isPast = (isCompleted || isPastSlot) && !isCancelled && !isNoShow;
+    const isPast = isPastSlot && !isCancelled && !isNoShow;
     const badgeKey = isNoShow
         ? 'no_show'
         : isPastSlot
@@ -132,6 +145,30 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
     const formattedTime = appointmentDate.toLocaleTimeString('pt-BR', {
         timeZone: businessTz, hour: '2-digit', minute: '2-digit'
     });
+    const clubLine = clubSentence(
+        isNoShow ? 'no_show' : isCompleted ? 'completed' : statusKey,
+        { clubOffered, isMember: isClubMember, businessName },
+    );
+    const completedCta = completedRebookLabel(booking.appointment_time, businessTz);
+    const clubNoteClass = 'flex items-center gap-1.5 text-xs leading-snug text-theme-textSecondary';
+    const clubNote = clubLine ? (
+        !isClubMember && onOpenClub ? (
+            <button
+                type="button"
+                data-testid="client-booking-club"
+                onClick={onOpenClub}
+                className={`${clubNoteClass} text-left hover:text-theme-text`}
+            >
+                <Crown className="w-3.5 h-3.5 shrink-0 text-theme-accent" aria-hidden="true" />
+                {clubLine}
+            </button>
+        ) : (
+            <p data-testid="client-booking-club" className={clubNoteClass}>
+                <Crown className="w-3.5 h-3.5 shrink-0 text-theme-accent" aria-hidden="true" />
+                {clubLine}
+            </p>
+        )
+    ) : null;
 
     const handleCancel = async () => {
         if (!clientPhone) {
@@ -186,7 +223,8 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
         `}>
             {/* Status bar — lateral esquerda */}
             <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl ${
-                isPastSlot || isNoShow || isPastCancelled || isCompleted ? 'bg-[var(--color-text-muted)]' :
+                isCompleted ? 'bg-[var(--color-success)]' :
+                isPastSlot || isNoShow || isPastCancelled ? 'bg-[var(--color-text-muted)]' :
                 booking.status === 'confirmed' ? 'bg-[var(--color-success)]' :
                 booking.status === 'pending' ? 'bg-[var(--color-warning)]' :
                 'bg-[var(--color-danger)]'
@@ -298,6 +336,8 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                     </div>
                 )}
 
+                {isUpcoming && statusKey === 'confirmed' && clubNote}
+
                 {isFutureCancelled && (
                     <div className="space-y-2 pt-1" data-testid="client-booking-cancelled">
                         <p
@@ -307,6 +347,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                             <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-px" aria-hidden="true" />
                             {cancellationMessage(booking)}
                         </p>
+                        {clubNote}
                         <button
                             type="button"
                             onClick={handleRebook}
@@ -329,6 +370,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                                 {PAST_CANCELLED_BY_BUSINESS_MESSAGE}
                             </p>
                         )}
+                        {clubNote}
                         <button
                             type="button"
                             onClick={handleRebook}
@@ -341,19 +383,47 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                     </div>
                 )}
 
+                {isCompleted && (
+                    <div className="space-y-2 pt-1" data-testid="client-booking-completed">
+                        <p
+                            className="flex items-start gap-2 px-3 py-2 rounded-xl text-xs leading-snug break-words bg-[var(--color-success-bg)] text-[var(--color-success)] border border-[var(--color-success-border)]"
+                            data-testid="client-booking-completed-note"
+                        >
+                            <CheckCircle className="w-3.5 h-3.5 shrink-0 mt-px" aria-hidden="true" />
+                            {completedThankYou(clientName)}
+                        </p>
+                        {clubNote}
+                        <button
+                            type="button"
+                            onClick={handleRebook}
+                            className={`w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold ${
+                                completedCta === SLOT_CTA
+                                    ? 'bg-theme-surface text-theme-text border border-theme-border hover:bg-[var(--color-card-hover)]'
+                                    : `bg-theme-accent hover:opacity-90 transition-opacity ${isBeauty ? 'text-[var(--color-text)]' : 'text-[var(--color-on-accent)]'}`
+                            }`}
+                            data-testid="client-booking-next-slot"
+                        >
+                            <Calendar className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                            {completedCta}
+                        </button>
+                    </div>
+                )}
+
                 {isNoShow && (
                     <div className="space-y-2 pt-1" data-testid="client-booking-noshow">
                         <p className="flex items-start gap-2 px-3 py-2 rounded-xl text-xs leading-snug break-words bg-theme-surface text-theme-textSecondary border border-theme-border">
                             <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-px" aria-hidden="true" />
-                            Sentimos sua falta. Quer marcar outro horário?
+                            {NO_SHOW_MESSAGE}
                         </p>
+                        {clubNote}
                         <button
                             type="button"
                             onClick={handleRebook}
                             className={`w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold bg-theme-accent hover:opacity-90 transition-opacity ${isBeauty ? 'text-[var(--color-text)]' : 'text-[var(--color-on-accent)]'}`}
+                            data-testid="client-booking-reschedule"
                         >
                             <Calendar className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-                            {REBOOK_LABEL}
+                            {SLOT_CTA}
                         </button>
                     </div>
                 )}

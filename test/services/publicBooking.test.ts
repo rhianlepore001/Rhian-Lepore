@@ -9,6 +9,7 @@ import {
   getActiveBookingByPhone,
   rejectPublicBooking,
   submitPublicBooking,
+  fetchAvailableSlots,
 } from '@/services/publicBooking';
 import { supabase } from '@/lib/supabase';
 
@@ -317,5 +318,38 @@ describe('public booking service', () => {
   it('propaga outros erros da RPC de cancelamentos', async () => {
     (supabase.rpc as any).mockResolvedValue({ data: null, error: { code: '42501', message: 'permission denied' } });
     await expect(fetchClientBookingCancellations('351912345678', 'business-001')).rejects.toMatchObject({ code: '42501' });
+  });
+
+  it('busca horários via get_available_slots_v2 e devolve antecedência', async () => {
+    (supabase.rpc as any).mockResolvedValue({
+      data: { slots: ['18:00', '18:30'], lead_time_hours: 8, empty_reason: null },
+      error: null,
+    });
+    await expect(fetchAvailableSlots('business-001', '2026-10-03', null, 30)).resolves.toEqual({
+      slots: ['18:00', '18:30'],
+      leadTimeHours: 8,
+      emptyReason: null,
+    });
+    expect(supabase.rpc).toHaveBeenCalledWith('get_available_slots_v2', {
+      p_business_id: 'business-001',
+      p_date: '2026-10-03',
+      p_professional_id: null,
+      p_duration_min: 30,
+    });
+  });
+
+  it('se a v2 ainda não existe, cai na v1', async () => {
+    (supabase.rpc as any)
+      .mockResolvedValueOnce({ data: null, error: { code: 'PGRST202', message: 'Could not find the function' } })
+      .mockResolvedValueOnce({ data: { slots: ['10:00'] }, error: null });
+    await expect(fetchAvailableSlots('business-001', '2026-10-03', 'pro-1', 45)).resolves.toEqual({
+      slots: ['10:00'],
+      leadTimeHours: 0,
+      emptyReason: null,
+    });
+    expect(supabase.rpc).toHaveBeenNthCalledWith(2, 'get_available_slots', expect.objectContaining({
+      p_business_id: 'business-001',
+      p_date: '2026-10-03',
+    }));
   });
 });

@@ -395,16 +395,37 @@ export async function fetchPublicBookingById(
   return data?.[0] ?? null;
 }
 
-export async function fetchAvailableSlots(businessId: string, date: string, professionalId: string | null, durationMin: number) {
-  const { data, error } = await supabase.rpc('get_available_slots', {
+export type AvailableSlotsEmptyReason = 'lead_time' | null;
+
+export interface AvailableSlotsResult {
+  slots: string[];
+  leadTimeHours: number;
+  emptyReason: AvailableSlotsEmptyReason;
+}
+
+function parseAvailableSlotsPayload(data: { slots?: string[]; lead_time_hours?: number; empty_reason?: string } | null): AvailableSlotsResult {
+  return {
+    slots: (data?.slots || []) as string[],
+    leadTimeHours: Number(data?.lead_time_hours ?? 0),
+    emptyReason: data?.empty_reason === 'lead_time' ? 'lead_time' : null,
+  };
+}
+
+export async function fetchAvailableSlots(businessId: string, date: string, professionalId: string | null, durationMin: number): Promise<AvailableSlotsResult> {
+  const args = {
     p_business_id: businessId,
     p_date: date,
     p_professional_id: professionalId,
     p_duration_min: durationMin,
-  });
+  };
+  const { data, error } = await supabase.rpc('get_available_slots_v2', args);
+  if (!error) return parseAvailableSlotsPayload(data);
 
-  if (error) throw error;
-  return (data?.slots || []) as string[];
+  if (!isMissingRpcError(error)) throw error;
+
+  const fallback = await supabase.rpc('get_available_slots', args);
+  if (fallback.error) throw fallback.error;
+  return parseAvailableSlotsPayload(fallback.data);
 }
 
 export async function fetchFullDates(businessId: string, startDate: string, endDate: string, professionalId: string | null, durationMin: number) {

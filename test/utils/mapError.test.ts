@@ -41,6 +41,17 @@ describe('mapError', () => {
     expect(formatted).toContain('#23505');
   });
 
+  it('traduz lead_time_violation com as horas do DETAIL', () => {
+    const out = mapError({
+      code: 'P0001',
+      message: 'lead_time_violation',
+      details: '8',
+      hint: 'lead_time_violation',
+    }, 'fallback');
+    expect(out.message).toBe('Esse horário precisa ser marcado com pelo menos 8h de antecedência');
+    expect(out.code).toBe('#leadtime');
+  });
+
   it('traduz slot_unavailable para copy de horário ocupado', () => {
     const out = mapError({ message: 'slot_unavailable' }, 'fallback');
     expect(out.message).toContain('horário acabou de ser ocupado');

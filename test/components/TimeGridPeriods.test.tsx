@@ -70,4 +70,19 @@ describe('TimeGrid — rótulo do grupo segue a hora real dos slots', () => {
     render(<TimeGrid selectedTime={null} onTimeSelect={() => undefined} availableSlots={slots} />);
     expect(headings()).toEqual(['Manhã', 'Almoço', 'Noite']);
   });
+
+  it('empty state de antecedência substitui o texto genérico', () => {
+    render(
+      <TimeGrid
+        selectedTime={null}
+        onTimeSelect={() => undefined}
+        availableSlots={[]}
+        emptyMessage="Hoje não há horários com 8h de antecedência. Veja amanhã."
+      />,
+    );
+    expect(screen.getByTestId('time-grid-empty')).toHaveTextContent(
+      'Hoje não há horários com 8h de antecedência. Veja amanhã.',
+    );
+    expect(screen.queryByText('Tente selecionar outro dia.')).toBeNull();
+  });
 });

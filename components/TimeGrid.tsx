@@ -20,6 +20,7 @@ interface TimeGridProps {
     onTimeSelect: (time: string) => void;
     availableSlots?: string[];
     forceTheme?: ThemeVariant;
+    emptyMessage?: string;
 }
 
 export const TimeGrid: React.FC<TimeGridProps> = ({
@@ -29,7 +30,8 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
         '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
         '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30'
     ],
-    forceTheme
+    forceTheme,
+    emptyMessage,
 }) => {
     const { colors, accent, font, classes, density } = useBrutalTheme({ override: forceTheme });
     const hoverBg = `hover:bg-[var(--color-accent-dim)]`;
@@ -127,9 +129,13 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
                 )}
 
                 {availableSlots.length === 0 && (
-                    <div className="text-center py-8">
-                        <p className={`${colors.textMuted} text-sm`}>Nenhum horário disponível para esta data.</p>
-                        <p className={`${colors.textMuted} text-xs mt-2 opacity-70`}>Tente selecionar outro dia.</p>
+                    <div className="text-center py-8" data-testid="time-grid-empty">
+                        <p className={`${colors.textMuted} text-sm`}>
+                            {emptyMessage ?? 'Nenhum horário disponível para esta data.'}
+                        </p>
+                        {!emptyMessage && (
+                            <p className={`${colors.textMuted} text-xs mt-2 opacity-70`}>Tente selecionar outro dia.</p>
+                        )}
                     </div>
                 )}
             </div>

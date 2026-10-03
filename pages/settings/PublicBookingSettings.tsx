@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, useToast } from '../../components/ui';
 import { SettingsLayout } from '../../components/SettingsLayout';
-import { Save, HelpCircle } from 'lucide-react';
+import { Save, HelpCircle, Clock } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { useBusinessSettings, useUpdateBusinessSettings, useProfileFields, useUpdateProfileFields } from '../../hooks/useSettings';
@@ -9,10 +9,11 @@ import { PublicLinkCard } from '../../components/PublicLinkCard';
 import { SettingsSection } from '../../components/SettingsSection';
 import { SettingsSwitch } from '../../components/SettingsSwitch';
 import { SettingsRow } from '../../components/ui/SettingsRow';
+import { LEAD_TIME_PRESETS, clampLeadTimeHours, isLeadTimePreset, leadTimePresetLabel } from '../../utils/bookingLeadTime';
 
 export const PublicBookingSettings: React.FC = () => {
     const { user } = useAuth();
-    const { accent, colors } = useBrutalTheme();
+    const { accent, colors, classes } = useBrutalTheme();
     const { data: settings } = useBusinessSettings();
     const { data: profile } = useProfileFields();
     const updateSettingsMutation = useUpdateBusinessSettings();
@@ -22,6 +23,7 @@ export const PublicBookingSettings: React.FC = () => {
     const [publicProductsEnabled, setPublicProductsEnabled] = useState(false);
     const [publicBookingEnabled, setPublicBookingEnabled] = useState(true);
     const [leadTimeHours, setLeadTimeHours] = useState(2);
+    const [leadTimeCustom, setLeadTimeCustom] = useState(false);
     const [maxBookingsPerDay, setMaxBookingsPerDay] = useState<number | null>(null);
     const [enableSelfRescheduling, setEnableSelfRescheduling] = useState(true);
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
@@ -39,6 +41,7 @@ export const PublicBookingSettings: React.FC = () => {
         if (profile) {
             setPublicBookingEnabled(profile.public_booking_enabled ?? true);
             setLeadTimeHours(profile.booking_lead_time_hours ?? 2);
+            setLeadTimeCustom(!isLeadTimePreset(profile.booking_lead_time_hours ?? 2));
             setMaxBookingsPerDay(profile.max_bookings_per_day ?? null);
         }
     }, [profile]);
@@ -54,7 +57,7 @@ export const PublicBookingSettings: React.FC = () => {
 
             await updateProfileMutation.mutateAsync({
                 public_booking_enabled: publicBookingEnabled,
-                booking_lead_time_hours: leadTimeHours,
+                booking_lead_time_hours: clampLeadTimeHours(leadTimeHours),
                 max_bookings_per_day: maxBookingsPerDay,
             });
 
@@ -105,6 +108,83 @@ export const PublicBookingSettings: React.FC = () => {
                         checked={publicBookingEnabled}
                         onChange={setPublicBookingEnabled}
                     />
+                </SettingsSection>
+
+                <SettingsSection
+                    title="Antecedência mínima"
+                    description="O cliente só consegue marcar pelo link com pelo menos esse tempo de antecedência. Quem marca pela Agenda — você e a equipe — não é afetado."
+                >
+                    <div className="space-y-4">
+                        <div className="flex items-start gap-3">
+                            <div className={`p-2 rounded-lg ${accent.bgDim} ${accent.text} shrink-0`}>
+                                <Clock className="w-4 h-4" aria-hidden="true" />
+                            </div>
+                            <p className={`${colors.textMuted} text-xs leading-relaxed`}>
+                                O padrão do sistema é 2 horas. Sem mínimo libera qualquer horário que ainda não passou.
+                            </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2" role="group" aria-label="Antecedência mínima">
+                            {LEAD_TIME_PRESETS.map((hours) => {
+                                const pressed = !leadTimeCustom && leadTimeHours === hours;
+                                return (
+                                    <button
+                                        key={hours}
+                                        type="button"
+                                        data-testid={`lead-time-preset-${hours}`}
+                                        aria-pressed={pressed}
+                                        onClick={() => {
+                                            setLeadTimeCustom(false);
+                                            setLeadTimeHours(hours);
+                                        }}
+                                        className={`px-3 py-3 min-h-[44px] text-xs font-semibold rounded-xl transition-all border ${
+                                            pressed
+                                                ? `${accent.bgDim} ${accent.border} ${accent.text}`
+                                                : `${colors.inputBg} ${colors.border} ${colors.textMuted}`
+                                        }`}
+                                    >
+                                        {leadTimePresetLabel(hours)}
+                                    </button>
+                                );
+                            })}
+                            <button
+                                type="button"
+                                data-testid="lead-time-preset-custom"
+                                aria-pressed={leadTimeCustom}
+                                onClick={() => setLeadTimeCustom(true)}
+                                className={`px-3 py-3 min-h-[44px] text-xs font-semibold rounded-xl transition-all border ${
+                                    leadTimeCustom
+                                        ? `${accent.bgDim} ${accent.border} ${accent.text}`
+                                        : `${colors.inputBg} ${colors.border} ${colors.textMuted}`
+                                }`}
+                            >
+                                Outro (em horas)
+                            </button>
+                        </div>
+                        {leadTimeCustom && (
+                            <label className="block">
+                                <span className={classes.label}>Horas de antecedência</span>
+                                <input
+                                    id="booking-lead-time-custom"
+                                    data-testid="booking-lead-time-custom"
+                                    type="number"
+                                    inputMode="numeric"
+                                    min={0}
+                                    max={720}
+                                    step={1}
+                                    value={leadTimeHours}
+                                    onChange={(e) => {
+                                        const next = Number.parseInt(e.target.value, 10);
+                                        if (e.target.value === '') {
+                                            setLeadTimeHours(0);
+                                            return;
+                                        }
+                                        if (Number.isFinite(next)) setLeadTimeHours(clampLeadTimeHours(next));
+                                    }}
+                                    className={`${classes.input} mt-1`}
+                                />
+                            </label>
+                        )}
+                    </div>
                 </SettingsSection>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">

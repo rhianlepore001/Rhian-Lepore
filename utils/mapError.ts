@@ -5,6 +5,7 @@ import {
   messageForAgendaBlockResultCode,
   professionalNameFromBlockedError,
 } from './agendaBlockPermission';
+import { isLeadTimeViolationError, leadTimeHoursFromError, leadTimeViolationMessage } from './bookingLeadTime';
 
 /**
  * Mapa de erro: traduz exceções do Supabase/JS em copy humana PT-BR + código curto
@@ -26,6 +27,7 @@ interface RawErrorShape {
   code?: string;
   message?: string;
   hint?: string;
+  details?: string;
   name?: string;
   status?: number;
 }
@@ -46,6 +48,7 @@ const CODE_MAP: Record<string, string> = {
   '22P02': 'Algum campo está em formato inválido. Revise e tente de novo.',
   '42501': 'Você não tem permissão para essa ação.',
   slot_unavailable: PUBLIC_SLOT_UNAVAILABLE_MESSAGE,
+  lead_time_violation: 'Esse horário precisa ser marcado com pelo menos 2h de antecedência',
   booking_not_cancellable: 'Não foi possível cancelar este agendamento. Tente de novo ou fale com o salão.',
   agenda_blocked: AGENDA_BLOCKED_MESSAGE,
   professional_blocked: AGENDA_BLOCKED_MESSAGE,
@@ -94,6 +97,7 @@ function pickCode(raw: RawErrorShape): string {
     return 'invalid_login';
   }
   if (msg.includes('muitas tentativas')) return 'rate_limit_login';
+  if (isLeadTimeViolationError(raw)) return 'lead_time_violation';
   if (
     msg.includes('slot_unavailable')
     || msg.includes('este horário acabou de ser ocupado')
@@ -130,6 +134,8 @@ export function mapError(error: unknown, fallback: string): UserFacingError {
   const named = professionalNameFromBlockedError(raw);
   const human = code === 'professional_blocked' && named
     ? agendaBlockedMessage(named)
+    : code === 'lead_time_violation'
+      ? leadTimeViolationMessage(leadTimeHoursFromError(error))
     : CODE_MAP[code] ?? fallback;
 
   return {

@@ -32,6 +32,12 @@ import { fetchEditBooking, fetchPublicClientByPhone, fetchClientByPhone, fetchPu
 import { shouldLandOnClientArea } from '../utils/publicBookingLanding';
 import { getPublicBookingAwaitingWhatsAppText, getPublicBookingSuccessCopy } from '../utils/publicBookingCopy';
 import { isSlotUnavailableError } from '../utils/supabaseRpc';
+import {
+    isLeadTimeViolationError,
+    leadTimeEmptySlotsMessage,
+    leadTimeHoursFromError,
+    leadTimeViolationMessage,
+} from '../utils/bookingLeadTime';
 import { Checkbox, ConfirmModal, useToast } from '@/components/ui';
 import { PublicBookingMemberships } from '@/components/membership/PublicBookingMemberships';
 import FocusTrap from 'focus-trap-react';
@@ -491,13 +497,17 @@ export const PublicBooking: React.FC = () => {
         : null;
     // Horários livres no fuso do negócio; respostas obsoletas (fuso padrão da
     // região vs. fuso dos settings, ou troca rápida de data) são descartadas.
-    const availableSlots = useZonedAvailableSlots({
+    const slotsResult = useZonedAvailableSlots({
         businessId,
         dateStr: selectedDateStr,
         professionalId: selectedProfessional === 'any' ? null : selectedProfessional,
         durationMinutes: calculateDuration(),
         timezone: businessTimezone,
     });
+    const availableSlots = slotsResult.slots;
+    const leadEmptyMessage = slotsResult.emptyReason === 'lead_time'
+        ? leadTimeEmptySlotsMessage(slotsResult.leadTimeHours, selectedDateStr === businessToday)
+        : undefined;
 
     const professionalCategories = Array.from(new Set((professionals || []).flatMap((p: any) => p.specialties || []))).filter(Boolean);
     const filteredProfessionals = activeProfessionalCategory === 'all'
@@ -690,7 +700,9 @@ export const PublicBooking: React.FC = () => {
             setQuickStep('success');
         } catch (error: any) {
             logger.error('Error creating booking', error);
-            if (isSlotUnavailableError(error)) {
+            if (isLeadTimeViolationError(error)) {
+                showToast(leadTimeViolationMessage(leadTimeHoursFromError(error, slotsResult.leadTimeHours)), 'error');
+            } else if (isSlotUnavailableError(error)) {
                 showToast('Este horário acabou de ser ocupado. Escolha outro.', 'error');
             } else {
                 showToast('Não foi possível concluir seu agendamento agora. Tente novamente em instantes ou fale com a equipe pelo WhatsApp.', 'error');
@@ -1092,7 +1104,7 @@ export const PublicBooking: React.FC = () => {
                             </div>
                             {selectedDate && (
                                 <div className="animate-reveal-fragment duration-700 max-w-2xl mx-auto">
-                                    <TimeGrid selectedTime={selectedTime} onTimeSelect={setSelectedTime} availableSlots={availableSlots} forceTheme={themeOverride} />
+                                    <TimeGrid selectedTime={selectedTime} onTimeSelect={setSelectedTime} availableSlots={availableSlots} emptyMessage={leadEmptyMessage} forceTheme={themeOverride} />
                                 </div>
                             )}
                         </div>
@@ -1508,7 +1520,7 @@ export const PublicBooking: React.FC = () => {
                                                                     setMessages(prev => [...prev, { id: Date.now().toString(), text: `Agendar para dia ${selectedDate.toLocaleDateString('pt-BR')} às ${time}`, isAssistant: false }, { id: (Date.now() + 1).toString(), text: isLogged ? "Estamos quase concluindo! Como você já tem cadastro, verifique os detalhes abaixo e confirme o seu agendamento." : "Estamos quase concluindo! Agora, para confirmar seu agendamento, informe seus dados de contato.", isAssistant: true, type: 'contact' }]);
                                                                     setStep('contact');
                                                                 }
-                                                            }} availableSlots={availableSlots} forceTheme={themeOverride} />
+                                                            }} availableSlots={availableSlots} emptyMessage={leadEmptyMessage} forceTheme={themeOverride} />
                                                         </div>
                                                     )}
                                                 </div>

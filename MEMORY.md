@@ -62,6 +62,8 @@ Script isolado em `scripts/demo-seed/` + doc `docs/demo-seed.md`. Dois tenants f
 
 ## 🛠️ Trabalho recente
 
+- **PR-2 antecedência mínima (3 Out 2026, NÃO merge / NÃO apply em prod):** branch `feat/overhaul-pr2-lead-time`, PR #121, rebaseada em `main` `e10c445` (#119). Trigger: dono ou staff ativo. Recusa lead_time: alerta inline com foco no banner. Chips `whitespace-nowrap`. **#120 aplica primeiro.**
+
 - **Performance dos colaboradores (3 Out 2026, NÃO merge / NÃO apply em prod):** stack rebaseada na `main` `9926787`. #106 migration `20261003103000`; #109 `pay_commission_v1` preenche colunas NOT NULL de prod (`payment_date`, `barber_name`, `net_amount`, `description`, `commission_paid_at`) e filtra `COALESCE(commission_paid,false)=false`. Harness usa md5 de prod `b8a54fe3` / `1588d011`. PRs #106 #109 #114 #116.
 
 - **Follow-up do bloqueio (3 Out 2026, não aplicado no live):** migration `20261003120000_agenda_blocks_acceptance_followup` cobre B-18/19/20/25, revalidação ao mover horário (B-35/38/46), trava por empresa (B-54..56), “qualquer profissional” (B-44/51) e M1/M2/M3. Rollback em `docs/rollbacks/`. Harness: `scripts/test-sql-agenda-blocks-followup.sh`.

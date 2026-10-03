@@ -1,11 +1,11 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { act, renderHook, waitFor } from '@testing-library/react';
 
-type Deferred = { resolve: (v: string[]) => void; reject: (e: unknown) => void; args: unknown[] };
+type Deferred = { resolve: (v: { slots: string[]; leadTimeHours: number; emptyReason: 'lead_time' | null }) => void; reject: (e: unknown) => void; args: unknown[] };
 const pending: Deferred[] = [];
 
 vi.mock('../../services/publicBooking', () => ({
-  fetchAvailableSlots: vi.fn((...args: unknown[]) => new Promise<string[]>((resolve, reject) => {
+  fetchAvailableSlots: vi.fn((...args: unknown[]) => new Promise<{ slots: string[]; leadTimeHours: number; emptyReason: 'lead_time' | null }>((resolve, reject) => {
     pending.push({ resolve, reject, args });
   })),
 }));
@@ -34,11 +34,11 @@ describe('useZonedAvailableSlots — resposta obsoleta não sobrescreve a atual'
     expect(pending).toHaveLength(2);
 
     // A busca nova (fuso certo) volta primeiro; a antiga volta depois.
-    await act(async () => { pending[1].resolve(['09:00', '09:30']); });
-    await waitFor(() => expect(result.current).toEqual(['09:00', '09:30']));
-    await act(async () => { pending[0].resolve(['06:00', '06:30', '07:00']); });
+    await act(async () => { pending[1].resolve({ slots: ['09:00', '09:30'], leadTimeHours: 2, emptyReason: null }); });
+    await waitFor(() => expect(result.current.slots).toEqual(['09:00', '09:30']));
+    await act(async () => { pending[0].resolve({ slots: ['06:00', '06:30', '07:00'], leadTimeHours: 2, emptyReason: null }); });
 
-    expect(result.current).toEqual(['09:00', '09:30']);
+    expect(result.current.slots).toEqual(['09:00', '09:30']);
   });
 
   it('troca rápida de data: só a última data preenche os horários', async () => {
@@ -50,10 +50,11 @@ describe('useZonedAvailableSlots — resposta obsoleta não sobrescreve a atual'
     );
     rerender({ tz: 'Europe/Lisbon', date: '2030-01-16' });
 
-    await act(async () => { pending[1].resolve(['14:00']); });
+    await act(async () => { pending[1].resolve({ slots: ['14:00'], leadTimeHours: 8, emptyReason: null }); });
     await act(async () => { pending[0].reject(new Error('late failure')); });
 
-    expect(result.current).toEqual(['14:00']);
+    expect(result.current.slots).toEqual(['14:00']);
+    expect(result.current.leadTimeHours).toBe(8);
     expect(fetchAvailableSlots).toHaveBeenLastCalledWith('biz-1', '2030-01-16', 'pro-1', 45);
   });
 

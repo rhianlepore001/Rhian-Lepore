@@ -28,12 +28,18 @@ import { buildWhatsAppLink, formatCurrency, formatDuration, Region } from '../ut
 import { capBookingDuration } from '../utils/serviceDuration';
 import { logger } from '../utils/Logger';
 import { useZonedAvailableSlots } from '../hooks/useZonedAvailableSlots';
-import { fetchEditBooking, fetchPublicClientByPhone, fetchClientByPhone, fetchPublicBookingById, fetchFullDates, getFirstAvailableProfessional, uploadClientPhoto, upsertPublicClientSession } from '../services/publicBooking';
+import { fetchEditBooking, fetchPublicClientByPhone, fetchClientByPhone, fetchPublicBookingById, fetchFullDates, findNextDateWithSlots, getFirstAvailableProfessional, uploadClientPhoto, upsertPublicClientSession } from '../services/publicBooking';
 import { shouldLandOnClientArea } from '../utils/publicBookingLanding';
 import { getPublicBookingAwaitingWhatsAppText, getPublicBookingSuccessCopy } from '../utils/publicBookingCopy';
 import { resolveCancellationPolicyDisplay } from '../utils/cancellationPolicyCopy';
 import { isSlotUnavailableError } from '../utils/supabaseRpc';
-import { Checkbox, ConfirmModal, useToast } from '@/components/ui';
+import {
+    isLeadTimeViolationError,
+    leadTimeEmptySlotsMessage,
+    leadTimeHoursFromError,
+    leadTimeViolationMessage,
+} from '../utils/bookingLeadTime';
+import { Checkbox, ConfirmModal, Button, useToast } from '@/components/ui';
 import { PublicBookingMemberships } from '@/components/membership/PublicBookingMemberships';
 import FocusTrap from 'focus-trap-react';
 
@@ -139,6 +145,10 @@ export const PublicBooking: React.FC = () => {
     const [selectedProfessional, setSelectedProfessional] = useState<string | null>(proIdParam || null);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [selectedTime, setSelectedTime] = useState<string | null>(null);
+    const [slotsRefreshKey, setSlotsRefreshKey] = useState(0);
+    const [nextDayBusy, setNextDayBusy] = useState(false);
+    const [leadTimeAlert, setLeadTimeAlert] = useState<string | null>(null);
+    const [leadTimeAlertKey, setLeadTimeAlertKey] = useState(0);
     const [fullDates, setFullDates] = useState<string[]>([]);
     const [acceptedPolicy, setAcceptedPolicy] = useState(false);
     const [acceptedMarketing, setAcceptedMarketing] = useState(false);
@@ -492,13 +502,56 @@ export const PublicBooking: React.FC = () => {
         : null;
     // Horários livres no fuso do negócio; respostas obsoletas (fuso padrão da
     // região vs. fuso dos settings, ou troca rápida de data) são descartadas.
-    const availableSlots = useZonedAvailableSlots({
+    const slotsResult = useZonedAvailableSlots({
         businessId,
         dateStr: selectedDateStr,
         professionalId: selectedProfessional === 'any' ? null : selectedProfessional,
         durationMinutes: calculateDuration(),
         timezone: businessTimezone,
+        refreshKey: slotsRefreshKey,
     });
+    const availableSlots = slotsResult.slots;
+    const leadEmptyMessage = slotsResult.emptyReason === 'lead_time'
+        ? leadTimeEmptySlotsMessage(slotsResult.leadTimeHours, selectedDateStr === businessToday, { hasCta: true })
+        : undefined;
+
+    const handleSeeNextDay = async () => {
+        if (!businessId || !selectedDateStr) return;
+        setNextDayBusy(true);
+        try {
+            const next = await findNextDateWithSlots(
+                businessId,
+                selectedDateStr,
+                selectedProfessional === 'any' ? null : selectedProfessional,
+                calculateDuration(),
+                businessTimezone,
+            );
+            if (!next) {
+                showToast('Não há horários nos próximos 14 dias. Escolha outro dia no calendário.', { type: 'info' });
+                return;
+            }
+            setLeadTimeAlert(null);
+            setSelectedDate(dateStringToLocalDate(next));
+            setSelectedTime(null);
+        } catch {
+            showToast('Não foi possível buscar o próximo dia. Tente outro dia no calendário.', 'error');
+        } finally {
+            setNextDayBusy(false);
+        }
+    };
+
+    const leadEmptyAction = slotsResult.emptyReason === 'lead_time' ? (
+        <Button
+            type="button"
+            variant="outline"
+            data-testid="lead-time-next-day"
+            onClick={() => { void handleSeeNextDay(); }}
+            disabled={nextDayBusy}
+            className="shadow-none"
+        >
+            {nextDayBusy ? 'Buscando…' : 'Ver próximo dia com horário'}
+        </Button>
+    ) : undefined;
 
     const professionalCategories = Array.from(new Set((professionals || []).flatMap((p: any) => p.specialties || []))).filter(Boolean);
     const filteredProfessionals = activeProfessionalCategory === 'all'
@@ -691,7 +744,16 @@ export const PublicBooking: React.FC = () => {
             setQuickStep('success');
         } catch (error: any) {
             logger.error('Error creating booking', error);
-            if (isSlotUnavailableError(error)) {
+            if (isLeadTimeViolationError(error)) {
+                setSelectedTime(null);
+                setQuickStep('datetime');
+                setStep('datetime');
+                setSlotsRefreshKey((key) => key + 1);
+                setLeadTimeAlert(
+                    leadTimeViolationMessage(leadTimeHoursFromError(error, slotsResult.leadTimeHours)),
+                );
+                setLeadTimeAlertKey((key) => key + 1);
+            } else if (isSlotUnavailableError(error)) {
                 showToast('Este horário acabou de ser ocupado. Escolha outro.', 'error');
             } else {
                 showToast('Não foi possível concluir seu agendamento agora. Tente novamente em instantes ou fale com a equipe pelo WhatsApp.', 'error');
@@ -1095,11 +1157,11 @@ export const PublicBooking: React.FC = () => {
                                 <p className={`${colors.textMuted} text-sm`}>Selecione o melhor dia e horário para você.</p>
                             </div>
                             <div className="max-w-2xl mx-auto">
-                                <CalendarPicker selectedDate={selectedDate} onDateSelect={setSelectedDate} forceTheme={themeOverride} fullDates={fullDates} today={businessToday} />
+                                <CalendarPicker selectedDate={selectedDate} onDateSelect={(date) => { setLeadTimeAlert(null); setSelectedDate(date); }} forceTheme={themeOverride} fullDates={fullDates} today={businessToday} />
                             </div>
                             {selectedDate && (
                                 <div className="animate-reveal-fragment duration-700 max-w-2xl mx-auto">
-                                    <TimeGrid selectedTime={selectedTime} onTimeSelect={setSelectedTime} availableSlots={availableSlots} forceTheme={themeOverride} />
+                                    <TimeGrid selectedTime={selectedTime} onTimeSelect={(time) => { setLeadTimeAlert(null); setSelectedTime(time); }} availableSlots={availableSlots} emptyMessage={leadEmptyMessage} emptyAction={leadEmptyAction} alertMessage={leadTimeAlert} alertKey={leadTimeAlertKey} forceTheme={themeOverride} />
                                 </div>
                             )}
                         </div>
@@ -1500,12 +1562,13 @@ export const PublicBooking: React.FC = () => {
                                                 <div className="w-full space-y-8 md:space-y-12 max-w-2xl mx-auto">
                                                     <div className={`${colors.card} ${colors.border} border-2 p-6 md:p-8 ${shadow.elevated} rounded-2xl`}>
                                                         <h3 className={`mb-8 ${colors.text} font-heading text-xl text-center md:text-left`}>Seleção de Agenda</h3>
-                                                        <CalendarPicker selectedDate={selectedDate} onDateSelect={setSelectedDate} forceTheme={themeOverride} fullDates={fullDates} today={businessToday} />
+                                                        <CalendarPicker selectedDate={selectedDate} onDateSelect={(date) => { setLeadTimeAlert(null); setSelectedDate(date); }} forceTheme={themeOverride} fullDates={fullDates} today={businessToday} />
                                                     </div>
                                                     {selectedDate && (
                                                         <div className="animate-reveal-fragment duration-700">
                                                             <h4 className={`mb-6 ${accent.text} font-heading text-lg text-center md:text-left`}>Horários Disponíveis</h4>
                                                             <TimeGrid selectedTime={selectedTime} onTimeSelect={(time) => {
+                                                                setLeadTimeAlert(null);
                                                                 setSelectedTime(time);
                                                                 const isLogged = !!client;
                                                                 if (editingBookingId) {
@@ -1515,7 +1578,7 @@ export const PublicBooking: React.FC = () => {
                                                                     setMessages(prev => [...prev, { id: Date.now().toString(), text: `Agendar para dia ${selectedDate.toLocaleDateString('pt-BR')} às ${time}`, isAssistant: false }, { id: (Date.now() + 1).toString(), text: isLogged ? "Estamos quase concluindo! Como você já tem cadastro, verifique os detalhes abaixo e confirme o seu agendamento." : "Estamos quase concluindo! Agora, para confirmar seu agendamento, informe seus dados de contato.", isAssistant: true, type: 'contact' }]);
                                                                     setStep('contact');
                                                                 }
-                                                            }} availableSlots={availableSlots} forceTheme={themeOverride} />
+                                                            }} availableSlots={availableSlots} emptyMessage={leadEmptyMessage} emptyAction={leadEmptyAction} alertMessage={leadTimeAlert} alertKey={leadTimeAlertKey} forceTheme={themeOverride} />
                                                         </div>
                                                     )}
                                                 </div>

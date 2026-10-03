@@ -5,6 +5,7 @@ import {
   messageForAgendaBlockResultCode,
   professionalNameFromBlockedError,
 } from './agendaBlockPermission';
+import { isLeadTimeViolationError, leadTimeHoursFromError, leadTimeViolationMessage } from './bookingLeadTime';
 
 /**
  * Mapa de erro: traduz exceções do Supabase/JS em copy humana PT-BR + código curto
@@ -26,6 +27,7 @@ interface RawErrorShape {
   code?: string;
   message?: string;
   hint?: string;
+  details?: string;
   name?: string;
   status?: number;
 }
@@ -94,6 +96,7 @@ function pickCode(raw: RawErrorShape): string {
     return 'invalid_login';
   }
   if (msg.includes('muitas tentativas')) return 'rate_limit_login';
+  if (isLeadTimeViolationError(raw)) return 'lead_time_violation';
   if (
     msg.includes('slot_unavailable')
     || msg.includes('este horário acabou de ser ocupado')
@@ -130,6 +133,8 @@ export function mapError(error: unknown, fallback: string): UserFacingError {
   const named = professionalNameFromBlockedError(raw);
   const human = code === 'professional_blocked' && named
     ? agendaBlockedMessage(named)
+    : code === 'lead_time_violation'
+      ? leadTimeViolationMessage(leadTimeHoursFromError(error))
     : CODE_MAP[code] ?? fallback;
 
   return {

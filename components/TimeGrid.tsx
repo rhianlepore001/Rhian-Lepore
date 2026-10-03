@@ -1,5 +1,5 @@
-import React from 'react';
-import { Clock } from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
+import { Clock, TriangleAlert } from 'lucide-react';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { Card } from './ui/Card';
 
@@ -20,6 +20,10 @@ interface TimeGridProps {
     onTimeSelect: (time: string) => void;
     availableSlots?: string[];
     forceTheme?: ThemeVariant;
+    emptyMessage?: string;
+    emptyAction?: React.ReactNode;
+    alertMessage?: string | null;
+    alertKey?: number;
 }
 
 export const TimeGrid: React.FC<TimeGridProps> = ({
@@ -29,9 +33,21 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
         '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
         '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30'
     ],
-    forceTheme
+    forceTheme,
+    emptyMessage,
+    emptyAction,
+    alertMessage,
+    alertKey = 0,
 }) => {
     const { colors, accent, font, classes, density } = useBrutalTheme({ override: forceTheme });
+    const headingRef = useRef<HTMLHeadingElement>(null);
+    const alertRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!alertMessage) return;
+        (alertRef.current ?? headingRef.current)?.focus();
+    }, [alertMessage, alertKey]);
+
     const hoverBg = `hover:bg-[var(--color-accent-dim)]`;
     const slotPadding = density.tableRowPy;
     const selectedText = classes.buttonPrimary.split(' ').find((c) => c.startsWith('text-')) ?? colors.text;
@@ -95,8 +111,29 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
             <div className={density.cardPadding}>
                 <div className="flex items-center gap-2 mb-4">
                     <Clock className={`w-5 h-5 ${accent.text}`} aria-hidden="true" />
-                    <h3 className={`${colors.text} font-heading text-lg font-bold`}>Horários disponíveis</h3>
+                    <h3
+                        id="booking-time-heading"
+                        ref={headingRef}
+                        tabIndex={-1}
+                        className={`${colors.text} font-heading text-lg font-bold outline-none focus:ring-2 focus:ring-[var(--color-accent)] rounded-sm`}
+                    >
+                        Horários disponíveis
+                    </h3>
                 </div>
+
+                {alertMessage ? (
+                    <div
+                        key={alertKey}
+                        ref={alertRef}
+                        role="alert"
+                        tabIndex={-1}
+                        data-testid="lead-time-alert"
+                        className="mb-4 flex items-start gap-2 rounded-xl border px-3 py-2.5 border-[var(--color-danger-border)] bg-[var(--color-danger-bg)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                    >
+                        <TriangleAlert className="w-4 h-4 shrink-0 mt-0.5 text-[var(--color-danger)]" aria-hidden="true" />
+                        <p className="text-sm leading-snug text-[var(--color-danger)] text-balance">{alertMessage}</p>
+                    </div>
+                ) : null}
 
                 {displayMorning.length > 0 && (
                     <div className="mb-4">
@@ -127,9 +164,18 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
                 )}
 
                 {availableSlots.length === 0 && (
-                    <div className="text-center py-8">
-                        <p className={`${colors.textMuted} text-sm`}>Nenhum horário disponível para esta data.</p>
-                        <p className={`${colors.textMuted} text-xs mt-2 opacity-70`}>Tente selecionar outro dia.</p>
+                    <div className={`text-center px-2 ${alertMessage ? 'py-4' : 'py-8'}`} data-testid="time-grid-empty">
+                        <p className={`${emptyMessage ? colors.text : colors.textMuted} text-sm leading-relaxed text-balance`}>
+                            {emptyMessage ?? 'Nenhum horário disponível para esta data.'}
+                        </p>
+                        {!emptyMessage && (
+                            <p className={`${colors.textMuted} text-xs mt-2 opacity-70`}>Tente selecionar outro dia.</p>
+                        )}
+                        {emptyAction && (
+                            <div className="mt-4 flex justify-center">
+                                {emptyAction}
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

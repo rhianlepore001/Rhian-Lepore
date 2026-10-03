@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { formatLocalDateString } from '../utils/date';
@@ -28,6 +28,11 @@ export const CalendarPicker: React.FC<CalendarPickerProps> = ({
     const todayStr = today ?? formatLocalDateString(new Date());
     const [currentMonth, setCurrentMonth] = useState(() => dateStringToLocalDate(todayStr));
     const { colors, accent, font, shadow, isBeauty } = useBrutalTheme({ override: forceTheme });
+
+    useEffect(() => {
+        if (!selectedDate) return;
+        setCurrentMonth(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
+    }, [selectedDate]);
 
     const hoverBg = `hover:bg-[var(--color-accent-dim)]`;
     const selectedClass = `${accent.bg} text-[var(--color-bg)]`;

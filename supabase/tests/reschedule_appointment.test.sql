@@ -1,4 +1,4 @@
--- Remarcar horário (T-R01..T-R08). Falha sem 20261003150000; passa depois.
+-- Remarcar horário (T-R01..T-R08). Falha sem 20261003165644; passa depois.
 -- T-R09 (concorrência) vive em scripts/test-sql-reschedule.sh (2 conexões).
 \set ON_ERROR_STOP on
 \set QUIET on

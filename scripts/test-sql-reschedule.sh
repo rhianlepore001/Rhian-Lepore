@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Testa 20261003150000_reschedule_appointment num Postgres local descartável.
-# Ordem de prod: #121 (20261003152759, já no live) depois #120 (20261003150000).
+# Testa 20261003165644_reschedule_appointment num Postgres local descartável.
+# Ordem de prod: #121 (20261003152759, já no live) depois #120 (20261003165644).
 #   scripts/test-sql-reschedule.sh             # stack -> #121 -> teste FALHA -> #120 2x -> passa + concorrência
 #   scripts/test-sql-reschedule.sh --rollback  # #121 + #120 + rollback #120; md5 das 3 funções intacto
 set -euo pipefail
@@ -8,8 +8,8 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PGBIN="${PGBIN:-$(ls -d /usr/lib/postgresql/*/bin 2>/dev/null | sort -V | tail -1)}"
 TMP="$(mktemp -d)"
 PORT="${PGPORT_TEST:-55463}"
-MIG="$ROOT/supabase/migrations/20261003150000_reschedule_appointment.sql"
-RB="$ROOT/docs/rollbacks/20261003150000_reschedule_appointment.rollback.sql"
+MIG="$ROOT/supabase/migrations/20261003165644_reschedule_appointment.sql"
+RB="$ROOT/docs/rollbacks/20261003165644_reschedule_appointment.rollback.sql"
 LEAD_PATH="$ROOT/supabase/migrations/20261003152759_public_booking_lead_time.sql"
 [ -f "$MIG" ] || { echo "faltou migration #120 $MIG"; exit 1; }
 [ -f "$LEAD_PATH" ] || { echo "faltou migration #121 20261003152759_public_booking_lead_time.sql"; exit 1; }
@@ -86,7 +86,7 @@ fi
 echo "antes da migration (esperado FAIL):"
 grep -E 'FAIL|ERROR|EXCEPTION' "$TMP/before.out" | head -20 || true
 
-echo "aplicando #120 20261003150000 (depois de #121)"
+echo "aplicando #120 20261003165644 (depois de #121)"
 P -f "$MIG"
 P -f "$MIG"
 AFTER="$(P -At -c "$MD5_SQL")"

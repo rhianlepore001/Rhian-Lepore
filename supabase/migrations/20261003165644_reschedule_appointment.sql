@@ -5,7 +5,7 @@
 -- nem enforce_agenda_block_on_appointments (md5 tem que permanecer igual).
 -- O trigger de bloqueio continua sendo a garantia de R-07 (B-39).
 --
--- ROLLBACK: docs/rollbacks/20261003150000_reschedule_appointment.rollback.sql
+-- ROLLBACK: docs/rollbacks/20261003165644_reschedule_appointment.rollback.sql
 -- =============================================================================
 
 CREATE TABLE IF NOT EXISTS public.appointment_reschedules (

@@ -1,4 +1,4 @@
--- ROLLBACK de 20261003150000_reschedule_appointment
+-- ROLLBACK de 20261003165644_reschedule_appointment
 -- Só remove o que este PR adicionou. Funções existentes não são tocadas.
 
 BEGIN;

@@ -102,12 +102,14 @@ describe('fetchCommissionCycle (get_commission_cycle_v1)', () => {
     expect(c.previous_end).toBe('2026-09-05');
     expect(c.next_end).toBe('2026-11-05');
     expect(c.settlement_day).toBe(5);
-    expect(c.totals).toEqual({ a_pagar_ciclo: 677, pendentes: 5, pago_ciclo: 0 });
+    expect(c.totals).toEqual({ a_pagar_ciclo: 699, pendentes: 5, pago_ciclo: 0 });
     const caio = c.members.find((m) => m.name === 'Caio')!;
     expect(caio).toMatchObject({ a_pagar_ciclo: 100, saldo_acumulado: 107, saldo_anterior: 7, status: 'pendente', servicos_ciclo: 5, pago_ciclo_em: null });
     const ana = c.members.find((m) => m.name === 'Ana')!;
     expect(ana.ultimo_pagamento).toMatchObject({ amount: 264, end_date: '2026-09-05' });
-    expect(c.members.find((m) => m.name === 'Eva')).toMatchObject({ inactive: true, status: 'pendente', saldo_acumulado: 15, saldo_anterior: 15 });
+    expect(c.members.find((m) => m.name === 'Eva')).toMatchObject({
+      inactive: true, status: 'pendente', saldo_acumulado: 15, saldo_anterior: 15, primeiro_nao_pago: '2026-08-20',
+    });
   });
 
   it('status desconhecido é rejeitado', async () => {

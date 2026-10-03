@@ -151,6 +151,8 @@ export const cycleMemberSchema = z.object({
   saldo_acumulado: z.number(),
   /** Não pago e lançado ANTES do início do ciclo ("+ X de ciclos anteriores"). */
   saldo_anterior: z.number(),
+  /** Data local (AAAA-MM-DD, fuso do tenant) do lançamento não pago mais antigo. */
+  primeiro_nao_pago: isoDate.nullable(),
   servicos_ciclo: int,
   produtos_ciclo: int,
   pago_ciclo: num,

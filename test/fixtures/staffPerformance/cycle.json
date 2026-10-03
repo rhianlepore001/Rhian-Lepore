@@ -8,7 +8,7 @@
   "totals": {
     "pendentes": 5,
     "pago_ciclo": 0,
-    "a_pagar_ciclo": 677.00
+    "a_pagar_ciclo": 699.00
   },
   "members": [
     {
@@ -22,6 +22,7 @@
       "pago_calculado": 0.00,
       "produtos_ciclo": 0,
       "saldo_anterior": 0.00,
+      "primeiro_nao_pago": "2026-09-06",
       "servicos_ciclo": 15,
       "commission_rate": 50,
       "professional_id": "20000000-0000-0000-0000-0000000000b1",
@@ -39,6 +40,7 @@
       "pago_calculado": 0.00,
       "produtos_ciclo": 3,
       "saldo_anterior": 0.00,
+      "primeiro_nao_pago": "2026-09-08",
       "servicos_ciclo": 10,
       "commission_rate": 40,
       "professional_id": "20000000-0000-0000-0000-0000000000a1",
@@ -61,6 +63,7 @@
       "pago_calculado": 0.00,
       "produtos_ciclo": 0,
       "saldo_anterior": 7.00,
+      "primeiro_nao_pago": "2026-09-05",
       "servicos_ciclo": 5,
       "commission_rate": 40,
       "professional_id": "20000000-0000-0000-0000-0000000000c1",
@@ -78,6 +81,7 @@
       "pago_calculado": 0.00,
       "produtos_ciclo": 0,
       "saldo_anterior": 0.00,
+      "primeiro_nao_pago": "2026-09-20",
       "servicos_ciclo": 1,
       "commission_rate": 40,
       "professional_id": "20000000-0000-0000-0000-0000000000e1",
@@ -95,6 +99,7 @@
       "pago_calculado": 0.00,
       "produtos_ciclo": 0,
       "saldo_anterior": 15.00,
+      "primeiro_nao_pago": "2026-08-20",
       "servicos_ciclo": 0,
       "commission_rate": 40,
       "professional_id": "20000000-0000-0000-0000-0000000000f1",

@@ -1,7 +1,7 @@
 -- =============================================================================
 -- P1: get_staff_performance_v1 + get_commission_cycle_v1 (ACCEPTANCE.md §4, §8, §9)
 -- =============================================================================
--- Só ADITIVO: 7 funções novas + 1 índice. Nenhuma função existente é alterada.
+-- Só ADITIVO: 7 funções novas + 2 índices. Nenhuma função existente é alterada.
 --   _staff_perf_tz(text)                 fuso do tenant (business_settings → região)
 --   _staff_perf_raw(...)                 agregados por colaborador (interna)
 --   _staff_performance_core(..., p_now)  payload (interna; o harness fixa o "agora")
@@ -22,6 +22,9 @@ SET LOCAL lock_timeout = '5s';
 
 CREATE INDEX IF NOT EXISTS idx_appointments_user_client_time
   ON public.appointments (user_id, client_id, appointment_time);
+
+CREATE INDEX IF NOT EXISTS idx_product_sales_finance_record_id
+  ON public.product_sales (finance_record_id);
 
 -- Fuso do tenant: business_settings.timezone → PT = Europe/Lisbon → America/Sao_Paulo
 CREATE OR REPLACE FUNCTION public._staff_perf_tz(p_tenant text)
@@ -461,6 +464,7 @@ BEGIN
       COALESCE(sum(fr.cv) FILTER (WHERE NOT fr.commission_paid AND fr.created_at >= v_from AND fr.created_at < v_to), 0) AS a_pagar_ciclo,
       COALESCE(sum(fr.cv) FILTER (WHERE NOT fr.commission_paid), 0) AS saldo_acumulado,
       COALESCE(sum(fr.cv) FILTER (WHERE NOT fr.commission_paid AND fr.created_at < v_from), 0) AS saldo_anterior,
+      min((fr.created_at AT TIME ZONE v_tz)::date) FILTER (WHERE NOT fr.commission_paid) AS primeiro_nao_pago,
       COALESCE(sum(fr.cv) FILTER (WHERE fr.commission_paid AND fr.created_at >= v_from AND fr.created_at < v_to), 0) AS pago_calculado,
       count(*) FILTER (WHERE NOT fr.commission_paid AND NOT fr.is_product AND fr.created_at >= v_from AND fr.created_at < v_to) AS servicos_ciclo,
       count(*) FILTER (WHERE NOT fr.commission_paid AND fr.is_product AND fr.created_at >= v_from AND fr.created_at < v_to) AS produtos_ciclo
@@ -472,6 +476,7 @@ BEGIN
       COALESCE(tm.commission_rate, tm.commission_percent, 0) AS rate,
       COALESCE(a.a_pagar_ciclo, 0) AS a_pagar_ciclo, COALESCE(a.saldo_acumulado, 0) AS saldo_acumulado,
       COALESCE(a.saldo_anterior, 0) AS saldo_anterior,
+      a.primeiro_nao_pago,
       COALESCE(a.pago_calculado, 0) AS pago_calculado,
       COALESCE(a.servicos_ciclo, 0) AS servicos_ciclo, COALESCE(a.produtos_ciclo, 0) AS produtos_ciclo,
       cp.amount AS pago_ciclo, cp.paid_at AS pago_ciclo_em,
@@ -497,6 +502,7 @@ BEGIN
       'a_pagar_ciclo', round(r.a_pagar_ciclo, 2),
       'saldo_acumulado', round(r.saldo_acumulado, 2),
       'saldo_anterior', round(r.saldo_anterior, 2),
+      'primeiro_nao_pago', r.primeiro_nao_pago,
       'servicos_ciclo', r.servicos_ciclo, 'produtos_ciclo', r.produtos_ciclo,
       'pago_ciclo', round(r.pago_ciclo, 2), 'pago_ciclo_em', r.pago_ciclo_em, 'pago_calculado', round(r.pago_calculado, 2),
       'status', CASE
@@ -509,7 +515,7 @@ BEGIN
     ORDER BY r.inactive, r.a_pagar_ciclo DESC, r.name), '[]'::jsonb)
   INTO v_members
   FROM rows r
-  WHERE NOT r.inactive OR r.saldo_acumulado > 0;
+  WHERE NOT r.inactive OR r.saldo_acumulado > 0 OR r.last_paid_at IS NOT NULL;
 
   RETURN jsonb_build_object(
     'cycle', jsonb_build_object('start', v_start, 'end', v_end, 'open', v_today <= v_end AND v_today >= v_start),
@@ -519,7 +525,7 @@ BEGIN
     'next_end', public._commission_settle_date((date_trunc('month', v_end) + interval '1 month')::date, v_day),
     'members', v_members,
     'totals', jsonb_build_object(
-      'a_pagar_ciclo', (SELECT COALESCE(round(sum((e ->> 'a_pagar_ciclo')::numeric), 2), 0) FROM jsonb_array_elements(v_members) e),
+      'a_pagar_ciclo', (SELECT COALESCE(round(sum((e ->> 'a_pagar_ciclo')::numeric + (e ->> 'saldo_anterior')::numeric), 2), 0) FROM jsonb_array_elements(v_members) e),
       'pendentes', (SELECT count(*) FROM jsonb_array_elements(v_members) e WHERE e ->> 'status' = 'pendente'),
       'pago_ciclo', (SELECT COALESCE(round(sum((e ->> 'pago_ciclo')::numeric), 2), 0) FROM jsonb_array_elements(v_members) e)));
 END;

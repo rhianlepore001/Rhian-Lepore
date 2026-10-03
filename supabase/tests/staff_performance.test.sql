@@ -187,12 +187,13 @@ DO $$ DECLARE c jsonb; BEGIN
   PERFORM public._t('Caio saldo acumulado', (SELECT (e ->> 'saldo_acumulado')::numeric FROM jsonb_array_elements(c -> 'members') e WHERE e ->> 'name' = 'Caio'), 107);
   PERFORM public._t('Caio saldo de ciclos anteriores', (SELECT (e ->> 'saldo_anterior')::numeric FROM jsonb_array_elements(c -> 'members') e WHERE e ->> 'name' = 'Caio'), 7);
   PERFORM public._t('Eva saldo de ciclos anteriores', (SELECT (e ->> 'saldo_anterior')::numeric FROM jsonb_array_elements(c -> 'members') e WHERE e ->> 'name' = 'Eva'), 15);
+  PERFORM public._tt('Eva primeiro não pago', (SELECT e ->> 'primeiro_nao_pago' FROM jsonb_array_elements(c -> 'members') e WHERE e ->> 'name' = 'Eva'), '2026-08-20');
   PERFORM public._tt('dono fora do repasse', (SELECT e::text FROM jsonb_array_elements(c -> 'members') e WHERE e ->> 'name' = 'Rhian (dono)'), NULL);
   PERFORM public._tt('Duda inativa com saldo aparece', (SELECT e ->> 'inactive' FROM jsonb_array_elements(c -> 'members') e WHERE e ->> 'name' = 'Duda'), 'true');
   PERFORM public._tt('Eva excluída com saldo antigo aparece pendente', (SELECT e ->> 'status' FROM jsonb_array_elements(c -> 'members') e WHERE e ->> 'name' = 'Eva'), 'pendente');
-  PERFORM public._t('total a pagar', (c -> 'totals' ->> 'a_pagar_ciclo')::numeric, 677);
+  PERFORM public._t('total a pagar', (c -> 'totals' ->> 'a_pagar_ciclo')::numeric, 699);
   PERFORM public._t('pendentes', (c -> 'totals' ->> 'pendentes')::numeric, 5);
-  RAISE NOTICE 'PASS ciclo 06/09–05/10: Ana 257 (10 serviços + 3 produtos, sem despesa), Caio 100 (+7 do ciclo anterior), dono fora, inativos com saldo aparecem, total 677';
+  RAISE NOTICE 'PASS ciclo 06/09–05/10: Ana 257 (10 serviços + 3 produtos, sem despesa), Caio 100 (+7 do ciclo anterior), dono fora, inativos com saldo aparecem, total 699';
 END $$;
 
 -- 11) Ciclo padrão (último fechado) e status Pago; Pago com ajuste
@@ -223,6 +224,33 @@ DO $$ DECLARE e jsonb; BEGIN
 END $$;
 ROLLBACK;
 
+-- 11b) Pagar o saldo anterior da Eva marca o lançamento e ela some da fila
+BEGIN;
+SELECT public.mark_commissions_as_paid(
+  '10000000-0000-0000-0000-000000000001',
+  '20000000-0000-0000-0000-0000000000f1',
+  15, '2026-08-20', '2026-09-05');
+DO $$ DECLARE e jsonb; unpaid int; expenses int; BEGIN
+  SELECT count(*) INTO unpaid FROM public.finance_records
+   WHERE professional_id = '20000000-0000-0000-0000-0000000000f1' AND type = 'revenue' AND NOT commission_paid;
+  PERFORM public._t('Eva: lançamento anterior marcado', unpaid, 0);
+  SELECT x INTO e FROM jsonb_array_elements(public._commission_cycle_core('10000000-0000-0000-0000-000000000001', '2026-10-05', '2026-10-02 12:00:00-03') -> 'members') x WHERE x ->> 'name' = 'Eva';
+  PERFORM public._tt('Eva após pagar saldo anterior', COALESCE(e ->> 'status', 'ausente'), 'nada_a_pagar');
+  PERFORM public._t('Eva a pagar ciclo', COALESCE((e ->> 'a_pagar_ciclo')::numeric, 0), 0);
+  PERFORM public._t('Eva saldo anterior zerado', COALESCE((e ->> 'saldo_anterior')::numeric, 0), 0);
+  SELECT count(*) INTO expenses FROM public.finance_records
+   WHERE professional_id = '20000000-0000-0000-0000-0000000000f1' AND type = 'expense';
+  PERFORM public.mark_commissions_as_paid(
+    '10000000-0000-0000-0000-000000000001',
+    '20000000-0000-0000-0000-0000000000f1',
+    15, '2026-08-20', '2026-09-05');
+  PERFORM public._t('Eva: segundo pagamento é idempotente',
+    (SELECT count(*) FROM public.finance_records WHERE professional_id = '20000000-0000-0000-0000-0000000000f1' AND type = 'expense'),
+    expenses);
+  RAISE NOTICE 'PASS Eva: pagar 15 de 20/08–05/09 marca o registro e status Nada a pagar; segundo pay não duplica';
+END $$;
+ROLLBACK;
+
 -- 12) Permissões pela RPC pública
 SET ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', false) AS _ \gset
@@ -231,7 +259,7 @@ DO $$ DECLARE j jsonb; BEGIN
   PERFORM public._tt('dono modo', j ->> 'mode', 'owner');
   PERFORM public._t('dono vê a equipe', jsonb_array_length(j -> 'members'), 5);
   j := public.get_commission_cycle_v1('2026-10-05');
-  PERFORM public._t('dono vê o ciclo', (j -> 'totals' ->> 'a_pagar_ciclo')::numeric, 677);
+  PERFORM public._t('dono vê o ciclo', (j -> 'totals' ->> 'a_pagar_ciclo')::numeric, 699);
   RAISE NOTICE 'PASS dono: equipe (5) e ciclo';
 END $$;
 SELECT set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-0000000000a1', false) AS _ \gset
@@ -275,7 +303,8 @@ DO $$ DECLARE r record; BEGIN
     IF r.proname <> '_commission_settle_date' AND NOT r.prosecdef THEN RAISE EXCEPTION 'FAIL não é DEFINER %', r.f; END IF;
   END LOOP;
   IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_appointments_user_client_time') THEN RAISE EXCEPTION 'FAIL índice'; END IF;
-  RAISE NOTICE 'PASS grants: anon sem EXECUTE; internas fechadas; search_path=public; DEFINER; índice criado';
+  IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_product_sales_finance_record_id') THEN RAISE EXCEPTION 'FAIL índice product_sales(finance_record_id)'; END IF;
+  RAISE NOTICE 'PASS grants: anon sem EXECUTE; internas fechadas; search_path=public; DEFINER; índices criados';
 END $$;
 DROP FUNCTION public._t(text, numeric, numeric);
 DROP FUNCTION public._tt(text, text, text);

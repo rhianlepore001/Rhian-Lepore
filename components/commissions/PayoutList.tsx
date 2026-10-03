@@ -21,6 +21,8 @@ export interface PayoutRowData {
         pago_ciclo: number | null;
         pago_calculado: number;
         paid_at: string | null;
+        /** Data local do lançamento não pago mais antigo (fuso do tenant). */
+        primeiro_nao_pago: string | null;
     };
 }
 
@@ -29,6 +31,8 @@ interface PayoutListProps {
     theme: ThemeVariant;
     formatMoney: (v: number) => string;
     payingId: string | null;
+    /** Já liquidados nesta sessão — o botão não volta a ficar clicável. */
+    settledIds?: ReadonlySet<string>;
     onPay: (row: PayoutRowData) => void;
     onEditRate: (row: PayoutRowData) => void;
     onOpenDetails: (row: PayoutRowData) => void;
@@ -54,6 +58,21 @@ export function payoutDueAmount(row: PayoutRowData): number {
     const earlier = row.cycle?.saldo_anterior ?? 0;
     if (earlier > 0) return row.cycle?.saldo_acumulado ?? earlier;
     return 0;
+}
+
+/** Intervalo enviado a mark_commissions_as_paid: cobre o lançamento mais antigo quando só há saldo anterior. */
+export function payoutPaymentRange(
+    row: PayoutRowData,
+    cycle: { start: string; end: string },
+    previousEnd: string,
+): { start: string; end: string; amount: number } {
+    const amount = payoutDueAmount(row);
+    const earliest = row.cycle?.primeiro_nao_pago;
+    const priorOnly = (row.total_due ?? 0) <= 0 && (row.cycle?.saldo_anterior ?? 0) > 0;
+    if (priorOnly && earliest) {
+        return { start: earliest, end: previousEnd, amount };
+    }
+    return { start: cycle.start, end: cycle.end, amount };
 }
 
 const STATUS: Record<CycleStatus, { label: string; variant: 'warning' | 'success' | 'accent' | 'neutral' }> = {
@@ -133,7 +152,7 @@ const RowMenu: React.FC<{ row: PayoutRowData; theme: ThemeVariant; onReport: () 
     );
 };
 
-export const PayoutList: React.FC<PayoutListProps> = ({ rows, theme, formatMoney, payingId, onPay, onEditRate, onOpenDetails, onOpenReport, onOpenHistory }) => {
+export const PayoutList: React.FC<PayoutListProps> = ({ rows, theme, formatMoney, payingId, settledIds, onPay, onEditRate, onOpenDetails, onOpenReport, onOpenHistory }) => {
     const { colors, font, radius, accent, isBeauty } = useBrutalTheme({ override: theme });
     const lgRadius = isBeauty ? 'lg:rounded-2xl' : 'lg:rounded-lg';
     const head = `${font.mono} text-xs uppercase tracking-wide ${colors.textMuted}`;
@@ -151,9 +170,11 @@ export const PayoutList: React.FC<PayoutListProps> = ({ rows, theme, formatMoney
             <ul className={`space-y-3 lg:space-y-0 lg:divide-y lg:divide-[var(--color-divider)]`}>
                 {rows.map((r) => {
                     const payable = payoutDueAmount(r);
-                    const due = payable > 0;
+                    const settled = settledIds?.has(r.professional_id) ?? false;
+                    const due = payable > 0 && !settled;
                     const paying = payingId === r.professional_id;
                     const earlier = r.cycle?.saldo_anterior ?? 0;
+                    const priorOnly = earlier > 0 && r.total_due <= 0;
                     return (
                         <li
                             key={r.professional_id}
@@ -199,7 +220,8 @@ export const PayoutList: React.FC<PayoutListProps> = ({ rows, theme, formatMoney
                             <span className={`hidden lg:block text-right ${font.mono} tabular-nums text-sm ${colors.textSecondary}`}>{r.products_pending}</span>
                             <span className="hidden lg:block text-right">
                                 <span className={`block ${font.mono} tabular-nums font-bold whitespace-nowrap ${due ? colors.text : colors.textMuted}`}>{formatMoney(r.total_due > 0 ? r.total_due : payable)}</span>
-                                {earlier > 0 && <span className={`block mt-0.5 text-xs leading-snug ${colors.textMuted} tabular-nums`}><span className="whitespace-nowrap">+ {formatMoney(earlier)}</span> de ciclos anteriores</span>}
+                                {earlier > 0 && r.total_due > 0 && <span className={`block mt-0.5 text-xs leading-snug ${colors.textMuted} tabular-nums`}><span className="whitespace-nowrap">+ {formatMoney(earlier)}</span> de ciclos anteriores</span>}
+                                {priorOnly && <span className={`block mt-0.5 text-xs leading-snug ${colors.textMuted}`}>de ciclos anteriores</span>}
                             </span>
                             <span className="hidden lg:block"><StatusCell row={r} theme={theme} formatMoney={formatMoney} /></span>
 
@@ -207,8 +229,11 @@ export const PayoutList: React.FC<PayoutListProps> = ({ rows, theme, formatMoney
                             <p className={`mt-3 text-xs ${colors.textMuted} lg:hidden`}>
                                 {r.cycle ? cycleContext(r.services_pending, r.products_pending) : pendingContext(r.services_pending, r.products_pending)}
                             </p>
-                            {earlier > 0 && (
+                            {earlier > 0 && r.total_due > 0 && (
                                 <p className={`mt-1 text-xs ${colors.textSecondary} tabular-nums lg:hidden`}>+ {formatMoney(earlier)} de ciclos anteriores</p>
+                            )}
+                            {priorOnly && (
+                                <p className={`mt-1 text-xs ${colors.textSecondary} lg:hidden`}>de ciclos anteriores</p>
                             )}
 
                             {/* ações */}

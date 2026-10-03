@@ -27,9 +27,9 @@ if [ "$MODE" != "--main" ]; then
 fi
 if [ "$MODE" = "--rollback" ]; then
   "${PSQL[@]}" -f "$RB"
-  LEFT="$("${PSQL[@]}" -At -c "SELECT (SELECT count(*) FROM pg_proc WHERE proname IN ('get_staff_performance_v1','get_commission_cycle_v1','_staff_performance_core','_commission_cycle_core','_staff_perf_raw','_staff_perf_tz','_commission_settle_date')) + (SELECT count(*) FROM pg_indexes WHERE indexname = 'idx_appointments_user_client_time')")"
+  LEFT="$("${PSQL[@]}" -At -c "SELECT (SELECT count(*) FROM pg_proc WHERE proname IN ('get_staff_performance_v1','get_commission_cycle_v1','_staff_performance_core','_commission_cycle_core','_staff_perf_raw','_staff_perf_tz','_commission_settle_date')) + (SELECT count(*) FROM pg_indexes WHERE indexname IN ('idx_appointments_user_client_time','idx_product_sales_finance_record_id'))")"
   [ "$LEFT" = "0" ] || { echo "FAIL rollback deixou $LEFT objetos"; exit 1; }
-  echo "PASS rollback: 7 funções e o índice removidos"
+  echo "PASS rollback: 7 funções e 2 índices removidos"
   "${PSQL[@]}" -f "$MIG"
   echo "PASS reaplicação depois do rollback"
 fi

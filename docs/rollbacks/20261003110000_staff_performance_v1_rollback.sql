@@ -11,4 +11,5 @@ DROP FUNCTION IF EXISTS public._staff_perf_raw(text, timestamptz, timestamptz, t
 DROP FUNCTION IF EXISTS public._staff_perf_raw(text, timestamptz, timestamptz, timestamptz);
 DROP FUNCTION IF EXISTS public._staff_perf_tz(text);
 DROP INDEX IF EXISTS public.idx_appointments_user_client_time;
+DROP INDEX IF EXISTS public.idx_product_sales_finance_record_id;
 COMMIT;

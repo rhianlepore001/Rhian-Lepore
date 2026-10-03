@@ -38,6 +38,26 @@ AS $$ SELECT role FROM public.profiles WHERE id = auth.uid()::text $$;
 CREATE FUNCTION public.get_commissions_due() RETURNS int LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
 AS $$ SELECT 1 $$;
 
+-- Espelho do contrato de prod: marca created_at::date no intervalo; não duplica se já estiver pago.
+CREATE FUNCTION public.mark_commissions_as_paid(
+  p_user_id text, p_professional_id uuid, p_amount numeric, p_start_date date, p_end_date date)
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE n int;
+BEGIN
+  UPDATE public.finance_records
+     SET commission_paid = true
+   WHERE user_id = p_user_id AND professional_id = p_professional_id
+     AND type = 'revenue' AND commission_paid = false
+     AND created_at::date BETWEEN p_start_date AND p_end_date;
+  GET DIAGNOSTICS n = ROW_COUNT;
+  IF n = 0 THEN RETURN; END IF;
+  INSERT INTO public.finance_records (user_id, professional_id, type, revenue, commission_value, commission_paid, created_at)
+  VALUES (p_user_id, p_professional_id, 'expense', 0, p_amount, true, now());
+  INSERT INTO public.commission_payments (user_id, professional_id, amount, start_date, end_date, status, paid_at)
+  VALUES (p_user_id, p_professional_id, p_amount, p_start_date, p_end_date, 'paid', now());
+END;
+$$;
+
 -- ---------------------------------------------------------------- fixture
 CREATE FUNCTION pg_temp.brt(t text) RETURNS timestamptz LANGUAGE sql AS $$ SELECT (t::timestamp AT TIME ZONE 'America/Sao_Paulo') $$;
 CREATE FUNCTION pg_temp.cid(tag text) RETURNS uuid LANGUAGE sql AS $$ SELECT md5('client-' || tag)::uuid $$;

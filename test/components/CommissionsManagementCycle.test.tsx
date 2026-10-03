@@ -82,8 +82,8 @@ describe('CommissionsManagement — ciclo do servidor (P1, get_commission_cycle_
         expect(rpc).toHaveBeenCalledWith('get_commission_cycle_v1', { p_cycle_end: null });
         expect(rpc.mock.calls.some((c) => c[0] === 'get_commissions_due')).toBe(false);
         const summary = screen.getByTestId('payout-summary');
-        expect(summary).toHaveTextContent('A pagar neste ciclo');
-        expect(summary).toHaveTextContent(money('677,00'));
+        expect(summary).toHaveTextContent('A pagar');
+        expect(summary).toHaveTextContent(money('699,00'));
         expect(summary).toHaveTextContent('5 pendentes');
         expect(summary).toHaveTextContent(/Pago neste ciclo\s*R\$\s0,00/);
     });
@@ -101,12 +101,25 @@ describe('CommissionsManagement — ciclo do servidor (P1, get_commission_cycle_
         expect(screen.queryByText(/dono/i)).toBeNull();
         const eva = screen.getByTestId('payout-row-20000000-0000-0000-0000-0000000000f1');
         expect(within(eva).getAllByText('Pendente').length).toBeGreaterThan(0);
-        expect(within(eva).getAllByText(/\+\sR\$\s15,00 de ciclos anteriores/).length).toBeGreaterThan(0);
         expect(within(eva).getByRole('button', { name: /Pagar Eva/ })).toBeEnabled();
         expect(within(eva).getAllByText(money('15,00')).length).toBeGreaterThan(0);
+        expect(within(eva).queryByText(/\+\sR\$\s15,00/)).toBeNull();
+        expect(within(eva).getAllByText(/de ciclos anteriores/).length).toBeGreaterThan(0);
         fireEvent.click(within(eva).getByRole('button', { name: /Pagar Eva/ }));
-        expect(await screen.findByText('Ciclo: 06/09 – 05/10')).toBeInTheDocument();
+        expect(await screen.findByText('Confirmar repasse')).toBeInTheDocument();
         expect((screen.getByDisplayValue('15.00') as HTMLInputElement).value).toBe('15.00');
+        expect((screen.getByDisplayValue('2026-08-20') as HTMLInputElement).value).toBe('2026-08-20');
+        expect((screen.getByDisplayValue('2026-09-05') as HTMLInputElement).value).toBe('2026-09-05');
+        expect(screen.getByText(/marca as comissões de 20\/08 a 05\/09/i)).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', { name: 'Pagar agora' }));
+        await waitFor(() => expect(rpc).toHaveBeenCalledWith('mark_commissions_as_paid', expect.objectContaining({
+            p_professional_id: '20000000-0000-0000-0000-0000000000f1',
+            p_amount: 15,
+            p_start_date: '2026-08-20',
+            p_end_date: '2026-09-05',
+        })));
+        const evaAfter = await screen.findByTestId('payout-row-20000000-0000-0000-0000-0000000000f1');
+        expect(within(evaAfter).getByRole('button', { name: /Nada a pagar para Eva|Pagar Eva/ })).toBeDisabled();
     });
 
     it('‹ vai para o ciclo anterior do servidor; › fica desabilitado no ciclo em aberto', async () => {

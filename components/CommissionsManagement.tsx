@@ -15,7 +15,7 @@ import { useTenantLocale } from '../hooks/useTenantLocale';
 import { lastClosedCycle, previousCycle, formatCycleLabel, type CommissionCycle } from '../utils/commissionCycle';
 import { fetchCommissionCycle, isRpcUnavailable } from '../services/staffPerformance';
 import type { CommissionCycleResult } from '../types/staffPerformance';
-import { PayoutList, payoutDueAmount, type PayoutRowData } from './commissions/PayoutList';
+import { PayoutList, payoutDueAmount, payoutPaymentRange, type PayoutRowData } from './commissions/PayoutList';
 import { PaidPaymentsList, type PaidPayment } from './commissions/PaidPaymentsList';
 
 interface CommissionDue extends PayoutRowData {
@@ -67,6 +67,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
 
     // Pay modal
     const [payingProfessionalId, setPayingProfessionalId] = useState<string | null>(null);
+    const [settledIds, setSettledIds] = useState<Set<string>>(() => new Set());
     const [showPayModal, setShowPayModal] = useState(false);
     const [selectedProfessional, setSelectedProfessional] = useState<CommissionDue | null>(null);
     const [paymentAmount, setPaymentAmount] = useState('');
@@ -161,6 +162,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                     pago_ciclo: m.pago_ciclo,
                     pago_calculado: m.pago_calculado,
                     paid_at: m.pago_ciclo_em,
+                    primeiro_nao_pago: m.primeiro_nao_pago,
                 },
             })));
             setLoadState('ready');
@@ -249,6 +251,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
     };
 
     const handleOpenPayModal = (professional: CommissionDue) => {
+        if (settledIds.has(professional.professional_id)) return;
         // Guard: colaborador sem % configurado
         if (!professional.commission_rate || professional.commission_rate === 0) {
             openRatePrompt(professional, true);
@@ -271,8 +274,17 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
 
     const openPayModal = (professional: CommissionDue) => {
         setSelectedProfessional(professional);
-        setPaymentAmount(payoutDueAmount(professional).toFixed(2));
-        applyPaymentCycle(professional, cycle);
+        if (!cycleData) {
+            setPaymentAmount(payoutDueAmount(professional).toFixed(2));
+            applyPaymentCycle(professional, cycle);
+            setShowPayModal(true);
+            return;
+        }
+        const range = payoutPaymentRange(professional, cycle, cycleData.previous_end);
+        setPaymentAmount(range.amount.toFixed(2));
+        setPaymentStartDate(range.start);
+        setPaymentEndDate(range.end);
+        setPaymentPeriodLabel(formatCycleLabel(range.start, range.end));
         setShowPayModal(true);
     };
 
@@ -344,7 +356,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
             showToast('Por favor, preencha todos os campos.', 'error');
             return;
         }
-        if (payingProfessionalId) return; // EC-F3-01: prevent double click
+        if (payingProfessionalId || settledIds.has(selectedProfessional.professional_id)) return;
 
         setPayingProfessionalId(selectedProfessional.professional_id);
         try {
@@ -358,6 +370,12 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
 
             if (error) throw error;
 
+            const paidId = selectedProfessional.professional_id;
+            setSettledIds((prev) => {
+                const next = new Set(prev);
+                next.add(paidId);
+                return next;
+            });
             showToast(`Comissão de ${selectedProfessional.professional_name} paga com sucesso!`, 'success');
             setShowPayModal(false);
             setSelectedProfessional(null);
@@ -475,7 +493,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                 {cycleData ? (
                                     cycleData.totals.a_pagar_ciclo > 0 || cycleData.totals.pago_ciclo > 0 ? (
                                         <>
-                                            <span>A pagar neste ciclo</span>
+                                            <span>A pagar</span>
                                             <strong className={`${font.mono} text-lg md:text-xl tabular-nums whitespace-nowrap ${colors.text}`}>{formatMoney(cycleData.totals.a_pagar_ciclo)}</strong>
                                             <span aria-hidden="true">·</span>
                                             <span className="whitespace-nowrap">{cycleData.totals.pendentes} {cycleData.totals.pendentes === 1 ? 'pendente' : 'pendentes'}</span>
@@ -501,6 +519,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                 theme={theme}
                                 formatMoney={formatMoney}
                                 payingId={payingProfessionalId}
+                                settledIds={settledIds}
                                 onPay={(r) => handleOpenPayModal(byId(r))}
                                 onEditRate={(r) => openRatePrompt(byId(r), false)}
                                 onOpenDetails={(r) => { setDetailsProfessional(byId(r)); setShowDetailsModal(true); }}
@@ -679,7 +698,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                     <div className={`mt-8 flex gap-3 rounded-2xl border border-[var(--color-info-border)] bg-[var(--color-info-bg)] p-4`}>
                         <InfoIcon className="h-5 w-5 shrink-0 text-[var(--color-info)]" />
                         <p className="text-xs leading-snug text-[var(--color-info)]">
-                            <strong>Aviso:</strong> Este pagamento será registrado como despesa e as comissões do período serão marcadas como pagas.
+                            <strong>Aviso:</strong> Este pagamento marca as comissões de {paymentStartDate.slice(8, 10)}/{paymentStartDate.slice(5, 7)} a {paymentEndDate.slice(8, 10)}/{paymentEndDate.slice(5, 7)} e registra a despesa de {formatMoney(Number(paymentAmount) || 0)}.
                         </p>
                     </div>
                 </Modal>

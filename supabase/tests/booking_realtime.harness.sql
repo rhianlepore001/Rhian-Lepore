@@ -1,4 +1,4 @@
--- Harness local e descartável para 20261003210000_public_bookings_realtime.
+-- Harness local e descartável para 20261003192135_public_bookings_realtime.
 -- Stub de realtime.send / realtime.topic / realtime.messages e objetos #120/#121.
 
 CREATE ROLE anon NOLOGIN;

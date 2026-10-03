@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Testa 20261003210000_public_bookings_realtime num Postgres local descartável.
+# Testa 20261003192135_public_bookings_realtime num Postgres local descartável.
 #   scripts/test-sql-booking-realtime.sh             # harness -> teste FALHA -> migration 2x -> passa
 #   scripts/test-sql-booking-realtime.sh --rollback  # migration + rollback: some trigger/fn/policy; #120/#121 intactos
 set -euo pipefail
@@ -11,8 +11,8 @@ if [ -z "$PGBIN" ] || [ ! -x "$PGBIN/psql" ]; then
 fi
 TMP="$(mktemp -d)"
 PORT="${PGPORT_TEST:-55471}"
-MIG="$ROOT/supabase/migrations/20261003210000_public_bookings_realtime.sql"
-RB="$ROOT/docs/rollbacks/20261003210000_public_bookings_realtime.rollback.sql"
+MIG="$ROOT/supabase/migrations/20261003192135_public_bookings_realtime.sql"
+RB="$ROOT/docs/rollbacks/20261003192135_public_bookings_realtime.rollback.sql"
 cleanup() { "$PGBIN/pg_ctl" -D "$TMP/data" -m immediate stop >/dev/null 2>&1 || true; rm -rf "$TMP"; }
 trap cleanup EXIT
 "$PGBIN/initdb" -D "$TMP/data" -U postgres -A trust >/dev/null

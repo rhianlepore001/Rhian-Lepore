@@ -1,4 +1,4 @@
--- ROLLBACK de 20261003210000_public_bookings_realtime
+-- ROLLBACK de 20261003192135_public_bookings_realtime
 -- Remove só o que este PR adicionou. Não toca fila, lead-time (#121) nem reschedule (#120).
 
 BEGIN;

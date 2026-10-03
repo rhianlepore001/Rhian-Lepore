@@ -66,10 +66,14 @@ export function getPublicBookingAwaitingWhatsAppText(input: {
   serviceLabel?: string;
   professionalName?: string | null;
 }): string {
-  const businessName = input.businessName.trim() || 'estabelecimento';
+  const businessName = input.businessName.trim();
+  const greeting = businessName ? `Olá, ${businessName}!` : 'Olá!';
   const serviceLabel = (input.serviceLabel ?? '').trim() || 'serviço';
-  const professional = (input.professionalName ?? '').trim() || 'Qualquer profissional';
-  return `Olá, ${businessName}! Fiz um agendamento online para ${serviceLabel} com ${professional} em ${input.dateLabel} às ${input.timeLabel}. Pode confirmar, por favor?`;
+  const professional = (input.professionalName ?? '').trim();
+  const withProfessional = professional
+    ? ` com ${professional}`
+    : ' com qualquer profissional';
+  return `${greeting} Fiz um agendamento online para ${serviceLabel}${withProfessional} em ${input.dateLabel} às ${input.timeLabel}. Pode confirmar, por favor?`;
 }
 
 export function getOwnerAcceptWhatsAppText(input: {

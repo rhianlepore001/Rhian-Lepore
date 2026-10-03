@@ -51,7 +51,7 @@ vi.mock('../../hooks/useBrutalTheme', () => ({
 }));
 
 import { GeneralSettings } from '../../pages/settings/GeneralSettings';
-import { GENERATED_CANCELLATION_POLICY_TEXT } from '@/utils/cancellationPolicyCopy';
+import { CANCELLATION_POLICY_NOTES_HINT, GENERATED_CANCELLATION_POLICY_TEXT } from '@/utils/cancellationPolicyCopy';
 
 describe('GeneralSettings — PR-1 política gerada da regra real (D3)', () => {
   beforeEach(() => {
@@ -81,5 +81,11 @@ describe('GeneralSettings — PR-1 política gerada da regra real (D3)', () => {
   it('mostra o texto gerado da regra real (cancelar até o horário, sem cobrança automática)', () => {
     render(<GeneralSettings />);
     expect(screen.getByText(GENERATED_CANCELLATION_POLICY_TEXT)).toBeInTheDocument();
+  });
+
+  it('mostra a dica sob o campo de observações, sem prometer multa', () => {
+    render(<GeneralSettings />);
+    expect(screen.getByTestId('cancellation-policy-notes-hint')).toHaveTextContent(CANCELLATION_POLICY_NOTES_HINT);
+    expect(screen.queryByText(/cobrança de 50%/i)).toBeNull();
   });
 });

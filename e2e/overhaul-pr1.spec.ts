@@ -133,6 +133,18 @@ const BOOKINGS = [
     duration_minutes: 30,
     created_at: '2026-10-01T00:00:00.000Z',
   },
+  {
+    id: 'bk-future-confirmed',
+    appointment_time: '2026-10-11T14:00:00.000Z',
+    status: 'confirmed',
+    service_ids: ['svc-1'],
+    service_names: ['Barba'],
+    professional_id: 'pro-1',
+    professional_name: 'Mário',
+    total_price: 15,
+    duration_minutes: 20,
+    created_at: '2026-10-01T00:00:00.000Z',
+  },
 ];
 
 async function mockSupabase(page: Page, role: 'anon' | 'owner' | 'staff', opts: { seedPublicClient?: boolean } = {}) {
@@ -302,8 +314,29 @@ async function mockSupabase(page: Page, role: 'anon' | 'owner' | 'staff', opts: 
   });
 }
 
+async function settleAnimations(page: Page) {
+  await page.addStyleTag({
+    content: `*, *::before, *::after {
+      animation: none !important;
+      animation-duration: 0s !important;
+      animation-delay: 0s !important;
+      transition: none !important;
+      transition-duration: 0s !important;
+      transition-delay: 0s !important;
+      caret-color: transparent !important;
+    }`,
+  });
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+    });
+  });
+}
+
 async function shot(page: Page, name: string, selector?: string) {
   fs.mkdirSync(ARTIFACTS, { recursive: true });
+  await settleAnimations(page);
   const dest = path.join(ARTIFACTS, `${name}.png`);
   if (selector) {
     const loc = page.locator(selector).first();
@@ -351,17 +384,32 @@ test.describe('PR-1 overhaul copy/cards', () => {
       await page.goto(`${BASE}/#/minha-area/pr1-copy`, { waitUntil: 'domcontentloaded' });
       await expect(page.getByText('Barbearia São João ✂️').first()).toBeVisible({ timeout: 20_000 });
       await expect(page.getByText('Aguardando').first()).toBeVisible();
-      await expect(page.getByRole('button', { name: /Pedir confirmação/ })).toBeVisible();
-      await expect(page.getByRole('button', { name: /Editar/ })).toBeVisible();
+      await expect(page.getByText('Confirmado').first()).toBeVisible();
+      await expect(page.getByText(/de out\./).first()).toBeVisible();
+      await expect(page.getByText(/De Out/)).toHaveCount(0);
 
-      await page.getByRole('button', { name: /Pedir confirmação/ }).click();
-      const opened = await page.evaluate(() => (window as Window & { __openedUrls?: string[] }).__openedUrls ?? []);
-      const wa = decodeURIComponent(opened.join(' '));
-      expect(wa).toContain('Olá, Barbearia São João ✂️!');
-      expect(wa).toContain('Corte tesoura');
-      expect(wa).toContain('Mário');
-      expect(wa.toLowerCase()).not.toContain('o salão');
-      expect(wa.toLowerCase()).not.toContain('barbearia silva');
+      const pedir = page.getByRole('button', { name: /Pedir confirmação/ });
+      await expect(pedir).toBeVisible();
+      await expect(pedir).toHaveClass(/col-span-2/);
+      await expect(page.getByTestId('client-upcoming-list').getByRole('button', { name: /^Editar$/ })).toHaveCount(2);
+      await expect(page.getByTestId('client-upcoming-list').getByRole('button', { name: /^WhatsApp$/ })).toHaveCount(1);
+
+      await pedir.click();
+      const openedPending = await page.evaluate(() => (window as Window & { __openedUrls?: string[] }).__openedUrls ?? []);
+      const waPending = decodeURIComponent(openedPending.join(' '));
+      expect(openedPending.join(' ')).toContain('https://wa.me/351912345678');
+      expect(waPending).toContain('Olá, Barbearia São João ✂️!');
+      expect(waPending).toContain('Corte tesoura');
+      expect(waPending).toContain('Mário');
+      expect(waPending.toLowerCase()).not.toContain('o salão');
+      expect(waPending.toLowerCase()).not.toContain('barbearia silva');
+      await shot(page, `after-proximos-pending-${vp.name}`, '[data-booking-id="bk-future-pending"]');
+
+      await page.getByRole('button', { name: /^WhatsApp$/ }).click();
+      const openedConfirmed = await page.evaluate(() => (window as Window & { __openedUrls?: string[] }).__openedUrls ?? []);
+      expect(openedConfirmed.join(' ')).toContain('https://wa.me/351912345678');
+      await expect(page.getByRole('button', { name: /^WhatsApp$/ })).toHaveClass(/col-span-2/);
+      await shot(page, `after-proximos-confirmed-${vp.name}`, '[data-booking-id="bk-future-confirmed"]');
       await shot(page, `after-client-proximos-${vp.name}`, '[data-testid="client-upcoming-list"]');
 
       await page.getByRole('button', { name: 'Histórico' }).click();
@@ -369,10 +417,15 @@ test.describe('PR-1 overhaul copy/cards', () => {
       await expect(page.getByText('Cancelado', { exact: true })).toBeVisible();
       await expect(page.getByText('Não compareceu')).toBeVisible();
       await expect(page.getByText('Sentimos sua falta. Quer marcar outro horário?')).toBeVisible();
-      await expect(page.getByRole('button', { name: /Editar/ })).toHaveCount(0);
-      await expect(page.getByRole('button', { name: /^Cancelar$/ })).toHaveCount(0);
-      await expect(page.getByRole('button', { name: /Reagendar horário/ })).toBeVisible();
-      await shot(page, `after-client-historico-${vp.name}`);
+      await expect(page.getByText('Cancelado.')).toBeVisible();
+      await expect(page.getByTestId('client-history-list').getByRole('button', { name: /Editar/ })).toHaveCount(0);
+      await expect(page.getByTestId('client-history-list').getByRole('button', { name: /^Cancelar$/ })).toHaveCount(0);
+      await expect(page.getByTestId('client-history-list').getByRole('button', { name: /^Agendar de novo$/ })).toHaveCount(3);
+      await expect(page.getByTestId('client-history-list').getByRole('button', { name: /Reagendar horário/ })).toHaveCount(0);
+      await shot(page, `after-historico-past-${vp.name}`, '[data-booking-id="bk-past-confirmed"]');
+      await shot(page, `after-historico-cancelled-${vp.name}`, '[data-booking-id="bk-past-cancelled"]');
+      await shot(page, `after-historico-noshow-${vp.name}`, '[data-booking-id="bk-past-noshow"]');
+      await shot(page, `after-client-historico-${vp.name}`, '[data-testid="client-history-list"]');
     });
 
     test(`público diretrizes ${vp.name}`, async ({ page }) => {
@@ -398,12 +451,20 @@ test.describe('PR-1 overhaul copy/cards', () => {
       await expect(page.getByText(GENERATED_POLICY)).toBeVisible();
       await expect(page.getByText('Flexível')).toHaveCount(0);
       await expect(page.getByText('24h')).toHaveCount(0);
+      await expect(page.getByTestId('cancellation-policy-notes-hint')).toHaveText(
+        'Aparece abaixo da regra. Não prometa multa: o sistema não cobra.',
+      );
       await shot(page, `after-owner-geral-${vp.name}`, '[data-testid="cancellation-policy-section"]');
 
       await page.goto(`${BASE}/#/configuracoes/agendamento`, { waitUntil: 'domcontentloaded' });
-      const toggle = page.getByText('Cliente pode editar o próprio agendamento na Minha Área');
+      const toggle = page.getByTestId('self-reschedule-title');
       await expect(toggle).toBeVisible({ timeout: 20_000 });
+      await expect(toggle).toHaveText('Cliente pode editar na Minha Área');
+      const titleBox = await toggle.boundingBox();
+      expect(titleBox?.height ?? 99).toBeLessThan(28);
+      await expect(page.getByText('Mostra o botão Editar nos agendamentos futuros da Minha Área.')).toBeVisible();
       await expect(page.getByText('Reagendamento Autônomo')).toHaveCount(0);
+      await expect(page.getByText(/Não envia e-mail/)).toHaveCount(0);
       await shot(page, `after-owner-agendamento-${vp.name}`, '[data-testid="self-reschedule-section"]');
     });
 

@@ -9,7 +9,7 @@ import { cancelPublicBooking } from '../services/publicBooking';
 import { useToast } from './ui/Toast';
 import { logger } from '../utils/Logger';
 import { resolveBusinessTimezone } from '../utils/businessTimezone';
-import { cancellationMessage, rebookPath } from '../utils/clientBookings';
+import { cancellationMessage, formatClientCardDate, PAST_CANCELLED_SHORT_MESSAGE, REBOOK_LABEL, rebookPath } from '../utils/clientBookings';
 import { getPublicBookingAwaitingWhatsAppText } from '../utils/publicBookingCopy';
 
 export interface ClientBooking {
@@ -64,6 +64,11 @@ const STATUS_CONFIG: Record<string, { label: string; className: string; icon: Re
         className: 'bg-[var(--color-danger-bg)] text-[var(--color-danger)] border border-[var(--color-danger-border)]',
         icon: <X className="w-3 h-3" />,
     },
+    cancelled_quiet: {
+        label: 'Cancelado',
+        className: 'bg-theme-surface text-theme-textSecondary border border-theme-border',
+        icon: <X className="w-3 h-3" />,
+    },
     past: {
         label: 'Horário passou',
         className: 'bg-theme-surface text-theme-textSecondary border border-theme-border',
@@ -98,18 +103,24 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
     const isNoShow = statusKey === 'no_show' || statusKey === 'noshow';
     const isCancelled = statusKey === 'cancelled';
     const appointmentPassed = new Date(booking.appointment_time).getTime() < Date.now();
+    const isPastCancelled = isCancelled && appointmentPassed;
+    const isFutureCancelled = isCancelled && !appointmentPassed;
     const isUpcoming = ['pending', 'confirmed'].includes(statusKey) && !appointmentPassed;
     const isPastSlot = ['pending', 'confirmed'].includes(statusKey) && appointmentPassed;
     const isCompleted = statusKey === 'completed';
     const isPast = (isCompleted || isPastSlot) && !isCancelled && !isNoShow;
-    const badgeKey = isNoShow ? 'no_show' : isPastSlot ? 'past' : statusKey;
+    const badgeKey = isNoShow
+        ? 'no_show'
+        : isPastSlot
+            ? 'past'
+            : isPastCancelled
+                ? 'cancelled_quiet'
+                : statusKey;
     const statusCfg = STATUS_CONFIG[badgeKey] ?? STATUS_CONFIG.completed;
 
     const businessTz = resolveBusinessTimezone({ timezone: timeZone, region });
     const appointmentDate = new Date(booking.appointment_time);
-    const formattedDate = appointmentDate.toLocaleDateString('pt-BR', {
-        timeZone: businessTz, weekday: 'short', day: '2-digit', month: 'short'
-    });
+    const formattedDate = formatClientCardDate(appointmentDate, businessTz);
     const formattedTime = appointmentDate.toLocaleTimeString('pt-BR', {
         timeZone: businessTz, hour: '2-digit', minute: '2-digit'
     });
@@ -135,17 +146,13 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
     };
 
     const handleRebook = () => {
-        const serviceParam = booking.service_ids.join(',');
-        navigate(`/book/${businessSlug}?rebook=${serviceParam}`);
+        navigate(rebookPath(businessSlug, booking));
     };
 
     const handleWhatsApp = () => {
         if (!businessPhone) return;
-        const clean = businessPhone.replace(/\D/g, '');
-        const msg = encodeURIComponent(
-            `Olá! Sou ${clientName} e tenho uma dúvida sobre meu agendamento de ${formattedDate} às ${formattedTime}.`
-        );
-        window.open(`https://wa.me/${clean}?text=${msg}`, '_blank', 'noopener,noreferrer');
+        const msg = `Olá! Sou ${clientName} e tenho uma dúvida sobre meu agendamento de ${formattedDate} às ${formattedTime}.`;
+        window.open(buildWhatsAppLink(businessPhone, region, msg), '_blank', 'noopener,noreferrer');
     };
 
     const handleConfirmWhatsApp = () => {
@@ -161,17 +168,19 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
     };
 
     return (
-        <div className={`
+        <div
+            data-testid="client-booking-card"
+            data-booking-id={booking.id}
+            data-booking-status={badgeKey}
+            className={`
             relative overflow-hidden min-w-0 w-full rounded-2xl
             bg-theme-card border border-theme-border
         `}>
             {/* Status bar — lateral esquerda */}
             <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl ${
-                isPastSlot ? 'bg-[var(--color-text-muted)]' :
-                isNoShow ? 'bg-[var(--color-text-muted)]' :
+                isPastSlot || isNoShow || isPastCancelled || isCompleted ? 'bg-[var(--color-text-muted)]' :
                 booking.status === 'confirmed' ? 'bg-[var(--color-success)]' :
                 booking.status === 'pending' ? 'bg-[var(--color-warning)]' :
-                booking.status === 'completed' ? 'bg-[var(--color-text-muted)]' :
                 'bg-[var(--color-danger)]'
             }`} aria-hidden="true" />
 
@@ -181,7 +190,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                     <div className="flex items-center gap-2">
                         <Calendar className={`w-4 h-4 shrink-0 ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`} />
                         <div>
-                            <p className={`font-bold text-sm capitalize ${isBeauty ? 'text-theme-text' : 'text-theme-text'}`}>
+                            <p className={`font-bold text-sm ${isBeauty ? 'text-theme-text' : 'text-theme-text'}`}>
                                 {formattedDate}
                             </p>
                             <div className="flex items-center gap-1 mt-0.5">
@@ -240,16 +249,6 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                 {/* Actions */}
                 {isUpcoming && (
                     <div className="grid grid-cols-2 gap-2 pt-1">
-                        {businessPhone && (
-                            <button
-                                type="button"
-                                onClick={handleWhatsApp}
-                                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl text-xs font-semibold bg-[var(--color-success-bg)] text-[var(--color-success)] border border-[var(--color-success-border)]"
-                            >
-                                <MessageSquare className="w-3.5 h-3.5 shrink-0" />
-                                WhatsApp
-                            </button>
-                        )}
                         {statusKey === 'pending' && businessPhone && (
                             <button
                                 type="button"
@@ -258,6 +257,16 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                             >
                                 <MessageSquare className="w-3.5 h-3.5 shrink-0" />
                                 Pedir confirmação
+                            </button>
+                        )}
+                        {statusKey === 'confirmed' && businessPhone && (
+                            <button
+                                type="button"
+                                onClick={handleWhatsApp}
+                                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl text-xs font-semibold col-span-2 bg-[var(--color-success-bg)] text-[var(--color-success)] border border-[var(--color-success-border)]"
+                            >
+                                <MessageSquare className="w-3.5 h-3.5 shrink-0" />
+                                WhatsApp
                             </button>
                         )}
                         {allowEdit && (
@@ -281,7 +290,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                     </div>
                 )}
 
-                {isCancelled && (
+                {isFutureCancelled && (
                     <div className="space-y-2 pt-1" data-testid="client-booking-cancelled">
                         <p
                             className="flex items-start gap-2 px-3 py-2 rounded-xl text-xs leading-snug break-words bg-[var(--color-danger-bg)] text-[var(--color-danger)] border border-[var(--color-danger-border)]"
@@ -292,12 +301,34 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                         </p>
                         <button
                             type="button"
-                            onClick={() => navigate(rebookPath(businessSlug, booking))}
+                            onClick={handleRebook}
                             className={`w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold bg-theme-accent hover:opacity-90 transition-opacity ${isBeauty ? 'text-[var(--color-text)]' : 'text-[var(--color-on-accent)]'}`}
                             data-testid="client-booking-reschedule"
                         >
                             <Calendar className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-                            Reagendar horário
+                            {REBOOK_LABEL}
+                        </button>
+                    </div>
+                )}
+
+                {isPastCancelled && (
+                    <div className="space-y-2 pt-1" data-testid="client-booking-cancelled">
+                        <p
+                            className="text-xs leading-snug text-theme-textSecondary"
+                            data-testid="client-booking-cancelled-note"
+                        >
+                            {booking.cancelled_by_business
+                                ? 'O estabelecimento cancelou.'
+                                : PAST_CANCELLED_SHORT_MESSAGE}
+                        </p>
+                        <button
+                            type="button"
+                            onClick={handleRebook}
+                            className="w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold bg-theme-surface text-theme-text border border-theme-border hover:bg-[var(--color-card-hover)]"
+                            data-testid="client-booking-reschedule"
+                        >
+                            <Calendar className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                            {REBOOK_LABEL}
                         </button>
                     </div>
                 )}
@@ -310,28 +341,23 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                         </p>
                         <button
                             type="button"
-                            onClick={() => navigate(rebookPath(businessSlug, booking))}
+                            onClick={handleRebook}
                             className={`w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold bg-theme-accent hover:opacity-90 transition-opacity ${isBeauty ? 'text-[var(--color-text)]' : 'text-[var(--color-on-accent)]'}`}
                         >
                             <Calendar className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-                            Agendar horário
+                            {REBOOK_LABEL}
                         </button>
                     </div>
                 )}
 
                 {isPast && (
                     <button
+                        type="button"
                         onClick={handleRebook}
-                        className={`
-                            w-full flex items-center justify-center gap-2 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold transition-all
-                            ${isBeauty
-                                ? 'bg-theme-surface text-theme-text hover:bg-[var(--color-card-hover)]'
-                                : 'bg-theme-surface text-theme-text hover:bg-[var(--color-card-hover)] border border-theme-border'
-                            }
-                        `}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold bg-theme-surface text-theme-text hover:bg-[var(--color-card-hover)] border border-theme-border"
                     >
                         <RefreshCw className="w-3.5 h-3.5" />
-                        Repetir este agendamento
+                        {REBOOK_LABEL}
                     </button>
                 )}
             </div>

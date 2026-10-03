@@ -24,6 +24,7 @@ import {
     isSelectableTimeZone,
 } from '../../utils/businessTimezone';
 import {
+    CANCELLATION_POLICY_NOTES_HINT,
     GENERATED_CANCELLATION_POLICY_TEXT,
     composeCancellationPolicyForSave,
     splitCancellationPolicyForEditor,
@@ -496,6 +497,9 @@ export const GeneralSettings: React.FC = () => {
                         placeholder="Ex.: avisar pelo WhatsApp se for atrasar."
                         className={classes.input}
                     />
+                    <p className={`${colors.textMuted} text-xs mt-2 leading-relaxed`} data-testid="cancellation-policy-notes-hint">
+                        {CANCELLATION_POLICY_NOTES_HINT}
+                    </p>
                 </SettingsSection>
                 </div>
 

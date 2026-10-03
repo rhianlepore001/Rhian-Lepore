@@ -46,9 +46,11 @@ describe('PublicBookingSettings — PR-1 copy do toggle de edição do cliente',
 
   it('diz o que o toggle faz de verdade, sem prometer e-mail', () => {
     render(<PublicBookingSettings />);
-    expect(screen.getByText('Cliente pode editar o próprio agendamento na Minha Área')).toBeInTheDocument();
+    expect(screen.getByTestId('self-reschedule-title')).toHaveTextContent('Cliente pode editar na Minha Área');
+    expect(screen.getByText('Mostra o botão Editar nos agendamentos futuros da Minha Área.')).toBeInTheDocument();
     expect(screen.queryByText('Reagendamento Autônomo')).toBeNull();
     expect(screen.queryByText(/via link de e-mail/i)).toBeNull();
+    expect(screen.queryByText(/Não envia e-mail/i)).toBeNull();
     expect(screen.queryByText(/Cliente reagenda sozinho via link de e-mail/i)).toBeNull();
   });
 });

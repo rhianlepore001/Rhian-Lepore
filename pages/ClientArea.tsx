@@ -595,7 +595,7 @@ export const ClientArea: React.FC = () => {
                                     <div className="flex items-start gap-2 px-3 py-2 rounded-xl border bg-[var(--color-warning-bg)] border-[var(--color-warning-border)] text-[var(--color-warning)]">
                                         <Clock className="w-4 h-4 shrink-0 mt-0.5" />
                                         <p className="text-xs leading-snug break-words">
-                                            Aguardando confirmação. Use o WhatsApp no card para agilizar.
+                                            Aguardando confirmação. Toque em Pedir confirmação no card para agilizar.
                                         </p>
                                     </div>
                                 )}

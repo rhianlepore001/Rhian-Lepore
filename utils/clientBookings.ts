@@ -47,6 +47,20 @@ export function splitClientBookings<T extends ClientBookingLike>(bookings: T[], 
 
 export const CANCELLED_BY_BUSINESS_MESSAGE = 'O estabelecimento cancelou este agendamento.';
 export const CANCELLED_GENERIC_MESSAGE = 'Este agendamento foi cancelado.';
+export const PAST_CANCELLED_SHORT_MESSAGE = 'Cancelado.';
+export const REBOOK_LABEL = 'Agendar de novo';
+
+/** Data do card: 'Sáb., 10 de out.' — weekday capitalizado; 'de' e mês em minúsculas. */
+export function formatClientCardDate(date: Date, timeZone: string): string {
+  const raw = date.toLocaleDateString('pt-BR', {
+    timeZone,
+    weekday: 'short',
+    day: '2-digit',
+    month: 'short',
+  });
+  const lowered = raw.toLocaleLowerCase('pt-BR');
+  return lowered.replace(/^(\p{L})/u, (ch) => ch.toLocaleUpperCase('pt-BR'));
+}
 
 export function cancellationMessage(booking: Pick<ClientBookingLike, 'cancelled_by_business'>): string {
   return booking.cancelled_by_business ? CANCELLED_BY_BUSINESS_MESSAGE : CANCELLED_GENERIC_MESSAGE;

@@ -11,7 +11,7 @@
 
 ## PR-1 overhaul booking — copy/cards (3 Out 2026, NÃO merge)
 
-Branch `feat/overhaul-pr1-copy-cards`, draft https://github.com/rhianlepore001/Rhian-Lepore/pull/119. Só tela: cards honestos (Horário passou / cancelado no Histórico / D2 Não compareceu), WhatsApp dinâmico no fuso do negócio, política D3 gerada da regra real, toggle da Minha Área, `NoShow` nos tipos, FAB morto removido. Sem migration. Playwright `e2e/overhaul-pr1.spec.ts` (mocks; escritas em prod interceptadas). Prints em `/opt/cursor/artifacts/pr1/`.
+Branch `feat/overhaul-pr1-copy-cards`, draft https://github.com/rhianlepore001/Rhian-Lepore/pull/119. Revisão de design: rótulo único «Agendar de novo», cancelado passado neutro, Pedir confirmação em largura total, WhatsApp PT via `buildWhatsAppLink`, data «Sáb., 10 de out.», política D3 grava só observações (vazio = `''`; `[AGENDIX-DEMO]` legado), toggle sem wrap em 375. Sem migration. Pendência PR-6: RPCs `update_public_booking_by_client` e `get_booking_by_id` devem aplicar `enable_self_rescheduling` no servidor (hoje só UI). Prints em `/opt/cursor/artifacts/pr1/`. Não rebasear enquanto #120 e #121 estão em review.
 
 ## Bloqueio de agenda — correção do #117 (3 Out 2026)
 

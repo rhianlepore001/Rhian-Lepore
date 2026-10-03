@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  CANCELLATION_POLICY_NOTES_HINT,
+  composeCancellationPolicyForSave,
   GENERATED_CANCELLATION_POLICY_TEXT,
+  GENERATED_CANCELLATION_POLICY_VERSIONS,
   LEGACY_CANCELLATION_POLICY_TEMPLATES,
   resolveCancellationPolicyDisplay,
   splitCancellationPolicyForEditor,
@@ -55,5 +58,35 @@ describe('cancellationPolicyCopy — PR-1 / D3', () => {
     });
     expect(splitCancellationPolicyForEditor(LEGACY_CANCELLATION_POLICY_TEMPLATES.moderate).notes).toBe('');
     expect(splitCancellationPolicyForEditor('Chegar 5 min antes.').notes).toBe('Chegar 5 min antes.');
+  });
+
+  it('compose grava só as observações; vazio vira string vazia, sem a frase gerada', () => {
+    expect(composeCancellationPolicyForSave('')).toBe('');
+    expect(composeCancellationPolicyForSave('   ')).toBe('');
+    expect(composeCancellationPolicyForSave('Avisar pelo WhatsApp.')).toBe('Avisar pelo WhatsApp.');
+    expect(composeCancellationPolicyForSave('  Avisar.  ')).toBe('Avisar.');
+    expect(composeCancellationPolicyForSave('')).not.toBe(GENERATED_CANCELLATION_POLICY_TEXT);
+  });
+
+  it('texto [AGENDIX-DEMO] 24h é legado e não vira observação', () => {
+    const demo = 'Cancelamentos com até 24h de antecedência sem custo. Dados fictícios [AGENDIX-DEMO].';
+    expect(splitCancellationPolicyForEditor(demo).notes).toBe('');
+    expect(resolveCancellationPolicyDisplay(demo)).toBe(GENERATED_CANCELLATION_POLICY_TEXT);
+    expect(splitCancellationPolicyForEditor('foo [AGENDIX-DEMO] bar').notes).toBe('');
+  });
+
+  it('descasca versões passadas da frase gerada e deixa só a observação do dono', () => {
+    expect(GENERATED_CANCELLATION_POLICY_VERSIONS.length).toBeGreaterThanOrEqual(1);
+    expect(GENERATED_CANCELLATION_POLICY_VERSIONS).toContain(GENERATED_CANCELLATION_POLICY_TEXT);
+    expect(splitCancellationPolicyForEditor(GENERATED_CANCELLATION_POLICY_TEXT).notes).toBe('');
+    expect(splitCancellationPolicyForEditor(
+      `${GENERATED_CANCELLATION_POLICY_TEXT}\n\nChegar 5 min antes.`,
+    ).notes).toBe('Chegar 5 min antes.');
+  });
+
+  it('dica das observações avisa para não prometer multa', () => {
+    expect(CANCELLATION_POLICY_NOTES_HINT).toBe(
+      'Aparece abaixo da regra. Não prometa multa: o sistema não cobra.',
+    );
   });
 });

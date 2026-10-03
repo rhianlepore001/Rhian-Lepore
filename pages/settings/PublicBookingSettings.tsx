@@ -162,12 +162,25 @@ export const PublicBookingSettings: React.FC = () => {
                                 <SettingsSwitch checked={false} onChange={() => undefined} />
                             </div>
                         </SettingsRow>
-                        <ToggleRow
-                            title="Cliente pode editar o próprio agendamento na Minha Área"
-                            description="Liga ou desliga o botão Editar nos pedidos da Minha Área. Não envia e-mail."
-                            checked={enableSelfRescheduling}
-                            onChange={setEnableSelfRescheduling}
-                        />
+                        <div className="py-4 first:pt-0 last:pb-0" data-testid="self-reschedule-row">
+                            <p
+                                data-testid="self-reschedule-title"
+                                className={`text-sm font-semibold leading-5 whitespace-nowrap ${colors.text}`}
+                            >
+                                Cliente pode editar na Minha Área
+                            </p>
+                            <div className="mt-2 flex items-center justify-between gap-3">
+                                <p className={`text-xs ${colors.textMuted} leading-relaxed min-w-0`}>
+                                    Mostra o botão Editar nos agendamentos futuros da Minha Área.
+                                </p>
+                                <div className="shrink-0">
+                                    <SettingsSwitch
+                                        checked={enableSelfRescheduling}
+                                        onChange={setEnableSelfRescheduling}
+                                    />
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </SettingsSection>
                 </div>

@@ -49,11 +49,11 @@ describe('publicBookingCopy', () => {
       professionalName: null,
     });
     expect(text).toBe(
-      'Olá, Barbearia São João ✂️! Fiz um agendamento online para Barba com Qualquer profissional em 03/10/2026 às 15:13. Pode confirmar, por favor?',
+      'Olá, Barbearia São João ✂️! Fiz um agendamento online para Barba com qualquer profissional em 03/10/2026 às 15:13. Pode confirmar, por favor?',
     );
   });
 
-  it('WhatsApp trata profissional em branco como Qualquer profissional', () => {
+  it('WhatsApp trata profissional em branco como qualquer profissional', () => {
     const text = getPublicBookingAwaitingWhatsAppText({
       businessName: 'Corte Fino',
       dateLabel: '18/09/2026',
@@ -62,8 +62,21 @@ describe('publicBookingCopy', () => {
       professionalName: '   ',
     });
     expect(text).toBe(
-      'Olá, Corte Fino! Fiz um agendamento online para Corte tesoura com Qualquer profissional em 18/09/2026 às 10:00. Pode confirmar, por favor?',
+      'Olá, Corte Fino! Fiz um agendamento online para Corte tesoura com qualquer profissional em 18/09/2026 às 10:00. Pode confirmar, por favor?',
     );
+  });
+
+  it('sem nome do estabelecimento a mensagem começa com Olá!', () => {
+    const text = getPublicBookingAwaitingWhatsAppText({
+      businessName: '  ',
+      dateLabel: '10/10/2026',
+      timeLabel: '15:00',
+      serviceLabel: 'Corte tesoura',
+      professionalName: 'Mário',
+    });
+    expect(text.startsWith('Olá! ')).toBe(true);
+    expect(text).not.toContain('Olá, estabelecimento');
+    expect(text).not.toContain('Olá, !');
   });
 });
 

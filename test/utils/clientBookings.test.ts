@@ -3,6 +3,9 @@ import {
   CANCELLED_BY_BUSINESS_MESSAGE,
   CANCELLED_GENERIC_MESSAGE,
   cancellationMessage,
+  formatClientCardDate,
+  PAST_CANCELLED_SHORT_MESSAGE,
+  REBOOK_LABEL,
   rebookPath,
   splitClientBookings,
   withCancellationInfo,
@@ -56,6 +59,20 @@ describe('clientBookings (Minha Área, item 5b)', () => {
   it('Reagendar abre o fluxo do mesmo negócio com os mesmos serviços', () => {
     expect(rebookPath('barbeariasilva', { service_ids: ['s1', 's2'] })).toBe('/book/barbeariasilva?rebook=s1,s2');
     expect(rebookPath('barbeariasilva', { service_ids: [] })).toBe('/book/barbeariasilva');
+  });
+
+  it('rótulo único de remarcar e linha curta do cancelado passado', () => {
+    expect(REBOOK_LABEL).toBe('Agendar de novo');
+    expect(PAST_CANCELLED_SHORT_MESSAGE).toBe('Cancelado.');
+  });
+
+  it('data do card: weekday capitalizado, de e mês minúsculos', () => {
+    const label = formatClientCardDate(new Date('2026-10-10T14:00:00.000Z'), 'Europe/Lisbon');
+    expect(label).toMatch(/^Sáb/);
+    expect(label).toMatch(/10 de out/);
+    expect(label).not.toMatch(/De Out/);
+    expect(label).not.toMatch(/ de Out/);
+    expect(label).not.toMatch(/De out/);
   });
 
   it('junta quem cancelou só nos cancelados', () => {

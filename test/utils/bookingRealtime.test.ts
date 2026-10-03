@@ -53,6 +53,24 @@ describe('applyBookingStatusEvent', () => {
     expect(next[1]).toBe(bookings[1]);
   });
 
+  it('aceita completed e no_show no mesmo patch', () => {
+    const next = applyBookingStatusEvent(bookings, {
+      id: 'a',
+      status: 'completed',
+      appointment_time: '2026-10-10T14:00:00.000Z',
+      op: 'UPDATE',
+    });
+    expect(next[0].status).toBe('completed');
+    const noshow = applyBookingStatusEvent(bookings, {
+      id: 'b',
+      status: 'no_show',
+      appointment_time: '2026-10-11T14:00:00.000Z',
+      op: 'UPDATE',
+    });
+    expect(noshow[1].status).toBe('no_show');
+    expect(noshow[0].status).toBe('pending');
+  });
+
   it('não cria card de outro cliente', () => {
     const next = applyBookingStatusEvent(bookings, {
       id: 'zzz',

@@ -141,7 +141,7 @@ describe('ClientBookingCard — cancelado (item 5b)', () => {
   it('Agendar de novo abre o booking público com os mesmos serviços', async () => {
     renderCancelled({ cancelled_by_business: true });
     await userEvent.click(screen.getByRole('button', { name: /Agendar de novo/ }));
-    expect(screen.getByTestId('location')).toHaveTextContent('/book/barbearia-silva?rebook=s1,s2');
+    expect(screen.getByTestId('location')).toHaveTextContent('/book/barbearia-silva?rebook=s1,s2&pro=p1');
   });
 
   it('cancelado sem sinal do estabelecimento (recusado / pelo cliente): mensagem neutra', () => {
@@ -298,12 +298,13 @@ describe('ClientBookingCard — PR-1 cards honestos e WhatsApp', () => {
     });
     expect(screen.getByText('Não compareceu')).toBeInTheDocument();
     expect(screen.getByText('Sentimos sua falta. Quer marcar outro horário?')).toBeInTheDocument();
-    const noshowCta = screen.getByRole('button', { name: /Agendar de novo/ });
+    const noshowCta = screen.getByRole('button', { name: /^Agendar horário$/ });
     expect(noshowCta).toBeInTheDocument();
     expect(noshowCta.className).toMatch(/theme-accent/);
-    expect(screen.queryByRole('button', { name: /Agendar horário/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Agendar de novo/ })).toBeNull();
     expect(screen.queryByRole('button', { name: /Editar/ })).toBeNull();
     expect(screen.queryByRole('button', { name: /^Cancelar$/ })).toBeNull();
+    expect(screen.queryByTestId('client-booking-club')).toBeNull();
   });
 
   it('status noshow (sem underscore) usa o mesmo card D2 de não compareceu', () => {
@@ -369,5 +370,128 @@ describe('ClientBookingCard — PR-1 cards honestos e WhatsApp', () => {
     expect(decoded).toMatch(/de sáb\., 10 de out\./);
     expect(decoded).not.toMatch(/de Sáb/);
     open.mockRestore();
+  });
+});
+
+function renderPr4(
+  extra: Partial<ClientBooking> & { clubActive?: boolean; timeZone?: string } = {},
+) {
+  const { clubActive = false, timeZone = 'America/Sao_Paulo', ...bookingExtra } = extra;
+  return render(
+    <MemoryRouter initialEntries={['/minha-area/barbearia-sao-joao']}>
+      <Routes>
+        <Route
+          path="/minha-area/:slug"
+          element={(
+            <ClientBookingCard
+              booking={{ ...booking, ...bookingExtra }}
+              isBeauty={false}
+              businessPhone="11999998888"
+              businessSlug="barbearia-sao-joao"
+              clientName="Zé Cliente"
+              clientPhone="11999998888"
+              region="BR"
+              timeZone={timeZone}
+              clubActive={clubActive}
+              onCancelled={vi.fn()}
+            />
+          )}
+        />
+        <Route path="/book/:slug" element={<LocationProbe />} />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
+
+describe('ClientBookingCard — PR-4 Finalizado / Não compareceu / Clube', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (useToast as ReturnType<typeof vi.fn>).mockReturnValue({ showToast });
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-10-03T12:00:00.000Z'));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('finalizado no mesmo dia: selo, obrigado e Agendar próximo horário, sem Editar/Cancelar', () => {
+    renderPr4({
+      status: 'completed',
+      appointment_time: '2026-10-03T14:00:00.000Z',
+    });
+    expect(screen.getByText('Finalizado')).toBeInTheDocument();
+    expect(screen.getByText('Obrigado pela visita, Zé!')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Agendar próximo horário$/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Editar/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Cancelar$/ })).toBeNull();
+    expect(screen.queryByTestId('client-booking-club')).toBeNull();
+  });
+
+  it('finalizado depois da virada do dia no fuso do negócio: Agendar horário', () => {
+    vi.setSystemTime(new Date('2026-10-03T03:00:00.000Z'));
+    renderPr4({
+      status: 'completed',
+      appointment_time: '2026-10-03T02:30:00.000Z',
+      timeZone: 'America/Sao_Paulo',
+    });
+    expect(screen.getByRole('button', { name: /^Agendar horário$/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Agendar próximo horário/ })).toBeNull();
+  });
+
+  it('no_show não usa vermelho de erro', () => {
+    renderPr4({
+      status: 'no_show',
+      appointment_time: '2026-10-02T15:00:00.000Z',
+    });
+    const note = screen.getByTestId('client-booking-noshow').querySelector('p');
+    expect(note?.className).not.toMatch(/danger/);
+    expect(screen.getByText('Não compareceu')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Agendar horário$/ })).toBeInTheDocument();
+  });
+
+  it('CTA pré-preenche profissional e serviços', async () => {
+    renderPr4({
+      status: 'completed',
+      appointment_time: '2026-10-03T14:00:00.000Z',
+      service_ids: ['s1', 's2'],
+      professional_id: 'p1',
+    });
+    fireEvent.click(screen.getByRole('button', { name: /^Agendar próximo horário$/ }));
+    expect(screen.getByTestId('location')).toHaveTextContent('/book/barbearia-sao-joao?rebook=s1,s2&pro=p1');
+  });
+
+  it('Clube ligado mostra frase própria em cada estado; desligado some', () => {
+    const { unmount } = renderPr4({
+      status: 'completed',
+      appointment_time: '2026-10-03T14:00:00.000Z',
+      clubActive: true,
+    });
+    expect(screen.getByTestId('client-booking-club')).toHaveTextContent('Esta visita entrou no seu Clube.');
+    unmount();
+
+    renderPr4({
+      status: 'no_show',
+      appointment_time: '2026-10-02T15:00:00.000Z',
+      clubActive: true,
+    });
+    expect(screen.getByTestId('client-booking-club')).toHaveTextContent('Seu Clube continua ativo.');
+  });
+
+  it('confirmado e cancelado também têm frase do Clube quando o negócio tem Clube', () => {
+    const { unmount } = renderPr4({
+      status: 'confirmed',
+      appointment_time: '2026-10-10T14:00:00.000Z',
+      clubActive: true,
+    });
+    expect(screen.getByTestId('client-booking-club')).toHaveTextContent('Seu Clube cobre este horário.');
+    unmount();
+
+    renderPr4({
+      status: 'cancelled',
+      appointment_time: '2026-10-10T14:00:00.000Z',
+      clubActive: true,
+    });
+    expect(screen.getByTestId('client-booking-club')).toHaveTextContent('Seu Clube segue valendo.');
   });
 });

@@ -3,12 +3,20 @@ import {
   CANCELLED_BY_BUSINESS_MESSAGE,
   CANCELLED_GENERIC_MESSAGE,
   cancellationMessage,
+  clubSentence,
+  CLUB_SENTENCE,
+  completedRebookLabel,
+  completedThankYou,
   formatClientCardDate,
   formatClientCardDateInSentence,
+  isSameBusinessDay,
+  NEXT_SLOT_CTA,
+  NO_SHOW_MESSAGE,
   PAST_CANCELLED_BY_BUSINESS_MESSAGE,
   pendingAwaitingBanner,
   REBOOK_LABEL,
   rebookPath,
+  SLOT_CTA,
   splitClientBookings,
   withCancellationInfo,
   type ClientBookingLike,
@@ -61,6 +69,8 @@ describe('clientBookings (Minha Área, item 5b)', () => {
   it('Reagendar abre o fluxo do mesmo negócio com os mesmos serviços', () => {
     expect(rebookPath('barbeariasilva', { service_ids: ['s1', 's2'] })).toBe('/book/barbeariasilva?rebook=s1,s2');
     expect(rebookPath('barbeariasilva', { service_ids: [] })).toBe('/book/barbeariasilva');
+    expect(rebookPath('barbeariasilva', { service_ids: ['s1'], professional_id: 'p1' }))
+      .toBe('/book/barbeariasilva?rebook=s1&pro=p1');
   });
 
   it('rótulo único de remarcar e linha do cancelado pelo estabelecimento', () => {
@@ -92,5 +102,47 @@ describe('clientBookings (Minha Área, item 5b)', () => {
     expect(merged.find((x) => x.id === 'future-cancelled')?.cancelled_by_business).toBe(true);
     expect(merged.find((x) => x.id === 'past-cancelled')?.cancelled_by_business).toBe(false);
     expect(merged.find((x) => x.id === 'future-confirmed')).not.toHaveProperty('cancelled_by_business');
+  });
+});
+
+describe('clientBookings — PR-4 Finalizado / Não compareceu', () => {
+  it('histórico inclui no_show mesmo se o horário ainda for futuro', () => {
+    const now = new Date('2026-10-03T12:00:00Z');
+    const { upcoming, history } = splitClientBookings([
+      b('ns', '2026-10-04T10:00:00Z', 'no_show'),
+      b('done', '2026-10-04T11:00:00Z', 'completed'),
+    ], now);
+    expect(upcoming).toHaveLength(0);
+    expect(history.map((x) => x.id)).toEqual(['ns', 'done']);
+  });
+
+  it('obrigado usa o primeiro nome', () => {
+    expect(completedThankYou('Zé Cliente')).toBe('Obrigado pela visita, Zé!');
+    expect(completedThankYou('')).toBe('Obrigado pela visita!');
+  });
+
+  it('CTA do finalizado vira no fuso do negócio, não no do navegador', () => {
+    const appointment = '2026-10-03T02:30:00.000Z'; // 23:30 em São Paulo (dia 2); 03:30 em Lisboa (dia 3)
+    const beforeSpMidnight = new Date('2026-10-03T02:00:00.000Z');
+    const afterSpMidnight = new Date('2026-10-03T03:00:00.000Z');
+    expect(isSameBusinessDay(appointment, 'America/Sao_Paulo', beforeSpMidnight)).toBe(true);
+    expect(completedRebookLabel(appointment, 'America/Sao_Paulo', beforeSpMidnight)).toBe(NEXT_SLOT_CTA);
+    expect(completedRebookLabel(appointment, 'America/Sao_Paulo', afterSpMidnight)).toBe(SLOT_CTA);
+    expect(completedRebookLabel(appointment, 'Europe/Lisbon', afterSpMidnight)).toBe(NEXT_SLOT_CTA);
+    expect(NEXT_SLOT_CTA).toBe('Agendar próximo horário');
+    expect(SLOT_CTA).toBe('Agendar horário');
+    expect(NO_SHOW_MESSAGE).toBe('Sentimos sua falta. Quer marcar outro horário?');
+  });
+
+  it('frases do Clube só existem com Clube ativo', () => {
+    expect(clubSentence('completed', false)).toBeNull();
+    expect(clubSentence('no_show', false)).toBeNull();
+    expect(clubSentence('cancelled', false)).toBeNull();
+    expect(clubSentence('confirmed', false)).toBeNull();
+    expect(clubSentence('completed', true)).toBe(CLUB_SENTENCE.completed);
+    expect(clubSentence('no_show', true)).toBe(CLUB_SENTENCE.no_show);
+    expect(clubSentence('cancelled', true)).toBe(CLUB_SENTENCE.cancelled);
+    expect(clubSentence('confirmed', true)).toBe(CLUB_SENTENCE.confirmed);
+    expect(clubSentence('pending', true)).toBeNull();
   });
 });

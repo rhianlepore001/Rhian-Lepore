@@ -9,6 +9,10 @@
 
 ---
 
+## PR-4 overhaul booking — Finalizado / Não compareceu (3 Out 2026, NÃO merge)
+
+Branch `feat/overhaul-pr4-completed-noshow`. Status `no_show` na constraint de `public_bookings`; trigger appointments→pedido para Completed/NoShow/undo/cancel-após-finalizar; RPC `get_client_bookings_history_v2` infere na leitura (v1 intacta). Fila grava `appointments.status = 'Completed'`. Não aplicar em prod neste PR.
+
 ## PR-3 overhaul booking — status ao vivo (3 Out 2026, NÃO merge)
 
 Branch `feat/overhaul-pr3-realtime-status`. Broadcast `booking:<id>` (payload id/status/appointment_time/op/at) + publication de `public_bookings` para o dono. Fallback 30s + refetch em visibility/online/erro de canal. Não aplicar em prod neste PR. Prints em `/opt/cursor/artifacts/screenshots/pr3-realtime/`.

@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { ClientMembershipPanel } from '../components/membership/ClientMembershipPanel';
 import { PublicClubFlow } from '../components/membership/PublicClubFlow';
-import { useCancelPublicClientMembership, usePublicClientMembership } from '../hooks/useMemberships';
+import { useCancelPublicClientMembership, usePublicClientMembership, usePublicMembershipPlans } from '../hooks/useMemberships';
 import { useToast } from '../components/ui/Toast';
 import { validityHeadline } from '../utils/membershipValidity';
 import { formatFirstName } from '../utils/formatters';
@@ -121,6 +121,8 @@ export const ClientArea: React.FC = () => {
         sessionClient?.business_id ?? business?.id ?? null,
         sessionClient?.phone ?? null
     );
+    const { data: clubPlans } = usePublicMembershipPlans(businessId);
+    const clubActive = (clubPlans?.length ?? 0) > 0;
     const cancelMembership = useCancelPublicClientMembership(
         sessionClient?.business_id ?? business?.id ?? null,
         sessionClient?.phone ?? null
@@ -158,10 +160,17 @@ export const ClientArea: React.FC = () => {
         if (!opts?.silent) setBookingsLoading(true);
         try {
             const [historyRes, cancelledByBusiness] = await Promise.all([
-                supabase.rpc('get_client_bookings_history', {
+                supabase.rpc('get_client_bookings_history_v2', {
                     p_phone: sessionClient.phone,
                     p_business_id: business.id,
-                }),
+                }).then((res) => (
+                    res.error
+                        ? supabase.rpc('get_client_bookings_history', {
+                            p_phone: sessionClient.phone,
+                            p_business_id: business.id,
+                        })
+                        : res
+                )),
                 // Quem cancelou (item 5b). Falha aqui não pode esconder os agendamentos.
                 fetchClientBookingCancellations(sessionClient.phone, business.id).catch(() => ({})),
             ]);
@@ -278,8 +287,8 @@ export const ClientArea: React.FC = () => {
     const historySlice = historyBookings.slice(0, historyPage * ITEMS_PER_PAGE);
     const pendingUpcomingCount = upcomingBookings.filter(b => b.status === 'pending').length;
     const liveBookingIds = useMemo(
-        () => upcomingBookings.map((booking) => booking.id),
-        [upcomingBookings],
+        () => bookings.map((booking) => booking.id),
+        [bookings],
     );
 
     useBookingStatusLive(
@@ -615,6 +624,7 @@ export const ClientArea: React.FC = () => {
                                             onCancelled={handleBookingCancelled}
                                             allowEdit={business?.allow_client_rescheduling ?? true}
                                             businessName={business.business_name}
+                                            clubActive={clubActive}
                                         />
                                     ))
                                 )}
@@ -646,6 +656,7 @@ export const ClientArea: React.FC = () => {
                                                 timeZone={businessTimezone}
                                                 onCancelled={handleBookingCancelled}
                                                 businessName={business.business_name}
+                                            clubActive={clubActive}
                                             />
                                         ))}
                                         {historySlice.length < historyBookings.length && (

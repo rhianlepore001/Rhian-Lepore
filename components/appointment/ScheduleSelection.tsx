@@ -128,8 +128,14 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                 if (!el) return;
                 const elRect = el.getBoundingClientRect();
                 const boxRect = box.getBoundingClientRect();
-                const delta = elRect.top - boxRect.top - (box.clientHeight / 2) + (el.clientHeight / 2);
-                box.scrollTop = Math.max(0, box.scrollTop + delta);
+                const pad = 8;
+                let delta = 0;
+                if (elRect.top < boxRect.top + pad) {
+                    delta = elRect.top - boxRect.top - pad;
+                } else if (elRect.bottom > boxRect.bottom - pad) {
+                    delta = elRect.bottom - boxRect.bottom + pad;
+                }
+                if (Math.abs(delta) > 1) box.scrollTop = Math.max(0, box.scrollTop + delta);
             });
         });
         return () => {
@@ -217,7 +223,7 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
             {/* Esquerda: profissional + data (fixa no desktop enquanto os horários rolam) */}
             <div className={`md:w-[22rem] md:shrink-0 md:sticky md:top-0 shrink-0 ${compact ? 'space-y-2 md:space-y-4' : 'space-y-6'}`}>
                 <section>
-                    <StepHeading level="section" title="Escolha o profissional" compact={compact} />
+                    <StepHeading level="section" title="Escolha o profissional" compact={compact} className={compact ? 'max-md:sr-only' : ''} />
                     {/* Sem caixa de rolagem interna: todos os profissionais visíveis */}
                     <div data-testid="wizard-pro-list" className={`grid gap-2 ${compact ? 'grid-cols-3 md:grid-cols-2' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-2'}`}>
                         {teamMembers.map(member => {
@@ -254,7 +260,7 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                 </section>
 
                 <section>
-                    <StepHeading level="section" title="Selecione a data" compact={compact} />
+                    <StepHeading level="section" title="Selecione a data" compact={compact} className={compact ? 'max-md:sr-only' : ''} />
                     <div data-testid="wizard-date-picker" className={`flex items-center gap-1 rounded-xl border ${cardBg} ${compact ? 'p-1' : 'p-1.5'}`}>
                         <button
                             type="button"
@@ -303,12 +309,12 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
 
             {/* Right: Time Slots */}
             <section className={`flex-1 min-w-0 ${compact ? 'min-h-0 flex flex-col' : ''}`}>
-                <StepHeading level="section" title="Escolha o horário" compact={compact} />
+                <StepHeading level="section" title="Escolha o horário" compact={compact} className={compact ? 'max-md:sr-only' : ''} />
 
                 <div
                     ref={gridScrollRef}
                     data-testid="reschedule-time-grid"
-                    className={`rounded-xl border ${cardBg} p-3 sm:p-4 ${compact ? 'min-h-0 flex-1 overflow-y-auto overscroll-contain max-md:min-h-[15rem] max-md:max-h-[17.5rem] md:max-h-[min(18rem,46dvh)]' : ''}`}
+                    className={`rounded-xl border ${cardBg} p-3 sm:p-4 ${compact ? 'overflow-y-auto overscroll-contain max-md:h-[16rem] md:min-h-0 md:flex-1 md:max-h-[min(18rem,46dvh)]' : ''}`}
                 >
                     {!selectedProId ? (
                         <div className="py-10 flex flex-col items-center justify-center text-center text-[var(--color-text-muted)] gap-2">

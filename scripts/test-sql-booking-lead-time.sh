@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Testa 20261003160000_public_booking_lead_time num Postgres local descartável.
+# Testa 20261003152759_public_booking_lead_time num Postgres local descartável.
 #   scripts/test-sql-booking-lead-time.sh             # baseline follow-up -> teste FALHA -> migration 2x -> passa + md5 intacto
 #   scripts/test-sql-booking-lead-time.sh --rollback  # migration + rollback some v2/trigger; md5 das 4 funções intacto
 set -euo pipefail
@@ -11,8 +11,8 @@ if [ -z "$PGBIN" ] || [ ! -x "$PGBIN/psql" ]; then
 fi
 TMP="$(mktemp -d)"
 PORT="${PGPORT_TEST:-55463}"
-MIG="$ROOT/supabase/migrations/20261003160000_public_booking_lead_time.sql"
-RB="$ROOT/docs/rollbacks/20261003160000_public_booking_lead_time_rollback.sql"
+MIG="$ROOT/supabase/migrations/20261003152759_public_booking_lead_time.sql"
+RB="$ROOT/docs/rollbacks/20261003152759_public_booking_lead_time_rollback.sql"
 cleanup() { "$PGBIN/pg_ctl" -D "$TMP/data" -m immediate stop >/dev/null 2>&1 || true; rm -rf "$TMP"; }
 trap cleanup EXIT
 "$PGBIN/initdb" -D "$TMP/data" -U postgres -A trust >/dev/null

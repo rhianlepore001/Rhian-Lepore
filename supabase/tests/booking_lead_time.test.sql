@@ -1,4 +1,4 @@
--- PR-2 antecedência mínima. Falha antes de 20261003160000; passa depois.
+-- PR-2 antecedência mínima. Falha antes de 20261003152759; passa depois.
 \set ON_ERROR_STOP on
 \set QUIET on
 \o /dev/null

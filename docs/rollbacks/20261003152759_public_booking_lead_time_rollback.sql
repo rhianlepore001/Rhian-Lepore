@@ -1,5 +1,5 @@
 -- =============================================================================
--- ROLLBACK de 20261003160000_public_booking_lead_time
+-- ROLLBACK de 20261003152759_public_booking_lead_time
 -- =============================================================================
 -- Remove só o que este PR adicionou. O front volta a chamar get_available_slots.
 -- A coluna profiles.booking_lead_time_hours permanece (já existia antes).

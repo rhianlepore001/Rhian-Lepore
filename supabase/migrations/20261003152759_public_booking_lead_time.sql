@@ -26,7 +26,7 @@
 -- get_available_slots ainda trata todo atendimento como 30 min.
 --
 -- Em produção a versão do ficheiro alinha-se no apply; #120 aplica antes.
--- ROLLBACK: docs/rollbacks/20261003160000_public_booking_lead_time_rollback.sql
+-- ROLLBACK: docs/rollbacks/20261003152759_public_booking_lead_time_rollback.sql
 -- =============================================================================
 
 BEGIN;

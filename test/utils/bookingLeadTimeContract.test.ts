@@ -4,8 +4,8 @@ import { describe, expect, it } from 'vitest';
 
 const root = resolve(__dirname, '../..');
 const read = (p: string) => readFileSync(resolve(root, p), 'utf8');
-const MIGRATION = 'supabase/migrations/20261003160000_public_booking_lead_time.sql';
-const ROLLBACK = 'docs/rollbacks/20261003160000_public_booking_lead_time_rollback.sql';
+const MIGRATION = 'supabase/migrations/20261003152759_public_booking_lead_time.sql';
+const ROLLBACK = 'docs/rollbacks/20261003152759_public_booking_lead_time_rollback.sql';
 
 const FORBIDDEN = [
   'CREATE OR REPLACE FUNCTION public.get_available_slots(',
@@ -14,7 +14,7 @@ const FORBIDDEN = [
   'CREATE OR REPLACE FUNCTION public.enforce_agenda_block_on_appointments(',
 ];
 
-describe('migration 20261003160000_public_booking_lead_time (contrato)', () => {
+describe('migration 20261003152759_public_booking_lead_time (contrato)', () => {
   const sql = read(MIGRATION);
 
   it('é aditiva: trigger + v2 + helper, sem reescrever as 4 funções protegidas', () => {

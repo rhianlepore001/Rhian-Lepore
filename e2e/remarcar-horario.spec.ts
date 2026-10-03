@@ -62,14 +62,6 @@ async function openReschedule(page: Page) {
   await settle(page);
 }
 
-async function dismissToasts(page: Page) {
-  const closes = page.locator('[role="alert"] button[aria-label="Fechar"], [role="status"] button[aria-label="Fechar"]');
-  const n = await closes.count();
-  for (let i = n - 1; i >= 0; i -= 1) {
-    await closes.nth(i).click({ force: true }).catch(() => undefined);
-  }
-}
-
 test.describe('PR C — Remarcar horário', () => {
   test.use({ locale: 'pt-BR', timezoneId: 'Europe/Lisbon' });
   test.setTimeout(120_000);
@@ -89,11 +81,19 @@ test.describe('PR C — Remarcar horário', () => {
       await expect(page.getByTestId('appointment-rescheduled-by')).toContainText('Remarcado por');
       await shot(page, `owner-${width}-2-detalhes.png`);
       await openReschedule(page);
-      await expect(page.getByTestId('reschedule-current')).toContainText('Atual:');
+      await expect(page.getByTestId('reschedule-current')).toBeVisible();
+      await expect(page.getByTestId('wizard-pro-list')).toBeVisible();
       await expect(page.getByTestId('reschedule-confirm')).toBeDisabled();
       await expect(page.getByTestId('reschedule-past-note').first()).toHaveText(PAST);
+      const dialogBox = await page.locator('[data-ui-modal-dialog]').boundingBox();
+      const currentBox = await page.getByTestId('reschedule-current').boundingBox();
+      const proBox = await page.getByTestId('wizard-pro-list').boundingBox();
+      expect((currentBox?.y ?? 999) - (dialogBox?.y ?? 0)).toBeLessThan(140);
+      expect((proBox?.y ?? 999) - (dialogBox?.y ?? 0)).toBeLessThan(420);
       await expect(page.getByRole('button', { name: '06:00 Atual' })).toBeVisible();
       await expect(page.getByRole('button', { name: '10:00 Ocupado' })).toBeDisabled();
+      await expect(page.getByRole('button', { name: '15:00 Ocupado' })).toBeDisabled();
+      await expect(page.getByRole('button', { name: '16:00 Ocupado' })).toBeDisabled();
       await expect(page.getByRole('button', { name: /12:00 Bloqueado/ })).toBeDisabled();
       await shot(page, `owner-${width}-3-remarcar-modal.png`);
       await page.getByTestId('reschedule-modal-body').getByRole('button', { name: '11:30' }).click();
@@ -128,6 +128,36 @@ test.describe('PR C — Remarcar horário', () => {
     });
   }
 
+  for (const width of [375, 1440] as const) {
+    test(`T-P06 ${width}: conflito R-06 e sucesso`, async ({ page }) => {
+      guard = await installRemarcarMocks(page, { role: 'owner' });
+      await openAgenda(page, width);
+      await openDetails(page);
+      await openReschedule(page);
+      await page.getByTestId('reschedule-modal-body').getByRole('button', { name: '11:30' }).click();
+
+      guard.setRpc({
+        status: 400,
+        body: { message: SLOT_BUSY, hint: 'reschedule_slot_busy', code: 'P0001' },
+      });
+      await page.getByTestId('reschedule-confirm').click();
+      await expect(page.getByTestId('reschedule-inline-error')).toHaveText(SLOT_BUSY, { timeout: 10_000 });
+      await expect(page.getByRole('button', { name: '11:30 Ocupado' })).toBeDisabled();
+      await shot(page, `owner-${width}-6-conflito.png`);
+
+      await page.getByTestId('reschedule-modal-body').getByRole('button', { name: '13:00' }).click();
+      await expect(page.getByTestId('reschedule-inline-error')).toHaveCount(0);
+      guard.setRpc({
+        status: 200,
+        body: { success: true, id: '50000000-0000-4000-8000-000000000001', appointment_time: '2026-08-23T12:00:00.000Z', professional_id: '10000000-0000-4000-8000-000000000001' },
+      });
+      await page.getByTestId('reschedule-confirm').click();
+      await expect(page.getByText('Horário remarcado.')).toBeVisible({ timeout: 10_000 });
+      await expect(page.locator('[data-highlight="true"]')).toBeVisible({ timeout: 15_000 });
+      await shot(page, `owner-${width}-8-sucesso.png`);
+    });
+  }
+
   test('T-P06 390: conflito R-06, bloqueio M1, sucesso + foco', async ({ page }) => {
     guard = await installRemarcarMocks(page, { role: 'owner' });
     await openAgenda(page, 390);
@@ -140,54 +170,29 @@ test.describe('PR C — Remarcar horário', () => {
       body: { message: SLOT_BUSY, hint: 'reschedule_slot_busy', code: 'P0001' },
     });
     await page.getByTestId('reschedule-confirm').click();
-    await expect(page.getByText(SLOT_BUSY)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByTestId('reschedule-inline-error')).toHaveText(SLOT_BUSY);
     await expect(page.getByRole('heading', { name: 'Remarcar horário' })).toBeVisible();
+    await expect(page.getByRole('button', { name: '11:30 Ocupado' })).toBeDisabled();
     await shot(page, 'owner-390-6-conflito.png');
-    await dismissToasts(page);
 
+    await page.getByTestId('reschedule-modal-body').getByRole('button', { name: '13:00' }).click();
+    await expect(page.getByTestId('reschedule-inline-error')).toHaveCount(0);
     guard.setRpc({
       status: 400,
       body: { message: M1, hint: 'professional_blocked', code: 'P0001' },
     });
     await page.getByTestId('reschedule-confirm').click();
-    await expect(page.getByText(M1)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByTestId('reschedule-inline-error')).toHaveText(M1, { timeout: 10_000 });
     await shot(page, 'owner-390-7-bloqueio-m1.png');
-    await dismissToasts(page);
 
     guard.setRpc({
       status: 200,
-      body: { success: true, id: '50000000-0000-4000-8000-000000000001', appointment_time: '2026-08-23T09:30:00.000Z', professional_id: '10000000-0000-4000-8000-000000000001' },
+      body: { success: true, id: '50000000-0000-4000-8000-000000000001', appointment_time: '2026-08-23T12:00:00.000Z', professional_id: '10000000-0000-4000-8000-000000000001' },
     });
     await page.getByTestId('reschedule-confirm').click();
     await expect(page.getByText('Horário remarcado.')).toBeVisible({ timeout: 10_000 });
     await expect(page.locator('[data-highlight="true"]')).toBeVisible({ timeout: 15_000 });
     await shot(page, 'owner-390-8-sucesso-foco.png');
-  });
-
-  test('T-P06 1440: conflito e sucesso', async ({ page }) => {
-    guard = await installRemarcarMocks(page, { role: 'owner' });
-    await openAgenda(page, 1440);
-    await openDetails(page);
-    await openReschedule(page);
-    await page.getByTestId('reschedule-modal-body').getByRole('button', { name: '11:30' }).click();
-
-    guard.setRpc({
-      status: 400,
-      body: { message: SLOT_BUSY, hint: 'reschedule_slot_busy', code: 'P0001' },
-    });
-    await page.getByTestId('reschedule-confirm').click();
-    await expect(page.getByText(SLOT_BUSY)).toBeVisible({ timeout: 10_000 });
-    await shot(page, 'owner-1440-6-conflito.png');
-    await dismissToasts(page);
-
-    guard.setRpc({
-      status: 200,
-      body: { success: true, id: '50000000-0000-4000-8000-000000000001', appointment_time: '2026-08-23T09:30:00.000Z', professional_id: '10000000-0000-4000-8000-000000000001' },
-    });
-    await page.getByTestId('reschedule-confirm').click();
-    await expect(page.getByText('Horário remarcado.')).toBeVisible({ timeout: 10_000 });
-    await expect(page.locator('[data-highlight="true"]')).toBeVisible({ timeout: 15_000 });
-    await shot(page, 'owner-1440-8-sucesso.png');
   });
 
   test('T-P06 390: slot passado selecionado', async ({ page }) => {
@@ -201,24 +206,31 @@ test.describe('PR C — Remarcar horário', () => {
     await shot(page, 'owner-390-9-passado-selecionado.png');
   });
 
-  test('C-R03 staff own 390: Remarcar no próprio com profissional travado', async ({ page }) => {
-    guard = await installRemarcarMocks(page, { role: 'staff', scope: 'own' });
-    await openAgenda(page, 390);
-    await openDetails(page);
-    await expect(page.getByTestId('appointment-reschedule')).toBeVisible();
-    await expect(page.getByRole('heading', { name: /Detalhes do Agendamento/i })).toBeVisible();
-    await expect(page.getByText(/Aline Lima/).first()).toBeVisible();
-    await expect(page.getByText(/Bob/).first()).toBeVisible();
-    await shot(page, 'staff-own-390-2-detalhes.png');
-    await openReschedule(page);
-    await expect(page.getByTestId('reschedule-lock-pro-note')).toBeVisible();
-    await expect(page.getByTestId('reschedule-modal-body').getByRole('button', { name: /Bruna/ })).toBeDisabled();
-    await expect(page.getByTestId('reschedule-modal-body').getByRole('button', { name: /Bob/ }).first()).toBeEnabled();
-    await expect(page.getByTestId('reschedule-current')).toContainText('com Bob');
-    await page.getByTestId('reschedule-lock-pro-note').scrollIntoViewIfNeeded();
-    await settle(page);
-    await shot(page, 'staff-own-390-3-seletor-travado.png');
-  });
+  for (const width of WIDTHS) {
+    test(`C-R03 staff own ${width}: Remarcar no próprio com profissional travado`, async ({ page }) => {
+      guard = await installRemarcarMocks(page, { role: 'staff', scope: 'own' });
+      await openAgenda(page, width);
+      await openDetails(page);
+      await expect(page.getByTestId('appointment-reschedule')).toBeVisible();
+      await expect(page.getByRole('heading', { name: /Detalhes do Agendamento/i })).toBeVisible();
+      await expect(page.getByText(/Aline Lima/).first()).toBeVisible();
+      await expect(page.getByText(/Bob/).first()).toBeVisible();
+      await shot(page, `staff-own-${width}-2-detalhes.png`);
+      await openReschedule(page);
+      await expect(page.getByTestId('reschedule-current')).toBeVisible();
+      await expect(page.getByTestId('wizard-pro-list')).toBeVisible();
+      await expect(page.getByTestId('reschedule-lock-pro-note')).toBeVisible();
+      const dialogBox = await page.locator('[data-ui-modal-dialog]').boundingBox();
+      const lockBox = await page.getByTestId('reschedule-lock-pro-note').boundingBox();
+      const currentBox = await page.getByTestId('reschedule-current').boundingBox();
+      expect((currentBox?.y ?? 999) - (dialogBox?.y ?? 0)).toBeLessThan(140);
+      expect((lockBox?.y ?? 999) - (dialogBox?.y ?? 0)).toBeLessThan(280);
+      await expect(page.getByTestId('reschedule-modal-body').getByRole('button', { name: /Bruna/ })).toBeDisabled();
+      await expect(page.getByTestId('reschedule-modal-body').getByRole('button', { name: /Bob/ }).first()).toBeEnabled();
+      await expect(page.getByTestId('reschedule-current')).toContainText('com Bob');
+      await shot(page, `staff-own-${width}-3-seletor-travado.png`);
+    });
+  }
 
   test('C-R04 staff all 390: Remarcar qualquer um e troca profissional', async ({ page }) => {
     guard = await installRemarcarMocks(page, { role: 'staff', scope: 'all' });
@@ -236,7 +248,8 @@ test.describe('PR C — Remarcar horário', () => {
     await shot(page, 'staff-all-390-3-troca-profissional.png');
   });
 
-  test('C-R09 390: link do cliente mostra o horário novo', async ({ page }) => {
+  // C-R09 UI-only: este spec só vê o mock de Minha Área. Cobertura real: T-R06 SQL.
+  test('C-R09 390 (UI-only): link do cliente mostra o horário do mock', async ({ page }) => {
     guard = await installRemarcarMocks(page, { role: 'owner' });
     guard.setRpc({
       status: 200,

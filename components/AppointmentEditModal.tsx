@@ -345,66 +345,40 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                         </select>
                     </div>
 
-                    {/* Profissional, data e hora — só leitura no fuso da loja; troca pelo Remarcar */}
+                    {/* Profissional · Data · Horário — só leitura no fuso da loja */}
                     <div>
-                        <p className={`${labelStyles} inline-flex items-center gap-1.5`} id="appt-professional-label">
-                            Profissional
-                            <Lock className="h-3.5 w-3.5 text-theme-accent" aria-hidden="true" />
-                        </p>
+                        <div className="flex items-center justify-between gap-3">
+                            <p className={`${labelStyles} mb-0 inline-flex items-center gap-1.5`} id="appt-schedule-label">
+                                Profissional · Data · Horário
+                                <Lock className="h-3.5 w-3.5 text-theme-accent" aria-hidden="true" />
+                            </p>
+                            {onReschedule && (
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    data-testid="edit-reschedule-link"
+                                    onClick={onReschedule}
+                                    className="min-h-[44px] shrink-0"
+                                >
+                                    Remarcar
+                                </Button>
+                            )}
+                        </div>
                         <p
-                            id="appt-professional"
-                            data-testid="edit-readonly-professional"
-                            aria-labelledby="appt-professional-label"
-                            className={`text-sm ${colors.text}`}
+                            id="appt-schedule-readonly-values"
+                            aria-labelledby="appt-schedule-label"
+                            className={`text-sm ${colors.text} mt-1.5`}
                         >
-                            {displayPro}
+                            <span data-testid="edit-readonly-professional">{displayPro}</span>
+                            {' · '}
+                            <span data-testid="edit-readonly-date">{displayDate}</span>
+                            {' · '}
+                            <span data-testid="edit-readonly-time">{displayTime}</span>
                         </p>
-                    </div>
-
-                    <div className={`pt-4 border-t ${colors.divider} flex items-end justify-between gap-3`}>
-                        <p className={`text-xs font-mono uppercase tracking-widest ${colors.textMuted} inline-flex items-center gap-1.5`}>
-                            Horário
-                            <Lock className="h-3.5 w-3.5 text-theme-accent" aria-hidden="true" />
+                        <p id="appt-schedule-readonly" className={`text-xs ${colors.textMuted} mt-2`}>
+                            Para mudar data, horário ou profissional, use Remarcar.
+                            {lockProfessional ? ' Você pode remarcar os seus agendamentos, mas não passá-los para outro profissional.' : ''}
                         </p>
-                        {onReschedule && (
-                            <Button
-                                type="button"
-                                variant="secondary"
-                                data-testid="edit-reschedule-link"
-                                onClick={onReschedule}
-                                className="min-h-[44px]"
-                            >
-                                Remarcar
-                            </Button>
-                        )}
-                    </div>
-                    <p id="appt-schedule-readonly" className={`text-xs ${colors.textMuted}`}>
-                        Para mudar data, horário ou profissional, use Remarcar.
-                        {lockProfessional ? ' Você pode remarcar os seus agendamentos, mas não passá-los para outro profissional.' : ''}
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <p className={labelStyles} id="appt-date-label">Data</p>
-                            <p
-                                id="appt-date"
-                                data-testid="edit-readonly-date"
-                                aria-labelledby="appt-date-label"
-                                className={`text-sm ${colors.text}`}
-                            >
-                                {displayDate}
-                            </p>
-                        </div>
-                        <div>
-                            <p className={labelStyles} id="appt-time-label">Horário</p>
-                            <p
-                                id="appt-time"
-                                data-testid="edit-readonly-time"
-                                aria-labelledby="appt-time-label"
-                                className={`text-sm ${colors.text}`}
-                            >
-                                {displayTime}
-                            </p>
-                        </div>
                     </div>
 
                     {/* Seção: Serviços */}

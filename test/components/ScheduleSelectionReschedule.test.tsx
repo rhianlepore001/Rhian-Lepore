@@ -86,8 +86,36 @@ describe('ScheduleSelection — remarcação (B-68 / R-02)', () => {
       ],
     });
     expect(screen.getByRole('button', { name: '09:00 Atual' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: '09:00 Atual' }).className).not.toMatch(/line-through/);
     expect(screen.getByRole('button', { name: '10:00 Ocupado' })).toBeDisabled();
     expect(screen.getByRole('button', { name: '10:30 Ocupado' })).toBeDisabled();
     expect(screen.getByRole('button', { name: '11:00' })).toBeEnabled();
+  });
+
+  it('distingue Bloqueado (ícone de cadeado) de Ocupado', () => {
+    const dateStr = `${MONDAY.getFullYear()}-${String(MONDAY.getMonth() + 1).padStart(2, '0')}-${String(MONDAY.getDate()).padStart(2, '0')}`;
+    setup({
+      blocks: [{
+        professional_id: 'p1',
+        starts_at: new Date(`${dateStr}T12:00:00`).toISOString(),
+        ends_at: new Date(`${dateStr}T13:00:00`).toISOString(),
+      }],
+      occupyingAppointments: [{
+        id: 'apt-busy',
+        professional_id: 'p1',
+        appointment_time: new Date(`${dateStr}T10:00:00`).toISOString(),
+        duration_minutes: 30,
+        status: 'Confirmed',
+      }],
+      durationMinutes: 30,
+    });
+    const blocked = screen.getByRole('button', { name: /12:00 Bloqueado/ });
+    const busy = screen.getByRole('button', { name: /10:00 Ocupado/ });
+    expect(blocked).toBeDisabled();
+    expect(busy).toBeDisabled();
+    expect(blocked.querySelector('svg')).toBeTruthy();
+    expect(busy.querySelector('svg')).toBeNull();
+    expect(blocked.getAttribute('data-slot-state')).toBe('bloqueado');
+    expect(busy.getAttribute('data-slot-state')).toBe('ocupado');
   });
 });

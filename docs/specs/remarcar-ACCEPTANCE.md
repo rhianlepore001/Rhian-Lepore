@@ -140,7 +140,7 @@ Este arquivo é a fonte de aceite **deste PR**. Não inclui bloqueio de agenda (
 | C-R06 | Remarcar para dentro de bloqueio → M1; nada muda | R-07, B-39 | SQL + PW | D · 390 |
 | C-R07 | Remarcar para o passado funciona para D e C, com aviso | R-08 | SQL + VT | D, C |
 | C-R08 | Mesmo horário/profissional → R-09; profissional inativo → R-10 | R-09, R-10 | SQL + VT | D |
-| C-R09 | Online: o pedido ligado recebe o novo horário e profissional; o link do cliente mostra o novo horário; o horário antigo volta a aparecer no link público | R-11 | SQL + PW | D + A · 390 |
+| C-R09 | Online: o pedido ligado recebe o novo horário e profissional; o link do cliente mostra o novo horário; o horário antigo volta a aparecer no link público | R-11 | SQL (T-R06) + PW UI-only | D + A · 390 |
 | C-R10 | WhatsApp: com telefone, abre `wa.me` com o texto de R-13 (barbearia e estética), datas no fuso da loja e substituto quando falta o nome do negócio | R-13 | VT | D, C |
 | C-R11 | Histórico: cada remarcação grava 1 linha com antes/depois/quem; o modal mostra "Remarcado por…" | R-16 | SQL + VT | D, C |
 | C-R12 | Atomicidade: se a sincronização do pedido ou o histórico falhar, o agendamento **não** muda | R-05 | SQL | — |
@@ -185,7 +185,7 @@ Este arquivo é a fonte de aceite **deste PR**. Não inclui bloqueio de agenda (
 | T-R09 concorrência entre duas remarcações | C-R13 |
 | T-R10 pedido pending `is_edit` recusa `reschedule_pending_client_request` | C-R09 |
 | T-R11 ex-staff com escopo `all` recusa; cross-tenant; histórico DML; anon; vizinho 90 min / duração NULL | C-R01 |
-| T-R12 H1 lead-time (#121) skip se trigger ausente; now+30min e passado ok com isenção | C-R09 |
+| T-R12 H1 lead-time (#121) skip só se o trigger/função estiver ausente; owner+staff now+30/passado ok; ex-staff e staff inativo recusam | C-R09 |
 
 ### D.2 Vitest
 | Teste | Critério |
@@ -212,7 +212,7 @@ Este arquivo é a fonte de aceite **deste PR**. Não inclui bloqueio de agenda (
 | T-P03 conflitos: lista e confirmação | C-B11 |
 | T-P04 link público: horários somem e dia fica lotado | C-B14, C-B15 |
 | T-P05 pontos de entrada e Ajustes | C-B22, C-B23 |
-| T-P06 remarcar: sucesso, conflito, bloqueio e link do cliente | C-R02, C-R06, C-R09 |
+| T-P06 remarcar: sucesso, conflito, bloqueio e link do cliente (C-R09 no PW é UI-only; T-R06 SQL é a cobertura real) | C-R02, C-R06, C-R09 |
 | T-P07 Editar sem campos de horário | C-R14 |
 
 ---

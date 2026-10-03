@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { User, ChevronLeft, ChevronRight, ChevronDown, MoonStar } from 'lucide-react';
+import { User, ChevronLeft, ChevronRight, ChevronDown, MoonStar, Lock } from 'lucide-react';
 import { StepHeading } from './StepHeading';
 import { splitWizardTimeSlots } from '../../utils/agendaDayWindow';
 import { formatLocalDateString } from '../../utils/date';
@@ -112,13 +112,18 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
     const [showOffHours, setShowOffHours] = useState(() => !!selectedTime && outOfHours.includes(selectedTime));
     const offHoursVisible = closed || showOffHours;
     const currentSlotRef = useRef<HTMLButtonElement | null>(null);
+    const gridScrollRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
+        if (!compact) return;
         const el = currentSlotRef.current;
-        if (el && typeof el.scrollIntoView === 'function') {
-            el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-        }
-    }, [dateStr, selectedProId, closed, offHoursVisible]);
+        const box = gridScrollRef.current;
+        if (!el || !box) return;
+        const elRect = el.getBoundingClientRect();
+        const boxRect = box.getBoundingClientRect();
+        const delta = elRect.top - boxRect.top - (box.clientHeight / 2) + (el.clientHeight / 2);
+        box.scrollTop = Math.max(0, box.scrollTop + delta);
+    }, [dateStr, selectedProId, closed, offHoursVisible, compact]);
 
     const renderTime = (time: string) => {
         const blocked = isBlockedTime(time);
@@ -131,6 +136,15 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
         if (blocked) aria = `${time} Bloqueado`;
         else if (busy) aria = `${time} Ocupado`;
         else if (current) aria = `${time} Atual`;
+        const slotClass = blocked
+            ? 'bg-theme-surface border-[var(--color-divider)] text-theme-textSecondary cursor-not-allowed'
+            : busy
+                ? 'bg-[var(--color-danger-bg)] border-[var(--color-danger-border)] text-[var(--color-text-muted)] cursor-not-allowed'
+                : selected
+                    ? activeCardBg
+                    : current
+                        ? 'bg-theme-surface border-theme-accent ring-2 ring-inset ring-theme-accent text-theme-text'
+                        : 'bg-theme-surface border-[var(--color-divider)] text-theme-text hover:border-[var(--color-input-border)] hover:bg-[var(--color-card-hover)]';
         return (
             <button
                 key={time}
@@ -145,19 +159,13 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                     min-h-[44px] h-[44px] max-h-[44px] w-full min-w-0 px-1 rounded-lg font-mono font-bold transition-all border
                     inline-flex flex-col items-center justify-center gap-0.5 overflow-hidden
                     ${tag ? 'text-xs leading-none' : 'text-sm leading-none'}
-                    ${blocked
-                        ? 'bg-theme-surface border-[var(--color-divider)] text-theme-textSecondary cursor-not-allowed'
-                        : busy
-                            ? 'bg-theme-surface border-[var(--color-divider)] text-[var(--color-text-muted)] cursor-not-allowed'
-                            : selected
-                                ? activeCardBg
-                                : current
-                                    ? 'bg-theme-surface border-[var(--color-divider)] text-theme-textSecondary'
-                                    : 'bg-theme-surface border-[var(--color-divider)] text-theme-text hover:border-[var(--color-input-border)] hover:bg-[var(--color-card-hover)]'
-                    }
+                    ${slotClass}
                 `}
             >
-                <span className={`tabular-nums ${disabled || (current && !selected) ? 'line-through decoration-theme-textSecondary decoration-1' : ''}`}>{time}</span>
+                <span className="tabular-nums inline-flex items-center gap-0.5">
+                    {blocked && <Lock className="w-3 h-3 shrink-0" aria-hidden="true" />}
+                    {time}
+                </span>
                 {tag && (
                     <span className={`text-xs font-sans font-semibold tracking-wide leading-none ${selected ? 'text-[var(--color-on-accent)]' : ''}`}>
                         {tag}
@@ -283,7 +291,11 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
             <section className="flex-1 min-w-0">
                 <StepHeading level="section" title="Escolha o horário" />
 
-                <div className={`rounded-xl border ${cardBg} p-3 sm:p-4`}>
+                <div
+                    ref={gridScrollRef}
+                    data-testid="reschedule-time-grid"
+                    className={`rounded-xl border ${cardBg} p-3 sm:p-4 ${compact ? 'max-h-[min(18rem,46dvh)] overflow-y-auto overscroll-contain' : ''}`}
+                >
                     {!selectedProId ? (
                         <div className="py-10 flex flex-col items-center justify-center text-center text-[var(--color-text-muted)] gap-2">
                             <User className="w-10 h-10 opacity-20" />

@@ -56,6 +56,9 @@ vi.mock('../../components/appointment/ScheduleSelection', () => ({
   ),
 }));
 vi.mock('../../hooks/useAgendaBlocks', () => ({ useAgendaBlocks: () => ({ data: [] }) }));
+vi.mock('../../utils/rescheduleOccupancy', () => ({
+  fetchRescheduleOccupancy: vi.fn().mockResolvedValue([]),
+}));
 
 import { RescheduleAppointmentModal } from '../../components/agenda/RescheduleAppointmentModal';
 
@@ -140,5 +143,20 @@ describe('RescheduleAppointmentModal', () => {
     expect(onSuccess).toHaveBeenCalled();
     expect(open).toHaveBeenCalled();
     expect(String(open.mock.calls[0][0])).toContain('https://wa.me/');
+  });
+
+  it('mostra erro inline acima de confirmar, limpa no retry e some no sucesso', async () => {
+    const busy = 'Esse horário já está ocupado na agenda de Bob. Escolha outro.';
+    rpc
+      .mockResolvedValueOnce({ data: null, error: { message: busy, hint: 'reschedule_slot_busy' } })
+      .mockResolvedValueOnce({ data: { success: true }, error: null });
+    renderModal();
+    fireEvent.click(screen.getByText('slot-10:30'));
+    fireEvent.click(screen.getByTestId('reschedule-confirm'));
+    expect(await screen.findByTestId('reschedule-inline-error')).toHaveTextContent(busy);
+    expect(showToast).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByTestId('reschedule-confirm'));
+    await waitFor(() => expect(showToast).toHaveBeenCalledWith('Horário remarcado.', 'success'));
+    expect(screen.queryByTestId('reschedule-inline-error')).toBeNull();
   });
 });

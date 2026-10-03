@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowRight, CalendarClock } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
@@ -19,6 +19,7 @@ import {
 } from '../../utils/businessTimezone';
 import { buildWhatsAppLink } from '../../utils/formatters';
 import { mapError } from '../../utils/mapError';
+import { fetchRescheduleOccupancy } from '../../utils/rescheduleOccupancy';
 import { isStaffEditForbiddenError, STAFF_EDIT_FORBIDDEN_MESSAGE } from '../../utils/staffAppointmentPermission';
 import {
   buildRescheduleWhatsAppMessage,
@@ -43,6 +44,7 @@ export interface RescheduleAppointment {
   duration_minutes?: number;
   status: string;
   service?: string;
+  public_booking_id?: string | null;
 }
 
 export interface RescheduleTeamMember {
@@ -58,7 +60,6 @@ export interface RescheduleAppointmentModalProps {
   shopTimeZone: string;
   businessHours?: BusinessHours | null;
   lockProfessional?: boolean;
-  occupyingAppointments?: OccupyingAppointment[];
   onClose: () => void;
   onSuccess: (result: { id: string; time: Date; professionalId: string | null }) => void;
   /** Só testes: relógio injetável para o aviso de passado. */
@@ -75,12 +76,11 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
   shopTimeZone,
   businessHours = null,
   lockProfessional = false,
-  occupyingAppointments = [],
   onClose,
   onSuccess,
   now,
 }) => {
-  const { user, businessName } = useAuth();
+  const { user, businessName, companyId } = useAuth();
   const { region: currencyRegion } = useTenantLocale();
   const { colors, isBeauty } = useBrutalTheme();
   const { showToast } = useToast();
@@ -91,9 +91,46 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
   const [selectedProId, setSelectedProId] = useState(appointment.professional_id || '');
   const [notifyWhatsApp, setNotifyWhatsApp] = useState(() => !!appointment.clientPhone?.trim());
   const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [fetchedOccupying, setFetchedOccupying] = useState<OccupyingAppointment[]>([]);
+  const [forcedBusy, setForcedBusy] = useState<OccupyingAppointment[]>([]);
 
   const dateStr = formatLocalDateString(selectedDate);
+  const tenantId = companyId || user?.id || '';
   const { data: blocks = [] } = useAgendaBlocks(open ? dateStr : null);
+
+  const loadOccupying = useCallback(async () => {
+    if (!open || !tenantId || !selectedProId) return;
+    try {
+      const rows = await fetchRescheduleOccupancy({
+        companyId: tenantId,
+        dateStr,
+        professionalId: selectedProId,
+        timeZone: shopTimeZone,
+        ignorePublicBookingId: appointment.public_booking_id,
+      });
+      setFetchedOccupying(rows);
+    } catch {
+      // RLS vazio ou rede: a RPC continua sendo a fonte da verdade.
+    }
+  }, [open, tenantId, selectedProId, dateStr, shopTimeZone, appointment.public_booking_id]);
+
+  useEffect(() => {
+    void loadOccupying();
+  }, [loadOccupying]);
+
+  useEffect(() => {
+    setForcedBusy([]);
+    setFormError(null);
+  }, [dateStr, selectedProId]);
+
+  useEffect(() => {
+    setFormError(null);
+  }, [selectedTime]);
+  const occupying = useMemo(
+    () => [...fetchedOccupying, ...forcedBusy],
+    [fetchedOccupying, forcedBusy],
+  );
   const professionalName = teamMembers.find((m) => m.id === (appointment.professional_id || ''))?.name;
   const destName = teamMembers.find((m) => m.id === selectedProId)?.name;
   const hasPhone = !!appointment.clientPhone?.trim();
@@ -111,6 +148,7 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
 
   const handleConfirm = async () => {
     if (unchanged || !selectedInstant || !selectedProId || submitting) return;
+    setFormError(null);
     setSubmitting(true);
     try {
       const { error } = await supabase.rpc('reschedule_appointment', {
@@ -120,6 +158,7 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
       });
       if (error) throw error;
 
+      setFormError(null);
       showToast(RESCHEDULE_SUCCESS_TOAST, 'success');
       if (notifyWhatsApp && hasPhone) {
         const message = buildRescheduleWhatsAppMessage({
@@ -136,12 +175,27 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
       onSuccess({ id: appointment.id, time: selectedInstant, professionalId: selectedProId });
       onClose();
     } catch (err) {
-      showToast(
-        isStaffEditForbiddenError(err)
-          ? STAFF_EDIT_FORBIDDEN_MESSAGE
-          : mapError(err, RESCHEDULE_GENERIC_ERROR).message,
-        'error',
-      );
+      const mapped = mapError(err, RESCHEDULE_GENERIC_ERROR);
+      const message = isStaffEditForbiddenError(err)
+        ? STAFF_EDIT_FORBIDDEN_MESSAGE
+        : mapped.message;
+      setFormError(message);
+      const hint = err && typeof err === 'object' && 'hint' in err
+        ? String((err as { hint?: string }).hint || '')
+        : '';
+      if (hint === 'reschedule_slot_busy') {
+        setForcedBusy((prev) => [
+          ...prev,
+          {
+            id: `forced:${selectedInstant.toISOString()}`,
+            professional_id: selectedProId,
+            appointment_time: selectedInstant.toISOString(),
+            duration_minutes: appointment.duration_minutes || 30,
+            status: 'Confirmed',
+          },
+        ]);
+        void loadOccupying();
+      }
     } finally {
       setSubmitting(false);
     }
@@ -191,6 +245,15 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
               />
               <span>{RESCHEDULE_WHATSAPP_LABEL}</span>
             </label>
+          )}
+          {formError && (
+            <p
+              role="alert"
+              data-testid="reschedule-inline-error"
+              className="text-sm leading-snug text-[var(--color-danger)]"
+            >
+              {formError}
+            </p>
           )}
           <Button
             variant="primary"
@@ -248,7 +311,7 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
           lockProfessional={lockProfessional}
           timeGridClass="grid grid-cols-3 sm:grid-cols-4 gap-2"
           compact
-          occupyingAppointments={occupyingAppointments}
+          occupyingAppointments={occupying}
           ignoreAppointmentId={appointment.id}
           currentSlotTime={initialTime}
           currentSlotDate={initialDateStr}

@@ -9,6 +9,7 @@ export const PRO_BRUNA = '10000000-0000-4000-8000-000000000002';
 export const PRO_QUIM = '10000000-0000-4000-8000-0000000000aa';
 export const APT_ID = '50000000-0000-4000-8000-000000000001';
 export const APT_BUSY_ID = '50000000-0000-4000-8000-0000000000b1';
+export const APT_QUEUE_ID = '50000000-0000-4000-8000-0000000000q1';
 export const CLIENT_ID = '30000000-0000-4000-8000-000000000001';
 export const CLIENT_BUSY_ID = '30000000-0000-4000-8000-0000000000b1';
 export const AGENDA_DATE = '2026-08-23';
@@ -316,9 +317,31 @@ export async function installRemarcarMocks(
           edited_at: null,
           clients: { id: CLIENT_BUSY_ID, name: 'Carla Costa', phone: '+351619923490' },
         },
+        {
+          id: APT_QUEUE_ID,
+          user_id: OWNER_ID,
+          client_id: CLIENT_BUSY_ID,
+          professional_id: PRO_BOB,
+          service: 'Fila',
+          appointment_time: '2026-08-23T14:00:00.000Z',
+          status: 'Completed',
+          duration_minutes: 30,
+          price: 0,
+          notes: null,
+          payment_method: 'cash',
+          origin: 'queue',
+          edited_at: null,
+          clients: { id: CLIENT_BUSY_ID, name: 'Carla Costa', phone: '+351619923490' },
+        },
       ];
       const idEq = search.match(/(?:^|[?&])id=eq\.([0-9a-f-]+)/i)?.[1];
-      await fulfillJson(route, idEq ? rows.filter((r) => r.id === idEq) : rows);
+      const proEq = search.match(/(?:^|[?&])professional_id=eq\.([0-9a-f-]+)/i)?.[1];
+      const originNeq = search.match(/(?:^|[?&])origin=neq\.([^&]+)/i)?.[1];
+      let out = rows;
+      if (idEq) out = out.filter((r) => r.id === idEq);
+      if (proEq) out = out.filter((r) => r.professional_id === proEq);
+      if (originNeq) out = out.filter((r) => r.origin !== originNeq);
+      await fulfillJson(route, out);
       return;
     }
 
@@ -341,7 +364,16 @@ export async function installRemarcarMocks(
     }
 
     if (pathname.includes('/rest/v1/public_bookings')) {
-      await fulfillJson(route, []);
+      const proEq = search.match(/(?:^|[?&])professional_id=eq\.([0-9a-f-]+)/i)?.[1];
+      const rows = [{
+        id: 'pb-busy-1',
+        business_id: OWNER_ID,
+        professional_id: PRO_BOB,
+        appointment_time: '2026-08-23T15:00:00.000Z',
+        duration_minutes: 30,
+        status: 'pending',
+      }];
+      await fulfillJson(route, proEq ? rows.filter((r) => r.professional_id === proEq) : rows);
       return;
     }
 

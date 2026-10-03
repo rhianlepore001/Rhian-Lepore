@@ -93,6 +93,8 @@ describe('T-V13 AppointmentEditModal — data/hora/profissional só leitura + Re
     expect(screen.getByTestId('edit-readonly-date')).toHaveTextContent('15/01/2030');
     expect(screen.getByTestId('edit-readonly-time')).toHaveTextContent('12:00');
     expect(screen.getByTestId('edit-readonly-professional')).toHaveTextContent('Eu');
+    expect(screen.getByText('Profissional · Data · Horário')).toBeInTheDocument();
+    expect(screen.queryByText(/^HORÁRIO$/)).toBeNull();
     fireEvent.click(screen.getByTestId('edit-reschedule-link'));
     expect(onReschedule).toHaveBeenCalledTimes(1);
   });

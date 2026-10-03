@@ -79,6 +79,7 @@ interface Appointment {
     payment_method?: string | null;
     duration_minutes?: number;
     edited_at?: string | null;
+    public_booking_id?: string | null;
 }
 
 interface TeamMember {
@@ -502,7 +503,8 @@ export const Agenda: React.FC = () => {
                     notes: apt.notes,
                     payment_method: apt.payment_method,
                     duration_minutes: apt.duration_minutes,
-                    edited_at: apt.edited_at
+                    edited_at: apt.edited_at,
+                    public_booking_id: apt.public_booking_id ?? null,
                 };
             }));
         }
@@ -544,7 +546,8 @@ export const Agenda: React.FC = () => {
                     status: apt.status,
                     professional_id: apt.professional_id,
                     basePrice: basePrice,
-                    notes: apt.notes
+                    notes: apt.notes,
+                    public_booking_id: apt.public_booking_id ?? null,
                 };
             }));
         }
@@ -2010,7 +2013,6 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                     shopTimeZone={shopTimeZone}
                     businessHours={businessSettings?.business_hours ?? null}
                     lockProfessional={staffPermission.lockProfessionalToSelf}
-                    occupyingAppointments={appointments}
                     onClose={() => setReschedulingAppointment(null)}
                     onSuccess={({ id, time, professionalId }) => {
                         const dateStr = getDateStringInTimeZone(time, shopTimeZone);

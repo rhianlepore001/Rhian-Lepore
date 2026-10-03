@@ -166,7 +166,8 @@ BEGIN
       INTO v_pb_status, v_pb_is_edit
     FROM public.public_bookings pb
     WHERE pb.id = v_apt.public_booking_id
-      AND pb.business_id = v_company;
+      AND pb.business_id = v_company
+    FOR UPDATE;
 
     IF v_pb_status = 'pending' AND v_pb_is_edit THEN
       RAISE EXCEPTION 'O cliente pediu outro horário para este agendamento. Aceite ou recuse o pedido antes de remarcar.'

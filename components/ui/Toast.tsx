@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { CheckCircle2, Info, TriangleAlert, X, XCircle } from 'lucide-react';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
@@ -105,17 +105,7 @@ const ToastView: React.FC<{ toast: ToastItem; onDismiss: (id: number) => void }>
 
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
-  const [dockBottom, setDockBottom] = useState(false);
   const idRef = useRef(0);
-
-  useEffect(() => {
-    if (typeof document === 'undefined') return undefined;
-    const sync = () => setDockBottom(document.documentElement.hasAttribute('data-ui-modal'));
-    sync();
-    const obs = new MutationObserver(sync);
-    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-ui-modal'] });
-    return () => obs.disconnect();
-  }, []);
 
   const dismiss = useCallback((id: number) => {
     setToasts(prev => prev.filter(t => t.id !== id));
@@ -153,17 +143,8 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       {typeof document !== 'undefined' &&
         createPortal(
           <div
-            data-toast-viewport
-            data-toast-dock={dockBottom ? 'modal' : 'page'}
-            className={
-              dockBottom
-                ? 'fixed right-0 left-0 sm:left-auto flex flex-col items-center sm:items-end gap-2 p-4 pointer-events-none'
-                : 'fixed top-0 right-0 left-0 sm:left-auto flex flex-col items-center sm:items-end gap-2 p-4 pt-[calc(0.75rem+env(safe-area-inset-top))] pointer-events-none'
-            }
-            style={{
-              zIndex: 'var(--z-toast)',
-              ...(dockBottom ? { bottom: '8.75rem', top: 'auto' } : {}),
-            }}
+            className="fixed top-0 right-0 left-0 sm:left-auto flex flex-col items-center sm:items-end gap-2 p-4 pt-[calc(0.75rem+env(safe-area-inset-top))] pointer-events-none"
+            style={{ zIndex: 'var(--z-toast)' }}
             aria-live="polite"
           >
             {toasts.map(toast => (

@@ -28,12 +28,6 @@ export const UIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   const closeSidebar = () => setIsSidebarOpen(false);
   const setModalOpen = (open: boolean) => setIsModalOpen(open);
 
-  React.useEffect(() => {
-    if (isModalOpen) document.documentElement.setAttribute('data-ui-modal', '');
-    else document.documentElement.removeAttribute('data-ui-modal');
-    return () => document.documentElement.removeAttribute('data-ui-modal');
-  }, [isModalOpen]);
-
   return (
     <UIContext.Provider value={{
       isSidebarOpen,

@@ -1,6 +1,5 @@
--- H1: empilha o trigger de antecedência (#121) se existir. Sem o trigger, skip.
--- Não edita a migration do #121. Se o trigger existir sem isenção de equipe,
--- skip das asserções (o #121 ainda está a ser corrigido).
+-- H1: empilha o trigger de antecedência (#121) se a função existir.
+-- Não edita a migration do #121. Skip só quando o trigger/função está ausente.
 \set ON_ERROR_STOP on
 \set QUIET on
 \o /dev/null
@@ -35,17 +34,17 @@ WHEN OTHERS THEN
   RETURN 'error:' || COALESCE(NULLIF(v_hint, ''), 'nohint') || '|' || v_msg;
 END $$;
 
-CREATE OR REPLACE FUNCTION pg_temp.at_l(p_day date, p_hm text) RETURNS timestamptz LANGUAGE sql AS $$
-  SELECT (p_day::text || ' ' || p_hm)::timestamp AT TIME ZONE 'Europe/Lisbon'
-$$;
-
 DO $$
 DECLARE
   v_has_trigger boolean;
-  v_has_exempt boolean;
-  v_def text;
   v_owner text := '00000000-0000-0000-0000-00000000000a';
+  v_staff text := '00000000-0000-0000-0000-00000000001a';
+  v_exstaff text := '00000000-0000-0000-0000-0000000000ee';
+  v_inactive text := '00000000-0000-0000-0000-00000000002a';
   v_pro text := '10000000-0000-0000-0000-000000000001';
+  v_pro_staff text := '10000000-0000-0000-0000-000000000002';
+  v_pro_inact text := '10000000-0000-0000-0000-0000000000c1';
+  v_pro_ex text := '10000000-0000-0000-0000-0000000000ee';
   v_client text := '30000000-0000-0000-0000-000000000001';
   v_svc text := '20000000-0000-0000-0000-000000000001';
   v_apt uuid := '50000000-0000-0000-0000-0000000000c9';
@@ -63,26 +62,46 @@ BEGIN
 
   IF NOT v_has_trigger THEN
     PERFORM pg_temp.check('H1 trigger #121', 'skip', 'skip');
-    PERFORM pg_temp.check('H1 now+30min', 'skip', 'skip');
-    PERFORM pg_temp.check('H1 passado', 'skip', 'skip');
+    PERFORM pg_temp.check('H1 owner now+30min', 'skip', 'skip');
+    PERFORM pg_temp.check('H1 owner passado', 'skip', 'skip');
+    PERFORM pg_temp.check('H1 staff now+30min', 'skip', 'skip');
+    PERFORM pg_temp.check('H1 staff passado', 'skip', 'skip');
+    PERFORM pg_temp.check('H1 ex-staff recusa', 'skip', 'skip');
+    PERFORM pg_temp.check('H1 staff inativo recusa', 'skip', 'skip');
     RETURN;
   END IF;
-
-  v_def := pg_get_functiondef(v_lead_fn);
-  v_has_exempt := v_def LIKE '%get_auth_company_id%' AND v_def LIKE '%auth.uid() IS NOT NULL%';
 
   PERFORM pg_temp.check('H1 trigger #121', 'present', 'present');
 
-  IF NOT v_has_exempt THEN
-    PERFORM pg_temp.check('H1 now+30min', 'skip', 'skip');
-    PERFORM pg_temp.check('H1 passado', 'skip', 'skip');
-    RETURN;
-  END IF;
+  INSERT INTO public.profiles (id, role, company_id, region) VALUES
+    (v_owner, 'owner', v_owner, 'PT'),
+    (v_staff, 'staff', v_owner, 'PT'),
+    (v_exstaff, 'staff', v_owner, 'PT'),
+    (v_inactive, 'staff', v_owner, 'PT')
+  ON CONFLICT (id) DO UPDATE SET role = EXCLUDED.role, company_id = EXCLUDED.company_id, region = 'PT';
 
-  PERFORM set_config('request.jwt.claim.sub', v_owner, false);
+  INSERT INTO public.team_members (id, user_id, name, staff_user_id, active, is_owner, deleted_at) VALUES
+    (v_pro, v_owner, 'Diego', NULL, true, true, NULL),
+    (v_pro_staff, v_owner, 'Bruna', v_staff::uuid, true, false, NULL),
+    (v_pro_inact, v_owner, 'Inativo', v_inactive::uuid, false, false, NULL),
+    (v_pro_ex, v_owner, 'Ex', v_exstaff::uuid, true, false, now())
+  ON CONFLICT (id) DO UPDATE SET
+    name = EXCLUDED.name,
+    staff_user_id = EXCLUDED.staff_user_id,
+    active = EXCLUDED.active,
+    deleted_at = EXCLUDED.deleted_at;
+
+  INSERT INTO public.business_settings (user_id, timezone, staff_appointment_edit_scope)
+  VALUES (v_owner, 'Europe/Lisbon', 'all')
+  ON CONFLICT (user_id) DO UPDATE SET staff_appointment_edit_scope = 'all', timezone = 'Europe/Lisbon';
+
+  INSERT INTO public.clients (id, user_id, name, phone)
+  VALUES (v_client::uuid, v_owner, 'Aline', '351600000001')
+  ON CONFLICT (id) DO NOTHING;
+  INSERT INTO public.services VALUES (v_svc::uuid, v_owner, 'Corte', 45, 30) ON CONFLICT (id) DO NOTHING;
+
   DELETE FROM public.appointments WHERE id = v_apt;
   DELETE FROM public.public_bookings WHERE id = v_pb;
-
   INSERT INTO public.public_bookings (
     id, business_id, customer_name, customer_phone, service_ids, professional_id, appointment_time, total_price, status, duration_minutes
   ) VALUES (
@@ -95,11 +114,37 @@ BEGIN
     v_apt, v_owner, v_client::uuid, v_pro::uuid, 'Corte', now() + interval '2 days', 'Confirmed', 30, 45, v_pb
   );
 
+  PERFORM set_config('request.jwt.claim.sub', v_owner, false);
   v_got := pg_temp.reschedule(v_apt, now() + interval '30 minutes', v_pro::uuid);
-  PERFORM pg_temp.check('H1 now+30min', v_got, 'ok:true');
+  PERFORM pg_temp.check('H1 owner now+30min', v_got, 'ok:true');
 
   v_got := pg_temp.reschedule(v_apt, now() - interval '45 minutes', v_pro::uuid);
-  PERFORM pg_temp.check('H1 passado', v_got, 'ok:true');
+  PERFORM pg_temp.check('H1 owner passado', v_got, 'ok:true');
+
+  UPDATE public.appointments SET appointment_time = now() + interval '2 days', professional_id = v_pro::uuid WHERE id = v_apt;
+  UPDATE public.public_bookings SET appointment_time = now() + interval '2 days', professional_id = v_pro::uuid, status = 'confirmed' WHERE id = v_pb;
+
+  PERFORM set_config('request.jwt.claim.sub', v_staff, false);
+  v_got := pg_temp.reschedule(v_apt, now() + interval '30 minutes', v_pro::uuid);
+  PERFORM pg_temp.check('H1 staff now+30min', v_got, 'ok:true');
+
+  v_got := pg_temp.reschedule(v_apt, now() - interval '45 minutes', v_pro::uuid);
+  PERFORM pg_temp.check('H1 staff passado', v_got, 'ok:true');
+
+  UPDATE public.appointments SET appointment_time = now() + interval '2 days', professional_id = v_pro::uuid WHERE id = v_apt;
+  UPDATE public.public_bookings SET appointment_time = now() + interval '2 days', professional_id = v_pro::uuid, status = 'confirmed' WHERE id = v_pb;
+
+  PERFORM set_config('request.jwt.claim.sub', v_exstaff, false);
+  v_got := pg_temp.reschedule(v_apt, now() + interval '30 minutes', v_pro::uuid);
+  PERFORM pg_temp.check('H1 ex-staff recusa',
+    CASE WHEN v_got LIKE 'error:staff_appointment_edit_forbidden%' THEN 'error:staff_appointment_edit_forbidden' ELSE v_got END,
+    'error:staff_appointment_edit_forbidden');
+
+  PERFORM set_config('request.jwt.claim.sub', v_inactive, false);
+  v_got := pg_temp.reschedule(v_apt, now() + interval '30 minutes', v_pro::uuid);
+  PERFORM pg_temp.check('H1 staff inativo recusa',
+    CASE WHEN v_got LIKE 'error:staff_appointment_edit_forbidden%' THEN 'error:staff_appointment_edit_forbidden' ELSE v_got END,
+    'error:staff_appointment_edit_forbidden');
 END $$;
 
 \o

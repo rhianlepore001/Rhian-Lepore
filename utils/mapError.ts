@@ -27,6 +27,7 @@ interface RawErrorShape {
   code?: string;
   message?: string;
   hint?: string;
+  details?: string;
   name?: string;
   status?: number;
 }

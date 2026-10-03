@@ -1,4 +1,4 @@
--- Testes de 20260929120000_staff_performance_v1 (rodar via scripts/test-sql-staff-performance.sh).
+-- Testes de 20261003110000_staff_performance_v1 (rodar via scripts/test-sql-staff-performance.sh).
 -- "Agora" fixo: 02/10/2026 12:00 BRT. Cada assert imprime PASS ou aborta com FAIL.
 CREATE FUNCTION public._t(p_label text, p_got numeric, p_exp numeric) RETURNS void LANGUAGE plpgsql AS $$
 BEGIN

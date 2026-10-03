@@ -1,4 +1,4 @@
--- Harness (Postgres local descartável) para 20260929120000_staff_performance_v1.
+-- Harness (Postgres local descartável) para 20261003110000_staff_performance_v1.
 -- Esquema mínimo com as colunas reais de prod usadas pelas RPCs + fixture da
 -- seção 5 do ACCEPTANCE.md (tenant BR, fuso America/Sao_Paulo, acerto dia 5).
 CREATE ROLE anon NOLOGIN;

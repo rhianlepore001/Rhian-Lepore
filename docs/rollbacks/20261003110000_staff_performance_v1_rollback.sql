@@ -1,4 +1,4 @@
--- Rollback de 20260929120000_staff_performance_v1.sql (só remove o que a migration criou).
+-- Rollback de 20261003110000_staff_performance_v1.sql (só remove o que a migration criou).
 -- Nenhuma função existente foi alterada pela migration, então não há o que restaurar.
 BEGIN;
 SET LOCAL lock_timeout = '5s';

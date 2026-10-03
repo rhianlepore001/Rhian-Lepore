@@ -15,8 +15,8 @@ trap cleanup EXIT
 "$PGBIN/initdb" -D "$TMP/data" -U postgres -A trust >/dev/null
 "$PGBIN/pg_ctl" -D "$TMP/data" -o "-p $PORT -k $TMP -c listen_addresses='' -c timezone=UTC" -l "$TMP/log" start >/dev/null
 PSQL=("$PGBIN/psql" -h "$TMP" -p "$PORT" -U postgres -d postgres -v ON_ERROR_STOP=1 -q)
-MIG="$ROOT/supabase/migrations/20260929120000_staff_performance_v1.sql"
-RB="$ROOT/docs/rollbacks/20260929120000_staff_performance_v1_rollback.sql"
+MIG="$ROOT/supabase/migrations/20261003110000_staff_performance_v1.sql"
+RB="$ROOT/docs/rollbacks/20261003110000_staff_performance_v1_rollback.sql"
 snapshot() { "${PSQL[@]}" -At -c "SELECT string_agg(p.oid::regprocedure::text || '=' || md5(pg_get_functiondef(p.oid)), ' ' ORDER BY 1) FROM pg_proc p WHERE p.pronamespace = 'public'::regnamespace AND p.proname NOT IN ('get_staff_performance_v1','get_commission_cycle_v1','_staff_performance_core','_commission_cycle_core','_staff_perf_raw','_staff_perf_tz','_commission_settle_date')"; }
 "${PSQL[@]}" -f "$ROOT/supabase/tests/staff_performance.harness.sql"
 BEFORE="$(snapshot)"

@@ -14,7 +14,7 @@
 -- (nunca total_price); comissão = finance_records.commission_value só de
 -- receita (despesa nunca entra); 1 linha por atendimento (DISTINCT ON);
 -- dono com comissão 0 e fora do ranking; clube fora de receita/ticket/hora.
--- Rollback: docs/rollbacks/20260929120000_staff_performance_v1_rollback.sql
+-- Rollback: docs/rollbacks/20261003110000_staff_performance_v1_rollback.sql
 -- =============================================================================
 
 BEGIN;

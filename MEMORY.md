@@ -9,6 +9,10 @@
 
 ---
 
+## PR-1 overhaul booking — copy/cards (3 Out 2026, NÃO merge)
+
+Branch `feat/overhaul-pr1-copy-cards`, draft https://github.com/rhianlepore001/Rhian-Lepore/pull/119. Só tela: cards honestos (Horário passou / cancelado no Histórico / D2 Não compareceu), WhatsApp dinâmico no fuso do negócio, política D3 gerada da regra real, toggle da Minha Área, `NoShow` nos tipos, FAB morto removido. Sem migration. Playwright `e2e/overhaul-pr1.spec.ts` (mocks; escritas em prod interceptadas). Prints em `/opt/cursor/artifacts/pr1/`.
+
 ## Bloqueio de agenda — correção do #117 (3 Out 2026)
 
 Branch `cursor/agenda-blocks-acceptance-followup-e54d`. #115 (fila/Completed) não foi alterado.

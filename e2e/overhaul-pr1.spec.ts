@@ -362,7 +362,7 @@ test.describe('PR-1 overhaul copy/cards', () => {
       expect(wa).toContain('Mário');
       expect(wa.toLowerCase()).not.toContain('o salão');
       expect(wa.toLowerCase()).not.toContain('barbearia silva');
-      await shot(page, `after-client-proximos-${vp.name}`);
+      await shot(page, `after-client-proximos-${vp.name}`, '[data-testid="client-upcoming-list"]');
 
       await page.getByRole('button', { name: 'Histórico' }).click();
       await expect(page.getByText('Horário passou')).toBeVisible();
@@ -372,7 +372,7 @@ test.describe('PR-1 overhaul copy/cards', () => {
       await expect(page.getByRole('button', { name: /Editar/ })).toHaveCount(0);
       await expect(page.getByRole('button', { name: /^Cancelar$/ })).toHaveCount(0);
       await expect(page.getByRole('button', { name: /Reagendar horário/ })).toBeVisible();
-      await shot(page, `after-client-historico-${vp.name}`);
+      await shot(page, `after-client-historico-${vp.name}`, '[data-testid="client-history-list"]');
     });
 
     test(`público diretrizes ${vp.name}`, async ({ page }) => {

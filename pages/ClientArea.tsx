@@ -590,7 +590,7 @@ export const ClientArea: React.FC = () => {
                 ) : (
                     <>
                         {activeTab === 'upcoming' && (
-                            <div className="space-y-4 animate-in fade-in duration-200">
+                            <div className="space-y-4 animate-in fade-in duration-200" data-testid="client-upcoming-list">
                                 {upcomingBookings.some(b => b.status === 'pending') && (
                                     <div className="flex items-start gap-2 px-3 py-2 rounded-xl border bg-[var(--color-warning-bg)] border-[var(--color-warning-border)] text-[var(--color-warning)]">
                                         <Clock className="w-4 h-4 shrink-0 mt-0.5" />
@@ -629,7 +629,7 @@ export const ClientArea: React.FC = () => {
                         )}
 
                         {activeTab === 'history' && (
-                            <div className="space-y-4 animate-in fade-in duration-200">
+                            <div className="space-y-4 animate-in fade-in duration-200" data-testid="client-history-list">
                                 {historyBookings.length === 0 ? (
                                     <EmptyState
                                         icon={<History className="w-10 h-10" />}

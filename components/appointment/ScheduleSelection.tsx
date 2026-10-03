@@ -1,10 +1,10 @@
-import React, { useMemo, useState } from 'react';
-import { User, ChevronLeft, ChevronRight, ChevronDown, MoonStar } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { User, ChevronLeft, ChevronRight, ChevronDown, MoonStar, Lock } from 'lucide-react';
 import { StepHeading } from './StepHeading';
 import { splitWizardTimeSlots } from '../../utils/agendaDayWindow';
 import { formatLocalDateString } from '../../utils/date';
 import type { BusinessHours } from '../../types/settings';
-import { slotOverlapsBlocks } from '../../utils/agendaBlockRange';
+import { slotOverlapsBlocks, slotOverlapsOccupying, type OccupyingAppointment } from '../../utils/agendaBlockRange';
 
 interface ScheduleSelectionProps {
     teamMembers: any[];
@@ -24,9 +24,21 @@ interface ScheduleSelectionProps {
     /** Horário de funcionamento: horários do expediente primeiro; fora dele sob demanda (encaixe). */
     businessHours?: BusinessHours | null;
     shopTimeZone?: string;
-    /** Bloqueios do profissional: esses horários somem da lista (trava rígida). */
+    /** Bloqueios do profissional: horários desabilitados com rótulo "Bloqueado" (B-68). */
     blocks?: Array<{ professional_id: string; starts_at: string; ends_at: string }>;
     durationMinutes?: number;
+    /** Escopo own: o colaborador não passa o agendamento para outro profissional. */
+    lockProfessional?: boolean;
+    /** Grade de horários (default: 3 / 4 / 5 colunas). Modal estreito usa menos colunas. */
+    timeGridClass?: string;
+    /** Remarcação: menos padding para a grade caber na primeira dobra. */
+    compact?: boolean;
+    occupyingAppointments?: OccupyingAppointment[];
+    ignoreAppointmentId?: string;
+    currentSlotTime?: string;
+    currentSlotDate?: string;
+    currentProfessionalId?: string;
+    afterDate?: ReactNode;
 }
 
 /**
@@ -49,6 +61,15 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
     shopTimeZone,
     blocks = [],
     durationMinutes = 30,
+    lockProfessional = false,
+    timeGridClass = 'grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3',
+    compact = false,
+    occupyingAppointments = [],
+    ignoreAppointmentId,
+    currentSlotTime,
+    currentSlotDate,
+    currentProfessionalId,
+    afterDate,
 }) => {
     // Horário pré-preenchido fora da grade de 30 min (ex.: falta às 14:15)
     // entra na lista para aparecer selecionado.
@@ -68,42 +89,143 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
         if (!selectedProId || blocks.length === 0) return false;
         return slotOverlapsBlocks(dateStr, time, durationMinutes || 30, blocks, selectedProId, tz);
     };
-    const inHoursOpen = inHours.filter((t) => !isBlockedTime(t));
-    const outOfHoursOpen = outOfHours.filter((t) => !isBlockedTime(t));
+    const isCurrentTime = (time: string) => (
+        !!currentSlotTime
+        && time === currentSlotTime
+        && (!currentSlotDate || currentSlotDate === dateStr)
+        && (!currentProfessionalId || currentProfessionalId === selectedProId)
+    );
+    const isBusyTime = (time: string) => {
+        if (!selectedProId || occupyingAppointments.length === 0) return false;
+        if (isCurrentTime(time)) return false;
+        return slotOverlapsOccupying(
+            dateStr,
+            time,
+            durationMinutes || 30,
+            occupyingAppointments,
+            selectedProId,
+            tz,
+            ignoreAppointmentId,
+        );
+    };
     // Horário escolhido (ex.: "+" da grade às 22:30) fora do expediente: seção já aberta.
     const [showOffHours, setShowOffHours] = useState(() => !!selectedTime && outOfHours.includes(selectedTime));
     const offHoursVisible = closed || showOffHours;
+    const currentSlotRef = useRef<HTMLButtonElement | null>(null);
+    const gridScrollRef = useRef<HTMLDivElement | null>(null);
 
-    const renderTime = (time: string) => (
-        <button
-            key={time}
-            type="button"
-            onClick={() => setSelectedTime(time)}
-            aria-pressed={selectedTime === time}
-            className={`
-                py-3 px-2 rounded-lg font-mono font-bold text-sm transition-all border
-                ${selectedTime === time
-                    ? activeCardBg
-                    : 'bg-theme-surface border-[var(--color-divider)] text-theme-text hover:border-[var(--color-input-border)] hover:bg-[var(--color-card-hover)]'
-                }
-            `}
-        >
-            {time}
-        </button>
-    );
-    const timeGridClass = 'grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3';
+    const scrollSlot = useCallback((mode: 'center' | 'nearest', time?: string) => {
+        const box = gridScrollRef.current;
+        if (!box) return;
+        const targetTime = time || currentSlotTime;
+        const el = (targetTime
+            ? box.querySelector(`[data-time="${targetTime}"]`)
+            : currentSlotRef.current) as HTMLElement | null;
+        if (!el) return;
+        const elRect = el.getBoundingClientRect();
+        const boxRect = box.getBoundingClientRect();
+        let delta = 0;
+        if (mode === 'center') {
+            delta = elRect.top - boxRect.top - (box.clientHeight / 2) + (el.clientHeight / 2);
+        } else {
+            const pad = 8;
+            if (elRect.top < boxRect.top + pad) delta = elRect.top - boxRect.top - pad;
+            else if (elRect.bottom > boxRect.bottom - pad) delta = elRect.bottom - boxRect.bottom + pad;
+        }
+        if (Math.abs(delta) > 1) box.scrollTop = Math.max(0, box.scrollTop + delta);
+    }, [currentSlotTime]);
+
+    useEffect(() => {
+        if (!compact) return;
+        let inner = 0;
+        const outer = requestAnimationFrame(() => {
+            inner = requestAnimationFrame(() => {
+                scrollSlot('center', currentSlotTime);
+            });
+        });
+        return () => {
+            cancelAnimationFrame(outer);
+            cancelAnimationFrame(inner);
+        };
+    }, [dateStr, selectedProId, currentSlotTime, closed, offHoursVisible, compact, scrollSlot]);
+
+    useEffect(() => {
+        if (!compact) return;
+        if (!selectedTime || selectedTime === currentSlotTime) return;
+        let inner = 0;
+        const outer = requestAnimationFrame(() => {
+            inner = requestAnimationFrame(() => {
+                scrollSlot('nearest', selectedTime);
+            });
+        });
+        return () => {
+            cancelAnimationFrame(outer);
+            cancelAnimationFrame(inner);
+        };
+    }, [selectedTime, currentSlotTime, compact, closed, offHoursVisible, scrollSlot]);
+
+    const renderTime = (time: string) => {
+        const blocked = isBlockedTime(time);
+        const busy = !blocked && isBusyTime(time);
+        const current = isCurrentTime(time);
+        const selected = !blocked && !busy && selectedTime === time;
+        const disabled = blocked || busy;
+        const tag = blocked ? 'Bloqueado' : busy ? 'Ocupado' : current ? 'Atual' : null;
+        let aria = time;
+        if (blocked) aria = `${time} Bloqueado`;
+        else if (busy) aria = `${time} Ocupado`;
+        else if (current) aria = `${time} Atual`;
+        const slotClass = blocked
+            ? 'bg-theme-surface border-[var(--color-divider)] text-theme-textSecondary cursor-not-allowed'
+            : busy
+                ? 'bg-[var(--color-danger-bg)] border-[var(--color-danger-border)] text-[var(--color-text-muted)] cursor-not-allowed'
+                : current
+                    ? 'bg-theme-surface border-theme-accent ring-2 ring-inset ring-theme-accent text-theme-text'
+                    : selected
+                        ? activeCardBg
+                        : 'bg-theme-surface border-[var(--color-divider)] text-theme-text hover:border-[var(--color-input-border)] hover:bg-[var(--color-card-hover)]';
+        return (
+            <button
+                key={time}
+                type="button"
+                ref={current ? currentSlotRef : undefined}
+                disabled={disabled}
+                onClick={() => { if (!disabled) setSelectedTime(time); }}
+                aria-pressed={selected}
+                aria-label={aria}
+                data-time={time}
+                data-slot-state={tag ? tag.toLowerCase() : selected ? 'selected' : undefined}
+                className={`
+                    min-h-[44px] h-[44px] max-h-[44px] w-full min-w-0 px-1 rounded-lg font-mono font-bold transition-all border
+                    inline-flex flex-col items-center justify-center gap-0.5 overflow-hidden
+                    ${tag ? 'text-xs leading-none' : 'text-sm leading-none'}
+                    ${slotClass}
+                `}
+            >
+                <span className="tabular-nums inline-flex items-center gap-0.5">
+                    {blocked && <Lock className="w-3 h-3 shrink-0" aria-hidden="true" />}
+                    {time}
+                </span>
+                {tag && (
+                    <span className={`text-xs font-sans font-semibold tracking-wide leading-none ${selected && !current ? 'text-[var(--color-on-accent)]' : ''}`}>
+                        {tag}
+                    </span>
+                )}
+            </button>
+        );
+    };
     // Fora do expediente em ordem, separado em antes da abertura / intervalo / depois do fechamento.
     const offHoursGroups = useMemo(() => {
-        if (closed || inHours.length === 0) return [{ label: '', times: outOfHoursOpen }];
+        if (closed || inHours.length === 0) return [{ label: '', times: outOfHours }];
         const first = inHours[0];
         const last = inHours[inHours.length - 1];
         const groups = [
-            { label: 'Antes da abertura', times: outOfHoursOpen.filter((t) => t < first) },
-            { label: 'Intervalo', times: outOfHoursOpen.filter((t) => t > first && t < last) },
-            { label: 'Depois do fechamento', times: outOfHoursOpen.filter((t) => t > last) },
+            { label: 'Antes da abertura', times: outOfHours.filter((t) => t < first) },
+            { label: 'Intervalo', times: outOfHours.filter((t) => t > first && t < last) },
+            { label: 'Depois do fechamento', times: outOfHours.filter((t) => t > last) },
         ];
         return groups.filter((g) => g.times.length > 0);
-    }, [closed, inHours, outOfHoursOpen]);
+    }, [closed, inHours, outOfHours]);
 
     const changeDate = (days: number) => {
         const newDate = new Date(selectedDate);
@@ -117,13 +239,13 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
         (name || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('');
 
     return (
-        <div className="flex flex-col md:flex-row md:items-start gap-6 animate-in fade-in slide-in-from-right-4 duration-300">
+        <div className={`flex flex-col md:flex-row md:items-start animate-in fade-in slide-in-from-right-4 duration-300 ${compact ? 'gap-3 md:gap-4 min-h-0 flex-1' : 'gap-6'}`}>
             {/* Esquerda: profissional + data (fixa no desktop enquanto os horários rolam) */}
-            <div className="md:w-[22rem] md:shrink-0 space-y-6 md:sticky md:top-0">
+            <div className={`md:w-[22rem] md:shrink-0 md:sticky md:top-0 shrink-0 ${compact ? 'space-y-2 md:space-y-3' : 'space-y-6'}`}>
                 <section>
-                    <StepHeading level="section" title="Escolha o profissional" />
+                    <StepHeading level="section" title="Escolha o profissional" compact={compact} className={compact ? 'max-md:sr-only' : ''} />
                     {/* Sem caixa de rolagem interna: todos os profissionais visíveis */}
-                    <div data-testid="wizard-pro-list" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 gap-2">
+                    <div data-testid="wizard-pro-list" className={`grid gap-2 ${compact ? 'grid-cols-3 md:grid-cols-2' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-2'}`}>
                         {teamMembers.map(member => {
                             const active = selectedProId === member.id;
                             return (
@@ -131,9 +253,11 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                                     key={member.id}
                                     type="button"
                                     aria-pressed={active}
-                                    onClick={() => setSelectedProId(member.id)}
-                                    className={`w-full min-h-[52px] flex items-center gap-2.5 px-2.5 py-2 rounded-xl border transition-colors text-left
+                                    disabled={lockProfessional && !active}
+                                    onClick={() => { if (!(lockProfessional && !active)) setSelectedProId(member.id); }}
+                                    className={`w-full ${compact ? 'min-h-[44px]' : 'min-h-[52px]'} flex items-center gap-2.5 px-2.5 py-2 rounded-xl border transition-colors text-left
                                         ${active ? activeCardBg : `${cardBg} hover:border-[var(--color-input-border)]`}
+                                        ${lockProfessional && !active ? 'opacity-50 cursor-not-allowed' : ''}
                                     `}
                                 >
                                     {member.photo_url ? (
@@ -156,18 +280,18 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                 </section>
 
                 <section>
-                    <StepHeading level="section" title="Selecione a data" />
-                    <div data-testid="wizard-date-picker" className={`flex items-center gap-1 p-1.5 rounded-xl border ${cardBg}`}>
+                    <StepHeading level="section" title="Selecione a data" compact={compact} className={compact ? 'max-md:sr-only' : ''} />
+                    <div data-testid="wizard-date-picker" className={`flex items-center gap-1 rounded-xl border ${cardBg} ${compact ? 'p-1' : 'p-1.5'}`}>
                         <button
                             type="button"
                             aria-label="Dia anterior"
                             onClick={() => changeDate(-1)}
-                            className="p-2 rounded-lg hover:bg-[var(--color-card-hover)] text-theme-text"
+                            className={`${compact ? 'p-1.5' : 'p-2'} rounded-lg hover:bg-[var(--color-card-hover)] text-theme-text`}
                         >
                             <ChevronLeft className="w-5 h-5" />
                         </button>
                         <div className="flex-1 min-w-0 flex items-center justify-center gap-3">
-                            <span className="text-3xl leading-none font-heading text-theme-accent tabular-nums">{selectedDate.getDate()}</span>
+                            <span className={`${compact ? 'text-xl' : 'text-3xl'} leading-none font-heading text-theme-accent tabular-nums`}>{selectedDate.getDate()}</span>
                             <span className="min-w-0 text-left leading-tight">
                                 <span className="block text-sm font-semibold text-theme-text truncate">
                                     {(() => {
@@ -194,19 +318,24 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                         <button
                             type="button"
                             onClick={() => { setSelectedDate(new Date()); setSelectedTime(''); }}
-                            className="mt-2 text-xs font-semibold text-theme-accent hover:underline"
+                            className={`${compact ? 'hidden md:inline-block mt-1.5' : 'mt-2'} text-xs font-semibold text-theme-accent hover:underline`}
                         >
                             Ir para hoje
                         </button>
                     )}
                 </section>
+                {afterDate ? <div className={compact ? 'md:mt-1' : undefined}>{afterDate}</div> : null}
             </div>
 
             {/* Right: Time Slots */}
-            <section className="flex-1 min-w-0">
-                <StepHeading level="section" title="Escolha o horário" />
+            <section className={`flex-1 min-w-0 ${compact ? 'min-h-0 flex flex-col' : ''}`}>
+                <StepHeading level="section" title="Escolha o horário" compact={compact} className={compact ? 'max-md:sr-only' : ''} />
 
-                <div className={`rounded-xl border ${cardBg} p-3 sm:p-4`}>
+                <div
+                    ref={gridScrollRef}
+                    data-testid="reschedule-time-grid"
+                    className={`rounded-xl border ${cardBg} p-3 sm:p-4 ${compact ? 'overflow-y-auto overscroll-contain h-[16rem]' : ''}`}
+                >
                     {!selectedProId ? (
                         <div className="py-10 flex flex-col items-center justify-center text-center text-[var(--color-text-muted)] gap-2">
                             <User className="w-10 h-10 opacity-20" />
@@ -223,8 +352,8 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                                     <span><span className="font-semibold text-theme-text">Fechado neste dia.</span> Escolha qualquer horário para um encaixe.</span>
                                 </p>
                             )}
-                            {inHoursOpen.length > 0 && <div className={timeGridClass}>{inHoursOpen.map(renderTime)}</div>}
-                            {!closed && outOfHoursOpen.length > 0 && (
+                            {inHours.length > 0 && <div className={timeGridClass}>{inHours.map(renderTime)}</div>}
+                            {!closed && outOfHours.length > 0 && (
                                 <button
                                     type="button"
                                     onClick={() => setShowOffHours((v) => !v)}
@@ -236,7 +365,7 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                                     <ChevronDown className={`w-4 h-4 transition-transform ${showOffHours ? 'rotate-180' : ''}`} aria-hidden="true" />
                                 </button>
                             )}
-                            {offHoursVisible && outOfHoursOpen.length > 0 && (
+                            {offHoursVisible && outOfHours.length > 0 && (
                                 <div id="wizard-off-hours" className="space-y-3">
                                     {offHoursGroups.map((g) => (
                                         <div key={g.label}>

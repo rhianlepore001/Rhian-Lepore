@@ -8,7 +8,7 @@ import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { Modal as UiModal } from '../components/ui/Modal';
 import { PageHeader } from '../components/ui/PageHeader';
 import { useToast } from '../components/ui/Toast';
-import { Calendar, Clock, Plus, User, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2, Trash2, Edit2, Tag, Scissors, Info, DollarSign, Phone, Ban, MoonStar } from 'lucide-react';
+import { Calendar, Clock, Plus, User, Check, X, ChevronLeft, ChevronRight, History, AlertTriangle, Loader2, Trash2, Edit2, Tag, Scissors, Info, DollarSign, Phone, Ban, MoonStar, CalendarClock } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -24,6 +24,7 @@ import { AgendaStatusLegend } from '../components/agenda/AgendaStatusLegend';
 import { AgendaPublicBookings } from '../components/agenda/AgendaPublicBookings';
 import { AgendaPublicLinkBar } from '../components/agenda/AgendaPublicLinkBar';
 import { AppointmentDetailsActions } from '../components/agenda/AppointmentDetailsActions';
+import { RescheduleAppointmentModal } from '../components/agenda/RescheduleAppointmentModal';
 import { useStaffAppointmentPermission } from '../hooks/useStaffAppointmentPermission';
 import { isStaffEditForbiddenError, STAFF_EDIT_FORBIDDEN_MESSAGE } from '../utils/staffAppointmentPermission';
 import { AllAppointmentsModal } from '../components/dashboard/modals/AllAppointmentsModal';
@@ -39,7 +40,7 @@ import { cancelAppointment, deleteAppointmentWithFinance, fetchPendingPublicBook
 import { buildWhatsAppLink, formatCurrency, formatPhone } from '../utils/formatters';
 import { formatDateForInput, formatLocalDateString, combineDateAndTime } from '../utils/date';
 import { buildAgendaDayWindow } from '../utils/agendaDayWindow';
-import { resolveBusinessTimezone } from '../utils/businessTimezone';
+import { resolveBusinessTimezone, formatTimeInTimeZone, getDateStringInTimeZone, dateStringToLocalDate } from '../utils/businessTimezone';
 import { useBusinessSettings } from '../hooks/useSettings';
 import {
     useAgendaBlocks,
@@ -62,6 +63,7 @@ import { buildNoShowSlotPrefill, findNoShowCoveringSlot, noShowSlotContext } fro
 import { useTenantLocale } from '../hooks/useTenantLocale';
 import { useBusinessCopy } from '../hooks/useBusinessCopy';
 import { getOwnerAcceptWhatsAppText } from '../utils/publicBookingCopy';
+import { formatRescheduleHistoryLine } from '../utils/rescheduleCopy';
 
 interface Appointment {
     id: string;
@@ -78,12 +80,14 @@ interface Appointment {
     payment_method?: string | null;
     duration_minutes?: number;
     edited_at?: string | null;
+    public_booking_id?: string | null;
 }
 
 interface TeamMember {
     id: string;
     name: string;
     photo_url?: string;
+    staff_user_id?: string | null;
 }
 
 interface Service {
@@ -186,6 +190,12 @@ export const Agenda: React.FC = () => {
 
     // State for editing
     const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
+    const [reschedulingAppointment, setReschedulingAppointment] = useState<Appointment | null>(null);
+    const [latestReschedule, setLatestReschedule] = useState<{
+        created_at: string;
+        created_by: string | null;
+        old_appointment_time: string;
+    } | null>(null);
 
     // State for checkout (Fase 3)
     const [checkoutAppointment, setCheckoutAppointment] = useState<import('../types').Appointment | null>(null);
@@ -441,7 +451,7 @@ export const Agenda: React.FC = () => {
         if (!user) return;
         const { data } = await supabase
             .from('team_members')
-            .select('id, name, photo_url')
+            .select('id, name, photo_url, staff_user_id')
             .eq('user_id', effectiveUserId)
             .eq('active', true)
             .order('name');
@@ -494,7 +504,8 @@ export const Agenda: React.FC = () => {
                     notes: apt.notes,
                     payment_method: apt.payment_method,
                     duration_minutes: apt.duration_minutes,
-                    edited_at: apt.edited_at
+                    edited_at: apt.edited_at,
+                    public_booking_id: apt.public_booking_id ?? null,
                 };
             }));
         }
@@ -536,7 +547,8 @@ export const Agenda: React.FC = () => {
                     status: apt.status,
                     professional_id: apt.professional_id,
                     basePrice: basePrice,
-                    notes: apt.notes
+                    notes: apt.notes,
+                    public_booking_id: apt.public_booking_id ?? null,
                 };
             }));
         }
@@ -1198,6 +1210,27 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
         ? (appointments.find(a => a.id === showingDetailsAppointment.id) ?? showingDetailsAppointment)
         : null;
 
+    useEffect(() => {
+        if (!detailsApt?.id || !effectiveUserId) {
+            setLatestReschedule(null);
+            return;
+        }
+        let cancelled = false;
+        (async () => {
+            const { data } = await supabase
+                .from('appointment_reschedules')
+                .select('created_at, created_by, old_appointment_time')
+                .eq('appointment_id', detailsApt.id)
+                .eq('user_id', effectiveUserId)
+                .order('created_at', { ascending: false })
+                .limit(1);
+            if (!cancelled) {
+                setLatestReschedule(data && data.length > 0 ? data[0] : null);
+            }
+        })();
+        return () => { cancelled = true; };
+    }, [detailsApt?.id, effectiveUserId]);
+
     // Prepare options for SearchableSelect
     const clientOptions = clients.map(c => ({
         id: c.id,
@@ -1634,6 +1667,28 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                     </p>
                                 </div>
                             )}
+
+                            {latestReschedule && (
+                                <p
+                                    data-testid="appointment-rescheduled-by"
+                                    className={`flex items-start gap-2 text-xs ${colors.textMuted}`}
+                                >
+                                    <CalendarClock className="w-3.5 h-3.5 mt-0.5 shrink-0 text-theme-accent" aria-hidden="true" />
+                                    <span>
+                                        {formatRescheduleHistoryLine({
+                                            actorName: (
+                                                teamMembers.find((m) => m.staff_user_id === latestReschedule.created_by)?.name
+                                                || ((latestReschedule.created_by === user?.id || latestReschedule.created_by === companyId)
+                                                    ? 'Dono'
+                                                    : 'Equipe')
+                                            ),
+                                            createdAtIso: latestReschedule.created_at,
+                                            oldTimeIso: latestReschedule.old_appointment_time,
+                                            timeZone: shopTimeZone,
+                                        })}
+                                    </span>
+                                </p>
+                            )}
                         </div>
 
                         {/* Footer Actions */}
@@ -1650,6 +1705,10 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                                 onNoShow={() => handleNoShowAppointment(detailsApt.id)}
                                 onEdit={() => {
                                     setEditingAppointment(detailsApt);
+                                    setShowingDetailsAppointment(null);
+                                }}
+                                onReschedule={() => {
+                                    setReschedulingAppointment(detailsApt);
                                     setShowingDetailsAppointment(null);
                                 }}
                                 onCancel={() => handleCancelAppointment(detailsApt.id, false, detailsApt.professional_id)}
@@ -1926,9 +1985,42 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                     clients={clients}
                     onClose={() => setEditingAppointment(null)}
                     onSave={fetchData}
+                    onReschedule={() => {
+                        const apt = editingAppointment;
+                        setEditingAppointment(null);
+                        setReschedulingAppointment(apt);
+                    }}
                     accentColor={isBeauty ? 'beauty-neon' : 'accent-gold'}
                     currencySymbol={currencySymbol}
                     lockProfessional={staffPermission.lockProfessionalToSelf}
+                    shopTimeZone={shopTimeZone}
+                />
+            )}
+
+            {reschedulingAppointment && (
+                <RescheduleAppointmentModal
+                    open
+                    appointment={reschedulingAppointment}
+                    teamMembers={teamMembers}
+                    shopTimeZone={shopTimeZone}
+                    businessHours={businessSettings?.business_hours ?? null}
+                    lockProfessional={staffPermission.lockProfessionalToSelf}
+                    onClose={() => setReschedulingAppointment(null)}
+                    onSuccess={({ id, time, professionalId }) => {
+                        const dateStr = getDateStringInTimeZone(time, shopTimeZone);
+                        const nextDate = dateStringToLocalDate(dateStr);
+                        setSelectedDate(nextDate);
+                        if (professionalId) {
+                            setSelectedProfessionalIds((ids) => ensureProfessionalVisible(ids, professionalId));
+                        }
+                        focusCreated({
+                            id,
+                            professionalId: professionalId,
+                            time: formatTimeInTimeZone(time, shopTimeZone),
+                        });
+                        navigate(`/agenda?date=${dateStr}`, { replace: true });
+                        void fetchData(nextDate);
+                    }}
                 />
             )}
 

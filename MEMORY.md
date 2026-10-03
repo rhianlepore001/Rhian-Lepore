@@ -62,7 +62,9 @@ Script isolado em `scripts/demo-seed/` + doc `docs/demo-seed.md`. Dois tenants f
 
 ## 🛠️ Trabalho recente
 
-- **PR-2 antecedência mínima (3 Out 2026, NÃO merge / NÃO apply em prod):** branch `feat/overhaul-pr2-lead-time`, PR #121, rebaseada em `main` `e10c445` (#119). Trigger: dono ou staff ativo. Recusa lead_time: alerta inline com foco no banner. Chips `whitespace-nowrap`. **#120 aplica primeiro.**
+- **PR-2 antecedência mínima (3 Out 2026, mergeada em `main` `94ea09c`, aplicada em prod como versão `20261003152759`):** PR #121. Trigger isenta dono (`auth.uid()::text = NEW.business_id`) ou `team_members` ativo (`staff_user_id`, `deleted_at IS NULL`); ex-staff cai em `lead_time_violation`. Recusa: alerta inline. Toast com portal próprio (placement top/bottom). Migration `supabase/migrations/20261003152759_public_booking_lead_time.sql`. Rollback: `docs/rollbacks/20261003152759_public_booking_lead_time_rollback.sql`. Agenda da equipe e encaixe #101 não entram no trigger.
+
+- **Remarcar horário / PR C (3 Out 2026, NÃO merge / NÃO apply em prod):** branch `feat/remarcar-horario`, PR #120, round-4 UI. Atual fica no centro da grade ao abrir e ao mudar data/profissional; clique do usuário usa scroll nearest. Coluna esquerda no desktop mais justa. Sem mudança de SQL (`20261003165644` md5 `9509841c2ad42e39dd5e3bed34c051f5`). Não aplicar em prod.
 
 - **Performance dos colaboradores (3 Out 2026, NÃO merge / NÃO apply em prod):** stack rebaseada na `main` `9926787`. #106 migration `20261003103000`; #109 `pay_commission_v1` preenche colunas NOT NULL de prod (`payment_date`, `barber_name`, `net_amount`, `description`, `commission_paid_at`) e filtra `COALESCE(commission_paid,false)=false`. Harness usa md5 de prod `b8a54fe3` / `1588d011`. PRs #106 #109 #114 #116.
 

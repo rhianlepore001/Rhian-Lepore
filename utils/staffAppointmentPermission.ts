@@ -81,6 +81,8 @@ export const STAFF_EDIT_FORBIDDEN_MESSAGE = 'Sua permissão não permite alterar
 /** Erro do banco quando a trigger bloqueia (42501 + mensagem fixa). */
 export function isStaffEditForbiddenError(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false;
-  const e = error as { code?: unknown; message?: unknown };
-  return String(e.message ?? '').includes('staff_appointment_edit_forbidden');
+  const e = error as { code?: unknown; message?: unknown; hint?: unknown };
+  return String(e.message ?? '').includes('staff_appointment_edit_forbidden')
+    || String(e.hint ?? '') === 'staff_appointment_edit_forbidden'
+    || String(e.code ?? '') === 'staff_appointment_edit_forbidden';
 }

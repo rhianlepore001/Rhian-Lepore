@@ -11,6 +11,7 @@ import {
   formatBlockRangeLabel,
   intervalsOverlap,
   slotOverlapsBlocks,
+  slotOverlapsOccupying,
 } from '@/utils/agendaBlockRange';
 
 const SP = 'America/Sao_Paulo';
@@ -123,6 +124,23 @@ describe('slotOverlapsBlocks', () => {
     expect(slotOverlapsBlocks('2026-10-05', '12:30', 30, blocks, 'pro-1', SP)).toBe(true);
     expect(slotOverlapsBlocks('2026-10-05', '13:00', 30, blocks, 'pro-1', SP)).toBe(false);
     expect(slotOverlapsBlocks('2026-10-05', '12:00', 30, blocks, 'pro-2', SP)).toBe(false);
+  });
+});
+
+describe('slotOverlapsOccupying', () => {
+  const occupying = [{
+    id: 'apt-1',
+    professional_id: 'pro-1',
+    appointment_time: '2026-10-05T10:00:00-03:00',
+    duration_minutes: 60,
+    status: 'Confirmed',
+  }];
+
+  it('duração real ocupa 10:00 e 10:30; 11:00 encosta', () => {
+    expect(slotOverlapsOccupying('2026-10-05', '10:00', 30, occupying, 'pro-1', SP, 'self')).toBe(true);
+    expect(slotOverlapsOccupying('2026-10-05', '10:30', 30, occupying, 'pro-1', SP, 'self')).toBe(true);
+    expect(slotOverlapsOccupying('2026-10-05', '11:00', 30, occupying, 'pro-1', SP, 'self')).toBe(false);
+    expect(slotOverlapsOccupying('2026-10-05', '10:00', 30, occupying, 'pro-1', SP, 'apt-1')).toBe(false);
   });
 });
 

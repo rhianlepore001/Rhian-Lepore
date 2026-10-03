@@ -5,7 +5,7 @@ import FocusTrap from 'focus-trap-react';
 import { useBrutalTheme, type ThemeVariant } from '../../hooks/useBrutalTheme';
 import { useOptionalUI } from '../../contexts/UIContext';
 
-type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
+type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
 
 interface ModalProps {
   open: boolean;
@@ -34,6 +34,7 @@ const SIZE_MAP: Record<ModalSize, string> = {
   md: 'max-w-md',
   lg: 'max-w-[560px]',
   xl: 'max-w-2xl',
+  '2xl': 'max-w-4xl',
   // size=full ocupa a viewport inteira (modais cheios tipo Checkout/Commission — DS Lock §3.4)
   full: 'max-w-none w-screen h-[100dvh] md:max-w-none md:w-screen md:h-[100dvh] rounded-none',
 };

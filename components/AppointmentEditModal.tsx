@@ -1,20 +1,19 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import FocusTrap from 'focus-trap-react';
-import { X, Loader2, Tag } from 'lucide-react';
+import { X, Loader2, Tag, Lock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { Button } from './ui/Button';
 import { useToast } from './ui';
-import { formatDateForInput, combineDateAndTime } from '../utils/date';
-import { buildManualBookingTimeSlots } from '../utils/agendaTimeSlots';
 import { isStaffEditForbiddenError, STAFF_EDIT_FORBIDDEN_MESSAGE } from '../utils/staffAppointmentPermission';
 import { agendaBlockedMessage, isAgendaBlockedError } from '../utils/agendaBlockPermission';
-import { useAgendaBlocks } from '../hooks/useAgendaBlocks';
-import { slotOverlapsBlocks } from '../utils/agendaBlockRange';
-import { capBookingDuration } from '../utils/serviceDuration';
+import {
+    formatTimeInTimeZone,
+    resolveBusinessTimezone,
+} from '../utils/businessTimezone';
 
 import { SearchableSelect } from './SearchableSelect';
 import { useProducts } from '@/hooks/useCatalog';
@@ -68,6 +67,8 @@ interface AppointmentEditModalProps {
      * agendamento, mas não passa para outro profissional (o banco bloqueia).
      */
     lockProfessional?: boolean;
+    onReschedule?: () => void;
+    shopTimeZone?: string;
 }
 
 export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
@@ -80,6 +81,8 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     accentColor,
     currencySymbol,
     lockProfessional = false,
+    onReschedule,
+    shopTimeZone,
 }) => {
     const { user, companyId, region } = useAuth();
     const { setModalOpen } = useUI();
@@ -129,25 +132,15 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
 
     const closeButtonStyles = `${colors.textMuted} hover:text-theme-text hover:bg-[var(--color-card-hover)] rounded-full p-1.5 transition-all`;
 
-    // Initial state setup
-    const initialDate = formatDateForInput(appointment.appointment_time);
-    const aptDate = new Date(appointment.appointment_time);
-    const initialTime = `${aptDate.getHours().toString().padStart(2, '0')}:${aptDate.getMinutes().toString().padStart(2, '0')}`;
-
-    // Criação/edição interna: qualquer horário (não limitado ao expediente)
-    const timeSlots = useMemo(() => {
-        const slots = buildManualBookingTimeSlots();
-        if (!slots.includes(initialTime)) {
-            const mins = aptDate.getHours() * 60 + aptDate.getMinutes();
-            const idx = slots.findIndex((t) => {
-                const [h, m] = t.split(':').map(Number);
-                return h * 60 + m > mins;
-            });
-            if (idx === -1) slots.push(initialTime);
-            else slots.splice(idx, 0, initialTime);
-        }
-        return slots;
-    }, [initialTime, appointment.appointment_time]);
+    const tz = shopTimeZone || resolveBusinessTimezone({ region });
+    const displayDate = new Date(appointment.appointment_time).toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        timeZone: tz,
+    });
+    const displayTime = formatTimeInTimeZone(appointment.appointment_time, tz);
+    const displayPro = teamMembers.find((m) => m.id === (appointment.professional_id || ''))?.name || '—';
 
     // Parse initial services ONLY ONCE using useMemo
     const { initialServiceIds, initialCustomPart } = useMemo(() => {
@@ -187,9 +180,6 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     // State for form fields
     const [selectedClient, setSelectedClient] = useState(appointment.client_id || '');
     const [selectedServices, setSelectedServices] = useState<string[]>(initialServiceIds);
-    const [selectedProfessional, setSelectedProfessional] = useState(appointment.professional_id || '');
-    const [selectedDate, setSelectedDate] = useState(initialDate);
-    const [selectedTime, setSelectedTime] = useState(initialTime);
     const [notes, setNotes] = useState(appointment.notes || '');
 
     // Custom Service State
@@ -201,18 +191,6 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     const [priceBeforeDiscount, setPriceBeforeDiscount] = useState(initialPriceBeforeDiscount);
     const [finalPriceInput, setFinalPriceInput] = useState(appointment.price.toFixed(2));
     const [discountPercentage, setDiscountPercentage] = useState(initialDiscountPercentage);
-    const { data: agendaBlocks = [] } = useAgendaBlocks(selectedDate);
-    const durationMin = capBookingDuration(appointment.duration_minutes
-        || services.filter((s) => selectedServices.includes(s.id)).reduce((sum, s) => sum + (s.duration_minutes || 30), 0)
-        || 30);
-    const visibleTimeSlots = useMemo(() => {
-        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        return timeSlots.filter((t) => {
-            if (t === initialTime || t === selectedTime) return true;
-            if (!selectedProfessional) return true;
-            return !slotOverlapsBlocks(selectedDate, t, durationMin, agendaBlocks, selectedProfessional, tz);
-        });
-    }, [timeSlots, selectedDate, selectedTime, selectedProfessional, durationMin, agendaBlocks, initialTime]);
 
     // 1. Update Base Price and Reference Price when services change
     useEffect(() => {
@@ -265,7 +243,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     const handleSave = async () => {
         const finalPriceValue = parseFloat(finalPriceInput);
 
-        if (!user || !selectedClient || selectedServices.length === 0 || !selectedProfessional || !selectedDate || !selectedTime || isNaN(finalPriceValue)) {
+        if (!user || !selectedClient || selectedServices.length === 0 || isNaN(finalPriceValue)) {
             showToast('Por favor, preencha todos os campos obrigatórios e verifique o preço final.', 'warning');
             return;
         }
@@ -275,9 +253,6 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
         try {
             const selectedServicesDetails = services.filter(s => selectedServices.includes(s.id));
             const serviceNames = selectedServicesDetails.map(s => s.name).join(', ');
-
-            const dateTime = combineDateAndTime(selectedDate, selectedTime);
-            
             const customNameTrimmed = customServiceName.trim();
             const finalServiceString = isCustomService && customNameTrimmed
                 ? (serviceNames ? serviceNames + ', ' + customNameTrimmed : customNameTrimmed)
@@ -287,9 +262,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                 .from('appointments')
                 .update({
                     client_id: selectedClient,
-                    professional_id: selectedProfessional,
                     service: finalServiceString,
-                    appointment_time: dateTime.toISOString(),
                     price: finalPriceValue,
                     notes: notes,
                     edited_at: new Date().toISOString()
@@ -322,7 +295,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                 isStaffEditForbiddenError(error)
                     ? STAFF_EDIT_FORBIDDEN_MESSAGE
                     : isAgendaBlockedError(error)
-                        ? agendaBlockedMessage(teamMembers.find(m => m.id === selectedProfessional)?.name || 'profissional')
+                        ? agendaBlockedMessage(teamMembers.find(m => m.id === appointment.professional_id)?.name || 'profissional')
                         : 'Não foi possível salvar as alterações. Tente novamente.',
                 'error',
             );
@@ -356,8 +329,6 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                 </div>
 
                 <div className="p-6 space-y-4">
-                    {/* Seção: Cliente */}
-                    <p className={`text-xs font-mono uppercase tracking-widest ${colors.textMuted}`}>Cliente</p>
                     <div>
                         <label className={labelStyles} htmlFor="appt-client">Cliente</label>
                         <select
@@ -374,27 +345,40 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                         </select>
                     </div>
 
-                    {/* Professional */}
+                    {/* Profissional · Data · Horário — só leitura no fuso da loja */}
                     <div>
-                        <label className={labelStyles} htmlFor="appt-professional">Profissional</label>
-                        <select
-                            id="appt-professional"
-                            value={selectedProfessional}
-                            onChange={(e) => setSelectedProfessional(e.target.value)}
-                            className={inputStyles}
-                            disabled={loading || lockProfessional}
-                            aria-describedby={lockProfessional ? 'appt-professional-locked' : undefined}
-                        >
-                            <option value="">Selecione um profissional</option>
-                            {teamMembers.map(member => (
-                                <option key={member.id} value={member.id}>{member.name}</option>
-                            ))}
-                        </select>
-                        {lockProfessional && (
-                            <p id="appt-professional-locked" className={`text-xs mt-1 ${colors.textMuted}`}>
-                                Você pode reagendar os seus agendamentos, mas não passá-los para outro profissional.
+                        <div className="flex items-center justify-between gap-2">
+                            <p className={`text-xs font-medium ${colors.textMuted} mb-0 inline-flex items-center gap-1.5 whitespace-nowrap min-w-0`} id="appt-schedule-label">
+                                Profissional · Data · Horário
+                                <Lock className="h-3.5 w-3.5 text-theme-accent shrink-0" aria-hidden="true" />
                             </p>
-                        )}
+                            {onReschedule && (
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    data-testid="edit-reschedule-link"
+                                    onClick={onReschedule}
+                                    className="min-h-[44px] shrink-0 px-3"
+                                >
+                                    Remarcar
+                                </Button>
+                            )}
+                        </div>
+                        <p
+                            id="appt-schedule-readonly-values"
+                            aria-labelledby="appt-schedule-label"
+                            className={`text-sm ${colors.text} mt-1.5`}
+                        >
+                            <span data-testid="edit-readonly-professional">{displayPro}</span>
+                            {' · '}
+                            <span data-testid="edit-readonly-date">{displayDate}</span>
+                            {' · '}
+                            <span data-testid="edit-readonly-time">{displayTime}</span>
+                        </p>
+                        <p id="appt-schedule-readonly" className={`text-xs ${colors.textMuted} mt-2`}>
+                            Para mudar data, horário ou profissional, use Remarcar.
+                            {lockProfessional ? ' Você pode remarcar os seus agendamentos, mas não passá-los para outro profissional.' : ''}
+                        </p>
                     </div>
 
                     {/* Seção: Serviços */}
@@ -458,40 +442,6 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                             placeholder="Adicione observações sobre o agendamento..."
                             disabled={loading}
                         />
-                    </div>
-
-                    {/* Seção: Horário */}
-                    <div className={`pt-4 border-t ${colors.divider}`}>
-                        <p className={`text-xs font-mono uppercase tracking-widest ${colors.textMuted} mb-3`}>Horário</p>
-                    </div>
-                    {/* Date & Time */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label className={labelStyles} htmlFor="appt-date">Data</label>
-                            <input
-                                id="appt-date"
-                                type="date"
-                                value={selectedDate}
-                                onChange={(e) => setSelectedDate(e.target.value)}
-                                className={inputStyles}
-                                disabled={loading}
-                            />
-                        </div>
-                        <div>
-                            <label className={labelStyles} htmlFor="appt-time">Horário</label>
-                            <select
-                                id="appt-time"
-                                value={selectedTime}
-                                onChange={(e) => setSelectedTime(e.target.value)}
-                                className={inputStyles}
-                                disabled={loading}
-                            >
-                                <option value="">Selecione</option>
-                                {visibleTimeSlots.map(time => (
-                                    <option key={time} value={time}>{time}</option>
-                                ))}
-                            </select>
-                        </div>
                     </div>
 
                     {/* Seção: Preço */}

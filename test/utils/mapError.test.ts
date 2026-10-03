@@ -113,4 +113,25 @@ describe('mapError', () => {
     })).toBe('Não foi possível aceitar: o horário deste pedido está bloqueado na agenda de Bruna. Recuse o pedido ou remova o bloqueio.');
     expect(messageForBookingAcceptError({ message: 'slot_unavailable' })).toBeNull();
   });
+
+  it('traduz hints de remarcação com a copy da spec (T-V05 / C-R05..R08)', () => {
+    expect(mapError({
+      hint: 'reschedule_slot_busy',
+      message: 'Esse horário já está ocupado na agenda de Diego. Escolha outro.',
+    }, 'fallback').message).toBe('Esse horário já está ocupado na agenda de Diego. Escolha outro.');
+    expect(mapError({
+      hint: 'reschedule_unchanged',
+      message: 'Escolha um horário ou profissional diferente do atual.',
+    }, 'fallback').message).toBe('Escolha um horário ou profissional diferente do atual.');
+    expect(mapError({
+      hint: 'reschedule_status_invalid',
+      message: 'Só dá para remarcar atendimentos pendentes ou confirmados.',
+    }, 'fallback').message).toBe('Só dá para remarcar atendimentos pendentes ou confirmados.');
+    expect(
+      mapError({
+        hint: 'reschedule_pending_client_request',
+        message: 'O cliente pediu outro horário para este agendamento. Aceite ou recuse o pedido antes de remarcar.',
+      }, 'fallback').message,
+    ).toBe('O cliente pediu outro horário para este agendamento. Aceite ou recuse o pedido antes de remarcar.');
+  });
 });

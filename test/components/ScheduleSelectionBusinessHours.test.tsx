@@ -106,9 +106,9 @@ describe('ScheduleSelection — horários seguem o expediente, encaixe fora dele
       }],
       durationMinutes: 30,
     });
-    expect(timeBtn('12:00')).toBeNull();
-    expect(timeBtn('12:30')).toBeNull();
-    expect(timeBtn('11:30')).toBeInTheDocument();
-    expect(timeBtn('13:00')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /12:00/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /12:30/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '11:30' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: '13:00' })).toBeEnabled();
   });
 });

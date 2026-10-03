@@ -84,7 +84,7 @@ describe('PublicBookingSettings — antecedência mínima', () => {
     state.profile = { ...state.profile, booking_lead_time_hours: 3 };
     render(<PublicBookingSettings />);
     expect(screen.getByRole('button', { name: /Outro/ })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByTestId('booking-lead-time-custom')).toHaveValue(3);
+    expect(screen.getByTestId('booking-lead-time-custom')).toHaveValue('3');
   });
 
   it('salvar envia booking_lead_time_hours do preset escolhido', async () => {

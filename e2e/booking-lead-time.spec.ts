@@ -327,7 +327,7 @@ test.describe('PR-2 antecedência mínima', () => {
       await page.getByTestId('booking-lead-time-custom').fill('');
       await page.getByRole('button', { name: /Salvar Alterações/ }).click();
       await expect(page.getByTestId('lead-time-custom-error')).toBeVisible();
-      await expect(page.getByTestId('lead-time-custom-hint')).toHaveTextContent('0 a 720');
+      await expect(page.getByTestId('lead-time-custom-hint')).toHaveText('0 a 720');
       await reveal(page, 'lead-time-section');
       await shot(page, `owner-${width}-settings-outro-error.png`);
     });

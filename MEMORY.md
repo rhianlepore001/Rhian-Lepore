@@ -9,6 +9,11 @@
 
 ---
 
+## Bloqueio de agenda — correção do #117 (3 Out 2026)
+
+Branch `cursor/agenda-blocks-acceptance-followup-e54d`. #115 (fila/Completed) não foi alterado.
+Dia inteiro começando hoje pede confirmação e passa a valer a partir de agora (formulário e `create_agenda_block`). `agenda_any_professional_busy` ganhou limite inferior de 1 dia. Ack sem lista de conflitos não cria. Aumentar duração dentro do bloqueio volta a ser recusado. Bloqueios podem se sobrepor. Insert direto de pedido sem profissional atribui o primeiro livre. Rollback confere md5 de 8 funções.
+
 ## 🎨 Design System v1.1 — F0–F4 CONCLUÍDAS (12 Jul 2026, branch `design/ds-v1.1-polish`)
 
 Auditoria de design (`design-audit.md` + `dashboard-proposal.html` + `components-showcase.html`) implementada em 4 commits (F0–F3):
@@ -52,6 +57,8 @@ Auditoria 360° (5 agentes, `agendix-e2e-test/04-bugs-e-achados/consolidado.md`)
 Script isolado em `scripts/demo-seed/` + doc `docs/demo-seed.md`. Dois tenants fictícios (`DEMO · Barbearia Corte Fino` e `DEMO · Studio Aurora`), e-mails `agendix.demo.barber|beauty@example.com`. Dry-run por padrão; `--apply` exige frase de confirmação; banco remoto exige `--allow-remote` + env. O seed **não** foi executado em produção por este agente (sem service role / senha no workspace). Não muda trial nem landing.
 
 ## 🛠️ Trabalho recente
+
+- **Follow-up do bloqueio (3 Out 2026, não aplicado no live):** migration `20261003120000_agenda_blocks_acceptance_followup` cobre B-18/19/20/25, revalidação ao mover horário (B-35/38/46), trava por empresa (B-54..56), “qualquer profissional” (B-44/51) e M1/M2/M3. Rollback em `docs/rollbacks/`. Harness: `scripts/test-sql-agenda-blocks-followup.sh`.
 
 - **Hotfix fila × bloqueio (3 Out 2026):** `settle_queue_ticket` grava `Completed` em `now()` e o trigger de `agenda_blocks` recusava. Migration aditiva `20261003090000_agenda_blocks_allow_queue_completed` deixa `Completed` passar e impede reabrir `Completed` → `Confirmed` dentro do bloqueio. Rollback em `docs/rollbacks/`. **Não aplicada no live** neste PR. Harness: `scripts/test-sql-agenda-blocks-queue.sh`.
 

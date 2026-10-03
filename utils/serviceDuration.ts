@@ -1,3 +1,11 @@
+/** Teto que mantém o limite inferior de 1 dia nas buscas de vaga. */
+export const MAX_BOOKING_DURATION_MIN = 1440;
+
+export function capBookingDuration(minutes: number): number {
+  if (!Number.isFinite(minutes) || minutes < 1) return 1;
+  return Math.min(Math.floor(minutes), MAX_BOOKING_DURATION_MIN);
+}
+
 /** Preset durations shown in the service editor select (minutes). */
 export const SERVICE_DURATION_PRESETS = [15, 30, 45, 60] as const;
 

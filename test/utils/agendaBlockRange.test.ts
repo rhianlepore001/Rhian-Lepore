@@ -1,8 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
+  BLOCK_ALREADY_FINISHED_MESSAGE,
+  BLOCK_START_ADJUSTED_MESSAGE,
   blockToSlotRange,
+  ceilToNextMinute,
+  formatAdjustedBlockEnd,
   blockToSlotRangeOnViewDay,
   buildAgendaBlockRange,
+  classifyAgendaBlockStart,
   formatBlockRangeLabel,
   intervalsOverlap,
   slotOverlapsBlocks,
@@ -118,6 +123,81 @@ describe('slotOverlapsBlocks', () => {
     expect(slotOverlapsBlocks('2026-10-05', '12:30', 30, blocks, 'pro-1', SP)).toBe(true);
     expect(slotOverlapsBlocks('2026-10-05', '13:00', 30, blocks, 'pro-1', SP)).toBe(false);
     expect(slotOverlapsBlocks('2026-10-05', '12:00', 30, blocks, 'pro-2', SP)).toBe(false);
+  });
+});
+
+describe('classifyAgendaBlockStart B-21/B-22', () => {
+  const now = new Date('2026-10-03T15:30:20-03:00');
+
+  it('dia inteiro de hoje pede ajuste para o próximo minuto', () => {
+    const range = buildAgendaBlockRange({
+      kind: 'full_day',
+      startDate: '2026-10-03',
+      timeZone: SP,
+    });
+    const decision = classifyAgendaBlockStart({ ...range, timeZone: SP, now });
+    expect(decision.action).toBe('adjust');
+    if (decision.action !== 'adjust') return;
+    expect(decision.message).toBe(BLOCK_START_ADJUSTED_MESSAGE);
+    expect(decision.startsAt).toBe(ceilToNextMinute(now).toISOString());
+    expect(formatAdjustedBlockEnd(range.endsAt, SP)).toBe('até 00:00 de 04/10');
+  });
+
+  it('C-B10 arredonda 14:07:20 para 14:08', () => {
+    const skewed = new Date('2026-10-03T14:07:20-03:00');
+    expect(ceilToNextMinute(skewed).toISOString()).toBe(new Date('2026-10-03T14:08:00-03:00').toISOString());
+    expect(ceilToNextMinute(new Date('2026-10-03T14:07:00-03:00')).toISOString())
+      .toBe(new Date('2026-10-03T14:07:00-03:00').toISOString());
+  });
+
+  it('período 12:00 depois do meio-dia pede o mesmo ajuste', () => {
+    const range = buildAgendaBlockRange({
+      kind: 'hours',
+      startDate: '2026-10-03',
+      startTime: '12:00',
+      endTime: '18:00',
+      timeZone: SP,
+    });
+    const decision = classifyAgendaBlockStart({ ...range, timeZone: SP, now });
+    expect(decision).toMatchObject({ action: 'adjust', message: BLOCK_START_ADJUSTED_MESSAGE });
+  });
+
+  it('vários dias começados ontem e ainda em curso pedem o mesmo ajuste', () => {
+    const range = buildAgendaBlockRange({
+      kind: 'multi_day',
+      startDate: '2026-10-02',
+      endDate: '2026-10-05',
+      timeZone: SP,
+    });
+    const decision = classifyAgendaBlockStart({ ...range, timeZone: SP, now });
+    expect(decision).toMatchObject({
+      action: 'adjust',
+      startsAt: ceilToNextMinute(now).toISOString(),
+      message: BLOCK_START_ADJUSTED_MESSAGE,
+    });
+  });
+
+  it('fim já passado recusa com a frase do bloqueio terminado', () => {
+    const range = buildAgendaBlockRange({
+      kind: 'full_day',
+      startDate: '2026-09-01',
+      timeZone: SP,
+    });
+    expect(classifyAgendaBlockStart({ ...range, timeZone: SP, now })).toEqual({
+      action: 'refuse',
+      message: BLOCK_ALREADY_FINISHED_MESSAGE,
+    });
+  });
+
+  it('início dentro de 5 minutos segue direto', () => {
+    const range = buildAgendaBlockRange({
+      kind: 'hours',
+      startDate: '2026-10-03',
+      startTime: '15:27',
+      endTime: '16:00',
+      timeZone: SP,
+    });
+    expect(classifyAgendaBlockStart({ ...range, timeZone: SP, now }).action).toBe('submit');
   });
 });
 

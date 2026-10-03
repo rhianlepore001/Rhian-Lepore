@@ -3,7 +3,14 @@ import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Select } from '../ui/Select';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
-import { buildAgendaBlockRange, type AgendaBlockKind } from '../../utils/agendaBlockRange';
+import {
+  BLOCK_START_ADJUSTED_MESSAGE,
+  buildAgendaBlockRange,
+  classifyAgendaBlockStart,
+  formatAdjustedBlockEnd,
+  type AgendaBlockKind,
+} from '../../utils/agendaBlockRange';
+import { formatTimeInTimeZone } from '../../utils/businessTimezone';
 import type { AgendaBlockConflict } from '../../types/agendaBlocks';
 
 export interface AgendaBlockFormMember {
@@ -24,11 +31,16 @@ export interface AgendaBlockFormProps {
   timeZone: string;
   submitting?: boolean;
   conflicts?: AgendaBlockConflict[];
+  /** Erro do servidor, ao lado do início — sem toast por cima dos botões. */
+  fieldError?: string | null;
+  /** Quando o servidor devolve block_start_adjusted, o próximo envio usa este início. */
+  serverAdjustment?: { startsAt: string; endsAt: string; message: string } | null;
   onSubmit: (input: {
     professionalId: string;
     startsAt: string;
     endsAt: string;
     acknowledgeConflicts: boolean;
+    confirmedConflictIds?: string[];
   }) => void | Promise<void>;
 }
 
@@ -59,6 +71,8 @@ export const AgendaBlockForm: React.FC<AgendaBlockFormProps> = ({
   timeZone,
   submitting = false,
   conflicts,
+  fieldError = null,
+  serverAdjustment = null,
   onSubmit,
 }) => {
   const { colors, classes } = useBrutalTheme();
@@ -68,6 +82,10 @@ export const AgendaBlockForm: React.FC<AgendaBlockFormProps> = ({
   const [startTime, setStartTime] = useState(initialTime || '12:00');
   const [endTime, setEndTime] = useState(defaultEndTime(initialTime || '12:00'));
   const [error, setError] = useState<string | null>(null);
+  const [startError, setStartError] = useState<string | null>(null);
+  const [awaitingAdjust, setAwaitingAdjust] = useState(false);
+  const [pinnedStart, setPinnedStart] = useState<string | null>(null);
+  const [pinnedEnd, setPinnedEnd] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -77,7 +95,28 @@ export const AgendaBlockForm: React.FC<AgendaBlockFormProps> = ({
     setStartTime(initialTime || '12:00');
     setEndTime(defaultEndTime(initialTime || '12:00'));
     setError(null);
+    setStartError(null);
+    setAwaitingAdjust(false);
+    setPinnedStart(null);
+    setPinnedEnd(null);
   }, [open, initialDate, initialTime]);
+
+  const clearAdjust = () => {
+    setAwaitingAdjust(false);
+    setPinnedStart(null);
+    setPinnedEnd(null);
+  };
+
+  useEffect(() => {
+    if (!serverAdjustment?.startsAt) return;
+    setAwaitingAdjust(true);
+    setPinnedStart(serverAdjustment.startsAt);
+    setPinnedEnd(serverAdjustment.endsAt);
+    setStartError(null);
+    const hm = formatTimeInTimeZone(serverAdjustment.startsAt, timeZone);
+    setStartTime(hm);
+    setEndTime((current) => (current <= hm ? defaultEndTime(hm) : current));
+  }, [serverAdjustment, timeZone]);
 
   const pendingConflicts = conflicts && conflicts.length > 0;
   const memberOptions = useMemo(
@@ -100,15 +139,38 @@ export const AgendaBlockForm: React.FC<AgendaBlockFormProps> = ({
         setError('Escolha o profissional.');
         return;
       }
+      const decision = classifyAgendaBlockStart({ ...range, timeZone });
+      let startsAt = pinnedStart ?? range.startsAt;
+      let endsAt = pinnedEnd ?? range.endsAt;
+      if (!pinnedStart && decision.action === 'refuse') {
+        clearAdjust();
+        setStartError(decision.message);
+        return;
+      }
+      if (!pinnedStart && decision.action === 'adjust' && !awaitingAdjust) {
+        setAwaitingAdjust(true);
+        setPinnedStart(decision.startsAt);
+        setPinnedEnd(range.endsAt);
+        setStartError(null);
+        const hm = formatTimeInTimeZone(decision.startsAt, timeZone);
+        setStartTime(hm);
+        if (endTime <= hm) setEndTime(defaultEndTime(hm));
+        return;
+      }
+      if (!pinnedStart && decision.action === 'adjust') {
+        startsAt = decision.startsAt;
+        endsAt = range.endsAt;
+      }
       await onSubmit({
         professionalId,
-        startsAt: range.startsAt,
-        endsAt: range.endsAt,
+        startsAt,
+        endsAt,
         acknowledgeConflicts: acknowledge,
+        confirmedConflictIds: acknowledge ? (conflicts ?? []).map((item) => item.id) : undefined,
       });
     } catch (e) {
       const msg = e instanceof Error ? e.message : '';
-      if (msg.includes('invalid_block')) setError('O fim precisa ser depois do início.');
+      if (msg.includes('invalid_block')) setError('O fim do bloqueio precisa ser depois do início.');
       else setError('Não foi possível bloquear. Confira as datas.');
     }
   };
@@ -122,24 +184,28 @@ export const AgendaBlockForm: React.FC<AgendaBlockFormProps> = ({
       footer={
         pendingConflicts ? (
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end w-full">
-            <Button variant="ghost" onClick={onClose} disabled={submitting}>Cancelar</Button>
+            <Button variant="ghost" size="lg" className="w-full sm:w-auto" onClick={onClose} disabled={submitting}>Cancelar</Button>
             <Button
               data-testid="agenda-block-confirm-conflicts"
+              size="lg"
+              className="w-full sm:w-auto"
               onClick={() => handleSubmit(true)}
               loading={submitting}
             >
-              Bloquear mesmo assim
+              {awaitingAdjust ? 'Confirmar' : 'Bloquear mesmo assim'}
             </Button>
           </div>
         ) : (
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end w-full">
-            <Button variant="ghost" onClick={onClose} disabled={submitting}>Cancelar</Button>
+            <Button variant="ghost" size="lg" className="w-full sm:w-auto" onClick={onClose} disabled={submitting}>Cancelar</Button>
             <Button
               data-testid="agenda-block-submit"
+              size="lg"
+              className="w-full sm:w-auto"
               onClick={() => handleSubmit(false)}
               loading={submitting}
             >
-              Bloquear
+              {awaitingAdjust ? 'Confirmar' : 'Bloquear'}
             </Button>
           </div>
         )
@@ -151,7 +217,11 @@ export const AgendaBlockForm: React.FC<AgendaBlockFormProps> = ({
             label="Profissional"
             options={memberOptions}
             value={professionalId}
-            onChange={(e) => onProfessionalIdChange?.(e.target.value)}
+            onChange={(e) => {
+              onProfessionalIdChange?.(e.target.value);
+              clearAdjust();
+              setStartError(null);
+            }}
             data-testid="agenda-block-professional"
           />
         )}
@@ -165,7 +235,7 @@ export const AgendaBlockForm: React.FC<AgendaBlockFormProps> = ({
                 <label
                   key={k.value}
                   data-testid={`agenda-block-kind-${k.value}`}
-                  className={`flex items-center justify-center min-h-[44px] rounded-xl border px-2 py-2 text-center text-xs font-semibold cursor-pointer ${
+                  className={`flex items-center justify-center min-h-[48px] rounded-xl border px-1 py-2 text-center text-xs font-semibold leading-none whitespace-nowrap cursor-pointer ${
                     checked ? 'border-[var(--color-accent)] bg-[var(--color-accent-dim)]' : colors.border
                   }`}
                 >
@@ -174,7 +244,11 @@ export const AgendaBlockForm: React.FC<AgendaBlockFormProps> = ({
                     name="agenda-block-kind"
                     value={k.value}
                     checked={checked}
-                    onChange={() => setKind(k.value)}
+                    onChange={() => {
+                      setKind(k.value);
+                      clearAdjust();
+                      setStartError(null);
+                    }}
                     className="sr-only"
                   />
                   {k.label}
@@ -185,15 +259,26 @@ export const AgendaBlockForm: React.FC<AgendaBlockFormProps> = ({
         </fieldset>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
+          <div className={kind === 'hours' ? '' : 'sm:col-span-2'}>
             <label className={classes.label} htmlFor="agenda-block-start-date">Início</label>
             <input
               id="agenda-block-start-date"
               data-testid="agenda-block-start-date"
               type="date"
+              lang="pt-BR"
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-full min-h-[44px] mt-1.5 px-3 rounded-lg bg-[var(--color-input-bg)] border border-[var(--color-input-border)] text-theme-text"
+              aria-invalid={Boolean(startError || fieldError) || undefined}
+              aria-describedby={
+                awaitingAdjust
+                  ? 'agenda-block-adjust-note'
+                  : (startError || fieldError ? 'agenda-block-start-error' : undefined)
+              }
+              onChange={(e) => {
+                setStartDate(e.target.value);
+                clearAdjust();
+                setStartError(null);
+              }}
+              className="w-full min-h-[48px] mt-1.5 px-3 rounded-lg bg-[var(--color-input-bg)] border border-[var(--color-input-border)] text-theme-text"
             />
           </div>
           {kind === 'hours' && (
@@ -204,7 +289,12 @@ export const AgendaBlockForm: React.FC<AgendaBlockFormProps> = ({
                 data-testid="agenda-block-start-time"
                 type="time"
                 value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
+                aria-invalid={Boolean(startError || fieldError) || undefined}
+                onChange={(e) => {
+                  setStartTime(e.target.value);
+                  clearAdjust();
+                  setStartError(null);
+                }}
                 className="w-full min-h-[44px] mt-1.5 px-3 rounded-lg bg-[var(--color-input-bg)] border border-[var(--color-input-border)] text-theme-text"
               />
             </div>
@@ -217,7 +307,10 @@ export const AgendaBlockForm: React.FC<AgendaBlockFormProps> = ({
                 data-testid="agenda-block-end-date"
                 type="date"
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  clearAdjust();
+                }}
                 className="w-full min-h-[44px] mt-1.5 px-3 rounded-lg bg-[var(--color-input-bg)] border border-[var(--color-input-border)] text-theme-text"
               />
             </div>
@@ -230,12 +323,47 @@ export const AgendaBlockForm: React.FC<AgendaBlockFormProps> = ({
                 data-testid="agenda-block-end-time"
                 type="time"
                 value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
+                onChange={(e) => {
+                  setEndTime(e.target.value);
+                  clearAdjust();
+                }}
                 className="w-full min-h-[44px] mt-1.5 px-3 rounded-lg bg-[var(--color-input-bg)] border border-[var(--color-input-border)] text-theme-text"
               />
             </div>
           )}
         </div>
+
+        {awaitingAdjust && pinnedStart && pinnedEnd && (
+          <div
+            id="agenda-block-adjust-note"
+            data-testid="agenda-block-adjust-note"
+            role="status"
+            className="rounded-xl border px-3 py-2 text-sm"
+            style={{
+              color: 'var(--color-warning)',
+              background: 'var(--color-warning-bg)',
+              borderColor: 'var(--color-warning-border)',
+            }}
+          >
+            <p>{serverAdjustment?.message || BLOCK_START_ADJUSTED_MESSAGE}</p>
+            <p className="mt-1">
+              Começa às <time dateTime={pinnedStart}>{formatTimeInTimeZone(pinnedStart, timeZone)}</time>
+              {' '}
+              {formatAdjustedBlockEnd(pinnedEnd, timeZone)}
+            </p>
+          </div>
+        )}
+
+        {(startError || fieldError) && (
+          <p
+            id="agenda-block-start-error"
+            className="text-sm text-[var(--color-danger)]"
+            data-testid="agenda-block-start-error"
+            role="alert"
+          >
+            {startError || fieldError}
+          </p>
+        )}
 
         <p className={`text-xs ${colors.textMuted}`}>
           Ninguém agenda neste período — nem pelo link, nem pela agenda. Os atendimentos já marcados continuam.

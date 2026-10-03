@@ -34,6 +34,7 @@ export interface AgendaPublicBookingsProps {
   currencyRegion: Region;
   onAccept: (booking: AgendaPublicBookingItem) => void;
   onReject: (bookingId: string) => void;
+  acceptError?: { id: string; message: string } | null;
 }
 
 function bookingNote(booking: AgendaPublicBookingItem): string {
@@ -59,6 +60,7 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
   currencyRegion,
   onAccept,
   onReject,
+  acceptError = null,
 }) => {
   const { colors, accent, classes } = useBrutalTheme();
 
@@ -77,7 +79,7 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
           <AlertTriangle className={`w-4 h-4 mt-0.5 shrink-0 ${accent.text}`} aria-hidden />
           <div className="min-w-0">
             <h3 className={`${colors.text} font-bold text-sm leading-snug`}>
-              {bookings.length} solicitação(ões) online
+              {bookings.length === 1 ? '1 solicitação online' : `${bookings.length} solicitações online`}
             </h3>
             <p className={`${colors.textSecondary} text-xs leading-snug break-words`}>
               {summary}
@@ -114,7 +116,7 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
                   <button
                     type="button"
                     onClick={() => onAccept(booking)}
-                    className={`px-3 min-h-[44px] py-1.5 rounded-lg text-xs font-bold inline-flex items-center gap-1 ${classes.buttonSuccess}`}
+                    className={`px-4 min-h-[48px] py-2 rounded-lg text-sm font-bold inline-flex items-center gap-1 ${classes.buttonSuccess}`}
                     title="Aceitar"
                   >
                     <Check className="w-3.5 h-3.5" aria-hidden /> Aceitar
@@ -122,7 +124,7 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
                   <button
                     type="button"
                     onClick={() => onReject(booking.id)}
-                    className={`px-3 min-h-[44px] py-1.5 rounded-lg text-xs font-bold inline-flex items-center gap-1 ${classes.buttonDanger}`}
+                    className={`px-4 min-h-[48px] py-2 rounded-lg text-sm font-bold inline-flex items-center gap-1 ${classes.buttonDanger}`}
                     title="Recusar"
                   >
                     <X className="w-3.5 h-3.5" aria-hidden /> Recusar
@@ -154,6 +156,15 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
               {note && (
                 <p className={`${colors.text} text-xs leading-snug break-words whitespace-pre-wrap mt-1.5`}>
                   {note}
+                </p>
+              )}
+              {acceptError?.id === booking.id && (
+                <p
+                  className="mt-2 text-sm leading-snug break-words text-[var(--color-danger)]"
+                  data-testid="agenda-public-booking-accept-error"
+                  role="alert"
+                >
+                  {acceptError.message}
                 </p>
               )}
             </li>

@@ -1,9 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import {
+  capBookingDuration,
   formatServiceDuration,
   minutesFromSelection,
   selectionFromDurationMinutes,
 } from '../../utils/serviceDuration';
+
+describe('capBookingDuration', () => {
+  it('soma acima de 24h fica em 1440', () => {
+    expect(capBookingDuration(30 + 2000)).toBe(1440);
+    expect(capBookingDuration(0)).toBe(1);
+  });
+});
 
 describe('selectionFromDurationMinutes', () => {
   it('uses presets when possible', () => {

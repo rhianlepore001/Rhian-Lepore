@@ -11,9 +11,10 @@ import { useToast } from './ui';
 import { formatDateForInput, combineDateAndTime } from '../utils/date';
 import { buildManualBookingTimeSlots } from '../utils/agendaTimeSlots';
 import { isStaffEditForbiddenError, STAFF_EDIT_FORBIDDEN_MESSAGE } from '../utils/staffAppointmentPermission';
-import { AGENDA_BLOCKED_MESSAGE, isAgendaBlockedError } from '../utils/agendaBlockPermission';
+import { agendaBlockedMessage, isAgendaBlockedError } from '../utils/agendaBlockPermission';
 import { useAgendaBlocks } from '../hooks/useAgendaBlocks';
 import { slotOverlapsBlocks } from '../utils/agendaBlockRange';
+import { capBookingDuration } from '../utils/serviceDuration';
 
 import { SearchableSelect } from './SearchableSelect';
 import { useProducts } from '@/hooks/useCatalog';
@@ -201,9 +202,9 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     const [finalPriceInput, setFinalPriceInput] = useState(appointment.price.toFixed(2));
     const [discountPercentage, setDiscountPercentage] = useState(initialDiscountPercentage);
     const { data: agendaBlocks = [] } = useAgendaBlocks(selectedDate);
-    const durationMin = appointment.duration_minutes
+    const durationMin = capBookingDuration(appointment.duration_minutes
         || services.filter((s) => selectedServices.includes(s.id)).reduce((sum, s) => sum + (s.duration_minutes || 30), 0)
-        || 30;
+        || 30);
     const visibleTimeSlots = useMemo(() => {
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
         return timeSlots.filter((t) => {
@@ -321,7 +322,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                 isStaffEditForbiddenError(error)
                     ? STAFF_EDIT_FORBIDDEN_MESSAGE
                     : isAgendaBlockedError(error)
-                        ? AGENDA_BLOCKED_MESSAGE
+                        ? agendaBlockedMessage(teamMembers.find(m => m.id === selectedProfessional)?.name || 'profissional')
                         : 'Não foi possível salvar as alterações. Tente novamente.',
                 'error',
             );

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { mapError, formatUserFacingError, isEmailTakenError } from '../../utils/mapError';
+import { messageForBookingAcceptError } from '../../utils/agendaBlockPermission';
 
 describe('mapError', () => {
   it('usa o fallback PT-BR quando o código é desconhecido', () => {
@@ -68,17 +69,27 @@ describe('mapError', () => {
     expect(isEmailTakenError({ code: 'invalid_login' })).toBe(false);
   });
 
-  it('traduz agenda_blocked para copy de trava rígida', () => {
-    const out = mapError({ code: 'agenda_blocked', message: 'agenda_blocked' }, 'fallback');
-    expect(out.message).toContain('está bloqueado');
-    expect(out.message).toContain('Remova o bloqueio');
-    expect(mapError({ message: 'Este horário está bloqueado. Remova o bloqueio para agendar.' }, 'fallback').message)
-      .toContain('bloqueado');
+  it('traduz professional_blocked para M1 com o nome do profissional', () => {
+    const out = mapError({
+      code: 'P0001',
+      hint: 'professional_blocked',
+      message: 'Horário bloqueado na agenda de Diego. Para agendar, remova o bloqueio primeiro.',
+    }, 'fallback');
+    expect(out.message).toBe('Horário bloqueado na agenda de Diego. Para agendar, remova o bloqueio primeiro.');
+    expect(mapError({ code: 'agenda_blocked', message: 'agenda_blocked' }, 'fallback').message)
+      .toBe('Horário bloqueado na agenda de profissional. Para agendar, remova o bloqueio primeiro.');
     const fromTrigger = mapError(
-      { code: '42501', message: 'Este horário está bloqueado. Remova o bloqueio para agendar.' },
+      { code: 'P0001', message: 'Este horário está bloqueado. Remova o bloqueio para agendar.' },
       'fallback',
     );
-    expect(fromTrigger.message).toContain('Remova o bloqueio');
+    expect(fromTrigger.message).toContain('remova o bloqueio primeiro');
     expect(fromTrigger.message).not.toContain('permissão');
+  });
+
+  it('M2 é a mensagem do aceite, separada do M1', () => {
+    expect(messageForBookingAcceptError({
+      message: 'Horário bloqueado na agenda de Bruna. Para agendar, remova o bloqueio primeiro.',
+    })).toBe('Não foi possível aceitar: o horário deste pedido está bloqueado na agenda de Bruna. Recuse o pedido ou remova o bloqueio.');
+    expect(messageForBookingAcceptError({ message: 'slot_unavailable' })).toBeNull();
   });
 });

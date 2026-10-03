@@ -104,11 +104,15 @@ export const TeamSettings: React.FC = () => {
         startsAt: string;
         endsAt: string;
         acknowledgeConflicts: boolean;
+        confirmedConflictIds?: string[];
     }) => {
         try {
             const result = await createBlock.mutateAsync(input);
             if (isAgendaBlockConflictResult(result)) {
                 setBlockConflicts(result.items);
+                if (result.code === 'block_conflicts_changed') {
+                    showToast(result.message ?? messageForAgendaBlockResultCode(result.code), 'error');
+                }
                 return;
             }
             if (result.success === false) {

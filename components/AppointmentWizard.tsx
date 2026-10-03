@@ -21,13 +21,14 @@ import { AppointmentReview } from './appointment/AppointmentReview';
 import { StepHeading } from './appointment/StepHeading';
 import { logger } from '../utils/Logger';
 import { combineDateAndTime, formatLocalDateString } from '../utils/date';
+import { capBookingDuration } from '../utils/serviceDuration';
 import { useCreateAppointment } from '../hooks/useScheduling';
 import { getFirstAvailableProfessional } from '../services/publicBooking';
 import { useToast } from '@/components/ui';
 import { useProducts } from '@/hooks/useCatalog';
 import { slotConflictMessage } from '../utils/noShowSlotReuse';
 import { useAgendaBlocks } from '../hooks/useAgendaBlocks';
-import { AGENDA_BLOCKED_MESSAGE, isAgendaBlockedError } from '../utils/agendaBlockPermission';
+import { agendaBlockedMessage, isAgendaBlockedError } from '../utils/agendaBlockPermission';
 import { setAppointmentProductLines } from '@/services/catalog';
 import {
     ProductLinesPicker,
@@ -149,9 +150,9 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
 
         (async () => {
             try {
-                const duration = services
+                const duration = capBookingDuration(services
                     .filter(s => selectedServiceIds.includes(s.id))
-                    .reduce((sum, s) => sum + (s.duration_minutes || 30), 0);
+                    .reduce((sum, s) => sum + (s.duration_minutes || 30), 0));
                 // Mesmo instante que o handleSubmit grava (data/hora locais do
                 // dispositivo da equipe). Antes: data em UTC + offset fixo por
                 // região, que em PT no verão checava 1h depois do horário real.
@@ -184,7 +185,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     ]);
 
     const finalPrice = parseFloat(customPrice || '0') * (1 - (parseFloat(discount || '0') / 100));
-    const durationMinutes = selectedServicesDetails.reduce((sum, s) => sum + (s.duration_minutes || 30), 0) || 30;
+    const durationMinutes = capBookingDuration(selectedServicesDetails.reduce((sum, s) => sum + (s.duration_minutes || 30), 0) || 30);
     const { data: agendaBlocks = [] } = useAgendaBlocks(formatLocalDateString(selectedDate));
 
     const handleSubmit = async () => {
@@ -222,11 +223,11 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
             }) as { success?: boolean; message?: string; booking_id?: string; code?: string };
 
             if (!result.success) {
-                const blocked = result.code === 'agenda_blocked' || isAgendaBlockedError(result);
+                const blocked = result.code === 'agenda_blocked' || result.code === 'professional_blocked' || isAgendaBlockedError(result);
                 const proName = teamMembers.find(m => m.id === selectedProId)?.name;
                 showToast(
                     blocked
-                        ? AGENDA_BLOCKED_MESSAGE
+                        ? agendaBlockedMessage(proName || 'profissional')
                         : slotConflictMessage(duration || 30, proName, result.message),
                     'warning',
                 );

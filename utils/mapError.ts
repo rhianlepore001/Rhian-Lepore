@@ -1,4 +1,10 @@
-import { AGENDA_BLOCKED_MESSAGE } from './agendaBlockPermission';
+import {
+  AGENDA_BLOCKED_MESSAGE,
+  PUBLIC_SLOT_UNAVAILABLE_MESSAGE,
+  agendaBlockedMessage,
+  messageForAgendaBlockResultCode,
+  professionalNameFromBlockedError,
+} from './agendaBlockPermission';
 
 /**
  * Mapa de erro: traduz exceções do Supabase/JS em copy humana PT-BR + código curto
@@ -19,6 +25,7 @@ export interface UserFacingError {
 interface RawErrorShape {
   code?: string;
   message?: string;
+  hint?: string;
   name?: string;
   status?: number;
 }
@@ -38,9 +45,15 @@ const CODE_MAP: Record<string, string> = {
   '23503': 'Não foi possível concluir: existe um vínculo com outro registro.',
   '22P02': 'Algum campo está em formato inválido. Revise e tente de novo.',
   '42501': 'Você não tem permissão para essa ação.',
-  slot_unavailable: 'Este horário acabou de ser ocupado. Escolha outro.',
+  slot_unavailable: PUBLIC_SLOT_UNAVAILABLE_MESSAGE,
   booking_not_cancellable: 'Não foi possível cancelar este agendamento. Tente de novo ou fale com o salão.',
   agenda_blocked: AGENDA_BLOCKED_MESSAGE,
+  professional_blocked: AGENDA_BLOCKED_MESSAGE,
+  block_finished: messageForAgendaBlockResultCode('block_finished'),
+  block_too_long: messageForAgendaBlockResultCode('block_too_long'),
+  block_starts_in_past: messageForAgendaBlockResultCode('block_starts_in_past'),
+  block_start_adjusted: messageForAgendaBlockResultCode('block_start_adjusted'),
+  block_conflicts_changed: messageForAgendaBlockResultCode('block_conflicts_changed'),
 
   // PostgREST
   PGRST116: 'Não encontramos esse registro.',
@@ -52,12 +65,21 @@ function pickCode(raw: RawErrorShape): string {
 
   if (
     raw.code === 'agenda_blocked'
+    || raw.code === 'professional_blocked'
+    || raw.hint === 'professional_blocked'
     || msg.includes('agenda_blocked')
+    || msg.includes('professional_blocked')
+    || msg.includes('horário bloqueado na agenda')
+    || msg.includes('horario bloqueado na agenda')
     || msg.includes('está bloqueado')
     || msg.includes('esta bloqueado')
   ) {
-    return 'agenda_blocked';
+    return 'professional_blocked';
   }
+  if (raw.code === 'block_finished' || raw.code === 'block_too_long' || raw.code === 'block_starts_in_past' || raw.code === 'block_start_adjusted' || raw.code === 'block_conflicts_changed') {
+    return raw.code;
+  }
+  if (msg.includes('este bloqueio já terminou')) return 'block_finished';
   if (raw.code && CODE_MAP[raw.code]) return raw.code;
   if (
     raw.code === 'email_exists'
@@ -105,7 +127,10 @@ export function mapError(error: unknown, fallback: string): UserFacingError {
       : { message: String(error ?? '') };
 
   const code = pickCode(raw);
-  const human = CODE_MAP[code] ?? fallback;
+  const named = professionalNameFromBlockedError(raw);
+  const human = code === 'professional_blocked' && named
+    ? agendaBlockedMessage(named)
+    : CODE_MAP[code] ?? fallback;
 
   return {
     message: human,

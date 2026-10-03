@@ -39,14 +39,10 @@ async function shot(page: Page, name: string) {
 }
 
 async function settle(page: Page) {
-  await page.evaluate(async () => {
-    await new Promise<void>((resolve) => {
-      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
-    });
-    const animations = typeof document.getAnimations === 'function' ? document.getAnimations() : [];
-    await Promise.all(animations.map((a) => a.finished.catch(() => undefined)));
-  });
-  await page.waitForTimeout(400);
+  await page.evaluate(() => new Promise<void>((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+  }));
+  await page.waitForTimeout(300);
 }
 
 function lisbonToday(): string {

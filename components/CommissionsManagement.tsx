@@ -438,7 +438,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                 next.add(paidId);
                 return next;
             });
-            showToast(`Comissão de ${selectedProfessional.professional_name} paga com sucesso!`, 'success');
+            showToast(`Comissão de ${selectedProfessional.professional_name} paga: ${formatMoney(paid)}.`, 'success');
             setShowPayModal(false);
             setSelectedProfessional(null);
             loadPayouts();
@@ -664,7 +664,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
             {showPayModal && selectedProfessional && (
                 <Modal
                     open
-                    size="full"
+                    size="lg"
                     onClose={() => setShowPayModal(false)}
                     title="Confirmar repasse"
                     footer={
@@ -699,9 +699,15 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                         <div>
                             <p className={`mb-1 text-lg font-bold leading-none ${colors.text}`}>{selectedProfessional.professional_name}</p>
                             <p className={`text-xs ${font.mono} ${colors.textMuted}`}>
-                                {selectedProfessional.cycle ? 'Neste ciclo' : 'Saldo'}: <span className="text-[var(--color-warning)]">{formatMoney(selectedProfessional.total_due)}</span>
-                                {selectedProfessional.cycle && selectedProfessional.cycle.saldo_acumulado > selectedProfessional.total_due && (
-                                    <> · Saldo total: {formatMoney(selectedProfessional.cycle.saldo_acumulado)}</>
+                                {selectedProfessional.cycle && selectedProfessional.total_due <= 0 && (selectedProfessional.cycle.saldo_anterior ?? 0) > 0 ? (
+                                    <>Ciclos anteriores: <span className={colors.text}>{formatMoney(selectedProfessional.cycle.saldo_anterior)}</span></>
+                                ) : (
+                                    <>
+                                        {selectedProfessional.cycle ? 'Neste ciclo' : 'Saldo'}: <span className="text-[var(--color-warning)]">{formatMoney(selectedProfessional.total_due)}</span>
+                                        {selectedProfessional.cycle && selectedProfessional.cycle.saldo_acumulado > selectedProfessional.total_due && (
+                                            <> · Saldo total: {formatMoney(selectedProfessional.cycle.saldo_acumulado)}</>
+                                        )}
+                                    </>
                                 )}
                             </p>
                         </div>
@@ -716,10 +722,11 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                 type="text"
                                 inputMode="decimal"
                                 readOnly
-                                value={paymentAmount}
+                                aria-label="Valor a ser liquidado"
+                                value={formatMoney(Number(paymentAmount) || 0)}
                                 aria-busy={previewing}
                                 className={`w-full rounded-2xl border-2 ${colors.border} ${colors.inputBg} p-4 ${font.mono} text-2xl ${colors.text} transition-all focus:border-[var(--color-success)] focus:outline-none`}
-                                placeholder="0.00"
+                                placeholder={formatMoney(0)}
                             />
                         </div>
 

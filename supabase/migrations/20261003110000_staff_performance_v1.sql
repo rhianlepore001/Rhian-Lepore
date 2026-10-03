@@ -465,13 +465,13 @@ BEGIN
   ),
   agg AS (
     SELECT fr.professional_id,
-      COALESCE(sum(fr.cv) FILTER (WHERE NOT fr.commission_paid AND fr.created_at >= v_from AND fr.created_at < v_to), 0) AS a_pagar_ciclo,
-      COALESCE(sum(fr.cv) FILTER (WHERE NOT fr.commission_paid), 0) AS saldo_acumulado,
-      COALESCE(sum(fr.cv) FILTER (WHERE NOT fr.commission_paid AND fr.created_at < v_from), 0) AS saldo_anterior,
-      min((fr.created_at AT TIME ZONE v_tz)::date) FILTER (WHERE NOT fr.commission_paid) AS primeiro_nao_pago,
-      COALESCE(sum(fr.cv) FILTER (WHERE fr.commission_paid AND fr.created_at >= v_from AND fr.created_at < v_to), 0) AS pago_calculado,
-      count(*) FILTER (WHERE NOT fr.commission_paid AND NOT fr.is_product AND fr.created_at >= v_from AND fr.created_at < v_to) AS servicos_ciclo,
-      count(*) FILTER (WHERE NOT fr.commission_paid AND fr.is_product AND fr.created_at >= v_from AND fr.created_at < v_to) AS produtos_ciclo
+      COALESCE(sum(fr.cv) FILTER (WHERE COALESCE(fr.commission_paid, false) = false AND fr.created_at >= v_from AND fr.created_at < v_to), 0) AS a_pagar_ciclo,
+      COALESCE(sum(fr.cv) FILTER (WHERE COALESCE(fr.commission_paid, false) = false), 0) AS saldo_acumulado,
+      COALESCE(sum(fr.cv) FILTER (WHERE COALESCE(fr.commission_paid, false) = false AND fr.created_at < v_from), 0) AS saldo_anterior,
+      min((fr.created_at AT TIME ZONE v_tz)::date) FILTER (WHERE COALESCE(fr.commission_paid, false) = false) AS primeiro_nao_pago,
+      COALESCE(sum(fr.cv) FILTER (WHERE COALESCE(fr.commission_paid, false) = true AND fr.created_at >= v_from AND fr.created_at < v_to), 0) AS pago_calculado,
+      count(*) FILTER (WHERE COALESCE(fr.commission_paid, false) = false AND NOT fr.is_product AND fr.created_at >= v_from AND fr.created_at < v_to) AS servicos_ciclo,
+      count(*) FILTER (WHERE COALESCE(fr.commission_paid, false) = false AND fr.is_product AND fr.created_at >= v_from AND fr.created_at < v_to) AS produtos_ciclo
     FROM fr GROUP BY fr.professional_id
   ),
   rows AS (
@@ -607,8 +607,9 @@ GRANT EXECUTE ON FUNCTION public.get_staff_performance_v1(date, date, uuid, bool
 GRANT EXECUTE ON FUNCTION public.get_commission_cycle_v1(date) TO authenticated, service_role;
 
 -- Paga o SUM do que o fuso do tenant realmente marca. Sem p_amount do cliente.
--- mark_commissions_as_paid de prod NÃO é alterada (created_at::date em UTC + insert
--- mesmo quando n=0). Esta RPC é o caminho novo da aba de repasse.
+-- mark_commissions_as_paid de prod NÃO é alterada. Inserts copiam as colunas
+-- NOT NULL de prod (payment_date, net_amount, commission_percent, barber_name,
+-- description) e gravam commission_paid_at nas linhas marcadas.
 CREATE OR REPLACE FUNCTION public._pay_commission_core(
   p_tenant text, p_professional_id uuid, p_start date, p_end date, p_commit boolean)
 RETURNS jsonb
@@ -624,12 +625,16 @@ DECLARE
   v_amount numeric := 0;
   v_count int := 0;
   v_is_owner boolean;
+  v_professional_name text;
+  v_commission_percent numeric;
+  v_payment_date date;
 BEGIN
   IF p_start IS NULL OR p_end IS NULL OR p_start > p_end THEN
     RAISE EXCEPTION 'Intervalo inválido.' USING ERRCODE = '22023';
   END IF;
 
-  SELECT COALESCE(tm.is_owner, false) INTO v_is_owner
+  SELECT COALESCE(tm.is_owner, false), tm.name, COALESCE(tm.commission_percent, tm.commission_rate, 0)
+    INTO v_is_owner, v_professional_name, v_commission_percent
     FROM public.team_members tm
    WHERE tm.id = p_professional_id AND tm.user_id = p_tenant;
   IF NOT FOUND THEN
@@ -647,7 +652,7 @@ BEGIN
       INTO v_amount, v_count
       FROM public.finance_records fr
      WHERE fr.user_id = p_tenant AND fr.professional_id = p_professional_id
-       AND fr.type = 'revenue' AND fr.commission_paid IS NOT TRUE
+       AND fr.type = 'revenue' AND COALESCE(fr.commission_paid, false) = false
        AND COALESCE(fr.commission_value, 0) > 0
        AND fr.created_at >= v_from AND fr.created_at < v_to;
     RETURN jsonb_build_object('amount', v_amount, 'count', v_count, 'start', p_start, 'end', p_end, 'tz', v_tz);
@@ -657,14 +662,14 @@ BEGIN
     SELECT fr.id
       FROM public.finance_records fr
      WHERE fr.user_id = p_tenant AND fr.professional_id = p_professional_id
-       AND fr.type = 'revenue' AND fr.commission_paid IS NOT TRUE
+       AND fr.type = 'revenue' AND COALESCE(fr.commission_paid, false) = false
        AND COALESCE(fr.commission_value, 0) > 0
        AND fr.created_at >= v_from AND fr.created_at < v_to
      FOR UPDATE OF fr
   ),
   upd AS (
     UPDATE public.finance_records f
-       SET commission_paid = true
+       SET commission_paid = true, commission_paid_at = now()
      WHERE f.id IN (SELECT id FROM locked)
      RETURNING COALESCE(f.commission_value, 0) AS cv
   )
@@ -674,10 +679,21 @@ BEGIN
     RETURN jsonb_build_object('amount', 0, 'count', 0, 'start', p_start, 'end', p_end, 'tz', v_tz);
   END IF;
 
-  INSERT INTO public.commission_payments (user_id, professional_id, amount, start_date, end_date, status, paid_at)
-  VALUES (p_tenant, p_professional_id, v_amount, p_start, p_end, 'paid', now());
-  INSERT INTO public.finance_records (user_id, professional_id, type, revenue, commission_value, commission_paid, created_at)
-  VALUES (p_tenant, p_professional_id, 'expense', 0, v_amount, true, now());
+  v_payment_date := (now() AT TIME ZONE v_tz)::date;
+
+  INSERT INTO public.commission_payments (
+    user_id, professional_id, payment_date, amount, start_date, end_date,
+    status, paid_at, net_amount, commission_percent)
+  VALUES (
+    p_tenant, p_professional_id, v_payment_date, v_amount, p_start, p_end,
+    'paid', now(), v_amount, v_commission_percent);
+
+  INSERT INTO public.finance_records (
+    user_id, professional_id, barber_name, revenue, commission_value, type,
+    description, created_at, commission_paid)
+  VALUES (
+    p_tenant, p_professional_id, v_professional_name, 0, v_amount, 'expense',
+    'Pagamento de Comissão', now(), true);
 
   RETURN jsonb_build_object('amount', v_amount, 'count', v_count, 'start', p_start, 'end', p_end, 'tz', v_tz);
 END;

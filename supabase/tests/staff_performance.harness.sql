@@ -15,51 +15,223 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE EXECUTE ON FUNCTIONS FROM PUBLI
 CREATE TABLE public.profiles (id text PRIMARY KEY, role text, company_id text, region text);
 CREATE TABLE public.business_settings (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id text NOT NULL,
   timezone text, commission_settlement_day_of_month int);
-CREATE TABLE public.team_members (id uuid PRIMARY KEY, user_id text NOT NULL, name text NOT NULL, photo_url text,
+CREATE TABLE public.team_members (id uuid PRIMARY KEY, user_id text NOT NULL, name text NOT NULL,
+  role text NOT NULL, photo_url text,
   is_owner boolean DEFAULT false, active boolean DEFAULT true, commission_rate numeric, commission_percent numeric,
   staff_user_id uuid, deleted_at timestamptz);
+-- service em prod é NOT NULL sem default; DEFAULT 'Corte' só no harness p/ a fixture.
 CREATE TABLE public.appointments (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id text, client_id uuid NOT NULL,
-  service text NOT NULL DEFAULT 'Corte', appointment_time timestamptz NOT NULL, status text NOT NULL, price numeric,
-  created_at timestamptz DEFAULT now(), professional_id uuid, duration_minutes int, payment_method text,
-  total_price numeric DEFAULT 0, completed_at timestamptz);
-CREATE TABLE public.finance_records (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id text, professional_id uuid,
-  appointment_id uuid, type text, revenue numeric, commission_value numeric, commission_paid boolean DEFAULT false,
-  created_at timestamptz DEFAULT now());
+  service text NOT NULL DEFAULT 'Corte', appointment_time timestamptz NOT NULL, status text NOT NULL DEFAULT 'Pending', price numeric,
+  created_at timestamptz DEFAULT now(), professional_id uuid, duration_minutes int DEFAULT 30, payment_method text,
+  total_price numeric DEFAULT 0, completed_at timestamptz, origin text NOT NULL DEFAULT 'agenda');
+CREATE TABLE public.finance_records (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  barber_name text NOT NULL,
+  revenue numeric DEFAULT 0,
+  commission_rate numeric DEFAULT 0,
+  commission_value numeric DEFAULT 0,
+  created_at timestamptz DEFAULT now(),
+  user_id text,
+  commission_paid boolean DEFAULT false,
+  professional_id uuid,
+  appointment_id uuid,
+  commission_paid_at timestamptz,
+  type text DEFAULT 'revenue',
+  description text,
+  status text DEFAULT 'paid'
+);
 CREATE TABLE public.product_sales (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), company_id uuid NOT NULL,
   appointment_id uuid, finance_record_id uuid, professional_id uuid, quantity int NOT NULL DEFAULT 1,
   total_revenue numeric NOT NULL, total_cost numeric NOT NULL, commission_value numeric NOT NULL DEFAULT 0,
   created_at timestamptz NOT NULL);
-CREATE TABLE public.commission_payments (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id text, professional_id uuid,
-  amount numeric NOT NULL, start_date date NOT NULL, end_date date NOT NULL, status text NOT NULL, paid_at timestamptz);
+CREATE TABLE public.commission_payments (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id text,
+  professional_id uuid,
+  payment_date date NOT NULL,
+  amount numeric NOT NULL,
+  start_date date NOT NULL,
+  end_date date NOT NULL,
+  created_at timestamptz DEFAULT now(),
+  gross_amount numeric NOT NULL DEFAULT 0,
+  fee_deducted numeric NOT NULL DEFAULT 0,
+  commission_percent numeric NOT NULL DEFAULT 0,
+  net_amount numeric NOT NULL DEFAULT 0,
+  status text NOT NULL DEFAULT 'pending',
+  paid_at timestamptz,
+  paid_by uuid,
+  updated_at timestamptz DEFAULT now()
+);
 
--- Stubs das funções existentes (só para provar que a migration não as altera)
-CREATE FUNCTION public.get_auth_role() RETURNS text LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
-AS $$ SELECT role FROM public.profiles WHERE id = auth.uid()::text $$;
+-- barber_name é NOT NULL sem default em prod; o trigger só existe no harness
+-- para a fixture não precisar repetir o nome em cada INSERT.
+CREATE FUNCTION public._harness_fill_barber_name() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  IF NEW.barber_name IS NULL THEN
+    SELECT tm.name INTO NEW.barber_name FROM public.team_members tm WHERE tm.id = NEW.professional_id;
+    IF NEW.barber_name IS NULL THEN NEW.barber_name := '(sem profissional)'; END IF;
+  END IF;
+  RETURN NEW;
+END $$;
+CREATE TRIGGER trg_finance_records_barber_name BEFORE INSERT ON public.finance_records
+  FOR EACH ROW EXECUTE FUNCTION public._harness_fill_barber_name();
+
+-- Funções existentes: texto verbatim de prod (pg_get_functiondef, 2026-10-03).
+-- md5 mark_commissions_as_paid = b8a54fe37623d7ce47ae0e8ed9571329
+-- md5 mark_commissions_as_paid__tenant_unsafe = 1588d01192bcbd5238d22de794259c7a
+CREATE OR REPLACE FUNCTION public.get_auth_role()
+ RETURNS text
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_role TEXT;
+BEGIN
+  SELECT role INTO v_role
+  FROM public.profiles
+  WHERE id = auth.uid()::text;
+  RETURN v_role;
+END;
+$function$;
+
+CREATE OR REPLACE FUNCTION public.get_auth_company_id()
+ RETURNS text
+ LANGUAGE plpgsql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_company_id TEXT;
+BEGIN
+  SELECT COALESCE(NULLIF(btrim(company_id), ''), id)
+    INTO v_company_id
+  FROM public.profiles
+  WHERE id = auth.uid()::text;
+  RETURN v_company_id;
+END;
+$function$;
+
 CREATE FUNCTION public.get_commissions_due() RETURNS int LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
 AS $$ SELECT 1 $$;
 
--- Cópia fiel de prod (mark_commissions_as_paid__tenant_unsafe): SEMPRE insere
--- pagamento+despesa com p_amount; marca por created_at::date no TZ da sessão (UTC).
--- Sem short-circuit quando n=0 — o harness não pode esconder overpay.
-CREATE FUNCTION public.mark_commissions_as_paid(
-  p_user_id text, p_professional_id uuid, p_amount numeric, p_start_date date, p_end_date date)
-RETURNS numeric LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-DECLARE marked numeric;
+CREATE OR REPLACE FUNCTION public.mark_commissions_as_paid__tenant_unsafe(p_user_id text, p_professional_id uuid, p_amount numeric, p_start_date date, p_end_date date)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_company_id TEXT;
+  v_professional_name TEXT;
+  v_commission_percent NUMERIC;
 BEGIN
-  INSERT INTO public.commission_payments (user_id, professional_id, amount, start_date, end_date, status, paid_at)
-  VALUES (p_user_id, p_professional_id, p_amount, p_start_date, p_end_date, 'paid', now());
-  WITH u AS (
-    UPDATE public.finance_records SET commission_paid = TRUE
-     WHERE user_id = p_user_id AND professional_id = p_professional_id
-       AND created_at::date >= p_start_date AND created_at::date <= p_end_date
-       AND commission_paid = FALSE AND type = 'revenue'
-     RETURNING commission_value)
-  SELECT COALESCE(sum(commission_value), 0) INTO marked FROM u;
-  INSERT INTO public.finance_records (user_id, professional_id, revenue, commission_value, type, created_at, commission_paid)
-  VALUES (p_user_id, p_professional_id, 0, p_amount, 'expense', now(), TRUE);
-  RETURN marked;
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Sua sessão expirou. Faça login novamente.';
+  END IF;
+
+  v_company_id := COALESCE(get_auth_company_id()::TEXT, auth.uid()::TEXT);
+
+  IF p_user_id IS DISTINCT FROM v_company_id THEN
+    RAISE EXCEPTION 'Acesso negado.';
+  END IF;
+
+  IF get_auth_role() = 'staff' THEN
+    RAISE EXCEPTION 'Apenas o dono pode registrar pagamentos de comissão.';
+  END IF;
+
+  SELECT name, COALESCE(commission_percent, commission_rate, 0)
+    INTO v_professional_name, v_commission_percent
+  FROM public.team_members
+  WHERE id = p_professional_id
+    AND user_id = v_company_id;
+
+  IF v_professional_name IS NULL THEN
+    RAISE EXCEPTION 'Profissional não encontrado ou não autorizado.';
+  END IF;
+
+  INSERT INTO public.commission_payments (
+    user_id,
+    professional_id,
+    payment_date,
+    amount,
+    start_date,
+    end_date,
+    status,
+    paid_at,
+    net_amount,
+    commission_percent
+  ) VALUES (
+    v_company_id,
+    p_professional_id,
+    CURRENT_DATE,
+    p_amount,
+    p_start_date,
+    p_end_date,
+    'paid',
+    NOW(),
+    p_amount,
+    v_commission_percent
+  );
+
+  UPDATE public.finance_records
+  SET commission_paid = TRUE,
+      commission_paid_at = NOW()
+  WHERE user_id = v_company_id
+    AND professional_id = p_professional_id
+    AND created_at::DATE >= p_start_date
+    AND created_at::DATE <= p_end_date
+    AND commission_paid = FALSE
+    AND type = 'revenue';
+
+  INSERT INTO public.finance_records (
+    user_id,
+    professional_id,
+    barber_name,
+    revenue,
+    commission_value,
+    type,
+    description,
+    created_at,
+    commission_paid
+  ) VALUES (
+    v_company_id,
+    p_professional_id,
+    v_professional_name,
+    0,
+    p_amount,
+    'expense',
+    'Pagamento de Comissão',
+    NOW(),
+    TRUE
+  );
 END;
-$$;
+$function$;
+
+CREATE OR REPLACE FUNCTION public.mark_commissions_as_paid(p_user_id text, p_professional_id uuid, p_amount numeric, p_start_date date, p_end_date date)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_auth_company_id TEXT;
+BEGIN
+  v_auth_company_id := COALESCE(get_auth_company_id()::TEXT, auth.uid()::TEXT);
+  IF v_auth_company_id IS NULL THEN
+    RAISE EXCEPTION 'Usuario autenticado obrigatorio.'
+      USING ERRCODE = 'insufficient_privilege';
+  END IF;
+  PERFORM public.mark_commissions_as_paid__tenant_unsafe(v_auth_company_id::text, p_professional_id, p_amount, p_start_date, p_end_date);
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.mark_commissions_as_paid(text, uuid, numeric, date, date) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.mark_commissions_as_paid__tenant_unsafe(text, uuid, numeric, date, date) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.mark_commissions_as_paid(text, uuid, numeric, date, date) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.mark_commissions_as_paid__tenant_unsafe(text, uuid, numeric, date, date) TO service_role;
+GRANT EXECUTE ON FUNCTION public.get_auth_role() TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.get_auth_company_id() TO authenticated, service_role;
 
 -- ---------------------------------------------------------------- fixture
 CREATE FUNCTION pg_temp.brt(t text) RETURNS timestamptz LANGUAGE sql AS $$ SELECT (t::timestamp AT TIME ZONE 'America/Sao_Paulo') $$;
@@ -75,14 +247,14 @@ INSERT INTO public.profiles VALUES
   ('30000000-0000-0000-0000-0000000000b1', 'staff', '30000000-0000-0000-0000-000000000001', 'PT');  -- Beto (staff B)
 INSERT INTO public.business_settings (user_id, timezone, commission_settlement_day_of_month)
 VALUES ('10000000-0000-0000-0000-000000000001', 'America/Sao_Paulo', 5);
-INSERT INTO public.team_members (id, user_id, name, is_owner, active, commission_rate, staff_user_id, deleted_at) VALUES
-  ('20000000-0000-0000-0000-0000000000d0', '10000000-0000-0000-0000-000000000001', 'Rhian (dono)', true, true, 40, NULL, NULL),
-  ('20000000-0000-0000-0000-0000000000a1', '10000000-0000-0000-0000-000000000001', 'Ana', false, true, 40, '10000000-0000-0000-0000-0000000000a1', NULL),
-  ('20000000-0000-0000-0000-0000000000b1', '10000000-0000-0000-0000-000000000001', 'Bruno', false, true, 50, '10000000-0000-0000-0000-0000000000b1', NULL),
-  ('20000000-0000-0000-0000-0000000000c1', '10000000-0000-0000-0000-000000000001', 'Caio', false, true, 40, NULL, NULL),
-  ('20000000-0000-0000-0000-0000000000e1', '10000000-0000-0000-0000-000000000001', 'Duda', false, false, 40, NULL, NULL),
-  ('20000000-0000-0000-0000-0000000000f1', '10000000-0000-0000-0000-000000000001', 'Eva', false, true, 40, '10000000-0000-0000-0000-0000000000f1', '2026-09-01'),
-  ('40000000-0000-0000-0000-0000000000b1', '30000000-0000-0000-0000-000000000001', 'Beto', false, true, 30, '30000000-0000-0000-0000-0000000000b1', NULL);
+INSERT INTO public.team_members (id, user_id, name, role, is_owner, active, commission_rate, staff_user_id, deleted_at) VALUES
+  ('20000000-0000-0000-0000-0000000000d0', '10000000-0000-0000-0000-000000000001', 'Rhian (dono)', 'Dono', true, true, 40, NULL, NULL),
+  ('20000000-0000-0000-0000-0000000000a1', '10000000-0000-0000-0000-000000000001', 'Ana', 'Barbeiro', false, true, 40, '10000000-0000-0000-0000-0000000000a1', NULL),
+  ('20000000-0000-0000-0000-0000000000b1', '10000000-0000-0000-0000-000000000001', 'Bruno', 'Barbeiro', false, true, 50, '10000000-0000-0000-0000-0000000000b1', NULL),
+  ('20000000-0000-0000-0000-0000000000c1', '10000000-0000-0000-0000-000000000001', 'Caio', 'Barbeiro', false, true, 40, NULL, NULL),
+  ('20000000-0000-0000-0000-0000000000e1', '10000000-0000-0000-0000-000000000001', 'Duda', 'Barbeiro', false, false, 40, NULL, NULL),
+  ('20000000-0000-0000-0000-0000000000f1', '10000000-0000-0000-0000-000000000001', 'Eva', 'Barbeiro', false, true, 40, '10000000-0000-0000-0000-0000000000f1', '2026-09-01'),
+  ('40000000-0000-0000-0000-0000000000b1', '30000000-0000-0000-0000-000000000001', 'Beto', 'Barbeiro', false, true, 30, '30000000-0000-0000-0000-0000000000b1', NULL);
 
 DO $$
 DECLARE
@@ -111,8 +283,8 @@ BEGIN
   -- Ana agosto: 10 pagos × 60 (30 min) + 2 clube; comissão 24, já paga; clientes a1..a12 (a1..a6 = s1..s6)
   FOR k IN 1..12 LOOP
     ts := pg_temp.brt('2026-08-' || (17 + k) || ' ' || CASE WHEN k > 10 THEN '15:00' ELSE '10:00' END);
-    INSERT INTO public.appointments (user_id, client_id, appointment_time, status, price, professional_id, duration_minutes, payment_method, created_at)
-    VALUES (t, pg_temp.cid(CASE WHEN k <= 6 THEN 's' || k ELSE 'a' || k END), ts, 'Completed',
+    INSERT INTO public.appointments (user_id, client_id, service, appointment_time, status, price, professional_id, duration_minutes, payment_method, created_at)
+    VALUES (t, pg_temp.cid(CASE WHEN k <= 6 THEN 's' || k ELSE 'a' || k END), 'Corte', ts, 'Completed',
             CASE WHEN k > 10 THEN 0 ELSE 60 END, ana, 30, CASE WHEN k > 10 THEN 'membership' ELSE 'pix' END, ts - interval '2 days')
     RETURNING id INTO a_id;
     aug_anchor := aug_anchor || (ts + interval '30 minutes');
@@ -125,8 +297,8 @@ BEGIN
       END IF;
     END IF;
   END LOOP;
-  INSERT INTO public.commission_payments (user_id, professional_id, amount, start_date, end_date, status, paid_at)
-  VALUES (t, ana, 264, '2026-08-06', '2026-09-05', 'paid', pg_temp.brt('2026-09-06 10:00'));
+  INSERT INTO public.commission_payments (user_id, professional_id, payment_date, amount, start_date, end_date, status, paid_at, net_amount, commission_percent)
+  VALUES (t, ana, '2026-09-06', 264, '2026-08-06', '2026-09-05', 'paid', pg_temp.brt('2026-09-06 10:00'), 264, 40);
 
   -- Ana setembro
   k := 0;

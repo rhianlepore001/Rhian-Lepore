@@ -18,7 +18,7 @@ PSQL=("$PGBIN/psql" -h "$TMP" -p "$PORT" -U postgres -d postgres -v ON_ERROR_STO
 MIG="$ROOT/supabase/migrations/20261003110000_staff_performance_v1.sql"
 RB="$ROOT/docs/rollbacks/20261003110000_staff_performance_v1_rollback.sql"
 NEW_FNS="'get_staff_performance_v1','get_commission_cycle_v1','_staff_performance_core','_commission_cycle_core','_staff_perf_raw','_staff_perf_tz','_commission_settle_date','_pay_commission_core','preview_commission_pay_v1','pay_commission_v1'"
-snapshot() { "${PSQL[@]}" -At -c "SELECT string_agg(p.oid::regprocedure::text || '=' || md5(pg_get_functiondef(p.oid)), ' ' ORDER BY 1) FROM pg_proc p WHERE p.pronamespace = 'public'::regnamespace AND p.proname NOT IN ($NEW_FNS)"; }
+snapshot() { "${PSQL[@]}" -At -c "SELECT string_agg(p.oid::regprocedure::text || '=' || md5(pg_get_functiondef(p.oid)), ' ' ORDER BY p.oid::regprocedure::text) FROM pg_proc p WHERE p.pronamespace = 'public'::regnamespace AND p.proname NOT IN ($NEW_FNS)"; }
 "${PSQL[@]}" -f "$ROOT/supabase/tests/staff_performance.harness.sql"
 BEFORE="$(snapshot)"
 MODE="${1:-}"

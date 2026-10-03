@@ -123,7 +123,10 @@ describe('CommissionsManagement — ciclo do servidor (P1, get_commission_cycle_
         expect(await screen.findByText('Período: 20/08 – 05/09')).toBeInTheDocument();
         expect(screen.queryByText(/^Ciclo:/)).toBeNull();
         expect(screen.queryByRole('button', { name: /Este ciclo/i })).toBeNull();
-        expect((screen.getByDisplayValue('15.00') as HTMLInputElement).value).toBe('15.00');
+        const modal = screen.getByRole('dialog');
+        expect(modal).toHaveTextContent(/Ciclos anteriores:\s*R\$\s*15,00/);
+        expect(modal).not.toHaveTextContent(/Neste ciclo:\s*R\$\s*0,00/);
+        expect((screen.getByLabelText('Valor a ser liquidado') as HTMLInputElement).value).toMatch(/R\$\s*15,00/);
         expect((screen.getByDisplayValue('20/08/2026') as HTMLInputElement).value).toBe('20/08/2026');
         expect((screen.getByDisplayValue('05/09/2026') as HTMLInputElement).value).toBe('05/09/2026');
         expect(screen.getByText(/marca as comissões de 20\/08 a 05\/09/i)).toBeInTheDocument();
@@ -136,6 +139,7 @@ describe('CommissionsManagement — ciclo do servidor (P1, get_commission_cycle_
         })));
         expect(rpc.mock.calls.some((c) => c[0] === 'mark_commissions_as_paid')).toBe(false);
         expect(rpc.mock.calls.some((c) => c[0] === 'pay_commission_v1' && (c[1] as { p_amount?: number })?.p_amount != null)).toBe(false);
+        expect(await screen.findByText(/Comissão de Eva paga:.*15,00/)).toBeInTheDocument();
         const evaAfter = await screen.findByTestId('payout-row-20000000-0000-0000-0000-0000000000f1');
         expect(within(evaAfter).getByRole('button', { name: /Nada a pagar para Eva|Pagar Eva/ })).toBeDisabled();
     });
@@ -176,7 +180,8 @@ describe('CommissionsManagement — ciclo do servidor (P1, get_commission_cycle_
         const ana = await screen.findByTestId('payout-row-20000000-0000-0000-0000-0000000000a1');
         fireEvent.click(within(ana).getByRole('button', { name: 'Pagar Ana' }));
         expect(await screen.findByText('Período: 06/09 – 05/10')).toBeInTheDocument();
-        expect((screen.getByDisplayValue('257.00') as HTMLInputElement).value).toBe('257.00');
+        expect((screen.getByLabelText('Valor a ser liquidado') as HTMLInputElement).value).toMatch(/R\$\s*257,00/);
+        expect(screen.getByText(/Neste ciclo/)).toBeInTheDocument();
         expect((screen.getByDisplayValue('06/09/2026') as HTMLInputElement).value).toBe('06/09/2026');
         expect(calls.some((c) => c.table === 'finance_records')).toBe(false);
         await waitFor(() => expect(screen.getByRole('button', { name: 'Pagar agora' })).toBeEnabled());
@@ -191,12 +196,12 @@ describe('CommissionsManagement — ciclo do servidor (P1, get_commission_cycle_
         mount();
         const eva = await screen.findByTestId('payout-row-20000000-0000-0000-0000-0000000000f1');
         fireEvent.click(within(eva).getByRole('button', { name: /Pagar Eva/ }));
-        expect(await screen.findByDisplayValue('15.00')).toBeInTheDocument();
+        expect((await screen.findByLabelText('Valor a ser liquidado') as HTMLInputElement).value).toMatch(/R\$\s*15,00/);
         fireEvent.change(screen.getByLabelText('Data inicial'), { target: { value: '06/09/2026' } });
         fireEvent.blur(screen.getByLabelText('Data inicial'));
         fireEvent.change(screen.getByLabelText('Data final'), { target: { value: '05/10/2026' } });
         fireEvent.blur(screen.getByLabelText('Data final'));
-        await waitFor(() => expect((screen.getByDisplayValue('257.00') as HTMLInputElement).value).toBe('257.00'));
+        await waitFor(() => expect((screen.getByLabelText('Valor a ser liquidado') as HTMLInputElement).value).toMatch(/R\$\s*257,00/));
         expect(screen.getByText('Período: 06/09 – 05/10')).toBeInTheDocument();
     });
 

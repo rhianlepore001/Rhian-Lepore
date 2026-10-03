@@ -353,8 +353,6 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                 </div>
 
                 <div className="p-6 space-y-4">
-                    {/* Seção: Cliente */}
-                    <p className={`text-xs font-mono uppercase tracking-widest ${colors.textMuted}`}>Cliente</p>
                     <div>
                         <label className={labelStyles} htmlFor="appt-client">Cliente</label>
                         <select

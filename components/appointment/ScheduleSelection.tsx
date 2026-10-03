@@ -31,6 +31,8 @@ interface ScheduleSelectionProps {
     lockProfessional?: boolean;
     /** Grade de horários (default: 3 / 4 / 5 colunas). Modal estreito usa menos colunas. */
     timeGridClass?: string;
+    /** Remarcação: menos padding para a grade caber na primeira dobra. */
+    compact?: boolean;
 }
 
 /**
@@ -55,6 +57,7 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
     durationMinutes = 30,
     lockProfessional = false,
     timeGridClass = 'grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3',
+    compact = false,
 }) => {
     // Horário pré-preenchido fora da grade de 30 min (ex.: falta às 14:15)
     // entra na lista para aparecer selecionado.
@@ -89,7 +92,7 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                 aria-pressed={!blocked && selectedTime === time}
                 aria-label={blocked ? `${time} Bloqueado` : time}
                 className={`
-                    py-3 px-2 rounded-lg font-mono font-bold text-sm transition-all border
+                    ${compact ? 'py-2' : 'py-3'} px-2 rounded-lg font-mono font-bold text-sm transition-all border
                     ${blocked
                         ? 'bg-theme-surface border-[var(--color-divider)] text-[var(--color-text-muted)] cursor-not-allowed opacity-60'
                         : selectedTime === time
@@ -132,9 +135,9 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
         (name || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('');
 
     return (
-        <div className="flex flex-col md:flex-row md:items-start gap-6 animate-in fade-in slide-in-from-right-4 duration-300">
+        <div className={`flex flex-col md:flex-row md:items-start animate-in fade-in slide-in-from-right-4 duration-300 ${compact ? 'gap-4 md:gap-6' : 'gap-6'}`}>
             {/* Esquerda: profissional + data (fixa no desktop enquanto os horários rolam) */}
-            <div className="md:w-[22rem] md:shrink-0 space-y-6 md:sticky md:top-0">
+            <div className={`md:w-[22rem] md:shrink-0 md:sticky md:top-0 ${compact ? 'space-y-4' : 'space-y-6'}`}>
                 <section>
                     <StepHeading level="section" title="Escolha o profissional" />
                     {/* Sem caixa de rolagem interna: todos os profissionais visíveis */}
@@ -148,7 +151,7 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                                     aria-pressed={active}
                                     disabled={lockProfessional && !active}
                                     onClick={() => { if (!(lockProfessional && !active)) setSelectedProId(member.id); }}
-                                    className={`w-full min-h-[52px] flex items-center gap-2.5 px-2.5 py-2 rounded-xl border transition-colors text-left
+                                    className={`w-full ${compact ? 'min-h-[44px]' : 'min-h-[52px]'} flex items-center gap-2.5 px-2.5 py-2 rounded-xl border transition-colors text-left
                                         ${active ? activeCardBg : `${cardBg} hover:border-[var(--color-input-border)]`}
                                         ${lockProfessional && !active ? 'opacity-50 cursor-not-allowed' : ''}
                                     `}

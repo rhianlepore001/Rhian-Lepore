@@ -189,29 +189,27 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
         </div>
       )}
     >
-      <div data-testid="reschedule-modal-body" className="space-y-5">
+      <div data-testid="reschedule-modal-body" className="space-y-4">
         <div
           data-testid="reschedule-current"
-          className="flex items-start gap-3 rounded-xl border border-theme-accent/40 bg-[var(--color-accent-dim)] px-4 py-3"
+          className="flex items-start gap-3 rounded-xl border border-theme-accent/40 bg-[var(--color-accent-dim)] px-3.5 py-2.5"
         >
           <CalendarClock className="w-5 h-5 mt-0.5 shrink-0 text-theme-accent" aria-hidden="true" />
-          <p className={`text-sm font-medium leading-snug ${colors.text}`}>
-            {formatRescheduleCurrentLine({
-              timeIso: appointment.appointment_time,
-              timeZone: shopTimeZone,
-              professionalName,
-            })}
-          </p>
+          <div className="min-w-0 space-y-1.5">
+            <p className={`text-sm font-medium leading-snug ${colors.text}`}>
+              {formatRescheduleCurrentLine({
+                timeIso: appointment.appointment_time,
+                timeZone: shopTimeZone,
+                professionalName,
+              })}
+            </p>
+            {isPast && (
+              <p data-testid="reschedule-past-note" className={`text-xs leading-snug ${colors.textMuted}`}>
+                {RESCHEDULE_PAST_NOTE}
+              </p>
+            )}
+          </div>
         </div>
-
-        {isPast && (
-          <p
-            data-testid="reschedule-past-note"
-            className="text-sm rounded-lg border border-[var(--color-warning-border,var(--color-accent-border))] bg-[var(--color-warning-bg,var(--color-surface))] px-3 py-2 text-theme-text"
-          >
-            {RESCHEDULE_PAST_NOTE}
-          </p>
-        )}
 
         {lockProfessional && (
           <p data-testid="reschedule-lock-pro-note" className={`text-xs ${colors.textMuted}`}>
@@ -240,6 +238,7 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
           durationMinutes={appointment.duration_minutes || 30}
           lockProfessional={lockProfessional}
           timeGridClass="grid grid-cols-3 sm:grid-cols-4 gap-2"
+          compact
         />
       </div>
     </Modal>

@@ -17,6 +17,12 @@ const LEAD_EMPTY = 'Hoje não há horários com 8h de antecedência. Veja amanh�
 const HAS_OWNER = Boolean(process.env.E2E_OWNER_EMAIL && process.env.E2E_OWNER_PASS);
 const HAS_STAFF = Boolean(process.env.E2E_STAFF_EMAIL && process.env.E2E_STAFF_PASS);
 
+async function reveal(page: Page, testId: string) {
+  const loc = page.getByTestId(testId);
+  await loc.waitFor({ timeout: 20_000 });
+  await loc.evaluate((el) => el.scrollIntoView({ block: 'start', inline: 'nearest' }));
+}
+
 async function shot(page: Page, name: string) {
   fs.mkdirSync(outDir, { recursive: true });
   await page.screenshot({ path: path.join(outDir, name), fullPage: false });
@@ -257,9 +263,8 @@ test.describe('PR-2 antecedência mínima', () => {
       }
       await page.goto(`${BASE}/#/configuracoes/agendamento`);
       if (phase === 'after') {
-        const heading = page.getByRole('heading', { name: 'Antecedência mínima' });
-        await expect(heading).toBeVisible({ timeout: 20_000 });
-        await heading.scrollIntoViewIfNeeded();
+        await expect(page.getByRole('heading', { name: 'Antecedência mínima' })).toBeVisible({ timeout: 20_000 });
+        await reveal(page, 'lead-time-section');
         await expect(page.getByTestId('lead-time-preset-2')).toBeVisible();
         await expect(page.getByTestId('lead-time-preset-8')).toBeVisible();
         await expect(page.getByTestId('lead-time-preset-16')).toBeVisible();
@@ -284,7 +289,7 @@ test.describe('PR-2 antecedência mínima', () => {
       await page.getByTestId('booking-lead-time-custom').fill('');
       await page.getByRole('button', { name: /Salvar Alterações/ }).click();
       await expect(page.getByTestId('lead-time-custom-error')).toBeVisible();
-      await page.getByTestId('lead-time-custom-error').scrollIntoViewIfNeeded();
+      await reveal(page, 'lead-time-section');
       await shot(page, `owner-${width}-settings-outro-error.png`);
     });
 
@@ -313,7 +318,9 @@ test.describe('PR-2 antecedência mínima', () => {
       if (phase === 'after') {
         await expect(page.getByText(LEAD_EMPTY)).toBeVisible({ timeout: 15_000 });
         await expect(page.getByTestId('lead-time-next-day')).toBeVisible();
-        await page.getByTestId('lead-time-next-day').scrollIntoViewIfNeeded();
+        await page.getByTestId('time-grid-empty').evaluate((el) => {
+          el.scrollIntoView({ block: 'center', inline: 'nearest' });
+        });
       }
       await shot(page, `client-${width}-empty-lead.png`);
     });
@@ -361,10 +368,14 @@ test.describe('PR-2 antecedência mínima', () => {
       await page.goto(`${BASE}/#/agenda`);
       await expect(page.locator('#btn-new-appointment')).toBeVisible({ timeout: 20_000 });
       await page.locator('#btn-new-appointment').click();
-      const appointmentChoice = page.getByRole('button', { name: /Agendamento|Novo atendimento/i }).first();
-      if (await appointmentChoice.isVisible().catch(() => false)) {
-        await appointmentChoice.click();
+      const choice = page.getByTestId('agenda-choice-new-appointment');
+      try {
+        await choice.waitFor({ state: 'visible', timeout: 4_000 });
+        await choice.click();
+      } catch {
+        /* wizard opened directly */
       }
+      await expect(page.getByText(/Novo atendimento|Cliente|Horário|Serviço/i).first()).toBeVisible({ timeout: 15_000 });
       await expect(page.getByText(/antecedência/i)).toHaveCount(0);
       await shot(page, `${role}-390-fit-in.png`);
     });

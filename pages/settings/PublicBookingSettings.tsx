@@ -128,6 +128,7 @@ export const PublicBookingSettings: React.FC = () => {
                     />
                 </SettingsSection>
 
+                <div data-testid="lead-time-section" className="scroll-mt-24">
                 <SettingsSection
                     title="Antecedência mínima"
                     description="O cliente só marca pelo link com essa antecedência (padrão 2h). Quem marca pela Agenda — você e a equipe — não é afetado."
@@ -205,6 +206,7 @@ export const PublicBookingSettings: React.FC = () => {
                         )}
                     </div>
                 </SettingsSection>
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <SettingsSection

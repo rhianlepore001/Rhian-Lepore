@@ -38,7 +38,11 @@ async function shot(page: Page, name: string) {
   fs.mkdirSync(ARTIFACTS, { recursive: true });
   const buf = await page.screenshot({ fullPage: true });
   fs.writeFileSync(path.join(OUT_DIR, name), buf);
-  fs.writeFileSync(path.join(ARTIFACTS, name), buf);
+  try {
+    fs.writeFileSync(path.join(ARTIFACTS, name), buf);
+  } catch {
+    // artifacts pode falhar por I/O do ambiente; o print em OUT_DIR basta
+  }
 }
 
 async function openAgenda(page: Page, width: number) {

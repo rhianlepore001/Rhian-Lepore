@@ -21,12 +21,10 @@ async function reveal(page: Page, testId: string) {
   const loc = page.getByTestId(testId);
   await loc.waitFor({ timeout: 20_000 });
   await loc.evaluate((el) => {
-    const sticky = 220;
-    const top = el.getBoundingClientRect().top + window.scrollY - sticky;
-    window.scrollTo({ top: Math.max(0, top), behavior: 'instant' });
     el.scrollIntoView({ block: 'start', inline: 'nearest' });
-    const after = el.getBoundingClientRect().top;
-    if (after < sticky - 8) {
+    if (window.innerWidth < 768) {
+      const sticky = 220;
+      const after = el.getBoundingClientRect().top;
       window.scrollBy({ top: after - sticky, behavior: 'instant' });
     }
   });
@@ -327,8 +325,8 @@ test.describe('PR-2 antecedência mínima', () => {
       if (phase === 'after') {
         await expect(page.getByText(LEAD_EMPTY)).toBeVisible({ timeout: 15_000 });
         await expect(page.getByTestId('lead-time-next-day')).toBeVisible();
-        await page.getByTestId('time-grid-empty').evaluate((el) => {
-          el.scrollIntoView({ block: 'center', inline: 'nearest' });
+        await page.getByRole('heading', { name: 'Escolha a data e hora' }).evaluate((el) => {
+          el.scrollIntoView({ block: 'start', inline: 'nearest' });
         });
       }
       await shot(page, `client-${width}-empty-lead.png`);

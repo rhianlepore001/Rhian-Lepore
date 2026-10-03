@@ -1,7 +1,7 @@
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 
 // ---- Supabase mock: registra cada query por tabela ----
 type Call = { table: string; select?: string; filters: [string, string, unknown][] };
@@ -65,8 +65,10 @@ const TEAM = [
     row({ professional_id: 'caio', professional_name: 'Caio Lima', total_due: 0, commission_rate: 50 }),
 ];
 
+let lastLocation = '';
+const Spy = () => { const l = useLocation(); lastLocation = l.pathname + l.search; return null; };
 const mount = () => render(
-    <MemoryRouter><ToastProvider><CommissionsManagement accentColor="accent-gold" currencySymbol="R$" /></ToastProvider></MemoryRouter>,
+    <MemoryRouter><ToastProvider><CommissionsManagement accentColor="accent-gold" currencySymbol="R$" /></ToastProvider><Spy /></MemoryRouter>,
 );
 
 describe('CommissionsManagement — aba Pagamento de comissão (P0; fallback sem a RPC da P1)', () => {
@@ -115,11 +117,13 @@ describe('CommissionsManagement — aba Pagamento de comissão (P0; fallback sem
         });
     });
 
-    it('"Ver histórico e análise" abre o detalhe do colaborador (sem link morto)', async () => {
+    it('"Ver histórico e análise" abre a Performance do colaborador com as datas do ciclo (R6.4, P2)', async () => {
+        process.env.TZ = 'Europe/Lisbon';
         mount();
         const ana = await screen.findByTestId('payout-row-ana');
-        fireEvent.click(within(ana).getByRole('button', { name: /Ver histórico e análise/i }));
-        expect(await screen.findByTestId('details-modal')).toHaveTextContent('Detalhes de Ana Souza');
+        fireEvent.click(within(ana).getByRole('link', { name: /Ver histórico e análise/i }));
+        await waitFor(() => expect(lastLocation).toBe('/financeiro/performance?de=2026-08-06&ate=2026-09-05&pro=ana'));
+        expect(screen.queryByTestId('details-modal')).toBeNull();
     });
 
     it('menu "Mais" abre o relatório com as datas do ciclo', async () => {

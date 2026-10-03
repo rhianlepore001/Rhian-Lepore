@@ -1,24 +1,11 @@
-import { useQuery } from '@tanstack/react-query';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchStaffInsights, staffPeriodLabel } from '@/services/staffInsights';
-import type { StaffInsights, StaffPeriod } from '@/types/insights';
+import { isRpcUnavailable } from '@/services/staffPerformance';
+import type { StaffPeriod } from '@/types/insights';
+import type { StaffOwnPerformance } from '@/types/staffPerformance';
 
-const EMPTY_INSIGHTS: StaffInsights = {
-  summary: {
-    appointmentsCount: 0,
-    uniqueClients: 0,
-    commissionsTotal: 0,
-    productsUnits: 0,
-    productsRevenue: 0,
-    servicesRevenue: 0,
-    avgTicket: 0,
-  },
-  services: [],
-  products: [],
-  recentServices: [],
-  recentProducts: [],
-  todayUpcoming: [],
-};
+export type StaffInsightsStatus = 'loading' | 'ready' | 'error' | 'unavailable';
 
 export function useStaffInsights(
   period: StaffPeriod,
@@ -27,28 +14,45 @@ export function useStaffInsights(
 ) {
   const { companyId, teamMemberId } = useAuth();
   const enabled = Boolean(companyId && teamMemberId);
+  const [status, setStatus] = useState<StaffInsightsStatus>(enabled ? 'loading' : 'ready');
+  const [data, setData] = useState<StaffOwnPerformance | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const seq = useRef(0);
 
-  const query = useQuery({
-    queryKey: ['staff', 'insights', companyId, teamMemberId, period, selectedMonth, selectedYear],
-    queryFn: () =>
-      fetchStaffInsights({
-        companyId: companyId!,
-        professionalId: teamMemberId!,
-        period,
-        selectedMonth,
-        selectedYear,
-      }),
-    enabled,
-    staleTime: 30 * 1000,
-    placeholderData: (previous) => previous,
-  });
+  useEffect(() => {
+    if (!enabled) {
+      setStatus('ready');
+      setData(null);
+      return;
+    }
+    const id = ++seq.current;
+    setStatus('loading');
+    fetchStaffInsights({
+      companyId: companyId!,
+      professionalId: teamMemberId!,
+      period,
+      selectedMonth,
+      selectedYear,
+    })
+      .then((result) => {
+        if (id !== seq.current) return;
+        setData(result);
+        setStatus('ready');
+      })
+      .catch((error: unknown) => {
+        if (id !== seq.current) return;
+        console.error('staff_insights falhou');
+        setData(null);
+        setStatus(isRpcUnavailable(error) ? 'unavailable' : 'error');
+      });
+  }, [enabled, companyId, teamMemberId, period, selectedMonth, selectedYear, attempt]);
 
+  const retry = useCallback(() => setAttempt((n) => n + 1), []);
   return {
-    data: query.data ?? EMPTY_INSIGHTS,
-    loading: enabled ? query.isLoading : false,
-    refreshing: enabled ? query.isFetching && !query.isLoading : false,
-    error: query.error,
+    data,
+    status,
+    loading: status === 'loading',
     periodLabel: staffPeriodLabel(period, selectedMonth, selectedYear),
-    refetch: query.refetch,
+    retry,
   };
 }

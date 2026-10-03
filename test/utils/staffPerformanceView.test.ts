@@ -88,7 +88,8 @@ describe('staffPerformanceView — deltas (R3.15)', () => {
         expect(moneyDelta(300, 360, { prevSample: 11, formatMoney: brl })).toEqual({ text: '▼ −R$ 60,00 (−17%)', tone: 'bad', label: 'pior' });
     });
 
-    it('neutro: |Δ%| < 5%; "novo" quando o anterior é 0', () => {
+    it('neutro: |Δ%| < 5%; "novo" quando o anterior é 0; delta zero some', () => {
+        expect(moneyDelta(360, 360, { prevSample: 11, formatMoney: brl })).toBeNull();
         expect(moneyDelta(370, 360, { prevSample: 11, formatMoney: brl })).toMatchObject({ tone: 'neutral', label: 'estável' });
         expect(moneyDelta(408, 0, { prevSample: 11, formatMoney: brl })).toEqual({ text: 'novo', tone: 'neutral', label: 'novo' });
         expect(moneyDelta(null, 360, { prevSample: 11, formatMoney: brl })).toBeNull();

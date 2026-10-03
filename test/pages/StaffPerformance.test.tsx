@@ -101,6 +101,8 @@ describe('StaffPerformance (P2) — /financeiro/performance', () => {
         expect(within(overview).getByText('Retorno total')).toBeInTheDocument();
         expect(within(overview).getByText('R$ 1.313,00')).toBeInTheDocument();
         expect(within(overview).getByText('38')).toBeInTheDocument();
+        expect(within(overview).getAllByText('sem base de comparação').length).toBeGreaterThan(0);
+        expect(within(overview).queryByText(/\+241%/)).toBeNull();
 
         expect(screen.getByText(/Compare cada pessoa principalmente com ela mesma/)).toBeInTheDocument();
         const ana = screen.getAllByTestId(`member-${ANA}`)[0];

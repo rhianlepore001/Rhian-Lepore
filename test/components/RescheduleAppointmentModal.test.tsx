@@ -25,9 +25,9 @@ vi.mock('../../hooks/useBrutalTheme', () => ({
 vi.mock('../../components/ui', () => ({ useToast: () => ({ showToast }) }));
 vi.mock('../../components/ui/Button', () => ({
   Button: ({
-    children, onClick, disabled,
-  }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean }) => (
-    <button type="button" onClick={onClick} disabled={disabled}>{children}</button>
+    children, onClick, disabled, ...rest
+  }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean } & Record<string, unknown>) => (
+    <button type="button" onClick={onClick} disabled={disabled} {...rest}>{children}</button>
   ),
 }));
 vi.mock('../../components/ui/Modal', () => ({
@@ -119,9 +119,12 @@ describe('RescheduleAppointmentModal', () => {
     expect(screen.getByText('pro-2')).toBeDisabled();
   });
 
-  it('WhatsApp marcado por padrão com telefone e escondido sem telefone', () => {
+  it('WhatsApp marcado por padrão quando o cliente tem telefone', () => {
     renderModal();
     expect(screen.getByLabelText('Avisar o cliente no WhatsApp')).toBeChecked();
+  });
+
+  it('WhatsApp escondido quando o cliente não tem telefone', () => {
     renderModal({ appointment: { ...appointment, clientPhone: '' } });
     expect(screen.queryByLabelText('Avisar o cliente no WhatsApp')).toBeNull();
   });

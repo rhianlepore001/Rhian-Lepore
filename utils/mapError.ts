@@ -5,6 +5,7 @@ import {
   messageForAgendaBlockResultCode,
   professionalNameFromBlockedError,
 } from './agendaBlockPermission';
+import { RESCHEDULE_ERROR_HINTS } from './rescheduleCopy';
 
 /**
  * Mapa de erro: traduz exceções do Supabase/JS em copy humana PT-BR + código curto
@@ -76,6 +77,12 @@ function pickCode(raw: RawErrorShape): string {
   ) {
     return 'professional_blocked';
   }
+  if (raw.hint && RESCHEDULE_ERROR_HINTS.has(raw.hint)) {
+    return raw.hint;
+  }
+  if (msg.includes('staff_appointment_edit_forbidden')) {
+    return 'staff_appointment_edit_forbidden';
+  }
   if (raw.code === 'block_finished' || raw.code === 'block_too_long' || raw.code === 'block_starts_in_past' || raw.code === 'block_start_adjusted' || raw.code === 'block_conflicts_changed') {
     return raw.code;
   }
@@ -130,7 +137,9 @@ export function mapError(error: unknown, fallback: string): UserFacingError {
   const named = professionalNameFromBlockedError(raw);
   const human = code === 'professional_blocked' && named
     ? agendaBlockedMessage(named)
-    : CODE_MAP[code] ?? fallback;
+    : RESCHEDULE_ERROR_HINTS.has(code) && raw.message
+      ? raw.message
+      : CODE_MAP[code] ?? fallback;
 
   return {
     message: human,

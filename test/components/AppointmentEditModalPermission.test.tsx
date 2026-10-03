@@ -122,8 +122,10 @@ describe('AppointmentEditModal — colaborador editando', () => {
     expect(screen.getByText(/não passá-los para outro profissional/)).toBeInTheDocument();
   });
 
-  it('dono / nível "todos": profissional livre', () => {
+  it('dono / nível "todos": profissional também só leitura (remarcar é o caminho)', () => {
     renderModal();
-    expect((screen.getByLabelText('Profissional') as HTMLSelectElement).disabled).toBe(false);
+    expect((screen.getByLabelText('Profissional') as HTMLSelectElement).disabled).toBe(true);
+    expect(screen.getByLabelText('Data')).toBeDisabled();
+    expect(screen.getByLabelText('Horário')).toBeDisabled();
   });
 });

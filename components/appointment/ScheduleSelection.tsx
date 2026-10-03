@@ -24,9 +24,11 @@ interface ScheduleSelectionProps {
     /** Horário de funcionamento: horários do expediente primeiro; fora dele sob demanda (encaixe). */
     businessHours?: BusinessHours | null;
     shopTimeZone?: string;
-    /** Bloqueios do profissional: esses horários somem da lista (trava rígida). */
+    /** Bloqueios do profissional: horários desabilitados com rótulo "Bloqueado" (B-68). */
     blocks?: Array<{ professional_id: string; starts_at: string; ends_at: string }>;
     durationMinutes?: number;
+    /** Escopo own: o colaborador não passa o agendamento para outro profissional. */
+    lockProfessional?: boolean;
 }
 
 /**
@@ -49,6 +51,7 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
     shopTimeZone,
     blocks = [],
     durationMinutes = 30,
+    lockProfessional = false,
 }) => {
     // Horário pré-preenchido fora da grade de 30 min (ex.: falta às 14:15)
     // entra na lista para aparecer selecionado.
@@ -68,42 +71,52 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
         if (!selectedProId || blocks.length === 0) return false;
         return slotOverlapsBlocks(dateStr, time, durationMinutes || 30, blocks, selectedProId, tz);
     };
-    const inHoursOpen = inHours.filter((t) => !isBlockedTime(t));
-    const outOfHoursOpen = outOfHours.filter((t) => !isBlockedTime(t));
     // Horário escolhido (ex.: "+" da grade às 22:30) fora do expediente: seção já aberta.
     const [showOffHours, setShowOffHours] = useState(() => !!selectedTime && outOfHours.includes(selectedTime));
     const offHoursVisible = closed || showOffHours;
 
-    const renderTime = (time: string) => (
-        <button
-            key={time}
-            type="button"
-            onClick={() => setSelectedTime(time)}
-            aria-pressed={selectedTime === time}
-            className={`
-                py-3 px-2 rounded-lg font-mono font-bold text-sm transition-all border
-                ${selectedTime === time
-                    ? activeCardBg
-                    : 'bg-theme-surface border-[var(--color-divider)] text-theme-text hover:border-[var(--color-input-border)] hover:bg-[var(--color-card-hover)]'
-                }
-            `}
-        >
-            {time}
-        </button>
-    );
+    const renderTime = (time: string) => {
+        const blocked = isBlockedTime(time);
+        return (
+            <button
+                key={time}
+                type="button"
+                disabled={blocked}
+                onClick={() => { if (!blocked) setSelectedTime(time); }}
+                aria-pressed={!blocked && selectedTime === time}
+                aria-label={blocked ? `${time} Bloqueado` : time}
+                className={`
+                    py-3 px-2 rounded-lg font-mono font-bold text-sm transition-all border
+                    ${blocked
+                        ? 'bg-theme-surface border-[var(--color-divider)] text-[var(--color-text-muted)] cursor-not-allowed opacity-60'
+                        : selectedTime === time
+                            ? activeCardBg
+                            : 'bg-theme-surface border-[var(--color-divider)] text-theme-text hover:border-[var(--color-input-border)] hover:bg-[var(--color-card-hover)]'
+                    }
+                `}
+            >
+                {blocked ? (
+                    <span className="flex flex-col items-center leading-tight gap-0.5">
+                        <span className="line-through">{time}</span>
+                        <span className="text-[10px] font-sans font-semibold uppercase tracking-wide">Bloqueado</span>
+                    </span>
+                ) : time}
+            </button>
+        );
+    };
     const timeGridClass = 'grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3';
     // Fora do expediente em ordem, separado em antes da abertura / intervalo / depois do fechamento.
     const offHoursGroups = useMemo(() => {
-        if (closed || inHours.length === 0) return [{ label: '', times: outOfHoursOpen }];
+        if (closed || inHours.length === 0) return [{ label: '', times: outOfHours }];
         const first = inHours[0];
         const last = inHours[inHours.length - 1];
         const groups = [
-            { label: 'Antes da abertura', times: outOfHoursOpen.filter((t) => t < first) },
-            { label: 'Intervalo', times: outOfHoursOpen.filter((t) => t > first && t < last) },
-            { label: 'Depois do fechamento', times: outOfHoursOpen.filter((t) => t > last) },
+            { label: 'Antes da abertura', times: outOfHours.filter((t) => t < first) },
+            { label: 'Intervalo', times: outOfHours.filter((t) => t > first && t < last) },
+            { label: 'Depois do fechamento', times: outOfHours.filter((t) => t > last) },
         ];
         return groups.filter((g) => g.times.length > 0);
-    }, [closed, inHours, outOfHoursOpen]);
+    }, [closed, inHours, outOfHours]);
 
     const changeDate = (days: number) => {
         const newDate = new Date(selectedDate);
@@ -131,9 +144,11 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                                     key={member.id}
                                     type="button"
                                     aria-pressed={active}
-                                    onClick={() => setSelectedProId(member.id)}
+                                    disabled={lockProfessional && !active}
+                                    onClick={() => { if (!(lockProfessional && !active)) setSelectedProId(member.id); }}
                                     className={`w-full min-h-[52px] flex items-center gap-2.5 px-2.5 py-2 rounded-xl border transition-colors text-left
                                         ${active ? activeCardBg : `${cardBg} hover:border-[var(--color-input-border)]`}
+                                        ${lockProfessional && !active ? 'opacity-50 cursor-not-allowed' : ''}
                                     `}
                                 >
                                     {member.photo_url ? (
@@ -223,8 +238,8 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                                     <span><span className="font-semibold text-theme-text">Fechado neste dia.</span> Escolha qualquer horário para um encaixe.</span>
                                 </p>
                             )}
-                            {inHoursOpen.length > 0 && <div className={timeGridClass}>{inHoursOpen.map(renderTime)}</div>}
-                            {!closed && outOfHoursOpen.length > 0 && (
+                            {inHours.length > 0 && <div className={timeGridClass}>{inHours.map(renderTime)}</div>}
+                            {!closed && outOfHours.length > 0 && (
                                 <button
                                     type="button"
                                     onClick={() => setShowOffHours((v) => !v)}
@@ -236,7 +251,7 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                                     <ChevronDown className={`w-4 h-4 transition-transform ${showOffHours ? 'rotate-180' : ''}`} aria-hidden="true" />
                                 </button>
                             )}
-                            {offHoursVisible && outOfHoursOpen.length > 0 && (
+                            {offHoursVisible && outOfHours.length > 0 && (
                                 <div id="wizard-off-hours" className="space-y-3">
                                     {offHoursGroups.map((g) => (
                                         <div key={g.label}>

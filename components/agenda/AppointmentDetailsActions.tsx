@@ -1,5 +1,5 @@
 import React from 'react';
-import { Ban, CalendarPlus, Check, DollarSign, Edit2, Lock, X } from 'lucide-react';
+import { Ban, CalendarClock, CalendarPlus, Check, DollarSign, Edit2, Lock, X } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { isNoShowStatus } from '../../utils/appointmentStatus';
@@ -16,6 +16,7 @@ interface AppointmentDetailsActionsProps {
   onEdit: () => void;
   onCancel: () => void;
   onClose: () => void;
+  onReschedule?: () => void;
   /**
    * Falta (NoShow): "Usar este horário" — abre um NOVO agendamento no horário
    * liberado (mesmo profissional, qualquer cliente). Liberado para toda a
@@ -39,6 +40,7 @@ export const AppointmentDetailsActions: React.FC<AppointmentDetailsActionsProps>
   onEdit,
   onCancel,
   onClose,
+  onReschedule,
   onUseSlot,
 }) => {
   const { colors } = useBrutalTheme();
@@ -90,6 +92,16 @@ export const AppointmentDetailsActions: React.FC<AppointmentDetailsActionsProps>
         >
           <Ban className="w-4 h-4" /> Faltou
         </Button>
+        {canEdit && onReschedule && (
+          <Button
+            variant="secondary"
+            className="flex-1 min-w-[7rem] flex justify-center items-center gap-2"
+            onClick={onReschedule}
+            data-testid="appointment-reschedule"
+          >
+            <CalendarClock className="w-4 h-4" /> Remarcar
+          </Button>
+        )}
         {canEdit && status === 'Confirmed' && (
           <Button
             variant="secondary"

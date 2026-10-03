@@ -6,8 +6,8 @@ vi.mock('../../hooks/useBrutalTheme', () => ({
   useBrutalTheme: () => ({ colors: { textMuted: 'text-muted' } }),
 }));
 vi.mock('../../components/ui/Button', () => ({
-  Button: ({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) => (
-    <button type="button" onClick={onClick}>{children}</button>
+  Button: ({ children, onClick, ...rest }: { children: React.ReactNode; onClick?: () => void } & Record<string, unknown>) => (
+    <button type="button" onClick={onClick} {...rest}>{children}</button>
   ),
 }));
 
@@ -22,7 +22,7 @@ describe('AppointmentDetailsActions — ações por permissão', () => {
   it('dono: cobrar, faltou, editar, cancelar e fechar', () => {
     const h = handlers();
     render(<AppointmentDetailsActions status="Confirmed" canEdit isStaff={false} blockedMessage="x" {...h} />);
-    expect(names()).toEqual(['Confirmar e cobrar', 'Faltou', 'Editar', 'Cancelar', 'Fechar']);
+    expect(names()).toEqual(['Confirmar e cobrar', 'Faltou', 'Remarcar', 'Editar', 'Cancelar', 'Fechar']);
     fireEvent.click(screen.getByText('Cancelar'));
     expect(h.onCancel).toHaveBeenCalledTimes(1);
     expect(screen.queryByTestId('staff-edit-blocked-note')).toBeNull();
@@ -41,12 +41,12 @@ describe('AppointmentDetailsActions — ações por permissão', () => {
 
   it('colaborador com permissão: vê editar e cancelar', () => {
     render(<AppointmentDetailsActions status="Confirmed" canEdit isStaff blockedMessage="x" {...handlers()} />);
-    expect(names()).toEqual(['Confirmar e cobrar', 'Faltou', 'Editar', 'Cancelar', 'Fechar']);
+    expect(names()).toEqual(['Confirmar e cobrar', 'Faltou', 'Remarcar', 'Editar', 'Cancelar', 'Fechar']);
   });
 
   it('pendente: sem "Editar" (como antes), mas cancelar se permitido', () => {
     render(<AppointmentDetailsActions status="Pending" canEdit isStaff={false} blockedMessage="x" {...handlers()} />);
-    expect(names()).toEqual(['Confirmar e cobrar', 'Faltou', 'Cancelar', 'Fechar']);
+    expect(names()).toEqual(['Confirmar e cobrar', 'Faltou', 'Remarcar', 'Cancelar', 'Fechar']);
   });
 
   it('concluído/cancelado: só fechar', () => {

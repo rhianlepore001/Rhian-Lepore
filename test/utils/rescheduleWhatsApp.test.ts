@@ -62,7 +62,6 @@ describe('T-V12 buildRescheduleWhatsAppMessage', () => {
       timeZone: LISBON,
       professionalName: 'Bob',
     });
-    expect(text).toContain('*{Barbearia}*'.replace('{', '').replace('}', ''));
     expect(text).toContain('*Barbearia*');
     expect(text).not.toContain('(nome do estabelecimento)');
   });
@@ -88,7 +87,7 @@ describe('copy de remarcação (R-06, R-14, R-16)', () => {
       timeIso: OLD,
       timeZone: LISBON,
       professionalName: 'Bob',
-    })).toBe('Atual: domingo 23/08/2026 às 06:00 com Bob');
+    })).toBe('Atual: Domingo 23/08/2026 às 06:00 com Bob');
   });
 
   it('histórico Remarcado por', () => {
@@ -101,7 +100,7 @@ describe('copy de remarcação (R-06, R-14, R-16)', () => {
   });
 
   it('de-para', () => {
-    expect(formatRescheduleInstant(OLD, LISBON, 'Bob')).toBe('domingo 23/08/2026 06:00 com Bob');
+    expect(formatRescheduleInstant(OLD, LISBON, 'Bob')).toBe('Domingo 23/08/2026 06:00 com Bob');
   });
 
   it('conflito R-06', () => {

@@ -58,6 +58,8 @@ Script isolado em `scripts/demo-seed/` + doc `docs/demo-seed.md`. Dois tenants f
 
 ## 🛠️ Trabalho recente
 
+- **Remarcar horário / PR C (3 Out 2026, NÃO merge / NÃO apply em prod):** branch `feat/remarcar-horario` a partir de `376b310`. Migration aditiva `supabase/migrations/20261003150000_reschedule_appointment.sql` (RPC `reschedule_appointment` + tabela `appointment_reschedules` com `source` default `staff`). Rollback em `docs/rollbacks/20261003150000_reschedule_appointment.rollback.sql`. md5 de `create_secure_booking` / `enforce_staff_appointment_edit_scope` / `enforce_agenda_block_on_appointments` inalterado. UI: botão Remarcar, `RescheduleAppointmentModal` reusa `ScheduleSelection`, Editar com data/hora/profissional só leitura. Aceite em `docs/specs/remarcar-ACCEPTANCE.md`. Harness: `scripts/test-sql-reschedule.sh`. Playwright: `e2e/remarcar-horario.spec.ts` (mocks; zero escrita em prod).
+
 - **Performance dos colaboradores (3 Out 2026, NÃO merge / NÃO apply em prod):** stack rebaseada na `main` `9926787`. #106 migration `20261003103000`; #109 `pay_commission_v1` preenche colunas NOT NULL de prod (`payment_date`, `barber_name`, `net_amount`, `description`, `commission_paid_at`) e filtra `COALESCE(commission_paid,false)=false`. Harness usa md5 de prod `b8a54fe3` / `1588d011`. PRs #106 #109 #114 #116.
 
 - **Follow-up do bloqueio (3 Out 2026, não aplicado no live):** migration `20261003120000_agenda_blocks_acceptance_followup` cobre B-18/19/20/25, revalidação ao mover horário (B-35/38/46), trava por empresa (B-54..56), “qualquer profissional” (B-44/51) e M1/M2/M3. Rollback em `docs/rollbacks/`. Harness: `scripts/test-sql-agenda-blocks-followup.sh`.

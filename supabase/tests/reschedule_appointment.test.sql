@@ -237,6 +237,8 @@ INSERT INTO public.appointments (
 SELECT pg_temp.check('T-R03 conflito com outro',
   pg_temp.reschedule(:'APT1'::uuid, pg_temp.at_l((SELECT d FROM ctx), '15:00'), :'PRO1'::uuid),
   'error:reschedule_slot_busy|Esse horário já está ocupado na agenda de Diego. Escolha outro.');
+-- O vizinho das 15:00 cobriria 14:15–15:15; cancela para o caso "só o próprio".
+UPDATE public.appointments SET status = 'Cancelled' WHERE id = '50000000-0000-0000-0000-0000000000c1';
 UPDATE public.appointments SET duration_minutes = 60, appointment_time = pg_temp.at_l((SELECT d FROM ctx), '14:00') WHERE id = :'APT1';
 SELECT pg_temp.check('T-R03 próprio 14:00→14:15 60min ok',
   pg_temp.reschedule(:'APT1'::uuid, pg_temp.at_l((SELECT d FROM ctx), '14:15'), :'PRO1'::uuid),

@@ -1931,25 +1931,24 @@ export const PublicBooking: React.FC = () => {
                         data-policy-dialog
                         role="dialog"
                         aria-modal="true"
-                        aria-label="Políticas administrativas"
+                        aria-label="Diretrizes de cancelamento"
                         tabIndex={-1}
                         onKeyDown={(e) => { if (e.key === 'Escape') setShowPolicyModal(false); }}
                         onClick={(e) => e.stopPropagation()}
-                        className={`${colors.card} ${colors.border} border max-w-xl w-full p-10 relative shadow-promax-depth overflow-hidden rounded-3xl`}>
-                        <button onClick={() => setShowPolicyModal(false)} aria-label="Fechar" className={`absolute top-6 right-6 ${colors.textMuted} hover:text-theme-text transition-colors z-30`}><X className="w-8 h-8" /></button>
-                        <div className="relative z-10 space-y-6">
-                            <h3 className={`text-2xl ${colors.text} flex items-center gap-3`}>
-                                <AlertTriangle className={`w-6 h-6 ${accent.text}`} />
-                                Políticas Administrativas
+                        className={`${colors.card} ${colors.border} border max-w-xl w-full p-6 md:p-8 relative shadow-promax-depth overflow-hidden rounded-3xl`}>
+                        <button onClick={() => setShowPolicyModal(false)} aria-label="Fechar" className={`absolute top-4 right-4 ${colors.textMuted} hover:text-theme-text transition-colors z-30`}><X className="w-6 h-6" /></button>
+                        <div className="relative z-10 space-y-5">
+                            <h3 className={`text-xl md:text-2xl font-semibold tracking-tight ${colors.text}`}>
+                                Diretrizes de cancelamento
                             </h3>
-                            <div className={`leading-relaxed ${colors.textSecondary} max-h-[50vh] overflow-y-auto pr-4 custom-scrollbar`}>
+                            <div className={`leading-relaxed text-sm md:text-base ${colors.textSecondary} max-h-[50vh] overflow-y-auto pr-1 md:pr-2 custom-scrollbar`}>
                                 <p className="whitespace-pre-wrap" data-testid="public-cancellation-policy">
                                     {resolveCancellationPolicyDisplay(businessSettings?.cancellation_policy)}
                                 </p>
                             </div>
                             <button onClick={() => setShowPolicyModal(false)}
-                                className={`w-full py-4 ${classes.buttonPrimary}`}>
-                                Compreendi as Políticas
+                                className={`w-full py-3.5 min-h-12 ${classes.buttonPrimary}`}>
+                                Entendi
                             </button>
                         </div>
                     </div>

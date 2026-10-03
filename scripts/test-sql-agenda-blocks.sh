@@ -79,11 +79,18 @@ apply_migration regress
 psql_db regress -f "$ROOT/supabase/tests/noshow_slots.test.sql" | tail -1
 echo "regressão NoShow após a migration #113 ok"
 
-# O arquivo de teste acompanha #117. Roda com #113 + #115 + #117 juntos.
+# --113-only: baseline + migration #113 + regressão NoShow. O teste de comportamento
+# acompanha #117 e não roda neste modo.
+if [ "${1:-}" = "--113-only" ]; then
+  echo "agenda_blocks #113-only ok"
+  exit 0
+fi
+
+# #115 está vendored em supabase/migrations (não depende do branch remoto).
 HOTFIX="$ROOT/supabase/migrations/20261003090000_agenda_blocks_allow_queue_completed.sql"
 if [ ! -f "$HOTFIX" ]; then
-  HOTFIX="$TMP/20261003090000_agenda_blocks_allow_queue_completed.sql"
-  git -C "$ROOT" show origin/cursor/agenda-blocks-queue-settle-e54d:supabase/migrations/20261003090000_agenda_blocks_allow_queue_completed.sql > "$HOTFIX"
+  echo "falta $HOTFIX no working tree" >&2
+  exit 1
 fi
 psql_db postgres -f "$HOTFIX"
 psql_db postgres -f "$ROOT/supabase/migrations/20261003120000_agenda_blocks_acceptance_followup.sql"

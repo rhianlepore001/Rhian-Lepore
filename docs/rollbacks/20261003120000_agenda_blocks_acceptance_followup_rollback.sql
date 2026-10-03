@@ -1149,6 +1149,7 @@ GRANT EXECUTE ON FUNCTION public.create_public_booking(text, text, text, uuid[],
 
 DROP FUNCTION IF EXISTS public.agenda_any_professional_busy(text, timestamptz, timestamptz);
 DROP INDEX IF EXISTS public.agenda_blocks_professional_id_idx;
+ALTER TABLE public.appointments DROP CONSTRAINT IF EXISTS appointments_duration_chk;
 
 -- Confere o corpo restaurado das 8 funções (não só o trigger de appointments).
 DO $verify$

@@ -199,7 +199,7 @@ SET search_path TO 'public'
 AS $function$
 DECLARE
   v_company text;
-  v_tz text;
+  v_now timestamptz;
   v_id uuid;
   v_conflicts json;
   v_ids uuid[];
@@ -221,31 +221,25 @@ BEGIN
     RETURN json_build_object('success', false, 'code', 'block_too_long', 'message', 'Um bloqueio pode ter no máximo 366 dias.');
   END IF;
 
-  v_tz := public.business_timezone(v_company);
+  -- B-21/C-B10: próximo minuto (14:07:20 → 14:08; segundo 0 permanece).
+  v_now := date_trunc('minute', now() + interval '1 minute' - interval '1 microsecond');
 
-  IF p_ends_at <= now() THEN
+  IF p_ends_at <= v_now THEN
     RETURN json_build_object(
       'success', false,
       'code', 'block_starts_in_past',
-      'message', 'Esse período já terminou.'
+      'message', 'Este bloqueio já terminou e fica só no histórico.'
     );
   END IF;
 
-  -- B-21/B-22: hoje e ainda em curso → não grava; devolve o início em agora para confirmar.
+  -- B-19/B-21: início passado e fim no futuro → confirma o início arredondado. Não grava ainda.
   IF p_starts_at < now() - interval '5 minutes' THEN
-    IF (p_starts_at AT TIME ZONE v_tz)::date = (now() AT TIME ZONE v_tz)::date THEN
-      RETURN json_build_object(
-        'success', false,
-        'code', 'block_start_adjusted',
-        'message', 'O início do bloqueio já passou. Ajustamos para agora — confira e confirme de novo.',
-        'starts_at', now(),
-        'ends_at', p_ends_at
-      );
-    END IF;
     RETURN json_build_object(
       'success', false,
-      'code', 'block_starts_in_past',
-      'message', 'O início do bloqueio já passou.'
+      'code', 'block_start_adjusted',
+      'message', 'O início do bloqueio já passou. Ajustamos para agora — confira e confirme de novo.',
+      'starts_at', v_now,
+      'ends_at', p_ends_at
     );
   END IF;
 
@@ -648,7 +642,8 @@ BEGIN
 
     v_status := COALESCE(p_status, 'pending');
     v_client_id := p_client_id;
-    v_end := p_appointment_time + (COALESCE(p_duration_min, 30) || ' minutes')::INTERVAL;
+    p_duration_min := LEAST(1440, GREATEST(COALESCE(p_duration_min, 30), 1));
+    v_end := p_appointment_time + (p_duration_min || ' minutes')::INTERVAL;
 
     IF v_client_id IS NOT NULL AND NOT EXISTS (
         SELECT 1 FROM public.clients c
@@ -796,7 +791,7 @@ BEGIN
     RAISE EXCEPTION 'slot_unavailable';
   END IF;
 
-  v_duration := GREATEST(COALESCE(p_duration_minutes, 30), 1);
+  v_duration := LEAST(1440, GREATEST(COALESCE(p_duration_minutes, 30), 1));
 
   IF NOT EXISTS (
     SELECT 1 FROM public.profiles p WHERE p.id = v_business_id
@@ -861,5 +856,18 @@ BEGIN
   RETURN NEXT v_booking;
 END;
 $$;
+
+-- Duração > 24h furaria o limite inferior de 1 dia em agenda_any_professional_busy.
+-- NOT VALID: não revarre o histórico. Prod em 2026-10-03: max 90, nenhuma fora de 1..1440.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'appointments_duration_chk'
+  ) THEN
+    ALTER TABLE public.appointments
+      ADD CONSTRAINT appointments_duration_chk
+      CHECK (duration_minutes BETWEEN 1 AND 1440) NOT VALID;
+  END IF;
+END $$;
 
 COMMIT;

@@ -166,6 +166,7 @@ export const Agenda: React.FC = () => {
     const [blockInitialTime, setBlockInitialTime] = useState<string | undefined>();
     const [blockConflicts, setBlockConflicts] = useState<AgendaBlockConflict[] | undefined>();
     const [blockFormError, setBlockFormError] = useState<string | null>(null);
+    const [blockServerAdjust, setBlockServerAdjust] = useState<{ startsAt: string; endsAt: string; message: string } | null>(null);
     const [acceptBlockError, setAcceptBlockError] = useState<{ id: string; message: string } | null>(null);
     const [selectedBlock, setSelectedBlock] = useState<AgendaBlock | null>(null);
     const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -1089,6 +1090,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
         setShowCreateChoice(false);
         setBlockConflicts(undefined);
         setBlockFormError(null);
+        setBlockServerAdjust(null);
         if (!choiceFromSlot) {
             setBlockInitialTime(undefined);
             setBlockProfessionalId(defaultBlockProfessionalId());
@@ -1114,7 +1116,17 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
             }
             if (result.success === false) {
                 const message = result.message ?? messageForAgendaBlockResultCode(result.code);
+                if (result.code === 'block_start_adjusted' && result.starts_at) {
+                    setBlockFormError(null);
+                    setBlockServerAdjust({
+                        startsAt: result.starts_at,
+                        endsAt: result.ends_at ?? input.endsAt,
+                        message,
+                    });
+                    return;
+                }
                 if (result.code === 'block_start_adjusted' || result.code === 'block_starts_in_past' || result.code === 'invalid_interval' || result.code === 'block_too_long') {
+                    setBlockServerAdjust(null);
                     setBlockFormError(message);
                     return;
                 }
@@ -1124,6 +1136,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
             setShowBlockForm(false);
             setBlockConflicts(undefined);
             setBlockFormError(null);
+            setBlockServerAdjust(null);
             showToast('Agenda bloqueada.', 'success');
         } catch (error) {
             showToast(formatUserFacingError(mapError(error, 'Não foi possível bloquear a agenda.')), 'error');
@@ -1831,6 +1844,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                     setShowBlockForm(false);
                     setBlockConflicts(undefined);
                     setBlockFormError(null);
+                    setBlockServerAdjust(null);
                 }}
                 members={teamMembers}
                 showProfessionalSelect={!isStaff && !choiceFromSlot}
@@ -1842,6 +1856,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                 submitting={createBlock.isPending}
                 conflicts={blockConflicts}
                 fieldError={blockFormError}
+                serverAdjustment={blockServerAdjust}
                 onSubmit={handleCreateAgendaBlock}
             />
 

@@ -21,6 +21,7 @@ import { AppointmentReview } from './appointment/AppointmentReview';
 import { StepHeading } from './appointment/StepHeading';
 import { logger } from '../utils/Logger';
 import { combineDateAndTime, formatLocalDateString } from '../utils/date';
+import { capBookingDuration } from '../utils/serviceDuration';
 import { useCreateAppointment } from '../hooks/useScheduling';
 import { getFirstAvailableProfessional } from '../services/publicBooking';
 import { useToast } from '@/components/ui';
@@ -149,9 +150,9 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
 
         (async () => {
             try {
-                const duration = services
+                const duration = capBookingDuration(services
                     .filter(s => selectedServiceIds.includes(s.id))
-                    .reduce((sum, s) => sum + (s.duration_minutes || 30), 0);
+                    .reduce((sum, s) => sum + (s.duration_minutes || 30), 0));
                 // Mesmo instante que o handleSubmit grava (data/hora locais do
                 // dispositivo da equipe). Antes: data em UTC + offset fixo por
                 // região, que em PT no verão checava 1h depois do horário real.
@@ -184,7 +185,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     ]);
 
     const finalPrice = parseFloat(customPrice || '0') * (1 - (parseFloat(discount || '0') / 100));
-    const durationMinutes = selectedServicesDetails.reduce((sum, s) => sum + (s.duration_minutes || 30), 0) || 30;
+    const durationMinutes = capBookingDuration(selectedServicesDetails.reduce((sum, s) => sum + (s.duration_minutes || 30), 0) || 30);
     const { data: agendaBlocks = [] } = useAgendaBlocks(formatLocalDateString(selectedDate));
 
     const handleSubmit = async () => {

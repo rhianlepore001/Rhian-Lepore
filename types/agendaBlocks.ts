@@ -20,7 +20,7 @@ export interface AgendaBlockConflict {
 export type CreateAgendaBlockResult =
   | { success: true; id: string }
   | { success: false; code: 'conflicts' | 'block_conflicts_changed'; items: AgendaBlockConflict[]; message?: string }
-  | { success: false; code: string; message?: string };
+  | { success: false; code: string; message?: string; starts_at?: string; ends_at?: string };
 
 export function isAgendaBlockConflictResult(
   result: CreateAgendaBlockResult,

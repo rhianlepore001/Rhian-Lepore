@@ -84,15 +84,17 @@ test.describe('follow-up bloqueio — copy M2 e bloqueio no passado', () => {
         await shot(page, `${role}-${width}-3-form.png`);
         await page.getByTestId('agenda-block-submit').click();
         if (phase === 'after') {
-          const startError = page.getByTestId('agenda-block-start-error');
-          await expect(startError).toHaveText(PAST, { timeout: 10000 });
+          const note = page.getByTestId('agenda-block-adjust-note');
+          await expect(note).toContainText(PAST, { timeout: 10000 });
+          await expect(note).toContainText(/até 00:00 de \d{2}\/\d{2}/);
+          await expect(note).toContainText(/Começa às/);
           const submit = page.getByTestId('agenda-block-submit');
+          await expect(submit).toHaveText('Confirmar');
           const cancel = page.getByRole('button', { name: 'Cancelar' });
-          await expect(submit).toBeVisible();
           await expect(cancel).toBeVisible();
-          const errorBox = await startError.boundingBox();
+          const noteBox = await note.boundingBox();
           const submitBox = await submit.boundingBox();
-          expect(errorBox && submitBox && errorBox.y + errorBox.height <= submitBox.y + 1).toBeTruthy();
+          expect(noteBox && submitBox && noteBox.y + noteBox.height <= submitBox.y + 1).toBeTruthy();
         }
         await shot(page, `${role}-${width}-4-passado.png`);
       });

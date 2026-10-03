@@ -44,7 +44,7 @@ export function messageForAgendaBlockResultCode(code: string | undefined): strin
     case 'block_too_long':
       return 'Um bloqueio pode ter no máximo 366 dias.';
     case 'block_starts_in_past':
-      return 'O início do bloqueio já passou.';
+      return 'Este bloqueio já terminou e fica só no histórico.';
     case 'block_start_adjusted':
       return 'O início do bloqueio já passou. Ajustamos para agora — confira e confirme de novo.';
     case 'block_finished':

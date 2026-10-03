@@ -104,10 +104,14 @@ SELECT pg_temp.check('B-19 início 10 dias atrás',
   'block_starts_in_past');
 SELECT pg_temp.check('B-19 mensagem',
   (public.create_agenda_block(:'PRO2', now() - interval '10 days', now() - interval '9 days', false)->>'message'),
-  'Esse período já terminou.');
-SELECT pg_temp.check('B-19 início antigo ainda em curso não ajusta',
-  (public.create_agenda_block(:'PRO2', now() - interval '10 days', now() + interval '1 day', false)->>'message'),
-  'O início do bloqueio já passou.');
+  'Este bloqueio já terminou e fica só no histórico.');
+SELECT pg_temp.check('B-19 início antigo ainda em curso pede ajuste',
+  (public.create_agenda_block(:'PRO2', now() - interval '1 day', now() + interval '1 day', false)->>'code'),
+  'block_start_adjusted');
+SELECT pg_temp.check('B-19 início antigo arredonda o minuto',
+  (SELECT ((r->>'starts_at')::timestamptz = date_trunc('minute', now() + interval '1 minute' - interval '1 microsecond'))::text
+   FROM (SELECT public.create_agenda_block(:'PRO2', now() - interval '1 day', now() + interval '1 day', false) AS r) s),
+  'true');
 SELECT pg_temp.check('B-19 intervalo já terminado',
   (public.create_agenda_block(:'PRO2', now() - interval '4 minutes', now() - interval '1 minute', false)->>'code'),
   'block_starts_in_past');
@@ -185,19 +189,20 @@ BEGIN
   );
   INSERT INTO results VALUES ('B-21 mensagem', COALESCE(r->>'message', 'created'), v_msg);
   IF r->>'code' = 'block_start_adjusted' THEN
-    IF (r->>'starts_at')::timestamptz BETWEEN now() - interval '5 seconds' AND now() + interval '5 seconds' THEN
-      INSERT INTO results VALUES ('B-22 início efetivo é agora', 'now', 'now');
+    IF (r->>'starts_at')::timestamptz = date_trunc('minute', now() + interval '1 minute' - interval '1 microsecond') THEN
+      INSERT INTO results VALUES ('B-21 arredonda para o próximo minuto', 'ceil', 'ceil');
     ELSE
-      INSERT INTO results VALUES ('B-22 início efetivo é agora', COALESCE(r->>'starts_at', 'null'), 'now');
+      INSERT INTO results VALUES ('B-21 arredonda para o próximo minuto', COALESCE(r->>'starts_at', 'null'), 'ceil');
     END IF;
-    r := public.create_agenda_block('10000000-0000-0000-0000-000000000002', now(), v_day_end, false);
+    r := public.create_agenda_block('10000000-0000-0000-0000-000000000002', (r->>'starts_at')::timestamptz, v_day_end, false);
   END IF;
   INSERT INTO results VALUES ('B-22 segunda confirmação cria', COALESCE(r->>'success', 'false'), 'true');
 
+  DELETE FROM public.agenda_blocks WHERE professional_id = '10000000-0000-0000-0000-000000000002';
   r := public.create_agenda_block('10000000-0000-0000-0000-000000000002', v_noon, v_noon + interval '2 hours', false);
-  IF v_noon + interval '2 hours' <= now() THEN
+  IF v_noon + interval '2 hours' <= date_trunc('minute', now() + interval '1 minute' - interval '1 microsecond') THEN
     v_code := 'block_starts_in_past';
-    v_msg := 'Esse período já terminou.';
+    v_msg := 'Este bloqueio já terminou e fica só no histórico.';
   ELSIF v_noon < now() - interval '5 minutes' THEN
     v_code := 'block_start_adjusted';
     v_msg := 'O início do bloqueio já passou. Ajustamos para agora — confira e confirme de novo.';
@@ -244,6 +249,16 @@ SELECT pg_temp.check('B-44 insert direto sem profissional atribui',
 SELECT pg_temp.check('B-44 insert direto ficou com o dono',
   (SELECT professional_id::text FROM public.public_bookings WHERE customer_phone = '351600000088'),
   '10000000-0000-0000-0000-000000000001');
+
+SELECT pg_temp.check('duração somada acima de 24h fica em 1440',
+  (SELECT duration_minutes::text FROM public.create_public_booking(
+    '00000000-0000-0000-0000-00000000000a', 'Cliente Longo', '351600000077',
+    ARRAY['20000000-0000-0000-0000-000000000001']::uuid[], NULL,
+    now() + interval '30 days', 45, 2000)),
+  '1440');
+SELECT pg_temp.check('appointments_duration_chk recusa acima de 1440',
+  pg_temp.try(format($q$INSERT INTO public.appointments (id, user_id, client_id, professional_id, appointment_time, status, duration_minutes) VALUES ('40000000-0000-0000-0000-0000000000d1', %L, %L, %L, now() + interval '40 days', 'Confirmed', 2000)$q$, :'OWNER', :'CLIENT', :'PRO2')),
+  'error:new row for relation "appointments" violates check constraint "appointments_duration_chk"');
 
 -- M1 no insert direto
 SELECT pg_temp.check('M1 insert no bloqueio',

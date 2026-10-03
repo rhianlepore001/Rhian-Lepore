@@ -143,7 +143,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       {typeof document !== 'undefined' &&
         createPortal(
           <div
-            className="fixed bottom-0 right-0 left-0 sm:left-auto flex flex-col items-center sm:items-end gap-2 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pointer-events-none"
+            className="fixed top-0 right-0 left-0 sm:left-auto flex flex-col items-center sm:items-end gap-2 p-4 pt-[calc(0.75rem+env(safe-area-inset-top))] pointer-events-none"
             style={{ zIndex: 'var(--z-toast)' }}
             aria-live="polite"
           >

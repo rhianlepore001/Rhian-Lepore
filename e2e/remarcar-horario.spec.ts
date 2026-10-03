@@ -68,8 +68,7 @@ test.describe('PR C — Remarcar horário', () => {
       await expect(page.getByTestId('reschedule-confirm')).toBeDisabled();
       await expect(page.getByTestId('reschedule-past-note')).toHaveText(PAST);
       await shot(page, `owner-${width}-3-remarcar-modal.png`);
-      const slot = page.getByRole('button', { name: '10:30' });
-      await slot.click();
+      await page.getByTestId('reschedule-modal-body').getByRole('button', { name: '10:30' }).click();
       await expect(page.getByTestId('reschedule-confirm')).toBeEnabled();
       await expect(page.getByTestId('reschedule-summary')).toContainText('De');
       await expect(page.getByTestId('reschedule-summary')).toContainText('Para');
@@ -104,7 +103,7 @@ test.describe('PR C — Remarcar horário', () => {
     await openAgenda(page, 390);
     await openDetails(page);
     await page.getByTestId('appointment-reschedule').click();
-    await page.getByRole('button', { name: '10:30' }).click();
+    await page.getByTestId('reschedule-modal-body').getByRole('button', { name: '10:30' }).click();
 
     guard.setRpc({
       status: 400,
@@ -125,7 +124,7 @@ test.describe('PR C — Remarcar horário', () => {
 
     guard.setRpc({
       status: 200,
-      body: { success: true, id: '50000000-0000-0000-0000-000000000001', appointment_time: '2026-08-23T09:30:00.000Z', professional_id: '10000000-0000-0000-0000-000000000001' },
+      body: { success: true, id: '50000000-0000-4000-8000-000000000001', appointment_time: '2026-08-23T09:30:00.000Z', professional_id: '10000000-0000-4000-8000-000000000001' },
     });
     await page.getByTestId('reschedule-confirm').click();
     await expect(page.getByText('Horário remarcado.')).toBeVisible({ timeout: 10_000 });
@@ -141,8 +140,8 @@ test.describe('PR C — Remarcar horário', () => {
     await shot(page, 'staff-own-390-2-detalhes.png');
     await page.getByTestId('appointment-reschedule').click();
     await expect(page.getByTestId('reschedule-lock-pro-note')).toBeVisible();
-    await expect(page.getByRole('button', { name: /Bruna/ })).toBeDisabled();
-    await expect(page.getByRole('button', { name: /Bob/ }).first()).toBeEnabled();
+    await expect(page.getByTestId('reschedule-modal-body').getByRole('button', { name: /Bruna/ })).toBeDisabled();
+    await expect(page.getByTestId('reschedule-modal-body').getByRole('button', { name: /Bob/ }).first()).toBeEnabled();
     await shot(page, 'staff-own-390-3-seletor-travado.png');
   });
 
@@ -153,7 +152,7 @@ test.describe('PR C — Remarcar horário', () => {
     await expect(page.getByTestId('appointment-reschedule')).toBeVisible();
     await page.getByTestId('appointment-reschedule').click();
     await expect(page.getByTestId('reschedule-lock-pro-note')).toHaveCount(0);
-    await expect(page.getByRole('button', { name: /Bruna/ })).toBeEnabled();
+    await expect(page.getByTestId('reschedule-modal-body').getByRole('button', { name: /Bruna/ })).toBeEnabled();
     await shot(page, 'staff-all-390-3-troca-profissional.png');
   });
 });

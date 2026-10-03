@@ -96,11 +96,11 @@ describe('copy de remarcação (R-06, R-14, R-16)', () => {
       createdAtIso: NEXT,
       oldTimeIso: OLD,
       timeZone: LISBON,
-    })).toBe('Remarcado por Bob em 24/08/2026 (antes: 23/08/2026 06:00)');
+    })).toBe('Remarcado por Bob em 24/08/2026 (antes: 23/08/2026 às 06:00)');
   });
 
   it('de-para', () => {
-    expect(formatRescheduleInstant(OLD, LISBON, 'Bob')).toBe('Domingo 23/08/2026 06:00 com Bob');
+    expect(formatRescheduleInstant(OLD, LISBON, 'Bob')).toBe('Domingo 23/08/2026 às 06:00 com Bob');
   });
 
   it('conflito R-06', () => {

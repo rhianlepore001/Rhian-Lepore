@@ -29,6 +29,8 @@ interface ScheduleSelectionProps {
     durationMinutes?: number;
     /** Escopo own: o colaborador não passa o agendamento para outro profissional. */
     lockProfessional?: boolean;
+    /** Grade de horários (default: 3 / 4 / 5 colunas). Modal estreito usa menos colunas. */
+    timeGridClass?: string;
 }
 
 /**
@@ -52,6 +54,7 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
     blocks = [],
     durationMinutes = 30,
     lockProfessional = false,
+    timeGridClass = 'grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3',
 }) => {
     // Horário pré-preenchido fora da grade de 30 min (ex.: falta às 14:15)
     // entra na lista para aparecer selecionado.
@@ -104,7 +107,6 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
             </button>
         );
     };
-    const timeGridClass = 'grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3';
     // Fora do expediente em ordem, separado em antes da abertura / intervalo / depois do fechamento.
     const offHoursGroups = useMemo(() => {
         if (closed || inHours.length === 0) return [{ label: '', times: outOfHours }];

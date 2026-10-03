@@ -373,22 +373,72 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
 
                     {/* Professional — só leitura; troca de profissional é pelo Remarcar */}
                     <div>
-                        <label className={labelStyles} htmlFor="appt-professional">Profissional</label>
-                        <div className="relative">
-                            <select
-                                id="appt-professional"
-                                value={selectedProfessional}
-                                onChange={(e) => setSelectedProfessional(e.target.value)}
-                                className={`${inputStyles} pr-10`}
-                                disabled
-                                aria-describedby="appt-schedule-readonly"
+                        <label className={`${labelStyles} inline-flex items-center gap-1.5`} htmlFor="appt-professional">
+                            Profissional
+                            <Lock className="h-3.5 w-3.5 text-theme-accent" aria-hidden="true" />
+                        </label>
+                        <select
+                            id="appt-professional"
+                            value={selectedProfessional}
+                            onChange={(e) => setSelectedProfessional(e.target.value)}
+                            className={inputStyles}
+                            disabled
+                            aria-describedby="appt-schedule-readonly"
+                        >
+                            <option value="">Selecione um profissional</option>
+                            {teamMembers.map(member => (
+                                <option key={member.id} value={member.id}>{member.name}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Seção: Horário — só leitura; o caminho com regras é Remarcar */}
+                    <div className={`pt-4 border-t ${colors.divider} flex items-end justify-between gap-3`}>
+                        <p className={`text-xs font-mono uppercase tracking-widest ${colors.textMuted} inline-flex items-center gap-1.5`}>
+                            Horário
+                            <Lock className="h-3.5 w-3.5 text-theme-accent" aria-hidden="true" />
+                        </p>
+                        {onReschedule && (
+                            <button
+                                type="button"
+                                data-testid="edit-reschedule-link"
+                                onClick={onReschedule}
+                                className={`text-sm font-semibold text-theme-accent hover:underline`}
                             >
-                                <option value="">Selecione um profissional</option>
-                                {teamMembers.map(member => (
-                                    <option key={member.id} value={member.id}>{member.name}</option>
+                                Remarcar
+                            </button>
+                        )}
+                    </div>
+                    <p id="appt-schedule-readonly" className={`text-xs ${colors.textMuted}`}>
+                        Para mudar data, horário ou profissional, use Remarcar.
+                        {lockProfessional ? ' Você pode remarcar os seus agendamentos, mas não passá-los para outro profissional.' : ''}
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label className={labelStyles} htmlFor="appt-date">Data</label>
+                            <input
+                                id="appt-date"
+                                type="text"
+                                value={selectedDate.split('-').reverse().join('/')}
+                                className={inputStyles}
+                                disabled
+                                readOnly
+                            />
+                        </div>
+                        <div>
+                            <label className={labelStyles} htmlFor="appt-time">Horário</label>
+                            <select
+                                id="appt-time"
+                                value={selectedTime}
+                                onChange={(e) => setSelectedTime(e.target.value)}
+                                className={inputStyles}
+                                disabled
+                            >
+                                <option value="">Selecione</option>
+                                {visibleTimeSlots.map(time => (
+                                    <option key={time} value={time}>{time}</option>
                                 ))}
                             </select>
-                            <Lock className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-theme-accent" aria-hidden="true" />
                         </div>
                     </div>
 
@@ -453,59 +503,6 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                             placeholder="Adicione observações sobre o agendamento..."
                             disabled={loading}
                         />
-                    </div>
-
-                    {/* Seção: Horário — só leitura; o caminho com regras é Remarcar */}
-                    <div className={`pt-4 border-t ${colors.divider} flex items-end justify-between gap-3`}>
-                        <p className={`text-xs font-mono uppercase tracking-widest ${colors.textMuted}`}>Horário</p>
-                        {onReschedule && (
-                            <button
-                                type="button"
-                                data-testid="edit-reschedule-link"
-                                onClick={onReschedule}
-                                className={`text-sm font-semibold text-theme-accent hover:underline`}
-                            >
-                                Remarcar
-                            </button>
-                        )}
-                    </div>
-                    <p id="appt-schedule-readonly" className={`text-xs ${colors.textMuted}`}>
-                        Para mudar data, horário ou profissional, use Remarcar.
-                        {lockProfessional ? ' Você pode remarcar os seus agendamentos, mas não passá-los para outro profissional.' : ''}
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 rounded-xl border border-[var(--color-divider)] bg-[var(--color-surface)] p-3">
-                        <div>
-                            <label className={labelStyles} htmlFor="appt-date">Data</label>
-                            <div className="relative">
-                                <input
-                                    id="appt-date"
-                                    type="date"
-                                    value={selectedDate}
-                                    onChange={(e) => setSelectedDate(e.target.value)}
-                                    className={`${inputStyles} pr-10`}
-                                    disabled
-                                />
-                                <Lock className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-theme-accent" aria-hidden="true" />
-                            </div>
-                        </div>
-                        <div>
-                            <label className={labelStyles} htmlFor="appt-time">Horário</label>
-                            <div className="relative">
-                                <select
-                                    id="appt-time"
-                                    value={selectedTime}
-                                    onChange={(e) => setSelectedTime(e.target.value)}
-                                    className={`${inputStyles} pr-10`}
-                                    disabled
-                                >
-                                    <option value="">Selecione</option>
-                                    {visibleTimeSlots.map(time => (
-                                        <option key={time} value={time}>{time}</option>
-                                    ))}
-                                </select>
-                                <Lock className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-theme-accent" aria-hidden="true" />
-                            </div>
-                        </div>
                     </div>
 
                     {/* Seção: Preço */}

@@ -2,13 +2,13 @@ import type { Page, Route } from '@playwright/test';
 
 /** Mesmo project ref de produção; as rotas nunca chegam na rede. */
 export const PROJECT_REF = 'lcqwrngscsziysyfhpfj';
-export const OWNER_ID = '00000000-0000-0000-0000-00000000000a';
-export const STAFF_ID = '00000000-0000-0000-0000-00000000001a';
-export const PRO_BOB = '10000000-0000-0000-0000-000000000001';
-export const PRO_BRUNA = '10000000-0000-0000-0000-000000000002';
-export const PRO_QUIM = '10000000-0000-0000-0000-0000000000aa';
-export const APT_ID = '50000000-0000-0000-0000-000000000001';
-export const CLIENT_ID = '30000000-0000-0000-0000-000000000001';
+export const OWNER_ID = '00000000-0000-4000-8000-00000000000a';
+export const STAFF_ID = '00000000-0000-4000-8000-00000000001a';
+export const PRO_BOB = '10000000-0000-4000-8000-000000000001';
+export const PRO_BRUNA = '10000000-0000-4000-8000-000000000002';
+export const PRO_QUIM = '10000000-0000-4000-8000-0000000000aa';
+export const APT_ID = '50000000-0000-4000-8000-000000000001';
+export const CLIENT_ID = '30000000-0000-4000-8000-000000000001';
 export const AGENDA_DATE = '2026-08-23';
 /** 23/08/2026 06:00 em Lisboa (WEST). */
 export const APT_TIME_ISO = '2026-08-23T05:00:00.000Z';
@@ -186,8 +186,8 @@ export async function installRemarcarMocks(
     }
 
     if (pathname.includes('/rest/v1/team_members')) {
-      if (search.includes('staff_user_id')) {
-        await fulfillJson(route, [{ id: staffMemberId }]);
+      if (search.includes('staff_user_id=eq.')) {
+        await fulfillJson(route, [{ id: staffMemberId, name: scope === 'own' ? 'Bob' : 'Quim' }]);
         return;
       }
       await fulfillJson(route, [

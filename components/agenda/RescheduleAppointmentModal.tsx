@@ -147,18 +147,22 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
       open={open}
       onClose={onClose}
       title={RESCHEDULE_MODAL_TITLE}
-      size="xl"
+      size="2xl"
       labelledById="reschedule-title"
       preventClose={submitting}
       footer={(
         <div className="flex flex-col gap-3 w-full">
           {selectedInstant && !unchanged && (
-            <p data-testid="reschedule-summary" className={`text-sm ${colors.text} leading-snug`}>
-              <span className={colors.textMuted}>De </span>
-              {formatRescheduleInstant(appointment.appointment_time, shopTimeZone, professionalName)}
-              <ArrowRight className="inline w-3.5 h-3.5 mx-1.5 text-theme-accent align-[-2px]" aria-hidden="true" />
-              <span className={colors.textMuted}>Para </span>
-              {formatRescheduleInstant(selectedInstant.toISOString(), shopTimeZone, destName)}
+            <p data-testid="reschedule-summary" className={`text-sm ${colors.text} leading-snug space-y-0.5`}>
+              <span className="block">
+                <span className={colors.textMuted}>De </span>
+                {formatRescheduleInstant(appointment.appointment_time, shopTimeZone, professionalName)}
+              </span>
+              <span className="block">
+                <ArrowRight className="inline w-3.5 h-3.5 mr-1 text-theme-accent align-[-2px]" aria-hidden="true" />
+                <span className={colors.textMuted}>Para </span>
+                {formatRescheduleInstant(selectedInstant.toISOString(), shopTimeZone, destName)}
+              </span>
             </p>
           )}
           {hasPhone && (
@@ -235,6 +239,7 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
           blocks={blocks}
           durationMinutes={appointment.duration_minutes || 30}
           lockProfessional={lockProfessional}
+          timeGridClass="grid grid-cols-3 sm:grid-cols-4 gap-2"
         />
       </div>
     </Modal>

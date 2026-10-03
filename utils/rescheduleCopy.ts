@@ -46,7 +46,7 @@ export function formatRescheduleInstant(
 ): string {
   const instant = new Date(timeIso);
   const withPro = professionalName?.trim() ? ` com ${professionalName.trim()}` : '';
-  return `${weekdayPt(instant, timeZone)} ${padPtDate(instant, timeZone)} ${formatTimeInTimeZone(instant, timeZone)}${withPro}`;
+  return `${weekdayPt(instant, timeZone)} ${padPtDate(instant, timeZone)} às ${formatTimeInTimeZone(instant, timeZone)}${withPro}`;
 }
 
 export function formatRescheduleCurrentLine(input: {
@@ -67,7 +67,7 @@ export function formatRescheduleHistoryLine(input: {
 }): string {
   const created = new Date(input.createdAtIso);
   const old = new Date(input.oldTimeIso);
-  return `Remarcado por ${input.actorName} em ${padPtDate(created, input.timeZone)} (antes: ${padPtDate(old, input.timeZone)} ${formatTimeInTimeZone(old, input.timeZone)})`;
+  return `Remarcado por ${input.actorName} em ${padPtDate(created, input.timeZone)} (antes: ${padPtDate(old, input.timeZone)} às ${formatTimeInTimeZone(old, input.timeZone)})`;
 }
 
 export interface RescheduleWhatsAppInput {

@@ -83,6 +83,18 @@ async function pickTime(page: Page, name: string) {
   await settle(page);
 }
 
+async function expectAtualCentered(page: Page) {
+  const atual = page.getByRole('button', { name: '06:00 Atual' });
+  const grid = page.getByTestId('reschedule-time-grid');
+  await expect(atual).toBeVisible();
+  const a = await atual.boundingBox();
+  const g = await grid.boundingBox();
+  expect(a && g).toBeTruthy();
+  const slotMid = a!.y + a!.height / 2;
+  const gridMid = g!.y + g!.height / 2;
+  expect(Math.abs(slotMid - gridMid)).toBeLessThan((g!.height) * 0.28);
+}
+
 test.describe('PR C — Remarcar horário', () => {
   test.use({ locale: 'pt-BR', timezoneId: 'Europe/Lisbon' });
   test.setTimeout(120_000);
@@ -112,6 +124,7 @@ test.describe('PR C — Remarcar horário', () => {
       const atualClass = await atual.getAttribute('class');
       expect(atualClass).toMatch(/ring-2/);
       expect(atualClass).not.toMatch(/\bbg-theme-accent\b/);
+      await expectAtualCentered(page);
       const dialogBox = await page.locator('[data-ui-modal-dialog]').boundingBox();
       const currentBox = await page.getByTestId('reschedule-current').boundingBox();
       const proBox = await page.getByTestId('wizard-pro-list').boundingBox();
@@ -280,6 +293,7 @@ test.describe('PR C — Remarcar horário', () => {
       await expect(page.getByTestId('reschedule-modal-body').getByRole('button', { name: /Bruna/ })).toBeDisabled();
       await expect(page.getByTestId('reschedule-modal-body').getByRole('button', { name: /Bob/ }).first()).toBeEnabled();
       await expect(page.getByTestId('reschedule-current')).toContainText('com Bob');
+      await expectAtualCentered(page);
       await shot(page, `staff-own-${width}-3-seletor-travado.png`);
     });
   }

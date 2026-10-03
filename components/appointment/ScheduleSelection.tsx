@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { User, ChevronLeft, ChevronRight, ChevronDown, MoonStar, Lock } from 'lucide-react';
 import { StepHeading } from './StepHeading';
 import { splitWizardTimeSlots } from '../../utils/agendaDayWindow';
@@ -114,35 +114,55 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
     const currentSlotRef = useRef<HTMLButtonElement | null>(null);
     const gridScrollRef = useRef<HTMLDivElement | null>(null);
 
-    useEffect(() => {
-        if (!compact) return;
+    const scrollSlot = useCallback((mode: 'center' | 'nearest', time?: string) => {
         const box = gridScrollRef.current;
         if (!box) return;
+        const targetTime = time || currentSlotTime;
+        const el = (targetTime
+            ? box.querySelector(`[data-time="${targetTime}"]`)
+            : currentSlotRef.current) as HTMLElement | null;
+        if (!el) return;
+        const elRect = el.getBoundingClientRect();
+        const boxRect = box.getBoundingClientRect();
+        let delta = 0;
+        if (mode === 'center') {
+            delta = elRect.top - boxRect.top - (box.clientHeight / 2) + (el.clientHeight / 2);
+        } else {
+            const pad = 8;
+            if (elRect.top < boxRect.top + pad) delta = elRect.top - boxRect.top - pad;
+            else if (elRect.bottom > boxRect.bottom - pad) delta = elRect.bottom - boxRect.bottom + pad;
+        }
+        if (Math.abs(delta) > 1) box.scrollTop = Math.max(0, box.scrollTop + delta);
+    }, [currentSlotTime]);
+
+    useEffect(() => {
+        if (!compact) return;
         let inner = 0;
         const outer = requestAnimationFrame(() => {
             inner = requestAnimationFrame(() => {
-                const targetTime = selectedTime || currentSlotTime;
-                const el = (targetTime
-                    ? box.querySelector(`[data-time="${targetTime}"]`)
-                    : currentSlotRef.current) as HTMLElement | null;
-                if (!el) return;
-                const elRect = el.getBoundingClientRect();
-                const boxRect = box.getBoundingClientRect();
-                const pad = 8;
-                let delta = 0;
-                if (elRect.top < boxRect.top + pad) {
-                    delta = elRect.top - boxRect.top - pad;
-                } else if (elRect.bottom > boxRect.bottom - pad) {
-                    delta = elRect.bottom - boxRect.bottom + pad;
-                }
-                if (Math.abs(delta) > 1) box.scrollTop = Math.max(0, box.scrollTop + delta);
+                scrollSlot('center', currentSlotTime);
             });
         });
         return () => {
             cancelAnimationFrame(outer);
             cancelAnimationFrame(inner);
         };
-    }, [dateStr, selectedProId, currentSlotTime, selectedTime, closed, offHoursVisible, compact]);
+    }, [dateStr, selectedProId, currentSlotTime, closed, offHoursVisible, compact, scrollSlot]);
+
+    useEffect(() => {
+        if (!compact) return;
+        if (!selectedTime || selectedTime === currentSlotTime) return;
+        let inner = 0;
+        const outer = requestAnimationFrame(() => {
+            inner = requestAnimationFrame(() => {
+                scrollSlot('nearest', selectedTime);
+            });
+        });
+        return () => {
+            cancelAnimationFrame(outer);
+            cancelAnimationFrame(inner);
+        };
+    }, [selectedTime, currentSlotTime, compact, closed, offHoursVisible, scrollSlot]);
 
     const renderTime = (time: string) => {
         const blocked = isBlockedTime(time);
@@ -219,9 +239,9 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
         (name || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('');
 
     return (
-        <div className={`flex flex-col md:flex-row md:items-start animate-in fade-in slide-in-from-right-4 duration-300 ${compact ? 'gap-3 md:gap-6 min-h-0 flex-1' : 'gap-6'}`}>
+        <div className={`flex flex-col md:flex-row md:items-start animate-in fade-in slide-in-from-right-4 duration-300 ${compact ? 'gap-3 md:gap-4 min-h-0 flex-1' : 'gap-6'}`}>
             {/* Esquerda: profissional + data (fixa no desktop enquanto os horários rolam) */}
-            <div className={`md:w-[22rem] md:shrink-0 md:sticky md:top-0 shrink-0 ${compact ? 'space-y-2 md:space-y-4' : 'space-y-6'}`}>
+            <div className={`md:w-[22rem] md:shrink-0 md:sticky md:top-0 shrink-0 ${compact ? 'space-y-2 md:space-y-3' : 'space-y-6'}`}>
                 <section>
                     <StepHeading level="section" title="Escolha o profissional" compact={compact} className={compact ? 'max-md:sr-only' : ''} />
                     {/* Sem caixa de rolagem interna: todos os profissionais visíveis */}
@@ -294,17 +314,17 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                             <ChevronRight className="w-5 h-5" />
                         </button>
                     </div>
-                    {!isToday && !compact && (
+                    {!isToday && (
                         <button
                             type="button"
                             onClick={() => { setSelectedDate(new Date()); setSelectedTime(''); }}
-                            className="mt-2 text-xs font-semibold text-theme-accent hover:underline"
+                            className={`${compact ? 'hidden md:inline-block mt-1.5' : 'mt-2'} text-xs font-semibold text-theme-accent hover:underline`}
                         >
                             Ir para hoje
                         </button>
                     )}
                 </section>
-                {afterDate}
+                {afterDate ? <div className={compact ? 'md:mt-1' : undefined}>{afterDate}</div> : null}
             </div>
 
             {/* Right: Time Slots */}
@@ -314,7 +334,7 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                 <div
                     ref={gridScrollRef}
                     data-testid="reschedule-time-grid"
-                    className={`rounded-xl border ${cardBg} p-3 sm:p-4 ${compact ? 'overflow-y-auto overscroll-contain max-md:h-[16rem] md:min-h-0 md:flex-1 md:max-h-[min(18rem,46dvh)]' : ''}`}
+                    className={`rounded-xl border ${cardBg} p-3 sm:p-4 ${compact ? 'overflow-y-auto overscroll-contain h-[16rem]' : ''}`}
                 >
                     {!selectedProId ? (
                         <div className="py-10 flex flex-col items-center justify-center text-center text-[var(--color-text-muted)] gap-2">

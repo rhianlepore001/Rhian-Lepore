@@ -3,6 +3,8 @@ import React from 'react';
 interface Tab {
   id: string;
   label: string;
+  /** Rótulo curto abaixo de 640 px (o nome completo fica no aria-label). */
+  shortLabel?: string;
   icon?: React.ReactNode;
 }
 
@@ -24,6 +26,7 @@ export const TabNav: React.FC<TabNavProps> = ({ tabs, activeTab, onChange, accen
               key={tab.id}
               role="tab"
               aria-selected={activeTab === tab.id}
+              aria-label={tab.shortLabel ? tab.label : undefined}
               onClick={() => onChange(tab.id)}
               className={`flex items-center gap-1.5 rounded-full px-4 py-2 min-h-[44px] font-mono text-xs uppercase tracking-wide transition-all duration-200 whitespace-nowrap ${
                 activeTab === tab.id
@@ -32,7 +35,12 @@ export const TabNav: React.FC<TabNavProps> = ({ tabs, activeTab, onChange, accen
               }`}
             >
               {tab.icon}
-              {tab.label}
+              {tab.shortLabel ? (
+                <>
+                  <span className="sm:hidden" aria-hidden="true">{tab.shortLabel}</span>
+                  <span className="hidden sm:inline" aria-hidden="true">{tab.label}</span>
+                </>
+              ) : tab.label}
             </button>
           ))}
         </div>

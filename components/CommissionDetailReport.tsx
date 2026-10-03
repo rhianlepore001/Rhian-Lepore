@@ -53,6 +53,7 @@ export const CommissionDetailReport: React.FC<CommissionDetailReportProps> = ({
     const { colors, accent, font, status } = useBrutalTheme({ override: isBeauty ? 'beauty' as ThemeVariant : 'barber' as ThemeVariant });
     const [records, setRecords] = useState<ServiceRecord[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState(false);
     const [showShare, setShowShare] = useState(false);
     const reportRef = useRef<HTMLDivElement>(null);
 
@@ -63,12 +64,13 @@ export const CommissionDetailReport: React.FC<CommissionDetailReportProps> = ({
     const fetchRecords = async () => {
         if (!user) return;
         setLoading(true);
+        setLoadError(false);
         try {
             const { data, error } = await supabase
                 .from('finance_records')
                 .select(`
                     id, created_at, service_name, client_name, description,
-                    revenue, amount, payment_method,
+                    revenue, payment_method,
                     commission_rate, commission_value,
                     appointments!appointment_id (machine_fee_percent)
                 `)
@@ -83,12 +85,13 @@ export const CommissionDetailReport: React.FC<CommissionDetailReportProps> = ({
             if (error) throw error;
 
             const formatted: ServiceRecord[] = (data || []).map((r: any) => {
-                const amount = Number(r.revenue ?? r.amount) || 0;
+                const amount = Number(r.revenue) || 0;
                 const feePercent = Number(r.appointments?.machine_fee_percent) || 0;
                 const feeAmount = amount * feePercent / 100;
                 const base = amount - feeAmount;
                 const rate = Number(r.commission_rate) || commissionRate;
-                const commValue = Number(r.commission_value) || (base * rate / 100);
+                // Só a comissão registrada; sem estimar (decisão Q3).
+                const commValue = Number(r.commission_value) || 0;
 
                 return {
                     id: r.id,
@@ -108,6 +111,8 @@ export const CommissionDetailReport: React.FC<CommissionDetailReportProps> = ({
             setRecords(formatted);
         } catch (err) {
             console.error('Error fetching commission records:', err);
+            setRecords([]);
+            setLoadError(true);
         } finally {
             setLoading(false);
         }
@@ -117,6 +122,7 @@ export const CommissionDetailReport: React.FC<CommissionDetailReportProps> = ({
     const totalFee = records.reduce((s, r) => s + r.machine_fee_amount, 0);
     const totalBase = records.reduce((s, r) => s + r.commission_base, 0);
     const totalCommission = records.reduce((s, r) => s + r.commission_value, 0);
+    const withoutCommission = records.filter((r) => !r.commission_value).length;
 
     const fmt = (n: number) => formatMoney(n);
     const fmtDate = (d: string) => new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
@@ -170,6 +176,11 @@ export const CommissionDetailReport: React.FC<CommissionDetailReportProps> = ({
                         {loading ? (
                             <div className="py-16 flex items-center justify-center">
                                 <Loader2 className={`w-8 h-8 animate-spin ${accent.text}`} />
+                            </div>
+                        ) : loadError ? (
+                            <div className="py-16 text-center" role="alert">
+                                <p className={`${colors.text} font-semibold`}>Não foi possível carregar o relatório.</p>
+                                <button type="button" onClick={fetchRecords} className={`mt-3 text-sm ${accent.text} underline underline-offset-4 min-h-[44px]`}>Tentar de novo</button>
                             </div>
                         ) : records.length === 0 ? (
                             <div className="py-16 text-center">
@@ -235,13 +246,18 @@ export const CommissionDetailReport: React.FC<CommissionDetailReportProps> = ({
                                         <span className={`${colors.text} ${font.mono}`}>{fmt(totalBase)}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
-                                        <span className={colors.textMuted}>(×) {commissionRate}% comissão</span>
+                                        <span className={colors.textMuted}>Comissão registrada ({commissionRate}% padrão)</span>
                                         <span className={`${colors.textSecondary} ${font.mono}`}>{fmt(totalCommission)}</span>
                                     </div>
                                     <div className={`flex justify-between text-base font-bold border-t ${colors.divider} pt-2 mt-2`}>
                                         <span className={colors.text}>Valor líquido a receber</span>
-                                        <span className={`${font.mono} ${accent.text}`}>{fmt(totalCommission)}</span>
+                                        <span className={`${font.mono} ${accent.text}`} data-testid="report-total-commission">{fmt(totalCommission)}</span>
                                     </div>
+                                    {withoutCommission > 0 && (
+                                        <p className="text-xs text-[var(--color-warning)] pt-1">
+                                            {withoutCommission} {withoutCommission === 1 ? 'serviço sem comissão registrada não entra' : 'serviços sem comissão registrada não entram'} no total. A comissão não é estimada.
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className={`border-t ${colors.divider} pt-4 text-xs ${colors.textMuted} opacity-60 ${font.mono} flex flex-wrap gap-4`}>

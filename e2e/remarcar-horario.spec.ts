@@ -105,6 +105,14 @@ test.describe('PR C — Remarcar horário', () => {
     await page.getByTestId('appointment-reschedule').click();
     await page.getByTestId('reschedule-modal-body').getByRole('button', { name: '10:30' }).click();
 
+    const dismissToasts = async () => {
+      const closes = page.locator('[role="alert"] button[aria-label="Fechar"], [role="status"] button[aria-label="Fechar"]');
+      const n = await closes.count();
+      for (let i = n - 1; i >= 0; i -= 1) {
+        await closes.nth(i).click({ force: true }).catch(() => undefined);
+      }
+    };
+
     guard.setRpc({
       status: 400,
       body: { message: SLOT_BUSY, hint: 'reschedule_slot_busy', code: 'P0001' },
@@ -113,6 +121,7 @@ test.describe('PR C — Remarcar horário', () => {
     await expect(page.getByText(SLOT_BUSY)).toBeVisible({ timeout: 10_000 });
     await expect(page.getByRole('heading', { name: 'Remarcar horário' })).toBeVisible();
     await shot(page, 'owner-390-6-conflito.png');
+    await dismissToasts();
 
     guard.setRpc({
       status: 400,
@@ -121,6 +130,7 @@ test.describe('PR C — Remarcar horário', () => {
     await page.getByTestId('reschedule-confirm').click();
     await expect(page.getByText(M1)).toBeVisible({ timeout: 10_000 });
     await shot(page, 'owner-390-7-bloqueio-m1.png');
+    await dismissToasts();
 
     guard.setRpc({
       status: 200,

@@ -70,6 +70,9 @@ VALUES (:'OWNER', :'PRO1', now() - interval '1 hour', now() + interval '1 hour')
 SELECT pg_temp.check('B-41 Completed no bloqueio',
   pg_temp.try(format($q$INSERT INTO public.appointments (user_id, client_id, professional_id, appointment_time, status, duration_minutes, origin) VALUES (%L, %L, %L, now(), 'Completed', 30, 'queue')$q$, :'OWNER', :'CLIENT', :'PRO1')),
   'ok');
+SELECT pg_temp.check('B-42 reabrir Completed dentro do bloqueio',
+  pg_temp.try($q$UPDATE public.appointments SET status = 'Confirmed' WHERE origin = 'queue' AND status = 'Completed'$q$),
+  'error:Horário bloqueado na agenda de Diego. Para agendar, remova o bloqueio primeiro.');
 
 -- B-46: pedido que já estava no bloqueio não muda para outro bloqueio
 SELECT pg_temp.check('B-46 cliente muda para outro bloqueio',

@@ -7,7 +7,7 @@
 -- conflitos confirmados (o 4-arg é removido e recriado com default, então a
 -- chamada antiga continua válida).
 --
--- Se 20261003110000 já tiver sido aplicada, este CREATE OR REPLACE do trigger
+-- Se 20261003090000 já tiver sido aplicada, este CREATE OR REPLACE do trigger
 -- preserva o passe de Completed (B-41) e ainda recusa reabrir para
 -- Pending/Confirmed.
 --
@@ -97,10 +97,13 @@ BEGIN
   IF NEW.professional_id IS NULL THEN
     RETURN NEW;
   END IF;
+  -- Status só muda de verdade quando o anterior ainda ocupava o horário.
+  -- Cancelled/NoShow/Completed reaberto para Confirmed/Pending volta a ser checado (B-42).
   IF TG_OP = 'UPDATE'
      AND NEW.appointment_time IS NOT DISTINCT FROM OLD.appointment_time
      AND NEW.professional_id IS NOT DISTINCT FROM OLD.professional_id
-     AND NEW.duration_minutes IS NOT DISTINCT FROM OLD.duration_minutes THEN
+     AND NEW.duration_minutes IS NOT DISTINCT FROM OLD.duration_minutes
+     AND OLD.status NOT IN ('Cancelled', 'NoShow', 'Completed') THEN
     RETURN NEW;
   END IF;
   IF TG_OP = 'UPDATE'

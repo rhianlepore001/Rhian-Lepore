@@ -3,8 +3,8 @@
 -- =============================================================================
 -- Volta as funções ao corpo do #113 / live lido em 2026-10-03.
 -- O trigger de appointments volta ao md5 150219aaaec7688797ec0e09229d8da5.
--- Se 20261003110000 tiver sido aplicada e este rollback rodar por cima, a fila
--- volta a falhar no bloqueio: reaplique 20261003110000 para manter B-41.
+-- Se 20261003090000 tiver sido aplicada e este rollback rodar por cima, a fila
+-- volta a falhar no bloqueio: reaplique 20261003090000 para manter B-41.
 -- Nenhuma linha de agenda_blocks é apagada. O índice novo sai.
 -- =============================================================================
 

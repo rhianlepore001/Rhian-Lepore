@@ -445,6 +445,7 @@ test.describe('PR-2 antecedência mínima', () => {
     if (phase === 'after') {
       await expect(page.getByRole('heading', { name: 'Escolha a data e hora' })).toBeVisible({ timeout: 10_000 });
       await expect(page.getByTestId('lead-time-alert')).toBeVisible({ timeout: 10_000 });
+      await expect(page.getByTestId('lead-time-alert')).toBeFocused();
       await expect(page.getByText(LEAD_TOAST)).toBeVisible();
       await expect(page.getByTestId('lead-time-next-day')).toBeVisible();
       await expect(page.locator('[data-toast-placement="bottom"]')).toHaveCount(0);

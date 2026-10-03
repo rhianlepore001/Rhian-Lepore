@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { TimeGrid, slotPeriodLabel } from '../../components/TimeGrid';
 
 vi.mock('../../hooks/useBrutalTheme', () => ({
@@ -99,7 +99,7 @@ describe('TimeGrid — rótulo do grupo segue a hora real dos slots', () => {
     expect(screen.getByRole('button', { name: 'Ver próximo dia com horário' })).toBeInTheDocument();
   });
 
-  it('alerta de antecedência fica no topo do card', () => {
+  it('alerta de antecedência fica no topo do card e recebe foco', async () => {
     render(
       <TimeGrid
         selectedTime={null}
@@ -108,10 +108,31 @@ describe('TimeGrid — rótulo do grupo segue a hora real dos slots', () => {
         emptyMessage="Sem horários com 8h de antecedência."
         emptyAction={<button type="button">Ver próximo dia com horário</button>}
         alertMessage="Esse horário precisa ser marcado com pelo menos 8h de antecedência"
+        alertKey={1}
       />,
     );
+    const heading = screen.getByRole('heading', { name: 'Horários disponíveis' });
+    expect(heading).toHaveAttribute('tabIndex', '-1');
     const alert = screen.getByTestId('lead-time-alert');
     expect(alert).toHaveAttribute('role', 'alert');
+    expect(alert).toHaveAttribute('tabIndex', '-1');
     expect(alert).toHaveTextContent('Esse horário precisa ser marcado com pelo menos 8h de antecedência');
+    await waitFor(() => expect(alert).toHaveFocus());
+  });
+
+  it('violação idêntica remonta o alerta e volta a anunciar', async () => {
+    const props = {
+      selectedTime: null as string | null,
+      onTimeSelect: () => undefined,
+      availableSlots: [] as string[],
+      emptyMessage: 'Sem horários com 8h de antecedência.',
+      alertMessage: 'Esse horário precisa ser marcado com pelo menos 8h de antecedência',
+    };
+    const { rerender } = render(<TimeGrid {...props} alertKey={1} />);
+    const first = screen.getByTestId('lead-time-alert');
+    rerender(<TimeGrid {...props} alertKey={2} />);
+    const second = screen.getByTestId('lead-time-alert');
+    expect(second).not.toBe(first);
+    await waitFor(() => expect(second).toHaveFocus());
   });
 });

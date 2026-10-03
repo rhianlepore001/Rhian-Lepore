@@ -73,6 +73,7 @@ describe('PublicBookingSettings — antecedência mínima', () => {
     expect(screen.getByTestId('lead-time-preset-24')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Outro/ })).toBeInTheDocument();
     expect(screen.getByText(/padrão 2h/)).toBeInTheDocument();
+    expect(screen.getByText('Cliente pode editar na Minha Área')).toBeInTheDocument();
   });
 
   it('valor 8h salvo já vem marcado', () => {

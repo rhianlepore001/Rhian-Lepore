@@ -148,6 +148,7 @@ export const PublicBooking: React.FC = () => {
     const [slotsRefreshKey, setSlotsRefreshKey] = useState(0);
     const [nextDayBusy, setNextDayBusy] = useState(false);
     const [leadTimeAlert, setLeadTimeAlert] = useState<string | null>(null);
+    const [leadTimeAlertKey, setLeadTimeAlertKey] = useState(0);
     const [fullDates, setFullDates] = useState<string[]>([]);
     const [acceptedPolicy, setAcceptedPolicy] = useState(false);
     const [acceptedMarketing, setAcceptedMarketing] = useState(false);
@@ -751,6 +752,7 @@ export const PublicBooking: React.FC = () => {
                 setLeadTimeAlert(
                     leadTimeViolationMessage(leadTimeHoursFromError(error, slotsResult.leadTimeHours)),
                 );
+                setLeadTimeAlertKey((key) => key + 1);
             } else if (isSlotUnavailableError(error)) {
                 showToast('Este horário acabou de ser ocupado. Escolha outro.', 'error');
             } else {
@@ -1159,7 +1161,7 @@ export const PublicBooking: React.FC = () => {
                             </div>
                             {selectedDate && (
                                 <div className="animate-reveal-fragment duration-700 max-w-2xl mx-auto">
-                                    <TimeGrid selectedTime={selectedTime} onTimeSelect={setSelectedTime} availableSlots={availableSlots} emptyMessage={leadEmptyMessage} emptyAction={leadEmptyAction} alertMessage={leadTimeAlert} forceTheme={themeOverride} />
+                                    <TimeGrid selectedTime={selectedTime} onTimeSelect={(time) => { setLeadTimeAlert(null); setSelectedTime(time); }} availableSlots={availableSlots} emptyMessage={leadEmptyMessage} emptyAction={leadEmptyAction} alertMessage={leadTimeAlert} alertKey={leadTimeAlertKey} forceTheme={themeOverride} />
                                 </div>
                             )}
                         </div>
@@ -1576,7 +1578,7 @@ export const PublicBooking: React.FC = () => {
                                                                     setMessages(prev => [...prev, { id: Date.now().toString(), text: `Agendar para dia ${selectedDate.toLocaleDateString('pt-BR')} às ${time}`, isAssistant: false }, { id: (Date.now() + 1).toString(), text: isLogged ? "Estamos quase concluindo! Como você já tem cadastro, verifique os detalhes abaixo e confirme o seu agendamento." : "Estamos quase concluindo! Agora, para confirmar seu agendamento, informe seus dados de contato.", isAssistant: true, type: 'contact' }]);
                                                                     setStep('contact');
                                                                 }
-                                                            }} availableSlots={availableSlots} emptyMessage={leadEmptyMessage} emptyAction={leadEmptyAction} alertMessage={leadTimeAlert} forceTheme={themeOverride} />
+                                                            }} availableSlots={availableSlots} emptyMessage={leadEmptyMessage} emptyAction={leadEmptyAction} alertMessage={leadTimeAlert} alertKey={leadTimeAlertKey} forceTheme={themeOverride} />
                                                         </div>
                                                     )}
                                                 </div>

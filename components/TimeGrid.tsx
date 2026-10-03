@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Clock, TriangleAlert } from 'lucide-react';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { Card } from './ui/Card';
@@ -23,6 +23,7 @@ interface TimeGridProps {
     emptyMessage?: string;
     emptyAction?: React.ReactNode;
     alertMessage?: string | null;
+    alertKey?: number;
 }
 
 export const TimeGrid: React.FC<TimeGridProps> = ({
@@ -36,8 +37,17 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
     emptyMessage,
     emptyAction,
     alertMessage,
+    alertKey = 0,
 }) => {
     const { colors, accent, font, classes, density } = useBrutalTheme({ override: forceTheme });
+    const headingRef = useRef<HTMLHeadingElement>(null);
+    const alertRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!alertMessage) return;
+        (alertRef.current ?? headingRef.current)?.focus();
+    }, [alertMessage, alertKey]);
+
     const hoverBg = `hover:bg-[var(--color-accent-dim)]`;
     const slotPadding = density.tableRowPy;
     const selectedText = classes.buttonPrimary.split(' ').find((c) => c.startsWith('text-')) ?? colors.text;
@@ -101,14 +111,24 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
             <div className={density.cardPadding}>
                 <div className="flex items-center gap-2 mb-4">
                     <Clock className={`w-5 h-5 ${accent.text}`} aria-hidden="true" />
-                    <h3 className={`${colors.text} font-heading text-lg font-bold`}>Horários disponíveis</h3>
+                    <h3
+                        id="booking-time-heading"
+                        ref={headingRef}
+                        tabIndex={-1}
+                        className={`${colors.text} font-heading text-lg font-bold outline-none focus:ring-2 focus:ring-[var(--color-accent)] rounded-sm`}
+                    >
+                        Horários disponíveis
+                    </h3>
                 </div>
 
                 {alertMessage ? (
                     <div
+                        key={alertKey}
+                        ref={alertRef}
                         role="alert"
+                        tabIndex={-1}
                         data-testid="lead-time-alert"
-                        className="mb-4 flex items-start gap-2 rounded-xl border px-3 py-2.5 border-[var(--color-danger-border)] bg-[var(--color-danger-bg)]"
+                        className="mb-4 flex items-start gap-2 rounded-xl border px-3 py-2.5 border-[var(--color-danger-border)] bg-[var(--color-danger-bg)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
                     >
                         <TriangleAlert className="w-4 h-4 shrink-0 mt-0.5 text-[var(--color-danger)]" aria-hidden="true" />
                         <p className="text-sm leading-snug text-[var(--color-danger)] text-balance">{alertMessage}</p>

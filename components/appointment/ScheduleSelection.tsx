@@ -121,8 +121,9 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
         let inner = 0;
         const outer = requestAnimationFrame(() => {
             inner = requestAnimationFrame(() => {
-                const el = (currentSlotTime
-                    ? box.querySelector(`[data-time="${currentSlotTime}"]`)
+                const targetTime = selectedTime || currentSlotTime;
+                const el = (targetTime
+                    ? box.querySelector(`[data-time="${targetTime}"]`)
                     : currentSlotRef.current) as HTMLElement | null;
                 if (!el) return;
                 const elRect = el.getBoundingClientRect();
@@ -135,7 +136,7 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
             cancelAnimationFrame(outer);
             cancelAnimationFrame(inner);
         };
-    }, [dateStr, selectedProId, currentSlotTime, closed, offHoursVisible, compact]);
+    }, [dateStr, selectedProId, currentSlotTime, selectedTime, closed, offHoursVisible, compact]);
 
     const renderTime = (time: string) => {
         const blocked = isBlockedTime(time);
@@ -152,10 +153,10 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
             ? 'bg-theme-surface border-[var(--color-divider)] text-theme-textSecondary cursor-not-allowed'
             : busy
                 ? 'bg-[var(--color-danger-bg)] border-[var(--color-danger-border)] text-[var(--color-text-muted)] cursor-not-allowed'
-                : selected
-                    ? activeCardBg
-                    : current
-                        ? 'bg-theme-surface border-theme-accent ring-2 ring-inset ring-theme-accent text-theme-text'
+                : current
+                    ? 'bg-theme-surface border-theme-accent ring-2 ring-inset ring-theme-accent text-theme-text'
+                    : selected
+                        ? activeCardBg
                         : 'bg-theme-surface border-[var(--color-divider)] text-theme-text hover:border-[var(--color-input-border)] hover:bg-[var(--color-card-hover)]';
         return (
             <button
@@ -180,7 +181,7 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                     {time}
                 </span>
                 {tag && (
-                    <span className={`text-xs font-sans font-semibold tracking-wide leading-none ${selected ? 'text-[var(--color-on-accent)]' : ''}`}>
+                    <span className={`text-xs font-sans font-semibold tracking-wide leading-none ${selected && !current ? 'text-[var(--color-on-accent)]' : ''}`}>
                         {tag}
                     </span>
                 )}
@@ -212,11 +213,11 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
         (name || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('');
 
     return (
-        <div className={`flex flex-col md:flex-row md:items-start animate-in fade-in slide-in-from-right-4 duration-300 ${compact ? 'gap-4 md:gap-6 min-h-0 flex-1' : 'gap-6'}`}>
+        <div className={`flex flex-col md:flex-row md:items-start animate-in fade-in slide-in-from-right-4 duration-300 ${compact ? 'gap-3 md:gap-6 min-h-0 flex-1' : 'gap-6'}`}>
             {/* Esquerda: profissional + data (fixa no desktop enquanto os horários rolam) */}
-            <div className={`md:w-[22rem] md:shrink-0 md:sticky md:top-0 shrink-0 ${compact ? 'space-y-3 md:space-y-4' : 'space-y-6'}`}>
+            <div className={`md:w-[22rem] md:shrink-0 md:sticky md:top-0 shrink-0 ${compact ? 'space-y-2 md:space-y-4' : 'space-y-6'}`}>
                 <section>
-                    <StepHeading level="section" title="Escolha o profissional" />
+                    <StepHeading level="section" title="Escolha o profissional" compact={compact} />
                     {/* Sem caixa de rolagem interna: todos os profissionais visíveis */}
                     <div data-testid="wizard-pro-list" className={`grid gap-2 ${compact ? 'grid-cols-3 md:grid-cols-2' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-2'}`}>
                         {teamMembers.map(member => {
@@ -253,7 +254,7 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                 </section>
 
                 <section>
-                    <StepHeading level="section" title="Selecione a data" />
+                    <StepHeading level="section" title="Selecione a data" compact={compact} />
                     <div data-testid="wizard-date-picker" className={`flex items-center gap-1 rounded-xl border ${cardBg} ${compact ? 'p-1' : 'p-1.5'}`}>
                         <button
                             type="button"
@@ -264,7 +265,7 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                             <ChevronLeft className="w-5 h-5" />
                         </button>
                         <div className="flex-1 min-w-0 flex items-center justify-center gap-3">
-                            <span className={`${compact ? 'text-2xl' : 'text-3xl'} leading-none font-heading text-theme-accent tabular-nums`}>{selectedDate.getDate()}</span>
+                            <span className={`${compact ? 'text-xl' : 'text-3xl'} leading-none font-heading text-theme-accent tabular-nums`}>{selectedDate.getDate()}</span>
                             <span className="min-w-0 text-left leading-tight">
                                 <span className="block text-sm font-semibold text-theme-text truncate">
                                     {(() => {
@@ -302,12 +303,12 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
 
             {/* Right: Time Slots */}
             <section className={`flex-1 min-w-0 ${compact ? 'min-h-0 flex flex-col' : ''}`}>
-                <StepHeading level="section" title="Escolha o horário" />
+                <StepHeading level="section" title="Escolha o horário" compact={compact} />
 
                 <div
                     ref={gridScrollRef}
                     data-testid="reschedule-time-grid"
-                    className={`rounded-xl border ${cardBg} p-3 sm:p-4 ${compact ? 'min-h-0 flex-1 overflow-y-auto overscroll-contain max-md:min-h-[7.5rem] max-md:max-h-[12rem] md:max-h-[min(18rem,46dvh)]' : ''}`}
+                    className={`rounded-xl border ${cardBg} p-3 sm:p-4 ${compact ? 'min-h-0 flex-1 overflow-y-auto overscroll-contain max-md:min-h-[14rem] max-md:max-h-[16.5rem] md:max-h-[min(18rem,46dvh)]' : ''}`}
                 >
                     {!selectedProId ? (
                         <div className="py-10 flex flex-col items-center justify-center text-center text-[var(--color-text-muted)] gap-2">

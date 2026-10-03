@@ -3,7 +3,9 @@ import { slotOverlapsOccupying, type OccupyingAppointment } from './agendaBlockR
 import { addDaysToDateString, zonedDateTimeToDate } from './businessTimezone';
 
 const APT_STATUSES = ['Pending', 'Confirmed', 'Completed'] as const;
+const APT_FETCH_STATUSES = [...APT_STATUSES, 'Cancelled', 'NoShow'] as const;
 const PB_STATUSES = ['pending', 'confirmed'] as const;
+const RELEASED_STATUSES = new Set(['Cancelled', 'NoShow']);
 
 export interface PublicBookingOccupancyRow {
   id: string;
@@ -17,6 +19,23 @@ export function salonDayRange(dateStr: string, timeZone: string): { startIso: st
   const start = zonedDateTimeToDate(dateStr, '00:00', timeZone);
   const end = zonedDateTimeToDate(addDaysToDateString(dateStr, 1), '00:00', timeZone);
   return { startIso: start.toISOString(), endIso: end.toISOString() };
+}
+
+/** Mesma regra de confirmed_booking_slot_released: confirmed só libera se há Cancelled/NoShow no mesmo instante+pro e nenhum outro status. */
+export function confirmedBookingSlotReleased(
+  appointments: OccupyingAppointment[],
+  pb: PublicBookingOccupancyRow,
+): boolean {
+  const pbTime = new Date(pb.appointment_time).getTime();
+  if (Number.isNaN(pbTime)) return false;
+  const proId = pb.professional_id || '';
+  const sameSlot = appointments.filter((a) => {
+    if (proId && (a.professional_id || '') !== proId) return false;
+    return new Date(a.appointment_time).getTime() === pbTime;
+  });
+  const hasReleased = sameSlot.some((a) => RELEASED_STATUSES.has(a.status || ''));
+  const hasActive = sameSlot.some((a) => !RELEASED_STATUSES.has(a.status || ''));
+  return hasReleased && !hasActive;
 }
 
 export function publicBookingToOccupying(row: PublicBookingOccupancyRow): OccupyingAppointment {
@@ -37,7 +56,12 @@ export function mergeOccupying(input: {
 }): OccupyingAppointment[] {
   const fromPb = input.publicBookings
     .filter((b) => b.id !== input.ignorePublicBookingId)
-    .filter((b) => PB_STATUSES.includes((b.status || '').toLowerCase() as typeof PB_STATUSES[number]))
+    .filter((b) => {
+      const st = (b.status || '').toLowerCase();
+      if (!PB_STATUSES.includes(st as typeof PB_STATUSES[number])) return false;
+      if (st === 'confirmed' && confirmedBookingSlotReleased(input.appointments, b)) return false;
+      return true;
+    })
     .map(publicBookingToOccupying);
   return [
     ...input.appointments.filter((a) => APT_STATUSES.includes((a.status || '') as typeof APT_STATUSES[number])),
@@ -90,6 +114,7 @@ export function serverSlotIsBusy(opts: {
     if ((b.professional_id || '') !== opts.professionalId) return false;
     const st = (b.status || '').toLowerCase();
     if (st !== 'pending' && st !== 'confirmed') return false;
+    if (st === 'confirmed' && confirmedBookingSlotReleased(opts.appointments, b)) return false;
     const aStart = new Date(b.appointment_time).getTime();
     const aEnd = aStart + Math.max(b.duration_minutes || 30, 1) * 60_000;
     return aStart < end && aEnd > start;
@@ -111,7 +136,7 @@ export async function fetchRescheduleOccupancy(input: {
       .select('id, professional_id, appointment_time, duration_minutes, status')
       .eq('user_id', input.companyId)
       .eq('professional_id', input.professionalId)
-      .in('status', [...APT_STATUSES])
+      .in('status', [...APT_FETCH_STATUSES])
       .gte('appointment_time', startIso)
       .lt('appointment_time', endIso),
     supabase
@@ -123,6 +148,8 @@ export async function fetchRescheduleOccupancy(input: {
       .gte('appointment_time', startIso)
       .lt('appointment_time', endIso),
   ]);
+  if (aptRes.error) throw aptRes.error;
+  if (pbRes.error) throw pbRes.error;
   return mergeOccupying({
     appointments: (aptRes.data ?? []) as OccupyingAppointment[],
     publicBookings: (pbRes.data ?? []) as PublicBookingOccupancyRow[],

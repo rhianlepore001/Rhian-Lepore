@@ -85,8 +85,11 @@ describe('ScheduleSelection — remarcação (B-68 / R-02)', () => {
         },
       ],
     });
-    expect(screen.getByRole('button', { name: '09:00 Atual' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: '09:00 Atual' }).className).not.toMatch(/line-through/);
+    const atual = screen.getByRole('button', { name: '09:00 Atual' });
+    expect(atual).toBeEnabled();
+    expect(atual.className).toMatch(/ring-2/);
+    expect(atual.className).not.toMatch(/active/);
+    expect(atual.className).not.toMatch(/line-through/);
     expect(screen.getByRole('button', { name: '10:00 Ocupado' })).toBeDisabled();
     expect(screen.getByRole('button', { name: '10:30 Ocupado' })).toBeDisabled();
     expect(screen.getByRole('button', { name: '11:00' })).toBeEnabled();

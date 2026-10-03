@@ -84,6 +84,76 @@ describe('ocupação do modal vs regra da RPC', () => {
     expect(ui('15:30')).toBe(false);
   });
 
+  it('trata pedido confirmed ligado a NoShow/Cancelled como livre (confirmed_booking_slot_released)', () => {
+    const released = [
+      ...appointments,
+      {
+        id: 'apt-noshow',
+        professional_id: PRO,
+        appointment_time: at('11:30'),
+        duration_minutes: 30,
+        status: 'NoShow',
+      },
+      {
+        id: 'apt-cancel',
+        professional_id: PRO,
+        appointment_time: at('12:00'),
+        duration_minutes: 30,
+        status: 'Cancelled',
+      },
+    ];
+    const pbs = [
+      ...publicBookings,
+      {
+        id: 'pb-noshow',
+        professional_id: PRO,
+        appointment_time: at('11:30'),
+        duration_minutes: 30,
+        status: 'confirmed',
+      },
+      {
+        id: 'pb-cancel',
+        professional_id: PRO,
+        appointment_time: at('12:00'),
+        duration_minutes: 30,
+        status: 'confirmed',
+      },
+      {
+        id: 'pb-still-confirmed',
+        professional_id: PRO,
+        appointment_time: at('13:00'),
+        duration_minutes: 30,
+        status: 'confirmed',
+      },
+    ];
+    const occupying = mergeOccupying({ appointments: released, publicBookings: pbs });
+    const opts = (time: string) => ({
+      dateStr: DAY,
+      time,
+      durationMinutes: 30,
+      occupying,
+      professionalId: PRO,
+      timeZone: TZ,
+      ignoreAppointmentId: SELF,
+    });
+    const serverOpts = (time: string) => ({
+      startIso: at(time),
+      durationMinutes: 30,
+      professionalId: PRO,
+      ignoreAppointmentId: SELF,
+      appointments: released,
+      publicBookings: pbs,
+    });
+    expect(uiSlotIsBusy(opts('11:30'))).toBe(false);
+    expect(serverSlotIsBusy(serverOpts('11:30'))).toBe(false);
+    expect(uiSlotIsBusy(opts('12:00'))).toBe(false);
+    expect(serverSlotIsBusy(serverOpts('12:00'))).toBe(false);
+    expect(uiSlotIsBusy(opts('13:00'))).toBe(true);
+    expect(serverSlotIsBusy(serverOpts('13:00'))).toBe(true);
+    expect(uiSlotIsBusy(opts('14:00'))).toBe(true);
+    expect(serverSlotIsBusy(serverOpts('14:00'))).toBe(true);
+  });
+
   it('ignora o próprio pedido ligado (não marca o Atual como ocupado)', () => {
     const occupying = mergeOccupying({
       appointments,

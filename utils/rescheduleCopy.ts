@@ -11,6 +11,8 @@ export const RESCHEDULE_PENDING_CLIENT_REQUEST =
 export const RESCHEDULE_WHATSAPP_LABEL = 'Avisar o cliente no WhatsApp';
 export const RESCHEDULE_CONFIRM_LABEL = 'Confirmar remarcação';
 export const RESCHEDULE_MODAL_TITLE = 'Remarcar horário';
+export const RESCHEDULE_OCCUPANCY_ERROR =
+  'Não deu para atualizar os ocupados. O servidor ainda recusa conflito.';
 
 export const RESCHEDULE_ERROR_HINTS = new Set([
   'reschedule_slot_busy',

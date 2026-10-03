@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowRight, CalendarClock } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
@@ -19,6 +19,7 @@ import {
 } from '../../utils/businessTimezone';
 import { buildWhatsAppLink } from '../../utils/formatters';
 import { mapError } from '../../utils/mapError';
+import { slotOverlapsOccupying, type OccupyingAppointment } from '../../utils/agendaBlockRange';
 import { fetchRescheduleOccupancy } from '../../utils/rescheduleOccupancy';
 import { isStaffEditForbiddenError, STAFF_EDIT_FORBIDDEN_MESSAGE } from '../../utils/staffAppointmentPermission';
 import {
@@ -28,11 +29,11 @@ import {
   RESCHEDULE_CONFIRM_LABEL,
   RESCHEDULE_GENERIC_ERROR,
   RESCHEDULE_MODAL_TITLE,
+  RESCHEDULE_OCCUPANCY_ERROR,
   RESCHEDULE_PAST_NOTE,
   RESCHEDULE_SUCCESS_TOAST,
   RESCHEDULE_WHATSAPP_LABEL,
 } from '../../utils/rescheduleCopy';
-import type { OccupyingAppointment } from '../../utils/agendaBlockRange';
 import type { BusinessHours } from '../../types/settings';
 
 export interface RescheduleAppointment {
@@ -94,6 +95,8 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
   const [formError, setFormError] = useState<string | null>(null);
   const [fetchedOccupying, setFetchedOccupying] = useState<OccupyingAppointment[]>([]);
   const [forcedBusy, setForcedBusy] = useState<OccupyingAppointment[]>([]);
+  const [occupancyError, setOccupancyError] = useState<string | null>(null);
+  const keepFormErrorRef = useRef(false);
 
   const dateStr = formatLocalDateString(selectedDate);
   const tenantId = companyId || user?.id || '';
@@ -110,8 +113,9 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
         ignorePublicBookingId: appointment.public_booking_id,
       });
       setFetchedOccupying(rows);
+      setOccupancyError(null);
     } catch {
-      // RLS vazio ou rede: a RPC continua sendo a fonte da verdade.
+      setOccupancyError(RESCHEDULE_OCCUPANCY_ERROR);
     }
   }, [open, tenantId, selectedProId, dateStr, shopTimeZone, appointment.public_booking_id]);
 
@@ -125,6 +129,10 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
   }, [dateStr, selectedProId]);
 
   useEffect(() => {
+    if (keepFormErrorRef.current) {
+      keepFormErrorRef.current = false;
+      return;
+    }
     setFormError(null);
   }, [selectedTime]);
   const occupying = useMemo(
@@ -145,9 +153,18 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
     ? zonedDateTimeToDate(dateStr, selectedTime, shopTimeZone)
     : null;
   const isPast = !!selectedTime && isZonedSlotInPast(dateStr, selectedTime, shopTimeZone, now ?? new Date());
+  const selectedIsBusy = !!selectedTime && !!selectedProId && !unchanged && slotOverlapsOccupying(
+    dateStr,
+    selectedTime,
+    appointment.duration_minutes || 30,
+    occupying,
+    selectedProId,
+    shopTimeZone,
+    appointment.id,
+  );
 
   const handleConfirm = async () => {
-    if (unchanged || !selectedInstant || !selectedProId || submitting) return;
+    if (unchanged || !selectedInstant || !selectedProId || submitting || selectedIsBusy) return;
     setFormError(null);
     setSubmitting(true);
     try {
@@ -184,6 +201,7 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
         ? String((err as { hint?: string }).hint || '')
         : '';
       if (hint === 'reschedule_slot_busy') {
+        keepFormErrorRef.current = true;
         setForcedBusy((prev) => [
           ...prev,
           {
@@ -194,6 +212,7 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
             status: 'Confirmed',
           },
         ]);
+        setSelectedTime('');
         void loadOccupying();
       }
     } finally {
@@ -217,7 +236,7 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
           <span>{formatRescheduleInstant(selectedInstant.toISOString(), shopTimeZone, destName)}</span>
         </div>
       )}
-      {isPast && !formError && (
+      {isPast && !formError && !unchanged && (
         <p data-testid="reschedule-past-note" className={`text-xs leading-snug ${colors.textMuted}`}>
           {RESCHEDULE_PAST_NOTE}
         </p>
@@ -260,7 +279,7 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
             variant="primary"
             className="w-full"
             onClick={() => { void handleConfirm(); }}
-            disabled={unchanged || !selectedTime || !selectedProId || submitting}
+            disabled={unchanged || !selectedTime || !selectedProId || submitting || selectedIsBusy}
             loading={submitting}
             data-testid="reschedule-confirm"
           >
@@ -272,7 +291,7 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
       <div data-testid="reschedule-modal-body" className="flex flex-col min-h-0 flex-1 gap-4">
         <div
           data-testid="reschedule-current"
-          className="flex items-start gap-3 rounded-xl border border-theme-accent/40 bg-[var(--color-accent-dim)] px-3.5 py-2 shrink-0"
+          className="flex items-start gap-3 rounded-xl border border-theme-accent/40 bg-[var(--color-accent-dim)] px-3.5 py-1.5 shrink-0"
         >
           <CalendarClock className="w-5 h-5 mt-0.5 shrink-0 text-theme-accent" aria-hidden="true" />
           <p className={`text-sm font-medium leading-snug ${colors.text}`}>
@@ -287,6 +306,12 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
         {lockProfessional && (
           <p data-testid="reschedule-lock-pro-note" className={`text-xs ${colors.textMuted} shrink-0`}>
             Você pode remarcar os seus agendamentos, mas não passá-los para outro profissional.
+          </p>
+        )}
+
+        {occupancyError && (
+          <p data-testid="reschedule-occupancy-error" className={`text-xs leading-snug ${colors.textMuted} shrink-0`}>
+            {occupancyError}
           </p>
         )}
 

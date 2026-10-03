@@ -98,7 +98,13 @@ test.describe('PR C — Remarcar horário', () => {
       await expect(page.getByTestId('reschedule-current')).toBeVisible();
       await expect(page.getByTestId('wizard-pro-list')).toBeVisible();
       await expect(page.getByTestId('reschedule-confirm')).toBeDisabled();
-      await expect(page.getByTestId('reschedule-past-note').first()).toHaveText(PAST);
+      await expect(page.getByTestId('reschedule-past-note')).toHaveCount(0);
+      const atual = page.getByRole('button', { name: '06:00 Atual' });
+      await expect(atual).toBeVisible();
+      await expect(atual).toHaveAttribute('data-slot-state', 'atual');
+      const atualClass = await atual.getAttribute('class');
+      expect(atualClass).toMatch(/ring-2/);
+      expect(atualClass).not.toMatch(/\bbg-theme-accent\b/);
       const dialogBox = await page.locator('[data-ui-modal-dialog]').boundingBox();
       const currentBox = await page.getByTestId('reschedule-current').boundingBox();
       const proBox = await page.getByTestId('wizard-pro-list').boundingBox();
@@ -114,6 +120,25 @@ test.describe('PR C — Remarcar horário', () => {
       await expect(page.getByTestId('reschedule-confirm')).toBeEnabled();
       await expect(page.getByTestId('reschedule-summary').first()).toContainText('De');
       await expect(page.getByTestId('reschedule-summary').first()).toContainText('Para');
+      const picked = page.getByTestId('reschedule-modal-body').getByRole('button', { name: '11:30' });
+      const gridBox = await page.getByTestId('reschedule-time-grid').boundingBox();
+      const pickedBox = await picked.boundingBox();
+      expect(pickedBox && gridBox).toBeTruthy();
+      expect(pickedBox!.y).toBeGreaterThanOrEqual(gridBox!.y - 2);
+      expect(pickedBox!.y + pickedBox!.height).toBeLessThanOrEqual(gridBox!.y + gridBox!.height + 2);
+      if (width <= 390) {
+        const slotButtons = page.getByTestId('reschedule-time-grid').locator('button[data-time]');
+        const n = await slotButtons.count();
+        const rowYs = new Set<number>();
+        for (let i = 0; i < n; i++) {
+          const b = await slotButtons.nth(i).boundingBox();
+          if (!b || !gridBox) continue;
+          if (b.y >= gridBox.y - 1 && b.y + b.height <= gridBox.y + gridBox.height + 1) {
+            rowYs.add(Math.round(b.y));
+          }
+        }
+        expect(rowYs.size).toBeGreaterThanOrEqual(4);
+      }
       await shot(page, `owner-${width}-4-remarcar-resumo.png`);
     });
 
@@ -157,6 +182,8 @@ test.describe('PR C — Remarcar horário', () => {
       await page.getByTestId('reschedule-confirm').click();
       await expect(page.getByTestId('reschedule-inline-error')).toHaveText(SLOT_BUSY, { timeout: 10_000 });
       await expect(page.getByRole('button', { name: '11:30 Ocupado' })).toBeDisabled();
+      await expect(page.getByTestId('reschedule-confirm')).toBeDisabled();
+      await expect(page.getByTestId('reschedule-summary')).toHaveCount(0);
       await shot(page, `owner-${width}-6-conflito.png`);
 
       await pickTime(page, '13:00');
@@ -187,6 +214,8 @@ test.describe('PR C — Remarcar horário', () => {
     await expect(page.getByTestId('reschedule-inline-error')).toHaveText(SLOT_BUSY);
     await expect(page.getByRole('heading', { name: 'Remarcar horário' })).toBeVisible();
     await expect(page.getByRole('button', { name: '11:30 Ocupado' })).toBeDisabled();
+    await expect(page.getByTestId('reschedule-confirm')).toBeDisabled();
+    await expect(page.getByTestId('reschedule-summary')).toHaveCount(0);
     await shot(page, 'owner-390-6-conflito.png');
 
     await pickTime(page, '13:00');

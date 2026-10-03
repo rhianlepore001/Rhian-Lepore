@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Testa 20261003150000_reschedule_appointment num Postgres local descartável.
-#   scripts/test-sql-reschedule.sh             # stack -> teste FALHA -> migration 2x -> passa + concorrência
-#   scripts/test-sql-reschedule.sh --rollback  # migration + rollback some RPC/tabela; md5 das 3 funções intacto
+# Ordem de prod: #121 (20261003152759, já no live) depois #120 (20261003150000).
+#   scripts/test-sql-reschedule.sh             # stack -> #121 -> teste FALHA -> #120 2x -> passa + concorrência
+#   scripts/test-sql-reschedule.sh --rollback  # #121 + #120 + rollback #120; md5 das 3 funções intacto
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PGBIN="${PGBIN:-$(ls -d /usr/lib/postgresql/*/bin 2>/dev/null | sort -V | tail -1)}"
@@ -9,6 +10,9 @@ TMP="$(mktemp -d)"
 PORT="${PGPORT_TEST:-55463}"
 MIG="$ROOT/supabase/migrations/20261003150000_reschedule_appointment.sql"
 RB="$ROOT/docs/rollbacks/20261003150000_reschedule_appointment.rollback.sql"
+LEAD_PATH="$ROOT/supabase/migrations/20261003152759_public_booking_lead_time.sql"
+[ -f "$MIG" ] || { echo "faltou migration #120 $MIG"; exit 1; }
+[ -f "$LEAD_PATH" ] || { echo "faltou migration #121 20261003152759_public_booking_lead_time.sql"; exit 1; }
 cleanup() { "$PGBIN/pg_ctl" -D "$TMP/data" -m immediate stop >/dev/null 2>&1 || true; rm -rf "$TMP"; }
 trap cleanup EXIT
 "$PGBIN/initdb" -D "$TMP/data" -U postgres -A trust >/dev/null
@@ -42,6 +46,11 @@ stack() {
   P -f "$ROOT/supabase/tests/reschedule_appointment.harness.sql"
 }
 
+apply_lead() {
+  echo "aplicando #121 20261003152759 (ordem de prod, fail-hard)"
+  P -f "$LEAD_PATH"
+}
+
 stack
 BEFORE="$(P -At -c "$MD5_SQL")"
 echo "baseline md5 (não podem mudar): $BEFORE"
@@ -49,15 +58,22 @@ echo "$BEFORE" | grep -q 'create_secure_booking=' || { echo "faltou create_secur
 echo "$BEFORE" | grep -q 'enforce_staff_appointment_edit_scope=' || { echo "faltou enforce_staff_appointment_edit_scope no md5"; exit 1; }
 echo "$BEFORE" | grep -q 'enforce_agenda_block_on_appointments=' || { echo "faltou enforce_agenda_block_on_appointments no md5"; exit 1; }
 
+apply_lead
+apply_lead
+AFTER_LEAD="$(P -At -c "$MD5_SQL")"
+[ "$AFTER_LEAD" = "$BEFORE" ] || { echo "md5 das funções existentes mudou após #121"; echo "got: $AFTER_LEAD"; exit 1; }
+echo "md5 inalterado após #121"
+
 if [ "${1:-}" = "--rollback" ]; then
   P -f "$MIG"
   P -f "$RB"
   AFTER="$(P -At -c "$MD5_SQL")"
   gone_fn="$(P -At -c "SELECT to_regprocedure('public.reschedule_appointment(uuid,timestamptz,uuid)') IS NULL")"
   gone_tbl="$(P -At -c "SELECT to_regclass('public.appointment_reschedules') IS NULL")"
+  lead_fn="$(P -At -c "SELECT to_regprocedure('public.enforce_lead_time_on_public_bookings()') IS NOT NULL")"
   echo "rollback md5: $([ "$AFTER" = "$BEFORE" ] && echo ok || echo "DIFF $AFTER")"
-  echo "rpc gone: $gone_fn; table gone: $gone_tbl"
-  [ "$AFTER" = "$BEFORE" ] && [ "$gone_fn" = t ] && [ "$gone_tbl" = t ]
+  echo "rpc gone: $gone_fn; table gone: $gone_tbl; #121 still present: $lead_fn"
+  [ "$AFTER" = "$BEFORE" ] && [ "$gone_fn" = t ] && [ "$gone_tbl" = t ] && [ "$lead_fn" = t ]
   echo "rollback ok"
   exit 0
 fi
@@ -70,6 +86,7 @@ fi
 echo "antes da migration (esperado FAIL):"
 grep -E 'FAIL|ERROR|EXCEPTION' "$TMP/before.out" | head -20 || true
 
+echo "aplicando #120 20261003150000 (depois de #121)"
 P -f "$MIG"
 P -f "$MIG"
 AFTER="$(P -At -c "$MD5_SQL")"
@@ -80,29 +97,6 @@ echo "md5 inalterado (create_secure_booking / enforce_staff_appointment_edit_sco
 P -f "$ROOT/supabase/tests/reschedule_appointment.test.sql"
 echo "reschedule idempotente; testes ok"
 
-LEAD_MIG=""
-LEAD_PATH="supabase/migrations/20261003152759_public_booking_lead_time.sql"
-if [ -f "$ROOT/$LEAD_PATH" ]; then
-  LEAD_MIG="$ROOT/$LEAD_PATH"
-  echo "H1: migration #121 @$LEAD_PATH (depois de $MIG)"
-elif git -C "$ROOT" show origin/main:"$LEAD_PATH" > "$TMP/lead_time.sql" 2>/dev/null; then
-  LEAD_MIG="$TMP/lead_time.sql"
-  echo "H1: migration #121 @origin/main:$LEAD_PATH"
-else
-  LEAD_MIG="$(ls -1 "$ROOT"/supabase/migrations/*_public_booking_lead_time.sql 2>/dev/null | sort | tail -1 || true)"
-fi
-if [ -n "$LEAD_MIG" ]; then
-  set +e
-  P -f "$LEAD_MIG" > "$TMP/lead.apply.out" 2>&1
-  LEAD_EC=$?
-  set -e
-  if [ "$LEAD_EC" -ne 0 ]; then
-    echo "H1: migration #121 não aplicou (skip se o trigger faltar):"
-    tail -20 "$TMP/lead.apply.out" || true
-  fi
-else
-  echo "H1: migration #121 ausente — teste skipa se o trigger não existir"
-fi
 P -f "$ROOT/supabase/tests/reschedule_lead_time_compat.sql"
 echo "H1 lead-time compat ok"
 

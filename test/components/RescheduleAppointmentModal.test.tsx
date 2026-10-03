@@ -48,6 +48,7 @@ vi.mock('../../components/appointment/ScheduleSelection', () => ({
     <div>
       <button type="button" onClick={() => setSelectedTime('10:30')}>slot-10:30</button>
       <button type="button" onClick={() => setSelectedTime('00:30')}>slot-00:30</button>
+      <button type="button" onClick={() => setSelectedTime('13:00')}>slot-13:00</button>
       <button type="button" onClick={() => setSelectedProId('pro-2')} disabled={!!lockProfessional}>pro-2</button>
       <span data-testid="lock-pro">{String(!!lockProfessional)}</span>
       <span data-testid="sel-time">{selectedTime}</span>
@@ -60,7 +61,9 @@ vi.mock('../../utils/rescheduleOccupancy', () => ({
   fetchRescheduleOccupancy: vi.fn().mockResolvedValue([]),
 }));
 
+import { fetchRescheduleOccupancy } from '../../utils/rescheduleOccupancy';
 import { RescheduleAppointmentModal } from '../../components/agenda/RescheduleAppointmentModal';
+import { RESCHEDULE_OCCUPANCY_ERROR } from '../../utils/rescheduleCopy';
 
 const appointment = {
   id: 'apt-1',
@@ -94,6 +97,7 @@ const renderModal = (props: Partial<React.ComponentProps<typeof RescheduleAppoin
 describe('RescheduleAppointmentModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(fetchRescheduleOccupancy).mockResolvedValue([]);
     rpc.mockResolvedValue({ data: { success: true }, error: null });
     vi.stubGlobal('open', open);
   });
@@ -102,6 +106,12 @@ describe('RescheduleAppointmentModal', () => {
     renderModal();
     expect(screen.getByText('Remarcar horário')).toBeInTheDocument();
     expect(screen.getByTestId('reschedule-current').textContent).toMatch(/Atual:.*23\/08\/2026 às 06:00 com Bob/);
+    expect(screen.getByTestId('reschedule-confirm')).toBeDisabled();
+  });
+
+  it('não mostra aviso de passado enquanto a seleção é o horário atual', () => {
+    renderModal({ now: new Date('2030-01-01T12:00:00.000Z') });
+    expect(screen.queryByTestId('reschedule-past-note')).toBeNull();
     expect(screen.getByTestId('reschedule-confirm')).toBeDisabled();
   });
 
@@ -155,8 +165,19 @@ describe('RescheduleAppointmentModal', () => {
     fireEvent.click(screen.getByTestId('reschedule-confirm'));
     expect(await screen.findByTestId('reschedule-inline-error')).toHaveTextContent(busy);
     expect(showToast).not.toHaveBeenCalled();
+    expect(screen.getByTestId('sel-time').textContent).toBe('');
+    expect(screen.getByTestId('reschedule-confirm')).toBeDisabled();
+    expect(screen.queryByTestId('reschedule-summary')).toBeNull();
+    fireEvent.click(screen.getByText('slot-13:00'));
+    expect(screen.getByTestId('reschedule-confirm')).toBeEnabled();
     fireEvent.click(screen.getByTestId('reschedule-confirm'));
     await waitFor(() => expect(showToast).toHaveBeenCalledWith('Horário remarcado.', 'success'));
     expect(screen.queryByTestId('reschedule-inline-error')).toBeNull();
+  });
+
+  it('mostra nota quando a ocupação falha ao carregar', async () => {
+    vi.mocked(fetchRescheduleOccupancy).mockRejectedValueOnce(new Error('network'));
+    renderModal();
+    expect(await screen.findByTestId('reschedule-occupancy-error')).toHaveTextContent(RESCHEDULE_OCCUPANCY_ERROR);
   });
 });

@@ -55,7 +55,6 @@ acl="$(psql_db -At -c "SELECT has_function_privilege('authenticated','public.enf
 echo "hotfix idempotente; fila durante bloqueio ok; authenticated sem EXECUTE no trigger"
 echo "md5 pós-hotfix: $(psql_db -At -c "$MD5_SQL")"
 
-# agenda_blocks.test.sql passou a exigir create_agenda_block de 5 args (follow-up #117).
-# Este hotfix não empilha essa migration; a regressão vive em
-# test-sql-agenda-blocks.sh e test-sql-agenda-blocks-followup.sh.
-echo "regressão agenda_blocks: coberta pelas suítes #113/#117 (API 5 args)"
+psql_db -c "DELETE FROM public.finance_records; DELETE FROM public.queue_entries; DELETE FROM public.appointments; DELETE FROM public.agenda_blocks;"
+psql_db -f "$ROOT/supabase/tests/agenda_blocks.test.sql" | tail -2
+echo "regressão agenda_blocks ok"

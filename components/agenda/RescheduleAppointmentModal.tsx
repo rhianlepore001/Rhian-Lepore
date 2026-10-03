@@ -6,6 +6,7 @@ import { useToast } from '../ui';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { useAgendaBlocks } from '../../hooks/useAgendaBlocks';
+import { useTenantLocale } from '../../hooks/useTenantLocale';
 import { ScheduleSelection } from '../appointment/ScheduleSelection';
 import { supabase } from '../../lib/supabase';
 import { formatLocalDateString } from '../../utils/date';
@@ -16,7 +17,7 @@ import {
   isZonedSlotInPast,
   zonedDateTimeToDate,
 } from '../../utils/businessTimezone';
-import { buildWhatsAppLink, type Region } from '../../utils/formatters';
+import { buildWhatsAppLink } from '../../utils/formatters';
 import { mapError } from '../../utils/mapError';
 import { isStaffEditForbiddenError, STAFF_EDIT_FORBIDDEN_MESSAGE } from '../../utils/staffAppointmentPermission';
 import {
@@ -30,6 +31,7 @@ import {
   RESCHEDULE_SUCCESS_TOAST,
   RESCHEDULE_WHATSAPP_LABEL,
 } from '../../utils/rescheduleCopy';
+import type { OccupyingAppointment } from '../../utils/agendaBlockRange';
 import type { BusinessHours } from '../../types/settings';
 
 export interface RescheduleAppointment {
@@ -56,6 +58,7 @@ export interface RescheduleAppointmentModalProps {
   shopTimeZone: string;
   businessHours?: BusinessHours | null;
   lockProfessional?: boolean;
+  occupyingAppointments?: OccupyingAppointment[];
   onClose: () => void;
   onSuccess: (result: { id: string; time: Date; professionalId: string | null }) => void;
   /** Só testes: relógio injetável para o aviso de passado. */
@@ -72,11 +75,13 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
   shopTimeZone,
   businessHours = null,
   lockProfessional = false,
+  occupyingAppointments = [],
   onClose,
   onSuccess,
   now,
 }) => {
-  const { user, region, businessName } = useAuth();
+  const { user, businessName } = useAuth();
+  const { region: currencyRegion } = useTenantLocale();
   const { colors, isBeauty } = useBrutalTheme();
   const { showToast } = useToast();
   const initialDateStr = getDateStringInTimeZone(appointment.appointment_time, shopTimeZone);
@@ -126,7 +131,7 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
           timeZone: shopTimeZone,
           professionalName: destName,
         });
-        window.open(buildWhatsAppLink(appointment.clientPhone || '', (region === 'PT' ? 'PT' : 'BR') as Region, message), '_blank');
+        window.open(buildWhatsAppLink(appointment.clientPhone || '', currencyRegion, message), '_blank');
       }
       onSuccess({ id: appointment.id, time: selectedInstant, professionalId: selectedProId });
       onClose();
@@ -142,29 +147,40 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
     }
   };
 
+  const summaryBlock = (
+    <div className="space-y-2">
+      {selectedInstant && !unchanged && (
+        <div
+          data-testid="reschedule-summary"
+          className={`text-sm ${colors.text} grid grid-cols-[3.25rem_1fr] gap-x-2 gap-y-1 items-baseline`}
+        >
+          <span className={colors.textMuted}>De</span>
+          <span>{formatRescheduleInstant(appointment.appointment_time, shopTimeZone, professionalName)}</span>
+          <span className={`${colors.textMuted} inline-flex items-center gap-1`}>
+            <ArrowRight className="w-3.5 h-3.5 text-theme-accent shrink-0" aria-hidden="true" />
+            Para
+          </span>
+          <span>{formatRescheduleInstant(selectedInstant.toISOString(), shopTimeZone, destName)}</span>
+        </div>
+      )}
+      {isPast && (
+        <p data-testid="reschedule-past-note" className={`text-xs leading-snug ${colors.textMuted}`}>
+          {RESCHEDULE_PAST_NOTE}
+        </p>
+      )}
+    </div>
+  );
+
   return (
     <Modal
       open={open}
       onClose={onClose}
       title={RESCHEDULE_MODAL_TITLE}
       size="2xl"
-      labelledById="reschedule-title"
       preventClose={submitting}
       footer={(
         <div className="flex flex-col gap-3 w-full">
-          {selectedInstant && !unchanged && (
-            <p data-testid="reschedule-summary" className={`text-sm ${colors.text} leading-snug space-y-0.5`}>
-              <span className="block">
-                <span className={colors.textMuted}>De </span>
-                {formatRescheduleInstant(appointment.appointment_time, shopTimeZone, professionalName)}
-              </span>
-              <span className="block">
-                <ArrowRight className="inline w-3.5 h-3.5 mr-1 text-theme-accent align-[-2px]" aria-hidden="true" />
-                <span className={colors.textMuted}>Para </span>
-                {formatRescheduleInstant(selectedInstant.toISOString(), shopTimeZone, destName)}
-              </span>
-            </p>
-          )}
+          <div className="md:hidden">{summaryBlock}</div>
           {hasPhone && (
             <label className="flex items-start gap-2.5 text-sm cursor-pointer">
               <input
@@ -195,20 +211,13 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
           className="flex items-start gap-3 rounded-xl border border-theme-accent/40 bg-[var(--color-accent-dim)] px-3.5 py-2.5"
         >
           <CalendarClock className="w-5 h-5 mt-0.5 shrink-0 text-theme-accent" aria-hidden="true" />
-          <div className="min-w-0 space-y-1.5">
-            <p className={`text-sm font-medium leading-snug ${colors.text}`}>
-              {formatRescheduleCurrentLine({
-                timeIso: appointment.appointment_time,
-                timeZone: shopTimeZone,
-                professionalName,
-              })}
-            </p>
-            {isPast && (
-              <p data-testid="reschedule-past-note" className={`text-xs leading-snug ${colors.textMuted}`}>
-                {RESCHEDULE_PAST_NOTE}
-              </p>
-            )}
-          </div>
+          <p className={`text-sm font-medium leading-snug ${colors.text}`}>
+            {formatRescheduleCurrentLine({
+              timeIso: appointment.appointment_time,
+              timeZone: shopTimeZone,
+              professionalName,
+            })}
+          </p>
         </div>
 
         {lockProfessional && (
@@ -239,6 +248,12 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
           lockProfessional={lockProfessional}
           timeGridClass="grid grid-cols-3 sm:grid-cols-4 gap-2"
           compact
+          occupyingAppointments={occupyingAppointments}
+          ignoreAppointmentId={appointment.id}
+          currentSlotTime={initialTime}
+          currentSlotDate={initialDateStr}
+          currentProfessionalId={appointment.professional_id || undefined}
+          afterDate={<div className="hidden md:block">{summaryBlock}</div>}
         />
       </div>
     </Modal>

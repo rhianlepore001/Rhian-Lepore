@@ -8,10 +8,15 @@ export const PRO_BOB = '10000000-0000-4000-8000-000000000001';
 export const PRO_BRUNA = '10000000-0000-4000-8000-000000000002';
 export const PRO_QUIM = '10000000-0000-4000-8000-0000000000aa';
 export const APT_ID = '50000000-0000-4000-8000-000000000001';
+export const APT_BUSY_ID = '50000000-0000-4000-8000-0000000000b1';
 export const CLIENT_ID = '30000000-0000-4000-8000-000000000001';
+export const CLIENT_BUSY_ID = '30000000-0000-4000-8000-0000000000b1';
 export const AGENDA_DATE = '2026-08-23';
 /** 23/08/2026 06:00 em Lisboa (WEST). */
 export const APT_TIME_ISO = '2026-08-23T05:00:00.000Z';
+/** 23/08/2026 10:00 em Lisboa — ocupa 10:00–11:00. */
+export const APT_BUSY_TIME_ISO = '2026-08-23T09:00:00.000Z';
+export const BOOKING_ID = '70000000-0000-4000-8000-000000000001';
 
 export type RemarcarRole = 'owner' | 'staff';
 export type StaffScope = 'none' | 'own' | 'all';
@@ -38,7 +43,7 @@ function fakeJwt(sub: string): string {
     role: 'authenticated',
     aud: 'authenticated',
     exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
-    email: sub === OWNER_ID ? 'bob.owner@example.test' : 'quim.staff@example.test',
+      email: sub === OWNER_ID ? 'bob.owner@example.test' : 'quim.staff@example.test',
   });
   return `${header}.${payload}.e2e-fake-sig`;
 }
@@ -75,7 +80,9 @@ export async function installRemarcarMocks(
   const role = opts.role;
   const scope = opts.scope ?? 'none';
   const userId = role === 'owner' ? OWNER_ID : STAFF_ID;
-  const staffMemberId = scope === 'own' ? PRO_BOB : PRO_QUIM;
+  const staffIsOwn = role === 'staff' && scope === 'own';
+  const staffMemberId = staffIsOwn ? PRO_BOB : PRO_QUIM;
+  const staffName = staffIsOwn ? 'Bob' : 'Quim';
   let rpc: RpcStub = { status: 200, body: { success: true, id: APT_ID, appointment_time: '2026-08-23T09:30:00.000Z', professional_id: PRO_BOB } };
   let aptTime = APT_TIME_ISO;
   const leaked: { method: string; url: string }[] = [];
@@ -93,13 +100,17 @@ export async function installRemarcarMocks(
       aud: 'authenticated',
       role: 'authenticated',
       app_metadata: { provider: 'email' },
-      user_metadata: { full_name: role === 'owner' ? 'Bob' : 'Quim' },
+      user_metadata: { full_name: role === 'owner' || staffIsOwn ? 'Bob' : 'Quim' },
       created_at: '2026-01-01T00:00:00.000Z',
     },
   };
 
   const handle: RemarcarMockHandle = {
-    setRpc: (stub) => { rpc = stub; },
+    setRpc: (stub) => {
+      rpc = stub;
+      const body = stub.body as { appointment_time?: string } | undefined;
+      if (body?.appointment_time) aptTime = body.appointment_time;
+    },
     leaked,
     assertNoLeak: () => {
       if (leaked.length > 0) throw new Error(`Escrita/GET vazou para prod: ${JSON.stringify(leaked)}`);
@@ -107,8 +118,21 @@ export async function installRemarcarMocks(
   };
 
   await page.addInitScript(
-    ({ key, value }) => { localStorage.setItem(key, JSON.stringify(value)); },
-    { key: `sb-${PROJECT_REF}-auth-token`, value: session },
+    ({ authKey, sessionValue, clientKey, clientValue }) => {
+      localStorage.setItem(authKey, JSON.stringify(sessionValue));
+      localStorage.setItem(clientKey, JSON.stringify(clientValue));
+    },
+    {
+      authKey: `sb-${PROJECT_REF}-auth-token`,
+      sessionValue: session,
+      clientKey: `rhian_public_client_${OWNER_ID}`,
+      clientValue: {
+        id: 'pc-aline',
+        name: 'Aline Lima',
+        phone: '+351619923489',
+        business_id: OWNER_ID,
+      },
+    },
   );
 
   await page.route(`**/${PROJECT_REF}.supabase.co/**`, async (route) => {
@@ -144,6 +168,46 @@ export async function installRemarcarMocks(
       return;
     }
 
+    if (pathname.includes('/rest/v1/rpc/get_public_profile_by_slug')) {
+      await fulfillJson(route, {
+        id: OWNER_ID,
+        business_name: 'Barbearia Bob',
+        user_type: 'barber',
+        region: 'PT',
+        business_slug: 'barbearia-bob',
+        public_booking_enabled: true,
+        phone: '+351210000000',
+      });
+      return;
+    }
+    if (pathname.includes('/rest/v1/rpc/get_public_business_settings_json')) {
+      await fulfillJson(route, {
+        timezone: 'Europe/Lisbon',
+        enable_self_rescheduling: true,
+        business_hours: HOURS,
+      });
+      return;
+    }
+    if (pathname.includes('/rest/v1/rpc/get_client_bookings_history')) {
+      await fulfillJson(route, [{
+        id: BOOKING_ID,
+        appointment_time: aptTime,
+        status: 'confirmed',
+        service_ids: ['svc-1'],
+        service_names: ['Corte Masculino'],
+        professional_id: PRO_BOB,
+        professional_name: 'Bob',
+        total_price: 45,
+        duration_minutes: 30,
+        created_at: '2026-08-22T10:00:00.000Z',
+      }]);
+      return;
+    }
+    if (pathname.includes('/rest/v1/rpc/get_client_booking_cancellations')) {
+      await fulfillJson(route, []);
+      return;
+    }
+
     if (pathname.includes('/rest/v1/rpc/')) {
       await fulfillJson(route, null);
       return;
@@ -172,7 +236,7 @@ export async function installRemarcarMocks(
         id: STAFF_ID,
         role: 'staff',
         company_id: OWNER_ID,
-        full_name: 'Quim',
+        full_name: staffName,
         business_name: null,
         user_type: 'barber',
         region: 'PT',
@@ -187,7 +251,7 @@ export async function installRemarcarMocks(
 
     if (pathname.includes('/rest/v1/team_members')) {
       if (search.includes('staff_user_id=eq.')) {
-        await fulfillJson(route, [{ id: staffMemberId, name: scope === 'own' ? 'Bob' : 'Quim' }]);
+        await fulfillJson(route, [{ id: staffMemberId, name: staffName }]);
         return;
       }
       await fulfillJson(route, [
@@ -219,22 +283,42 @@ export async function installRemarcarMocks(
     }
 
     if (pathname.includes('/rest/v1/appointments')) {
-      await fulfillJson(route, [{
-        id: APT_ID,
-        user_id: OWNER_ID,
-        client_id: CLIENT_ID,
-        professional_id: PRO_BOB,
-        service: 'Corte Masculino',
-        appointment_time: aptTime,
-        status: 'Confirmed',
-        duration_minutes: 30,
-        price: 45,
-        notes: null,
-        payment_method: 'cash',
-        origin: 'agenda',
-        edited_at: null,
-        clients: { id: CLIENT_ID, name: 'Aline Lima', phone: '+351619923489' },
-      }]);
+      const rows = [
+        {
+          id: APT_ID,
+          user_id: OWNER_ID,
+          client_id: CLIENT_ID,
+          professional_id: PRO_BOB,
+          service: 'Corte Masculino',
+          appointment_time: aptTime,
+          status: 'Confirmed',
+          duration_minutes: 30,
+          price: 45,
+          notes: null,
+          payment_method: 'cash',
+          origin: 'agenda',
+          edited_at: null,
+          clients: { id: CLIENT_ID, name: 'Aline Lima', phone: '+351619923489' },
+        },
+        {
+          id: APT_BUSY_ID,
+          user_id: OWNER_ID,
+          client_id: CLIENT_BUSY_ID,
+          professional_id: PRO_BOB,
+          service: 'Barba',
+          appointment_time: APT_BUSY_TIME_ISO,
+          status: 'Confirmed',
+          duration_minutes: 60,
+          price: 25,
+          notes: null,
+          payment_method: 'cash',
+          origin: 'agenda',
+          edited_at: null,
+          clients: { id: CLIENT_BUSY_ID, name: 'Carla Costa', phone: '+351619923490' },
+        },
+      ];
+      const idEq = search.match(/id=eq\.([0-9a-f-]+)/i)?.[1];
+      await fulfillJson(route, idEq ? rows.filter((r) => r.id === idEq) : rows);
       return;
     }
 
@@ -244,7 +328,10 @@ export async function installRemarcarMocks(
     }
 
     if (pathname.includes('/rest/v1/clients')) {
-      await fulfillJson(route, [{ id: CLIENT_ID, name: 'Aline Lima', phone: '+351619923489' }]);
+      await fulfillJson(route, [
+        { id: CLIENT_ID, name: 'Aline Lima', phone: '+351619923489' },
+        { id: CLIENT_BUSY_ID, name: 'Carla Costa', phone: '+351619923490' },
+      ]);
       return;
     }
 
@@ -280,6 +367,11 @@ export async function installRemarcarMocks(
 
     if (pathname.includes('/rest/v1/')) {
       await fulfillJson(route, method === 'GET' || method === 'HEAD' ? [] : null);
+      return;
+    }
+
+    if (url.includes('realtime') || pathname.includes('/realtime')) {
+      await route.abort('blockedbyclient');
       return;
     }
 

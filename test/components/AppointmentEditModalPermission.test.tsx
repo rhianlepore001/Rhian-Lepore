@@ -115,17 +115,15 @@ describe('AppointmentEditModal — colaborador editando', () => {
   });
 
   it('nível "só os próprios": profissional travado em si mesmo, com explicação', () => {
-    renderModal({ lockProfessional: true });
-    const select = screen.getByLabelText('Profissional') as HTMLSelectElement;
-    expect(select.disabled).toBe(true);
-    expect(select.value).toBe('member-self');
+    renderModal({ lockProfessional: true, shopTimeZone: 'Europe/Lisbon' });
+    expect(screen.getByTestId('edit-readonly-professional')).toHaveTextContent('Eu');
     expect(screen.getByText(/não passá-los para outro profissional/)).toBeInTheDocument();
   });
 
-  it('dono / nível "todos": profissional também só leitura (remarcar é o caminho)', () => {
-    renderModal();
-    expect((screen.getByLabelText('Profissional') as HTMLSelectElement).disabled).toBe(true);
-    expect(screen.getByLabelText('Data')).toBeDisabled();
-    expect(screen.getByLabelText('Horário')).toBeDisabled();
+  it('dono / nível "todos": profissional, data e hora só leitura no fuso da loja', () => {
+    renderModal({ shopTimeZone: 'Europe/Lisbon' });
+    expect(screen.getByTestId('edit-readonly-professional')).toHaveTextContent('Eu');
+    expect(screen.getByTestId('edit-readonly-date')).toHaveTextContent('15/01/2030');
+    expect(screen.getByTestId('edit-readonly-time')).toHaveTextContent('12:00');
   });
 });

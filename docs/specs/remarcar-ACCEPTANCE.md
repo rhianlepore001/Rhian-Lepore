@@ -183,6 +183,9 @@ Este arquivo é a fonte de aceite **deste PR**. Não inclui bloqueio de agenda (
 | T-R07 histórico gravado | C-R11 |
 | T-R08 atomicidade: forçar falha no histórico → nada muda | C-R12 |
 | T-R09 concorrência entre duas remarcações | C-R13 |
+| T-R10 pedido pending `is_edit` recusa `reschedule_pending_client_request` | C-R09 |
+| T-R11 ex-staff com escopo `all` recusa; cross-tenant; histórico DML; anon; vizinho 90 min / duração NULL | C-R01 |
+| T-R12 H1 lead-time (#121) skip se trigger ausente; now+30min e passado ok com isenção | C-R09 |
 
 ### D.2 Vitest
 | Teste | Critério |

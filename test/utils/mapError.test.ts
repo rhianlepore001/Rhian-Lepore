@@ -106,9 +106,11 @@ describe('mapError', () => {
       hint: 'reschedule_status_invalid',
       message: 'Só dá para remarcar atendimentos pendentes ou confirmados.',
     }, 'fallback').message).toBe('Só dá para remarcar atendimentos pendentes ou confirmados.');
-    expect(mapError({
-      hint: 'reschedule_professional_unavailable',
-      message: 'Esse profissional não está disponível para agendamentos.',
-    }, 'fallback').message).toBe('Esse profissional não está disponível para agendamentos.');
+    expect(
+      mapError({
+        hint: 'reschedule_pending_client_request',
+        message: 'O cliente pediu outro horário para este agendamento. Aceite ou recuse o pedido antes de remarcar.',
+      }, 'fallback').message,
+    ).toBe('O cliente pediu outro horário para este agendamento. Aceite ou recuse o pedido antes de remarcar.');
   });
 });

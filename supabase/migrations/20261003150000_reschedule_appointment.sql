@@ -70,14 +70,19 @@ SET search_path TO 'public'
 AS $function$
 DECLARE
   v_company text;
+  v_uid uuid;
+  v_role text;
   v_apt public.appointments%ROWTYPE;
   v_dest uuid;
   v_duration integer;
   v_end timestamptz;
   v_pro_name text;
+  v_pb_status text;
+  v_pb_is_edit boolean;
 BEGIN
   v_company := get_auth_company_id();
-  IF v_company IS NULL THEN
+  v_uid := auth.uid();
+  IF v_company IS NULL OR v_uid IS NULL THEN
     RAISE EXCEPTION 'Sua sessão expirou. Entre de novo.'
       USING ERRCODE = '42501', HINT = 'auth_expired';
   END IF;
@@ -92,7 +97,8 @@ BEGIN
   SELECT * INTO v_apt
   FROM public.appointments
   WHERE id = p_appointment_id
-    AND user_id = v_company;
+    AND user_id = v_company
+  FOR UPDATE;
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Não foi possível remarcar. Tente novamente.'
@@ -102,6 +108,22 @@ BEGIN
   IF v_apt.status IS NULL OR v_apt.status NOT IN ('Pending', 'Confirmed') THEN
     RAISE EXCEPTION 'Só dá para remarcar atendimentos pendentes ou confirmados.'
       USING ERRCODE = 'P0001', HINT = 'reschedule_status_invalid';
+  END IF;
+
+  SELECT p.role INTO v_role
+  FROM public.profiles p
+  WHERE p.id = v_uid::text;
+
+  IF v_role = 'staff' AND NOT EXISTS (
+    SELECT 1
+    FROM public.team_members tm
+    WHERE tm.staff_user_id = v_uid
+      AND tm.user_id = v_company
+      AND tm.active IS TRUE
+      AND tm.deleted_at IS NULL
+  ) THEN
+    RAISE EXCEPTION 'Sua permissão não permite alterar este agendamento. Fale com o dono.'
+      USING ERRCODE = '42501', HINT = 'staff_appointment_edit_forbidden';
   END IF;
 
   v_dest := COALESCE(p_new_professional_id, v_apt.professional_id);
@@ -138,6 +160,19 @@ BEGIN
     INTO v_pro_name
   FROM public.team_members tm
   WHERE tm.id = v_dest;
+
+  IF v_apt.public_booking_id IS NOT NULL THEN
+    SELECT pb.status, COALESCE(pb.is_edit, false)
+      INTO v_pb_status, v_pb_is_edit
+    FROM public.public_bookings pb
+    WHERE pb.id = v_apt.public_booking_id
+      AND pb.business_id = v_company;
+
+    IF v_pb_status = 'pending' AND v_pb_is_edit THEN
+      RAISE EXCEPTION 'O cliente pediu outro horário para este agendamento. Aceite ou recuse o pedido antes de remarcar.'
+        USING ERRCODE = 'P0001', HINT = 'reschedule_pending_client_request';
+    END IF;
+  END IF;
 
   v_duration := GREATEST(COALESCE(v_apt.duration_minutes, 30), 1);
   v_end := p_new_time + make_interval(mins => v_duration);
@@ -188,7 +223,8 @@ BEGIN
       original_appointment_time = v_apt.appointment_time,
       updated_at = now()
     WHERE id = v_apt.public_booking_id
-      AND business_id = v_company;
+      AND business_id = v_company
+      AND status = 'confirmed';
   END IF;
 
   INSERT INTO public.appointment_reschedules (

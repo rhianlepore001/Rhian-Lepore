@@ -79,6 +79,29 @@ describe('T-V12 buildRescheduleWhatsAppMessage', () => {
     expect(text).toContain('Agora: *24/08/2026* às *10:30*.');
     expect(text).not.toContain(' com ');
   });
+
+  it('sem nome do cliente usa Olá! (não Fala, olá!)', () => {
+    const barber = buildRescheduleWhatsAppMessage({
+      theme: 'barber',
+      clientName: '',
+      businessName: 'Bob',
+      oldTimeIso: OLD,
+      newTimeIso: NEXT,
+      timeZone: LISBON,
+    });
+    expect(barber.startsWith('Olá!')).toBe(true);
+    expect(barber).not.toContain('Fala, olá');
+    const beauty = buildRescheduleWhatsAppMessage({
+      theme: 'beauty',
+      clientName: '  ',
+      businessName: 'Studio',
+      oldTimeIso: OLD,
+      newTimeIso: NEXT,
+      timeZone: LISBON,
+    });
+    expect(beauty.startsWith('Olá!')).toBe(true);
+    expect(beauty).not.toContain('Olá, olá');
+  });
 });
 
 describe('copy de remarcação (R-06, R-14, R-16)', () => {

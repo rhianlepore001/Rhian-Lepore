@@ -6,7 +6,8 @@ export const RESCHEDULE_GENERIC_ERROR = 'Não foi possível remarcar. Tente nova
 export const RESCHEDULE_PAST_NOTE = 'Esse horário já passou — use para lançar um atendimento que já aconteceu.';
 export const RESCHEDULE_UNCHANGED_MESSAGE = 'Escolha um horário ou profissional diferente do atual.';
 export const RESCHEDULE_STATUS_MESSAGE = 'Só dá para remarcar atendimentos pendentes ou confirmados.';
-export const RESCHEDULE_PROFESSIONAL_UNAVAILABLE = 'Esse profissional não está disponível para agendamentos.';
+export const RESCHEDULE_PENDING_CLIENT_REQUEST =
+  'O cliente pediu outro horário para este agendamento. Aceite ou recuse o pedido antes de remarcar.';
 export const RESCHEDULE_WHATSAPP_LABEL = 'Avisar o cliente no WhatsApp';
 export const RESCHEDULE_CONFIRM_LABEL = 'Confirmar remarcação';
 export const RESCHEDULE_MODAL_TITLE = 'Remarcar horário';
@@ -17,6 +18,7 @@ export const RESCHEDULE_ERROR_HINTS = new Set([
   'reschedule_status_invalid',
   'reschedule_professional_unavailable',
   'reschedule_not_found',
+  'reschedule_pending_client_request',
   'staff_appointment_edit_forbidden',
 ]);
 
@@ -83,7 +85,10 @@ export interface RescheduleWhatsAppInput {
 export function buildRescheduleWhatsAppMessage(input: RescheduleWhatsAppInput): string {
   const copy = getBusinessCopy(input.theme);
   const establishment = (input.businessName || '').trim() || copy.establishmentFallback;
-  const client = (input.clientName || '').trim() || 'olá';
+  const client = (input.clientName || '').trim();
+  const greeting = client
+    ? (input.theme === 'beauty' ? `Olá, ${client}! ✨` : `Fala, ${client}! 🔁`)
+    : 'Olá!';
   const old = new Date(input.oldTimeIso);
   const next = new Date(input.newTimeIso);
   const oldDate = padPtDate(old, input.timeZone);
@@ -95,7 +100,7 @@ export function buildRescheduleWhatsAppMessage(input: RescheduleWhatsAppInput): 
 
   if (input.theme === 'beauty') {
     return [
-      `Olá, ${client}! ✨`,
+      greeting,
       `Seu horário no *${establishment}* foi remarcado.`,
       `Antes: ${oldDate} às ${oldTime}`,
       agora,
@@ -104,7 +109,7 @@ export function buildRescheduleWhatsAppMessage(input: RescheduleWhatsAppInput): 
   }
 
   return [
-    `Fala, ${client}! 🔁`,
+    greeting,
     `Seu horário na *${establishment}* foi remarcado.`,
     `Antes: ${oldDate} às ${oldTime}`,
     agora,

@@ -24,15 +24,20 @@ WHERE p.oid IN (
   'public.enforce_agenda_block_on_appointments()'::regprocedure
 )"
 
+QUEUE_MIG="$(ls -1 "$ROOT"/supabase/migrations/*_agenda_blocks_allow_queue_completed.sql 2>/dev/null | sort | tail -1)"
+FOLLOW_MIG="$(ls -1 "$ROOT"/supabase/migrations/*_agenda_blocks_acceptance_followup.sql 2>/dev/null | sort | tail -1)"
+[ -n "$QUEUE_MIG" ] || { echo "faltou migration *_agenda_blocks_allow_queue_completed.sql"; exit 1; }
+[ -n "$FOLLOW_MIG" ] || { echo "faltou migration *_agenda_blocks_acceptance_followup.sql"; exit 1; }
+
 stack() {
   P -f "$ROOT/supabase/tests/noshow_slots.harness.sql"
   P -f "$ROOT/docs/rollbacks/20260925160000_noshow_frees_slot_rollback.sql"
   P -f "$ROOT/supabase/migrations/20260925160000_noshow_frees_slot.sql"
   P -f "$ROOT/supabase/tests/agenda_blocks.harness.sql"
   P -f "$ROOT/supabase/migrations/20261002120000_agenda_blocks.sql"
-  P -f "$ROOT/supabase/migrations/20261003090000_agenda_blocks_allow_queue_completed.sql"
+  P -f "$QUEUE_MIG"
   P -f "$ROOT/supabase/tests/agenda_blocks_followup.harness.sql"
-  P -f "$ROOT/supabase/migrations/20261003120000_agenda_blocks_acceptance_followup.sql"
+  P -f "$FOLLOW_MIG"
   P -f "$ROOT/supabase/migrations/20260925140000_staff_appointment_edit_scope.sql"
   P -f "$ROOT/supabase/tests/reschedule_appointment.harness.sql"
 }
@@ -75,6 +80,27 @@ echo "md5 inalterado (create_secure_booking / enforce_staff_appointment_edit_sco
 P -f "$ROOT/supabase/tests/reschedule_appointment.test.sql"
 echo "reschedule idempotente; testes ok"
 
+LEAD_MIG="$(ls -1 "$ROOT"/supabase/migrations/*_public_booking_lead_time.sql 2>/dev/null | sort | tail -1 || true)"
+if [ -z "$LEAD_MIG" ]; then
+  if git -C "$ROOT" show origin/feat/overhaul-pr2-lead-time:supabase/migrations/20261003160000_public_booking_lead_time.sql > "$TMP/lead_time.sql" 2>/dev/null; then
+    LEAD_MIG="$TMP/lead_time.sql"
+  fi
+fi
+if [ -n "$LEAD_MIG" ]; then
+  set +e
+  P -f "$LEAD_MIG" > "$TMP/lead.apply.out" 2>&1
+  LEAD_EC=$?
+  set -e
+  if [ "$LEAD_EC" -ne 0 ]; then
+    echo "H1: migration #121 não aplicou (skip se o trigger faltar):"
+    tail -20 "$TMP/lead.apply.out" || true
+  fi
+else
+  echo "H1: migration #121 ausente — teste skipa se o trigger não existir"
+fi
+P -f "$ROOT/supabase/tests/reschedule_lead_time_compat.sql"
+echo "H1 lead-time compat ok"
+
 # C-R13: duas remarcações para o mesmo horário. A que pega a trava primeiro vence.
 OWNER=00000000-0000-0000-0000-00000000000a
 PRO=10000000-0000-0000-0000-000000000001
@@ -89,13 +115,13 @@ P -c "INSERT INTO public.appointments (id, user_id, client_id, professional_id, 
 TARGET="date_trunc('hour', now()) + interval '20 days 3 hours'"
 (
   P -c "SELECT set_config('request.jwt.claim.sub','$OWNER', false);" \
-    -c "BEGIN; SELECT public.reschedule_appointment('$APT_A'::uuid, $TARGET, '$PRO'::uuid); SELECT pg_sleep(4); COMMIT;"
+    -c "BEGIN; SET LOCAL ROLE authenticated; SELECT public.reschedule_appointment('$APT_A'::uuid, $TARGET, '$PRO'::uuid); SELECT pg_sleep(4); COMMIT;"
 ) > "$TMP/race-a.out" 2>&1 &
 sleep 1
 START=$(date +%s.%N)
 set +e
 P -c "SELECT set_config('request.jwt.claim.sub','$OWNER', false);" \
-  -c "SELECT public.reschedule_appointment('$APT_B'::uuid, $TARGET, '$PRO'::uuid);" > "$TMP/race-b.out" 2>&1
+  -c "SET ROLE authenticated; SELECT public.reschedule_appointment('$APT_B'::uuid, $TARGET, '$PRO'::uuid); RESET ROLE;" > "$TMP/race-b.out" 2>&1
 BEC=$?
 set -e
 wait

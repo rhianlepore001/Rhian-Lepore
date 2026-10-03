@@ -1,10 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { User, ChevronLeft, ChevronRight, ChevronDown, MoonStar } from 'lucide-react';
 import { StepHeading } from './StepHeading';
 import { splitWizardTimeSlots } from '../../utils/agendaDayWindow';
 import { formatLocalDateString } from '../../utils/date';
 import type { BusinessHours } from '../../types/settings';
-import { slotOverlapsBlocks } from '../../utils/agendaBlockRange';
+import { slotOverlapsBlocks, slotOverlapsOccupying, type OccupyingAppointment } from '../../utils/agendaBlockRange';
 
 interface ScheduleSelectionProps {
     teamMembers: any[];
@@ -33,6 +33,12 @@ interface ScheduleSelectionProps {
     timeGridClass?: string;
     /** Remarcação: menos padding para a grade caber na primeira dobra. */
     compact?: boolean;
+    occupyingAppointments?: OccupyingAppointment[];
+    ignoreAppointmentId?: string;
+    currentSlotTime?: string;
+    currentSlotDate?: string;
+    currentProfessionalId?: string;
+    afterDate?: ReactNode;
 }
 
 /**
@@ -58,6 +64,12 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
     lockProfessional = false,
     timeGridClass = 'grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3',
     compact = false,
+    occupyingAppointments = [],
+    ignoreAppointmentId,
+    currentSlotTime,
+    currentSlotDate,
+    currentProfessionalId,
+    afterDate,
 }) => {
     // Horário pré-preenchido fora da grade de 30 min (ex.: falta às 14:15)
     // entra na lista para aparecer selecionado.
@@ -77,36 +89,75 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
         if (!selectedProId || blocks.length === 0) return false;
         return slotOverlapsBlocks(dateStr, time, durationMinutes || 30, blocks, selectedProId, tz);
     };
+    const isCurrentTime = (time: string) => (
+        !!currentSlotTime
+        && time === currentSlotTime
+        && (!currentSlotDate || currentSlotDate === dateStr)
+        && (!currentProfessionalId || currentProfessionalId === selectedProId)
+    );
+    const isBusyTime = (time: string) => {
+        if (!selectedProId || occupyingAppointments.length === 0) return false;
+        if (isCurrentTime(time)) return false;
+        return slotOverlapsOccupying(
+            dateStr,
+            time,
+            durationMinutes || 30,
+            occupyingAppointments,
+            selectedProId,
+            tz,
+            ignoreAppointmentId,
+        );
+    };
     // Horário escolhido (ex.: "+" da grade às 22:30) fora do expediente: seção já aberta.
     const [showOffHours, setShowOffHours] = useState(() => !!selectedTime && outOfHours.includes(selectedTime));
     const offHoursVisible = closed || showOffHours;
+    const currentSlotRef = useRef<HTMLButtonElement | null>(null);
+
+    useEffect(() => {
+        currentSlotRef.current?.scrollIntoView({ block: 'center', inline: 'nearest' });
+    }, [dateStr, selectedProId, closed, offHoursVisible]);
 
     const renderTime = (time: string) => {
         const blocked = isBlockedTime(time);
+        const busy = !blocked && isBusyTime(time);
+        const current = isCurrentTime(time);
+        const selected = !blocked && !busy && selectedTime === time;
+        const disabled = blocked || busy;
+        const tag = blocked ? 'Bloqueado' : busy ? 'Ocupado' : current ? 'Atual' : null;
+        let aria = time;
+        if (blocked) aria = `${time} Bloqueado`;
+        else if (busy) aria = `${time} Ocupado`;
+        else if (current) aria = `${time} Atual`;
         return (
             <button
                 key={time}
                 type="button"
-                disabled={blocked}
-                onClick={() => { if (!blocked) setSelectedTime(time); }}
-                aria-pressed={!blocked && selectedTime === time}
-                aria-label={blocked ? `${time} Bloqueado` : time}
+                ref={current ? currentSlotRef : undefined}
+                disabled={disabled}
+                onClick={() => { if (!disabled) setSelectedTime(time); }}
+                aria-pressed={selected}
+                aria-label={aria}
+                data-slot-state={tag ? tag.toLowerCase() : selected ? 'selected' : undefined}
                 className={`
-                    ${compact ? 'py-2' : 'py-3'} px-2 rounded-lg font-mono font-bold text-sm transition-all border
+                    min-h-[44px] h-[44px] px-1.5 rounded-lg font-mono font-bold text-sm transition-all border inline-flex items-center justify-center gap-1 whitespace-nowrap
                     ${blocked
-                        ? 'bg-theme-surface border-[var(--color-divider)] text-[var(--color-text-muted)] cursor-not-allowed opacity-60'
-                        : selectedTime === time
-                            ? activeCardBg
-                            : 'bg-theme-surface border-[var(--color-divider)] text-theme-text hover:border-[var(--color-input-border)] hover:bg-[var(--color-card-hover)]'
+                        ? 'bg-theme-surface border-[var(--color-divider)] text-theme-textSecondary cursor-not-allowed'
+                        : busy
+                            ? 'bg-theme-surface border-[var(--color-divider)] text-[var(--color-text-muted)] cursor-not-allowed'
+                            : selected
+                                ? activeCardBg
+                                : current
+                                    ? 'bg-theme-surface border-[var(--color-divider)] text-theme-textSecondary'
+                                    : 'bg-theme-surface border-[var(--color-divider)] text-theme-text hover:border-[var(--color-input-border)] hover:bg-[var(--color-card-hover)]'
                     }
                 `}
             >
-                {blocked ? (
-                    <span className="flex flex-col items-center leading-tight gap-0.5">
-                        <span className="line-through">{time}</span>
-                        <span className="text-xs font-sans font-semibold uppercase tracking-wide">Bloqueado</span>
+                <span className={disabled || (current && !selected) ? 'line-through decoration-theme-textSecondary' : undefined}>{time}</span>
+                {tag && (
+                    <span className={`text-xs font-sans font-semibold tracking-wide ${selected ? 'text-[var(--color-on-accent)]' : ''}`}>
+                        {tag}
                     </span>
-                ) : time}
+                )}
             </button>
         );
     };
@@ -220,6 +271,7 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                         </button>
                     )}
                 </section>
+                {afterDate}
             </div>
 
             {/* Right: Time Slots */}

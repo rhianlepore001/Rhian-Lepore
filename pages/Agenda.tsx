@@ -1998,6 +1998,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                     accentColor={isBeauty ? 'beauty-neon' : 'accent-gold'}
                     currencySymbol={currencySymbol}
                     lockProfessional={staffPermission.lockProfessionalToSelf}
+                    shopTimeZone={shopTimeZone}
                 />
             )}
 
@@ -2009,6 +2010,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                     shopTimeZone={shopTimeZone}
                     businessHours={businessSettings?.business_hours ?? null}
                     lockProfessional={staffPermission.lockProfessionalToSelf}
+                    occupyingAppointments={appointments}
                     onClose={() => setReschedulingAppointment(null)}
                     onSuccess={({ id, time, professionalId }) => {
                         const dateStr = getDateStringInTimeZone(time, shopTimeZone);

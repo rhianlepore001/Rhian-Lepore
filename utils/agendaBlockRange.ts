@@ -227,6 +227,38 @@ export function slotOverlapsBlocks(
   });
 }
 
+const OCCUPYING_STATUSES = new Set(['Pending', 'Confirmed', 'Completed']);
+
+export interface OccupyingAppointment {
+  id?: string;
+  professional_id?: string | null;
+  appointment_time: string;
+  duration_minutes?: number | null;
+  status?: string | null;
+}
+
+/** Mesma regra da RPC: [start, start+duration) com duração 30 se vazia. */
+export function slotOverlapsOccupying(
+  dateStr: string,
+  time: string,
+  durationMin: number,
+  occupying: OccupyingAppointment[],
+  professionalId: string,
+  timeZone: string,
+  ignoreId?: string | null,
+): boolean {
+  const start = zonedDateTimeToDate(dateStr, time, timeZone);
+  const end = new Date(start.getTime() + Math.max(durationMin || 30, 1) * 60_000);
+  return occupying.some((apt) => {
+    if (ignoreId && apt.id === ignoreId) return false;
+    if ((apt.professional_id || '') !== professionalId) return false;
+    if (!OCCUPYING_STATUSES.has(apt.status || '')) return false;
+    const aStart = new Date(apt.appointment_time);
+    const aEnd = new Date(aStart.getTime() + Math.max(apt.duration_minutes || 30, 1) * 60_000);
+    return intervalsOverlap(start, end, aStart, aEnd);
+  });
+}
+
 export function formatBlockRangeLabel(
   startsAt: string,
   endsAt: string,

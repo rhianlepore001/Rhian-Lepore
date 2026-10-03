@@ -24,10 +24,13 @@ DECLARE
   v_hint text;
   v_json json;
 BEGIN
+  EXECUTE 'SET LOCAL ROLE authenticated';
   v_json := public.reschedule_appointment(p_id, p_time, p_pro);
   RETURN 'ok:' || COALESCE(v_json->>'success', 'null');
 EXCEPTION WHEN undefined_function THEN
   RETURN 'error:missing_rpc';
+WHEN insufficient_privilege THEN
+  RETURN 'error:denied|' || SQLERRM;
 WHEN OTHERS THEN
   GET STACKED DIAGNOSTICS v_msg = MESSAGE_TEXT, v_hint = PG_EXCEPTION_HINT;
   RETURN 'error:' || COALESCE(NULLIF(v_hint, ''), 'nohint') || '|' || v_msg;
@@ -39,9 +42,14 @@ BEGIN
   PERFORM set_config('request.jwt.claim.sub', COALESCE(p_uid, ''), true);
   EXECUTE format('SET LOCAL ROLE %I', p_role);
   BEGIN
-    EXECUTE p_sql INTO v;
+    IF left(btrim(p_sql), 6) ILIKE 'SELECT' THEN
+      EXECUTE p_sql INTO v;
+      EXECUTE 'RESET ROLE';
+      RETURN v;
+    END IF;
+    EXECUTE p_sql;
     EXECUTE 'RESET ROLE';
-    RETURN v;
+    RETURN 'ok';
   EXCEPTION WHEN OTHERS THEN
     EXECUTE 'RESET ROLE';
     RETURN 'error:' || SQLERRM;
@@ -68,32 +76,50 @@ $$;
 \set APT_DONE '50000000-0000-0000-0000-000000000006'
 \set APT_PB '50000000-0000-0000-0000-000000000007'
 \set APT_NOPRO '50000000-0000-0000-0000-000000000008'
+\set APT_EDIT '50000000-0000-0000-0000-000000000009'
+\set APT_X '50000000-0000-0000-0000-0000000000aa'
 \set PB1 '70000000-0000-0000-0000-000000000001'
+\set PB_EDIT '70000000-0000-0000-0000-0000000000ed'
+\set OTHER '00000000-0000-0000-0000-00000000000b'
+\set OTHER_STAFF '00000000-0000-0000-0000-0000000000bb'
+\set OTHER_PRO '10000000-0000-0000-0000-0000000000b1'
+\set OTHER_CLIENT '30000000-0000-0000-0000-0000000000b1'
+\set EXSTAFF '00000000-0000-0000-0000-0000000000ee'
+\set EX_PRO '10000000-0000-0000-0000-0000000000ee'
 
 CREATE TEMP TABLE ctx AS SELECT (current_date + 14)::date AS d;
 
 INSERT INTO public.profiles (id, role, company_id, region) VALUES
   (:'OWNER', 'owner', NULL, 'PT'),
   (:'STAFF', 'staff', :'OWNER', 'PT'),
-  (:'STAFF2', 'staff', :'OWNER', 'PT')
+  (:'STAFF2', 'staff', :'OWNER', 'PT'),
+  (:'EXSTAFF', 'staff', :'OWNER', 'PT'),
+  (:'OTHER', 'owner', NULL, 'PT'),
+  (:'OTHER_STAFF', 'staff', :'OTHER', 'PT')
 ON CONFLICT (id) DO UPDATE SET role = EXCLUDED.role, company_id = EXCLUDED.company_id, region = 'PT';
 
 INSERT INTO public.business_settings (user_id, timezone, staff_can_block_agenda, staff_appointment_edit_scope)
-VALUES (:'OWNER', 'Europe/Lisbon', true, 'none')
+VALUES
+  (:'OWNER', 'Europe/Lisbon', true, 'none'),
+  (:'OTHER', 'Europe/Lisbon', true, 'all')
 ON CONFLICT (user_id) DO UPDATE SET
   timezone = 'Europe/Lisbon',
   staff_can_block_agenda = true,
-  staff_appointment_edit_scope = 'none';
+  staff_appointment_edit_scope = EXCLUDED.staff_appointment_edit_scope;
 
-INSERT INTO public.team_members (id, user_id, name, staff_user_id, active, is_owner) VALUES
-  (:'PRO1', :'OWNER', 'Diego', NULL, true, true),
-  (:'PRO2', :'OWNER', 'Bruna', :'STAFF', true, false),
-  (:'PRO_INACT', :'OWNER', 'Inativo', NULL, false, false)
+INSERT INTO public.team_members (id, user_id, name, staff_user_id, active, is_owner, deleted_at) VALUES
+  (:'PRO1', :'OWNER', 'Diego', NULL, true, true, NULL),
+  (:'PRO2', :'OWNER', 'Bruna', :'STAFF', true, false, NULL),
+  (:'PRO_INACT', :'OWNER', 'Inativo', NULL, false, false, NULL),
+  (:'EX_PRO', :'OWNER', 'Ex', :'EXSTAFF', true, false, now()),
+  (:'OTHER_PRO', :'OTHER', 'Carla', :'OTHER_STAFF', true, false, NULL)
 ON CONFLICT (id) DO UPDATE SET
-  name = EXCLUDED.name, staff_user_id = EXCLUDED.staff_user_id, active = EXCLUDED.active, deleted_at = NULL;
+  name = EXCLUDED.name, staff_user_id = EXCLUDED.staff_user_id, active = EXCLUDED.active, deleted_at = EXCLUDED.deleted_at;
 
 INSERT INTO public.services VALUES (:'SVC', :'OWNER', 'Corte', 45, 30) ON CONFLICT (id) DO NOTHING;
-INSERT INTO public.clients (id, user_id, name, phone) VALUES (:'CLIENT', :'OWNER', 'Aline', '351600000001')
+INSERT INTO public.clients (id, user_id, name, phone) VALUES
+  (:'CLIENT', :'OWNER', 'Aline', '351600000001'),
+  (:'OTHER_CLIENT', :'OTHER', 'Lara', '351600000088')
 ON CONFLICT (id) DO UPDATE SET phone = EXCLUDED.phone, name = EXCLUDED.name;
 
 SELECT pg_temp.check('rpc existe',
@@ -123,6 +149,14 @@ SELECT pg_temp.check('authenticated lê histórico',
   CASE WHEN to_regclass('public.appointment_reschedules') IS NULL THEN 'missing'
        ELSE has_table_privilege('authenticated', 'public.appointment_reschedules', 'SELECT')::text END,
   'true');
+SELECT pg_temp.check('authenticated sem UPDATE no histórico',
+  CASE WHEN to_regclass('public.appointment_reschedules') IS NULL THEN 'missing'
+       ELSE has_table_privilege('authenticated', 'public.appointment_reschedules', 'UPDATE')::text END,
+  'false');
+SELECT pg_temp.check('authenticated sem DELETE no histórico',
+  CASE WHEN to_regclass('public.appointment_reschedules') IS NULL THEN 'missing'
+       ELSE has_table_privilege('authenticated', 'public.appointment_reschedules', 'DELETE')::text END,
+  'false');
 
 SELECT set_config('request.jwt.claim.sub', :'OWNER', false);
 DELETE FROM public.appointment_reschedules;
@@ -372,6 +406,101 @@ DROP TRIGGER IF EXISTS appointment_reschedules_fail_history ON public.appointmen
 SELECT pg_temp.check('T-R07 staff lê histórico',
   pg_temp.run_as('authenticated', :'STAFF', $q$SELECT count(*)::text FROM public.appointment_reschedules$q$),
   (SELECT count(*)::text FROM public.appointment_reschedules));
+
+SELECT pg_temp.check('L1 SELECT FOR UPDATE',
+  CASE WHEN pg_get_functiondef('public.reschedule_appointment(uuid,timestamptz,uuid)'::regprocedure)
+    LIKE '%FOR UPDATE%' THEN 'ok' ELSE 'missing' END,
+  'ok');
+
+-- M1: pedido pending is_edit recusa e não sincroniza
+SELECT set_config('request.jwt.claim.sub', :'OWNER', false);
+INSERT INTO public.public_bookings (
+  id, business_id, customer_name, customer_phone, service_ids, professional_id, appointment_time, total_price, status, duration_minutes, is_edit
+) VALUES (
+  :'PB_EDIT', :'OWNER', 'Aline', '351600000001', ARRAY[:'SVC']::uuid[],
+  :'PRO1', pg_temp.at_l((SELECT d FROM ctx) + 3, '10:00'), 45, 'pending', 30, true
+);
+INSERT INTO public.appointments (
+  id, user_id, client_id, professional_id, service, appointment_time, status, duration_minutes, price, public_booking_id
+) VALUES (
+  :'APT_EDIT', :'OWNER', :'CLIENT', :'PRO1', 'Corte', pg_temp.at_l((SELECT d FROM ctx) + 3, '10:00'), 'Confirmed', 30, 45, :'PB_EDIT'
+);
+SELECT pg_temp.check('M1 pending is_edit recusa',
+  pg_temp.reschedule(:'APT_EDIT'::uuid, pg_temp.at_l((SELECT d FROM ctx) + 3, '11:00'), :'PRO1'::uuid),
+  'error:reschedule_pending_client_request|O cliente pediu outro horário para este agendamento. Aceite ou recuse o pedido antes de remarcar.');
+SELECT pg_temp.check('M1 pending horário do agendamento intacto',
+  (SELECT appointment_time = pg_temp.at_l((SELECT d FROM ctx) + 3, '10:00') FROM public.appointments WHERE id = :'APT_EDIT')::text,
+  'true');
+SELECT pg_temp.check('M1 pending horário do pedido intacto',
+  (SELECT appointment_time = pg_temp.at_l((SELECT d FROM ctx) + 3, '10:00') FROM public.public_bookings WHERE id = :'PB_EDIT')::text,
+  'true');
+
+-- M2: ex-colaborador com escopo all
+UPDATE public.business_settings SET staff_appointment_edit_scope = 'all' WHERE user_id = :'OWNER';
+SELECT set_config('request.jwt.claim.sub', :'EXSTAFF', false);
+SELECT pg_temp.check('M2 ex-staff all recusa',
+  pg_temp.reschedule(:'APT_EDIT'::uuid, pg_temp.at_l((SELECT d FROM ctx) + 3, '11:00'), :'PRO1'::uuid),
+  'error:staff_appointment_edit_forbidden|Sua permissão não permite alterar este agendamento. Fale com o dono.');
+
+-- Cross-tenant: agendamento de outra empresa
+SELECT set_config('request.jwt.claim.sub', :'OWNER', false);
+INSERT INTO public.appointments (
+  id, user_id, client_id, professional_id, service, appointment_time, status, duration_minutes, price
+) VALUES (
+  :'APT_X', :'OTHER', :'OTHER_CLIENT', :'OTHER_PRO', 'Corte', pg_temp.at_l((SELECT d FROM ctx) + 4, '10:00'), 'Confirmed', 30, 45
+);
+SELECT pg_temp.check('cross-tenant agendamento',
+  pg_temp.reschedule(:'APT_X'::uuid, pg_temp.at_l((SELECT d FROM ctx) + 4, '11:00'), :'PRO1'::uuid),
+  'error:reschedule_not_found|Não foi possível remarcar. Tente novamente.');
+SELECT pg_temp.check('cross-tenant profissional',
+  pg_temp.reschedule(:'APT1'::uuid, pg_temp.at_l((SELECT d FROM ctx) + 4, '12:00'), :'OTHER_PRO'::uuid),
+  'error:reschedule_professional_unavailable|Esse profissional não está disponível para agendamentos.');
+
+INSERT INTO public.appointment_reschedules (
+  appointment_id, user_id, old_appointment_time, new_appointment_time, old_professional_id, new_professional_id, source
+) VALUES (
+  :'APT_X', :'OTHER', pg_temp.at_l((SELECT d FROM ctx) + 4, '09:00'), pg_temp.at_l((SELECT d FROM ctx) + 4, '10:00'), :'OTHER_PRO', :'OTHER_PRO', 'staff'
+);
+SELECT pg_temp.check('cross-tenant histórico staff não lê',
+  pg_temp.run_as('authenticated', :'STAFF', $q$SELECT count(*)::text FROM public.appointment_reschedules WHERE user_id = '00000000-0000-0000-0000-00000000000b'$q$),
+  '0');
+SELECT pg_temp.check('cross-tenant histórico dono outro lê o próprio',
+  pg_temp.run_as('authenticated', :'OTHER', $q$SELECT count(*)::text FROM public.appointment_reschedules WHERE user_id = '00000000-0000-0000-0000-00000000000b'$q$),
+  '1');
+
+SELECT pg_temp.check('histórico INSERT recusado',
+  pg_temp.run_as('authenticated', :'OWNER', $q$INSERT INTO public.appointment_reschedules (appointment_id, user_id, old_appointment_time, new_appointment_time, source) VALUES ('50000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-00000000000a', now(), now() + interval '1 hour', 'staff')$q$),
+  'error:permission denied for table appointment_reschedules');
+SELECT pg_temp.check('histórico UPDATE recusado',
+  pg_temp.run_as('authenticated', :'OWNER', $q$UPDATE public.appointment_reschedules SET source = 'client_request' WHERE user_id = '00000000-0000-0000-0000-00000000000a'$q$),
+  'error:permission denied for table appointment_reschedules');
+SELECT pg_temp.check('histórico DELETE recusado',
+  pg_temp.run_as('authenticated', :'OWNER', $q$DELETE FROM public.appointment_reschedules WHERE user_id = '00000000-0000-0000-0000-00000000000a'$q$),
+  'error:permission denied for table appointment_reschedules');
+
+SELECT pg_temp.check('anon RPC recusada',
+  pg_temp.run_as('anon', NULL, $q$SELECT public.reschedule_appointment('50000000-0000-0000-0000-000000000001'::uuid, now() + interval '2 hours', '10000000-0000-0000-0000-000000000001'::uuid)$q$),
+  'error:permission denied for function reschedule_appointment');
+
+-- Vizinho mais longo e vizinho com duração NULL
+INSERT INTO public.appointments (
+  id, user_id, client_id, professional_id, service, appointment_time, status, duration_minutes, price
+) VALUES
+  ('50000000-0000-0000-0000-0000000000d1', :'OWNER', :'CLIENT', :'PRO2', 'Corte', pg_temp.at_l((SELECT d FROM ctx) + 5, '12:00'), 'Confirmed', 30, 45),
+  ('50000000-0000-0000-0000-0000000000d2', :'OWNER', :'CLIENT', :'PRO2', 'Corte', pg_temp.at_l((SELECT d FROM ctx) + 5, '14:00'), 'Confirmed', 90, 45),
+  ('50000000-0000-0000-0000-0000000000d3', :'OWNER', :'CLIENT', :'PRO2', 'Corte', pg_temp.at_l((SELECT d FROM ctx) + 5, '18:00'), 'Confirmed', 30, 45),
+  ('50000000-0000-0000-0000-0000000000d4', :'OWNER', :'CLIENT', :'PRO2', 'Corte', pg_temp.at_l((SELECT d FROM ctx) + 5, '19:00'), 'Confirmed', NULL, 45);
+
+SELECT set_config('request.jwt.claim.sub', :'OWNER', false);
+SELECT pg_temp.check('vizinho 90min cobre 15:00',
+  pg_temp.reschedule('50000000-0000-0000-0000-0000000000d1'::uuid, pg_temp.at_l((SELECT d FROM ctx) + 5, '15:00'), :'PRO2'::uuid),
+  'error:reschedule_slot_busy|Esse horário já está ocupado na agenda de Bruna. Escolha outro.');
+SELECT pg_temp.check('vizinho 90min encosta 15:30 ok',
+  pg_temp.reschedule('50000000-0000-0000-0000-0000000000d1'::uuid, pg_temp.at_l((SELECT d FROM ctx) + 5, '15:30'), :'PRO2'::uuid),
+  'ok:true');
+SELECT pg_temp.check('vizinho duração NULL cobre 19:15',
+  pg_temp.reschedule('50000000-0000-0000-0000-0000000000d3'::uuid, pg_temp.at_l((SELECT d FROM ctx) + 5, '19:15'), :'PRO2'::uuid),
+  'error:reschedule_slot_busy|Esse horário já está ocupado na agenda de Bruna. Escolha outro.');
 
 \o
 SELECT name, CASE WHEN got IS NOT DISTINCT FROM expected THEN 'ok' ELSE 'FAIL' END AS status, got, expected

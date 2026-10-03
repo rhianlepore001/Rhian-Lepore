@@ -59,4 +59,35 @@ describe('ScheduleSelection — remarcação (B-68 / R-02)', () => {
     expect(screen.getByRole('button', { name: /Bruna/ })).toBeDisabled();
     expect(screen.getByRole('button', { name: /Bob/ })).toBeEnabled();
   });
+
+  it('marca o horário atual e os ocupados com a duração real', () => {
+    const dateStr = `${MONDAY.getFullYear()}-${String(MONDAY.getMonth() + 1).padStart(2, '0')}-${String(MONDAY.getDate()).padStart(2, '0')}`;
+    setup({
+      selectedTime: '09:00',
+      currentSlotTime: '09:00',
+      currentSlotDate: dateStr,
+      currentProfessionalId: 'p1',
+      ignoreAppointmentId: 'apt-self',
+      occupyingAppointments: [
+        {
+          id: 'apt-self',
+          professional_id: 'p1',
+          appointment_time: new Date(`${dateStr}T09:00:00`).toISOString(),
+          duration_minutes: 30,
+          status: 'Confirmed',
+        },
+        {
+          id: 'apt-busy',
+          professional_id: 'p1',
+          appointment_time: new Date(`${dateStr}T10:00:00`).toISOString(),
+          duration_minutes: 60,
+          status: 'Confirmed',
+        },
+      ],
+    });
+    expect(screen.getByRole('button', { name: '09:00 Atual' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: '10:00 Ocupado' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '10:30 Ocupado' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '11:00' })).toBeEnabled();
+  });
 });

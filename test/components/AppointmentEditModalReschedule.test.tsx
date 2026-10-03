@@ -38,8 +38,10 @@ vi.mock('../../hooks/useBrutalTheme', () => ({
 }));
 vi.mock('../../components/ui', () => ({ useToast: () => ({ showToast }) }));
 vi.mock('../../components/ui/Button', () => ({
-  Button: ({ children, onClick, disabled }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean }) => (
-    <button type="button" onClick={onClick} disabled={disabled}>{children}</button>
+  Button: ({
+    children, onClick, disabled, ...rest
+  }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean } & Record<string, unknown>) => (
+    <button type="button" onClick={onClick} disabled={disabled} {...rest}>{children}</button>
   ),
 }));
 vi.mock('@/hooks/useCatalog', () => ({ useProducts: () => ({ data: [] }) }));
@@ -85,14 +87,12 @@ describe('T-V13 AppointmentEditModal — data/hora/profissional só leitura + Re
         onReschedule={onReschedule}
         accentColor="accent-gold"
         currencySymbol="R$"
+        shopTimeZone="Europe/Lisbon"
       />,
     );
-    const date = screen.getByLabelText('Data') as HTMLInputElement;
-    const time = screen.getByLabelText('Horário');
-    const pro = screen.getByLabelText('Profissional') as HTMLSelectElement | HTMLInputElement;
-    expect(date).toBeDisabled();
-    expect(time).toBeDisabled();
-    expect(pro).toBeDisabled();
+    expect(screen.getByTestId('edit-readonly-date')).toHaveTextContent('15/01/2030');
+    expect(screen.getByTestId('edit-readonly-time')).toHaveTextContent('12:00');
+    expect(screen.getByTestId('edit-readonly-professional')).toHaveTextContent('Eu');
     fireEvent.click(screen.getByTestId('edit-reschedule-link'));
     expect(onReschedule).toHaveBeenCalledTimes(1);
   });

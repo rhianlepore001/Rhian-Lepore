@@ -15,6 +15,8 @@ export const financeTransactionSchema = z.object({
   payment_method: z.string().nullable(),
   commission_paid: z.boolean(),
   status: z.enum(['paid', 'pending']),
+  description: z.string().nullable().optional(),
+  deleteKind: z.enum(['appointment', 'product_sale', 'manual', 'expense']).optional(),
 });
 
 export const financeSummarySchema = z.object({

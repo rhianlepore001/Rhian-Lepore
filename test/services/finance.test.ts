@@ -106,6 +106,23 @@ describe('finance service', () => {
     expect(transaction.professionalId).toBe('pro-001');
     expect(transaction.professionalName).toBe('Ana');
     expect(transaction.type).toBe('revenue');
+    expect(transaction.deleteKind).toBe('appointment');
+  });
+
+  it('classifica venda de produto pelo description da RPC', () => {
+    const transaction = mapFinanceTransaction({
+      id: 'fin-prod',
+      created_at: '2026-05-30T10:00:00.000Z',
+      service_name: 'Pomada',
+      description: 'Venda de produto: Pomada',
+      barber_name: 'Ana',
+      professional_id: 'pro-001',
+      client_name: 'Joao',
+      amount: 40,
+      expense: 0,
+      type: 'revenue',
+    });
+    expect(transaction.deleteKind).toBe('product_sale');
   });
 
   it('filtra staff por professional_id e nunca por nome', () => {
@@ -237,10 +254,25 @@ describe('finance service', () => {
   });
 
   it('deleteFinanceTransaction chama RPC atomica delete_finance_transaction', async () => {
-    (supabase.rpc as any).mockResolvedValueOnce({ data: null, error: null });
-    await deleteFinanceTransaction('fin-001', 'company-001');
+    (supabase.rpc as any).mockResolvedValueOnce({ data: { ok: true, kind: 'manual' }, error: null });
+    await expect(deleteFinanceTransaction('fin-001', 'company-001')).resolves.toEqual({
+      ok: true,
+      kind: 'manual',
+    });
     expect(supabase.rpc).toHaveBeenCalledWith('delete_finance_transaction', {
       p_record_id: 'fin-001',
+    });
+  });
+
+  it('deleteFinanceTransaction traduz ok:false em FinanceDeleteError', async () => {
+    (supabase.rpc as any).mockResolvedValueOnce({
+      data: { ok: false, error: 'commission_already_paid', staff_name: 'Ana', paid_at: '2026-10-01T12:00:00.000Z' },
+      error: null,
+    });
+    await expect(deleteFinanceTransaction('fin-001', 'company-001')).rejects.toMatchObject({
+      name: 'FinanceDeleteError',
+      code: 'commission_already_paid',
+      staffName: 'Ana',
     });
   });
 

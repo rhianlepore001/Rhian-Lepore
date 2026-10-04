@@ -19,6 +19,12 @@ import { combineDateAndTime, formatLocalDateString, getTodayDateString } from '.
 import { logger } from '../utils/Logger';
 import { mapError, formatUserFacingError } from '../utils/mapError';
 import { fetchFinanceStats, filterStaffTransactions, mapFinanceTransaction } from '../services/finance';
+import {
+  financeDeleteConfirmMessage,
+  mapFinanceDeleteError,
+  shouldShowFinanceDelete,
+  type FinanceDeleteKind,
+} from '../utils/financeDelete';
 import { fetchQueueCompletedCount } from '../services/queue';
 import { useMonthlyHistory, useFinanceDropdowns, useDeleteFinanceTransaction, useMarkExpenseAsPaid, useCreateFinanceRecord } from '../hooks/useFinance';
 import { useTenantLocale } from '../hooks/useTenantLocale';
@@ -39,6 +45,8 @@ interface Transaction {
   payment_method: string | null;
   commission_paid: boolean;
   status: 'paid' | 'pending';
+  description?: string | null;
+  deleteKind?: FinanceDeleteKind;
 }
 
 function transactionAmount(t: Transaction): number {
@@ -115,6 +123,7 @@ const [searchParams, setSearchParams] = useSearchParams();
   const [filterPaymentMethod, setFilterPaymentMethod] = useState<string>('all');
   // Staff não vê aba de comissões nem histórico
   const isStaff = role === 'staff';
+  const canDeleteTransactions = shouldShowFinanceDelete(role);
   const [activeTab, setActiveTab] = useState<FinanceTabType>(() => (searchParams.get('tab') === 'commissions' ? 'commissions' : 'overview'));
 
   // New Transaction Modal State
@@ -344,16 +353,16 @@ useEffect(() => {
   };
 
   const confirmDeleteTransaction = async () => {
-    if (!pendingDelete) return;
+    if (!pendingDelete || !canDeleteTransactions) return;
     const t = pendingDelete;
     try {
       await deleteTransactionMutation.mutateAsync({ transactionId: t.id, companyId: queryUserId });
       showToast('Transação excluída com sucesso!', 'success');
-      fetchFinanceData();
+      await fetchFinanceData();
+      void refetchMonthlyHistory();
     } catch (error: unknown) {
       logger.error('Erro ao excluir transação', error);
-      const ui = mapError(error, 'Não foi possível excluir a transação. Tente de novo.');
-      showToast(formatUserFacingError(ui), 'error');
+      showToast(mapFinanceDeleteError(error), 'error');
     } finally {
       setPendingDelete(null);
     }
@@ -538,42 +547,45 @@ useEffect(() => {
         </span>
       ),
     },
-    {
-      key: 'actions',
-      header: 'Ações',
-      align: 'right',
-      render: (t) => (
-        <div className="flex justify-end gap-2">
-          {t.type === 'expense' && t.status === 'pending' && (
-            <Button
-              variant="ghost"
-              size="sm"
-              icon={<Check className="h-3.5 w-3.5" />}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setPendingMarkPaid({ id: t.id, name: t.serviceName || 'Despesa' });
-              }}
-            >
-              Dar baixa
-            </Button>
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            icon={<Trash2 className="h-3.5 w-3.5" />}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleDeleteTransaction(t);
-            }}
-          >
-            Excluir
-          </Button>
-        </div>
-      ),
-    },
-  ], [accent.text, colors, currencyRegion, status.danger, status.success]);
+    ...(canDeleteTransactions
+      ? [{
+          key: 'actions',
+          header: 'Ações',
+          align: 'right' as const,
+          render: (t: Transaction) => (
+            <div className="flex justify-end gap-2">
+              {t.type === 'expense' && t.status === 'pending' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon={<Check className="h-3.5 w-3.5" />}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setPendingMarkPaid({ id: t.id, name: t.serviceName || 'Despesa' });
+                  }}
+                >
+                  Dar baixa
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                data-testid="finance-delete"
+                icon={<Trash2 className="h-3.5 w-3.5" />}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleDeleteTransaction(t);
+                }}
+              >
+                Excluir
+              </Button>
+            </div>
+          ),
+        } satisfies TableColumn<Transaction>]
+      : []),
+  ], [accent.text, canDeleteTransactions, colors, currencyRegion, status.danger, status.success]);
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -1094,7 +1106,9 @@ useEffect(() => {
         title={detailTransaction?.type === 'expense' ? 'Detalhes da saída' : 'Detalhes da entrada'}
         size="md"
         footer={
-          detailTransaction ? (
+          detailTransaction
+          && (canDeleteTransactions || (detailTransaction.type === 'expense' && detailTransaction.status === 'pending'))
+            ? (
             <div className="flex flex-col gap-2 sm:flex-row">
               {detailTransaction.type === 'expense' && detailTransaction.status === 'pending' && (
                 <Button
@@ -1109,19 +1123,23 @@ useEffect(() => {
                   Dar baixa
                 </Button>
               )}
-              <Button
-                variant="ghost"
-                className="flex-1"
-                icon={<Trash2 className="h-4 w-4" />}
-                onClick={() => {
-                  handleDeleteTransaction(detailTransaction);
-                  setDetailTransaction(null);
-                }}
-              >
-                Excluir
-              </Button>
+              {canDeleteTransactions && (
+                <Button
+                  variant="ghost"
+                  className="flex-1"
+                  data-testid="finance-delete"
+                  icon={<Trash2 className="h-4 w-4" />}
+                  onClick={() => {
+                    handleDeleteTransaction(detailTransaction);
+                    setDetailTransaction(null);
+                  }}
+                >
+                  Excluir
+                </Button>
+              )}
             </div>
-          ) : null
+              )
+            : null
         }
       >
         {detailTransaction && (
@@ -1198,13 +1216,21 @@ useEffect(() => {
       <ConfirmModal
         open={!!pendingDelete}
         title="Excluir transação"
+        testId="finance-delete-confirm"
         message={
-          pendingDelete?.type === 'revenue'
-            ? `Excluir "${pendingDelete.serviceName}"?\n\nEsta é uma receita gerada por agendamento. O agendamento vinculado também será removido. Esta ação é irreversível.`
-            : `Tem certeza que deseja excluir "${pendingDelete?.serviceName}"? Esta ação é irreversível.`
+          pendingDelete
+            ? financeDeleteConfirmMessage({
+              deleteKind: pendingDelete.deleteKind
+                ?? (pendingDelete.type === 'expense' ? 'expense' : 'manual'),
+              clientName: pendingDelete.clientName,
+              date: pendingDelete.date,
+              serviceName: pendingDelete.serviceName,
+            })
+            : ''
         }
         confirmLabel="Excluir"
         variant="danger"
+        loading={deleteTransactionMutation.isPending}
         onCancel={() => setPendingDelete(null)}
         onConfirm={() => void confirmDeleteTransaction()}
       />

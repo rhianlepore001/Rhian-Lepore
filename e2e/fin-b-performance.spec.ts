@@ -561,7 +561,6 @@ test.describe('Finance PR-B — performance clara', () => {
       latency: 150,
       downloadThroughput: Math.round((1.6 * 1024 * 1024) / 8),
       uploadThroughput: Math.round((750 * 1024) / 8),
-      connectionType: 'cellular4g',
     });
     await client.send('Emulation.setCPUThrottlingRate', { rate: 4 });
 

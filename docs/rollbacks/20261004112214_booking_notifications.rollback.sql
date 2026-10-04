@@ -1,4 +1,4 @@
--- ROLLBACK de 20261004114500_booking_notifications
+-- ROLLBACK de 20261004112214_booking_notifications
 -- Idempotente. Restaura accept/reject v2 aos corpos exatos de 20261004101021.
 -- Remove trigger/funções novas. Colunas extras de notifications são dropadas.
 -- CREATE OR REPLACE das v2 não altera grants.

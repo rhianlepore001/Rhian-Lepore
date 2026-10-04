@@ -1,5 +1,5 @@
 -- Provas PR-7: notificações de pedido online + aceite/recusa por profissional.
--- Roda DEPOIS da migration 20261004114500. Falha antes dela (trigger/colunas ausentes).
+-- Roda DEPOIS da migration 20261004112214. Falha antes dela (trigger/colunas ausentes).
 
 CREATE TEMP TABLE pr7_fail (msg text);
 

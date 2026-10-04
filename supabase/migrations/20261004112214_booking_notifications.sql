@@ -7,7 +7,7 @@
 -- 3. accept/reject v2 recusam com not_allowed_for_booking (resto idêntico ao PR-6)
 -- 4. Publication realtime de notifications (RLS por user_id)
 --
--- ROLLBACK: docs/rollbacks/20261004114500_booking_notifications.rollback.sql
+-- ROLLBACK: docs/rollbacks/20261004112214_booking_notifications.rollback.sql
 -- =============================================================================
 
 CREATE TABLE IF NOT EXISTS public.notifications (

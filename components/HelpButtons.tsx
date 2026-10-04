@@ -124,10 +124,21 @@ export const InfoButton: React.FC<InfoButtonProps> = ({ text }) => {
 
 interface AIAssistantButtonProps {
     context: string;
+    /** Controle externo (ex.: item "Assistente" do menu "⋯" do Financeiro). */
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
+    /** Só o painel, sem o botão (quem abre é o menu). */
+    hideTrigger?: boolean;
+    className?: string;
 }
 
-export const AIAssistantButton: React.FC<AIAssistantButtonProps> = ({ context }) => {
-    const [isOpen, setIsOpen] = useState(false);
+export const AIAssistantButton: React.FC<AIAssistantButtonProps> = ({ context, open, onOpenChange, hideTrigger = false, className = '' }) => {
+    const [innerOpen, setInnerOpen] = useState(false);
+    const isOpen = open ?? innerOpen;
+    const setIsOpen = (next: boolean) => {
+        if (open === undefined) setInnerOpen(next);
+        onOpenChange?.(next);
+    };
     const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([
         { role: 'assistant', content: `Olá! Sou seu assistente pessoal. Como posso ajudar com ${context}?` }
     ]);
@@ -154,17 +165,19 @@ export const AIAssistantButton: React.FC<AIAssistantButtonProps> = ({ context })
         <>
             {/* Mesma altura e alinhamento dos botões vizinhos (Filtrar/Exportar):
                 quadrado de 44 px no celular, com rótulo a partir de 768 px. */}
-            <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsOpen(true)}
-                title="Assistente"
-                aria-label="Abrir assistente IA"
-                className="w-11 px-0 md:w-auto md:px-3"
-                icon={<Bot className="h-4 w-4" />}
-            >
-                <span className="hidden md:inline">Assistente</span>
-            </Button>
+            {!hideTrigger && (
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsOpen(true)}
+                    title="Assistente"
+                    aria-label="Abrir assistente IA"
+                    className={`w-11 px-0 md:w-auto md:px-3 ${className}`}
+                    icon={<Bot className="h-4 w-4" />}
+                >
+                    <span className="hidden md:inline">Assistente</span>
+                </Button>
+            )}
 
             {isOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-bg)]/50 backdrop-blur-sm p-4">

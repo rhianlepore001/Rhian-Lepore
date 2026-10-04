@@ -293,10 +293,8 @@ async function installMocks(page: Page, mode: 'light' | 'dark', financeRows = pa
 async function openHistory(page: Page) {
   await page.goto(`${BASE}/#/financeiro?tab=commissions`, { waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('heading', { name: 'Pagamento de comissão' })).toBeVisible({ timeout: 30_000 });
-  const row = page.getByTestId(`payout-row-${ANA_ID}`);
-  await expect(row).toBeVisible();
-  await row.getByRole('button', { name: /Mais ações de Ana Souza/i }).click();
-  await page.getByRole('menuitem', { name: /Histórico de pagamentos/i }).click();
+  // PR-F: sem valor no período, a Ana aparece na frase "Nada a pagar"; o nome abre o histórico.
+  await page.getByTestId('payout-nothing-due').getByRole('button', { name: 'Histórico de pagamentos de Ana Souza' }).click();
   await expect(page.getByTestId('payment-history-card').first()).toBeVisible({ timeout: 15_000 });
 }
 

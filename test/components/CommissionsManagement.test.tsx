@@ -94,12 +94,13 @@ describe('CommissionsManagement — aba Pagamento de comissão (P0; fallback sem
         expect(screen.queryByText(/^Liquidado$/i)).toBeNull();
     });
 
-    it('dono fica fora da lista de repasse; colaborador sem saldo mostra "Nada a pagar" desabilitado', async () => {
+    it('dono fica fora da lista de repasse; colaborador sem saldo vai para a frase "Nada a pagar" (PR-F #10)', async () => {
         mount();
         await screen.findByText('Ana Souza');
         expect(screen.queryByText('Bob Dono')).toBeNull();
-        const caio = screen.getByTestId('payout-row-caio');
-        expect(within(caio).getByRole('button', { name: /Nada a pagar/i })).toBeDisabled();
+        expect(screen.queryByTestId('payout-row-caio')).toBeNull();
+        expect(screen.queryByRole('button', { name: /Nada a pagar/i })).toBeNull();
+        expect(screen.getByTestId('payout-nothing-due')).toHaveTextContent(/Nada a pagar neste período:.*Caio/);
         const ana = screen.getByTestId('payout-row-ana');
         expect(within(ana).getByText('Pendentes: 12 serviços · 3 produtos')).toBeInTheDocument();
         expect(within(ana).getByRole('button', { name: 'Pagar Ana Souza' })).toBeEnabled();
@@ -117,13 +118,24 @@ describe('CommissionsManagement — aba Pagamento de comissão (P0; fallback sem
         });
     });
 
-    it('"Ver histórico e análise" abre a Performance do colaborador com as datas do ciclo (R6.4, P2)', async () => {
+    it('link único "Ver histórico e análise" abre a Performance da equipe com as datas do ciclo (PR-F #10)', async () => {
+        process.env.TZ = 'Europe/Lisbon';
+        mount();
+        await screen.findByTestId('payout-row-ana');
+        const links = screen.getAllByRole('link', { name: /Ver histórico e análise/i });
+        expect(links).toHaveLength(1);
+        fireEvent.click(links[0]);
+        await waitFor(() => expect(lastLocation).toBe('/financeiro/performance?de=2026-08-06&ate=2026-09-05'));
+        expect(screen.queryByTestId('details-modal')).toBeNull();
+    });
+
+    it('análise do colaborador fica no menu "⋯" da linha, com as datas do ciclo (R6.4)', async () => {
         process.env.TZ = 'Europe/Lisbon';
         mount();
         const ana = await screen.findByTestId('payout-row-ana');
-        fireEvent.click(within(ana).getByRole('link', { name: /Ver histórico e análise/i }));
+        fireEvent.click(within(ana).getByRole('button', { name: /Mais ações de Ana Souza/i }));
+        fireEvent.click(await screen.findByRole('menuitem', { name: 'Análise na Performance' }));
         await waitFor(() => expect(lastLocation).toBe('/financeiro/performance?de=2026-08-06&ate=2026-09-05&pro=ana'));
-        expect(screen.queryByTestId('details-modal')).toBeNull();
     });
 
     it('menu "Mais" abre o relatório com as datas do ciclo', async () => {

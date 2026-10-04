@@ -146,8 +146,9 @@ describe('CommissionsManagement — ciclo do servidor (P1, get_commission_cycle_
         expect(rpc.mock.calls.some((c) => c[0] === 'mark_commissions_as_paid')).toBe(false);
         expect(rpc.mock.calls.some((c) => c[0] === 'pay_commission_v1' && (c[1] as { p_amount?: number })?.p_amount != null)).toBe(false);
         expect(await screen.findByText(/Comissão de Eva paga:.*15,00/)).toBeInTheDocument();
-        const evaAfter = await screen.findByTestId('payout-row-20000000-0000-0000-0000-0000000000f1');
-        expect(within(evaAfter).getByRole('button', { name: /Nada a pagar para Eva|Pagar Eva/ })).toBeDisabled();
+        // PR-F #10: pago nesta sessão sai do cartão e vai para "Pagos neste período" (sem botão desativado).
+        const evaAfter = await screen.findByTestId('payout-paid-20000000-0000-0000-0000-0000000000f1');
+        expect(within(evaAfter).queryByRole('button', { name: /Pagar Eva/ })).toBeNull();
     });
 
     it('‹ vai para o ciclo anterior do servidor; › fica desabilitado no ciclo em aberto', async () => {
@@ -156,29 +157,30 @@ describe('CommissionsManagement — ciclo do servidor (P1, get_commission_cycle_
         expect(screen.getByTestId('commission-cycle-header')).toHaveTextContent('Período 06/09 – 05/10');
         expect(screen.getByRole('button', { name: 'Próximo ciclo' })).toBeDisabled();
         fireEvent.click(screen.getByRole('button', { name: 'Ciclo anterior' }));
-        expect(await screen.findByText(/Período 06\/08 – 05\/09/)).toBeInTheDocument();
+        expect(await screen.findByTestId('commission-cycle-header')).toHaveTextContent(/Período 06\/08 – 05\/09/);
         expect(rpc).toHaveBeenCalledWith('get_commission_cycle_v1', { p_cycle_end: '2026-09-05' });
         expect(screen.getByRole('button', { name: 'Próximo ciclo' })).toBeEnabled();
         fireEvent.click(screen.getByRole('button', { name: 'Próximo ciclo' }));
-        expect(await screen.findByText(/Período 06\/09 – 05\/10/)).toBeInTheDocument();
+        await waitFor(() => expect(screen.getByTestId('commission-cycle-header')).toHaveTextContent(/Período 06\/09 – 05\/10/));
         expect(rpc).toHaveBeenCalledWith('get_commission_cycle_v1', { p_cycle_end: '2026-10-05' });
     });
 
     it('chips de status M2: Pago (com data), Pago com ajuste (valor pago × calculado), Pendente, Nada a pagar', async () => {
         cycles.default = cycles['2026-09-05'];
         mount();
-        const ana = await screen.findByTestId('payout-row-20000000-0000-0000-0000-0000000000a1');
+        // PR-F #10: quem já recebeu fica em "Pagos neste período"; sem valor vai para a frase "Nada a pagar".
+        const ana = await screen.findByTestId('payout-paid-20000000-0000-0000-0000-0000000000a1');
         expect(within(ana).getAllByText('Pago').length).toBeGreaterThan(0);
         expect(within(ana).getAllByText('Pago em 06/09').length).toBeGreaterThan(0);
-        const bruno = screen.getByTestId('payout-row-20000000-0000-0000-0000-0000000000b1');
+        const bruno = screen.getByTestId('payout-paid-20000000-0000-0000-0000-0000000000b1');
         expect(within(bruno).getAllByText('Pago com ajuste').length).toBeGreaterThan(0);
         expect(within(bruno).getAllByTitle(/Pago R\$\s250,00 · calculado R\$\s257,00/).length).toBeGreaterThan(0);
         expect(within(bruno).getAllByText(/Pago em 07\/09 · R\$\s250,00/).length).toBeGreaterThan(0);
         const caio = screen.getByTestId('payout-row-20000000-0000-0000-0000-0000000000c1');
         expect(within(caio).getAllByText('Pendente').length).toBeGreaterThan(0);
         expect(within(caio).queryByText(/ciclos anteriores/)).toBeNull();
-        const duda = screen.getByTestId('payout-row-20000000-0000-0000-0000-0000000000e1');
-        expect(within(duda).getAllByText('Nada a pagar').length).toBeGreaterThan(0);
+        expect(screen.queryByTestId('payout-row-20000000-0000-0000-0000-0000000000e1')).toBeNull();
+        expect(screen.getByTestId('payout-nothing-due')).toHaveTextContent(/Nada a pagar neste período:.*Duda/);
         expect(screen.getByTestId('payout-summary')).toHaveTextContent(/Pago neste ciclo\s*R\$\s514,00/);
     });
 

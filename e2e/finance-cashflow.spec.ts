@@ -288,7 +288,8 @@ async function expectYTicksAA(page: Page) {
 async function openFinanceSeptember(page: Page) {
   await page.goto(`${BASE}/#/financeiro`, { waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('heading', { name: 'Financeiro' })).toBeVisible({ timeout: 20_000 });
-  const monthLabel = page.locator('p.text-xl.font-heading');
+  // PR-F: seletor de mês na linha do título
+  const monthLabel = page.getByTestId('finance-month-stepper');
   await expect(monthLabel).toBeVisible({ timeout: 15_000 });
   if (!(await monthLabel.textContent())?.includes('Setembro')) {
     await page.getByRole('button', { name: 'Mês anterior' }).click();

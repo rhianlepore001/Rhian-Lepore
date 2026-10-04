@@ -9,6 +9,10 @@
 
 ---
 
+## PR-A Finance — exclusão de transação (4 Out 2026, NÃO merge)
+
+Branch `cursor/finance-delete-transaction-9a2a`. RPC nova `delete_finance_transaction` (não existia em prod). Dono só; venda de produto não apaga o atendimento; bloqueia comissão paga e despesa ligada a `commission_payments`. Não aplicar em prod. Prints em `/opt/cursor/artifacts/screenshots/fin-a/`.
+
 ## PR-6 overhaul booking — pedido de alteração (4 Out 2026, NÃO merge)
 
 Branch `cursor/overhaul-pr6-edit-request-01d7`. Edit pending = `status='pending' AND is_edit` (prod tem confirmed+is_edit stale). Cancel v2 de edit-pending aplica cutoff no original. Conflito de pedido sempre exclui linked do próprio booking. Accept recusa Completed/NoShow/original passado. Não aplicar em prod. Prints em `/opt/cursor/artifacts/screenshots/pr6/`.

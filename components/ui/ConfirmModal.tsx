@@ -10,6 +10,7 @@ export interface ConfirmModalProps {
   cancelLabel?: string;
   variant?: 'danger' | 'default';
   loading?: boolean;
+  testId?: string;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -22,6 +23,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   cancelLabel = 'Cancelar',
   variant = 'default',
   loading = false,
+  testId,
   onConfirm,
   onCancel,
 }) => (
@@ -48,6 +50,11 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
       </div>
     }
   >
-    <p className="text-sm leading-relaxed text-[var(--color-text-secondary)] whitespace-pre-line">{message}</p>
+    <p
+      data-testid={testId}
+      className="text-sm leading-relaxed text-[var(--color-text-secondary)] whitespace-pre-line"
+    >
+      {message}
+    </p>
   </Modal>
 );

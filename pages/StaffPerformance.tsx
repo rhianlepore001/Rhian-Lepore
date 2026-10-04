@@ -279,6 +279,8 @@ export const StaffPerformance: React.FC = () => {
                 <CommissionPaymentHistory
                     professionalId={member.professional_id}
                     professionalName={member.name}
+                    cpf={reportInfo.cpf}
+                    commissionRate={reportInfo.rate}
                     onClose={() => setModal(null)}
                     accentColor={isBeauty ? 'beauty-neon' : 'accent-gold'}
                     currencySymbol={getCurrencySymbol(region)}

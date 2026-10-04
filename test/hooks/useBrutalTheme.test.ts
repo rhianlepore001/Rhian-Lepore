@@ -130,6 +130,9 @@ describe('useBrutalTheme', () => {
         expect(result.current.classes.card).toContain('bg-theme-card');
         expect(result.current.classes.card).toContain('rounded-lg');
         expect(result.current.classes.buttonPrimary).toContain('bg-theme-accent');
+        expect(result.current.classes.buttonOutline).toContain('text-[var(--color-accent)]');
+        expect(result.current.classes.buttonOutline).toContain('color-mix(in_srgb,var(--color-accent)_50%,transparent)');
+        expect(result.current.classes.buttonOutline).toContain('hover:bg-[var(--color-accent-dim)]');
         expect(result.current.classes.input).toContain('rounded-md');
         expect(result.current.classes.label).not.toContain('uppercase');
         expect(result.current.classes.badgeAccent).not.toContain('uppercase');

@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { X, Calendar, Loader2, Check, Clock, TrendingUp } from 'lucide-react';
+import { X, Calendar, Loader2, Check, Clock, TrendingUp, FileText, ChevronRight } from 'lucide-react';
 import { Modal } from '@/components/ui';
 import { Button } from './ui/Button';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { useTenantLocale } from '../hooks/useTenantLocale';
-
-interface PaymentRecord {
-    payment_date: string;
-    period_start: string;
-    period_end: string;
-    amount: number;
-    services_count: number;
-}
+import { useAuth } from '../contexts/AuthContext';
+import { resolveBusinessTimezone } from '../utils/businessTimezone';
+import {
+    formatPaidAtLabel,
+    groupPaidRecordsByTimestamp,
+    historyPaidAtRangeBounds,
+    periodLabelFromRange,
+    type GroupedCommissionPayment,
+} from '../utils/commissionReport';
+import { CommissionDetailReport } from './CommissionDetailReport';
 
 interface CommissionPaymentHistoryProps {
     professionalId: string;
@@ -20,6 +22,8 @@ interface CommissionPaymentHistoryProps {
     onClose: () => void;
     accentColor: string;
     currencySymbol: string;
+    cpf?: string | null;
+    commissionRate?: number;
 }
 
 export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> = ({
@@ -27,23 +31,30 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
     professionalName,
     onClose,
     accentColor,
-    currencySymbol: _currencySymbol,
+    currencySymbol,
+    cpf = null,
+    commissionRate = 0,
 }) => {
+    const { region } = useAuth();
+    const tz = resolveBusinessTimezone({ region });
     const { formatMoney } = useTenantLocale();
     const isBeauty = accentColor.includes('beauty');
-    const { colors, accent, font, status } = useBrutalTheme({ override: isBeauty ? 'beauty' as ThemeVariant : 'barber' as ThemeVariant });
-    const [payments, setPayments] = useState<PaymentRecord[]>([]);
+    const theme: ThemeVariant = isBeauty ? 'beauty' : 'barber';
+    const { colors, accent, font, status, radius, isDark } = useBrutalTheme({ override: theme });
+    const [payments, setPayments] = useState<GroupedCommissionPayment[]>([]);
     const [loading, setLoading] = useState(true);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+    const [selected, setSelected] = useState<GroupedCommissionPayment | null>(null);
 
     useEffect(() => {
         const today = new Date();
         const sixMonthsAgo = new Date(today);
         sixMonthsAgo.setMonth(today.getMonth() - 6);
-
-        setStartDate(sixMonthsAgo.toISOString().split('T')[0]);
-        setEndDate(today.toISOString().split('T')[0]);
+        const pad = (n: number) => String(n).padStart(2, '0');
+        const iso = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+        setStartDate(iso(sixMonthsAgo));
+        setEndDate(iso(today));
     }, []);
 
     useEffect(() => {
@@ -55,46 +66,27 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
     const fetchPaymentHistory = async () => {
         setLoading(true);
         try {
+            const bounds = historyPaidAtRangeBounds(startDate, endDate, tz);
             const { data, error } = await supabase
                 .from('finance_records')
-                .select('*')
+                .select('commission_paid_at, created_at, commission_value')
                 .eq('professional_id', professionalId)
                 .eq('commission_paid', true)
                 .not('commission_paid_at', 'is', null)
-                .gte('commission_paid_at', new Date(startDate).toISOString())
-                .lte('commission_paid_at', new Date(endDate + 'T23:59:59').toISOString())
+                .gte('commission_paid_at', bounds.gte)
+                .lt('commission_paid_at', bounds.lt)
                 .order('commission_paid_at', { ascending: false });
 
             if (error) throw error;
 
-            const groupedPayments = new Map<string, PaymentRecord>();
+            const { data: paymentRows } = await supabase
+                .from('commission_payments')
+                .select('paid_at, start_date, end_date')
+                .eq('professional_id', professionalId)
+                .eq('status', 'paid')
+                .order('paid_at', { ascending: false });
 
-            (data || []).forEach((record: any) => {
-                const paymentDate = new Date(record.commission_paid_at).toISOString().split('T')[0];
-
-                if (!groupedPayments.has(paymentDate)) {
-                    groupedPayments.set(paymentDate, {
-                        payment_date: record.commission_paid_at,
-                        period_start: record.created_at,
-                        period_end: record.created_at,
-                        amount: 0,
-                        services_count: 0
-                    });
-                }
-
-                const payment = groupedPayments.get(paymentDate)!;
-                payment.amount += record.commission_value || 0;
-                payment.services_count += 1;
-
-                if (new Date(record.created_at) < new Date(payment.period_start)) {
-                    payment.period_start = record.created_at;
-                }
-                if (new Date(record.created_at) > new Date(payment.period_end)) {
-                    payment.period_end = record.created_at;
-                }
-            });
-
-            setPayments(Array.from(groupedPayments.values()));
+            setPayments(groupPaidRecordsByTimestamp(Array.isArray(data) ? data : [], Array.isArray(paymentRows) ? paymentRows : [], tz));
         } catch (error) {
             console.error('Error fetching payment history:', error);
         } finally {
@@ -103,36 +95,72 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
     };
 
     const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
-    const totalServices = payments.reduce((sum, p) => sum + p.services_count, 0);
+    const totalServices = payments.reduce((sum, p) => sum + p.servicesCount, 0);
 
-    const dateInputClass = `w-full p-2 md:p-2.5 ${colors.inputBg} ${colors.inputBorder} border md:rounded-xl rounded-lg ${colors.text} text-xs md:text-xs focus:border-[var(--color-input-focus)] outline-none transition-colors`;
+    const dateInputClass = [
+        'w-full p-2 md:p-2.5 text-xs outline-none transition-colors',
+        colors.inputBg,
+        colors.inputBorder,
+        'border',
+        radius.input,
+        'text-[var(--color-text)]',
+        isDark ? '[color-scheme:dark]' : '[color-scheme:light]',
+        'focus:border-[var(--color-input-focus)]',
+        '[&::-webkit-calendar-picker-indicator]:cursor-pointer',
+        '[&::-webkit-calendar-picker-indicator]:opacity-100',
+    ].join(' ');
+    const dateInputStyle: React.CSSProperties = {
+        color: 'var(--color-text)',
+        colorScheme: isDark ? 'dark' : 'light',
+    };
+
+    if (selected) {
+        return (
+            <CommissionDetailReport
+                professionalId={professionalId}
+                professionalName={professionalName}
+                cpf={cpf}
+                commissionRate={commissionRate}
+                periodStart={selected.periodStart}
+                periodEnd={selected.periodEnd}
+                periodLabel={periodLabelFromRange(selected.periodStart, selected.periodEnd, tz)}
+                currencySymbol={currencySymbol}
+                accentColor={accentColor}
+                mode="paid"
+                paidAt={selected.paidAt}
+                onClose={() => setSelected(null)}
+            />
+        );
+    }
 
     return (
         <Modal open size="full" onClose={onClose} showCloseButton={false}>
             <div className="-m-5 flex min-h-[calc(100dvh-8rem)] flex-col overflow-hidden md:-m-6">
-                <div className={`p-4 md:p-8 border-b ${colors.divider} ${colors.card} backdrop-blur-md sticky top-0 z-20`}>
+                <div className={`p-4 md:p-8 border-b ${colors.divider} ${colors.card} sticky top-0 z-20`}>
                     <div className="flex items-center justify-between mb-4 md:mb-6">
-                        <div className="flex items-center gap-3 md:gap-4">
-                            <div className={`w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center ${colors.surface} ${colors.border} border shadow-inner`}>
+                        <div className="flex items-center gap-3 md:gap-4 min-w-0">
+                            <div className={`w-10 h-10 md:w-12 md:h-12 ${radius.card} flex items-center justify-center ${colors.surface} ${colors.border} border shrink-0`}>
                                 <Clock className={`w-5 h-5 md:w-6 md:h-6 ${accent.text}`} />
                             </div>
-                            <div>
-                                <h2 className={`text-lg md:text-2xl ${font.heading} ${colors.text} uppercase tracking-tight leading-none md:leading-normal`}>Histórico de Pagamentos</h2>
-                                <p className={`${colors.textMuted} text-xs md:text-sm mt-0.5`}>Repasses para <span className={`${colors.text} font-bold`}>{professionalName}</span></p>
+                            <div className="min-w-0">
+                                <h2 className={`text-lg md:text-2xl ${font.heading} ${colors.text} tracking-tight truncate`}>Histórico de pagamentos</h2>
+                                <p className={`${colors.textSecondary} text-xs md:text-sm mt-0.5 truncate`}>Repasses para <span className={`${colors.text} font-semibold`}>{professionalName}</span></p>
                             </div>
                         </div>
                         <button
+                            type="button"
                             onClick={onClose}
-                            className={`${colors.textMuted} hover:text-theme-text transition-all p-2 hover:bg-theme-surface rounded-xl border border-transparent hover:border-theme-border active:scale-95`}
+                            aria-label="Fechar"
+                            className={`${colors.textMuted} hover:text-theme-text transition-all p-2 hover:bg-theme-surface ${radius.button} border border-transparent hover:border-theme-border`}
                         >
                             <X className="w-5 h-5 md:w-6 md:h-6" />
                         </button>
                     </div>
 
-                    <div className={`${colors.surface} p-3 md:p-4 rounded-2xl ${colors.border} border opacity-80`}>
+                    <div className={`bg-card-elevated p-3 md:p-4 ${radius.card} ${colors.border} border`}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <label className={`${colors.textMuted} text-xs md:text-xs uppercase ${font.mono} block px-1`}>Período de Consulta</label>
+                                <label className={`${colors.textMuted} text-xs uppercase ${font.mono} block px-1`}>Período de consulta</label>
                                 <div className="flex gap-2">
                                     <div className="flex-1">
                                         <input
@@ -140,6 +168,7 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
                                             value={startDate}
                                             onChange={(e) => setStartDate(e.target.value)}
                                             className={dateInputClass}
+                                            style={dateInputStyle}
                                         />
                                     </div>
                                     <div className="flex-1">
@@ -148,37 +177,44 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
                                             value={endDate}
                                             onChange={(e) => setEndDate(e.target.value)}
                                             className={dateInputClass}
+                                            style={dateInputStyle}
                                         />
                                     </div>
                                 </div>
                             </div>
 
                             <div className="flex flex-col space-y-2">
-                                <label className={`${colors.textMuted} text-xs md:text-xs uppercase ${font.mono} block px-1`}>Seleção Rápida</label>
+                                <label className={`${colors.textMuted} text-xs uppercase ${font.mono} block px-1`}>Seleção rápida</label>
                                 <div className="flex gap-2">
                                     <button
+                                        type="button"
                                         onClick={() => {
                                             const today = new Date();
                                             const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
                                             const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-                                            setStartDate(firstDay.toISOString().split('T')[0]);
-                                            setEndDate(lastDay.toISOString().split('T')[0]);
+                                            const pad = (n: number) => String(n).padStart(2, '0');
+                                            const iso = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+                                            setStartDate(iso(firstDay));
+                                            setEndDate(iso(lastDay));
                                         }}
-                                        className={`flex-1 py-2 px-2 rounded-xl text-xs font-bold uppercase ${colors.inputBg} ${colors.surfaceHover} ${colors.textSecondary} hover:text-theme-text ${colors.border} border transition-all`}
+                                        className={`flex-1 py-2 px-2 ${radius.button} text-xs font-semibold ${colors.inputBg} ${colors.surfaceHover} ${colors.text} ${colors.border} border min-h-[44px]`}
                                     >
-                                        Este Mês
+                                        Este mês
                                     </button>
                                     <button
+                                        type="button"
                                         onClick={() => {
                                             const today = new Date();
                                             const firstDay = new Date(today.getFullYear(), today.getMonth() - 1, 1);
                                             const lastDay = new Date(today.getFullYear(), today.getMonth(), 0);
-                                            setStartDate(firstDay.toISOString().split('T')[0]);
-                                            setEndDate(lastDay.toISOString().split('T')[0]);
+                                            const pad = (n: number) => String(n).padStart(2, '0');
+                                            const iso = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+                                            setStartDate(iso(firstDay));
+                                            setEndDate(iso(lastDay));
                                         }}
-                                        className={`flex-1 py-2 px-2 rounded-xl text-xs font-bold uppercase ${colors.inputBg} ${colors.surfaceHover} ${colors.textSecondary} hover:text-theme-text ${colors.border} border transition-all`}
+                                        className={`flex-1 py-2 px-2 ${radius.button} text-xs font-semibold ${colors.inputBg} ${colors.surfaceHover} ${colors.text} ${colors.border} border min-h-[44px]`}
                                     >
-                                        Mês Passado
+                                        Mês passado
                                     </button>
                                 </div>
                             </div>
@@ -186,90 +222,103 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
                     </div>
                 </div>
 
-                <div className={`flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar ${colors.surface} opacity-40`}>
+                <div className={`flex-1 overflow-y-auto p-4 md:p-8 ${colors.bg}`}>
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-24 space-y-4">
                             <Loader2 className={`w-10 h-10 animate-spin ${accent.text}`} />
                             <p className={`${colors.textMuted} ${font.mono} text-xs uppercase tracking-widest`}>Buscando pagamentos...</p>
                         </div>
                     ) : payments.length === 0 ? (
-                        <div className={`text-center py-20 ${colors.surface} rounded-[32px] border-2 border-dashed ${colors.border}`}>
-                            <Clock className={`w-12 h-12 ${colors.textMuted} mx-auto mb-4 opacity-50`} />
-                            <p className={`${colors.textSecondary} font-medium`}>Nenhum pagamento registrado.</p>
-                            <p className={`${colors.textMuted} text-xs mt-1 uppercase ${font.mono}`}>Os repasses aparecerão aqui após serem liquidados</p>
+                        <div className={`text-center py-20 ${colors.surface} ${radius.card} border-2 border-dashed ${colors.border}`}>
+                            <Clock className={`w-12 h-12 ${colors.textMuted} mx-auto mb-4`} />
+                            <p className={`${colors.text} font-medium`}>Nenhum pagamento registrado.</p>
+                            <p className={`${colors.textSecondary} text-xs mt-1`}>Os repasses aparecem aqui depois de liquidados</p>
                         </div>
                     ) : (
-                        <div className="flex flex-col gap-4">
-                            {payments.map((payment, index) => (
-                                <div
-                                    key={index}
-                                    className={`group ${colors.card} ${colors.border} border rounded-2xl p-4 md:p-6 hover:border-theme-border transition-all duration-300`}
+                        <div className="flex flex-col gap-3">
+                            {payments.map((payment) => (
+                                <article
+                                    key={payment.paidAt}
+                                    data-testid="payment-history-card"
+                                    data-paid-at={payment.paidAt}
+                                    className={`${colors.card} ${colors.border} border ${radius.card} p-4 md:p-5`}
                                 >
                                     <div className="flex flex-col gap-4">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <div className={`w-8 h-8 rounded-lg ${status.successBg} flex items-center justify-center ${status.successBorder} border`}>
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <div className={`w-8 h-8 ${radius.badge} ${status.successBg} flex items-center justify-center ${status.successBorder} border shrink-0`}>
                                                     <Check className={`w-4 h-4 ${status.success}`} />
                                                 </div>
-                                                <div>
-                                                    <span className={`text-xs font-bold ${status.success} uppercase tracking-tight`}>Pagamento Efetuado</span>
-                                                    <p className={`text-xs md:text-xs ${font.mono} ${colors.textMuted} uppercase`}>
-                                                        Em: {new Date(payment.payment_date).toLocaleDateString('pt-BR')}
+                                                <div className="min-w-0">
+                                                    <span className={`text-xs font-semibold ${status.success}`}>Pagamento efetuado</span>
+                                                    <p className={`text-sm ${colors.text} tabular-nums`}>
+                                                        {formatPaidAtLabel(payment.paidAt, tz)}
                                                     </p>
                                                 </div>
                                             </div>
-                                            <div className="text-right">
-                                                <p className={`text-xs ${colors.textMuted} uppercase ${font.mono} font-bold mb-0.5`}>Total Pago</p>
-                                                <p className={`${font.mono} font-bold text-lg md:text-2xl ${accent.text} leading-none`}>
+                                            <div className="text-right shrink-0">
+                                                <p className={`text-xs ${colors.textMuted} mb-0.5`}>Total pago</p>
+                                                <p className={`${font.mono} font-bold text-lg md:text-2xl tabular-nums ${accent.text} leading-none`}>
                                                     {formatMoney(payment.amount)}
                                                 </p>
                                             </div>
                                         </div>
 
-                                        <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 md:p-4 rounded-xl ${colors.surface} ${colors.border} border opacity-80 group-hover:border-theme-border transition-colors`}>
+                                        <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 ${radius.card} bg-card-elevated ${colors.border} border`}>
                                             <div className="flex items-center gap-3">
-                                                <div className={`w-8 h-8 rounded-lg ${colors.card} ${colors.border} border flex items-center justify-center`}>
-                                                    <Calendar className={`w-4 h-4 ${colors.textMuted}`} />
+                                                <div className={`w-8 h-8 ${radius.badge} ${colors.card} ${colors.border} border flex items-center justify-center`}>
+                                                    <Calendar className={`w-4 h-4 ${colors.textSecondary}`} />
                                                 </div>
                                                 <div>
-                                                    <p className={`text-xs ${colors.textMuted} uppercase ${font.mono} font-bold leading-none mb-1`}>Período</p>
-                                                    <p className={`${colors.textSecondary} text-xs md:text-xs`}>
-                                                        {new Date(payment.period_start).toLocaleDateString('pt-BR')} — {new Date(payment.period_end).toLocaleDateString('pt-BR')}
+                                                    <p className={`text-xs ${colors.textMuted} mb-0.5`}>Período</p>
+                                                    <p className={`${colors.text} text-sm tabular-nums`}>
+                                                        {periodLabelFromRange(payment.periodStart, payment.periodEnd, tz)}
                                                     </p>
                                                 </div>
                                             </div>
                                             <div className={`flex items-center gap-3 border-t sm:border-t-0 sm:border-l ${colors.divider} pt-3 sm:pt-0 sm:pl-3`}>
-                                                <div className={`w-8 h-8 rounded-lg ${colors.card} ${colors.border} border flex items-center justify-center`}>
-                                                    <TrendingUp className={`w-4 h-4 ${colors.textMuted}`} />
+                                                <div className={`w-8 h-8 ${radius.badge} ${colors.card} ${colors.border} border flex items-center justify-center`}>
+                                                    <TrendingUp className={`w-4 h-4 ${colors.textSecondary}`} />
                                                 </div>
                                                 <div>
-                                                    <p className={`text-xs ${colors.textMuted} uppercase ${font.mono} font-bold leading-none mb-1`}>Serviços</p>
-                                                    <p className={`${colors.textSecondary} text-xs md:text-xs`}>
-                                                        {payment.services_count} atendimentos liquidados
+                                                    <p className={`text-xs ${colors.textMuted} mb-0.5`}>Serviços</p>
+                                                    <p className={`${colors.text} text-sm`}>
+                                                        {payment.servicesCount} {payment.servicesCount === 1 ? 'atendimento liquidado' : 'atendimentos liquidados'}
                                                     </p>
                                                 </div>
                                             </div>
                                         </div>
+
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            fullWidth
+                                            icon={<FileText />}
+                                            iconRight={<ChevronRight />}
+                                            onClick={() => setSelected(payment)}
+                                        >
+                                            Ver relatório
+                                        </Button>
                                     </div>
-                                </div>
+                                </article>
                             ))}
                         </div>
                     )}
                 </div>
 
-                <div className={`p-4 md:p-8 border-t ${colors.divider} ${colors.card} backdrop-blur-md rounded-b-3xl`}>
+                <div className={`p-4 md:p-8 border-t ${colors.divider} ${colors.card}`}>
                     <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-8">
                         <div className="flex justify-between md:justify-start items-center gap-6 md:gap-10 w-full md:w-auto">
                             <div>
-                                <p className={`${colors.textMuted} text-xs md:text-xs uppercase ${font.mono} font-bold mb-1 tracking-widest leading-none`}>Total Geral Pago</p>
-                                <p className={`${font.mono} font-bold text-xl md:text-3xl ${accent.text} leading-none`}>
+                                <p className={`${colors.textMuted} text-xs mb-1`}>Total geral pago</p>
+                                <p className={`${font.mono} font-bold text-xl md:text-3xl tabular-nums ${accent.text} leading-none`}>
                                     {formatMoney(totalPaid)}
                                 </p>
                             </div>
                             <div className={`h-10 w-px ${colors.divider}`}></div>
                             <div>
-                                <p className={`${colors.textMuted} text-xs md:text-xs uppercase ${font.mono} font-bold mb-1 tracking-widest leading-none`}>Serviços</p>
-                                <p className={`${colors.text} ${font.mono} font-bold text-xl md:text-3xl leading-none`}>
+                                <p className={`${colors.textMuted} text-xs mb-1`}>Serviços</p>
+                                <p className={`${colors.text} ${font.mono} font-bold text-xl md:text-3xl tabular-nums leading-none`}>
                                     {totalServices}
                                 </p>
                             </div>
@@ -280,7 +329,7 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
                             onClick={onClose}
                             className="w-full md:w-auto md:px-12"
                         >
-                            Fechar Histórico
+                            Fechar histórico
                         </Button>
                     </div>
                 </div>

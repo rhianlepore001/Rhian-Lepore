@@ -9,6 +9,10 @@
 
 ---
 
+## Comissões — histórico + PDF (4 Out 2026, draft)
+
+Branch `cursor/comissoes-relatorio-pdf-mobile-57c7`, PR #129. Front-end only. Review: `commission_paid_at` eq usa string crua (microsegundos); intervalo do histórico no fuso do negócio; PDF jspdf-autotable; padding 16px no relatório 390. Prints em `/opt/cursor/artifacts/screenshots/comissoes/`.
+
 ## Finance PR-B — Performance da equipe / Meus resultados (4 Out 2026, NÃO merge)
 
 Branch `cursor/fin-b-performance-clara-6a1f`, draft https://github.com/rhianlepore001/Rhian-Lepore/pull/128. Só frontend. Grade desktop sem órfão (hero + comparação; resto 3/4 colunas). Meus resultados: título sem travessão, período compacto, dinheiro sem quebra. Prefetch RPC; in-app ~46 ms. Sem banco/prod. Prints em `/opt/cursor/artifacts/screenshots/fin-b/`.

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Upload, User, Check, Link as LinkIcon, CheckCircle2, Share2, Copy } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -10,6 +10,17 @@ import { useBusinessCopy } from '../hooks/useBusinessCopy';
 import { useCopyInviteLink } from '../hooks/useCopyInviteLink';
 import { mapError } from '../utils/mapError';
 import { generateSlug } from '../services/team';
+import { SettingsSwitch } from './SettingsSwitch';
+import { CommissionScheduleEditor } from './settings/CommissionScheduleEditor';
+import {
+    defaultScheduleDraft,
+    scheduleRowToDraft,
+    type CommissionScheduleDraft,
+    draftsEqual,
+    scheduleDraftSummary,
+    validateScheduleDraft,
+} from '../utils/commissionSchedule';
+import { fetchCommissionSchedules, saveCommissionSchedule } from '../services/commissionSchedule';
 
 interface TeamMemberFormProps {
     initialData?: any;
@@ -52,6 +63,39 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     const [photoPreview, setPhotoPreview] = useState<string | null>(initialData?.photo_url || null);
     const [loading, setLoading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [useBusinessDefault, setUseBusinessDefault] = useState(true);
+    const [scheduleDraft, setScheduleDraft] = useState<CommissionScheduleDraft>(defaultScheduleDraft);
+    const [savedSchedule, setSavedSchedule] = useState<CommissionScheduleDraft>(defaultScheduleDraft);
+    const [scheduleFromIso, setScheduleFromIso] = useState(() => {
+        const d = new Date();
+        const pad = (n: number) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    });
+    const [scheduleCurrentEnd, setScheduleCurrentEnd] = useState<string | null>(null);
+    const [scheduleReady, setScheduleReady] = useState(false);
+    const [hadException, setHadException] = useState(false);
+    const [businessDraft, setBusinessDraft] = useState<CommissionScheduleDraft | null>(null);
+    const showSchedule = Boolean(initialData?.id) && !isOwner && !isOwnerForm;
+
+    useEffect(() => {
+        if (!showSchedule) return;
+        void fetchCommissionSchedules()
+            .then((payload) => {
+                setScheduleFromIso(payload.today);
+                const business = scheduleRowToDraft(payload.business);
+                setBusinessDraft(business);
+                const exception = payload.exceptions.find((row) => row.professional_id === initialData.id);
+                const hasCustom = Boolean(exception && (exception.schedule.close_days?.length ?? 0) > 0);
+                setScheduleCurrentEnd((hasCustom ? exception?.current_end : null) ?? payload.current_end);
+                setHadException(hasCustom);
+                setUseBusinessDefault(!hasCustom);
+                const draft = hasCustom ? scheduleRowToDraft(exception!.schedule) : business;
+                setScheduleDraft(draft);
+                setSavedSchedule(hasCustom ? draft : business);
+                setScheduleReady(true);
+            })
+            .catch(() => setScheduleReady(true));
+    }, [showSchedule, initialData?.id]);
 
     const inviteMemberId = createdMemberId || (initialData?.staff_user_id ? null : initialData?.id) || null;
     const { inviteLink, copied: copiedInviteLink, copy: copyInviteLink, share: shareInviteLink } = useCopyInviteLink({
@@ -86,6 +130,15 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
         setLoading(true);
 
         try {
+            if (showSchedule && !useBusinessDefault) {
+                const invalid = validateScheduleDraft(scheduleDraft);
+                if (invalid) {
+                    showToast(invalid, 'warning');
+                    setLoading(false);
+                    return;
+                }
+            }
+
             let photoUrl = photoPreview;
 
             if (photoFile) {
@@ -139,6 +192,22 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                     .eq('id', initialData.id)
                     .eq('user_id', user.id);
                 if (updateError) throw updateError;
+
+                // Só grava quando a regra do colaborador mudou de fato (editar telefone não cria versão nova).
+                const scheduleChanged = showSchedule && scheduleReady && (
+                    hadException === useBusinessDefault
+                    || (!useBusinessDefault && !draftsEqual(scheduleDraft, savedSchedule))
+                );
+                if (scheduleChanged) {
+                    await saveCommissionSchedule({
+                        professionalId: initialData.id,
+                        frequency: scheduleDraft.frequency,
+                        closeDays: scheduleDraft.closeDays,
+                        payOffsetDays: scheduleDraft.payOffsetDays,
+                        reminderOffsets: scheduleDraft.reminderOffsets,
+                        useBusinessDefault,
+                    });
+                }
 
                 window.dispatchEvent(new CustomEvent('setup-step-completed', { detail: { stepId: 'team' } }));
                 onSave();
@@ -249,7 +318,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
             open
             onClose={onClose}
             title={initialData ? 'Editar Profissional' : 'Novo Profissional'}
-            size="md"
+            size={showSchedule ? 'lg' : 'md'}
         >
             <form onSubmit={handleSubmit} className="space-y-4">
                 {!initialData && (
@@ -360,8 +429,44 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
 
                 {!isOwner && (
                     <p className={`text-xs ${colors.textMuted} -mt-1`}>
-                        A comissão e o dia de acerto ficam no card do colaborador, em Equipe e Comissões.
+                        A comissão (%) fica no card do colaborador. O ciclo de acerto é a regra do negócio, com exceção opcional abaixo.
                     </p>
+                )}
+
+                {showSchedule && scheduleReady && (
+                    <div
+                        data-testid="collaborator-schedule-exception"
+                        className={`space-y-6 p-4 rounded-xl border ${colors.border} ${colors.surface}`}
+                    >
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="min-w-0">
+                                <p className={`text-xs font-medium ${colors.textMuted}`}>Ciclo de acerto</p>
+                                <label htmlFor="use-business-schedule" className={`mt-1 block text-sm font-semibold ${colors.text} cursor-pointer`}>
+                                    Usar regra do negócio
+                                </label>
+                                <p className={`mt-1 text-xs leading-relaxed ${colors.textSecondary}`}>
+                                    {useBusinessDefault
+                                        ? `Segue a regra de todos${businessDraft ? `: ${scheduleDraftSummary(businessDraft)}` : ''}.`
+                                        : 'Desligado: este colaborador tem um ciclo próprio, que vale a partir do próximo fechamento dele.'}
+                                </p>
+                            </div>
+                            <SettingsSwitch
+                                id="use-business-schedule"
+                                checked={useBusinessDefault}
+                                onChange={setUseBusinessDefault}
+                                ariaLabel="Usar regra do negócio"
+                            />
+                        </div>
+                        {!useBusinessDefault && (
+                            <CommissionScheduleEditor
+                                draft={scheduleDraft}
+                                onChange={setScheduleDraft}
+                                fromIso={scheduleFromIso}
+                                currentEnd={scheduleCurrentEnd}
+                                saved={savedSchedule}
+                            />
+                        )}
+                    </div>
                 )}
 
                 <div>

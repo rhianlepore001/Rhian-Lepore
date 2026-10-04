@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
-import { useTenantLocale } from '../hooks/useTenantLocale';
 import { logger } from '../utils/Logger';
+import { generateCommissionReminders } from '../services/commissionSchedule';
 
 export interface Alert {
     id: string;
@@ -19,6 +19,7 @@ export interface AppNotification {
     read: boolean;
     link: string | null;
     booking_id: string | null;
+    event_key?: string | null;
     created_at: string;
 }
 
@@ -38,7 +39,6 @@ const NOTIFICATION_SOUND = 'https://assets.mixkit.co/active_storage/sfx/2869/286
 
 export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user, role, companyId, loading: authLoading } = useAuth();
-    const { formatMoney } = useTenantLocale();
     const [alerts, setAlerts] = useState<Alert[]>([]);
     const [notifications, setNotifications] = useState<AppNotification[]>([]);
     const [loading, setLoading] = useState(true);
@@ -68,12 +68,7 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 });
             }
 
-            const [{ data: settings }, { data: onboardingProgress }] = await Promise.all([
-                supabase
-                    .from('business_settings')
-                    .select('commission_settlement_day_of_month')
-                    .eq('user_id', tenantId)
-                    .single(),
+            const [{ data: onboardingProgress }] = await Promise.all([
                 supabase
                     .from('onboarding_progress')
                     .select('is_completed')
@@ -82,42 +77,6 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             ]);
 
             const onboardingCompleted = onboardingProgress?.is_completed ?? false;
-
-            if (settings?.commission_settlement_day_of_month) {
-                const settlementDay = settings.commission_settlement_day_of_month;
-                const today = new Date();
-                const currentDay = today.getDate();
-
-                let daysRemaining = settlementDay - currentDay;
-
-                if (daysRemaining < 0) {
-                    const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, settlementDay);
-                    daysRemaining = Math.ceil((nextMonth.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-                }
-
-                const { data: commissionsDue } = await supabase.rpc('get_commissions_due');
-                const totalDue = (commissionsDue || [])
-                    .filter((r: { is_owner?: boolean }) => !r.is_owner)
-                    .reduce((sum: number, r: { total_due?: number }) => sum + (Number(r.total_due) || 0), 0);
-
-                if (totalDue > 0) {
-                    if (daysRemaining <= 2 && daysRemaining > 0) {
-                        generatedAlerts.push({
-                            id: 'commission-settlement-warning',
-                            text: `Acerto de comissões se aproxima! Dia ${settlementDay} será o dia do acerto.`,
-                            type: 'warning',
-                            actionPath: '/financeiro?tab=commissions'
-                        });
-                    } else if (daysRemaining === 0) {
-                        generatedAlerts.push({
-                            id: 'commission-settlement-today',
-                            text: `Hoje é dia de acerto de comissões! Total pendente: ${formatMoney(totalDue)}`,
-                            type: 'danger',
-                            actionPath: '/financeiro?tab=commissions'
-                        });
-                    }
-                }
-            }
 
             const isNewAccount = createdAt &&
                 (new Date().getTime() - createdAt.getTime()) < (7 * 24 * 60 * 60 * 1000);
@@ -182,7 +141,7 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         if (!user) return [];
         const { data, error } = await supabase
             .from('notifications')
-            .select('id, title, message, type, read, link, booking_id, created_at')
+            .select('id, title, message, type, read, link, booking_id, event_key, created_at')
             .eq('user_id', user.id)
             .order('created_at', { ascending: false })
             .limit(30);
@@ -203,6 +162,14 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
         setLoading(true);
         try {
+            if (companyId && role === 'owner') {
+                try {
+                    await generateCommissionReminders();
+                } catch (error) {
+                    logger.warn('Commission reminder generate skipped', { error });
+                }
+            }
+
             const nextNotifications = await fetchNotifications();
             setNotifications(nextNotifications);
 

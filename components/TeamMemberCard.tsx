@@ -2,13 +2,7 @@ import React, { useState } from 'react';
 import { Edit2, Trash2, User, Crown, Percent, Check, Loader2 } from 'lucide-react';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { Button } from './ui/Button';
-import {
-    type CommissionPaymentFrequency,
-    defaultPaymentDay,
-    normalizePaymentFrequency,
-    paymentDayOptions,
-    scheduleSummary,
-} from '../utils/commissionSchedule';
+import type { CommissionPaymentFrequency } from '../utils/commissionSchedule';
 
 interface TeamMember {
     id: string;
@@ -24,8 +18,6 @@ interface TeamMember {
 
 export interface CommissionDraft {
     rate: number;
-    frequency: CommissionPaymentFrequency;
-    day: number;
 }
 
 interface TeamMemberCardProps {
@@ -33,6 +25,7 @@ interface TeamMemberCardProps {
     onEdit: (member: TeamMember) => void;
     onDelete: (id: string) => void;
     onSaveCommission?: (memberId: string, draft: CommissionDraft) => Promise<void>;
+    scheduleLabel?: string;
     /** @deprecated tema vem do useBrutalTheme; mantido por compat de API */
     accentColor?: string;
     children?: React.ReactNode;
@@ -43,30 +36,17 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
     onEdit,
     onDelete,
     onSaveCommission,
+    scheduleLabel,
     children,
 }) => {
     const { colors, accent, radius, shadow, status } = useBrutalTheme();
     const [editingCommission, setEditingCommission] = useState(false);
     const [saving, setSaving] = useState(false);
     const [rate, setRate] = useState(String(member.commission_rate ?? 0));
-    const [frequency, setFrequency] = useState<CommissionPaymentFrequency>(
-        normalizePaymentFrequency(member.commission_payment_frequency),
-    );
-    const [day, setDay] = useState(
-        member.commission_payment_day ?? defaultPaymentDay(normalizePaymentFrequency(member.commission_payment_frequency)),
-    );
 
     const openCommissionEditor = () => {
-        const freq = normalizePaymentFrequency(member.commission_payment_frequency);
         setRate(String(member.commission_rate ?? 0));
-        setFrequency(freq);
-        setDay(member.commission_payment_day ?? defaultPaymentDay(freq));
         setEditingCommission(true);
-    };
-
-    const handleFrequencyChange = (next: CommissionPaymentFrequency) => {
-        setFrequency(next);
-        setDay(defaultPaymentDay(next));
     };
 
     const handleSaveCommission = async () => {
@@ -75,7 +55,7 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
         if (Number.isNaN(parsed) || parsed < 0 || parsed > 100) return;
         setSaving(true);
         try {
-            await onSaveCommission(member.id, { rate: parsed, frequency, day });
+            await onSaveCommission(member.id, { rate: parsed });
             setEditingCommission(false);
         } finally {
             setSaving(false);
@@ -83,8 +63,6 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
     };
 
     const commissionRate = member.commission_rate ?? 0;
-    const schedule = scheduleSummary(member.commission_payment_frequency, member.commission_payment_day);
-    const dayOptions = paymentDayOptions(frequency);
 
     return (
         <div className={`
@@ -146,9 +124,11 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
                                     de comissão
                                 </span>
                             </p>
-                            <p className={`text-sm font-medium ${colors.textSecondary}`}>
-                                {schedule}
-                            </p>
+                            {scheduleLabel && (
+                                <p className={`text-sm font-medium ${colors.textSecondary}`}>
+                                    {scheduleLabel}
+                                </p>
+                            )}
                         </div>
                     )}
                     {member.is_owner && (
@@ -161,45 +141,19 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
 
             {!member.is_owner && editingCommission && (
                 <div className={`mt-4 space-y-3 p-3 rounded-xl border ${accent.border} ${colors.surface}`}>
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                        <div className="relative col-span-2 sm:col-span-1">
-                            <label className={`text-xs mb-1 block ${colors.textMuted}`}>Comissão</label>
-                            <input
-                                type="number"
-                                min="0"
-                                max="100"
-                                step="0.5"
-                                value={rate}
-                                onChange={(e) => setRate(e.target.value)}
-                                className={`w-full px-3 py-2.5 min-h-[44px] rounded-lg ${colors.text} font-mono text-center outline-none bg-[var(--color-input-bg)] border border-[var(--color-input-border)] focus:border-theme-accent`}
-                                autoFocus
-                            />
-                            <span className={`absolute right-3 bottom-2.5 ${colors.textMuted} font-mono pointer-events-none`}>%</span>
-                        </div>
-                        <div>
-                            <label className={`text-xs mb-1 block ${colors.textMuted}`}>Frequência</label>
-                            <select
-                                value={frequency}
-                                onChange={(e) => handleFrequencyChange(e.target.value as CommissionPaymentFrequency)}
-                                className={`w-full min-h-[44px] px-2 py-2 rounded-lg ${colors.inputBg} ${colors.text} text-xs border ${colors.border} outline-none uppercase font-mono`}
-                            >
-                                <option value="weekly">Semanal</option>
-                                <option value="biweekly">Quinzenal</option>
-                                <option value="monthly">Mensal</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className={`text-xs mb-1 block ${colors.textMuted}`}>Dia do acerto</label>
-                            <select
-                                value={day}
-                                onChange={(e) => setDay(parseInt(e.target.value, 10))}
-                                className={`w-full min-h-[44px] px-2 py-2 rounded-lg ${colors.inputBg} ${colors.text} text-xs border ${colors.border} outline-none uppercase font-mono`}
-                            >
-                                {dayOptions.map((opt) => (
-                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                ))}
-                            </select>
-                        </div>
+                    <div className="relative">
+                        <label className={`text-xs mb-1 block ${colors.textMuted}`}>Comissão</label>
+                        <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="0.5"
+                            value={rate}
+                            onChange={(e) => setRate(e.target.value)}
+                            className={`w-full px-3 py-2.5 min-h-[44px] rounded-lg ${colors.text} font-mono text-center outline-none bg-[var(--color-input-bg)] border border-[var(--color-input-border)] focus:border-theme-accent`}
+                            autoFocus
+                        />
+                        <span className={`absolute right-3 bottom-2.5 ${colors.textMuted} font-mono pointer-events-none`}>%</span>
                     </div>
                     <div className="flex gap-2">
                         <Button

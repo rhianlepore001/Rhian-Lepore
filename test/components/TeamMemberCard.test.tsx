@@ -51,4 +51,20 @@ describe('TeamMemberCard', () => {
 
     expect(screen.queryByRole('button', { name: /Excluir membro/i })).not.toBeInTheDocument();
   });
+
+  it('não oferece frequência no card; a % continua editável', async () => {
+    render(
+      <TeamMemberCard
+        member={staff}
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
+        onSaveCommission={vi.fn()}
+        scheduleLabel="Mensal · Dia 5"
+      />,
+    );
+    expect(screen.getByText('Mensal · Dia 5')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /Comissão/i }));
+    expect(screen.queryByText('Frequência')).not.toBeInTheDocument();
+    expect(screen.getByText('Comissão')).toBeInTheDocument();
+  });
 });

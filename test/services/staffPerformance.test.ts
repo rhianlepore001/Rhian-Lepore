@@ -98,7 +98,7 @@ describe('fetchCommissionCycle (get_commission_cycle_v1)', () => {
     rpc.mockResolvedValueOnce({ data: cycle, error: null });
     const c = await fetchCommissionCycle('2026-10-05');
     expect(rpc).toHaveBeenCalledWith('get_commission_cycle_v1', { p_cycle_end: '2026-10-05' });
-    expect(c.cycle).toEqual({ start: '2026-09-06', end: '2026-10-05', open: true });
+    expect(c.cycle).toEqual({ start: '2026-09-06', end: '2026-10-05', open: true, pay_due: '2026-10-05' });
     expect(c.previous_end).toBe('2026-09-05');
     expect(c.next_end).toBe('2026-11-05');
     expect(c.settlement_day).toBe(5);

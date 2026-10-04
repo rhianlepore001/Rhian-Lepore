@@ -24,6 +24,8 @@ export interface PayoutRowData {
         paid_at: string | null;
         /** Data local do lançamento não pago mais antigo (fuso do tenant). */
         primeiro_nao_pago: string | null;
+        /** Exceção do colaborador: ciclo próprio (semanal/quinzenal/mensal) em vez do ciclo do negócio. */
+        own?: { start: string; end: string; pay_due: string; frequency: string } | null;
     };
 }
 
@@ -43,6 +45,14 @@ interface PayoutListProps {
 }
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+const ddmm = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
+const FREQ_LABEL: Record<string, string> = { weekly: 'Semanal', biweekly: 'Quinzenal', monthly: 'Mensal' };
+
+/** "Exceção · Semanal · 28/09 – 04/10" para quem tem regra própria. */
+export function ownCycleLabel(own: { start: string; end: string; frequency: string }): string {
+    return `Exceção · ${FREQ_LABEL[own.frequency] ?? 'Ciclo próprio'} · ${ddmm(own.start)} – ${ddmm(own.end)}`;
+}
 
 export function pendingContext(services: number, products: number): string {
     if (!services && !products) return 'Nada pendente';
@@ -66,6 +76,7 @@ export function payoutPaymentRange(
     row: PayoutRowData,
     cycle: { start: string; end: string },
     previousEnd: string,
+    opts?: { today?: string; open?: boolean },
 ): { start: string; end: string; amount: number } {
     const amount = payoutDueAmount(row);
     const earliest = row.cycle?.primeiro_nao_pago;
@@ -73,7 +84,12 @@ export function payoutPaymentRange(
     if (priorOnly && earliest) {
         return { start: earliest, end: previousEnd, amount };
     }
-    return { start: cycle.start, end: cycle.end, amount };
+    const window = row.cycle?.own ?? cycle;
+    const end = opts?.today && opts.today >= window.start && opts.today <= window.end
+        && (opts.open || row.cycle?.own)
+        ? opts.today
+        : window.end;
+    return { start: window.start, end, amount };
 }
 
 const STATUS: Record<CycleStatus, { label: string; variant: 'warning' | 'success' | 'accent' | 'neutral' }> = {
@@ -198,6 +214,11 @@ export const PayoutList: React.FC<PayoutListProps> = ({ rows, theme, formatMoney
                                         {r.professional_name}
                                         {r.cycle?.inactive && <Badge variant="neutral" forceTheme={theme} className="ml-2 align-middle">Inativo</Badge>}
                                     </p>
+                                    {r.cycle?.own && (
+                                        <p data-testid={`own-cycle-${r.professional_id}`} className={`mt-1 text-xs ${colors.textSecondary} tabular-nums`}>
+                                            {ownCycleLabel(r.cycle.own)}
+                                        </p>
+                                    )}
                                     <p className={`mt-1 text-xs ${colors.textMuted} flex items-center gap-1.5 lg:hidden`}>
                                         <span className="tabular-nums">{r.commission_rate || 0}%</span>
                                         <span aria-hidden="true">·</span>

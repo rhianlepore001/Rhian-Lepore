@@ -43,6 +43,7 @@ export const AttentionInbox: React.FC<AttentionInboxProps> = ({
             <li key={item.id}>
               <button
                 type="button"
+                data-testid={`attention-${item.id}`}
                 disabled={!interactive}
                 onClick={item.onClick}
                 className={`flex w-full items-start gap-3 rounded-2xl p-3 text-left transition-opacity ${colors.surface} ${

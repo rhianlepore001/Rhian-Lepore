@@ -163,10 +163,14 @@ export const cycleMemberSchema = z.object({
   ultimo_pagamento: z
     .object({ paid_at: z.string(), amount: z.number(), start_date: isoDate.nullable(), end_date: isoDate.nullable() })
     .nullable(),
+  /** Exceção do colaborador (PR-D): janela própria que termina no último fechamento dele <= fim do ciclo do negócio. */
+  own_cycle: z
+    .object({ start: isoDate, end: isoDate, pay_due: isoDate, frequency: z.string(), close_days: z.array(z.number()).optional() })
+    .optional(),
 });
 
 export const commissionCycleSchema = z.object({
-  cycle: z.object({ start: isoDate, end: isoDate, open: z.boolean() }),
+  cycle: z.object({ start: isoDate, end: isoDate, open: z.boolean(), pay_due: isoDate.optional() }),
   settlement_day: int,
   tz: z.string(),
   currency: z.enum(['BRL', 'EUR']),
@@ -174,6 +178,9 @@ export const commissionCycleSchema = z.object({
   next_end: isoDate,
   members: z.array(cycleMemberSchema),
   totals: z.object({ a_pagar_ciclo: z.number(), pendentes: int, pago_ciclo: z.number() }),
+  pay_due: isoDate.optional(),
+  frequency: z.string().optional(),
+  pay_offset_days: z.number().int().optional(),
 });
 
 export const payPreviewSchema = z.object({

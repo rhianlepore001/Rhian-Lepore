@@ -9,6 +9,10 @@
 
 ---
 
+## Comissões — histórico + PDF (4 Out 2026, draft)
+
+Branch `cursor/comissoes-relatorio-pdf-mobile-57c7`, PR #129. Front-end only. Histórico agrupa por `commission_paid_at` exato; relatório em modo pago; PDF resumido/detalhado (jspdf dinâmico). Prints em `/opt/cursor/artifacts/screenshots/comissoes/`.
+
 ## PR-A Finance — exclusão de transação (4 Out 2026, em prod)
 
 Branch `cursor/finance-delete-transaction-9a2a`. RPC nova `delete_finance_transaction` (não existia em prod). Dono só; venda de produto não apaga o atendimento; bloqueia comissão paga e despesa ligada a `commission_payments`. Aplicado em prod como migration 20261004115121. Prints em `/opt/cursor/artifacts/screenshots/fin-a/`.

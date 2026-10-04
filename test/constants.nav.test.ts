@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest';
 import {
   CLUB_OWNER_NAV,
   NAVIGATION_ITEMS,
+  OWNER_SETTINGS_CARD_LABELS,
   SETTINGS_ITEMS,
   TRIAL_DAYS,
   findActiveSettingsItem,
   getTrialEndsAt,
   isPathActive,
+  settingsItemsForRole,
 } from '@/constants';
 
 describe('navegação do Clube (dono)', () => {
@@ -42,6 +44,31 @@ describe('navegação do Clube (dono)', () => {
 
   it('não confunde Ajustes com a rota pública /clube/:slug', () => {
     expect(isPathActive('/clube/minha-barbearia', '/clube/assinantes')).toBe(false);
+  });
+});
+
+describe('Ajustes do colaborador (conta staff nova)', () => {
+  it('não lista os cards de Ajustes do dono', () => {
+    const staffItems = settingsItemsForRole('staff');
+    const labels = staffItems.map((item) => item.label);
+    expect(labels).toEqual(['Serviços']);
+    for (const card of OWNER_SETTINGS_CARD_LABELS) {
+      expect(labels).not.toContain(card);
+    }
+  });
+
+  it('dono continua vendo os cards de Ajustes (sem os de dev)', () => {
+    const ownerLabels = settingsItemsForRole('owner').map((item) => item.label);
+    expect(ownerLabels).toEqual([
+      'Geral',
+      'Agendamento',
+      'Equipe e Comissões',
+      'Serviços',
+      'Clube',
+      'Plano AgendiX',
+      'Notificações',
+      'Segurança',
+    ]);
   });
 });
 

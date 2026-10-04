@@ -47,6 +47,60 @@ export function formatAgendaPublicBookingsSummary(edits: number, newOnes: number
   return 'Feitos pelo link público — aceite ou recuse.';
 }
 
+function joinPtList(names: string[]): string {
+  if (names.length === 0) return '';
+  if (names.length === 1) return names[0];
+  if (names.length === 2) return `${names[0]} e ${names[1]}`;
+  return `${names.slice(0, -1).join(', ')} e ${names[names.length - 1]}`;
+}
+
+export function formatStaffCannotActSummary(
+  bookings: Array<{ professional_id?: string | null }>,
+  members: Array<{ id: string; name: string }>,
+): string {
+  const labels = bookings.map((booking) => {
+    if (!booking.professional_id) return 'qualquer profissional';
+    return members.find((member) => member.id === booking.professional_id)?.name || 'qualquer profissional';
+  });
+  const unique = [...new Set(labels)];
+  const named = unique.filter((name) => name !== 'qualquer profissional');
+  const pedido = bookings.length === 1 ? 'Pedido' : 'Pedidos';
+  const dest = `${pedido} para ${joinPtList(unique)}.`;
+  if (named.length === 0) {
+    return `${dest} Só o dono pode responder.`;
+  }
+  if (named.length === 1) {
+    return `${dest} Só ${named[0]} ou o dono podem responder.`;
+  }
+  return `${dest} Só ${named.join(', ')} ou o dono podem responder.`;
+}
+
+export function formatAgendaRequestsBanner(input: {
+  bookings: Array<{
+    professional_id?: string | null;
+    status?: string | null;
+    is_edit?: boolean | null;
+  }>;
+  canActOnBooking: (booking: { professional_id?: string | null }) => boolean;
+  teamMembers: Array<{ id: string; name: string }>;
+}): { title: string; summary: string } {
+  const { bookings, canActOnBooking, teamMembers } = input;
+  const actionable = bookings.filter((booking) => canActOnBooking(booking));
+  if (actionable.length === 0) {
+    return {
+      title: formatAgendaOnlineRequestsTitle(bookings.length),
+      summary: formatStaffCannotActSummary(bookings, teamMembers),
+    };
+  }
+  const edits = actionable.filter((booking) => (
+    isClientEditPending({ ...booking, status: booking.status ?? 'pending' })
+  )).length;
+  return {
+    title: formatAgendaOnlineRequestsTitle(actionable.length),
+    summary: formatAgendaPublicBookingsSummary(edits, actionable.length - edits),
+  };
+}
+
 export function isClientEditPending(booking: {
   status?: string | null;
   is_edit?: boolean | null;

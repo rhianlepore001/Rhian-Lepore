@@ -45,6 +45,19 @@ export function canEditAppointment({ role, scope, teamMemberId, professionalId }
   return false;
 }
 
+/**
+ * Pode aceitar ou recusar um pedido online (public_bookings pending)?
+ * Dono sempre. Profissional atribuído no próprio pedido. Escopo #96 `all`
+ * abre para a equipe. Pedido sem profissional: só dono, ou qualquer um se `all`.
+ * Ex-staff / inativo não entra aqui — o banco recusa com not_allowed_for_booking.
+ */
+export function canActOnPublicBooking({ role, scope, teamMemberId, professionalId }: AppointmentEditCheck): boolean {
+  if (role !== 'staff') return true;
+  if (scope === 'all') return true;
+  if (!professionalId) return false;
+  return !!teamMemberId && professionalId === teamMemberId;
+}
+
 /** Explicação curta mostrada ao colaborador quando a ação está bloqueada. */
 export function staffEditBlockedMessage(scope: StaffAppointmentEditScope): string {
   if (scope === 'own') {

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_STAFF_APPOINTMENT_EDIT_SCOPE,
   STAFF_APPOINTMENT_EDIT_SCOPE_OPTIONS,
+  canActOnPublicBooking,
   canEditAppointment,
   isStaffEditForbiddenError,
   normalizeStaffAppointmentEditScope,
@@ -60,5 +61,29 @@ describe('permissão da equipe para editar agendamentos', () => {
     expect(isStaffEditForbiddenError({ code: '42501', message: 'staff_appointment_edit_forbidden' })).toBe(true);
     expect(isStaffEditForbiddenError({ code: '42501', message: 'permission denied for table appointments' })).toBe(false);
     expect(isStaffEditForbiddenError(null)).toBe(false);
+  });
+});
+
+describe('aceitar/recusar pedido online (D5)', () => {
+  it('dono sempre pode, inclusive pedido sem profissional', () => {
+    expect(canActOnPublicBooking({ role: 'owner', scope: 'none', teamMemberId: null, professionalId: OTHER })).toBe(true);
+    expect(canActOnPublicBooking({ role: 'owner', scope: 'none', teamMemberId: null, professionalId: null })).toBe(true);
+  });
+
+  it('profissional X age no próprio pedido mesmo com scope none', () => {
+    expect(canActOnPublicBooking({ role: 'staff', scope: 'none', teamMemberId: SELF, professionalId: SELF })).toBe(true);
+    expect(canActOnPublicBooking({ role: 'staff', scope: 'own', teamMemberId: SELF, professionalId: SELF })).toBe(true);
+  });
+
+  it('staff Y não age no pedido de X, salvo scope all', () => {
+    expect(canActOnPublicBooking({ role: 'staff', scope: 'none', teamMemberId: SELF, professionalId: OTHER })).toBe(false);
+    expect(canActOnPublicBooking({ role: 'staff', scope: 'own', teamMemberId: SELF, professionalId: OTHER })).toBe(false);
+    expect(canActOnPublicBooking({ role: 'staff', scope: 'all', teamMemberId: SELF, professionalId: OTHER })).toBe(true);
+  });
+
+  it('pedido sem profissional: só dono, ou equipe se scope all', () => {
+    expect(canActOnPublicBooking({ role: 'staff', scope: 'none', teamMemberId: SELF, professionalId: null })).toBe(false);
+    expect(canActOnPublicBooking({ role: 'staff', scope: 'own', teamMemberId: SELF, professionalId: null })).toBe(false);
+    expect(canActOnPublicBooking({ role: 'staff', scope: 'all', teamMemberId: SELF, professionalId: null })).toBe(true);
   });
 });

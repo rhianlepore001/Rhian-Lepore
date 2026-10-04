@@ -4,8 +4,7 @@ import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { formatCurrency, formatPhone, type Region } from '../../utils/formatters';
 import {
   formatAgendaAlteracao,
-  formatAgendaOnlineRequestsTitle,
-  formatAgendaPublicBookingsSummary,
+  formatAgendaRequestsBanner,
   isClientEditPending,
 } from '../../utils/clientEditRequest';
 import { formatTimeInTimeZone, getDateStringInTimeZone, getTodayInTimeZone } from '../../utils/businessTimezone';
@@ -44,7 +43,9 @@ export interface AgendaPublicBookingsProps {
   timeZone?: string;
   onAccept: (booking: AgendaPublicBookingItem) => void;
   onReject: (bookingId: string) => void;
+  canActOnBooking?: (booking: AgendaPublicBookingItem) => boolean;
   acceptError?: { id: string; message: string } | null;
+  highlightedBookingId?: string | null;
 }
 
 function bookingNote(booking: AgendaPublicBookingItem): string {
@@ -71,15 +72,19 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
   timeZone = 'America/Sao_Paulo',
   onAccept,
   onReject,
+  canActOnBooking = () => true,
   acceptError = null,
+  highlightedBookingId = null,
 }) => {
   const { colors, accent, classes } = useBrutalTheme();
 
   if (bookings.length === 0) return null;
 
-  const edits = bookings.filter((b) => isClientEditPending({ ...b, status: b.status ?? 'pending' })).length;
-  const newOnes = bookings.length - edits;
-  const summary = formatAgendaPublicBookingsSummary(edits, newOnes);
+  const banner = formatAgendaRequestsBanner({
+    bookings,
+    canActOnBooking,
+    teamMembers,
+  });
 
   return (
     <section data-testid="agenda-public-bookings" className="shrink-0 space-y-2">
@@ -88,10 +93,10 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
           <AlertTriangle className={`w-4 h-4 mt-0.5 shrink-0 ${accent.text}`} aria-hidden />
           <div className="min-w-0">
             <h3 className={`${colors.text} font-bold text-sm leading-snug`}>
-              {formatAgendaOnlineRequestsTitle(bookings.length)}
+              {banner.title}
             </h3>
             <p className={`${colors.textSecondary} text-xs leading-snug break-words`}>
-              {summary}
+              {banner.summary}
             </p>
           </div>
         </div>
@@ -105,12 +110,16 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
           const note = bookingNote(booking);
           const pendingEdit = isClientEditPending({ ...booking, status: booking.status ?? 'pending' });
           const when = `${isToday ? 'Hoje' : bookingDate.toLocaleDateString('pt-BR', { timeZone, day: '2-digit', month: '2-digit' })} · ${formatTimeInTimeZone(booking.appointment_time, timeZone)}`;
+          const canAct = canActOnBooking(booking);
 
           return (
             <li
               key={booking.id}
               data-testid={`agenda-public-booking-${booking.id}`}
-              className={`${colors.card} ${colors.border} rounded-xl px-3 py-2.5`}
+              data-highlighted={highlightedBookingId === booking.id ? 'true' : 'false'}
+              className={`${colors.card} ${colors.border} rounded-xl px-3 py-2.5 scroll-mt-24 ${
+                highlightedBookingId === booking.id ? `ring-2 ${accent.border} ${accent.bgDim}` : ''
+              }`}
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span
@@ -123,22 +132,26 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
                   {when}
                 </span>
                 <div className="flex flex-wrap gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => onAccept(booking)}
-                    className={`px-4 min-h-[48px] py-2 rounded-lg text-sm font-bold inline-flex items-center gap-1 ${classes.buttonSuccess}`}
-                    title="Aceitar"
-                  >
-                    <Check className="w-3.5 h-3.5" aria-hidden /> Aceitar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onReject(booking.id)}
-                    className={`px-4 min-h-[48px] py-2 rounded-lg text-sm font-bold inline-flex items-center gap-1 ${classes.buttonDanger}`}
-                    title="Recusar"
-                  >
-                    <X className="w-3.5 h-3.5" aria-hidden /> Recusar
-                  </button>
+                  {canAct && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => onAccept(booking)}
+                        className={`px-4 min-h-[48px] py-2 rounded-lg text-sm font-bold inline-flex items-center gap-1 ${classes.buttonSuccess}`}
+                        title="Aceitar"
+                      >
+                        <Check className="w-3.5 h-3.5" aria-hidden /> Aceitar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onReject(booking.id)}
+                        className={`px-4 min-h-[48px] py-2 rounded-lg text-sm font-bold inline-flex items-center gap-1 ${classes.buttonDanger}`}
+                        title="Recusar"
+                      >
+                        <X className="w-3.5 h-3.5" aria-hidden /> Recusar
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
 

@@ -64,6 +64,27 @@ export const SETTINGS_ITEMS: SettingsItem[] = [
   { label: 'Auditoria', path: '/configuracoes/auditoria', icon: ShieldAlert, devOnly: true, group: 'Sistema' },
   { label: 'Lixeira', path: '/configuracoes/lixeira', icon: Trash2, devOnly: true, group: 'Sistema' },
 ];
+
+/** Cards de Ajustes que só o dono vê. */
+export const OWNER_SETTINGS_CARD_LABELS = [
+  'Geral',
+  'Agendamento',
+  'Equipe e Comissões',
+  'Clube',
+  'Plano AgendiX',
+  'Notificações',
+  'Segurança',
+] as const;
+
+export function settingsItemsForRole(
+  role: string | null | undefined,
+  isDev = false,
+): SettingsItem[] {
+  if (role === 'staff') {
+    return SETTINGS_ITEMS.filter((item) => item.path === '/configuracoes/servicos');
+  }
+  return SETTINGS_ITEMS.filter((item) => isDev || !item.devOnly);
+}
 export const PREDEFINED_SERVICES = {
   barber: [
     { name: 'Corte Masculino', price: 40, duration_minutes: 30, category: 'Geral' },

@@ -50,7 +50,7 @@ END;
 $function$;
 GRANT EXECUTE ON FUNCTION public.get_public_business_settings_json(uuid) TO anon, authenticated, service_role;
 
--- v1 intacta (prod-equivalent). Identidade via phones_match; sem cutoff.
+-- v1 de prod (phones_match, sem cutoff). A migration PR-5 reescreve para encaminhar a v2.
 CREATE OR REPLACE FUNCTION public.cancel_public_booking_by_client(
   p_booking_id UUID,
   p_phone TEXT

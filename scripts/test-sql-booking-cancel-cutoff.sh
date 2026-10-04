@@ -62,6 +62,23 @@ if [ "${1:-}" = "--rollback" ]; then
   [ "$v2" = t ] && [ "$col" = 0 ]
   echo "$json" | grep -q client_cancel_cutoff && { echo "JSON ainda expõe cutoff"; exit 1; }
   echo "$json" | grep -q timezone
+  v1def="$(P -At -c "SELECT pg_get_functiondef('public.cancel_public_booking_by_client(uuid,text)'::regprocedure)")"
+  echo "$v1def" | grep -q phones_match || { echo "rollback: v1 sem phones_match"; exit 1; }
+  echo "$v1def" | grep -q cancel_public_booking_by_client_v2 && { echo "rollback: v1 ainda aponta para v2"; exit 1; }
+  P -c "
+    INSERT INTO public.public_bookings (
+      id, business_id, customer_phone, customer_name, service_ids, professional_id,
+      appointment_time, total_price, status
+    ) VALUES (
+      '52000000-0000-0000-0000-0000000000ff',
+      '00000000-0000-0000-0000-0000000000a0',
+      '351912345678', 'Ana', ARRAY['20000000-0000-0000-0000-000000000001'::uuid],
+      '10000000-0000-0000-0000-0000000000a0', now() + interval '1 hour', 35, 'confirmed'
+    );
+  "
+  v1got="$(P -At -c "SELECT public.cancel_public_booking_by_client('52000000-0000-0000-0000-0000000000ff', '351912345678')::text")"
+  echo "rollback v1_1h:$v1got"
+  [ "$v1got" = t ] || [ "$v1got" = true ]
   intact
   echo "rollback ok"
   exit 0
@@ -79,4 +96,4 @@ echo "migration aplicada 2x"
 
 P -f "$ROOT/supabase/tests/booking_cancel_cutoff.test.sql"
 intact
-echo "cancel cutoff idempotente; testes ok; #98/#120/#121/#122/#123 e v1 intactos"
+echo "cancel cutoff idempotente; testes ok; #98/#120/#121/#122/#123 intactos; v1 encaminha v2"

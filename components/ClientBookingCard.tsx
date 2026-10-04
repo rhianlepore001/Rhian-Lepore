@@ -338,7 +338,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                                 Pedir confirmação
                             </button>
                         )}
-                        {statusKey === 'confirmed' && businessPhone && (
+                        {statusKey === 'confirmed' && businessPhone && cancelCta !== 'whatsapp' && (
                             <button
                                 type="button"
                                 onClick={handleWhatsApp}

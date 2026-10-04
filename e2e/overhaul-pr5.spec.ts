@@ -349,6 +349,7 @@ test.describe('PR-5 prazo de cancelamento', () => {
       const card = page.locator(`[data-booking-id="${row.id}"]`);
       await expect(card.getByRole('button', { name: /Falar com Barbearia São João/ })).toBeVisible({ timeout: 20_000 });
       await expect(card.getByRole('button', { name: /^Cancelar$/ })).toHaveCount(0);
+      await expect(card.getByRole('button', { name: /^WhatsApp$/ })).toHaveCount(0);
       await shot(page, `card-falar-${vp.name}`);
       guard.assertNoLeak();
     });
@@ -373,8 +374,8 @@ test.describe('PR-5 prazo de cancelamento', () => {
       await slot.waitFor({ timeout: 15_000 });
       await slot.click();
       await page.getByRole('button', { name: /^Continuar$/ }).click();
-      await expect(page.getByRole('button', { name: /diretrizes de cancelamento/i })).toBeVisible({ timeout: 15_000 });
-      await page.getByRole('button', { name: /diretrizes de cancelamento/i }).click();
+      await expect(page.getByRole('button', { name: /política de cancelamento/i })).toBeVisible({ timeout: 15_000 });
+      await page.getByRole('button', { name: /política de cancelamento/i }).click();
       await expect(page.getByTestId('public-cancellation-policy')).toHaveText(POLICY_TEXT);
       await expect(page.getByText(/cobrança de 50%/i)).toHaveCount(0);
       await shot(page, `politica-${vp.name}`);

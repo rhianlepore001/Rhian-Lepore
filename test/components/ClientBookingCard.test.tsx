@@ -553,6 +553,7 @@ describe('ClientBookingCard — PR-5 prazo de cancelamento', () => {
     );
     expect(screen.getByTestId('client-cancel-cta')).toHaveAttribute('data-cta', 'cancel');
     expect(screen.getByRole('button', { name: /^Cancelar$/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^WhatsApp$/ })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Falar com Barbearia São João/ })).toBeNull();
   });
 
@@ -576,6 +577,7 @@ describe('ClientBookingCard — PR-5 prazo de cancelamento', () => {
     expect(screen.getByTestId('client-cancel-cta')).toHaveAttribute('data-cta', 'whatsapp');
     expect(screen.getByRole('button', { name: /Falar com Barbearia São João/ })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^Cancelar$/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^WhatsApp$/ })).toBeNull();
   });
 
   it('janela fechada no servidor troca o botão e mostra recado curto', async () => {
@@ -602,6 +604,7 @@ describe('ClientBookingCard — PR-5 prazo de cancelamento', () => {
     await userEvent.click(screen.getByRole('button', { name: /^Cancelar$/ }));
     await userEvent.click(screen.getByRole('button', { name: /^Confirmar$/ }));
     expect(await screen.findByRole('button', { name: /Falar com Barbearia São João/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^WhatsApp$/ })).toBeNull();
     expect(showToast).toHaveBeenCalledWith(
       'O prazo para cancelar online já passou. Fale com o estabelecimento.',
       'info',

@@ -11,6 +11,38 @@
 
 BEGIN;
 
+-- Restaura v1 (corpo de 20260918190000) ANTES de dropar v2.
+CREATE OR REPLACE FUNCTION public.cancel_public_booking_by_client(
+  p_booking_id UUID,
+  p_phone TEXT
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_updated INT;
+BEGIN
+  IF btrim(COALESCE(p_phone, '')) = '' THEN
+    RAISE EXCEPTION 'booking_not_cancellable';
+  END IF;
+
+  UPDATE public.public_bookings pb
+  SET status = 'cancelled',
+      updated_at = NOW()
+  WHERE pb.id = p_booking_id
+    AND public.phones_match(pb.customer_phone, p_phone)
+    AND pb.status IN ('pending', 'confirmed');
+
+  GET DIAGNOSTICS v_updated = ROW_COUNT;
+  IF v_updated = 0 THEN
+    RAISE EXCEPTION 'booking_not_cancellable';
+  END IF;
+  RETURN true;
+END;
+$function$;
+
 DROP FUNCTION IF EXISTS public.cancel_public_booking_by_client_v2(uuid, text);
 
 ALTER TABLE public.business_settings

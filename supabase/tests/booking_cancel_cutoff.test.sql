@@ -249,22 +249,57 @@ BEGIN
     'SELECT public.cancel_public_booking_by_client_v2(%L, %L)::text', v_bk, '351912345678'));
   PERFORM pg_temp.check('mesmo telefone formatado cancela', v_got, 'true');
 
-  -- v1 intacta: ainda cancela confirmed 1h restante (sem cutoff)
+  -- v1 encaminha para v2: 1h restante → cancel_window_closed
+  UPDATE public.business_settings SET client_cancel_cutoff_hours = 2 WHERE user_id = v_biz;
   v_bk := '52000000-0000-0000-0000-00000000000a';
+  v_apt := '42000000-0000-0000-0000-00000000000a';
+  v_time := v_now + interval '1 hour';
   INSERT INTO public.public_bookings (
     id, business_id, customer_phone, customer_name, service_ids, professional_id,
     appointment_time, total_price, status
   ) VALUES (
-    v_bk, v_biz, v_phone, 'Ana', ARRAY[v_svc], v_pro, v_now + interval '1 hour', 35, 'confirmed'
+    v_bk, v_biz, v_phone, 'Ana', ARRAY[v_svc], v_pro, v_time, 35, 'confirmed'
+  );
+  INSERT INTO public.appointments (
+    id, user_id, client_id, professional_id, service, appointment_time, price, status, public_booking_id
+  ) VALUES (
+    v_apt, v_biz, v_cli, v_pro, 'Corte', v_time, 35, 'Confirmed', v_bk
   );
   v_got := pg_temp.run_as('anon', format(
     'SELECT public.cancel_public_booking_by_client(%L, %L)::text', v_bk, v_phone));
-  PERFORM pg_temp.check('v1 segue cancelando sem cutoff', v_got, 'true');
+  PERFORM pg_temp.check('v1 1h restante cancel_window_closed', v_got, 'error:cancel_window_closed');
+  PERFORM pg_temp.check('v1 1h booking intacto',
+    (SELECT status FROM public.public_bookings WHERE id = v_bk), 'confirmed');
+  PERFORM pg_temp.check('v1 1h appointment intacto',
+    (SELECT status FROM public.appointments WHERE id = v_apt), 'Confirmed');
+
+  -- v1 3h restantes → cancelled + appointments Cancelled
+  v_bk := '52000000-0000-0000-0000-00000000000b';
+  v_apt := '42000000-0000-0000-0000-00000000000b';
+  v_time := date_trunc('hour', v_now + interval '3 hours');
+  INSERT INTO public.public_bookings (
+    id, business_id, customer_phone, customer_name, service_ids, professional_id,
+    appointment_time, total_price, status
+  ) VALUES (
+    v_bk, v_biz, v_phone, 'Ana', ARRAY[v_svc], v_pro, v_time, 35, 'confirmed'
+  );
+  INSERT INTO public.appointments (
+    id, user_id, client_id, professional_id, service, appointment_time, price, status, public_booking_id
+  ) VALUES (
+    v_apt, v_biz, v_cli, v_pro, 'Corte', v_time, 35, 'Confirmed', v_bk
+  );
+  v_got := pg_temp.run_as('anon', format(
+    'SELECT public.cancel_public_booking_by_client(%L, %L)::text', v_bk, v_phone));
+  PERFORM pg_temp.check('v1 3h cancela', v_got, 'true');
+  PERFORM pg_temp.check('v1 3h booking cancelled',
+    (SELECT status FROM public.public_bookings WHERE id = v_bk), 'cancelled');
+  PERFORM pg_temp.check('v1 3h appointment Cancelled',
+    (SELECT status FROM public.appointments WHERE id = v_apt), 'Cancelled');
 
   SELECT pg_get_functiondef('public.cancel_public_booking_by_client(uuid,text)'::regprocedure) INTO v1_def;
-  IF v1_def ILIKE '%cancel_window_closed%' THEN
-    PERFORM pg_temp.fail('v1 não deveria conhecer cancel_window_closed');
+  IF v1_def NOT ILIKE '%cancel_public_booking_by_client_v2%' THEN
+    PERFORM pg_temp.fail('v1 deveria encaminhar para v2');
   END IF;
-  RAISE NOTICE 'PASS  v1 sem cutoff';
+  RAISE NOTICE 'PASS  v1 encaminha para v2';
 END;
 $$;

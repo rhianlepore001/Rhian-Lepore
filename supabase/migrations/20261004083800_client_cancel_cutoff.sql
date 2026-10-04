@@ -1,5 +1,6 @@
 -- PR-5: prazo para o cliente cancelar + cancelamento libera a agenda.
--- Aditivo. Não reescreve cancel_public_booking_by_client (v1 intacta).
+-- Aditivo. v1 cancel_public_booking_by_client (mesma assinatura) passa a
+-- encaminhar para v2 — bundles antigos herdam cutoff + libera agenda.
 --
 -- 0 em client_cancel_cutoff_hours = "Não pode cancelar online" (sentinela
 -- explícita, NOT NULL DEFAULT 2). NULL seria "não configurado" e forçaria
@@ -169,3 +170,18 @@ $function$;
 REVOKE ALL ON FUNCTION public.cancel_public_booking_by_client_v2(uuid, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.cancel_public_booking_by_client_v2(uuid, text) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.cancel_public_booking_by_client_v2(uuid, text) TO service_role;
+
+-- 4) v1: mesma assinatura/retorno; só encaminha para v2 (grants intactos).
+CREATE OR REPLACE FUNCTION public.cancel_public_booking_by_client(
+  p_booking_id uuid,
+  p_phone text
+)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+BEGIN
+  RETURN public.cancel_public_booking_by_client_v2(p_booking_id, p_phone);
+END;
+$function$;

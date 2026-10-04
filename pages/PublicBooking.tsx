@@ -1247,13 +1247,13 @@ export const PublicBooking: React.FC = () => {
                                         onChange={(e) => setAcceptedPolicy(e.target.checked)}
                                         label={
                                             <>
-                                                Confirmo meu compromisso e aceito as{' '}
+                                                Confirmo meu compromisso e aceito a{' '}
                                                 <button
                                                     type="button"
                                                     onClick={(e) => { e.preventDefault(); setShowPolicyModal(true); }}
                                                     className={`font-semibold underline underline-offset-2 ${accent.text}`}
                                                 >
-                                                    diretrizes de cancelamento
+                                                    política de cancelamento
                                                 </button>
                                                 .
                                             </>
@@ -1790,7 +1790,7 @@ export const PublicBooking: React.FC = () => {
                                     className="shrink-0"
                                 />
                                 <label htmlFor="privacy" className={`text-sm cursor-pointer ${colors.textSecondary} leading-snug`}>
-                                    Confirmo meu compromisso e aceito as <button type="button" onClick={(e) => { e.preventDefault(); setShowPolicyModal(true); }} className={`font-bold underline ${accent.text} hover:text-theme-text`}>diretrizes de cancelamento</button>.
+                                    Confirmo meu compromisso e aceito a <button type="button" onClick={(e) => { e.preventDefault(); setShowPolicyModal(true); }} className={`font-bold underline ${accent.text} hover:text-theme-text`}>política de cancelamento</button>.
                                 </label>
                             </div>
 
@@ -1995,7 +1995,7 @@ export const PublicBooking: React.FC = () => {
                         data-policy-dialog
                         role="dialog"
                         aria-modal="true"
-                        aria-label="Diretrizes de cancelamento"
+                        aria-label="Política de cancelamento"
                         tabIndex={-1}
                         onKeyDown={(e) => { if (e.key === 'Escape') setShowPolicyModal(false); }}
                         onClick={(e) => e.stopPropagation()}
@@ -2003,7 +2003,7 @@ export const PublicBooking: React.FC = () => {
                         <button onClick={() => setShowPolicyModal(false)} aria-label="Fechar" className={`absolute top-4 right-4 ${colors.textMuted} hover:text-theme-text transition-colors z-30`}><X className="w-6 h-6" /></button>
                         <div className="relative z-10 space-y-5">
                             <h3 className={`text-xl md:text-2xl font-semibold tracking-tight ${colors.text}`}>
-                                Diretrizes de cancelamento
+                                Política de cancelamento
                             </h3>
                             <div className={`leading-relaxed text-sm md:text-base ${colors.textSecondary} max-h-[50vh] overflow-y-auto pr-1 md:pr-2 custom-scrollbar`}>
                                 <p className="whitespace-pre-wrap" data-testid="public-cancellation-policy">

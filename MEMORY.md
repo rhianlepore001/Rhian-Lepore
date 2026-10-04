@@ -11,7 +11,7 @@
 
 ## PR-5 overhaul booking — prazo de cancelamento (4 Out 2026, NÃO merge)
 
-Branch `cursor/overhaul-pr5-cancel-cutoff-494b`. `business_settings.client_cancel_cutoff_hours` (0/1/2/6/12/24/48, default 2) + `client_cancel_note`. RPC `cancel_public_booking_by_client_v2` (v1 intacta): pending até o horário; confirmed só se `now() <= horário - cutoff`; libera agenda (`Cancelled`). Política gerada da regra real; chips 24h/48h/72h com multa saíram da UI (coluna antiga intocada). Não aplicar em prod. Prints em `/opt/cursor/artifacts/screenshots/pr5/`.
+Branch `cursor/overhaul-pr5-cancel-cutoff-494b`. `client_cancel_cutoff_hours` (0/1/2/6/12/24/48, default 2) + `client_cancel_note`. RPC `cancel_public_booking_by_client_v2`; v1 (`cancel_public_booking_by_client`) só encaminha para v2. Política gerada da regra real. Não aplicar em prod. Prints em `/opt/cursor/artifacts/screenshots/pr5/`.
 
 ## PR-4 overhaul booking — Finalizado / Não compareceu (3 Out 2026, NÃO merge)
 

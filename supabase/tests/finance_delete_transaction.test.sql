@@ -12,6 +12,7 @@
 \set FIN_EXP '50000000-0000-0000-0000-0000000000e4'
 \set FIN_PAID '50000000-0000-0000-0000-0000000000e5'
 \set FIN_PAY '50000000-0000-0000-0000-0000000000e6'
+\set FIN_PAY_OLD '50000000-0000-0000-0000-0000000000e7'
 \set PROD '60000000-0000-0000-0000-0000000000f1'
 \set PAY '70000000-0000-0000-0000-000000000011'
 
@@ -43,7 +44,8 @@ INSERT INTO public.finance_records (
   (:'FIN_MAN', :'OWNER_A', NULL, NULL, 'revenue', 25, 0, true, NULL, 'Manual', '', 'Caixa extra', 'Caixa extra', '2026-10-04 10:00:00+00'),
   (:'FIN_EXP', :'OWNER_A', NULL, NULL, 'expense', 0, 120, true, NULL, 'Manual', '', 'Aluguel', 'Aluguel', '2026-10-01 10:00:00+00'),
   (:'FIN_PAID', :'OWNER_A', :'ANA', :'APT_PAID', 'revenue', 50, 20, true, '2026-10-02 18:00:00+00', 'Ana Souza', 'Maria Silva', 'Barba', NULL, '2026-10-03 14:00:00+00'),
-  (:'FIN_PAY', :'OWNER_A', :'ANA', NULL, 'expense', 0, 20, true, '2026-10-02 18:00:00+00', 'Ana Souza', '', 'Pagamento de Comissão', 'Pagamento de Comissão', '2026-10-02 18:00:00+00');
+  (:'FIN_PAY', :'OWNER_A', :'ANA', NULL, 'expense', 0, 20, true, '2026-10-02 18:00:00+00', 'Ana Souza', '', 'Pagamento de Comissão', 'Pagamento de Comissão', '2026-10-02 18:00:00+00'),
+  (:'FIN_PAY_OLD', :'OWNER_A', :'ANA', NULL, 'expense', 0, 15, true, '2026-09-01 12:00:00+00', 'Ana Souza', '', 'Pagamento de Comissão', 'Pagamento de Comissão', '2026-09-01 12:00:00+00');
 
 INSERT INTO public.product_sales (company_id, product_id, appointment_id, finance_record_id, professional_id, quantity)
 VALUES (:'OWNER_A'::uuid, :'PROD', :'APT', :'FIN_PROD', :'ANA', 2);
@@ -211,6 +213,27 @@ BEGIN
     RAISE EXCEPTION 'FAIL payment record apagou a despesa';
   END IF;
   RAISE NOTICE 'PASS bloqueio commission_payment_record';
+END $$;
+
+-- 6b) Fallback: despesa "Pagamento de Comissão" paga, sem row em commission_payments
+DO $$
+DECLARE r jsonb;
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM public.commission_payments
+     WHERE user_id = 'a0000000-0000-0000-0000-0000000000a0'
+       AND round(amount, 2) = 15
+  ) THEN
+    RAISE EXCEPTION 'FAIL fallback: fixture não deveria ter commission_payments';
+  END IF;
+  r := public.delete_finance_transaction('50000000-0000-0000-0000-0000000000e7');
+  IF r->>'ok' <> 'false' OR r->>'error' <> 'commission_payment_record' THEN
+    RAISE EXCEPTION 'FAIL payment fallback: %', r;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.finance_records WHERE id = '50000000-0000-0000-0000-0000000000e7') THEN
+    RAISE EXCEPTION 'FAIL payment fallback apagou a despesa antiga';
+  END IF;
+  RAISE NOTICE 'PASS bloqueio commission_payment_record (fallback por descrição)';
 END $$;
 
 -- 7) Staff do mesmo tenant

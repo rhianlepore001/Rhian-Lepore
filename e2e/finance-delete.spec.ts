@@ -324,6 +324,7 @@ test.describe('PR-A exclusão financeira', () => {
       await expect(page.getByText('Meu Financeiro')).toBeVisible({ timeout: 20_000 });
       await page.getByText('Transações recentes').scrollIntoViewIfNeeded();
       await expect(page.getByTestId('finance-delete')).toHaveCount(0);
+      await expect(page.getByRole('columnheader', { name: 'Ações' })).toHaveCount(0);
       if (vp.width < 768) {
         await page.getByTestId('finance-tx-card').first().click();
         await expect(page.getByTestId('finance-delete')).toHaveCount(0);

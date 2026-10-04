@@ -107,6 +107,14 @@ BEGIN
        AND v_record.created_at <= cp.paid_at + interval '5 minutes'
   ) INTO v_is_commission_payment;
 
+  IF NOT v_is_commission_payment
+     AND v_record.type = 'expense'
+     AND v_record.description = 'Pagamento de Comissão'
+     AND COALESCE(v_record.commission_paid, false)
+  THEN
+    v_is_commission_payment := true;
+  END IF;
+
   IF v_is_commission_payment THEN
     RETURN jsonb_build_object('ok', false, 'error', 'commission_payment_record');
   END IF;
@@ -218,4 +226,4 @@ REVOKE ALL ON FUNCTION public.delete_finance_transaction(uuid) FROM PUBLIC, anon
 GRANT EXECUTE ON FUNCTION public.delete_finance_transaction(uuid) TO authenticated, service_role;
 
 COMMENT ON FUNCTION public.delete_finance_transaction(uuid) IS
-  'Owner-only: exclui lançamento do Financeiro. Appointment Completed apaga finance_records e depois o atendimento; venda de produto apaga só o row; bloqueia comissão paga e despesa de commission_payments.';
+  'Owner-only: exclui lançamento do Financeiro. Appointment Completed apaga finance_records e depois o atendimento; venda de produto apaga só o row; bloqueia comissão paga e despesa de commission_payments (fallback pela descrição Pagamento de Comissão).';

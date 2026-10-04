@@ -119,6 +119,7 @@ describe('Finance — exclusão', () => {
   it('dono vê Excluir e a confirmação do serviço', async () => {
     mount();
     await waitFor(() => expect(screen.getAllByTestId('finance-delete').length).toBeGreaterThan(0));
+    expect(screen.getByText('Ações')).toBeInTheDocument();
     fireEvent.click(screen.getAllByTestId('finance-delete')[0]);
     expect(screen.getByTestId('finance-delete-confirm').textContent).toMatch(/remove o atendimento de Maria Silva/);
     expect(screen.getByTestId('finance-delete-confirm').textContent).not.toMatch(/barbearia|salão/i);
@@ -136,11 +137,13 @@ describe('Finance — exclusão', () => {
     expect(screen.getByRole('alert').textContent).not.toMatch(/PGRST|#/);
   });
 
-  it('staff não vê Excluir em Meu Financeiro', async () => {
+  it('staff não vê Excluir nem a coluna Ações em Meu Financeiro', async () => {
     AUTH.role = 'staff';
     mount();
     await waitFor(() => expect(screen.getByText('Meu Financeiro')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getAllByText('Corte').length).toBeGreaterThan(0));
     expect(screen.queryByTestId('finance-delete')).toBeNull();
     expect(screen.queryByRole('button', { name: 'Excluir' })).toBeNull();
+    expect(screen.queryByText('Ações')).toBeNull();
   });
 });

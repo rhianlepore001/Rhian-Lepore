@@ -546,44 +546,44 @@ useEffect(() => {
         </span>
       ),
     },
-    {
-      key: 'actions',
-      header: 'Ações',
-      align: 'right',
-      render: (t) => (
-        <div className="flex justify-end gap-2">
-          {t.type === 'expense' && t.status === 'pending' && (
-            <Button
-              variant="ghost"
-              size="sm"
-              icon={<Check className="h-3.5 w-3.5" />}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setPendingMarkPaid({ id: t.id, name: t.serviceName || 'Despesa' });
-              }}
-            >
-              Dar baixa
-            </Button>
-          )}
-          {canDeleteTransactions && (
-            <Button
-              variant="ghost"
-              size="sm"
-              data-testid="finance-delete"
-              icon={<Trash2 className="h-3.5 w-3.5" />}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleDeleteTransaction(t);
-              }}
-            >
-              Excluir
-            </Button>
-          )}
-        </div>
-      ),
-    },
+    ...(canDeleteTransactions
+      ? [{
+          key: 'actions',
+          header: 'Ações',
+          align: 'right' as const,
+          render: (t: Transaction) => (
+            <div className="flex justify-end gap-2">
+              {t.type === 'expense' && t.status === 'pending' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon={<Check className="h-3.5 w-3.5" />}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setPendingMarkPaid({ id: t.id, name: t.serviceName || 'Despesa' });
+                  }}
+                >
+                  Dar baixa
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                data-testid="finance-delete"
+                icon={<Trash2 className="h-3.5 w-3.5" />}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleDeleteTransaction(t);
+                }}
+              >
+                Excluir
+              </Button>
+            </div>
+          ),
+        } satisfies TableColumn<Transaction>]
+      : []),
   ], [accent.text, canDeleteTransactions, colors, currencyRegion, status.danger, status.success]);
 
   return (
@@ -1092,7 +1092,9 @@ useEffect(() => {
         title={detailTransaction?.type === 'expense' ? 'Detalhes da saída' : 'Detalhes da entrada'}
         size="md"
         footer={
-          detailTransaction ? (
+          detailTransaction
+          && (canDeleteTransactions || (detailTransaction.type === 'expense' && detailTransaction.status === 'pending'))
+            ? (
             <div className="flex flex-col gap-2 sm:flex-row">
               {detailTransaction.type === 'expense' && detailTransaction.status === 'pending' && (
                 <Button
@@ -1122,7 +1124,8 @@ useEffect(() => {
                 </Button>
               )}
             </div>
-          ) : null
+              )
+            : null
         }
       >
         {detailTransaction && (

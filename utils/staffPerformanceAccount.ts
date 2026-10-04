@@ -35,6 +35,9 @@ export interface AccountLine {
     value: string;
     muted: boolean;
     emphasize?: boolean;
+    kind?: 'row' | 'formula' | 'note';
+    numerator?: string;
+    denominator?: string;
 }
 
 export interface MetricAccount {
@@ -140,7 +143,19 @@ function moneyLine(label: string, amount: number, formatMoney: (v: number) => st
 }
 
 function ratioLine(left: string, right: string, result: string): AccountLine {
-    return { label: `${left} ÷ ${right}`, value: result, muted: false, emphasize: true };
+    return {
+        kind: 'formula',
+        label: `${left} ÷ ${right}`,
+        numerator: left,
+        denominator: right,
+        value: result,
+        muted: false,
+        emphasize: true,
+    };
+}
+
+function noteLine(label: string, value: string): AccountLine {
+    return { kind: 'note', label, value, muted: false };
 }
 
 export interface AccountBuildOpts {
@@ -310,7 +325,9 @@ function linesFor(id: MetricKey, m: AnyMetrics, opts: AccountBuildOpts): Account
                 ? 'Comissão (dono: zero)'
                 : voice === 'self'
                     ? 'Sua comissão'
-                    : `Comissão de ${personName}`;
+                    : voice === 'team'
+                        ? 'Comissão da equipe'
+                        : `Comissão de ${personName}`;
             return [
                 moneyLine('Serviços', m.receita_servicos, formatMoney, 'plain'),
                 moneyLine('Produtos vendidos', m.receita_produtos, formatMoney, 'add'),
@@ -352,7 +369,7 @@ function linesFor(id: MetricKey, m: AnyMetrics, opts: AccountBuildOpts): Account
             ];
         case 'voltou': {
             const waiting = m.imaturos > 0
-                ? [{ label: 'Ainda esperando', value: `atendidos há menos de ${REBOOK_WINDOW_DAYS} dias: ${m.imaturos}`, muted: false }]
+                ? [noteLine(`Ainda esperando: atendidos há menos de ${REBOOK_WINDOW_DAYS} dias`, String(m.imaturos))]
                 : [];
             return [
                 { label: 'Clientes que marcaram de novo', value: String(m.voltou), muted: m.voltou === 0 },
@@ -363,7 +380,7 @@ function linesFor(id: MetricKey, m: AnyMetrics, opts: AccountBuildOpts): Account
         }
         case 'faltas': {
             const open = m.sem_desfecho > 0
-                ? [{ label: 'Horários passados sem marcar se o cliente veio', value: String(m.sem_desfecho), muted: false }]
+                ? [noteLine('Horários passados sem marcar se o cliente veio', String(m.sem_desfecho))]
                 : [];
             return [
                 { label: 'Não apareceram', value: String(m.faltas), muted: m.faltas === 0 },

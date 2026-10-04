@@ -283,6 +283,12 @@ export function unrankedSentence(m: PerformanceMember, minSample: number): strin
     return `Fez ${plural(m.metrics.atendimentos, 'atendimento', 'atendimentos')}; o ranking começa em ${minSample}`;
 }
 
+export function rankedSentence(m: PerformanceMember): string {
+    const n = m.metrics.atendimentos;
+    if (m.is_owner) return `Fez ${plural(n, 'atendimento', 'atendimentos')}. Como dono, a comissão conta como zero.`;
+    return `Fez ${plural(n, 'atendimento', 'atendimentos')}`;
+}
+
 export type SortKey = 'rank' | 'retorno' | 'retorno_por_hora' | 'ticket_medio' | 'voltou_taxa' | 'taxa_faltas' | 'atendimentos';
 export type SortDir = 'asc' | 'desc';
 export const defaultDir = (key: SortKey): SortDir => (key === 'rank' || key === 'taxa_faltas' ? 'asc' : 'desc');

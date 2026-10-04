@@ -89,6 +89,21 @@ describe('staffPerformanceAccount — a conta fecha com o valor do card', () => 
         expect(account.hint).toBe('6 de 11 clientes');
         expect(account.meaning).toContain('em até 2 dias');
         expect(account.comparison).toBe('subiu de 50% para 55%');
+        expect(account.lines.find((l) => l.kind === 'formula')?.numerator).toBe('6 clientes marcaram de novo');
+        expect(account.lines.find((l) => l.kind === 'note')?.label).toBe('Ainda esperando: atendidos há menos de 2 dias');
+        expect(account.lines.find((l) => l.kind === 'note')?.value).toBe('1');
+    });
+
+    it('equipe: comissão da equipe, não “de a equipe”', () => {
+        const totals = data.team_totals!;
+        const account = buildMetricAccount('retorno', totals, {
+            ...opts,
+            personName: 'a equipe',
+            voice: 'team',
+            previous: data.team_previous,
+        });
+        expect(account.lines.map((l) => l.label)).toContain('Comissão da equipe');
+        expect(account.lines.map((l) => l.label).join(' ')).not.toMatch(/Comissão de a /);
     });
 
     it('tipo desconhecido não inventa barbearia', () => {

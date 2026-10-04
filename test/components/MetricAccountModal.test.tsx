@@ -36,9 +36,15 @@ describe('MetricAccountModal', () => {
     expect(screen.getByRole('heading', { name: /Saíram com horário marcado · setembro/ })).toBeInTheDocument();
     expect(screen.getByText('O que isso quer dizer')).toBeInTheDocument();
     expect(screen.getByText(/em até 2 dias/)).toBeInTheDocument();
-    expect(screen.getByText('subiu de 50% para 55%')).toBeInTheDocument();
-    const buttons = screen.getAllByRole('button', { name: 'Fechar' });
-    await userEvent.click(buttons[buttons.length - 1]);
+    expect(screen.getByText('Subiu de 50% para 55%.')).toBeInTheDocument();
+    expect(screen.getByText('6 clientes marcaram de novo')).toBeInTheDocument();
+    expect(screen.getByText(/÷ 11 clientes atendidos/)).toBeInTheDocument();
+    expect(screen.getByText('Ainda esperando: atendidos há menos de 2 dias')).toBeInTheDocument();
+    const closeButtons = screen.getAllByRole('button', { name: 'Fechar' });
+    expect(closeButtons[0].className).toMatch(/h-11/);
+    expect(closeButtons[0].className).toMatch(/w-11/);
+    expect(closeButtons[0].className).toMatch(/min-h-\[44px\]/);
+    await userEvent.click(closeButtons[closeButtons.length - 1]);
     expect(onClose).toHaveBeenCalled();
   });
 });

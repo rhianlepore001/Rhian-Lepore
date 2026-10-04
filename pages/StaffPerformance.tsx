@@ -251,7 +251,6 @@ export const StaffPerformance: React.FC = () => {
                         <TeamRanking
                             members={data.members.map((m) => (compare ? m : { ...m, previous: null }))}
                             minSample={data.min_sample}
-                            previousName={previousName}
                             formatMoney={formatMoney}
                             hrefFor={hrefFor}
                             sortKey={sort.key}

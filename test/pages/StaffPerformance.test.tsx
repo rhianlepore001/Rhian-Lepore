@@ -121,7 +121,8 @@ describe('StaffPerformance (P2) — /financeiro/performance', () => {
         const caio = team.members.find((m) => m.name === 'Caio')!;
         expect(screen.getAllByTestId(`member-${caio.professional_id}`).every((el) => el.getAttribute('data-unranked') === 'true')).toBe(true);
         expect(screen.getAllByTestId(`member-${ANA}`).every((el) => !el.getAttribute('data-unranked'))).toBe(true);
-        expect(screen.getAllByText(/Ana deixou R\$ 408,00 para a barbearia em 12 atendimentos \(R\$ 68,00 por hora\), R\$ 48,00 a mais que em agosto\./).length).toBeGreaterThan(0);
+        expect(screen.getAllByText('Fez 12 atendimentos').length).toBeGreaterThan(0);
+        expect(screen.getAllByText('Fez 5 atendimentos; o ranking começa em 8').length).toBeGreaterThan(0);
         expect(screen.getByText('Sem profissional')).toBeInTheDocument();
         expect(screen.queryByText(/melhor funcionário/i)).not.toBeInTheDocument();
     });

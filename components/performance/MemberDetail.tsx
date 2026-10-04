@@ -5,7 +5,7 @@ import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import type { OwnerPerformance, PerformanceMember } from '../../types/staffPerformance';
 import type { BusinessRemainderNoun } from '../../utils/businessCopy';
 import { buildMetricAccount, MEMBER_METRIC_IDS } from '../../utils/staffPerformanceAccount';
-import { memberBadge, rankLabel, summarySentence } from '../../utils/staffPerformanceView';
+import { memberBadge, rankLabel, unrankedSentence } from '../../utils/staffPerformanceView';
 import { MemberLedger } from './MemberLedger';
 import { MetricCard } from './MetricCard';
 import { PerformanceSection } from './PerformanceSection';
@@ -55,10 +55,17 @@ export const MemberDetail: React.FC<MemberDetailProps> = ({
                         {m.rank != null && <span className={`${font.mono} text-sm tabular-nums ${colors.textSecondary}`}>{rankLabel(m.rank)} no ranking</span>}
                         {badge && <Badge variant="neutral">{badge}</Badge>}
                     </div>
+                    {m.rank == null && (
+                        <p className={`text-sm leading-relaxed ${colors.textSecondary}`}>
+                            {unrankedSentence(m, data.min_sample)}
+                        </p>
+                    )}
+                    {m.is_owner && (
+                        <p className={`text-sm leading-relaxed ${colors.textSecondary}`}>
+                            Como dono, a comissão conta como zero.
+                        </p>
+                    )}
                 </div>
-                <p className={`text-sm leading-relaxed ${colors.textSecondary} max-w-3xl`}>
-                    {summarySentence(m, { formatMoney, minSample: data.min_sample, previousName, remainder })}
-                </p>
             </div>
 
             <section data-testid="detail-headline" aria-label="Números principais" className="grid grid-cols-2 gap-3">

@@ -22,6 +22,7 @@ import {
     rateCompareText,
     rateDelta,
     remainderModalCompare,
+    rankedSentence,
     sortMembers,
     summarySentence,
     unrankedSentence,
@@ -150,6 +151,8 @@ describe('staffPerformanceView — ranking e selos (R4.8, R3.9–R3.11)', () => 
         expect(rankLabel(1)).toBe('1º');
         expect(memberBadge(byName('Caio'), 8)).toBe('Poucos atendimentos para comparar');
         expect(unrankedSentence(byName('Caio'), 8)).toBe('Fez 5 atendimentos; o ranking começa em 8');
+        expect(rankedSentence(byName('Bruno'))).toBe('Fez 15 atendimentos');
+        expect(rankedSentence(byName('Rhian'))).toBe('Fez 3 atendimentos. Como dono, a comissão conta como zero.');
         expect(memberBadge(byName('Rhian'), 8)).toBe('Dono');
         expect(memberBadge(byName('Duda'), 8)).toBe('Inativo');
         expect(memberBadge(byName('Ana'), 8)).toBeNull();

@@ -141,7 +141,7 @@ export const Modal: React.FC<ModalProps> = ({
                   ref={titleRef}
                   id={titleDomId}
                   tabIndex={-1}
-                  className={`text-base md:text-lg font-bold tracking-tight ${colors.text} outline-none`}
+                  className={`min-w-0 pr-2 text-base md:text-lg font-bold tracking-tight ${colors.text} outline-none`}
                 >
                   {title}
                 </h2>
@@ -151,7 +151,7 @@ export const Modal: React.FC<ModalProps> = ({
                   type="button"
                   onClick={onClose}
                   className={[
-                    'h-11 w-11 p-0 rounded-lg transition-colors duration-150',
+                    'shrink-0 h-11 w-11 min-h-[44px] min-w-[44px] p-0 rounded-lg transition-colors duration-150',
                     colors.textMuted,
                     'hover:bg-[var(--color-card-hover)]',
                     'inline-flex items-center justify-center',

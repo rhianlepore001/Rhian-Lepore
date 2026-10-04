@@ -43,7 +43,7 @@ export const StaffInsights: React.FC = () => {
   const empty = !!x && x.atendimentos === 0 && x.vendas_produtos === 0;
   const previousRange = data?.period.previous ?? null;
   const previousName = previousRange ? previousMonthName(previousRange) : null;
-  const comparing = period === 'month' && previousRange
+  const comparing = !empty && period === 'month' && previousRange
     ? comparingHeadline(data!.period.start, data!.period.end, previousRange)
     : null;
 
@@ -117,9 +117,9 @@ export const StaffInsights: React.FC = () => {
 
       {status === 'loading' && (
         <div aria-busy="true" className="grid grid-cols-2 gap-3">
+          <Skeleton className="h-[136px]" />
+          <Skeleton className="h-[136px]" />
           <Skeleton className="h-[136px] col-span-2" />
-          <Skeleton className="h-[136px]" />
-          <Skeleton className="h-[136px]" />
           <Skeleton className="h-[136px] col-span-2" />
         </div>
       )}

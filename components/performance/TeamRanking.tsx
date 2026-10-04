@@ -8,9 +8,9 @@ import type { BusinessRemainderNoun } from '../../utils/businessCopy';
 import {
     defaultDir,
     memberBadge,
+    rankedSentence,
     rankLabel,
     sortMembers,
-    summarySentence,
     unrankedSentence,
     type SortDir,
     type SortKey,
@@ -19,7 +19,6 @@ import {
 interface TeamRankingProps {
     members: PerformanceMember[];
     minSample: number;
-    previousName: string | null;
     formatMoney: (v: number) => string;
     hrefFor: (professionalId: string) => string;
     sortKey: SortKey;
@@ -35,7 +34,7 @@ const Position: React.FC<{ m: PerformanceMember }> = ({ m }) => {
 };
 
 export const TeamRanking: React.FC<TeamRankingProps> = ({
-    members, minSample, previousName, formatMoney, hrefFor, sortKey, sortDir, onSort, remainder,
+    members, minSample, formatMoney, hrefFor, sortKey, sortDir, onSort, remainder,
 }) => {
     const { colors, font, radius, accent } = useBrutalTheme();
     const sorted = sortMembers(members, sortKey, sortDir);
@@ -76,9 +75,7 @@ export const TeamRanking: React.FC<TeamRankingProps> = ({
                 {showBadge && <Badge variant="neutral">{badge}</Badge>}
             </div>
             <p className={`mt-1 text-sm leading-snug ${colors.textSecondary}`}>
-                {unranked
-                    ? unrankedSentence(m, minSample)
-                    : summarySentence(m, { formatMoney, minSample, previousName, remainder })}
+                {unranked ? unrankedSentence(m, minSample) : rankedSentence(m)}
             </p>
             <p className={`mt-3 ${font.mono} tabular-nums font-semibold text-[28px] leading-none ${colors.text}`}>
                 {money(m.metrics.retorno)}

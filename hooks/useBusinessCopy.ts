@@ -1,12 +1,22 @@
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from './useBrutalTheme';
-import { BusinessCopy, getBusinessCopy, resolveBusinessTheme } from '../utils/businessCopy';
+import {
+  BusinessCopy,
+  BusinessRemainderNoun,
+  getBusinessCopy,
+  getBusinessRemainderNoun,
+  resolveBusinessTheme,
+} from '../utils/businessCopy';
 
 /**
  * Textos que mudam entre barbearia e salão/beleza.
  * Preferir este hook em vez de strings fixas "barbearia" na UI.
  */
-export function useBusinessCopy(): BusinessCopy & { theme: 'barber' | 'beauty'; isBeauty: boolean } {
+export function useBusinessCopy(): BusinessCopy & {
+  theme: 'barber' | 'beauty';
+  isBeauty: boolean;
+  remainder: BusinessRemainderNoun;
+} {
   const { userType } = useAuth();
   const { isBeauty } = useBrutalTheme();
   const theme = resolveBusinessTheme(userType ?? (isBeauty ? 'beauty' : 'barber'));
@@ -14,6 +24,7 @@ export function useBusinessCopy(): BusinessCopy & { theme: 'barber' | 'beauty'; 
     ...getBusinessCopy(theme),
     theme,
     isBeauty: theme === 'beauty',
+    remainder: getBusinessRemainderNoun(userType),
   };
 }
 

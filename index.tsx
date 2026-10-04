@@ -1,11 +1,12 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import './design-system/tokens.css';
 import './styles/tailwind.css';
 import App from './App';
 import { initAutoBugCapture } from './lib/autoBugCapture';
+import { queryClient } from './lib/queryClient';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -15,7 +16,6 @@ if (!rootElement) {
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 const root = ReactDOM.createRoot(rootElement);
-const queryClient = new QueryClient();
 
 // Captura automática de erros de runtime → bug_reports (anti-spam embutido).
 initAutoBugCapture();

@@ -27,11 +27,11 @@
     },
     {
       "month": "2026-07",
-      "retorno": null,
-      "comissao": null,
+      "retorno": 80.00,
+      "comissao": 45.00,
       "low_sample": true,
-      "atendimentos": 0,
-      "ticket_medio": null
+      "atendimentos": 3,
+      "ticket_medio": 40.00
     },
     {
       "month": "2026-08",

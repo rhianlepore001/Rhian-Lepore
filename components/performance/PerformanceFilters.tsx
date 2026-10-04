@@ -14,6 +14,7 @@ interface PerformanceFiltersProps {
     compare: boolean;
     roster: RosterEntry[];
     tzLabel: string | null;
+    showTzOnPage?: boolean;
     onPreset: (preset: Exclude<PeriodPreset, 'personalizado'>) => void;
     onCustom: (start: string, end: string) => void;
     onPro: (pro: string | null) => void;
@@ -95,7 +96,9 @@ export const PerformanceFilters: React.FC<PerformanceFiltersProps> = (props) => 
                     {`Filtrar · ${presetName}${selectedName ? ` · ${selectedName}` : ''}`}
                 </Button>
             </div>
-            {props.tzLabel && <p className={`mt-2 text-xs ${colors.textMuted}`}>{props.tzLabel}</p>}
+            {props.showTzOnPage && props.tzLabel && (
+                <p className={`hidden lg:block mt-2 text-xs ${colors.textMuted}`}>{props.tzLabel}</p>
+            )}
             {sheetOpen && (
                 <Modal
                     open
@@ -105,6 +108,7 @@ export const PerformanceFilters: React.FC<PerformanceFiltersProps> = (props) => 
                     footer={<Button variant="primary" fullWidth onClick={() => setSheetOpen(false)}>Ver resultados</Button>}
                 >
                     {controls(true)}
+                    {props.tzLabel && <p className={`mt-5 text-sm ${colors.textMuted}`}>{props.tzLabel}</p>}
                 </Modal>
             )}
         </div>

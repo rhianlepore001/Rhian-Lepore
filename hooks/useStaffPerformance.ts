@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { queryClient } from '../lib/queryClient';
 import { fetchStaffPerformance, isRpcUnavailable } from '../services/staffPerformance';
 import type { OwnerPerformance } from '../types/staffPerformance';
+import { parseFilters } from '../utils/staffPerformanceView';
 
 export type PerformanceStatus = 'loading' | 'ready' | 'error' | 'unavailable';
 
@@ -11,35 +13,58 @@ interface Params {
     compare: boolean;
 }
 
-interface Settled { key: string; status: Exclude<PerformanceStatus, 'loading'>; data: OwnerPerformance | null }
+export function staffPerformanceQueryKey(start: string, end: string, compare: boolean, professionalId: string | null) {
+    return ['staff-performance', start, end, compare, professionalId] as const;
+}
+
+export async function loadOwnerPerformance(params: Params): Promise<OwnerPerformance> {
+    const result = await fetchStaffPerformance(params);
+    if (result.mode !== 'owner') throw new Error('unexpected_staff_payload');
+    return result;
+}
+
+/** Dispara a RPC no mesmo instante em que o chunk da rota começa a baixar. */
+export function prefetchStaffPerformanceFromLocation(compare = true) {
+    if (typeof window === 'undefined') return;
+    const hash = window.location.hash.replace(/^#/, '');
+    const q = hash.includes('?') ? hash.slice(hash.indexOf('?')) : window.location.search;
+    const filters = parseFilters(q, new Date());
+    void queryClient.prefetchQuery({
+        queryKey: staffPerformanceQueryKey(filters.start, filters.end, compare, filters.pro),
+        queryFn: () => loadOwnerPerformance({
+            start: filters.start,
+            end: filters.end,
+            professionalId: filters.pro,
+            compare,
+        }),
+        staleTime: 60_000,
+    });
+}
 
 /**
- * Uma chamada por tela (R3.2). O resultado fica amarrado aos parâmetros que o geraram:
- * ao trocar o filtro, a tela volta a "loading" no mesmo render, sem mostrar o payload anterior.
+ * Uma chamada por filtro. Trocar de colaborador usa o cache da equipe
+ * (queryKey inclui o professionalId; a chave da equipe permanece intacta).
  */
 export function useStaffPerformance({ start, end, professionalId, compare }: Params) {
-    const key = `${start}|${end}|${professionalId ?? ''}|${compare ? 1 : 0}`;
-    const [settled, setSettled] = useState<Settled | null>(null);
-    const [attempt, setAttempt] = useState(0);
-    const seq = useRef(0);
+    const query = useQuery({
+        queryKey: staffPerformanceQueryKey(start, end, compare, professionalId),
+        queryFn: () => loadOwnerPerformance({ start, end, professionalId, compare }),
+        retry: false,
+        staleTime: 60_000,
+    });
 
-    useEffect(() => {
-        const id = ++seq.current;
-        setSettled(null);
-        fetchStaffPerformance({ start, end, professionalId, compare })
-            .then((result) => {
-                if (id !== seq.current) return;
-                if (result.mode !== 'owner') throw new Error('unexpected_staff_payload');
-                setSettled({ key, status: 'ready', data: result });
-            })
-            .catch((error: unknown) => {
-                if (id !== seq.current) return;
-                console.error('get_staff_performance_v1 falhou', error);
-                setSettled({ key, status: isRpcUnavailable(error) ? 'unavailable' : 'error', data: null });
-            });
-    }, [start, end, professionalId, compare, key, attempt]);
+    const unavailable = isRpcUnavailable(query.error);
+    const status: PerformanceStatus = query.isPending
+        ? 'loading'
+        : unavailable
+            ? 'unavailable'
+            : query.isError
+                ? 'error'
+                : 'ready';
 
-    const retry = useCallback(() => setAttempt((n) => n + 1), []);
-    const current = settled && settled.key === key ? settled : null;
-    return { status: (current?.status ?? 'loading') as PerformanceStatus, data: current?.data ?? null, retry };
+    return {
+        status,
+        data: query.data ?? null,
+        retry: () => { void query.refetch(); },
+    };
 }

@@ -21,7 +21,7 @@ export const DataQualityNotice: React.FC<{ counts: QualityCounts }> = ({ counts 
             todo: 'Revise em Financeiro → Histórico e apague a cópia.',
         },
         counts.sem_desfecho > 0 && {
-            what: `${plural(counts.sem_desfecho, 'horário passado', 'horários passados')} sem desfecho`,
+            what: `${plural(counts.sem_desfecho, 'horário passado', 'horários passados')} sem marcar se o cliente veio`,
             todo: 'Marque como concluído, falta ou cancelado na Agenda.',
         },
     ].filter(Boolean) as { what: string; todo: string }[];

@@ -62,7 +62,7 @@ describe('iOS safe areas (PWA instalado)', () => {
     expect(root.style.getPropertyValue('--header-top')).toBe('var(--safe-top)');
     const main = container.querySelector('main') as HTMLElement;
     expect(main.className).toContain('pt-[calc(var(--safe-top)+3.5rem)]');
-    expect(main.className).toContain('pb-[calc(6rem+var(--safe-bottom))]');
+    expect(main.className).toContain('pb-[calc(7rem+var(--safe-bottom))]');
   });
 
   it('com banner de trial, header e conteúdo somam status bar + 40px do banner', () => {

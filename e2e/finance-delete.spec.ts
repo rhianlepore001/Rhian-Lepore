@@ -321,7 +321,7 @@ test.describe('PR-A exclusão financeira', () => {
       guard.stubRpc('get_monthly_finance_history', { body: [] });
       await stubSession(page, 'staff');
       await page.goto(`${BASE}/#/financeiro`, { waitUntil: 'domcontentloaded' });
-      await expect(page.getByText('Meu Financeiro')).toBeVisible({ timeout: 20_000 });
+      await expect(page.getByRole('heading', { name: 'Meu financeiro' })).toBeVisible({ timeout: 20_000 });
       await page.getByText('Transações recentes').scrollIntoViewIfNeeded();
       await expect(page.getByTestId('finance-delete')).toHaveCount(0);
       await expect(page.getByRole('columnheader', { name: 'Ações' })).toHaveCount(0);

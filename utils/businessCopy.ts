@@ -17,6 +17,8 @@ export interface BusinessCopy {
   homeNavLabel: string;
   assistantName: string;
   rolePlaceholder: string;
+  /** Exemplo do campo Especialidades no perfil do profissional. */
+  specialtiesPlaceholder: string;
   clubPlanNamePlaceholder: string;
   clubPlanDescriptionPlaceholder: string;
   clubPlansSubtitle: string;
@@ -45,6 +47,7 @@ const BARBER_COPY: BusinessCopy = {
   homeNavLabel: 'Início',
   assistantName: 'Assistente AgendiX',
   rolePlaceholder: 'Ex: Barbeiro',
+  specialtiesPlaceholder: 'Ex: Corte, Barba, Degradê',
   clubPlanNamePlaceholder: 'Corte Ilimitado',
   clubPlanDescriptionPlaceholder: 'Cortes de cabelo ilimitados durante o mês.',
   clubPlansSubtitle: 'Crie os planos que seus clientes podem assinar (corte ilimitado, combo, etc).',
@@ -73,6 +76,7 @@ const BEAUTY_COPY: BusinessCopy = {
   homeNavLabel: 'Início',
   assistantName: 'Assistente AgendiX',
   rolePlaceholder: 'Ex: Cabeleireira',
+  specialtiesPlaceholder: 'Ex: Corte, Coloração, Escova',
   clubPlanNamePlaceholder: 'Beleza Ilimitada',
   clubPlanDescriptionPlaceholder: 'Serviços selecionados ilimitados durante o mês.',
   clubPlansSubtitle: 'Crie os planos que seus clientes podem assinar (manicure, combo, etc).',

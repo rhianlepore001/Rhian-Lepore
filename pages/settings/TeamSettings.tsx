@@ -11,7 +11,8 @@ import { useBusinessCopy } from '../../hooks/useBusinessCopy';
 import { useTeamMembers, useDeleteTeamMember } from '../../hooks/useTeam';
 import { useBusinessSettings } from '../../hooks/useSettings';
 import { useQueryClient } from '@tanstack/react-query';
-import { TeamMemberCard, type CommissionDraft } from '../../components/TeamMemberCard';
+import { TeamMemberCard } from '../../components/TeamMemberCard';
+import { SettingsSectionHeader } from '../../components/settings/SettingsSectionHeader';
 import { TeamMemberForm } from '../../components/TeamMemberForm';
 import { StaffAppointmentPermissionSection } from '../../components/settings/StaffAppointmentPermissionSection';
 import { TeamMemberBlocksSection } from '../../components/agenda/TeamMemberBlocksSection';
@@ -111,6 +112,8 @@ export const TeamSettings: React.FC = () => {
         try {
             await deleteMemberMutation.mutateAsync(pendingDeleteId);
             showToast('Profissional excluído.', 'success');
+            setIsModalOpen(false);
+            setEditingMember(null);
         } catch (error) {
             const message = error instanceof Error && error.message === 'OWNER_OR_MISSING_TEAM_MEMBER'
                 ? 'Não foi possível excluir este profissional. O dono não pode ser removido.'
@@ -167,38 +170,6 @@ export const TeamSettings: React.FC = () => {
             showToast(formatUserFacingError(mapError(error, 'Não foi possível desbloquear.')), 'error');
         } finally {
             setUnlockTarget(null);
-        }
-    };
-
-    const handleSaveCommission = async (memberId: string, draft: CommissionDraft) => {
-        if (!companyId) return;
-        try {
-            const { error } = await supabase
-                .from('team_members')
-                .update({
-                    commission_rate: draft.rate,
-                    commission_percent: draft.rate,
-                    updated_at: new Date().toISOString(),
-                })
-                .eq('id', memberId)
-                .eq('user_id', companyId);
-            if (error) throw error;
-
-            const { error: recalculateError } = await supabase.rpc('recalculate_pending_commissions', {
-                p_professional_id: memberId,
-                p_new_rate: draft.rate,
-            });
-            if (recalculateError) {
-                console.error('Error recalculating commissions:', recalculateError);
-                showToast('Taxa salva, mas houve erro ao recalcular comissões pendentes.', 'warning');
-            } else {
-                showToast('Comissão atualizada!', 'success');
-            }
-            queryClient.invalidateQueries({ queryKey: ['team', companyId, 'members'] });
-        } catch (error) {
-            console.error('Error saving commission:', error);
-            showToast('Não foi possível salvar a comissão. Tente de novo.', 'error');
-            throw error;
         }
     };
 
@@ -276,16 +247,12 @@ export const TeamSettings: React.FC = () => {
     const exceptionByPro = new Map(
         (schedulePayload?.exceptions ?? []).map((row) => [row.professional_id, row.schedule]),
     );
-    const businessSummary = scheduleDraftSummary(scheduleDraft);
     const ruleOfBusiness = remainder.article === 'a' ? `da ${remainder.noun}` : `do ${remainder.noun}`;
     const scheduleFromIso = schedulePayload?.today ?? getTodayInTimeZone(shopTimeZone);
 
-    const memberScheduleLabel = (memberId: string) => {
+    const hasOwnCycle = (memberId: string) => {
         const exception = exceptionByPro.get(memberId);
-        if (exception && (exception.close_days?.length ?? 0) > 0) {
-            return `Exceção · ${scheduleDraftSummary(scheduleRowToDraft(exception))}`;
-        }
-        return businessSummary;
+        return Boolean(exception && (exception.close_days?.length ?? 0) > 0);
     };
 
     return (
@@ -313,108 +280,55 @@ export const TeamSettings: React.FC = () => {
                     </Button>
                 </div>
 
-                {loading ? (
-                    <div className="flex items-center justify-center py-20">
-                        <div className={`animate-spin h-10 w-10 border-4 border-t-transparent ${accent.border} rounded-full`} />
-                    </div>
-                ) : cardMembers.length === 0 ? (
-                    <Card className="p-12 text-center border-dashed">
-                        <div className={`w-20 h-20 ${colors.inputBg} rounded-2xl flex items-center justify-center mx-auto mb-6 border ${colors.border}`}>
-                            <UserCheck className="w-10 h-10 text-[var(--color-text-muted)]" />
+                <section className="space-y-4" data-testid="team-section-members" aria-labelledby="team-members-title">
+                    <SettingsSectionHeader
+                        id="team-members-title"
+                        title="Equipe"
+                        description={staff.length > 0
+                            ? `${staff.length} ${staff.length === 1 ? 'colaborador' : 'colaboradores'}. Toque em Editar para mudar dados, comissão e bloqueios.`
+                            : 'Toque em Editar para mudar dados, comissão e bloqueios.'}
+                    />
+                    {loading ? (
+                        <div className="flex items-center justify-center py-16">
+                            <div className={`animate-spin h-8 w-8 border-4 border-t-transparent ${accent.border} rounded-full`} />
                         </div>
-                        <h3 className={`text-2xl font-heading ${colors.text} uppercase mb-3`}>
-                            Comece sua equipe
-                        </h3>
-                        <p className={`${colors.textMuted} mb-8 max-w-sm mx-auto font-medium`}>
-                            Você ainda não cadastrou nenhum profissional. Adicione a si mesmo ou seus colaboradores.
-                        </p>
-                        <button
-                            type="button"
-                            onClick={() => setIsModalOpen(true)}
-                            className={`px-8 py-4 ${colors.inputBg} hover:bg-white/[0.08] ${colors.text} font-heading uppercase text-sm tracking-widest rounded-2xl transition-all border ${colors.border}`}
-                        >
-                            Cadastrar primeiro perfil
-                        </button>
-                    </Card>
-                ) : (
-                    <div className="space-y-12">
-                        {owners.length > 0 && (
-                            <section className="space-y-4">
-                                <div className={`flex items-center gap-2 ${colors.textMuted} font-mono text-xs uppercase tracking-[0.2em] px-1`}>
-                                    <ShieldCheck className={`w-4 h-4 ${accent.text}`} />
-                                    Proprietários
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {owners.map(member => (
-                                        <TeamMemberCard
-                                            key={member.id}
-                                            member={member}
-                                            onEdit={(m) => {
-                                                setEditingMember(m);
-                                                setIsModalOpen(true);
-                                            }}
-                                            onDelete={handleDelete}
-                                        >
-                                            <TeamMemberBlocksSection
-                                                memberName={member.name}
-                                                blocks={blocksForMember(member.id)}
-                                                timeZone={shopTimeZone}
-                                                onCreate={() => {
-                                                    setBlockConflicts(undefined);
-                                                    setBlockFormMemberId(member.id);
-                                                }}
-                                                onUnlock={setUnlockTarget}
-                                            />
-                                        </TeamMemberCard>
-                                    ))}
-                                </div>
-                            </section>
-                        )}
+                    ) : cardMembers.length === 0 ? (
+                        <Card className="p-10 text-center border-dashed">
+                            <div className={`w-14 h-14 ${colors.inputBg} rounded-2xl flex items-center justify-center mx-auto mb-4 border ${colors.border}`}>
+                                <UserCheck className="w-7 h-7 text-[var(--color-text-muted)]" />
+                            </div>
+                            <h3 className={`text-lg font-semibold ${colors.text} mb-1`}>
+                                Comece sua equipe
+                            </h3>
+                            <p className={`${colors.textSecondary} text-sm mb-6 max-w-sm mx-auto`}>
+                                Você ainda não cadastrou nenhum profissional. Adicione a si mesmo ou seus colaboradores.
+                            </p>
+                            <Button variant="secondary" onClick={() => { setEditingMember(null); setIsModalOpen(true); }}>
+                                Cadastrar primeiro perfil
+                            </Button>
+                        </Card>
+                    ) : (
+                        <ul className="space-y-2" aria-label="Equipe">
+                            {[...owners, ...staff].map(member => (
+                                <TeamMemberCard
+                                    key={member.id}
+                                    member={member}
+                                    hasOwnCycle={!member.is_owner && hasOwnCycle(member.id)}
+                                    onEdit={(m) => {
+                                        setEditingMember(m);
+                                        setIsModalOpen(true);
+                                    }}
+                                />
+                            ))}
+                        </ul>
+                    )}
+                </section>
 
-                        {staff.length > 0 && (
-                            <section className="space-y-4">
-                                <div className={`flex items-center gap-2 ${colors.textMuted} font-mono text-xs uppercase tracking-[0.2em] px-1 border-t ${colors.divider} pt-8`}>
-                                    <Users className="w-4 h-4" />
-                                    Colaboradores e comissões
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {staff.map(member => (
-                                        <TeamMemberCard
-                                            key={member.id}
-                                            member={member}
-                                            onEdit={(m) => {
-                                                setEditingMember(m);
-                                                setIsModalOpen(true);
-                                            }}
-                                            onDelete={handleDelete}
-                                            onSaveCommission={handleSaveCommission}
-                                            scheduleLabel={memberScheduleLabel(member.id)}
-                                        >
-                                            <TeamMemberBlocksSection
-                                                memberName={member.name}
-                                                blocks={blocksForMember(member.id)}
-                                                timeZone={shopTimeZone}
-                                                onCreate={() => {
-                                                    setBlockConflicts(undefined);
-                                                    setBlockFormMemberId(member.id);
-                                                }}
-                                                onUnlock={setUnlockTarget}
-                                            />
-                                        </TeamMemberCard>
-                                    ))}
-                                </div>
-                            </section>
-                        )}
-                    </div>
-                )}
-
-                <StaffAppointmentPermissionSection />
-
-                <section className="space-y-4 border-t border-[var(--color-divider)] pt-8">
-                    <div className={`flex items-center gap-2 ${colors.textMuted} font-mono text-xs uppercase tracking-[0.2em] px-1`}>
-                        <Calendar className={`w-4 h-4 ${accent.text}`} />
-                        Pagamento da comissão
-                    </div>
+                <section className="space-y-4 border-t border-[var(--color-divider)] pt-8" data-testid="team-section-schedule">
+                    <SettingsSectionHeader
+                        title="Pagamento da comissão"
+                        description="Quando o ciclo fecha e quando você paga. Vale para toda a equipe."
+                    />
 
                     {scheduleNotice && (
                         <div
@@ -443,7 +357,7 @@ export const TeamSettings: React.FC = () => {
                     <Card title="Regra do negócio">
                         <div className="space-y-6">
                             <p className={`${colors.textMuted} text-sm leading-relaxed`}>
-                                Uma regra para {remainder.withArticle}. Se alguém precisar de outra, crie uma exceção no perfil do colaborador.
+                                Uma regra para {remainder.withArticle}. Se alguém precisar de outra, crie uma exceção em Editar › Comissão.
                             </p>
                             <CommissionScheduleEditor
                                 draft={scheduleDraft}
@@ -466,17 +380,14 @@ export const TeamSettings: React.FC = () => {
                     </Card>
                 </section>
 
-                <section className="space-y-4 border-t border-[var(--color-divider)] pt-8">
-                    <div className={`flex items-center gap-2 ${colors.textMuted} font-mono text-xs uppercase tracking-[0.2em] px-1`}>
-                        <CreditCard className={`w-4 h-4 ${accent.text}`} />
-                        Taxas
-                    </div>
+                <section className="space-y-4 border-t border-[var(--color-divider)] pt-8" data-testid="team-section-machine-fee">
+                    <SettingsSectionHeader
+                        title="Taxa da maquininha"
+                        description="Se ligada, a comissão é calculada sobre o valor líquido, depois da taxa."
+                    />
 
-                    <Card title="Taxa de maquininha">
+                    <Card>
                         <div className="space-y-4">
-                            <p className={`${colors.textMuted} text-sm`}>
-                                Quando ativado, a comissão é calculada sobre o valor líquido (após a taxa).
-                            </p>
                             <div className={`
                                 flex items-center gap-4 p-4 rounded-xl cursor-pointer transition-all border
                                 ${machineFeeEnabled
@@ -544,14 +455,9 @@ export const TeamSettings: React.FC = () => {
                         </div>
                     </Card>
 
-                    <div className={`flex items-start gap-3 p-4 rounded-xl border ${colors.border} ${colors.inputBg}`}>
-                        <AlertCircle className="w-5 h-5 text-[var(--color-info)] flex-shrink-0 mt-0.5" />
-                        <div className={`text-sm ${colors.textMuted} space-y-1`}>
-                            <p className={`font-bold ${colors.text}`}>Como funciona</p>
-                            <p>Defina a % no card do colaborador. O ciclo de acerto fica acima, em Pagamento da comissão. Ao concluir um atendimento, a comissão entra automaticamente. O pagamento fica em Financeiro → Pagamentos.</p>
-                        </div>
-                    </div>
                 </section>
+
+                <StaffAppointmentPermissionSection />
 
                 <ConfirmModal
                     open={!!pendingDeleteId}
@@ -595,6 +501,20 @@ export const TeamSettings: React.FC = () => {
                     <TeamMemberForm
                         initialData={editingMember}
                         onClose={() => setIsModalOpen(false)}
+                        onDelete={handleDelete}
+                        blocksSlot={editingMember?.id ? (
+                            <TeamMemberBlocksSection
+                                bare
+                                memberName={editingMember.name}
+                                blocks={blocksForMember(editingMember.id)}
+                                timeZone={shopTimeZone}
+                                onCreate={() => {
+                                    setBlockConflicts(undefined);
+                                    setBlockFormMemberId(editingMember.id);
+                                }}
+                                onUnlock={setUnlockTarget}
+                            />
+                        ) : undefined}
                         onSave={() => {
                             queryClient.invalidateQueries({ queryKey: ['team', companyId, 'members'] });
                             void fetchCommissionSchedules()

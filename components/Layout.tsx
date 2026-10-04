@@ -50,9 +50,11 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
       {/* sem willChange:transform — cria containing block e já foi associado a
           conteúdo “preso” na navegação SPA (URL muda, main não troca). */}
+      {/* Folga inferior no celular: barra (64) + o "+" que sobressai (~28) + 16 = 7rem,
+          para o último item da lista nunca ficar sob o FAB. */}
       <main
         className={`${!isSettingsRoute ? 'md:pl-64' : ''} ${paddingTop} relative z-10 flex flex-col min-h-screen ${
-          showBottomMobileNav ? 'pb-[calc(6rem+var(--safe-bottom))]' : 'pb-[calc(2rem+var(--safe-bottom))]'
+          showBottomMobileNav ? 'pb-[calc(7rem+var(--safe-bottom))]' : 'pb-[calc(2rem+var(--safe-bottom))]'
         } md:pb-8`}
       >
         <div

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Upload, User, Check, Link as LinkIcon, CheckCircle2, Share2, Copy } from 'lucide-react';
+import { Upload, User, Check, Link as LinkIcon, CheckCircle2, Share2, Copy, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Modal } from './ui/Modal';
@@ -29,7 +29,26 @@ interface TeamMemberFormProps {
     /** @deprecated Tema vem de useBrutalTheme() / data-theme — prop ignorada */
     accentColor?: string;
     isOwnerForm?: boolean;
+    /** Exclusão fica dentro do drawer (PR-E). Só para colaborador já salvo, nunca o dono. */
+    onDelete?: (id: string) => void;
+    /** Bloqueios de agenda do colaborador (seção própria do drawer). */
+    blocksSlot?: React.ReactNode;
 }
+
+const DrawerSection: React.FC<{ title: string; description?: string; children: React.ReactNode; first?: boolean; testId?: string }> = ({
+    title, description, children, first = false, testId,
+}) => {
+    const { colors } = useBrutalTheme();
+    return (
+        <section data-testid={testId} className={first ? 'space-y-4' : `space-y-4 border-t ${colors.divider} pt-6`}>
+            <div>
+                <h3 className={`text-[15px] font-semibold leading-6 ${colors.text}`}>{title}</h3>
+                {description && <p className={`mt-0.5 text-sm ${colors.textSecondary}`}>{description}</p>}
+            </div>
+            {children}
+        </section>
+    );
+};
 
 type FormStep = 'form' | 'invite';
 
@@ -37,12 +56,14 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     initialData,
     onClose,
     onSave,
-    isOwnerForm = false
+    isOwnerForm = false,
+    onDelete,
+    blocksSlot,
 }) => {
     const { user, fullName, avatarUrl, businessName } = useAuth();
     const { showToast } = useToast();
     const { colors, accent, font } = useBrutalTheme();
-    const { rolePlaceholder } = useBusinessCopy();
+    const { rolePlaceholder, specialtiesPlaceholder } = useBusinessCopy();
 
     const [step, setStep] = useState<FormStep>('form');
     const [createdMemberId, setCreatedMemberId] = useState<string | null>(
@@ -76,6 +97,9 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     const [hadException, setHadException] = useState(false);
     const [businessDraft, setBusinessDraft] = useState<CommissionScheduleDraft | null>(null);
     const showSchedule = Boolean(initialData?.id) && !isOwner && !isOwnerForm;
+    const showCommission = !isOwner && !isOwnerForm;
+    const savedRate = Number(initialData?.commission_rate ?? initialData?.commission_percent ?? 0) || 0;
+    const [commissionRate, setCommissionRate] = useState(String(savedRate));
 
     useEffect(() => {
         if (!showSchedule) return;
@@ -139,6 +163,14 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                 }
             }
 
+            const parsedRate = parseFloat(commissionRate.replace(',', '.'));
+            if (showCommission && (Number.isNaN(parsedRate) || parsedRate < 0 || parsedRate > 100)) {
+                showToast('A comissão deve ser entre 0% e 100%.', 'warning');
+                setLoading(false);
+                return;
+            }
+            const rateChanged = showCommission && parsedRate !== savedRate;
+
             let photoUrl = photoPreview;
 
             if (photoFile) {
@@ -178,11 +210,15 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                 cpf: cpf.trim() || null
             };
 
-            // Comissão só é configurada em Equipe → Comissão (não no formulário de perfil).
-            // Em criação, inicia em 0; em edição, preserva a taxa já salva.
+            // Comissão (%) é editada aqui no drawer. Em edição só grava se mudou;
+            // em criação parte do valor informado (padrão 0).
             if (!initialData?.id) {
-                teamMemberData.commission_rate = 0;
-                teamMemberData.commission_percent = 0;
+                const initialRate = showCommission ? parsedRate : 0;
+                teamMemberData.commission_rate = initialRate;
+                teamMemberData.commission_percent = initialRate;
+            } else if (rateChanged) {
+                teamMemberData.commission_rate = parsedRate;
+                teamMemberData.commission_percent = parsedRate;
             }
 
             if (initialData?.id) {
@@ -192,6 +228,18 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                     .eq('id', initialData.id)
                     .eq('user_id', user.id);
                 if (updateError) throw updateError;
+
+                if (rateChanged) {
+                    // Mesma regra de antes: comissões ainda não pagas passam a usar a nova %.
+                    const { error: recalculateError } = await supabase.rpc('recalculate_pending_commissions', {
+                        p_professional_id: initialData.id,
+                        p_new_rate: parsedRate,
+                    });
+                    if (recalculateError) {
+                        console.error('Error recalculating commissions:', recalculateError);
+                        showToast('Comissão salva, mas não foi possível recalcular as pendentes.', 'warning');
+                    }
+                }
 
                 // Só grava quando a regra do colaborador mudou de fato (editar telefone não cria versão nova).
                 const scheduleChanged = showSchedule && scheduleReady && (
@@ -245,7 +293,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     };
 
     const inputClass = `w-full p-3 rounded-lg ${colors.text} transition-all outline-none ${colors.inputBg} ${colors.inputBorder} border focus:border-[var(--color-input-focus)]`;
-    const labelClass = `text-xs mb-1 block ${colors.textSecondary} ${font.label}`;
+    const labelClass = `text-[13px] font-medium mb-1.5 block ${colors.textSecondary}`;
 
     if (step === 'invite') {
         const firstName = name.trim().split(/\s+/)[0] || 'o profissional';
@@ -317,23 +365,22 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
         <Modal
             open
             onClose={onClose}
-            title={initialData ? 'Editar Profissional' : 'Novo Profissional'}
+            title={initialData ? 'Editar profissional' : 'Novo profissional'}
             size={showSchedule ? 'lg' : 'md'}
         >
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
                 {!initialData && (
                     <button
                         type="button"
                         onClick={handleFillWithOwner}
-                        className={`w-full py-2 px-4 mb-4 border border-dashed rounded-lg transition-all text-xs ${font.mono} uppercase ${accent.borderDim} ${accent.text} hover:bg-[var(--color-accent-dim)]`}
+                        className={`w-full min-h-[44px] py-2 px-4 border border-dashed rounded-lg transition-all text-sm font-medium ${accent.borderDim} ${accent.text} hover:bg-[var(--color-accent-dim)]`}
                     >
-                        Sou eu quem atende (Usar meu perfil)
+                        Sou eu quem atende (usar meu perfil)
                     </button>
                 )}
-
                 {initialData?.id && !initialData?.staff_user_id && !initialData?.is_owner && (
                     <div className={`p-4 rounded-lg border ${colors.border} ${colors.surface} flex flex-col gap-2`}>
-                        <p className={`text-xs ${colors.textSecondary}`}>
+                        <p className={`text-sm ${colors.textSecondary}`}>
                             Este profissional ainda não entrou no sistema. Envie o convite:
                         </p>
                         <button
@@ -342,7 +389,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                                 setCreatedMemberId(initialData.id);
                                 setStep('invite');
                             }}
-                            className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-xs ${font.label} uppercase transition-all ${colors.inputBg} hover:bg-white/[0.08] ${colors.text} ${colors.border} border`}
+                            className={`w-full min-h-[44px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${colors.card} hover:bg-[var(--color-card-hover)] ${colors.text} ${colors.border} border`}
                         >
                             <LinkIcon className="w-4 h-4" />
                             <span>Abrir convite</span>
@@ -350,170 +397,211 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                     </div>
                 )}
 
-                <div className="flex justify-center mb-6">
-                    <div
-                        className={`relative w-24 h-24 rounded-full border-2 border-dashed ${photoPreview ? 'border-transparent' : colors.border} flex items-center justify-center cursor-pointer hover:border-current overflow-hidden group transition-colors ${accent.text} ${colors.surface}`}
-                        onClick={() => fileInputRef.current?.click()}
-                    >
-                        {photoPreview ? (
-                            <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
-                        ) : (
-                            <User className={`w-8 h-8 ${colors.textMuted}`} />
-                        )}
+                <DrawerSection title="Dados" first testId="team-member-section-dados">
+                    <div className="flex justify-center">
+                        <div
+                            className={`relative w-20 h-20 rounded-full border-2 border-dashed ${photoPreview ? 'border-transparent' : colors.border} flex items-center justify-center cursor-pointer hover:border-current overflow-hidden group transition-colors ${accent.text} ${colors.surface}`}
+                            onClick={() => fileInputRef.current?.click()}
+                        >
+                            {photoPreview ? (
+                                <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
+                            ) : (
+                                <User className={`w-8 h-8 ${colors.textMuted}`} />
+                            )}
 
-                        <div className="absolute inset-0 bg-[var(--color-bg)]/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                            <Upload className="w-6 h-6 text-[var(--color-text)]" />
-                        </div>
-                    </div>
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        className="hidden"
-                        accept="image/*"
-                        onChange={handlePhotoChange}
-                    />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 items-center mb-2">
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            id="isOwner"
-                            checked={isOwner}
-                            onChange={e => setIsOwner(e.target.checked)}
-                            className={`rounded ${colors.inputBg} ${colors.inputBorder} border focus:ring-0 ${accent.text}`}
-                        />
-                        <label htmlFor="isOwner" className={`text-xs cursor-pointer ${colors.text} ${font.label}`}>
-                            É o Dono
-                        </label>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            id="active"
-                            checked={active}
-                            onChange={e => setActive(e.target.checked)}
-                            className={`rounded ${colors.inputBg} ${colors.inputBorder} border focus:ring-0 ${accent.text}`}
-                        />
-                        <label htmlFor="active" className={`text-xs cursor-pointer ${colors.text} ${font.label}`}>
-                            Ativo
-                        </label>
-                    </div>
-                </div>
-
-                <div>
-                    <label className={labelClass}>Nome</label>
-                    <input
-                        type="text"
-                        required
-                        value={name}
-                        onChange={e => setName(e.target.value)}
-                        className={inputClass}
-                        placeholder="Ex: João Silva"
-                    />
-                </div>
-
-                <div>
-                    <label htmlFor="team-member-role" className={labelClass}>Cargo</label>
-                    <input
-                        id="team-member-role"
-                        type="text"
-                        required
-                        value={role}
-                        onChange={e => setRole(e.target.value)}
-                        className={inputClass}
-                        placeholder={rolePlaceholder}
-                    />
-                </div>
-
-                {!isOwner && (
-                    <p className={`text-xs ${colors.textMuted} -mt-1`}>
-                        A comissão (%) fica no card do colaborador. O ciclo de acerto é a regra do negócio, com exceção opcional abaixo.
-                    </p>
-                )}
-
-                {showSchedule && scheduleReady && (
-                    <div
-                        data-testid="collaborator-schedule-exception"
-                        className={`space-y-6 p-4 rounded-xl border ${colors.border} ${colors.surface}`}
-                    >
-                        <div className="flex items-start justify-between gap-4">
-                            <div className="min-w-0">
-                                <p className={`text-xs font-medium ${colors.textMuted}`}>Ciclo de acerto</p>
-                                <label htmlFor="use-business-schedule" className={`mt-1 block text-sm font-semibold ${colors.text} cursor-pointer`}>
-                                    Usar regra do negócio
-                                </label>
-                                <p className={`mt-1 text-xs leading-relaxed ${colors.textSecondary}`}>
-                                    {useBusinessDefault
-                                        ? `Segue a regra de todos${businessDraft ? `: ${scheduleDraftSummary(businessDraft)}` : ''}.`
-                                        : 'Desligado: este colaborador tem um ciclo próprio, que vale a partir do próximo fechamento dele.'}
-                                </p>
+                            <div className="absolute inset-0 bg-[var(--color-bg)]/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                <Upload className="w-6 h-6 text-[var(--color-text)]" />
                             </div>
-                            <SettingsSwitch
-                                id="use-business-schedule"
-                                checked={useBusinessDefault}
-                                onChange={setUseBusinessDefault}
-                                ariaLabel="Usar regra do negócio"
-                            />
                         </div>
-                        {!useBusinessDefault && (
-                            <CommissionScheduleEditor
-                                draft={scheduleDraft}
-                                onChange={setScheduleDraft}
-                                fromIso={scheduleFromIso}
-                                currentEnd={scheduleCurrentEnd}
-                                saved={savedSchedule}
-                            />
-                        )}
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            className="hidden"
+                            accept="image/*"
+                            onChange={handlePhotoChange}
+                        />
                     </div>
+                    <div className="grid grid-cols-2 gap-4 items-center">
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                id="isOwner"
+                                checked={isOwner}
+                                onChange={e => setIsOwner(e.target.checked)}
+                                className={`rounded ${colors.inputBg} ${colors.inputBorder} border focus:ring-0 ${accent.text}`}
+                            />
+                            <label htmlFor="isOwner" className={`text-sm cursor-pointer ${colors.text}`}>
+                                É o Dono
+                            </label>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                id="active"
+                                checked={active}
+                                onChange={e => setActive(e.target.checked)}
+                                className={`rounded ${colors.inputBg} ${colors.inputBorder} border focus:ring-0 ${accent.text}`}
+                            />
+                            <label htmlFor="active" className={`text-sm cursor-pointer ${colors.text}`}>
+                                Ativo
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <label htmlFor="team-member-name" className={labelClass}>Nome</label>
+                        <input
+                            id="team-member-name"
+                            type="text"
+                            required
+                            value={name}
+                            onChange={e => setName(e.target.value)}
+                            className={inputClass}
+                            placeholder="Ex: João Silva"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="team-member-role" className={labelClass}>Cargo</label>
+                        <input
+                            id="team-member-role"
+                            type="text"
+                            required
+                            value={role}
+                            onChange={e => setRole(e.target.value)}
+                            className={inputClass}
+                            placeholder={rolePlaceholder}
+                        />
+                    </div>
+                    <div>
+                        <label className={labelClass}>CPF (opcional)</label>
+                        <input
+                            type="text"
+                            value={cpf}
+                            onChange={e => setCpf(e.target.value)}
+                            className={inputClass}
+                            placeholder="000.000.000-00"
+                            maxLength={14}
+                        />
+                    </div>
+                    <div>
+                        <label className={labelClass}>Bio (opcional)</label>
+                        <textarea
+                            value={bio}
+                            onChange={e => setBio(e.target.value)}
+                            rows={3}
+                            className={`${inputClass} resize-none`}
+                            placeholder="Breve descrição..."
+                        />
+                    </div>
+                    <div>
+                        <label className={labelClass}>Especialidades (separadas por vírgula)</label>
+                        <input
+                            type="text"
+                            value={specialties}
+                            onChange={e => setSpecialties(e.target.value)}
+                            className={inputClass}
+                            placeholder={specialtiesPlaceholder}
+                        />
+                    </div>
+                </DrawerSection>
+
+                {showCommission && (
+                    <DrawerSection title="Comissão" testId="team-member-section-comissao">
+                        <div>
+                            <label htmlFor="team-member-commission" className={labelClass}>Comissão (%)</label>
+                            <div className="relative max-w-[200px]">
+                                <input
+                                    id="team-member-commission"
+                                    type="number"
+                                    inputMode="decimal"
+                                    min="0"
+                                    max="100"
+                                    step="0.5"
+                                    value={commissionRate}
+                                    onChange={e => setCommissionRate(e.target.value)}
+                                    className={`${inputClass} pr-9 tabular-nums`}
+                                    aria-describedby="team-member-commission-help"
+                                />
+                                <span className={`pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm ${colors.textMuted}`} aria-hidden="true">%</span>
+                            </div>
+                            <p id="team-member-commission-help" className={`mt-1.5 text-xs ${colors.textMuted}`}>
+                                {initialData?.id
+                                    ? 'Vale para os atendimentos ainda não pagos e os próximos.'
+                                    : 'Pode ajustar depois. Vale para os atendimentos a partir de agora.'}
+                            </p>
+                        </div>
+                        {showSchedule && scheduleReady && (
+                            <div
+                                data-testid="collaborator-schedule-exception"
+                                className={`space-y-6 p-4 rounded-xl border ${colors.border} ${colors.surface}`}
+                            >
+                                <div className="flex items-start justify-between gap-4">
+                                    <div className="min-w-0">
+                                        <p className={`text-[13px] font-medium ${colors.textSecondary}`}>Ciclo de acerto</p>
+                                        <label htmlFor="use-business-schedule" className={`mt-1 block text-sm font-semibold ${colors.text} cursor-pointer`}>
+                                            Usar regra do negócio
+                                        </label>
+                                        <p className={`mt-1 text-xs leading-relaxed ${colors.textSecondary}`}>
+                                            {useBusinessDefault
+                                                ? `Segue a regra de todos${businessDraft ? `: ${scheduleDraftSummary(businessDraft)}` : ''}.`
+                                                : 'Desligado: este colaborador tem um ciclo próprio, que vale a partir do próximo fechamento dele.'}
+                                        </p>
+                                    </div>
+                                    <SettingsSwitch
+                                        id="use-business-schedule"
+                                        checked={useBusinessDefault}
+                                        onChange={setUseBusinessDefault}
+                                        ariaLabel="Usar regra do negócio"
+                                    />
+                                </div>
+                                {!useBusinessDefault && (
+                                    <CommissionScheduleEditor
+                                        draft={scheduleDraft}
+                                        onChange={setScheduleDraft}
+                                        fromIso={scheduleFromIso}
+                                        currentEnd={scheduleCurrentEnd}
+                                        saved={savedSchedule}
+                                    />
+                                )}
+                            </div>
+                        )}
+                    </DrawerSection>
                 )}
 
-                <div>
-                    <label className={labelClass}>CPF (Opcional)</label>
-                    <input
-                        type="text"
-                        value={cpf}
-                        onChange={e => setCpf(e.target.value)}
-                        className={inputClass}
-                        placeholder="000.000.000-00"
-                        maxLength={14}
-                    />
-                </div>
+                {initialData?.id && blocksSlot && (
+                    <DrawerSection
+                        title="Bloqueios de agenda"
+                        description="Períodos em que ninguém pode marcar com este profissional."
+                        testId="team-member-section-bloqueios"
+                    >
+                        {blocksSlot}
+                    </DrawerSection>
+                )}
 
-                <div>
-                    <label className={labelClass}>Bio (Opcional)</label>
-                    <textarea
-                        value={bio}
-                        onChange={e => setBio(e.target.value)}
-                        rows={3}
-                        className={`${inputClass} resize-none`}
-                        placeholder="Breve descrição..."
-                    />
+                <div className="space-y-3 pt-2">
+                    <Button
+                        type="submit"
+                        disabled={loading}
+                        variant="primary"
+                        fullWidth
+                        loading={loading}
+                        icon={!loading ? <Check className="w-5 h-5" /> : undefined}
+                    >
+                        {loading ? 'Salvando...' : (initialData ? 'Salvar alterações' : 'Criar e convidar')}
+                    </Button>
+                    {initialData?.id && !initialData?.is_owner && onDelete && (
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            fullWidth
+                            onClick={() => onDelete(initialData.id)}
+                            className="text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)]"
+                            icon={<Trash2 className="w-4 h-4" />}
+                        >
+                            Excluir profissional
+                        </Button>
+                    )}
                 </div>
-
-                <div>
-                    <label className={labelClass}>Especialidades (Separadas por vírgula)</label>
-                    <input
-                        type="text"
-                        value={specialties}
-                        onChange={e => setSpecialties(e.target.value)}
-                        className={inputClass}
-                        placeholder="Ex: Corte, Barba, Coloração"
-                    />
-                </div>
-
-                <Button
-                    type="submit"
-                    disabled={loading}
-                    variant="primary"
-                    fullWidth
-                    className="mt-4"
-                    loading={loading}
-                    icon={!loading ? <Check className="w-5 h-5" /> : undefined}
-                >
-                    {loading ? 'Salvando...' : (initialData ? 'Salvar Profissional' : 'Criar e convidar')}
-                </Button>
             </form>
         </Modal>
     );

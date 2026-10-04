@@ -12,7 +12,7 @@ const BASE = process.env.E2E_BASE_URL || 'http://localhost:3000';
 const PROJECT_REF = process.env.E2E_SUPABASE_REF || 'lcqwrngscsziysyfhpfj';
 const OWNER_ID = '2310b54d-5963-4dc6-9afb-8f308116a698';
 const ANA_ID = '7d3f2a9c-4b1e-4c8a-9f6d-2e5b8a1c0d4f';  // uuid v4 válido (teamMemberSchema)
-const ARTIFACTS = '/opt/cursor/artifacts/screenshots/fin-d';
+const ARTIFACTS = process.env.E2E_SHOTS_DIR ? `${process.env.E2E_SHOTS_DIR}/fin-d` : '/opt/cursor/artifacts/screenshots/fin-d';
 const NOW = '2026-10-04T15:00:00.000Z';
 
 function b64url(obj: unknown): string {
@@ -398,7 +398,7 @@ test.describe('Fin PR-D ciclo de comissão', () => {
     await stubApp(page, 'settings', 'light');
     await page.goto(`${BASE}/#/configuracoes/equipe`, { waitUntil: 'domcontentloaded' });
     await expect(page.getByText('Ana Souza')).toBeVisible({ timeout: 20_000 });
-    await page.getByRole('button', { name: /^Perfil$/ }).last().click();
+    await page.getByRole('button', { name: 'Editar Ana Souza' }).click();
     const toggle = page.getByLabel('Usar regra do negócio');
     await expect(toggle).toBeVisible({ timeout: 10_000 });
     await expect(toggle).toBeChecked();
@@ -420,7 +420,7 @@ test.describe('Fin PR-D ciclo de comissão', () => {
     stubRpcs(guard, 'pay-closed');
     await stubApp(page, 'pay-closed', 'light');
     await page.goto(`${BASE}/#/financeiro`, { waitUntil: 'domcontentloaded' });
-    await page.getByRole('tab', { name: 'Pagamento de comissão' }).click();
+    await page.getByRole('tab', { name: 'Pagamentos' }).click();
     await expect(page.getByTestId('commission-cycle-header')).toContainText('Período 06/09 – 20/09', { timeout: 20_000 });
     await expect(page.getByTestId('commission-cycle-header')).toContainText('fecha em 20/09');
     await expect(page.getByTestId('commission-cycle-header')).toContainText('pagar até 22/09');
@@ -435,7 +435,7 @@ test.describe('Fin PR-D ciclo de comissão', () => {
     stubRpcs(guard, 'pay-open');
     await stubApp(page, 'pay-open', 'light');
     await page.goto(`${BASE}/#/financeiro`, { waitUntil: 'domcontentloaded' });
-    await page.getByRole('tab', { name: 'Pagamento de comissão' }).click();
+    await page.getByRole('tab', { name: 'Pagamentos' }).click();
     await expect(page.getByRole('button', { name: 'Pagar Ana Souza' })).toBeVisible({ timeout: 20_000 });
     await page.getByRole('button', { name: 'Pagar Ana Souza' }).click();
     await expect(page.getByText('Confirmar repasse')).toBeVisible();

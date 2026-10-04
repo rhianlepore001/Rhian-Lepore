@@ -55,17 +55,18 @@ test.describe('Equipe no menu e exclusão de profissional', () => {
     await expect(inviteModal).toBeVisible({ timeout: 20_000 });
     await inviteModal.getByTestId('invite-modal-close').click();
 
-    const memberCard = page.getByRole('heading', { name: professionalName, exact: true }).locator('xpath=ancestor::div[contains(@class,"group")][1]');
-    await expect(page.getByRole('heading', { name: professionalName, exact: true })).toBeVisible({ timeout: 15_000 });
+    // PR-E: linha compacta; a exclusão fica dentro do drawer "Editar".
+    const memberRow = page.getByTestId('team-member-row').filter({ hasText: professionalName });
+    await expect(memberRow).toBeVisible({ timeout: 15_000 });
 
-    await page.getByRole('button', { name: `Excluir membro ${professionalName}` }).click();
-    const confirm = page.getByRole('dialog').filter({ hasText: /Excluir profissional/i });
+    await memberRow.getByRole('button', { name: `Editar ${professionalName}` }).click();
+    await page.getByRole('button', { name: 'Excluir profissional' }).click();
+    const confirm = page.getByRole('dialog').filter({ hasText: /remove o acesso/i });
     await expect(confirm).toBeVisible({ timeout: 10_000 });
     await confirm.getByRole('button', { name: 'Excluir', exact: true }).click();
 
     await expect(page.getByText('Profissional excluído.')).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByRole('heading', { name: professionalName, exact: true })).toHaveCount(0);
-    await expect(memberCard).toHaveCount(0);
+    await expect(memberRow).toHaveCount(0);
 
     await page.screenshot({
       path: path.join(ARTIFACTS, 'equipe-profissional-excluido.png'),

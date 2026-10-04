@@ -12,7 +12,7 @@ const BASE = process.env.E2E_BASE_URL || 'http://localhost:3000';
 const PROJECT_REF = process.env.E2E_SUPABASE_REF || 'lcqwrngscsziysyfhpfj';
 const OWNER_ID = '2310b54d-5963-4dc6-9afb-8f308116a698';
 const ANA_ID = '20000000-0000-0000-0000-0000000000a1';
-const ARTIFACTS = '/opt/cursor/artifacts/screenshots/comissoes';
+const ARTIFACTS = process.env.E2E_SHOTS_DIR ? `${process.env.E2E_SHOTS_DIR}/comissoes` : '/opt/cursor/artifacts/screenshots/comissoes';
 const MORNING = '2026-09-10T09:15:00.000Z';
 const AFTERNOON = '2026-09-10T18:40:00.000Z';
 

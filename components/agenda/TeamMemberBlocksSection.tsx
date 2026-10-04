@@ -11,6 +11,8 @@ export interface TeamMemberBlocksSectionProps {
   timeZone: string;
   onCreate: () => void;
   onUnlock: (block: AgendaBlock) => void;
+  /** Dentro do drawer do colaborador: sem borda/rótulo próprios (a seção já tem título). */
+  bare?: boolean;
 }
 
 export const TeamMemberBlocksSection: React.FC<TeamMemberBlocksSectionProps> = ({
@@ -19,17 +21,24 @@ export const TeamMemberBlocksSection: React.FC<TeamMemberBlocksSectionProps> = (
   timeZone,
   onCreate,
   onUnlock,
+  bare = false,
 }) => {
   const { colors } = useBrutalTheme();
   const upcoming = blocks.slice(0, 8);
 
   return (
-    <div className={`mt-4 pt-4 border-t ${colors.border}`} data-testid="team-member-blocks">
-      <div className="flex items-center justify-between gap-2 mb-2">
-        <p className={`text-xs font-mono uppercase tracking-wider ${colors.textMuted} flex items-center gap-1.5`}>
-          <Ban className="w-3.5 h-3.5" aria-hidden />
-          Bloqueios
-        </p>
+    <div className={bare ? 'space-y-2' : `mt-4 pt-4 border-t ${colors.border}`} data-testid="team-member-blocks">
+      <div className={`flex items-center justify-between gap-2 ${bare ? '' : 'mb-2'}`}>
+        {bare ? (
+          <p className={`text-sm ${colors.textSecondary}`}>
+            {upcoming.length === 0 ? 'Nenhum bloqueio à frente.' : `${upcoming.length} ${upcoming.length === 1 ? 'bloqueio' : 'bloqueios'} à frente`}
+          </p>
+        ) : (
+          <p className={`text-xs font-mono uppercase tracking-wider ${colors.textMuted} flex items-center gap-1.5`}>
+            <Ban className="w-3.5 h-3.5" aria-hidden />
+            Bloqueios
+          </p>
+        )}
         <Button
           size="sm"
           variant="secondary"
@@ -38,11 +47,11 @@ export const TeamMemberBlocksSection: React.FC<TeamMemberBlocksSectionProps> = (
           data-testid="team-member-block-create"
           aria-label={`Bloquear agenda de ${memberName}`}
         >
-          Criar
+          {bare ? 'Bloquear' : 'Criar'}
         </Button>
       </div>
       {upcoming.length === 0 ? (
-        <p className={`text-xs ${colors.textMuted}`}>Nenhum bloqueio à frente.</p>
+        bare ? null : <p className={`text-xs ${colors.textMuted}`}>Nenhum bloqueio à frente.</p>
       ) : (
         <ul className="space-y-1.5">
           {upcoming.map((b) => (

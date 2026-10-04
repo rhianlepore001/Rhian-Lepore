@@ -227,6 +227,16 @@ async function setMode(page: Page, mode: 'light' | 'dark') {
   await page.waitForTimeout(1100);
 }
 
+async function frameChart(page: Page) {
+  await page.evaluate(() => {
+    const el = document.getElementById('finance-cashflow')
+      || document.querySelector('[data-testid="finance-cashflow-chart"]');
+    el?.scrollIntoView({ block: 'start' });
+    window.scrollBy(0, -88);
+  });
+  await page.waitForTimeout(250);
+}
+
 async function openFinanceSeptember(page: Page) {
   await page.goto(`${BASE}/#/financeiro`, { waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('heading', { name: 'Financeiro' })).toBeVisible({ timeout: 20_000 });
@@ -256,26 +266,34 @@ test.describe('PR-C gráfico entradas e saídas', () => {
     await openFinanceSeptember(page);
     await setMode(page, 'light');
     await expect(page.getByText('Mês anterior com pouco movimento')).toBeVisible();
-    await shot(page, 'overview-390-light');
+    await page.getByText('Mês anterior com pouco movimento').scrollIntoViewIfNeeded();
     await shot(page, 'small-previous-390-light');
 
+    await frameChart(page);
+    await shot(page, 'overview-390-light');
+
     await page.getByTestId('cashflow-hit-0').click();
-    await expect(page.getByTestId('finance-cashflow-tooltip')).toBeVisible();
+    await expect(page.getByTestId('finance-cashflow-tooltip')).toContainText('1–6 set');
     await shot(page, 'week-tooltip-390-light');
+    await page.keyboard.press('Escape');
 
     await setMode(page, 'dark');
+    await frameChart(page);
     await shot(page, 'overview-390-dark');
 
     await page.setViewportSize({ width: 360, height: 800 });
     await setMode(page, 'light');
+    await frameChart(page);
     await shot(page, 'overview-360-light');
 
     await page.setViewportSize({ width: 1440, height: 900 });
     await setMode(page, 'light');
+    await frameChart(page);
     await expect(page.getByTestId('finance-cashflow-svg')).toBeVisible();
     await shot(page, 'overview-1440-light');
 
     await setMode(page, 'dark');
+    await frameChart(page);
     await shot(page, 'overview-1440-dark');
 
     guard.assertNoLeak();

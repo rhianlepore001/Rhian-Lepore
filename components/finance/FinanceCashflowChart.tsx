@@ -34,11 +34,11 @@ interface FinanceCashflowChartProps {
 }
 
 const PLOT_HEIGHT = 168;
-const Y_AXIS = 32;
+const Y_AXIS = 36;
 const X_AXIS = 24;
-const TOP_PAD = 8;
+const TOP_PAD = 16;
 const RIGHT_PAD = 8;
-const CHART_RESERVE = 288;
+const CHART_RESERVE = 340;
 const FALLBACK_SUCCESS = '#10B981';
 const FALLBACK_DANGER = '#EF4444';
 const FALLBACK_TEXT = '#6B6252';
@@ -95,6 +95,10 @@ export const FinanceCashflowChart = memo(function FinanceCashflowChart({
   const wrapRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(330);
   const [active, setActive] = useState<number | null>(null);
+
+  useEffect(() => {
+    setActive(null);
+  }, [mode]);
 
   const income = tokens.success || FALLBACK_SUCCESS;
   const expense = tokens.danger || FALLBACK_DANGER;
@@ -155,7 +159,6 @@ export const FinanceCashflowChart = memo(function FinanceCashflowChart({
     }
   }, [activateFromTarget]);
 
-  const activeHit = active != null ? layout.hits[active] : null;
   const tooltip = active != null ? summaries[active] : null;
 
   const aria = monthAriaLabel(periodLabel, totals.receita, totals.despesas, currencyRegion);
@@ -183,7 +186,7 @@ export const FinanceCashflowChart = memo(function FinanceCashflowChart({
       style={{ minHeight: CHART_RESERVE }}
     >
       <div
-        className="grid grid-cols-3 gap-2 pb-4"
+        className="grid grid-cols-3 gap-2 md:max-w-2xl md:gap-8 pb-4"
         data-testid="finance-cashflow-totals"
         style={{ minHeight: 72 }}
       >
@@ -299,31 +302,24 @@ export const FinanceCashflowChart = memo(function FinanceCashflowChart({
               role="button"
               aria-label={summaries[hit.dataIndex]}
               onPointerDown={activateFromTarget}
-              onPointerEnter={activateFromTarget}
+              onPointerEnter={mode === 'day' ? activateFromTarget : undefined}
               onFocus={activateFromTarget}
               onKeyDown={onKey}
               style={{ outline: 'none', cursor: 'pointer' }}
             />
           ))}
         </svg>
-
-        {tooltip && activeHit && (
-          <div
-            data-testid="finance-cashflow-tooltip"
-            className="pointer-events-none absolute z-10 max-w-[260px] rounded-xl px-3 py-2 text-xs leading-relaxed"
-            style={{
-              left: Math.min(Math.max(Y_AXIS + activeHit.x + activeHit.width / 2 - 110, 0), Math.max(width - 220, 0)),
-              top: 4,
-              background: tokens.card || '#1A1816',
-              border: `1px solid ${tokens.divider || 'rgba(255,255,255,0.08)'}`,
-              color: tokens.text || '#F0EBE0',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-            }}
-          >
-            {tooltip}
-          </div>
-        )}
       </div>
+
+      <p
+        data-testid="finance-cashflow-tooltip"
+        className="mt-2 min-h-10 px-0.5 text-xs leading-relaxed"
+        style={{ color: tooltip ? (tokens.text || axis) : axis }}
+      >
+        {tooltip ?? (mode === 'week'
+          ? 'Toque numa semana para ver entradas, saídas e o que sobrou.'
+          : 'Passe o cursor ou foque um dia para ver o resumo.')}
+      </p>
 
       <table className="sr-only">
         <caption>{`Entradas e saídas — ${periodLabel}`}</caption>

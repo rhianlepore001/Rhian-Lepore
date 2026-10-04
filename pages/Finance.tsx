@@ -668,7 +668,7 @@ const [searchParams, setSearchParams] = useSearchParams();
                   <SkeletonCard />
                 </section>
               )}
-              <SkeletonCard className="min-h-[288px]" />
+              <SkeletonCard className="min-h-[340px]" />
               <SkeletonCard className="min-h-[160px]" />
             </>
           ) : fetchError ? (
@@ -764,6 +764,7 @@ const [searchParams, setSearchParams] = useSearchParams();
           )}
 
           <Card
+            id="finance-cashflow"
             title={
               <div>
                 <h3 className={`text-base md:text-lg font-bold tracking-tight ${colors.text}`}>

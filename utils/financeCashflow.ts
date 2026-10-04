@@ -313,27 +313,31 @@ export function layoutCashflowBars(
   for (let i = 0; i < n; i++) {
     const p = points[i];
     const slotX = i * slot;
-    const pairX = slotX + (slot - pairW) / 2;
     hits.push({ dataIndex: i, x: slotX, width: slot });
 
     const hIn = barHeight(p.receita, yMax, plotHeight, minHeight);
     const hOut = barHeight(p.despesas, yMax, plotHeight, minHeight);
+    const hasIn = p.receita > 0;
+    const hasOut = p.despesas > 0;
+    const pairX = slotX + (slot - pairW) / 2;
+    const singleX = slotX + (slot - barW) / 2;
 
-    if (p.receita > 0) {
+    if (hasIn) {
+      const x = hasOut ? pairX : singleX;
       const y = plotHeight - hIn;
       bars.push({
         key: `${p.key}-in`,
         dataIndex: i,
         series: 'income',
-        x: pairX,
+        x,
         y,
         width: barW,
         height: hIn,
-        d: roundedTopBarPath(pairX, y, barW, hIn),
+        d: roundedTopBarPath(x, y, barW, hIn),
       });
     }
-    if (p.despesas > 0) {
-      const x = pairX + barW + barGap;
+    if (hasOut) {
+      const x = hasIn ? pairX + barW + barGap : singleX;
       const y = plotHeight - hOut;
       bars.push({
         key: `${p.key}-out`,

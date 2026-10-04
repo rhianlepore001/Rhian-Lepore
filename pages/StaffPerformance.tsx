@@ -81,12 +81,19 @@ export const StaffPerformance: React.FC = () => {
         }
     }, [data, filters.pro]);
 
+    useEffect(() => {
+        const scroller = [...document.querySelectorAll('div')].find((node) => {
+            const c = typeof node.className === 'string' ? node.className : '';
+            return c.includes('overflow-y-auto') && c.includes('h-[100dvh]');
+        }) as HTMLElement | undefined;
+        (scroller ?? document.scrollingElement)?.scrollTo(0, 0);
+    }, [filters.pro, filters.start, filters.end]);
+
     const go = (next: Filters) => navigate({ pathname: BASE, search: `?${filtersToSearch(next)}` });
     const hrefFor = (pro: string) => `${BASE}?${filtersToSearch({ ...filters, pro })}`;
 
     const region = localeRegion;
     const previousName = compare ? previousMonthName(data?.period.previous) : null;
-    const comparing = compare && data?.period.previous ? comparingHeadline(filters.start, filters.end, data.period.previous) : null;
     const preset = detectPreset(filters.start, filters.end, today, settlementDay);
     const member = filters.pro ? data?.members.find((m) => m.professional_id === filters.pro) ?? null : null;
     const emptyHint = emptyPeriodSuggestion(preset);
@@ -109,6 +116,9 @@ export const StaffPerformance: React.FC = () => {
     const isEmpty = !!data && (filters.pro
         ? !member || (member.metrics.atendimentos === 0 && member.metrics.vendas_produtos === 0 && member.metrics.avulsos === 0)
         : (data.team_totals?.atendimentos ?? 0) === 0 && (data.team_totals?.vendas_produtos ?? 0) === 0 && (data.team_totals?.avulsos ?? 0) === 0);
+    const comparing = !isEmpty && compare && data?.period.previous
+        ? comparingHeadline(filters.start, filters.end, data.period.previous)
+        : null;
 
     const openReport = async () => {
         if (!member || !user?.id) return;
@@ -163,6 +173,7 @@ export const StaffPerformance: React.FC = () => {
                     <Skeleton className="h-[136px]" />
                     <Skeleton className="h-[136px]" />
                     <Skeleton className="h-[136px] col-span-2" />
+                    <Skeleton className="h-72 col-span-2" />
                 </div>
             )}
 
@@ -253,7 +264,7 @@ export const StaffPerformance: React.FC = () => {
                         <section aria-label="Sem profissional" className="space-y-1">
                             <h2 className={`text-lg font-semibold ${colors.text}`}>Sem profissional</h2>
                             <p className={`text-sm ${colors.textSecondary}`}>
-                                Atendimentos e vendas sem colaborador atribuído. Entram no total da equipe, fora do ranking.
+                                Atendimentos e vendas sem colaborador atribuído. Entram no total da equipe, sem posição no ranking.
                             </p>
                             <p className={`text-sm tabular-nums ${colors.textSecondary}`}>
                                 <span className={`${colors.text} font-semibold`}>{data.unassigned.retorno == null ? '—' : formatMoney(data.unassigned.retorno)}</span>

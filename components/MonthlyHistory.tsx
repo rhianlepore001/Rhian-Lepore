@@ -1,7 +1,10 @@
 import React from 'react';
-import { TrendingUp, TrendingDown, Award, AlertCircle } from 'lucide-react';
+import { Award, TrendingUp, Wallet, History } from 'lucide-react';
 import { formatCurrency, type Region } from '../utils/formatters';
 import { formatMonthGrowth } from '../utils/financeCashflow';
+import { useBrutalTheme } from '../hooks/useBrutalTheme';
+import { FinanceKpi } from './finance/FinanceKpi';
+import { Card } from './ui/Card';
 
 interface MonthData {
     month: string;
@@ -17,130 +20,143 @@ interface MonthData {
 interface MonthlyHistoryProps {
     data: MonthData[];
     currencyRegion: Region;
+    /** @deprecated tema vem do useBrutalTheme */
     accentColor?: string;
+    /** @deprecated tema vem do useBrutalTheme */
     isBeauty?: boolean;
 }
 
-export const MonthlyHistory: React.FC<MonthlyHistoryProps> = ({
-    data,
-    currencyRegion,
-}) => {
+const LOW_MOVEMENT = 'Mês anterior com pouco movimento';
+
+/**
+ * Histórico (PR-F #11): três números no mesmo cartão da Visão geral e a lista de meses
+ * sem blocos coloridos. Verde/vermelho só no texto do crescimento.
+ */
+export const MonthlyHistory: React.FC<MonthlyHistoryProps> = ({ data, currencyRegion }) => {
+    const { colors, status, font } = useBrutalTheme();
+
     if (data.length === 0) {
         return (
-            <div className="text-center py-12 text-[var(--color-text-muted)]">
-                <AlertCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Sem dados históricos disponíveis</p>
-            </div>
+            <Card>
+                <div className={`text-center py-10 ${colors.textSecondary}`}>
+                    <History className={`w-8 h-8 mx-auto mb-3 ${colors.textMuted}`} aria-hidden="true" />
+                    <p className={`font-semibold ${colors.text}`}>Ainda sem histórico</p>
+                    <p className="text-sm mt-1">Os meses aparecem aqui assim que houver movimento.</p>
+                </div>
+            </Card>
         );
     }
 
-    const bestMonth = data.reduce((max, month) => month.profit > max.profit ? month : max, data[0]);
-    const worstMonth = data.reduce((min, month) => month.profit < min.profit ? month : min, data[0]);
-
-    const avgGrowth = data.reduce((sum, month) => sum + month.growth, 0) / data.length;
-    const totalRevenue = data.reduce((sum, month) => sum + month.revenue, 0);
+    const bestMonth = data.reduce((max, m) => (m.profit > max.profit ? m : max), data[0]);
+    const avgGrowth = data.reduce((sum, m) => sum + m.growth, 0) / data.length;
+    const totalRevenue = data.reduce((sum, m) => sum + m.revenue, 0);
     const avgSign = avgGrowth > 0 ? '+' : avgGrowth < 0 ? '−' : '';
     const avgGrowthLabel = `${avgSign}${Math.abs(avgGrowth).toFixed(1).replace('.', ',')}%`;
+    const oldest = data[data.length - 1];
+    const newest = data[0];
+    const span = data.length === 1 ? '1 mês' : `${data.length} meses`;
+
+    const rows = data.map((m, index) => {
+        const prev = data[index + 1];
+        const growthLabel = formatMonthGrowth({
+            currentRevenue: m.revenue,
+            previousRevenue: prev?.revenue ?? 0,
+            previousRecords: prev ? 8 : 0,
+        });
+        const muted = growthLabel === LOW_MOVEMENT || !prev;
+        const negative = growthLabel.startsWith('−');
+        return {
+            key: `${m.month}-${m.year}`,
+            label: `${m.month} ${m.year}`,
+            m,
+            growth: !prev ? '—' : growthLabel === LOW_MOVEMENT ? 'Pouco movimento antes' : growthLabel,
+            growthClass: muted ? colors.textMuted : negative ? status.danger : status.success,
+            isBest: m === bestMonth,
+        };
+    });
+
+    const money = (v: number) => formatCurrency(v, currencyRegion);
 
     return (
-        <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-[var(--color-success-bg)] border border-[var(--color-success-border)] rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                        <Award className="w-5 h-5 text-[var(--color-success)]" />
-                        <p className="text-xs font-mono text-[var(--color-success)] uppercase">Melhor Mês</p>
+        <div className="space-y-4 md:space-y-6">
+            <section data-testid="history-kpis" aria-label="Resumo do histórico" className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <FinanceKpi
+                    icon={<Award className="h-4 w-4" />}
+                    title="Melhor mês"
+                    value={money(bestMonth.profit)}
+                    subtitle={`Lucro em ${bestMonth.month} ${bestMonth.year}`}
+                />
+                <FinanceKpi
+                    icon={<TrendingUp className="h-4 w-4" />}
+                    title="Crescimento médio"
+                    value={avgGrowthLabel}
+                    subtitle="Receita, mês a mês"
+                />
+                <FinanceKpi
+                    icon={<Wallet className="h-4 w-4" />}
+                    title={`Receita em ${span}`}
+                    value={money(totalRevenue)}
+                    subtitle={`${oldest.month} ${oldest.year} – ${newest.month} ${newest.year}`}
+                />
+            </section>
+
+            <Card
+                title={
+                    <div>
+                        <h3 className={`text-base md:text-lg font-bold tracking-tight ${colors.text}`}>Mês a mês</h3>
+                        <p className={`mt-0.5 text-xs ${colors.textSecondary}`}>Últimos {span}</p>
                     </div>
-                    <p className="text-lg font-heading text-[var(--color-text)]">
-                        {bestMonth.month} {bestMonth.year}
-                    </p>
-                    <p className="text-sm text-[var(--color-success)] font-mono">
-                        {formatCurrency(bestMonth.profit, currencyRegion)}
-                    </p>
-                </div>
+                }
+                noPadding
+            >
+                {/* Celular: lista (sem tabela com scroll lateral) */}
+                <ul className={`md:hidden divide-y ${colors.divider}`}>
+                    {rows.map((r) => (
+                        <li key={r.key} data-testid="history-month" className="px-4 py-3">
+                            <div className="flex items-baseline justify-between gap-3">
+                                <p className={`text-sm font-semibold ${colors.text}`}>
+                                    {r.label}
+                                    {r.isBest && <span className={`ml-2 text-xs font-medium ${colors.textSecondary}`}>melhor mês</span>}
+                                </p>
+                                <p className={`${font.mono} text-base font-bold tabular-nums ${colors.text}`}>{money(r.m.profit)}</p>
+                            </div>
+                            <div className={`mt-0.5 flex items-baseline justify-between gap-3 text-xs tabular-nums ${colors.textSecondary}`}>
+                                <span className="truncate">Receita {money(r.m.revenue)} · Despesas {money(r.m.expenses)}</span>
+                                <span className={`shrink-0 ${r.growthClass}`}>{r.growth}</span>
+                            </div>
+                        </li>
+                    ))}
+                </ul>
 
-                <div className="bg-[var(--color-accent-dim)] border border-[var(--color-accent-border)] rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                        <TrendingUp className="w-5 h-5 text-theme-accent" />
-                        <p className="text-xs font-mono text-theme-accent uppercase">Crescimento Médio</p>
-                    </div>
-                    <p className="text-lg font-heading text-[var(--color-text)]">
-                        {avgGrowthLabel}
-                    </p>
-                    <p className="text-sm text-theme-accent font-mono">
-                        por mês
-                    </p>
-                </div>
-
-                <div className="bg-[var(--color-info-bg)] border border-[var(--color-info-border)] rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                        <TrendingUp className="w-5 h-5 text-[var(--color-info)]" />
-                        <p className="text-xs font-mono text-[var(--color-info)] uppercase">Receita Total</p>
-                    </div>
-                    <p className="text-lg font-heading text-[var(--color-text)]">
-                        12 meses
-                    </p>
-                    <p className="text-sm text-[var(--color-info)] font-mono">
-                        {formatCurrency(totalRevenue, currencyRegion)}
-                    </p>
-                </div>
-            </div>
-
-            <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                    <thead>
-                        <tr className="border-b-2 border-[var(--color-border)] text-text-secondary font-mono text-xs uppercase">
-                            <th className="p-3">Período</th>
-                            <th className="p-3 text-right">Receita</th>
-                            <th className="p-3 text-right">Despesas</th>
-                            <th className="p-3 text-right">Lucro</th>
-                            <th className="p-3 text-right">Crescimento</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-neutral-800">
-                        {data.map((month, index) => {
-                            const isBest = month.month === bestMonth.month && month.year === bestMonth.year;
-                            const isWorst = month.month === worstMonth.month && month.year === worstMonth.year;
-                            const prev = data[index + 1];
-                            const growthLabel = formatMonthGrowth({
-                                currentRevenue: month.revenue,
-                                previousRevenue: prev?.revenue ?? 0,
-                                previousRecords: prev ? 8 : 0,
-                            });
-                            const muted = growthLabel === 'Mês anterior com pouco movimento';
-                            const growthPositive = !growthLabel.startsWith('−') && !muted;
-
-                            return (
-                                <tr
-                                    key={`${month.month}-${month.year}`}
-                                    className={`hover:bg-[var(--color-card-hover)] transition-colors ${isBest ? 'bg-[var(--color-success)]/5' : isWorst ? 'bg-[var(--color-danger)]/5' : ''}`}
-                                >
-                                    <td className="p-3">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-[var(--color-text)] font-medium">{month.month} {month.year}</span>
-                                            {isBest && <Award className="w-4 h-4 text-[var(--color-success)]" />}
-                                        </div>
+                {/* Computador: tabela */}
+                <div className="hidden md:block">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className={`border-b ${colors.divider} text-[13px] font-medium ${colors.textSecondary}`}>
+                                <th scope="col" className="px-5 py-3 font-medium">Mês</th>
+                                <th scope="col" className="px-5 py-3 font-medium text-right">Receita</th>
+                                <th scope="col" className="px-5 py-3 font-medium text-right">Despesas</th>
+                                <th scope="col" className="px-5 py-3 font-medium text-right">Lucro</th>
+                                <th scope="col" className="px-5 py-3 font-medium text-right">Crescimento</th>
+                            </tr>
+                        </thead>
+                        <tbody className={`divide-y ${colors.divider}`}>
+                            {rows.map((r) => (
+                                <tr key={r.key} data-testid="history-month">
+                                    <td className={`px-5 py-3 text-sm font-medium ${colors.text}`}>
+                                        {r.label}
+                                        {r.isBest && <span className={`ml-2 text-xs font-normal ${colors.textSecondary}`}>melhor mês</span>}
                                     </td>
-                                    <td className="p-3 text-right font-mono text-[var(--color-success)]">
-                                        {formatCurrency(month.revenue, currencyRegion)}
-                                    </td>
-                                    <td className="p-3 text-right font-mono text-[var(--color-danger)]">
-                                        {formatCurrency(month.expenses, currencyRegion)}
-                                    </td>
-                                    <td className={`p-3 text-right font-mono font-bold ${month.profit >= 0 ? 'text-theme-accent' : 'text-[var(--color-danger)]'}`}>
-                                        {formatCurrency(month.profit, currencyRegion)}
-                                    </td>
-                                    <td className="p-3 text-right">
-                                        <div className={`inline-flex max-w-[11rem] items-center gap-1 px-2 py-1 rounded text-xs font-mono ${muted ? 'bg-[var(--color-surface)] text-[var(--color-text-muted)]' : growthPositive ? 'bg-[var(--color-success-bg)] text-[var(--color-success)]' : 'bg-[var(--color-danger-bg)] text-[var(--color-danger)]'}`}>
-                                            {!muted && (growthPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />)}
-                                            {growthLabel}
-                                        </div>
-                                    </td>
+                                    <td className={`px-5 py-3 text-right ${font.mono} text-sm tabular-nums ${colors.textSecondary}`}>{money(r.m.revenue)}</td>
+                                    <td className={`px-5 py-3 text-right ${font.mono} text-sm tabular-nums ${colors.textSecondary}`}>{money(r.m.expenses)}</td>
+                                    <td className={`px-5 py-3 text-right ${font.mono} text-sm font-bold tabular-nums ${colors.text}`}>{money(r.m.profit)}</td>
+                                    <td className={`px-5 py-3 text-right text-sm tabular-nums ${r.growthClass}`}>{r.growth}</td>
                                 </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
-            </div>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </Card>
         </div>
     );
 };

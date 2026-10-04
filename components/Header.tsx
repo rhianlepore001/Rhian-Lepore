@@ -31,7 +31,7 @@ export const Header: React.FC = () => {
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
   const isSettingsRoute = pathname.startsWith('/configuracoes');
-  const { accent, colors, status, isBeauty } = useBrutalTheme();
+  const { accent, colors, status, isBeauty, isLight } = useBrutalTheme();
   const { segmentLabel, segmentLabelShort } = useBusinessCopy();
 
   // Fechar menus ao clicar fora
@@ -83,16 +83,17 @@ export const Header: React.FC = () => {
             {isSettingsRoute ? (
               <Link to="/" className="flex items-center gap-3 group hover:opacity-90 transition-all ml-1 md:ml-0 min-w-0" title="Voltar ao início">
                 <ArrowLeft className={`w-5 h-5 shrink-0 ${accent.text} opacity-70 group-hover:opacity-100 transition-all duration-300 group-hover:-translate-x-1`} />
-                <div className="relative shrink-0">
-                  <div className={`absolute -inset-3 ${accent.bgDim} blur-xl opacity-60 group-hover:opacity-100 transition-opacity duration-500 rounded-full`} />
-                  <div className="relative">
-                    <img
-                      src="/logo icon.png"
-                      alt="AgendiX"
-                      style={{ height: 36, width: 'auto', objectFit: 'contain', display: 'block' }}
-                    />
-                  </div>
-                </div>
+                {/* Marca recortada e leve (96 px, ~6–16 KB) por modo de cor. O PNG antigo de 1024 px
+                    tinha o desenho branco e deslocado + halo com blur: no claro virava um borrão. */}
+                <img
+                  src={isLight ? '/agendix-mark-light.png' : '/agendix-mark-dark.png'}
+                  alt="AgendiX"
+                  width={28}
+                  height={28}
+                  decoding="async"
+                  className="h-7 w-7 shrink-0 object-contain"
+                />
+                <span className={`font-heading text-base font-bold tracking-tight leading-none ${colors.text}`}>AgendiX</span>
               </Link>
             ) : (
               <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">

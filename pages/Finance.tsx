@@ -1,18 +1,19 @@
 ﻿import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { prefetchStaffPerformanceFromLocation } from '../hooks/useStaffPerformance';
+import { FinanceKpi } from '../components/finance/FinanceKpi';
 import { TeamPerformanceCard } from '../components/finance/TeamPerformanceCard';
 import { Card } from '../components/ui/Card';
-import { PageHeader } from '../components/ui/PageHeader';
 import { Button, Modal, Table, Badge, ConfirmModal, useToast, ErrorState, SkeletonCard } from '@/components/ui';
 import type { TableColumn } from '@/components/ui';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
-import { Wallet, TrendingUp, TrendingDown, Calendar, Download, Filter, Users, History, Trash2, Plus, Check, Smartphone, Banknote, CreditCard, User, Clock, Scissors, BarChart3 } from 'lucide-react';
+import { Wallet, TrendingUp, TrendingDown, Calendar, Download, Filter, Users, History, Trash2, Plus, Check, Smartphone, Banknote, CreditCard, User, Clock, Scissors, BarChart3, Bot } from 'lucide-react';
 import { FinanceCashflowChart } from '../components/finance/FinanceCashflowChart';
 import { AIAssistantButton } from '../components/HelpButtons';
 import { CommissionsManagement } from '../components/CommissionsManagement';
-import { MonthYearSelector } from '../components/MonthYearSelector';
+import { MonthStepper } from '../components/finance/MonthStepper';
+import { FinanceMoreMenu } from '../components/finance/FinanceMoreMenu';
 import { MonthlyHistory } from '../components/MonthlyHistory';
 import { TabNav } from '../components/TabNav';
 import { formatCurrency } from '../utils/formatters';
@@ -90,37 +91,12 @@ interface MonthlyHistoryItem {
   growth: number;
 }
 
-interface FinanceKpiProps {
-  title: string;
-  value: string;
-  subtitle: string;
-  icon: React.ReactNode;
-  iconClass: string;
-}
-
-const FinanceKpi: React.FC<FinanceKpiProps> = ({
-  title, value, subtitle, icon, iconClass,
-}) => {
-  const { colors } = useBrutalTheme();
-  return (
-    <Card variant="outlined" noPadding>
-      <div className="flex items-center gap-3 px-3 py-3 md:px-4">
-        <div className={iconClass}>{icon}</div>
-        <div className="min-w-0 flex-1">
-          <p className={`text-xs font-semibold uppercase tracking-wide ${colors.textMuted}`}>{title}</p>
-          <p className={`mt-0.5 font-mono text-xl font-black tracking-tight tabular-nums ${colors.text}`}>{value}</p>
-          <p className={`mt-0.5 text-xs ${colors.textSecondary} truncate`}>{subtitle}</p>
-        </div>
-      </div>
-    </Card>
-  );
-};
-
 export const Finance: React.FC = () => {
   const { user, region, role, companyId, teamMemberId } = useAuth();
 const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const [showFilterModal, setShowFilterModal] = useState(false);
+  const [assistantOpen, setAssistantOpen] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'revenue' | 'expense'>('all');
@@ -162,7 +138,7 @@ const [searchParams, setSearchParams] = useSearchParams();
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
 
-  const { accent, colors, isBeauty, classes, status } = useBrutalTheme();
+  const { accent, colors, isBeauty, classes, status, font } = useBrutalTheme();
   const { showToast } = useToast();
   const { region: currencyRegion, currencySymbol } = useTenantLocale();
   const { data: businessSettings } = useBusinessSettings();
@@ -490,7 +466,6 @@ const [searchParams, setSearchParams] = useSearchParams();
   };
 
   const periodLabel = `${months[selectedMonth]} ${selectedYear}`;
-  const iconClass = `flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${accent.bgDim} ${accent.text}`;
   const revenueCount = transactions.filter((t) => t.type === 'revenue').length;
   const avgTicket = revenueCount > 0 ? (summary.revenue || 0) / revenueCount : 0;
 
@@ -600,53 +575,92 @@ const [searchParams, setSearchParams] = useSearchParams();
 
   return (
     <div className="space-y-4 md:space-y-6">
-      <PageHeader
-        title={isStaff ? 'Meu financeiro' : 'Financeiro'}
-        subtitle={periodLabel}
-        meta={
-          <>
-            <Button variant="outline" size="sm" icon={<Filter className="h-4 w-4" />} onClick={() => setShowFilterModal(true)}>
-              Filtrar
-            </Button>
-            <Button variant="ghost" size="sm" icon={<Download className="h-4 w-4" />} onClick={handleExport}>
-              Exportar
-            </Button>
-            <AIAssistantButton context="suas finanças, entradas e saídas de dinheiro e relatórios" />
-          </>
-        }
-        hideActionOnMobile
-        action={
-          // Celular: "Registrar receita" fica só no "+" da barra inferior (D-E3).
-          <>
-            {!isStaff && (
-              <Button
-                variant="outline"
-                size="sm"
-                data-testid="finance-performance-button"
-                icon={<BarChart3 className="h-4 w-4" />}
-                onClick={() => navigate('/financeiro/performance')}
-                onMouseEnter={warmPerformance}
-                onPointerDown={warmPerformance}
-              >
-                Performance da equipe
-              </Button>
+      {/* Topo (PR-F #9). Celular: título + mês (‹ ›) + "⋯" numa linha; Filtrar/Exportar/Assistente no "⋯"
+          e "Registrar receita" no "+". Computador: mês ao lado do título, ações visíveis. */}
+      <header className="flex flex-col gap-3 pb-1 md:flex-row md:items-start md:justify-between md:gap-6 md:pb-2">
+        <div className="min-w-0 flex-1">
+          <div
+            className={isStaff
+              ? 'flex flex-wrap items-center gap-x-3 gap-y-2 min-[440px]:flex-nowrap'
+              : 'flex flex-wrap items-center gap-x-3 gap-y-2 min-[360px]:flex-nowrap'}
+          >
+            <h1
+              className={`${font.heading} text-2xl md:text-3xl font-bold tracking-tight leading-tight whitespace-nowrap ${colors.text} mr-auto ${activeTab !== 'overview' ? '' : isStaff ? 'min-[440px]:mr-0' : 'min-[360px]:mr-0'} md:mr-0`}
+            >
+              {isStaff ? 'Meu financeiro' : 'Financeiro'}
+            </h1>
+            {activeTab === 'overview' && (
+              <MonthStepper
+                month={selectedMonth}
+                year={selectedYear}
+                onChange={handleMonthChange}
+                className={isStaff
+                  ? 'order-last min-[440px]:order-none min-[440px]:ml-auto md:ml-0'
+                  : 'order-last min-[360px]:order-none min-[360px]:ml-auto md:ml-0'}
+              />
             )}
-            <Button variant="primary" size="sm" icon={<Plus className="h-4 w-4" />} onClick={handleOpenNewTransaction}>
-              Registrar receita
+            <FinanceMoreMenu
+              label="Mais ações do financeiro"
+              className="md:hidden"
+              items={[
+                ...(activeTab === 'overview'
+                  ? [
+                    { id: 'filter', label: 'Filtrar', icon: <Filter className="h-4 w-4" />, onSelect: () => setShowFilterModal(true) },
+                    { id: 'export', label: 'Exportar', icon: <Download className="h-4 w-4" />, onSelect: handleExport },
+                  ]
+                  : []),
+                { id: 'assistant', label: 'Assistente', icon: <Bot className="h-4 w-4" />, onSelect: () => setAssistantOpen(true) },
+              ]}
+            />
+          </div>
+          <div className="mt-3 hidden md:flex flex-wrap items-center gap-2">
+            {activeTab === 'overview' && (
+              <>
+                <Button variant="outline" size="sm" icon={<Filter className="h-4 w-4" />} onClick={() => setShowFilterModal(true)}>
+                  Filtrar
+                </Button>
+                <Button variant="ghost" size="sm" icon={<Download className="h-4 w-4" />} onClick={handleExport}>
+                  Exportar
+                </Button>
+              </>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              icon={<Bot className="h-4 w-4" />}
+              aria-label="Abrir assistente IA"
+              onClick={() => setAssistantOpen(true)}
+            >
+              Assistente
             </Button>
-          </>
-        }
+          </div>
+        </div>
+        <div className="hidden md:flex items-center gap-2 shrink-0">
+          {!isStaff && (
+            <Button
+              variant="outline"
+              size="sm"
+              data-testid="finance-performance-button"
+              icon={<BarChart3 className="h-4 w-4" />}
+              onClick={() => navigate('/financeiro/performance')}
+              onMouseEnter={warmPerformance}
+              onPointerDown={warmPerformance}
+            >
+              Performance da equipe
+            </Button>
+          )}
+          <Button variant="primary" size="sm" icon={<Plus className="h-4 w-4" />} onClick={handleOpenNewTransaction}>
+            Registrar receita
+          </Button>
+        </div>
+      </header>
+      {/* Painel fora do bloco que some no celular: abre pelo botão (computador) ou pelo "⋯". */}
+      <AIAssistantButton
+        hideTrigger
+        context="suas finanças, entradas e saídas de dinheiro e relatórios"
+        open={assistantOpen}
+        onOpenChange={setAssistantOpen}
       />
-
-      {/* Month/Year Selector */}
-      {activeTab === 'overview' && (
-        <MonthYearSelector
-          selectedMonth={selectedMonth}
-          selectedYear={selectedYear}
-          onChange={handleMonthChange}
-          accentColor={isBeauty ? 'beauty-neon' : 'accent-gold'}
-        />
-      )}
 
       {/* Abas: controle segmentado de uma linha. Staff só tem a Visão geral (sem controle). */}
       {!isStaff && (
@@ -709,7 +723,6 @@ const [searchParams, setSearchParams] = useSearchParams();
                     ? summary.growthLabel
                     : `${summary.growthLabel} vs mês anterior`
               }
-              iconClass={iconClass}
             />
             {!isStaff && (
               <>
@@ -718,8 +731,7 @@ const [searchParams, setSearchParams] = useSearchParams();
                   title="Despesas"
                   value={formatCurrency(summary.expenses || 0, currencyRegion)}
                   subtitle="Comissões e custos liquidados"
-                  iconClass={iconClass}
-                />
+                    />
                 <FinanceKpi
                   icon={<Wallet className="h-4 w-4" />}
                   title="Lucro"
@@ -729,8 +741,7 @@ const [searchParams, setSearchParams] = useSearchParams();
                       ? `${Math.round(((summary.profit || 0) / summary.revenue) * 100)}% margem`
                       : 'Sem receita no período'
                   }
-                  iconClass={iconClass}
-                />
+                    />
               </>
             )}
             {isStaff && (
@@ -739,8 +750,7 @@ const [searchParams, setSearchParams] = useSearchParams();
                 title="Atendimentos"
                 value={String(revenueCount)}
                 subtitle={`Ticket médio ${formatCurrency(avgTicket, currencyRegion)}`}
-                iconClass={iconClass}
-              />
+                />
             )}
             <FinanceKpi
               icon={<Users className="h-4 w-4" />}
@@ -751,7 +761,6 @@ const [searchParams, setSearchParams] = useSearchParams();
                   ? `1 cliente atendido em ${periodLabel}`
                   : `Clientes atendidos na fila em ${periodLabel}`
               }
-              iconClass={iconClass}
             />
           </section>
 
@@ -873,14 +882,7 @@ const [searchParams, setSearchParams] = useSearchParams();
 
       {
         activeTab === 'history' && (
-          <Card title="Histórico mensal — últimos 12 meses">
-            <MonthlyHistory
-              data={monthlyHistory}
-              currencyRegion={currencyRegion}
-              accentColor={isBeauty ? 'beauty-neon' : 'accent-gold'}
-              isBeauty={isBeauty}
-            />
-          </Card>
+          <MonthlyHistory data={monthlyHistory} currencyRegion={currencyRegion} />
         )
       }
 

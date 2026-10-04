@@ -260,10 +260,11 @@ export const TeamSettings: React.FC = () => {
             <div className="w-full space-y-8 pb-20">
                 <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
                     <div className="min-w-0">
-                        <h2 className={`text-xl md:text-2xl font-heading font-bold ${colors.text} tracking-tight`}>
+                        {/* No celular o título já está no topo de Ajustes (SettingsLayout); aqui só no computador. */}
+                        <h2 className={`hidden md:block text-xl md:text-2xl font-heading font-bold ${colors.text} tracking-tight`}>
                             Equipe e comissões
                         </h2>
-                        <p className={`text-sm mt-1 ${colors.textSecondary} max-w-lg`}>
+                        <p className={`text-sm md:mt-1 ${colors.textSecondary} max-w-lg`}>
                             Cadastre colaboradores e configure comissão e o ciclo de acerto.
                         </p>
                     </div>

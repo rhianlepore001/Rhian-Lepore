@@ -601,6 +601,8 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                 settledIds={settledIds}
                                 onPay={(r) => handleOpenPayModal(byId(r))}
                                 analysisHref={(r) => `/financeiro/performance?de=${cycle.start}&ate=${cycle.end}&pro=${encodeURIComponent(r.professional_id)}`}
+                                historyHref={`/financeiro/performance?de=${cycle.start}&ate=${cycle.end}`}
+                                periodLabel={`Período ${formatDayMonth(cycle.start)} – ${formatDayMonth(cycle.end)}`}
                                 onOpenReport={(r) => { setDetailsProfessional(byId(r)); setShowReportModal(true); }}
                                 onOpenHistory={(r) => { setDetailsProfessional(byId(r)); setShowHistoryModal(true); }}
                             />

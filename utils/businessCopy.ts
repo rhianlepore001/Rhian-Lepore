@@ -88,3 +88,28 @@ export function resolveBusinessTheme(userType: string | null | undefined): Busin
 export function getBusinessCopy(theme: BusinessTheme): BusinessCopy {
   return theme === 'beauty' ? BEAUTY_COPY : BARBER_COPY;
 }
+
+/** Artigo + substantivo do estabelecimento, sem assumir o tipo no restante da UI. */
+export interface BusinessRemainderNoun {
+  noun: string;
+  article: 'a' | 'o';
+  withArticle: string;
+  remainderLabel: string;
+}
+
+function remainderOf(article: 'a' | 'o', noun: string): BusinessRemainderNoun {
+  const withArticle = `${article} ${noun}`;
+  return { noun, article, withArticle, remainderLabel: `Ficou para ${withArticle}` };
+}
+
+/**
+ * Rótulo "Ficou para {a barbearia | o salão | o estúdio}".
+ * Tipo desconhecido → "Ficou para o negócio". Não usa o tema visual (que cai em barbearia).
+ */
+export function getBusinessRemainderNoun(userType: string | null | undefined): BusinessRemainderNoun {
+  const raw = String(userType ?? '').trim().toLowerCase();
+  if (raw === 'barber' || raw === 'barbearia') return remainderOf('a', 'barbearia');
+  if (raw === 'beauty' || raw === 'salao' || raw === 'salão' || raw === 'salon') return remainderOf('o', 'salão');
+  if (raw === 'tattoo' || raw === 'estudio' || raw === 'estúdio' || raw === 'studio') return remainderOf('o', 'estúdio');
+  return remainderOf('o', 'negócio');
+}

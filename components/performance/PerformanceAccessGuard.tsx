@@ -1,11 +1,18 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { prefetchStaffPerformanceFromLocation } from '../../hooks/useStaffPerformance';
+import { PerformancePageSkeleton } from './PerformancePageSkeleton';
 
 /** R7.1: colaborador que abre /financeiro/performance vai para os próprios resultados. */
 export const PerformanceAccessGuard: React.FC<{ children: React.ReactElement }> = ({ children }) => {
     const { isAuthenticated, loading, role } = useAuth();
-    if (loading) return null;
+
+    useEffect(() => {
+        prefetchStaffPerformanceFromLocation();
+    }, []);
+
+    if (loading) return <PerformancePageSkeleton />;
     if (!isAuthenticated) return <Navigate to="/login" replace />;
     if (role === 'staff') return <Navigate to="/meus-insights" replace />;
     return children;

@@ -1,28 +1,32 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, BarChart3, CalendarX } from 'lucide-react';
-import { Badge, Button, EmptyState, ErrorState, PageHeader, Skeleton } from '../components/ui';
+import { Button, EmptyState, ErrorState, PageHeader, Badge } from '../components/ui';
 import { CommissionDetailReport } from '../components/CommissionDetailReport';
 import { CommissionPaymentHistory } from '../components/CommissionPaymentHistory';
 import { DataQualityNotice } from '../components/performance/DataQualityNotice';
 import { MemberDetail } from '../components/performance/MemberDetail';
 import { PerformanceFilters, type RosterEntry } from '../components/performance/PerformanceFilters';
+import { PerformancePageSkeleton } from '../components/performance/PerformancePageSkeleton';
+import { PerformanceSection } from '../components/performance/PerformanceSection';
 import { TeamOverview } from '../components/performance/TeamOverview';
 import { TeamRanking } from '../components/performance/TeamRanking';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
+import { useBusinessCopy } from '../hooks/useBusinessCopy';
 import { useStaffPerformance } from '../hooks/useStaffPerformance';
 import { supabase } from '../lib/supabase';
 import { useTenantLocale } from '../hooks/useTenantLocale';
 import { getCurrencySymbol } from '../utils/formatters';
 import {
-    comparisonLabel,
+    compactPeriodLine,
     detectPreset,
+    emptyPeriodSuggestion,
     filtersToSearch,
     parseFilters,
-    periodLabel,
     presetRange,
     previousMonthName,
+    shopTimezoneDiffersFromDevice,
     timezoneLabel,
     type PerformanceFilters as Filters,
     type SortDir,
@@ -31,11 +35,13 @@ import {
 import { formatCycleLabel } from '../utils/commissionCycle';
 
 const BASE = '/financeiro/performance';
+const PAGE_PB = 'pb-[calc(8rem+var(--safe-bottom))] md:pb-16';
 
 export const StaffPerformance: React.FC = () => {
     const { user } = useAuth();
+    const { remainder } = useBusinessCopy();
     const { formatMoney, region: localeRegion } = useTenantLocale();
-    const { colors, font, radius, isBeauty } = useBrutalTheme();
+    const { colors, isBeauty } = useBrutalTheme();
     const location = useLocation();
     const navigate = useNavigate();
     const today = useMemo(() => new Date(), []);
@@ -76,14 +82,22 @@ export const StaffPerformance: React.FC = () => {
         }
     }, [data, filters.pro]);
 
+    useEffect(() => {
+        const scroller = [...document.querySelectorAll('div')].find((node) => {
+            const c = typeof node.className === 'string' ? node.className : '';
+            return c.includes('overflow-y-auto') && c.includes('h-[100dvh]');
+        }) as HTMLElement | undefined;
+        (scroller ?? document.scrollingElement)?.scrollTo(0, 0);
+    }, [filters.pro, filters.start, filters.end]);
+
     const go = (next: Filters) => navigate({ pathname: BASE, search: `?${filtersToSearch(next)}` });
     const hrefFor = (pro: string) => `${BASE}?${filtersToSearch({ ...filters, pro })}`;
 
     const region = localeRegion;
-    const against = compare && data?.period.previous ? comparisonLabel(data.period.previous) : null;
     const previousName = compare ? previousMonthName(data?.period.previous) : null;
     const preset = detectPreset(filters.start, filters.end, today, settlementDay);
     const member = filters.pro ? data?.members.find((m) => m.professional_id === filters.pro) ?? null : null;
+    const emptyHint = emptyPeriodSuggestion(preset);
 
     const quality = useMemo(() => {
         const sum = { sem_registro_financeiro: 0, duplicadas: 0, sem_desfecho: 0 };
@@ -103,6 +117,9 @@ export const StaffPerformance: React.FC = () => {
     const isEmpty = !!data && (filters.pro
         ? !member || (member.metrics.atendimentos === 0 && member.metrics.vendas_produtos === 0 && member.metrics.avulsos === 0)
         : (data.team_totals?.atendimentos ?? 0) === 0 && (data.team_totals?.vendas_produtos ?? 0) === 0 && (data.team_totals?.avulsos ?? 0) === 0);
+    const comparingLine = !isEmpty && data
+        ? compactPeriodLine(filters.start, filters.end, compare ? data.period.previous : null, compare)
+        : compactPeriodLine(filters.start, filters.end, null, false);
 
     const openReport = async () => {
         if (!member || !user?.id) return;
@@ -122,49 +139,45 @@ export const StaffPerformance: React.FC = () => {
 
     const subtitle = (
         <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="first-letter:uppercase">{periodLabel(filters.start, filters.end)}</span>
-            {against && <span className={colors.textMuted}>· comparado {against.replace(/^vs /, 'com ')}</span>}
+            <span>{data ? comparingLine : compactPeriodLine(filters.start, filters.end, null, false)}</span>
             {data?.period.partial && <Badge variant="warning">Mês em andamento</Badge>}
         </span>
     );
 
     return (
-        <div className="space-y-5 lg:space-y-6 pb-28 lg:pb-16">
-            <Link to="/financeiro?tab=commissions" className={`inline-flex items-center gap-1.5 min-h-[44px] -mb-2 text-sm ${colors.textSecondary} hover:text-theme-text`}>
-                <ArrowLeft className="w-4 h-4" aria-hidden="true" /> Pagamento de comissão
-            </Link>
-            <PageHeader title="Performance da equipe" subtitle={subtitle} />
+        <div className={`flex flex-col ${PAGE_PB} max-w-[1120px]`}>
+            <div className="flex flex-col gap-2 lg:gap-3">
+                <Link to="/financeiro?tab=commissions" className={`hidden lg:inline-flex items-center gap-1.5 min-h-[44px] text-sm ${colors.textSecondary} hover:text-theme-text`}>
+                    <ArrowLeft className="w-4 h-4" aria-hidden="true" /> Financeiro
+                </Link>
+                <PageHeader title="Performance da equipe" subtitle={subtitle} className="!pb-0 !gap-1" />
+                <PerformanceFilters
+                    preset={preset}
+                    start={filters.start}
+                    end={filters.end}
+                    pro={filters.pro}
+                    compare={compare}
+                    roster={roster}
+                    tzLabel={data ? timezoneLabel(data.period.tz) : null}
+                    showTzOnPage={!!data && shopTimezoneDiffersFromDevice(data.period.tz)}
+                    onPreset={(p) => go({ ...presetRange(p, today, settlementDay), pro: filters.pro })}
+                    onCustom={(start, end) => start <= end && go({ start, end, pro: filters.pro })}
+                    onPro={(pro) => go({ ...filters, pro })}
+                    onCompare={setCompare}
+                />
+            </div>
 
-            <PerformanceFilters
-                preset={preset}
-                start={filters.start}
-                end={filters.end}
-                pro={filters.pro}
-                compare={compare}
-                roster={roster}
-                tzLabel={data ? timezoneLabel(data.period.tz) : null}
-                onPreset={(p) => go({ ...presetRange(p, today, settlementDay), pro: filters.pro })}
-                onCustom={(start, end) => start <= end && go({ start, end, pro: filters.pro })}
-                onPro={(pro) => go({ ...filters, pro })}
-                onCompare={setCompare}
-            />
+            <div className="mt-4 lg:mt-8 flex flex-col gap-8">
 
-            {status === 'loading' && (
-                <div data-testid="performance-loading" aria-busy="true" aria-label="Carregando a performance" className="space-y-3">
-                    <Skeleton className="h-28 w-full" />
-                    <Skeleton count={4} className="h-16 w-full" />
-                </div>
-            )}
+            {status === 'loading' && <PerformancePageSkeleton />}
 
             {status === 'error' && (
-                <div className={`border ${colors.border} ${radius.card} ${colors.card}`}>
-                    <ErrorState
-                        title="Não foi possível carregar a performance."
-                        message="Confira a conexão e tente de novo."
-                        retryLabel="Tentar de novo"
-                        onRetry={retry}
-                    />
-                </div>
+                <ErrorState
+                    title="Não foi possível carregar a performance."
+                    message="Confira a conexão e tente de novo."
+                    retryLabel="Tentar de novo"
+                    onRetry={retry}
+                />
             )}
 
             {status === 'unavailable' && (
@@ -187,8 +200,12 @@ export const StaffPerformance: React.FC = () => {
                         icon={CalendarX}
                         bordered
                         title="Nenhum atendimento concluído neste período."
-                        description="Tente 'Mês passado'."
-                        action={<Button variant="secondary" onClick={() => go({ ...presetRange('mes_passado', today), pro: filters.pro })}>{"Ver 'Mês passado'"}</Button>}
+                        description={emptyHint ? `Tente “${emptyHint.label}”.` : undefined}
+                        action={emptyHint ? (
+                            <Button variant="secondary" onClick={() => go({ ...presetRange(emptyHint.id, today, settlementDay), pro: filters.pro })}>
+                                {`Ver “${emptyHint.label}”`}
+                            </Button>
+                        ) : undefined}
                     />
                 </>
             )}
@@ -197,10 +214,10 @@ export const StaffPerformance: React.FC = () => {
                 <MemberDetail
                     member={member}
                     data={data}
-                    against={against}
                     previousName={previousName}
                     formatMoney={formatMoney}
                     companyId={user?.id ?? ''}
+                    remainder={remainder}
                     onBack={() => go({ ...filters, pro: null })}
                     onOpenHistory={() => setModal('history')}
                     onOpenReport={openReport}
@@ -209,34 +226,41 @@ export const StaffPerformance: React.FC = () => {
 
             {status === 'ready' && data && !isEmpty && !filters.pro && (
                 <>
-                    <TeamOverview totals={data.team_totals} previous={compare ? data.team_previous : null} against={against} formatMoney={formatMoney} />
-                    <div className="space-y-3">
-                        <div className="flex flex-col gap-1">
-                            <h2 className={`${font.heading} text-lg font-bold tracking-tight ${colors.text}`}>Por colaborador</h2>
-                            <p className={`text-sm ${colors.textSecondary}`}>Compare cada pessoa principalmente com ela mesma. Turnos e tipos de serviço diferentes mudam os números.</p>
-                            {!data.ranking_available && (
-                                <p className={`text-sm ${colors.textMuted}`}>Ranking aparece quando 2 ou mais colaboradores têm {data.min_sample} atendimentos no período.</p>
-                            )}
-                        </div>
+                    <TeamOverview
+                        totals={data.team_totals}
+                        previous={compare ? data.team_previous : null}
+                        previousName={previousName}
+                        periodStart={data.period.start}
+                        periodEnd={data.period.end}
+                        formatMoney={formatMoney}
+                        remainder={remainder}
+                    />
+                    <PerformanceSection
+                        title="Por colaborador"
+                        description="Compare cada pessoa principalmente com ela mesma. Turnos e tipos de serviço diferentes mudam os números."
+                    >
+                        {!data.ranking_available && (
+                            <p className={`text-sm ${colors.textMuted}`}>Ranking aparece quando 2 ou mais colaboradores têm {data.min_sample} atendimentos no período.</p>
+                        )}
                         <TeamRanking
                             members={data.members.map((m) => (compare ? m : { ...m, previous: null }))}
                             minSample={data.min_sample}
-                            previousName={previousName}
                             formatMoney={formatMoney}
                             hrefFor={hrefFor}
                             sortKey={sort.key}
                             sortDir={sort.dir}
                             onSort={(key, dir) => setSort({ key, dir })}
+                            remainder={remainder}
                         />
-                    </div>
+                    </PerformanceSection>
                     {data.unassigned && data.unassigned.atendimentos + data.unassigned.vendas_produtos + data.unassigned.avulsos > 0 && (
-                        <section aria-label="Sem profissional" className={`flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border border-dashed ${colors.border} ${radius.card} px-4 py-3 lg:px-5`}>
-                            <div className="min-w-0">
-                                <h3 className={`text-sm font-semibold ${colors.text}`}>Sem profissional</h3>
-                                <p className={`text-xs ${colors.textMuted}`}>Atendimentos e vendas sem colaborador atribuído. Entram no total da equipe, fora do ranking.</p>
-                            </div>
-                            <p className={`text-sm ${colors.textSecondary} tabular-nums`}>
-                                <span className={`${font.mono} ${colors.text}`}>{data.unassigned.retorno == null ? '—' : formatMoney(data.unassigned.retorno)}</span>
+                        <section aria-label="Sem profissional" className="space-y-1">
+                            <h2 className={`text-lg font-semibold ${colors.text}`}>Sem profissional</h2>
+                            <p className={`text-sm ${colors.textSecondary}`}>
+                                Atendimentos e vendas sem colaborador atribuído. Entram no total da equipe, sem posição no ranking.
+                            </p>
+                            <p className={`text-sm tabular-nums ${colors.textSecondary}`}>
+                                <span className={`${colors.text} font-semibold`}>{data.unassigned.retorno == null ? '—' : formatMoney(data.unassigned.retorno)}</span>
                                 {` · ${data.unassigned.atendimentos} ${data.unassigned.atendimentos === 1 ? 'atendimento' : 'atendimentos'}`}
                             </p>
                         </section>
@@ -246,9 +270,10 @@ export const StaffPerformance: React.FC = () => {
 
             {status === 'ready' && data && <DataQualityNotice counts={quality} />}
 
-            <p className={`text-xs ${colors.textMuted}`}>
-                Valores antes das despesas fixas, no modelo de comissão por atendimento. Aluguel de cadeira ainda não é suportado.
+            <p className={`text-[13px] ${colors.textMuted}`}>
+                Aluguel, luz e outras contas fixas não entram nestes números.
             </p>
+            </div>
 
             {modal === 'history' && member && (
                 <CommissionPaymentHistory

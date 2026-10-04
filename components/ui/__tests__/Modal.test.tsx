@@ -112,4 +112,20 @@ describe('Modal Component', () => {
     await userEvent.click(closeBtn);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
+
+  it('a11y: 44×44, aria-labelledby e título focável', () => {
+    render(
+      <Modal open={true} onClose={() => {}} title="Título do Modal">
+        <div>Conteúdo</div>
+      </Modal>
+    );
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveAttribute('aria-modal', 'true');
+    const title = screen.getByRole('heading', { name: 'Título do Modal' });
+    expect(dialog.getAttribute('aria-labelledby')).toBe(title.id);
+    expect(title).toHaveAttribute('tabindex', '-1');
+    const closeBtn = screen.getByRole('button', { name: 'Fechar' });
+    expect(closeBtn.className).toMatch(/h-11/);
+    expect(closeBtn.className).toMatch(/w-11/);
+  });
 });

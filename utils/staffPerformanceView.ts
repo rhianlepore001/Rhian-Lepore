@@ -1,4 +1,5 @@
 import type { PerformanceMember } from '../types/staffPerformance';
+import type { BusinessRemainderNoun } from './businessCopy';
 import { parseLocalISODate, toLocalISODate } from './commissionCycle';
 
 /**
@@ -76,6 +77,46 @@ export function previousMonthName(prev: DateRange | null | undefined): string | 
     return MONTHS[parseLocalISODate(prev.start).getMonth()];
 }
 
+/** Mês cheio: "setembro". Intervalo: "03/09 – 02/10". */
+export function periodShortLabel(start: string, end: string): string {
+    const s = parseLocalISODate(start);
+    const e = parseLocalISODate(end);
+    if (isFullMonth(start, end)) return MONTHS[s.getMonth()];
+    return `${pad(s.getDate())}/${pad(s.getMonth() + 1)} – ${pad(e.getDate())}/${pad(e.getMonth() + 1)}`;
+}
+
+function capitalizePt(text: string): string {
+    if (!text) return text;
+    return text.charAt(0).toLocaleUpperCase('pt-BR') + text.slice(1);
+}
+
+/** Uma vez no topo da página. Sem "vs" nos cards. */
+export function comparingHeadline(start: string, end: string, prev: DateRange | null | undefined): string | null {
+    if (!prev) return null;
+    const current = isFullMonth(start, end) ? MONTHS[parseLocalISODate(start).getMonth()] : periodShortLabel(start, end);
+    const previous = previousMonthName(prev) ?? periodShortLabel(prev.start, prev.end);
+    return `Comparando ${current} com ${previous}`;
+}
+
+/** Título + uma linha: "Setembro de 2026 · comparado com agosto". */
+export function compactPeriodLine(
+    start: string,
+    end: string,
+    prev: DateRange | null | undefined,
+    compare: boolean,
+): string {
+    const period = capitalizePt(periodLabel(start, end));
+    if (!compare || !prev) return period;
+    const previous = previousMonthName(prev) ?? periodShortLabel(prev.start, prev.end);
+    return `${period} · comparado com ${previous}`;
+}
+
+/** Só mostra o fuso na página quando o do salão é outro. */
+export function shopTimezoneDiffersFromDevice(shopTz: string, deviceTz?: string): boolean {
+    const device = deviceTz ?? (typeof Intl === 'undefined' ? '' : Intl.DateTimeFormat().resolvedOptions().timeZone);
+    return Boolean(shopTz && device && shopTz !== device);
+}
+
 /** R3.6: "vs agosto" · "vs 01–30 ago" · "vs 04 ago–02 set". */
 export function comparisonLabel(prev: DateRange | null | undefined): string | null {
     if (!prev) return null;
@@ -87,6 +128,13 @@ export function comparisonLabel(prev: DateRange | null | undefined): string | nu
         return `vs ${pad(s.getDate())}–${pad(e.getDate())} ${MONTHS_SHORT[e.getMonth()]}`;
     }
     return `vs ${pad(s.getDate())} ${MONTHS_SHORT[s.getMonth()]}–${pad(e.getDate())} ${MONTHS_SHORT[e.getMonth()]}`;
+}
+
+/** Empty state: nunca sugere o período em que a pessoa já está. */
+export function emptyPeriodSuggestion(preset: PeriodPreset): { id: Exclude<PeriodPreset, 'personalizado'>; label: string } | null {
+    if (preset === 'mes_passado') return { id: 'ultimos_30', label: 'Últimos 30 dias' };
+    if (preset === 'ultimos_30') return { id: 'este_mes', label: 'Este mês' };
+    return { id: 'mes_passado', label: 'Mês passado' };
 }
 
 export function monthShortLabel(yyyyMm: string): string {
@@ -129,6 +177,15 @@ export function formatHours(min: number | null | undefined): string {
     return m ? `${h}h ${m}min` : `${h}h`;
 }
 
+/** "3 h" / "6 h 30 min" para a linha de apoio. */
+export function formatWorkHours(min: number | null | undefined): string | null {
+    if (!min || min <= 0) return null;
+    const h = Math.floor(min / 60);
+    const m = Math.round(min % 60);
+    if (!h) return `${m} min`;
+    return m ? `${h} h ${m} min` : `${h} h`;
+}
+
 export function formatPercent(ratio: number | null | undefined): string {
     if (ratio == null || Number.isNaN(ratio)) return '—';
     return `${Math.round(ratio * 100)}%`;
@@ -142,13 +199,22 @@ export function formatPercentPrecise(ratio: number | null | undefined): string {
 
 export const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
-// ---- Deltas (R3.15) ----
+// ---- Comparações em frase (sem seta, sem p.p.) ----
 export type Tone = 'good' | 'bad' | 'neutral';
 export interface Delta { text: string; tone: Tone; label: 'melhor' | 'pior' | 'estável' | 'novo' | 'sem_base' }
 
-interface DeltaOpts { prevSample: number; lowerIsBetter?: boolean }
-const MIN_SAMPLE = 8;
-const MINUS = '\u2212';
+interface DeltaOpts { prevSample: number; lowerIsBetter?: boolean; previousName?: string | null }
+export const MIN_SAMPLE = 8;
+
+export function fewSampleCompare(previousName?: string | null): string {
+    return previousName
+        ? `Em ${previousName} teve poucos atendimentos para comparar`
+        : 'No período anterior teve poucos atendimentos para comparar';
+}
+
+function whenPhrase(previousName?: string | null): string {
+    return previousName ? `em ${previousName}` : 'no período anterior';
+}
 
 function tone(diff: number, rel: number, { prevSample, lowerIsBetter }: DeltaOpts): Pick<Delta, 'tone' | 'label'> {
     if (prevSample < MIN_SAMPLE) return { tone: 'neutral', label: 'sem_base' };
@@ -157,19 +223,42 @@ function tone(diff: number, rel: number, { prevSample, lowerIsBetter }: DeltaOpt
     return good ? { tone: 'good', label: 'melhor' } : { tone: 'bad', label: 'pior' };
 }
 
+export function moneyCompareText(
+    curr: number | null | undefined,
+    prev: number | null | undefined,
+    opts: DeltaOpts & { formatMoney: (v: number) => string },
+): string | null {
+    if (curr == null || prev == null) return null;
+    if (opts.prevSample < MIN_SAMPLE) return fewSampleCompare(opts.previousName);
+    const diff = curr - prev;
+    if (diff === 0) return null;
+    if (prev === 0) return null;
+    return `${opts.formatMoney(Math.abs(diff))} a ${diff > 0 ? 'mais' : 'menos'} que ${whenPhrase(opts.previousName)}`;
+}
+
+export function rateCompareText(
+    curr: number | null | undefined,
+    prev: number | null | undefined,
+    opts: DeltaOpts,
+): string | null {
+    if (curr == null || prev == null) return null;
+    if (opts.prevSample < MIN_SAMPLE) return fewSampleCompare(opts.previousName);
+    if (Math.round(curr * 100) === Math.round(prev * 100)) return null;
+    const verb = curr > prev ? 'subiu' : 'caiu';
+    return `${verb} de ${formatPercent(prev)} para ${formatPercent(curr)}`;
+}
+
 export function valueDelta(
     curr: number | null | undefined,
     prev: number | null | undefined,
     opts: DeltaOpts & { format: (v: number) => string },
 ): Delta | null {
-    if (curr == null || prev == null) return null;
-    if (prev === 0) return curr === 0 ? null : { text: 'novo', tone: 'neutral', label: 'novo' };
+    const text = moneyCompareText(curr, prev, { ...opts, formatMoney: opts.format });
+    if (!text) return null;
+    if (opts.prevSample < MIN_SAMPLE) return { text, tone: 'neutral', label: 'sem_base' };
+    if (curr == null || prev == null || prev === 0) return { text, tone: 'neutral', label: 'novo' };
     const diff = curr - prev;
-    if (diff === 0) return null;
     const rel = diff / Math.abs(prev);
-    const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '=';
-    const sign = diff > 0 ? '+' : diff < 0 ? MINUS : '';
-    const text = `${arrow} ${sign}${opts.format(Math.abs(diff))} (${sign}${Math.round(Math.abs(rel) * 100)}%)`;
     return { text, ...tone(diff, rel, opts) };
 }
 
@@ -181,14 +270,27 @@ export function moneyDelta(
     return valueDelta(curr, prev, { ...opts, format: opts.formatMoney });
 }
 
-/** Taxas: diferença em pontos percentuais ("▲ +5 p.p."). */
 export function rateDelta(curr: number | null | undefined, prev: number | null | undefined, opts: DeltaOpts): Delta | null {
+    const text = rateCompareText(curr, prev, opts);
+    if (!text) return null;
+    if (opts.prevSample < MIN_SAMPLE) return { text, tone: 'neutral', label: 'sem_base' };
     if (curr == null || prev == null) return null;
-    const pp = Math.round((curr - prev) * 100);
-    const rel = prev === 0 ? (curr === 0 ? 0 : 1) : (curr - prev) / prev;
-    if (pp === 0) return { text: '= 0 p.p.', tone: 'neutral', label: 'estável' };
-    const text = `${pp > 0 ? '▲ +' : `▼ ${MINUS}`}${Math.abs(pp)} p.p.`;
-    return { text, ...tone(curr - prev, rel, opts) };
+    const diff = curr - prev;
+    const rel = prev === 0 ? (curr === 0 ? 0 : 1) : diff / prev;
+    return { text, ...tone(diff, rel, opts) };
+}
+
+export function remainderModalCompare(
+    curr: number | null | undefined,
+    prev: number | null | undefined,
+    opts: DeltaOpts & { formatMoney: (v: number) => string },
+): string | null {
+    if (curr == null || prev == null) return null;
+    if (opts.prevSample < MIN_SAMPLE) return fewSampleCompare(opts.previousName);
+    const when = opts.previousName ? `Em ${opts.previousName}` : 'No período anterior';
+    const diff = curr - prev;
+    if (diff === 0) return `${when} ficaram ${opts.formatMoney(prev)}. Agora, o mesmo valor.`;
+    return `${when} ficaram ${opts.formatMoney(prev)}. Agora, ${opts.formatMoney(Math.abs(diff))} a ${diff > 0 ? 'mais' : 'menos'}.`;
 }
 
 // ---- Ranking e selos (R4.8, R3.9–R3.11) ----
@@ -197,8 +299,20 @@ export const rankLabel = (rank: number) => `${rank}º`;
 export function memberBadge(m: PerformanceMember, minSample: number): string | null {
     if (m.is_owner) return 'Dono';
     if (m.inactive) return 'Inativo';
-    if (m.low_sample) return `Amostra baixa (${m.metrics.atendimentos} de ${minSample})`;
+    if (m.low_sample) return 'Poucos atendimentos para comparar';
     return null;
+}
+
+export function unrankedSentence(m: PerformanceMember, minSample: number): string {
+    const did = `Fez ${plural(m.metrics.atendimentos, 'atendimento', 'atendimentos')}`;
+    if (m.is_owner) return `${did}. O dono não entra no ranking.`;
+    return `${did}; o ranking começa em ${minSample}`;
+}
+
+export function rankedSentence(m: PerformanceMember): string {
+    const n = m.metrics.atendimentos;
+    if (m.is_owner) return `Fez ${plural(n, 'atendimento', 'atendimentos')}. Como dono, a comissão conta como zero.`;
+    return `Fez ${plural(n, 'atendimento', 'atendimentos')}`;
 }
 
 export type SortKey = 'rank' | 'retorno' | 'retorno_por_hora' | 'ticket_medio' | 'voltou_taxa' | 'taxa_faltas' | 'atendimentos';
@@ -231,21 +345,26 @@ export function sortMembers(members: PerformanceMember[], key: SortKey, dir: Sor
 // ---- Frase-resumo (R7.3) ----
 export function summarySentence(
     m: PerformanceMember,
-    opts: { formatMoney: (v: number) => string; minSample: number; previousName: string | null },
+    opts: {
+        formatMoney: (v: number) => string;
+        minSample: number;
+        previousName: string | null;
+        remainder: Pick<BusinessRemainderNoun, 'withArticle'>;
+    },
 ): string {
     const n = m.metrics.atendimentos;
     if (n === 0 && m.metrics.retorno == null) return `${m.name} não teve atendimentos concluídos neste período.`;
     if (m.is_owner) return `${m.name} fez ${plural(n, 'atendimento', 'atendimentos')}. Como dono, a comissão conta como zero.`;
-    if (m.low_sample) return `${m.name} fez ${plural(n, 'atendimento', 'atendimentos')}: poucos para comparar (mínimo ${opts.minSample}).`;
+    if (m.low_sample) return `${m.name} fez ${plural(n, 'atendimento', 'atendimentos')}: o ranking começa em ${opts.minSample}.`;
     const money = (v: number | null) => (v == null ? '—' : opts.formatMoney(v));
-    let s = `${m.name} deixou ${money(m.metrics.retorno)} para a casa em ${plural(n, 'atendimento', 'atendimentos')}`;
+    let s = `${m.name} deixou ${money(m.metrics.retorno)} para ${opts.remainder.withArticle} em ${plural(n, 'atendimento', 'atendimentos')}`;
     if (m.metrics.retorno_por_hora != null) s += ` (${money(m.metrics.retorno_por_hora)} por hora)`;
-    const d = moneyDelta(m.metrics.retorno, m.previous?.retorno, { prevSample: m.previous?.atendimentos ?? 0, formatMoney: opts.formatMoney });
-    if (d && d.tone !== 'neutral' && m.previous?.retorno) {
-        const pct = Math.round(Math.abs((m.metrics.retorno! - m.previous.retorno) / m.previous.retorno) * 100);
-        const when = opts.previousName ? `em ${opts.previousName}` : 'no período anterior';
-        s += `, ${pct}% a ${d.tone === 'good' ? 'mais' : 'menos'} que ${when}`;
-    }
+    const compare = moneyCompareText(m.metrics.retorno, m.previous?.retorno, {
+        prevSample: m.previous?.atendimentos ?? 0,
+        formatMoney: opts.formatMoney,
+        previousName: opts.previousName,
+    });
+    if (compare && !compare.includes('poucos atendimentos')) s += `, ${compare}`;
     return `${s}.`;
 }
 

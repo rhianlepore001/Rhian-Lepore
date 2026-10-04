@@ -4,6 +4,8 @@ import {
   formatAgendaAlteracao,
   formatAgendaOnlineRequestsTitle,
   formatAgendaPublicBookingsSummary,
+  formatAgendaRequestsBanner,
+  formatStaffCannotActSummary,
   formatClientEditReservedLine,
   clientEditReservedIso,
   isClientEditPending,
@@ -75,5 +77,48 @@ describe('clientEditRequest', () => {
     expect(formatAgendaPublicBookingsSummary(1, 2)).toBe('2 pedidos novos e 1 alteração');
     expect(formatAgendaPublicBookingsSummary(2, 1)).toBe('1 pedido novo e 2 alterações');
     expect(formatAgendaPublicBookingsSummary(0, 3)).toBe('Feitos pelo link público — aceite ou recuse.');
+  });
+
+  it('banner sem permissão: pedido para o profissional, sem aceite ou recuse', () => {
+    expect(formatStaffCannotActSummary(
+      [{ professional_id: 'a1' }],
+      [{ id: 'a1', name: 'Aline X' }],
+    )).toBe('Pedido para Aline X. Só Aline X ou o dono podem responder.');
+    expect(formatStaffCannotActSummary(
+      [{ professional_id: 'a1' }, { professional_id: 'a1' }],
+      [{ id: 'a1', name: 'Aline X' }],
+    )).toBe('Pedidos para Aline X. Só Aline X ou o dono podem responder.');
+    expect(formatStaffCannotActSummary(
+      [{ professional_id: 'a1' }, { professional_id: 'a2' }],
+      [{ id: 'a1', name: 'Aline X' }, { id: 'a2', name: 'Yago Y' }],
+    )).toBe('Pedidos para Aline X e Yago Y. Só Aline X, Yago Y ou o dono podem responder.');
+    expect(formatStaffCannotActSummary(
+      [{ professional_id: null }],
+      [{ id: 'a1', name: 'Aline X' }],
+    )).toBe('Pedido para qualquer profissional. Só o dono pode responder.');
+  });
+
+  it('contador do banner conta só o que o usuário pode aceitar', () => {
+    const bookings = [
+      { professional_id: 'a1', status: 'pending', is_edit: false },
+      { professional_id: 'a2', status: 'pending', is_edit: false },
+    ];
+    const members = [{ id: 'a1', name: 'Aline X' }, { id: 'a2', name: 'Yago Y' }];
+    expect(formatAgendaRequestsBanner({
+      bookings,
+      canActOnBooking: (b) => b.professional_id === 'a1',
+      teamMembers: members,
+    })).toEqual({
+      title: '1 solicitação online',
+      summary: 'Feitos pelo link público — aceite ou recuse.',
+    });
+    expect(formatAgendaRequestsBanner({
+      bookings,
+      canActOnBooking: () => false,
+      teamMembers: members,
+    })).toEqual({
+      title: '2 solicitações online',
+      summary: 'Pedidos para Aline X e Yago Y. Só Aline X, Yago Y ou o dono podem responder.',
+    });
   });
 });

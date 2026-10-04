@@ -52,6 +52,7 @@ const CODE_MAP: Record<string, string> = {
   booking_not_cancellable: 'Não foi possível cancelar este agendamento. Tente de novo ou fale com o salão.',
   cancel_window_closed: 'O prazo para cancelar online já passou. Fale com o estabelecimento.',
   self_rescheduling_disabled: 'O estabelecimento não permite remarcar pelo app. Fale com o salão.',
+  not_allowed_for_booking: 'Você não pode aceitar ou recusar este pedido.',
   agenda_blocked: AGENDA_BLOCKED_MESSAGE,
   professional_blocked: AGENDA_BLOCKED_MESSAGE,
   block_finished: messageForAgendaBlockResultCode('block_finished'),
@@ -120,6 +121,9 @@ function pickCode(raw: RawErrorShape): string {
   }
   if (msg.includes('self_rescheduling_disabled')) {
     return 'self_rescheduling_disabled';
+  }
+  if (msg.includes('not_allowed_for_booking') || raw.hint === 'not_allowed_for_booking') {
+    return 'not_allowed_for_booking';
   }
   if (raw.status === 401) return 'auth_expired';
   if (raw.status === 403) return 'permission_denied';

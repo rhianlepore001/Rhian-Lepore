@@ -73,6 +73,12 @@ describe('mapError', () => {
     expect(out.message).toBe('O estabelecimento não permite remarcar pelo app. Fale com o salão.');
   });
 
+  it('traduz not_allowed_for_booking', () => {
+    const out = mapError({ message: 'not_allowed_for_booking' }, 'fallback');
+    expect(out.message).toBe('Você não pode aceitar ou recusar este pedido.');
+    expect(out.code).toBe('#notallow');
+  });
+
   it('traduz e-mail já cadastrado no Auth (user_already_exists)', () => {
     const out = mapError(
       { code: 'user_already_exists', message: 'User already registered' },

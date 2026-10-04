@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 import { useTenantLocale } from '../hooks/useTenantLocale';
@@ -11,18 +11,36 @@ export interface Alert {
     actionPath?: string;
 }
 
+export interface AppNotification {
+    id: string;
+    title: string | null;
+    message: string | null;
+    type: string | null;
+    read: boolean;
+    link: string | null;
+    booking_id: string | null;
+    created_at: string;
+}
+
 interface AlertsContextType {
     alerts: Alert[];
+    notifications: AppNotification[];
+    unreadCount: number;
     loading: boolean;
     refreshAlerts: () => Promise<void>;
+    markNotificationRead: (id: string) => Promise<void>;
+    markAllNotificationsRead: () => Promise<void>;
 }
 
 const AlertsContext = createContext<AlertsContextType | undefined>(undefined);
+
+const NOTIFICATION_SOUND = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3';
 
 export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { user, role, companyId, loading: authLoading } = useAuth();
     const { formatMoney } = useTenantLocale();
     const [alerts, setAlerts] = useState<Alert[]>([]);
+    const [notifications, setNotifications] = useState<AppNotification[]>([]);
     const [loading, setLoading] = useState(true);
 
     const generateSmartAlerts = async (createdAt: Date | null) => {
@@ -31,7 +49,6 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         const generatedAlerts: Alert[] = [];
 
         try {
-            // --- ALERTA: Agendamentos Atrasados ---
             const now = new Date().toISOString();
             const { data: overdueApts } = await supabase
                 .from('appointments')
@@ -43,29 +60,14 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             if (overdueApts && overdueApts.length > 0) {
                 generatedAlerts.push({
                     id: 'overdue-appointments',
-                    text: `⚠️ ${overdueApts.length} agendamento(s) pendente(s) de conclusão/cancelamento.`,
+                    text: overdueApts.length === 1
+                        ? '1 agendamento pendente de conclusão/cancelamento.'
+                        : `${overdueApts.length} agendamentos pendentes de conclusão/cancelamento.`,
                     type: 'danger',
                     actionPath: '/agenda?filter=overdue'
                 });
             }
 
-            // --- ALERTA: Novos Agendamentos Online ---
-            const { data: pendingBookings } = await supabase
-                .from('public_bookings')
-                .select('id')
-                .eq('business_id', tenantId)
-                .eq('status', 'pending');
-
-            if (pendingBookings && pendingBookings.length > 0) {
-                generatedAlerts.push({
-                    id: 'pending-public-bookings',
-                    text: `📌 Você tem ${pendingBookings.length} agendamento(s) online aguardando aprovação.`,
-                    type: 'warning',
-                    actionPath: '/agenda'
-                });
-            }
-
-            // --- ALERTA: Acerto de Comissões ---
             const [{ data: settings }, { data: onboardingProgress }] = await Promise.all([
                 supabase
                     .from('business_settings')
@@ -86,16 +88,13 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 const today = new Date();
                 const currentDay = today.getDate();
 
-                // Calculate days remaining until the settlement day
                 let daysRemaining = settlementDay - currentDay;
 
-                // If the settlement day has passed this month, calculate for next month
                 if (daysRemaining < 0) {
                     const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, settlementDay);
                     daysRemaining = Math.ceil((nextMonth.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
                 }
 
-                // Check if there are commissions due (dono não entra na fila de repasse)
                 const { data: commissionsDue } = await supabase.rpc('get_commissions_due');
                 const totalDue = (commissionsDue || [])
                     .filter((r: { is_owner?: boolean }) => !r.is_owner)
@@ -120,12 +119,10 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 }
             }
 
-            // --- ALERTA DE SETUP (Lógica de conta nova) ---
             const isNewAccount = createdAt &&
                 (new Date().getTime() - createdAt.getTime()) < (7 * 24 * 60 * 60 * 1000);
 
             if (isNewAccount) {
-                // Fetch basic status in parallel
                 const [
                     { count: servicesCount, error: servicesError },
                     { count: teamCount, error: teamError },
@@ -136,32 +133,29 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                     supabase.from('profiles').select('business_name, logo_url').eq('id', tenantId).maybeSingle()
                 ]);
 
-                // 1. Services Check
                 if (!servicesError && (servicesCount === 0 || servicesCount === null) && !onboardingCompleted) {
                     generatedAlerts.push({
                         id: 'setup-services',
-                        text: '📋 Configure seus serviços e preços para começar',
+                        text: 'Configure seus serviços e preços para começar',
                         type: 'warning',
                         actionPath: '/configuracoes/servicos'
                     });
                 }
 
-                // 2. Team Check
                 if (!teamError && (teamCount === 0 || teamCount === null) && !onboardingCompleted) {
                     generatedAlerts.push({
                         id: 'setup-team',
-                        text: '👥 Adicione membros da equipe para gerenciar agendamentos',
+                        text: 'Adicione membros da equipe para gerenciar agendamentos',
                         type: 'warning',
                         actionPath: '/configuracoes/equipe'
                     });
                 }
 
-                // 3. Profile/Business Check
                 if (!profileError && profile) {
                     if (!profile.business_name && !onboardingCompleted) {
                         generatedAlerts.push({
                             id: 'setup-profile',
-                            text: '👤 Configure seu perfil',
+                            text: 'Configure seu perfil',
                             type: 'warning',
                             actionPath: '/configuracoes/geral'
                         });
@@ -170,7 +164,7 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                     if (!profile.logo_url) {
                         generatedAlerts.push({
                             id: 'setup-business',
-                            text: '🏪 Adicione foto e capa do seu estabelecimento',
+                            text: 'Adicione foto e capa do seu estabelecimento',
                             type: 'warning',
                             actionPath: '/configuracoes/geral'
                         });
@@ -184,17 +178,39 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         return generatedAlerts;
     };
 
-    const refreshAlerts = async () => {
-        // Só o dono lê comissões da equipe (RPCs negam colaborador desde 20261003100000).
-        // Espera o perfil: no login o papel começa como 'owner' até o perfil carregar.
-        if (!user || authLoading || !companyId || role !== 'owner') {
+    const fetchNotifications = useCallback(async (): Promise<AppNotification[]> => {
+        if (!user) return [];
+        const { data, error } = await supabase
+            .from('notifications')
+            .select('id, title, message, type, read, link, booking_id, created_at')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(30);
+        if (error) {
+            logger.error('Error loading notifications', error);
+            return [];
+        }
+        return (data ?? []) as AppNotification[];
+    }, [user]);
+
+    const refreshAlerts = useCallback(async () => {
+        if (!user || authLoading) {
             setAlerts([]);
+            setNotifications([]);
             setLoading(false);
             return;
         }
 
         setLoading(true);
         try {
+            const nextNotifications = await fetchNotifications();
+            setNotifications(nextNotifications);
+
+            if (!companyId || role !== 'owner') {
+                setAlerts([]);
+                return;
+            }
+
             let userCreatedAt: Date | null = null;
             if (user.created_at) {
                 userCreatedAt = new Date(user.created_at);
@@ -207,57 +223,109 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         } finally {
             setLoading(false);
         }
-    };
+    }, [user, role, companyId, authLoading, fetchNotifications]);
+
+    const markNotificationRead = useCallback(async (id: string) => {
+        if (!user) return;
+        setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+        const { error } = await supabase
+            .from('notifications')
+            .update({ read: true })
+            .eq('id', id)
+            .eq('user_id', user.id);
+        if (error) {
+            logger.error('Error marking notification read', error);
+            const restored = await fetchNotifications();
+            setNotifications(restored);
+        }
+    }, [user, fetchNotifications]);
+
+    const markAllNotificationsRead = useCallback(async () => {
+        if (!user) return;
+        setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+        const { error } = await supabase
+            .from('notifications')
+            .update({ read: true })
+            .eq('user_id', user.id)
+            .eq('read', false);
+        if (error) {
+            logger.error('Error marking all notifications read', error);
+            const restored = await fetchNotifications();
+            setNotifications(restored);
+        }
+    }, [user, fetchNotifications]);
 
     useEffect(() => {
-        refreshAlerts();
+        void refreshAlerts();
 
-        // 1. Refresh alerts every 5 minutes
-        const interval = setInterval(refreshAlerts, 5 * 60 * 1000);
+        const interval = setInterval(() => { void refreshAlerts(); }, 5 * 60 * 1000);
 
-        // 2. Real-time subscription for public_bookings to alert immediately
-        const subscription = supabase
+        const ownerSoundFilter = user?.id ? `business_id=eq.${user.id}` : undefined;
+        const bookingInsertChannel = supabase
             .channel('public_bookings_alerts')
             .on('postgres_changes', {
                 event: 'INSERT',
                 schema: 'public',
                 table: 'public_bookings',
-                filter: `business_id=eq.${user?.id}`
-            }, (payload) => {
-                // Play notification sound
-                try {
-                    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); // Gentle notification sound
-                    audio.play().catch(e => logger.warn('Audio play failed (interaction needed?)', { error: e }));
-                } catch (e) {
-                    logger.error('Error playing sound', e);
+                ...(ownerSoundFilter ? { filter: ownerSoundFilter } : {}),
+            }, () => {
+                if (role === 'owner') {
+                    try {
+                        const audio = new Audio(NOTIFICATION_SOUND);
+                        audio.play().catch((e) => logger.warn('Audio play failed (interaction needed?)', { error: e }));
+                    } catch (e) {
+                        logger.error('Error playing sound', e);
+                    }
                 }
-
-                refreshAlerts();
+                void refreshAlerts();
             })
             .subscribe();
 
-        // 3. Real-time subscription for status updates
-        const updateSubscription = supabase
+        const bookingUpdateChannel = supabase
             .channel('public_bookings_updates')
             .on('postgres_changes', {
                 event: 'UPDATE',
                 schema: 'public',
                 table: 'public_bookings',
-                filter: `business_id=eq.${user?.id}`
+                ...(ownerSoundFilter ? { filter: ownerSoundFilter } : {}),
             }, () => {
-                refreshAlerts();
+                void refreshAlerts();
+            })
+            .subscribe();
+
+        const notificationsFilter = user?.id ? `user_id=eq.${user.id}` : undefined;
+        const notificationsChannel = supabase
+            .channel('notifications_bell')
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'notifications',
+                ...(notificationsFilter ? { filter: notificationsFilter } : {}),
+            }, () => {
+                void fetchNotifications().then(setNotifications);
             })
             .subscribe();
 
         return () => {
             clearInterval(interval);
-            supabase.removeChannel(subscription);
-            supabase.removeChannel(updateSubscription);
+            supabase.removeChannel(bookingInsertChannel);
+            supabase.removeChannel(bookingUpdateChannel);
+            supabase.removeChannel(notificationsChannel);
         };
-    }, [user, role, companyId, authLoading]);
+    }, [user, role, companyId, authLoading, refreshAlerts, fetchNotifications]);
+
+    const unreadCount = notifications.filter((n) => !n.read).length + alerts.length;
 
     return (
-        <AlertsContext.Provider value={{ alerts, loading, refreshAlerts }}>
+        <AlertsContext.Provider value={{
+            alerts,
+            notifications,
+            unreadCount,
+            loading,
+            refreshAlerts,
+            markNotificationRead,
+            markAllNotificationsRead,
+        }}>
             {children}
         </AlertsContext.Provider>
     );

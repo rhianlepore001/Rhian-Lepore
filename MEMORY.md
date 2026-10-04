@@ -9,6 +9,10 @@
 
 ---
 
+## PR-7 overhaul booking — sino de pedido + aceite/recusa (4 Out 2026, NÃO merge)
+
+Branch `cursor/overhaul-pr7-booking-notifications-0c8e`. Trigger em `public_bookings` gera notificação in-app (dono + profissional atribuído; “qualquer profissional” só o dono). Escopo #96 `all` libera Aceitar/Recusar para a equipe; senão só dono e o profissional do pedido. Banco recusa com `not_allowed_for_booking`. Pedido de alteração notifica na hora (profissional antigo e novo se trocar). Sino existente: marcar lida / “Marcar todas como lidas”. Não aplicar em prod. Prints em `/opt/cursor/artifacts/screenshots/pr7/`.
+
 ## PR-6 overhaul booking — pedido de alteração (4 Out 2026, NÃO merge)
 
 Branch `cursor/overhaul-pr6-edit-request-01d7`. Edit pending = `status='pending' AND is_edit` (prod tem confirmed+is_edit stale). Cancel v2 de edit-pending aplica cutoff no original. Conflito de pedido sempre exclui linked do próprio booking. Accept recusa Completed/NoShow/original passado. Não aplicar em prod. Prints em `/opt/cursor/artifacts/screenshots/pr6/`.

@@ -3,6 +3,7 @@ import { AlertTriangle, Check, X } from 'lucide-react';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { formatCurrency, formatPhone, type Region } from '../../utils/formatters';
 import { formatAgendaAlteracao } from '../../utils/clientEditRequest';
+import { formatTimeInTimeZone, getDateStringInTimeZone, getTodayInTimeZone } from '../../utils/businessTimezone';
 
 export interface AgendaPublicBookingItem {
   id: string;
@@ -96,9 +97,9 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
         {bookings.map((booking) => {
           const professional = teamMembers.find((m) => m.id === booking.professional_id);
           const bookingDate = new Date(booking.appointment_time);
-          const isToday = bookingDate.toDateString() === new Date().toDateString();
+          const isToday = getDateStringInTimeZone(booking.appointment_time, timeZone) === getTodayInTimeZone(timeZone);
           const note = bookingNote(booking);
-          const when = `${isToday ? 'Hoje' : bookingDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} · ${bookingDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+          const when = `${isToday ? 'Hoje' : bookingDate.toLocaleDateString('pt-BR', { timeZone, day: '2-digit', month: '2-digit' })} · ${formatTimeInTimeZone(booking.appointment_time, timeZone)}`;
 
           return (
             <li

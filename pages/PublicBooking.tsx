@@ -804,6 +804,13 @@ export const PublicBooking: React.FC = () => {
             : null,
     });
     const talkEditLabel = talkToBusinessLabel(business?.business_name);
+    const successServiceIds = selectedServices.length > 0
+        ? selectedServices
+        : ((activeBooking?.service_ids as string[] | undefined) ?? []);
+    const successTotal = selectedServices.length > 0
+        ? calculateTotal()
+        : Number(activeBooking?.total_price ?? 0);
+    const successServiceNames = services.filter(s => successServiceIds.includes(s.id)).map(s => s.name).join(' + ');
     const stepLabels = ['Serviços', 'Agenda', 'Dados', successCopy.stepperLastLabel];
     // Resumo pós-agendamento: usa o horário gravado, exibido no fuso do negócio.
     const bookedAt: Date | null = parseDate(activeBooking?.appointment_time ?? null);
@@ -1685,14 +1692,14 @@ export const PublicBooking: React.FC = () => {
                                                 <div className="space-y-1">
                                                     <p className={`text-xs uppercase font-black tracking-widest ${colors.textMuted}`}>Total</p>
                                                     <p className={`text-lg font-black tracking-tight ${accent.text}`}>
-                                                        {formatCurrency(calculateTotal(), currencyRegion)}
+                                                        {formatCurrency(successTotal, currencyRegion)}
                                                     </p>
                                                 </div>
                                             </div>
                                             <div className="space-y-1">
                                                 <p className={`text-xs uppercase font-black tracking-widest ${colors.textMuted}`}>Serviços</p>
                                                 <p className={`text-sm font-bold ${colors.textSecondary}`}>
-                                                    {services.filter(s => selectedServices.includes(s.id)).map(s => s.name).join(' + ')}
+                                                    {successServiceNames}
                                                 </p>
                                             </div>
                                         </div>
@@ -1923,7 +1930,10 @@ export const PublicBooking: React.FC = () => {
 
             {/* Success State (shared between modes) */}
             {quickStep === 'success' && activeBooking && (
-                <div className="max-w-xl mx-auto text-center py-20 animate-reveal-fragment px-4">
+                <div
+                    data-testid="booking-success"
+                    className="max-w-xl mx-auto text-center py-20 animate-reveal-fragment px-4"
+                >
                     <div className="relative inline-block mb-10">
                         <div className={`w-32 h-32 md:w-36 md:h-36 flex items-center justify-center border-4 animate-scale-check ${accent.bg} ${accentTextOnAccent} rounded-full ${shadow.elevated}`}>
                             {isBookingCancelled ? <X className="w-16 h-16 md:w-20 md:h-20 stroke-[4]" /> : <Check className="w-16 h-16 md:w-20 md:h-20 stroke-[4]" />}
@@ -1965,14 +1975,14 @@ export const PublicBooking: React.FC = () => {
                                 <div className="space-y-1">
                                     <p className={`text-xs uppercase font-black tracking-widest ${colors.textMuted}`}>Total</p>
                                     <p className={`text-lg font-black tracking-tight ${accent.text}`}>
-                                        {formatCurrency(calculateTotal(), currencyRegion)}
+                                        {formatCurrency(successTotal, currencyRegion)}
                                     </p>
                                 </div>
                             </div>
                             <div className="space-y-1">
                                 <p className={`text-xs uppercase font-black tracking-widest ${colors.textMuted}`}>Serviços</p>
                                 <p className={`text-sm font-bold ${colors.textSecondary}`}>
-                                    {services.filter(s => selectedServices.includes(s.id)).map(s => s.name).join(' + ')}
+                                    {successServiceNames}
                                 </p>
                             </div>
                         </div>

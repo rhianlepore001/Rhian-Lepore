@@ -382,11 +382,13 @@ test.describe('PR-6 pedido de alteração', () => {
       const guard = await installProdWriteGuard(page);
       await page.clock.setFixedTime(new Date(NOW));
       stubPublic(guard, [PENDING_EDIT], [PENDING_EDIT]);
+      // Sem este stub vazio o fetch de cliente público retorna cedo e não abre a tela de sucesso.
+      guard.stubRpc('get_public_client_by_phone', { body: [] });
       await mockPublicClient(page);
       await page.goto(`${BASE}/#/book/pr6-edit?agendar=1`, { waitUntil: 'domcontentloaded' });
       await expect(page.getByTestId('client-edit-sent-message')).toHaveText(EDIT_SENT, { timeout: 20_000 });
       await expect(page.getByText('ALTERAÇÃO ENVIADA')).toBeVisible();
-      await shot(page, `client-edit-sent-${vp.name}`);
+      await shot(page, `client-edit-sent-${vp.name}`, '[data-testid="booking-success"]');
       guard.assertNoLeak();
     });
 

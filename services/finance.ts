@@ -5,6 +5,11 @@ import {
   type FinanceStatsInput,
   type FinanceTransaction,
 } from '@/types/finance';
+import {
+  classifyFinanceDeleteKind,
+  FinanceDeleteError,
+  type FinanceDeleteKind,
+} from '@/utils/financeDelete';
 
 export function calcCommission(input: CommissionCalculationInput): CommissionCalculationResult {
   const commissionBase = input.machineFeeEnabled
@@ -59,6 +64,7 @@ export function mapFinanceTransaction(item: any): FinanceTransaction {
   const isPaid = isExpense
     ? item.commission_paid === true
     : (item.status ? item.status === 'paid' : true);
+  const description = item.description ?? null;
 
   return {
     id: item.id,
@@ -75,6 +81,13 @@ export function mapFinanceTransaction(item: any): FinanceTransaction {
     payment_method: item.payment_method ?? null,
     commission_paid: item.commission_paid === true,
     status: isPaid ? 'paid' : 'pending',
+    description,
+    deleteKind: classifyFinanceDeleteKind({
+      type: isExpense ? 'expense' : 'revenue',
+      description,
+      kind: item.kind,
+      deleteKind: item.deleteKind,
+    }),
   };
 }
 
@@ -95,12 +108,29 @@ export async function fetchMonthlyHistory(companyId: string, monthsCount: number
   return data || [];
 }
 
-export async function deleteFinanceTransaction(transactionId: string, companyId: string): Promise<void> {
-  void companyId; // tenant validado server-side pela RPC (get_auth_company_id/auth.uid)
-  const { error } = await supabase.rpc('delete_finance_transaction', {
+export async function deleteFinanceTransaction(
+  transactionId: string,
+  companyId: string,
+): Promise<{ ok: true; kind: FinanceDeleteKind }> {
+  void companyId; // tenant derivado no servidor; dono conferido pela RPC
+  const { data, error } = await supabase.rpc('delete_finance_transaction', {
     p_record_id: transactionId,
   });
   if (error) throw error;
+  const result = data as {
+    ok?: boolean;
+    kind?: FinanceDeleteKind;
+    error?: string;
+    staff_name?: string;
+    paid_at?: string | null;
+  } | null;
+  if (!result || result.ok !== true) {
+    throw new FinanceDeleteError(result?.error || 'delete_failed', {
+      staffName: result?.staff_name,
+      paidAt: result?.paid_at,
+    });
+  }
+  return { ok: true, kind: result.kind ?? 'manual' };
 }
 
 export async function markExpenseAsPaid(recordId: string, companyId: string): Promise<void> {

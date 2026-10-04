@@ -45,26 +45,26 @@ export const MemberDetail: React.FC<MemberDetailProps> = ({
 
     return (
         <div className="flex flex-col gap-8">
-            <div className="flex flex-col gap-3">
-                <button type="button" onClick={onBack} className={`inline-flex items-center gap-1.5 min-h-[44px] text-sm ${accent.text} hover:underline underline-offset-4`}>
+            <div>
+                <button type="button" onClick={onBack} className={`inline-flex items-center gap-1.5 min-h-[44px] -mt-1 text-sm ${accent.text} hover:underline underline-offset-4`}>
                     <ArrowLeft className="w-4 h-4" aria-hidden="true" /> Toda a equipe
                 </button>
                 <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 min-w-0">
-                    <h2 className={`${font.heading} text-lg lg:text-xl font-semibold tracking-tight ${colors.text} break-words`}>{m.name}</h2>
+                    <h2 className={`${font.heading} text-lg lg:text-xl lg:font-bold font-semibold tracking-tight ${colors.text} break-words`}>{m.name}</h2>
                     {m.rank != null && <span className={`${font.mono} text-sm tabular-nums ${colors.textSecondary}`}>{rankLabel(m.rank)} no ranking</span>}
                     {badge && <Badge variant="neutral">{badge}</Badge>}
                 </div>
                 {m.rank == null && (m.low_sample || m.metrics.atendimentos < data.min_sample) && (
-                    <p className={`text-sm leading-relaxed ${colors.textSecondary}`}>
+                    <p className={`mt-1 text-sm leading-relaxed ${colors.textSecondary}`}>
                         {unrankedSentence(m, data.min_sample)}
                     </p>
                 )}
                 {m.is_owner && (
-                    <p className={`text-sm leading-relaxed ${colors.textSecondary}`}>
+                    <p className={`mt-1 text-sm leading-relaxed ${colors.textSecondary}`}>
                         Como dono, a comissão conta como zero.
                     </p>
                 )}
-                <section data-testid="detail-headline" aria-label="Números principais">
+                <section data-testid="detail-headline" aria-label="Números principais" className="mt-2 lg:mt-3">
                     <MetricGrid>
                         {accounts.map((account) => (
                             <div key={account.id} className={metricCellClass(account.span)}>

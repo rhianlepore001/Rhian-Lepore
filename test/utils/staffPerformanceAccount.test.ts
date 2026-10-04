@@ -93,6 +93,7 @@ describe('staffPerformanceAccount — a conta fecha com o valor do card', () => 
         expect(account.comparisonCaption).toBe('Comparado com agosto');
         expect(account.lines.find((l) => l.kind === 'formula')?.numerator).toBe('6 clientes marcaram de novo');
         expect(account.lines.find((l) => l.kind === 'note')?.label).toBe('Ainda esperando: 1 cliente atendido há menos de 2 dias');
+        expect(account.lines.filter((l) => l.kind !== 'formula' && l.kind !== 'note')).toHaveLength(0);
     });
 
     it('equipe: comissão da equipe, não “de a equipe”', () => {

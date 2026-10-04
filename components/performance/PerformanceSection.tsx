@@ -11,9 +11,9 @@ interface PerformanceSectionProps {
 export const PerformanceSection: React.FC<PerformanceSectionProps> = ({ title, description, children, className = '' }) => {
     const { colors, font } = useBrutalTheme();
     return (
-        <section className={`space-y-3 ${className}`}>
+        <section className={`space-y-2 lg:space-y-3 ${className}`}>
             <div className="space-y-1">
-                <h2 className={`${font.heading} text-lg lg:text-xl font-semibold tracking-tight ${colors.text}`}>{title}</h2>
+                <h2 className={`${font.heading} text-lg font-semibold lg:text-xl lg:font-bold tracking-tight ${colors.text}`}>{title}</h2>
                 {description && <p className={`text-sm leading-relaxed ${colors.textSecondary}`}>{description}</p>}
             </div>
             {children}

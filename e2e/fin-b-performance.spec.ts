@@ -490,6 +490,11 @@ test.describe('Finance PR-B — performance clara', () => {
     const dialog = page.getByRole('dialog');
     await expect(dialog.getByText(/Saíram com horário marcado/)).toBeVisible();
     await expect(dialog.getByText(/6 clientes marcaram de novo/)).toBeVisible();
+    await expect(dialog.getByText(/÷ 11 clientes atendidos/)).toBeVisible();
+    await expect(dialog.getByText('= 55%')).toBeVisible();
+    await expect(dialog.getByText('Comparado com agosto: subiu de 50% para 55%')).toBeVisible();
+    await expect(dialog.getByText(/Ainda esperando: 1 cliente atendido há menos de 2 dias/)).toBeVisible();
+    await expect(dialog.getByText(/já dá para contar/)).toHaveCount(0);
     await expect(dialog.getByText('O que isso quer dizer')).toBeVisible();
     await closeAccount(page).click();
     await openEveryCard(page);

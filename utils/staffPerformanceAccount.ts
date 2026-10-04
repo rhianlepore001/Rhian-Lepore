@@ -352,8 +352,6 @@ function linesFor(id: MetricKey, m: AnyMetrics, opts: AccountBuildOpts): Account
             const avulsoNet = m.receita_avulsa - m.comissao_avulsa;
             const base = money2((m.retorno ?? 0) - avulsoNet);
             return [
-                moneyLine(`O que ficou para ${remainder.withArticle} nos atendimentos`, base, formatMoney, 'plain'),
-                { label: 'Horas de atendimento (duração marcada)', value: hoursLabel, muted: false },
                 ratioLine(dash(base), hoursLabel, m.retorno_por_hora == null ? '—' : `${formatMoney(m.retorno_por_hora)} / h`),
                 ...(m.faturamento_por_hora != null ? [{
                     label: 'Fatura por hora (o que os clientes pagaram, antes da comissão)',
@@ -365,24 +363,22 @@ function linesFor(id: MetricKey, m: AnyMetrics, opts: AccountBuildOpts): Account
         case 'faturamento_por_hora': {
             const hoursLabel = formatWorkHours(m.tempo_pago_min) ?? '0 h';
             return [
-                moneyLine('Serviços pagos', m.receita_servicos, formatMoney, 'plain'),
-                { label: 'Horas dos atendimentos pagos', value: hoursLabel, muted: false },
                 ratioLine(formatMoney(m.receita_servicos), hoursLabel, m.faturamento_por_hora == null ? '—' : `${formatMoney(m.faturamento_por_hora)} / h`),
             ];
         }
         case 'ticket_medio':
             return [
-                moneyLine('Serviços', m.receita_servicos, formatMoney, 'plain'),
-                { label: 'Atendimentos pagos', value: String(m.atendimentos_pagos), muted: m.atendimentos_pagos === 0 },
-                ratioLine(formatMoney(m.receita_servicos), `${m.atendimentos_pagos} atendimentos`, m.ticket_medio == null ? '—' : formatMoney(m.ticket_medio)),
+                ratioLine(
+                    formatMoney(m.receita_servicos),
+                    `${m.atendimentos_pagos} ${m.atendimentos_pagos === 1 ? 'atendimento pago' : 'atendimentos pagos'}`,
+                    m.ticket_medio == null ? '—' : formatMoney(m.ticket_medio),
+                ),
             ];
         case 'voltou': {
             const waiting = m.imaturos > 0
                 ? [noteLine(`Ainda esperando: ${plural(m.imaturos, 'cliente atendido', 'clientes atendidos')} há menos de ${REBOOK_WINDOW_DAYS} dias`)]
                 : [];
             return [
-                { label: 'Clientes que marcaram de novo', value: String(m.voltou), muted: m.voltou === 0 },
-                { label: 'Clientes atendidos', value: String(m.maduros), muted: m.maduros === 0 },
                 ratioLine(`${m.voltou} clientes marcaram de novo`, `${m.maduros} clientes atendidos`, formatPercent(m.voltou_taxa)),
                 ...waiting,
             ];
@@ -392,8 +388,6 @@ function linesFor(id: MetricKey, m: AnyMetrics, opts: AccountBuildOpts): Account
                 ? [noteLine(`Horários passados sem marcar se o cliente veio: ${m.sem_desfecho}`)]
                 : [];
             return [
-                { label: 'Não apareceram', value: String(m.faltas), muted: m.faltas === 0 },
-                { label: 'Horários com desfecho', value: String(m.desfechos), muted: m.desfechos === 0 },
                 ratioLine(`${m.faltas} faltas`, `${m.desfechos} horários`, formatPercent(m.taxa_faltas)),
                 ...open,
             ];
@@ -410,8 +404,6 @@ function linesFor(id: MetricKey, m: AnyMetrics, opts: AccountBuildOpts): Account
             ];
         case 'produtos':
             return [
-                { label: 'Atendimentos com produto', value: String(m.visitas_com_produto), muted: m.visitas_com_produto === 0 },
-                { label: 'Atendimentos feitos', value: String(m.atendimentos), muted: false },
                 ratioLine(`${m.visitas_com_produto} com produto`, `${m.atendimentos} atendimentos`, formatPercent(m.attach)),
                 ...(hasReturn(m) || m.receita_produtos
                     ? [moneyLine('Em produtos', m.receita_produtos, formatMoney, 'plain')]

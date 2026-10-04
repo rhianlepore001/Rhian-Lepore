@@ -63,6 +63,12 @@ const StaffPerformance = React.lazy(() => {
   void import('./hooks/useStaffPerformance').then((m) => m.prefetchStaffPerformanceFromLocation());
   return import('./pages/StaffPerformance').then((module) => ({ default: module.StaffPerformance }));
 });
+
+if (typeof window !== 'undefined' && window.location.hash.includes('/financeiro/performance')) {
+  void import('./hooks/useStaffPerformance').then((m) => m.prefetchStaffPerformanceFromLocation());
+  void import('./pages/StaffPerformance');
+}
+
 const Products = React.lazy(() => import('./pages/Products').then(module => ({ default: module.Products })));
 
 const LoadingFull = () => (
@@ -99,6 +105,13 @@ const ProtectedLayout = () => {
   const { isAuthenticated, loading, tutorialCompleted, role } = useAuth();
 
   if (loading) {
+    if (typeof window !== 'undefined' && window.location.hash.includes('/financeiro/performance')) {
+      return (
+        <div className="min-h-screen bg-[var(--color-bg)] p-4 md:p-8">
+          <PerformancePageSkeleton />
+        </div>
+      );
+    }
     return <LoadingFull />;
   }
 

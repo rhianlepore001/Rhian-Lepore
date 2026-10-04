@@ -72,10 +72,11 @@ export const StaffInsights: React.FC = () => {
     : [];
 
   return (
-    <div className={`flex flex-col gap-6 lg:gap-8 ${PAGE_PB} max-w-[1120px]`}>
+    <div className={`flex flex-col gap-4 lg:gap-8 ${PAGE_PB} max-w-[1120px]`}>
       <PageHeader
         title={firstName ? `Meus resultados — ${firstName}` : 'Meus resultados'}
         subtitle={<span>{comparing}</span>}
+        className="!pb-0"
         meta={
           <div className="flex gap-2 w-full overflow-x-auto pb-1">
             {PERIODS.map((item) => {

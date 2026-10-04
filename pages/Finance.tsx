@@ -595,8 +595,14 @@ useEffect(() => {
                 size="sm"
                 icon={<BarChart3 className="h-4 w-4" />}
                 onClick={() => navigate('/financeiro/performance')}
-                onMouseEnter={() => prefetchStaffPerformanceFromLocation()}
-                onPointerDown={() => prefetchStaffPerformanceFromLocation()}
+                onMouseEnter={() => {
+                  prefetchStaffPerformanceFromLocation();
+                  void import('./StaffPerformance');
+                }}
+                onPointerDown={() => {
+                  prefetchStaffPerformanceFromLocation();
+                  void import('./StaffPerformance');
+                }}
               >
                 Performance da equipe
               </Button>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { CalendarCog, Check, Loader2 } from 'lucide-react';
+import { SettingsSectionHeader } from './SettingsSectionHeader';
+import { Check, Loader2 } from 'lucide-react';
 import { Card, useToast } from '../ui';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
@@ -82,10 +83,10 @@ export const StaffAppointmentPermissionSection: React.FC = () => {
 
   return (
     <section className="space-y-4 border-t border-[var(--color-divider)] pt-8" data-testid="staff-edit-scope-section">
-      <div className={`flex items-center gap-2 ${colors.textMuted} font-mono text-xs uppercase tracking-[0.2em] px-1`}>
-        <CalendarCog className={`w-4 h-4 ${accent.text}`} aria-hidden="true" />
-        Permissões da equipe
-      </div>
+      <SettingsSectionHeader
+        title="Permissões da equipe"
+        description="O que os colaboradores podem fazer na agenda."
+      />
       <Card title={<span id="staff-edit-scope-title">Edição de agendamentos</span>}>
       <div className="space-y-4">
         <p className={`text-sm ${colors.textMuted}`}>

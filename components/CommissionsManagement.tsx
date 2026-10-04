@@ -600,7 +600,6 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                 payingId={payingProfessionalId}
                                 settledIds={settledIds}
                                 onPay={(r) => handleOpenPayModal(byId(r))}
-                                onEditRate={(r) => openRatePrompt(byId(r), false)}
                                 analysisHref={(r) => `/financeiro/performance?de=${cycle.start}&ate=${cycle.end}&pro=${encodeURIComponent(r.professional_id)}`}
                                 onOpenReport={(r) => { setDetailsProfessional(byId(r)); setShowReportModal(true); }}
                                 onOpenHistory={(r) => { setDetailsProfessional(byId(r)); setShowHistoryModal(true); }}

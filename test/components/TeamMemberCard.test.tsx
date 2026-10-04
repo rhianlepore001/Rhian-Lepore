@@ -25,46 +25,36 @@ const owner = {
   is_owner: true,
 };
 
-describe('TeamMemberCard', () => {
-  it('dispara exclusão do colaborador pelo botão visível', async () => {
-    const onDelete = vi.fn();
-    render(
-      <TeamMemberCard
-        member={staff}
-        onEdit={vi.fn()}
-        onDelete={onDelete}
-      />,
-    );
-
-    await userEvent.click(screen.getByRole('button', { name: /Excluir membro João Silva/i }));
-    expect(onDelete).toHaveBeenCalledWith('staff-1');
+// PR-E: card compacto (linha ~64px). Comissão, bloqueios e exclusão ficam no drawer "Editar".
+describe('TeamMemberCard (linha compacta)', () => {
+  it('mostra nome, cargo e "% de comissão" como texto, sem editor inline', () => {
+    render(<TeamMemberCard member={staff} onEdit={vi.fn()} />);
+    const row = screen.getByTestId('team-member-row');
+    expect(row).toHaveTextContent('João Silva');
+    expect(row).toHaveTextContent('Barbeiro');
+    expect(row).toHaveTextContent('40% de comissão');
+    expect(screen.queryByRole('button', { name: /Comissão/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Excluir/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
   });
 
-  it('não mostra exclusão no card do dono', () => {
-    render(
-      <TeamMemberCard
-        member={owner}
-        onEdit={vi.fn()}
-        onDelete={vi.fn()}
-      />,
-    );
-
-    expect(screen.queryByRole('button', { name: /Excluir membro/i })).not.toBeInTheDocument();
+  it('o único botão é "Editar" e abre o drawer do colaborador', async () => {
+    const onEdit = vi.fn();
+    render(<TeamMemberCard member={staff} onEdit={onEdit} />);
+    expect(screen.getAllByRole('button')).toHaveLength(1);
+    await userEvent.click(screen.getByRole('button', { name: 'Editar João Silva' }));
+    expect(onEdit).toHaveBeenCalledWith(staff);
   });
 
-  it('não oferece frequência no card; a % continua editável', async () => {
-    render(
-      <TeamMemberCard
-        member={staff}
-        onEdit={vi.fn()}
-        onDelete={vi.fn()}
-        onSaveCommission={vi.fn()}
-        scheduleLabel="Mensal · Dia 5"
-      />,
-    );
-    expect(screen.getByText('Mensal · Dia 5')).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: /Comissão/i }));
-    expect(screen.queryByText('Frequência')).not.toBeInTheDocument();
-    expect(screen.getByText('Comissão')).toBeInTheDocument();
+  it('dono aparece como "Dono", sem % de comissão', () => {
+    render(<TeamMemberCard member={owner} onEdit={vi.fn()} />);
+    const row = screen.getByTestId('team-member-row');
+    expect(row).toHaveTextContent('Dono');
+    expect(row).not.toHaveTextContent('% de comissão');
+  });
+
+  it('marca colaborador inativo', () => {
+    render(<TeamMemberCard member={{ ...staff, active: false }} onEdit={vi.fn()} />);
+    expect(screen.getByTestId('team-member-row')).toHaveTextContent('Inativo');
   });
 });

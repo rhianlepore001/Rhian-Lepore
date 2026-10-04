@@ -1,6 +1,7 @@
-﻿import React, { useState, useEffect, useMemo } from 'react';
+﻿import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { prefetchStaffPerformanceFromLocation } from '../hooks/useStaffPerformance';
+import { TeamPerformanceCard } from '../components/finance/TeamPerformanceCard';
 import { Card } from '../components/ui/Card';
 import { PageHeader } from '../components/ui/PageHeader';
 import { Button, Modal, Table, Badge, ConfirmModal, useToast, ErrorState, SkeletonCard } from '@/components/ui';
@@ -127,7 +128,17 @@ const [searchParams, setSearchParams] = useSearchParams();
   // Staff não vê aba de comissões nem histórico
   const isStaff = role === 'staff';
   const canDeleteTransactions = shouldShowFinanceDelete(role);
-  const [activeTab, setActiveTab] = useState<FinanceTabType>(() => (searchParams.get('tab') === 'commissions' ? 'commissions' : 'overview'));
+  // A aba vive na URL (?tab=) para o botão voltar funcionar (PR-E).
+  const tabParam = searchParams.get('tab');
+  const activeTab: FinanceTabType = !isStaff && (tabParam === 'commissions' || tabParam === 'history') ? tabParam : 'overview';
+  const setActiveTab = useCallback((next: FinanceTabType) => {
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev);
+      if (next === 'overview') params.delete('tab');
+      else params.set('tab', next);
+      return params;
+    });
+  }, [setSearchParams]);
 
   // New Transaction Modal State
   const [showNewTransactionModal, setShowNewTransactionModal] = useState(false);
@@ -229,11 +240,11 @@ const [searchParams, setSearchParams] = useSearchParams();
 
   const months = MONTH_NAMES;
 
-  useEffect(() => {
-    if (isStaff && activeTab !== 'overview') {
-      setActiveTab('overview');
-    }
-  }, [activeTab, isStaff]);
+  const warmPerformance = useCallback(() => {
+    prefetchStaffPerformanceFromLocation();
+    void import('./StaffPerformance');
+  }, []);
+
 
   useEffect(() => {
     const isNewQuery = searchParams.get('new') === 'true';
@@ -590,41 +601,40 @@ const [searchParams, setSearchParams] = useSearchParams();
   return (
     <div className="space-y-4 md:space-y-6">
       <PageHeader
-        title="Financeiro"
+        title={isStaff ? 'Meu financeiro' : 'Financeiro'}
         subtitle={periodLabel}
         meta={
           <>
-            <AIAssistantButton context="suas finanças, entradas e saídas de dinheiro e relatórios" />
             <Button variant="outline" size="sm" icon={<Filter className="h-4 w-4" />} onClick={() => setShowFilterModal(true)}>
               Filtrar
             </Button>
             <Button variant="ghost" size="sm" icon={<Download className="h-4 w-4" />} onClick={handleExport}>
               Exportar
             </Button>
+            <AIAssistantButton context="suas finanças, entradas e saídas de dinheiro e relatórios" />
+          </>
+        }
+        hideActionOnMobile
+        action={
+          // Celular: "Registrar receita" fica só no "+" da barra inferior (D-E3).
+          <>
             {!isStaff && (
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
+                data-testid="finance-performance-button"
                 icon={<BarChart3 className="h-4 w-4" />}
                 onClick={() => navigate('/financeiro/performance')}
-                onMouseEnter={() => {
-                  prefetchStaffPerformanceFromLocation();
-                  void import('./StaffPerformance');
-                }}
-                onPointerDown={() => {
-                  prefetchStaffPerformanceFromLocation();
-                  void import('./StaffPerformance');
-                }}
+                onMouseEnter={warmPerformance}
+                onPointerDown={warmPerformance}
               >
                 Performance da equipe
               </Button>
             )}
+            <Button variant="primary" size="sm" icon={<Plus className="h-4 w-4" />} onClick={handleOpenNewTransaction}>
+              Registrar receita
+            </Button>
           </>
-        }
-        action={
-          <Button variant="primary" size="sm" icon={<Plus className="h-4 w-4" />} onClick={handleOpenNewTransaction}>
-            Registrar receita
-          </Button>
         }
       />
 
@@ -638,19 +648,27 @@ const [searchParams, setSearchParams] = useSearchParams();
         />
       )}
 
-      {/* Tabs — staff vê apenas Visão Geral */}
-      <TabNav
-        tabs={[
-          { id: 'overview', label: isStaff ? 'Meu Financeiro' : 'Visão Geral', icon: <Calendar className="w-3.5 h-3.5" /> },
-          ...(!isStaff ? [
-            { id: 'commissions', label: 'Pagamento de comissão', shortLabel: 'Pagamentos', icon: <Users className="w-3.5 h-3.5" /> },
-            { id: 'history', label: 'Histórico', shortLabel: 'Histórico', icon: <History className="w-3.5 h-3.5" /> },
-          ] : []),
-        ]}
-        activeTab={activeTab}
-        onChange={(id) => setActiveTab(id as FinanceTabType)}
-        accentBg={accent.bg}
-      />
+      {/* Abas: controle segmentado de uma linha. Staff só tem a Visão geral (sem controle). */}
+      {!isStaff && (
+        <TabNav
+          ariaLabel="Seções do financeiro"
+          panelId="finance-panel"
+          tabs={[
+            { id: 'overview', label: 'Visão geral', icon: <Calendar className="w-4 h-4" /> },
+            { id: 'commissions', label: 'Pagamentos', icon: <Users className="w-4 h-4" /> },
+            { id: 'history', label: 'Histórico', icon: <History className="w-4 h-4" /> },
+          ]}
+          activeTab={activeTab}
+          onChange={(id) => setActiveTab(id as FinanceTabType)}
+        />
+      )}
+
+      <div
+        id="finance-panel"
+        role={isStaff ? undefined : 'tabpanel'}
+        aria-labelledby={isStaff ? undefined : `tab-${activeTab}`}
+        className="space-y-4 md:space-y-6"
+      >
 
       {activeTab === 'overview' && (
         <>
@@ -736,6 +754,8 @@ const [searchParams, setSearchParams] = useSearchParams();
               iconClass={iconClass}
             />
           </section>
+
+          {!isStaff && <TeamPerformanceCard monthName={months[selectedMonth]} className="md:hidden" />}
 
           {!isStaff && (
             <section className="grid grid-cols-3 gap-2">
@@ -866,13 +886,18 @@ const [searchParams, setSearchParams] = useSearchParams();
 
       {
         activeTab === 'commissions' && (
+          <>
+          <TeamPerformanceCard monthName={months[selectedMonth]} />
           <CommissionsManagement
             accentColor={isBeauty ? 'beauty-neon' : 'accent-gold'}
             currencySymbol={currencySymbol}
             onPaymentSuccess={fetchFinanceData}
           />
+          </>
         )
       }
+
+      </div>
 
       {/* New Transaction Modal */}
       {

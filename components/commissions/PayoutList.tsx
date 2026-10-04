@@ -37,7 +37,6 @@ interface PayoutListProps {
     /** Já liquidados nesta sessão — o botão não volta a ficar clicável. */
     settledIds?: ReadonlySet<string>;
     onPay: (row: PayoutRowData) => void;
-    onEditRate: (row: PayoutRowData) => void;
     /** Link "Ver histórico e análise" → Performance do colaborador no ciclo (R6.4). */
     analysisHref: (row: PayoutRowData) => string;
     onOpenReport: (row: PayoutRowData) => void;
@@ -169,7 +168,7 @@ const RowMenu: React.FC<{ row: PayoutRowData; theme: ThemeVariant; onReport: () 
     );
 };
 
-export const PayoutList: React.FC<PayoutListProps> = ({ rows, theme, formatMoney, payingId, settledIds, onPay, onEditRate, analysisHref, onOpenReport, onOpenHistory }) => {
+export const PayoutList: React.FC<PayoutListProps> = ({ rows, theme, formatMoney, payingId, settledIds, onPay, analysisHref, onOpenReport, onOpenHistory }) => {
     const { colors, font, radius, accent, isBeauty } = useBrutalTheme({ override: theme });
     const lgRadius = isBeauty ? 'lg:rounded-2xl' : 'lg:rounded-lg';
     const head = `${font.mono} text-xs uppercase tracking-wide ${colors.textMuted}`;
@@ -220,11 +219,7 @@ export const PayoutList: React.FC<PayoutListProps> = ({ rows, theme, formatMoney
                                         </p>
                                     )}
                                     <p className={`mt-1 text-xs ${colors.textMuted} flex items-center gap-1.5 lg:hidden`}>
-                                        <span className="tabular-nums">{r.commission_rate || 0}%</span>
-                                        <span aria-hidden="true">·</span>
-                                        <button type="button" onClick={() => onEditRate(r)} className={`${accent.text} inline-flex items-center min-h-[44px] -my-3 px-1 -mx-1 underline-offset-2 hover:underline`} aria-label={`Alterar % de ${r.professional_name}`}>
-                                            Alterar %
-                                        </button>
+                                        <span><span className="tabular-nums">{r.commission_rate || 0}%</span> de comissão</span>
                                     </p>
                                 </div>
                                 {/* mobile: valor + status à direita, 1ª linha */}
@@ -236,9 +231,10 @@ export const PayoutList: React.FC<PayoutListProps> = ({ rows, theme, formatMoney
 
                             {/* desktop: colunas */}
                             <div className="hidden lg:flex lg:justify-end">
-                                <button type="button" onClick={() => onEditRate(r)} title="Alterar %" aria-label={`Alterar % de ${r.professional_name} (${r.commission_rate || 0}%)`} className={`${font.mono} tabular-nums text-sm ${colors.textSecondary} hover:text-theme-accent underline decoration-dotted underline-offset-4 min-h-[36px]`}>
+                                {/* % é editado no drawer do colaborador (Ajustes › Equipe) */}
+                                <span className={`${font.mono} tabular-nums text-sm ${colors.textSecondary}`}>
                                     {r.commission_rate || 0}%
-                                </button>
+                                </span>
                             </div>
                             <span className={`hidden lg:block text-right ${font.mono} tabular-nums text-sm ${colors.textSecondary}`}>{r.services_pending}</span>
                             <span className={`hidden lg:block text-right ${font.mono} tabular-nums text-sm ${colors.textSecondary}`}>{r.products_pending}</span>

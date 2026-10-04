@@ -11,7 +11,7 @@ import { installProdWriteGuard } from './helpers/prodWriteGuard';
 const BASE = process.env.E2E_BASE_URL || 'http://localhost:3000';
 const PROJECT_REF = 'lcqwrngscsziysyfhpfj';
 const OWNER_ID = '2310b54d-5963-4dc6-9afb-8f308116a698';
-const ARTIFACTS = '/opt/cursor/artifacts/screenshots/fin-c';
+const ARTIFACTS = process.env.E2E_SHOTS_DIR ? `${process.env.E2E_SHOTS_DIR}/fin-c` : '/opt/cursor/artifacts/screenshots/fin-c';
 
 function b64url(obj: unknown): string {
   return Buffer.from(JSON.stringify(obj)).toString('base64url');

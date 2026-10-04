@@ -151,10 +151,10 @@ describe('Finance — exclusão', () => {
     expect(screen.getByRole('alert').textContent).not.toMatch(/PGRST|#/);
   });
 
-  it('staff não vê Excluir nem a coluna Ações em Meu Financeiro', async () => {
+  it('staff não vê Excluir nem a coluna Ações em Meu financeiro (sem abas)', async () => {
     AUTH.role = 'staff';
     mount();
-    await waitFor(() => expect(screen.getByText('Meu Financeiro')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Meu financeiro' })).toBeInTheDocument());
     await waitFor(() => expect(screen.getAllByText('Corte').length).toBeGreaterThan(0));
     expect(screen.queryByTestId('finance-delete')).toBeNull();
     expect(screen.queryByRole('button', { name: 'Excluir' })).toBeNull();

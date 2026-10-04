@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
-import { Edit2, Trash2, User, Crown, Percent, Check, Loader2 } from 'lucide-react';
+import React from 'react';
+import { Pencil, User } from 'lucide-react';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
-import { Button } from './ui/Button';
 import type { CommissionPaymentFrequency } from '../utils/commissionSchedule';
 
 interface TeamMember {
@@ -23,214 +22,71 @@ export interface CommissionDraft {
 interface TeamMemberCardProps {
     member: TeamMember;
     onEdit: (member: TeamMember) => void;
-    onDelete: (id: string) => void;
-    onSaveCommission?: (memberId: string, draft: CommissionDraft) => Promise<void>;
-    scheduleLabel?: string;
-    /** @deprecated tema vem do useBrutalTheme; mantido por compat de API */
-    accentColor?: string;
-    children?: React.ReactNode;
+    /** Colaborador com ciclo de acerto próprio (exceção à regra do negócio). */
+    hasOwnCycle?: boolean;
 }
 
-export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
-    member,
-    onEdit,
-    onDelete,
-    onSaveCommission,
-    scheduleLabel,
-    children,
-}) => {
-    const { colors, accent, radius, shadow, status } = useBrutalTheme();
-    const [editingCommission, setEditingCommission] = useState(false);
-    const [saving, setSaving] = useState(false);
-    const [rate, setRate] = useState(String(member.commission_rate ?? 0));
+const formatRate = (rate: number) =>
+    `${new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 }).format(rate)}%`;
 
-    const openCommissionEditor = () => {
-        setRate(String(member.commission_rate ?? 0));
-        setEditingCommission(true);
-    };
-
-    const handleSaveCommission = async () => {
-        if (!onSaveCommission) return;
-        const parsed = parseFloat(rate);
-        if (Number.isNaN(parsed) || parsed < 0 || parsed > 100) return;
-        setSaving(true);
-        try {
-            await onSaveCommission(member.id, { rate: parsed });
-            setEditingCommission(false);
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    const commissionRate = member.commission_rate ?? 0;
+/**
+ * Linha compacta da equipe (~64 px): avatar 40 px, nome, cargo e % de comissão.
+ * Tudo que é edição (dados, comissão, bloqueios, exclusão) fica no drawer "Editar".
+ */
+export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({ member, onEdit, hasOwnCycle = false }) => {
+    const { colors, radius, accent } = useBrutalTheme();
+    const rate = member.commission_rate ?? 0;
 
     return (
-        <div className={`
-            relative p-4 md:p-5 ${radius.card} border transition-all duration-300 group
-            ${member.active
-                ? `${colors.card} ${colors.border} hover:border-[var(--color-border-strong)] ${shadow.card} ${shadow.cardHover}`
-                : `${colors.card} ${colors.border} grayscale opacity-70`}
-            ${member.is_owner ? `ring-2 ${accent.ring}` : ''}
-            active:scale-[0.98] md:active:scale-100
-        `}>
-            <div className="absolute top-4 right-4 flex items-center gap-2">
-                {member.is_owner && (
-                    <div className={`flex items-center gap-1 px-2 py-0.5 ${radius.badge} ${accent.bgDim} ${accent.text} text-xs font-bold uppercase border ${accent.borderDim}`}>
-                        <Crown className="w-3 h-3" />
-                        Dono
-                    </div>
-                )}
-                {!member.active && (
-                    <div className={`px-2 py-0.5 ${radius.badge} ${status.dangerBg} ${status.danger} text-xs font-bold uppercase border ${status.dangerBorder}`}>
-                        Inativo
-                    </div>
+        <li
+            data-testid="team-member-row"
+            className={`flex items-center gap-3 min-h-[64px] px-3 py-2.5 md:px-4 ${radius.card} border ${colors.border} ${colors.card}`}
+        >
+            <div className={`relative h-10 w-10 shrink-0 overflow-hidden rounded-full ${colors.surface} border ${colors.border}`}>
+                {member.photo_url ? (
+                    <img src={member.photo_url} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" />
+                ) : (
+                    <span className={`flex h-full w-full items-center justify-center ${colors.textMuted}`} aria-hidden="true">
+                        <User className="h-5 w-5" />
+                    </span>
                 )}
             </div>
 
-            <div className="flex items-center gap-4 md:gap-5">
-                <div className="relative shrink-0">
-                    <div className={`
-                        w-14 h-14 md:w-20 md:h-20 ${radius.avatar} overflow-hidden ${colors.surface} border transition-all
-                        ${member.active
-                            ? `${accent.borderDim} group-hover:border-[var(--color-accent-border)]`
-                            : `${colors.border} ring-2 ring-[var(--color-danger-border)]`}
-                    `}>
-                        {member.photo_url ? (
-                            <img src={member.photo_url} alt={member.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
-                        ) : (
-                            <div className={`w-full h-full flex items-center justify-center ${colors.textMuted}`}>
-                                <User className="w-8 h-8 md:w-10 md:h-10" />
-                            </div>
-                        )}
-                    </div>
-                    {member.active && (
-                        <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[var(--color-success)] border-2 border-[var(--color-card)]" />
+            <div className="min-w-0 flex-1">
+                <p className={`flex items-center gap-2 text-[15px] font-semibold leading-5 ${member.active ? colors.text : colors.textMuted}`}>
+                    <span className="truncate">{member.name}</span>
+                    {member.is_owner && !/\bdono\b/i.test(member.role ?? '') && (
+                        <span className={`shrink-0 rounded-md ${accent.bgDim} ${accent.text} px-1.5 py-px text-xs font-semibold leading-4`}>
+                            Dono
+                        </span>
                     )}
-                </div>
-
-                <div className="flex-1 min-w-0 pr-16 sm:pr-20">
-                    <h3 className={`font-heading text-base md:text-xl font-bold truncate leading-tight ${member.active ? colors.text : colors.textMuted}`}>
-                        {member.name}
-                    </h3>
-                    <p className={`text-xs font-mono uppercase tracking-wide ${accent.text} opacity-80`}>
-                        {member.role}
-                    </p>
-
-                    {!member.is_owner && !editingCommission && (
-                        <div className="space-y-1">
-                            <p className={`text-xl font-bold font-mono tabular-nums ${colors.text}`}>
-                                <span className={accent.text}>{commissionRate}%</span>
-                                <span className={`ml-1.5 text-sm font-sans font-semibold ${colors.textSecondary}`}>
-                                    de comissão
-                                </span>
-                            </p>
-                            {scheduleLabel && (
-                                <p className={`text-sm font-medium ${colors.textSecondary}`}>
-                                    {scheduleLabel}
-                                </p>
-                            )}
-                        </div>
+                    {!member.active && (
+                        <span className="shrink-0 rounded-md bg-[var(--color-danger-bg)] px-1.5 py-px text-xs font-semibold leading-4 text-[var(--color-danger)]">
+                            Inativo
+                        </span>
                     )}
-                    {member.is_owner && (
-                        <p className={`text-sm ${colors.textSecondary}`}>
-                            Dono não entra na fila de repasse de comissões.
-                        </p>
+                </p>
+                <p className={`mt-0.5 truncate text-[13px] leading-5 ${colors.textSecondary}`}>
+                    {member.role ? <span>{member.role}</span> : member.is_owner && <span>Dono</span>}
+                    {!member.is_owner && (
+                        <>
+                            {member.role && <span aria-hidden="true"> · </span>}
+                            <span className="tabular-nums">{formatRate(rate)} de comissão</span>
+                            {hasOwnCycle && <span> · ciclo próprio</span>}
+                        </>
                     )}
-                </div>
+                </p>
             </div>
 
-            {!member.is_owner && editingCommission && (
-                <div className={`mt-4 space-y-3 p-3 rounded-xl border ${accent.border} ${colors.surface}`}>
-                    <div className="relative">
-                        <label className={`text-xs mb-1 block ${colors.textMuted}`}>Comissão</label>
-                        <input
-                            type="number"
-                            min="0"
-                            max="100"
-                            step="0.5"
-                            value={rate}
-                            onChange={(e) => setRate(e.target.value)}
-                            className={`w-full px-3 py-2.5 min-h-[44px] rounded-lg ${colors.text} font-mono text-center outline-none bg-[var(--color-input-bg)] border border-[var(--color-input-border)] focus:border-theme-accent`}
-                            autoFocus
-                        />
-                        <span className={`absolute right-3 bottom-2.5 ${colors.textMuted} font-mono pointer-events-none`}>%</span>
-                    </div>
-                    <div className="flex gap-2">
-                        <Button
-                            variant="primary"
-                            size="sm"
-                            className="flex-1 min-h-[44px]"
-                            onClick={() => void handleSaveCommission()}
-                            disabled={saving}
-                            icon={saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                        >
-                            {saving ? 'Salvando' : 'Salvar'}
-                        </Button>
-                        <Button
-                            variant="secondary"
-                            size="sm"
-                            className="flex-1 min-h-[44px]"
-                            onClick={() => setEditingCommission(false)}
-                            disabled={saving}
-                        >
-                            Cancelar
-                        </Button>
-                    </div>
-                </div>
-            )}
-
-            {children}
-
-            <div className={`mt-5 pt-4 border-t ${colors.divider} flex flex-wrap justify-end items-center gap-2`}>
-                {!member.is_owner && onSaveCommission && !editingCommission && (
-                    <button
-                        type="button"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            openCommissionEditor();
-                        }}
-                        className={`
-                            flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-3 min-h-[44px]
-                            ${accent.bgDim} ${accent.text} ${radius.button}
-                            transition-all text-xs font-bold uppercase tracking-wide
-                            border ${accent.borderDim}
-                        `}
-                    >
-                        <Percent className="w-4 h-4" />
-                        Comissão
-                    </button>
-                )}
-                <button
-                    type="button"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onEdit(member);
-                    }}
-                    className={`
-                        flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-3 min-h-[44px]
-                        bg-[var(--color-card-hover)] ${colors.text} ${radius.button} hover:bg-[var(--color-divider)]
-                        transition-all text-xs font-bold uppercase tracking-wide
-                        border ${colors.border} hover:border-[var(--color-border-strong)]
-                    `}
-                >
-                    <Edit2 className={`w-4 h-4 ${accent.text}`} />
-                    Perfil
-                </button>
-                {!member.is_owner && (
-                <button
-                    type="button"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete(member.id);
-                    }}
-                    className={`p-2.5 min-h-[44px] min-w-[44px] ${colors.textMuted} hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)] ${radius.button} transition-all border border-transparent hover:border-[var(--color-danger-border)] active:scale-90`}
-                    title="Excluir"
-                    aria-label={`Excluir membro ${member.name}`}
-                >
-                    <Trash2 className="w-4 h-4" />
-                </button>
-                )}
-            </div>
-        </div>
+            <button
+                type="button"
+                onClick={() => onEdit(member)}
+                aria-label={`Editar ${member.name}`}
+                className={`inline-flex h-11 shrink-0 items-center gap-1.5 rounded-lg border ${colors.border} px-3 text-sm font-medium ${colors.text} transition-colors hover:bg-[var(--color-card-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]`}
+            >
+                <Pencil className="h-4 w-4" aria-hidden="true" />
+                <span>Editar</span>
+            </button>
+        </li>
     );
 };

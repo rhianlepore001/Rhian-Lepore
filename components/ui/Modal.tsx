@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useId, useRef } from 'react';
+import React, { useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import FocusTrap from 'focus-trap-react';
@@ -41,6 +41,9 @@ const SIZE_MAP: Record<ModalSize, string> = {
   full: 'max-w-none w-screen h-[100dvh] md:max-w-none md:w-screen md:h-[100dvh] rounded-none',
 };
 
+/** Pilha global de modais abertos (topo = último). */
+const openModalStack: symbol[] = [];
+
 export const Modal: React.FC<ModalProps> = ({
   open,
   onClose,
@@ -59,7 +62,6 @@ export const Modal: React.FC<ModalProps> = ({
   forceTheme,
 }) => {
   const { classes, colors } = useBrutalTheme({ override: forceTheme });
-  const previousFocusRef = useRef<HTMLElement | null>(null);
   const titleRef = useRef<HTMLHeadingElement | null>(null);
   const reactId = useId();
   const titleDomId = title ? `ui-modal-title-${reactId.replace(/:/g, '')}` : labelledById;
@@ -68,33 +70,38 @@ export const Modal: React.FC<ModalProps> = ({
   const allowEsc = !preventClose && closeOnEsc;
   const allowOverlay = !preventClose && closeOnOverlay;
 
-  const handleEscape = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && allowEsc) {
-        onClose();
-      }
-    },
-    [onClose, allowEsc]
-  );
+  // Últimas props em ref: o efeito de abertura não reexecuta a cada render (onClose inline)
+  // e a posição do modal na pilha fica estável.
+  const escRef = useRef({ onClose, allowEsc });
+  escRef.current = { onClose, allowEsc };
+  const setModalOpenRef = useRef(setModalOpen);
+  setModalOpenRef.current = setModalOpen;
 
   useEffect(() => {
-    if (open) {
-      previousFocusRef.current = document.activeElement as HTMLElement;
-      document.addEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'hidden';
-      setModalOpen?.(true);
-    }
+    if (!open) return undefined;
+    const token = Symbol('modal');
+    openModalStack.push(token);
+    document.body.style.overflow = 'hidden';
+    setModalOpenRef.current?.(true);
+
+    // O retorno de foco fica com o FocusTrap (returnFocusOnDeactivate).
+    // Modais empilhados (ex.: drawer do colaborador → "Bloquear agenda"): ESC fecha só o do topo.
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || openModalStack[openModalStack.length - 1] !== token) return;
+      if (escRef.current.allowEsc) escRef.current.onClose();
+    };
+    document.addEventListener('keydown', handleEscape);
 
     return () => {
       document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = '';
-      setModalOpen?.(false);
-      if (!open && previousFocusRef.current) {
-        previousFocusRef.current.focus();
-        previousFocusRef.current = null;
+      const idx = openModalStack.indexOf(token);
+      if (idx >= 0) openModalStack.splice(idx, 1);
+      if (openModalStack.length === 0) {
+        document.body.style.overflow = '';
+        setModalOpenRef.current?.(false);
       }
     };
-  }, [open, handleEscape, setModalOpen]);
+  }, [open]);
 
   if (!open) return null;
 

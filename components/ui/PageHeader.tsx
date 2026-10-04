@@ -11,6 +11,8 @@ interface PageHeaderProps {
   action?: React.ReactNode;
   /** Slot opcional para chips/filtros à esquerda, entre subtítulo e CTA */
   meta?: React.ReactNode;
+  /** Esconde o slot de ação no celular (quando o "+" da barra inferior já cumpre o papel). */
+  hideActionOnMobile?: boolean;
   className?: string;
   forceTheme?: ThemeVariant;
 }
@@ -20,6 +22,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   subtitle,
   action,
   meta,
+  hideActionOnMobile = false,
   className = '',
   forceTheme,
 }) => {
@@ -52,7 +55,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
         {meta && <div className="mt-2 flex flex-wrap gap-2">{meta}</div>}
       </div>
       {action && (
-        <div className="flex w-full md:w-auto items-center md:justify-end gap-2 [&>*]:w-full md:[&>*]:w-auto">
+        <div className={`${hideActionOnMobile ? 'hidden md:flex' : 'flex'} w-full md:w-auto items-center md:justify-end gap-2 [&>*]:w-full md:[&>*]:w-auto`}>
           {action}
         </div>
       )}

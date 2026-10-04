@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useBusinessCopy } from '../hooks/useBusinessCopy';
 import { createPortal } from 'react-dom';
+import { Button } from './ui/Button';
 
 interface InfoButtonProps {
     text: string;
@@ -131,7 +132,6 @@ export const AIAssistantButton: React.FC<AIAssistantButtonProps> = ({ context })
         { role: 'assistant', content: `Olá! Sou seu assistente pessoal. Como posso ajudar com ${context}?` }
     ]);
     const [input, setInput] = useState('');
-    const { accent } = useBrutalTheme();
     const { assistantName } = useBusinessCopy();
 
     const handleSend = () => {
@@ -152,14 +152,19 @@ export const AIAssistantButton: React.FC<AIAssistantButtonProps> = ({ context })
 
     return (
         <>
-            <button
+            {/* Mesma altura e alinhamento dos botões vizinhos (Filtrar/Exportar):
+                quadrado de 44 px no celular, com rótulo a partir de 768 px. */}
+            <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setIsOpen(true)}
-                className={`ml-2 p-1 rounded-full ${accent.bgDim} ${accent.text} hover:bg-theme-accent transition-colors`}
-                title="Assistente IA"
+                title="Assistente"
                 aria-label="Abrir assistente IA"
+                className="w-11 px-0 md:w-auto md:px-3"
+                icon={<Bot className="h-4 w-4" />}
             >
-                <Bot className="w-4 h-4" />
-            </button>
+                <span className="hidden md:inline">Assistente</span>
+            </Button>
 
             {isOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-bg)]/50 backdrop-blur-sm p-4">

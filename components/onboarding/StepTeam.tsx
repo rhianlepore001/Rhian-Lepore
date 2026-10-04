@@ -76,6 +76,7 @@ export const StepTeam: React.FC<StepTeamProps> = ({ onNext, onBack, accentColor 
                     </div>
                 ) : (
                     <div className="space-y-3">
+                        <ul className="space-y-2">
                         {members.map(member => (
                             <TeamMemberCard
                                 key={member.id}
@@ -84,13 +85,9 @@ export const StepTeam: React.FC<StepTeamProps> = ({ onNext, onBack, accentColor 
                                     setEditingMember(member);
                                     setIsModalOpen(true);
                                 }}
-                                onDelete={async (id) => {
-                                    await supabase.from('team_members').delete().eq('id', id);
-                                    fetchMembers();
-                                }}
-                                accentColor={accentColor}
                             />
                         ))}
+                        </ul>
                         <button
                             onClick={() => setIsModalOpen(true)}
                             id="wizard-add-team"
@@ -127,6 +124,12 @@ export const StepTeam: React.FC<StepTeamProps> = ({ onNext, onBack, accentColor 
                         setEditingMember(null);
                     }}
                     onSave={fetchMembers}
+                    onDelete={async (id) => {
+                        await supabase.from('team_members').delete().eq('id', id);
+                        setIsModalOpen(false);
+                        setEditingMember(null);
+                        fetchMembers();
+                    }}
                     accentColor={accentColor}
                     isOwnerForm={isOwnerMode || (editingMember?.is_owner ?? false)}
                     initialData={editingMember}

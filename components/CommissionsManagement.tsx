@@ -11,8 +11,9 @@ import { CommissionPaymentHistory } from './CommissionPaymentHistory';
 import { CommissionDetailReport } from './CommissionDetailReport';
 import { useToast } from '@/components/ui';
 import { useTenantLocale } from '../hooks/useTenantLocale';
-import { lastClosedCycle, formatCycleLabel, formatIsoToBr, parseBrToIso, type CommissionCycle } from '../utils/commissionCycle';
+import { lastClosedCycle, formatCycleLabel, formatIsoToBr, parseBrToIso, formatDayMonth, type CommissionCycle } from '../utils/commissionCycle';
 import { fetchCommissionCycle, isRpcUnavailable, payCommission, previewCommissionPay } from '../services/staffPerformance';
+import { getTodayInTimeZone } from '../utils/businessTimezone';
 import type { CommissionCycleResult } from '../types/staffPerformance';
 import { PayoutList, payoutDueAmount, payoutPaymentRange, type PayoutRowData } from './commissions/PayoutList';
 import { PaidPaymentsList, type PaidPayment } from './commissions/PaidPaymentsList';
@@ -324,7 +325,10 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
             void calculateAmountForDates(professional.professional_id, start, end);
             return;
         }
-        const range = payoutPaymentRange(professional, cycle, cycleData.previous_end);
+        const range = payoutPaymentRange(professional, cycle, cycleData.previous_end, {
+            today: getTodayInTimeZone(cycleData.tz),
+            open: cycleData.cycle.open,
+        });
         setPaymentAmount(range.amount.toFixed(2));
         setPaymentStartDate(range.start);
         setPaymentEndDate(range.end);
@@ -476,31 +480,39 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                         <InfoButton text="Quanto cada colaborador tem a receber e o registro de cada repasse. O saldo soma as comissões registradas ainda não pagas." />
                     </div>
                     {cycleData ? (
-                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-                            <div className={`inline-flex items-center border ${colors.border} ${radius.button} ${colors.card}`}>
-                                <button
-                                    type="button"
-                                    aria-label="Ciclo anterior"
-                                    disabled={loadState === 'loading'}
-                                    onClick={() => goToCycle(cycleData.previous_end)}
-                                    className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] md:min-h-[40px] ${colors.textSecondary} ${colors.surfaceHover} disabled:opacity-40`}
-                                >
-                                    <ChevronLeft className="w-4 h-4" aria-hidden="true" />
-                                </button>
-                                <span className={`px-1 text-sm font-semibold ${colors.text} tabular-nums whitespace-nowrap`} aria-live="polite">
-                                    {cycleData.cycle.open ? 'Ciclo em aberto' : 'Ciclo fechado'} · {cycle.label}
-                                </span>
-                                <button
-                                    type="button"
-                                    aria-label="Próximo ciclo"
-                                    disabled={loadState === 'loading' || cycleData.cycle.open}
-                                    onClick={() => goToCycle(cycleData.next_end)}
-                                    className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] md:min-h-[40px] ${colors.textSecondary} ${colors.surfaceHover} disabled:opacity-40 disabled:cursor-not-allowed`}
-                                >
-                                    <ChevronRight className="w-4 h-4" aria-hidden="true" />
-                                </button>
+                        <div className="mt-2 flex flex-col gap-2">
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                <div className={`inline-flex items-center border ${colors.border} ${radius.button} ${colors.card}`}>
+                                    <button
+                                        type="button"
+                                        aria-label="Ciclo anterior"
+                                        disabled={loadState === 'loading'}
+                                        onClick={() => goToCycle(cycleData.previous_end)}
+                                        className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] md:min-h-[40px] ${colors.textSecondary} ${colors.surfaceHover} disabled:opacity-40`}
+                                    >
+                                        <ChevronLeft className="w-4 h-4" aria-hidden="true" />
+                                    </button>
+                                    <span className={`px-1 text-sm font-semibold ${colors.text} tabular-nums whitespace-nowrap`} aria-live="polite">
+                                        {formatDayMonth(cycleData.cycle.start)} – {formatDayMonth(cycleData.cycle.end)}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        aria-label="Próximo ciclo"
+                                        disabled={loadState === 'loading' || cycleData.cycle.open}
+                                        onClick={() => goToCycle(cycleData.next_end)}
+                                        className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] md:min-h-[40px] ${colors.textSecondary} ${colors.surfaceHover} disabled:opacity-40 disabled:cursor-not-allowed`}
+                                    >
+                                        <ChevronRight className="w-4 h-4" aria-hidden="true" />
+                                    </button>
+                                </div>
                             </div>
-                            <span className={`text-sm whitespace-nowrap ${colors.textMuted}`}>Acerto todo dia {settlementDay}</span>
+                            <p className={`text-sm ${colors.textSecondary} tabular-nums`} data-testid="commission-cycle-header">
+                                Período {formatDayMonth(cycleData.cycle.start)} – {formatDayMonth(cycleData.cycle.end)}
+                                {' · '}fecha em {formatDayMonth(cycleData.cycle.end)}
+                                {cycleData.cycle.pay_due || cycleData.pay_due
+                                    ? ` · pagar até ${formatDayMonth((cycleData.cycle.pay_due || cycleData.pay_due)!)}`
+                                    : ''}
+                            </p>
                         </div>
                     ) : (
                         <p className={`${colors.textSecondary} text-sm mt-1 tabular-nums flex flex-wrap gap-x-2`}>
@@ -677,7 +689,13 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                 disabled={!!payingProfessionalId || previewing || Number(paymentAmount) <= 0}
                                 loading={payingProfessionalId === selectedProfessional.professional_id}
                             >
-                                {payingProfessionalId === selectedProfessional.professional_id ? 'Confirmando...' : 'Pagar agora'}
+                                {payingProfessionalId === selectedProfessional.professional_id
+                                    ? 'Confirmando...'
+                                    : `Pagar ${formatMoney(Number(paymentAmount) || 0)} de ${formatDayMonth(paymentStartDate)} a ${
+                                        cycleData?.cycle.open && paymentEndDate === getTodayInTimeZone(cycleData.tz)
+                                            ? 'hoje'
+                                            : formatDayMonth(paymentEndDate)
+                                    }`}
                             </Button>
                         </div>
                     }

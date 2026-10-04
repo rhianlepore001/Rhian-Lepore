@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
+import { useBusinessCopy } from '../../hooks/useBusinessCopy';
 import { useTeamMembers, useDeleteTeamMember } from '../../hooks/useTeam';
 import { useBusinessSettings } from '../../hooks/useSettings';
 import { useQueryClient } from '@tanstack/react-query';
@@ -15,6 +16,7 @@ import { TeamMemberForm } from '../../components/TeamMemberForm';
 import { StaffAppointmentPermissionSection } from '../../components/settings/StaffAppointmentPermissionSection';
 import { TeamMemberBlocksSection } from '../../components/agenda/TeamMemberBlocksSection';
 import { AgendaBlockForm } from '../../components/agenda/AgendaBlockForm';
+import { CommissionScheduleEditor } from '../../components/settings/CommissionScheduleEditor';
 import {
     useUpcomingAgendaBlocks,
     useCreateAgendaBlock,
@@ -22,12 +24,27 @@ import {
 } from '../../hooks/useAgendaBlocks';
 import { supabase } from '../../lib/supabase';
 import { mapError, formatUserFacingError } from '../../utils/mapError';
-import { resolveBusinessTimezone } from '../../utils/businessTimezone';
+import { resolveBusinessTimezone, getTodayInTimeZone } from '../../utils/businessTimezone';
 import { isAgendaBlockConflictResult, type AgendaBlock, type AgendaBlockConflict } from '../../types/agendaBlocks';
 import { messageForAgendaBlockResultCode } from '../../utils/agendaBlockPermission';
+import {
+    defaultScheduleDraft,
+    formatLegacyFrequencyResetNotice,
+    scheduleDraftSummary,
+    scheduleRowToDraft,
+    type CommissionScheduleDraft,
+    validateScheduleDraft,
+} from '../../utils/commissionSchedule';
+import {
+    dismissCommissionScheduleNotice,
+    fetchCommissionSchedules,
+    saveCommissionSchedule,
+    type CommissionSchedulesPayload,
+} from '../../services/commissionSchedule';
 
 export const TeamSettings: React.FC = () => {
     const { companyId, region } = useAuth();
+    const { remainder } = useBusinessCopy();
     const { accent, colors, classes } = useBrutalTheme();
     const queryClient = useQueryClient();
     const { data: members = [], isLoading: loading } = useTeamMembers();
@@ -45,8 +62,10 @@ export const TeamSettings: React.FC = () => {
     const [unlockTarget, setUnlockTarget] = useState<AgendaBlock | null>(null);
     const { showToast } = useToast();
 
-    const [settlementDay, setSettlementDay] = useState<number | string>(5);
-    const [savingSettlement, setSavingSettlement] = useState(false);
+    const [scheduleDraft, setScheduleDraft] = useState<CommissionScheduleDraft>(defaultScheduleDraft);
+    const [schedulePayload, setSchedulePayload] = useState<CommissionSchedulesPayload | null>(null);
+    const [savingSchedule, setSavingSchedule] = useState(false);
+    const [scheduleNotice, setScheduleNotice] = useState(false);
     const [machineFeeEnabled, setMachineFeeEnabled] = useState(false);
     const [debitFeePercent, setDebitFeePercent] = useState('0');
     const [creditFeePercent, setCreditFeePercent] = useState('0');
@@ -54,11 +73,23 @@ export const TeamSettings: React.FC = () => {
 
     useEffect(() => {
         if (!settingsData) return;
-        setSettlementDay(settingsData.commission_settlement_day_of_month ?? 5);
         setMachineFeeEnabled(settingsData.machine_fee_enabled ?? false);
         setDebitFeePercent(String(settingsData.debit_fee_percent ?? 0));
         setCreditFeePercent(String(settingsData.credit_fee_percent ?? 0));
     }, [settingsData]);
+
+    useEffect(() => {
+        if (!companyId) return;
+        void fetchCommissionSchedules()
+            .then((payload) => {
+                setSchedulePayload(payload);
+                setScheduleDraft(scheduleRowToDraft(payload.business));
+                setScheduleNotice(payload.notice);
+            })
+            .catch(() => {
+                setScheduleDraft(defaultScheduleDraft());
+            });
+    }, [companyId]);
 
     const cardMembers = members.map(m => ({
         ...m,
@@ -147,8 +178,6 @@ export const TeamSettings: React.FC = () => {
                 .update({
                     commission_rate: draft.rate,
                     commission_percent: draft.rate,
-                    commission_payment_frequency: draft.frequency,
-                    commission_payment_day: draft.day,
                     updated_at: new Date().toISOString(),
                 })
                 .eq('id', memberId)
@@ -173,30 +202,38 @@ export const TeamSettings: React.FC = () => {
         }
     };
 
-    const handleSaveSettlementDay = async () => {
-        if (!companyId) return;
-        setSavingSettlement(true);
-        let day = typeof settlementDay === 'string' ? parseInt(settlementDay, 10) : settlementDay;
-        if (Number.isNaN(day) || day < 1 || day > 31) {
-            day = 5;
-            setSettlementDay(5);
+    const handleSaveSchedule = async () => {
+        const invalid = validateScheduleDraft(scheduleDraft);
+        if (invalid) {
+            showToast(invalid, 'warning');
+            return;
         }
+        setSavingSchedule(true);
         try {
-            const { error } = await supabase
-                .from('business_settings')
-                .upsert({
-                    user_id: companyId,
-                    commission_settlement_day_of_month: day,
-                    updated_at: new Date().toISOString(),
-                }, { onConflict: 'user_id' });
-            if (error) throw error;
-            showToast('Dia de lembrete salvo!', 'success');
+            await saveCommissionSchedule({
+                frequency: scheduleDraft.frequency,
+                closeDays: scheduleDraft.closeDays,
+                payOffsetDays: scheduleDraft.payOffsetDays,
+                reminderOffsets: scheduleDraft.reminderOffsets,
+            });
+            const payload = await fetchCommissionSchedules();
+            setSchedulePayload(payload);
+            setScheduleDraft(scheduleRowToDraft(payload.business));
+            showToast('Pagamento da comissão salvo.', 'success');
             queryClient.invalidateQueries({ queryKey: ['settings', companyId, 'business'] });
         } catch (error) {
-            console.error('Error saving settlement day:', error);
-            showToast('Não foi possível salvar o dia de acerto. Tente de novo.', 'error');
+            showToast(formatUserFacingError(mapError(error, 'Não foi possível salvar o pagamento da comissão.')), 'error');
         } finally {
-            setSavingSettlement(false);
+            setSavingSchedule(false);
+        }
+    };
+
+    const handleDismissScheduleNotice = async () => {
+        try {
+            await dismissCommissionScheduleNotice();
+            setScheduleNotice(false);
+        } catch {
+            setScheduleNotice(false);
         }
     };
 
@@ -236,6 +273,20 @@ export const TeamSettings: React.FC = () => {
 
     const owners = cardMembers.filter(m => m.is_owner);
     const staff = cardMembers.filter(m => !m.is_owner);
+    const exceptionByPro = new Map(
+        (schedulePayload?.exceptions ?? []).map((row) => [row.professional_id, row.schedule]),
+    );
+    const businessSummary = scheduleDraftSummary(scheduleDraft);
+    const ruleOfBusiness = remainder.article === 'a' ? `da ${remainder.noun}` : `do ${remainder.noun}`;
+    const scheduleFromIso = schedulePayload?.today ?? getTodayInTimeZone(shopTimeZone);
+
+    const memberScheduleLabel = (memberId: string) => {
+        const exception = exceptionByPro.get(memberId);
+        if (exception && (exception.close_days?.length ?? 0) > 0) {
+            return `Exceção · ${scheduleDraftSummary(scheduleRowToDraft(exception))}`;
+        }
+        return businessSummary;
+    };
 
     return (
         <SettingsLayout>
@@ -246,7 +297,7 @@ export const TeamSettings: React.FC = () => {
                             Equipe e comissões
                         </h2>
                         <p className={`text-sm mt-1 ${colors.textSecondary} max-w-lg`}>
-                            Cadastre colaboradores e configure comissão, frequência e dia de acerto.
+                            Cadastre colaboradores e configure comissão e o ciclo de acerto.
                         </p>
                     </div>
                     <Button
@@ -337,6 +388,7 @@ export const TeamSettings: React.FC = () => {
                                             }}
                                             onDelete={handleDelete}
                                             onSaveCommission={handleSaveCommission}
+                                            scheduleLabel={memberScheduleLabel(member.id)}
                                         >
                                             <TeamMemberBlocksSection
                                                 memberName={member.name}
@@ -361,43 +413,59 @@ export const TeamSettings: React.FC = () => {
                 <section className="space-y-4 border-t border-[var(--color-divider)] pt-8">
                     <div className={`flex items-center gap-2 ${colors.textMuted} font-mono text-xs uppercase tracking-[0.2em] px-1`}>
                         <Calendar className={`w-4 h-4 ${accent.text}`} />
-                        Lembrete e taxas
+                        Pagamento da comissão
                     </div>
 
-                    <Card title="Lembrete de acerto">
-                        <div className="space-y-4">
-                            <p className={`${colors.textMuted} text-sm`}>
-                                Dia em que o dashboard avisa sobre o acerto. A frequência de cada colaborador (semanal, quinzenal ou mensal) fica no card da equipe.
+                    {scheduleNotice && (
+                        <div
+                            data-testid="commission-schedule-notice"
+                            className={`flex flex-col sm:flex-row sm:items-start gap-3 p-4 rounded-xl border ${accent.borderDim} ${accent.bgDim}`}
+                        >
+                            <AlertCircle className={`w-5 h-5 ${accent.text} flex-shrink-0 mt-0.5`} />
+                            <p className={`text-sm leading-relaxed ${colors.text} flex-1`}>
+                                {formatLegacyFrequencyResetNotice(ruleOfBusiness)}
                             </p>
-                            <div className="flex flex-col sm:flex-row sm:items-end gap-3">
-                                <div className="flex-1 w-full sm:max-w-xs min-w-0">
-                                    <label className={classes.label}>Dia do mês (1–31)</label>
-                                    <div className="relative">
-                                        <Calendar className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${colors.textMuted}`} />
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            max="31"
-                                            value={settlementDay}
-                                            onChange={(e) => setSettlementDay(e.target.value)}
-                                            className={`${classes.input} pl-12 text-lg min-h-[44px]`}
-                                        />
-                                    </div>
-                                    <p className={`${colors.textMuted} text-xs mt-1`}>
-                                        Alerta no dashboard 2 dias antes do dia {settlementDay}
-                                    </p>
-                                </div>
-                                <Button
-                                    variant="primary"
-                                    onClick={() => void handleSaveSettlementDay()}
-                                    disabled={savingSettlement}
-                                    className="w-full sm:w-auto shrink-0 min-h-[44px]"
-                                >
-                                    {savingSettlement ? 'Salvando...' : 'Salvar lembrete'}
-                                </Button>
-                            </div>
+                            <Button
+                                variant="secondary"
+                                onClick={() => void handleDismissScheduleNotice()}
+                                className="w-full sm:w-auto shrink-0 min-h-[44px]"
+                            >
+                                Entendi
+                            </Button>
+                        </div>
+                    )}
+
+                    <Card title="Regra do negócio">
+                        <div className="space-y-6">
+                            <p className={`${colors.textMuted} text-sm leading-relaxed`}>
+                                Uma regra para {remainder.withArticle}. Se alguém precisar de outra, crie uma exceção no perfil do colaborador.
+                            </p>
+                            <CommissionScheduleEditor
+                                draft={scheduleDraft}
+                                onChange={setScheduleDraft}
+                                fromIso={scheduleFromIso}
+                                currentEnd={schedulePayload?.current_end}
+                                saved={schedulePayload ? scheduleRowToDraft(schedulePayload.business) : undefined}
+                            />
+                            <Button
+                                variant="primary"
+                                data-testid="commission-schedule-save"
+                                onClick={() => void handleSaveSchedule()}
+                                disabled={savingSchedule}
+                                className="w-full sm:w-auto min-h-[44px]"
+                                icon={savingSchedule ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                            >
+                                {savingSchedule ? 'Salvando...' : 'Salvar pagamento'}
+                            </Button>
                         </div>
                     </Card>
+                </section>
+
+                <section className="space-y-4 border-t border-[var(--color-divider)] pt-8">
+                    <div className={`flex items-center gap-2 ${colors.textMuted} font-mono text-xs uppercase tracking-[0.2em] px-1`}>
+                        <CreditCard className={`w-4 h-4 ${accent.text}`} />
+                        Taxas
+                    </div>
 
                     <Card title="Taxa de maquininha">
                         <div className="space-y-4">
@@ -475,7 +543,7 @@ export const TeamSettings: React.FC = () => {
                         <AlertCircle className="w-5 h-5 text-[var(--color-info)] flex-shrink-0 mt-0.5" />
                         <div className={`text-sm ${colors.textMuted} space-y-1`}>
                             <p className={`font-bold ${colors.text}`}>Como funciona</p>
-                            <p>Defina a % e a frequência no card do colaborador. Ao concluir um atendimento, a comissão entra automaticamente. O pagamento fica em Financeiro → Comissões.</p>
+                            <p>Defina a % no card do colaborador. O ciclo de acerto fica acima, em Pagamento da comissão. Ao concluir um atendimento, a comissão entra automaticamente. O pagamento fica em Financeiro → Pagamentos.</p>
                         </div>
                     </div>
                 </section>
@@ -524,6 +592,13 @@ export const TeamSettings: React.FC = () => {
                         onClose={() => setIsModalOpen(false)}
                         onSave={() => {
                             queryClient.invalidateQueries({ queryKey: ['team', companyId, 'members'] });
+                            void fetchCommissionSchedules()
+                                .then((payload) => {
+                                    setSchedulePayload(payload);
+                                    setScheduleDraft(scheduleRowToDraft(payload.business));
+                                    setScheduleNotice(payload.notice);
+                                })
+                                .catch(() => undefined);
                         }}
                     />
                 )}

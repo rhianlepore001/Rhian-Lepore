@@ -66,6 +66,7 @@ export function payoutPaymentRange(
     row: PayoutRowData,
     cycle: { start: string; end: string },
     previousEnd: string,
+    opts?: { today?: string; open?: boolean },
 ): { start: string; end: string; amount: number } {
     const amount = payoutDueAmount(row);
     const earliest = row.cycle?.primeiro_nao_pago;
@@ -73,7 +74,10 @@ export function payoutPaymentRange(
     if (priorOnly && earliest) {
         return { start: earliest, end: previousEnd, amount };
     }
-    return { start: cycle.start, end: cycle.end, amount };
+    const end = opts?.open && opts.today && opts.today >= cycle.start && opts.today <= cycle.end
+        ? opts.today
+        : cycle.end;
+    return { start: cycle.start, end, amount };
 }
 
 const STATUS: Record<CycleStatus, { label: string; variant: 'warning' | 'success' | 'accent' | 'neutral' }> = {

@@ -166,7 +166,7 @@ export const cycleMemberSchema = z.object({
 });
 
 export const commissionCycleSchema = z.object({
-  cycle: z.object({ start: isoDate, end: isoDate, open: z.boolean() }),
+  cycle: z.object({ start: isoDate, end: isoDate, open: z.boolean(), pay_due: isoDate.optional() }),
   settlement_day: int,
   tz: z.string(),
   currency: z.enum(['BRL', 'EUR']),
@@ -174,6 +174,9 @@ export const commissionCycleSchema = z.object({
   next_end: isoDate,
   members: z.array(cycleMemberSchema),
   totals: z.object({ a_pagar_ciclo: z.number(), pendentes: int, pago_ciclo: z.number() }),
+  pay_due: isoDate.optional(),
+  frequency: z.string().optional(),
+  pay_offset_days: z.number().int().optional(),
 });
 
 export const payPreviewSchema = z.object({

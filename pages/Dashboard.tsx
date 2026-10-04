@@ -35,12 +35,11 @@ const GoalSettingsModal = lazy(() =>
 
 export const Dashboard: React.FC = () => {
   const { role, user, fullName, companyId } = useAuth();
-  const { alerts } = useAlerts();
+  const { alerts, notifications } = useAlerts();
   const navigate = useNavigate();
   const isStaff = role === 'staff';
 
   const [redirectToast, setRedirectToast] = useState<string | null>(null);
-  const [commissionBanner, setCommissionBanner] = useState(false);
   const [commissionBannerDismissed, setCommissionBannerDismissed] = useState(false);
   const [unfinishedCount, setUnfinishedCount] = useState(0);
   const [unfinishedBannerDismissed, setUnfinishedBannerDismissed] = useState(false);
@@ -55,28 +54,9 @@ export const Dashboard: React.FC = () => {
     }
   }, []);
 
-  useEffect(() => {
-    if (!user || commissionBannerDismissed || isStaff) return;
-    const fetchCommissionBanner = async () => {
-      const { data } = await supabase
-        .from('business_settings')
-        .select('commission_settlement_day_of_month')
-        .eq('user_id', companyId ?? user.id)
-        .maybeSingle();
-      if (!data?.commission_settlement_day_of_month) return;
-      const today = new Date();
-      const settlementDay = data.commission_settlement_day_of_month;
-      if (
-        today.getDate() === settlementDay - 1 ||
-        (settlementDay === 1 &&
-          today.getDate() ===
-            new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate())
-      ) {
-        setCommissionBanner(true);
-      }
-    };
-    fetchCommissionBanner();
-  }, [user, isStaff, commissionBannerDismissed, companyId]);
+  const commissionNotice = notifications.find((n) =>
+    !n.read && (n.type === 'commission_reminder' || (n.event_key ?? '').startsWith('commission:')),
+  );
 
   useEffect(() => {
     if (!user || unfinishedBannerDismissed) return;
@@ -138,10 +118,10 @@ export const Dashboard: React.FC = () => {
   const attentionItems = useMemo((): AttentionItem[] => {
     const items: AttentionItem[] = [];
 
-    if (!isStaff && !commissionBannerDismissed && commissionBanner) {
+    if (!isStaff && !commissionBannerDismissed && commissionNotice) {
       items.push({
         id: 'commission-due',
-        text: 'Amanhã é dia de pagar as comissões da equipe.',
+        text: commissionNotice.message || 'Hoje é prazo para pagar as comissões da equipe.',
         tone: 'info',
         onClick: () => navigate('/financeiro'),
       });
@@ -170,7 +150,7 @@ export const Dashboard: React.FC = () => {
     return items.slice(0, 4);
   }, [
     alerts,
-    commissionBanner,
+    commissionNotice,
     commissionBannerDismissed,
     unfinishedCount,
     unfinishedBannerDismissed,

@@ -38,7 +38,7 @@ import {
     readCancelCutoffHours,
     talkToBusinessLabel,
 } from '../utils/clientCancelCutoff';
-import { clientEditRequestSentMessage } from '../utils/clientEditRequest';
+import { clientEditRequestSentMessage, isClientEditPending } from '../utils/clientEditRequest';
 import { isSlotUnavailableError } from '../utils/supabaseRpc';
 import {
     isLeadTimeViolationError,
@@ -795,11 +795,12 @@ export const PublicBooking: React.FC = () => {
     const currentStepNum = stepIndex[step as keyof typeof stepIndex] ?? 0;
     const isBookingCancelled = activeBooking?.status === 'cancelled';
     const editSentIso = activeBooking?.original_appointment_time || originalTimeISO || activeBooking?.appointment_time;
+    const pendingEdit = isClientEditPending(activeBooking ?? {});
     const successCopy = getPublicBookingSuccessCopy({
         isBeauty,
         status: activeBooking?.status,
-        isEdit: Boolean(activeBooking?.is_edit),
-        editSentSubtitle: activeBooking?.is_edit && editSentIso
+        isEdit: pendingEdit,
+        editSentSubtitle: pendingEdit && editSentIso
             ? clientEditRequestSentMessage(editSentIso, businessTimezone)
             : null,
     });
@@ -1669,7 +1670,7 @@ export const PublicBooking: React.FC = () => {
 
                                     <p
                                         className={`text-lg md:text-xl mb-12 max-w-md mx-auto leading-relaxed ${colors.textMuted}`}
-                                        data-testid={activeBooking?.is_edit ? 'client-edit-sent-message' : undefined}
+                                        data-testid={pendingEdit ? 'client-edit-sent-message' : undefined}
                                     >
                                         {successCopy.subtitle}
                                     </p>
@@ -1952,7 +1953,7 @@ export const PublicBooking: React.FC = () => {
 
                     <p
                         className={`text-lg md:text-xl mb-12 max-w-md mx-auto leading-relaxed ${colors.textMuted}`}
-                        data-testid={activeBooking?.is_edit ? 'client-edit-sent-message' : undefined}
+                        data-testid={pendingEdit ? 'client-edit-sent-message' : undefined}
                     >
                         {successCopy.subtitle}
                     </p>

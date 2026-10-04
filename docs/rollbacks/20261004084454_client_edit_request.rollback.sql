@@ -1,6 +1,8 @@
 -- ROLLBACK de 20261004084454_client_edit_request
 -- Idempotente. Restaura update/get/accept/reject/lead-time/history v2
--- exatamente como nas migrations anteriores. Não toca cutoff PR-5.
+-- exatamente como nas migrations anteriores (corpos atuais de prod).
+-- Restaura cancel v2 ao corpo exato de 20261004082633 (PR-5).
+-- CREATE OR REPLACE das v1 não altera grants.
 --
 -- ANTES de aplicar: reverter o frontend (Minha Área / link público chamam v2).
 
@@ -294,6 +296,92 @@ BEGIN
   END IF;
 
   RETURN NEW;
+END;
+$function$;
+
+-- Cancel v2: corpo EXATO de 20261004082633_client_cancel_cutoff.sql
+CREATE OR REPLACE FUNCTION public.cancel_public_booking_by_client_v2(
+  p_booking_id uuid,
+  p_phone text
+)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_booking public.public_bookings%ROWTYPE;
+  v_cutoff integer;
+  v_digits_in text;
+  v_digits_stored text;
+  v_updated integer;
+BEGIN
+  -- TODO(PR-9): depósito pago — ainda não há regra de cancelamento/reembolso.
+  v_digits_in := regexp_replace(COALESCE(p_phone, ''), '\D', '', 'g');
+  IF v_digits_in = '' THEN
+    RAISE EXCEPTION 'booking_not_found';
+  END IF;
+
+  SELECT * INTO v_booking
+  FROM public.public_bookings
+  WHERE id = p_booking_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'booking_not_found';
+  END IF;
+
+  v_digits_stored := regexp_replace(COALESCE(v_booking.customer_phone, ''), '\D', '', 'g');
+  IF v_digits_stored = '' OR v_digits_stored IS DISTINCT FROM v_digits_in THEN
+    RAISE EXCEPTION 'booking_not_found';
+  END IF;
+
+  IF v_booking.status IS DISTINCT FROM 'pending'
+     AND v_booking.status IS DISTINCT FROM 'confirmed' THEN
+    RAISE EXCEPTION 'booking_not_cancellable';
+  END IF;
+
+  IF v_booking.appointment_time <= now() THEN
+    RAISE EXCEPTION 'booking_not_cancellable';
+  END IF;
+
+  IF v_booking.status = 'confirmed' THEN
+    SELECT bs.client_cancel_cutoff_hours
+      INTO v_cutoff
+    FROM public.business_settings bs
+    WHERE bs.user_id::text = v_booking.business_id
+    LIMIT 1;
+    v_cutoff := COALESCE(v_cutoff, 2);
+
+    IF v_cutoff <= 0
+       OR now() > (v_booking.appointment_time - make_interval(hours => v_cutoff)) THEN
+      RAISE EXCEPTION 'cancel_window_closed';
+    END IF;
+  END IF;
+
+  UPDATE public.public_bookings
+     SET status = 'cancelled',
+         updated_at = NOW()
+   WHERE id = v_booking.id
+     AND status IN ('pending', 'confirmed');
+
+  GET DIAGNOSTICS v_updated = ROW_COUNT;
+  IF v_updated = 0 THEN
+    RAISE EXCEPTION 'booking_not_cancellable';
+  END IF;
+
+  -- Libera a agenda. Pedido já está cancelled: #98 não reescreve (WHERE
+  -- status = 'confirmed'); #123 retorna cedo para cancelled.
+  UPDATE public.appointments a
+     SET status = 'Cancelled',
+         updated_at = NOW()
+   WHERE a.id IN (
+     SELECT l.appointment_id
+     FROM public.public_booking_linked_appointments(v_booking.id) l
+     WHERE l.status IS DISTINCT FROM 'Cancelled'
+   );
+
+  RETURN true;
 END;
 $function$;
 

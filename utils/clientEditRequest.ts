@@ -23,11 +23,21 @@ export function formatAgendaAlteracao(fromIso: string, toIso: string, timeZone: 
   return `Alteração: de ${fmt(fromIso)} para ${fmt(toIso)}`;
 }
 
+export function isClientEditPending(booking: {
+  status?: string | null;
+  is_edit?: boolean | null;
+}): boolean {
+  return (booking.status ?? '').trim().toLowerCase() === 'pending' && Boolean(booking.is_edit);
+}
+
 export function clientEditReservedIso(booking: {
   appointment_time: string;
   original_appointment_time?: string | null;
   is_edit?: boolean | null;
+  status?: string | null;
 }): string {
-  if (booking.is_edit && booking.original_appointment_time) return booking.original_appointment_time;
+  if (isClientEditPending(booking) && booking.original_appointment_time) {
+    return booking.original_appointment_time;
+  }
   return booking.appointment_time;
 }

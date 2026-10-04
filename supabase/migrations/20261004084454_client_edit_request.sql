@@ -1,11 +1,13 @@
 -- PR-6: edição do cliente vira pedido de alteração (sem duplicar agendamento).
 -- Aditivo. v1 update/get/accept/reject (mesma assinatura) encaminham para v2.
 --
--- Confirmed: snapshot original_* (se ainda não is_edit), status pending, is_edit,
--- appointment_time = horário pedido. O appointment ligado NÃO é tocado.
--- Accept v2 is_edit: MOVE o mesmo appointment. Reject v2 is_edit: restaura
+-- "Edit pending" = status='pending' AND is_edit. Não confiar em is_edit sozinho:
+-- prod tem confirmed com is_edit=true (accept antigo não limpava). Confirmed
+-- sempre faz snapshot fresco de original_* a partir dos valores atuais.
+-- Accept v2 edit-pending: MOVE o mesmo appointment. Reject v2: restaura
 -- original e volta a confirmed (não cancela).
--- Pending (Aguardando): substitui direto, sem camada de aprovação.
+-- Pending (Aguardando, sem is_edit): substitui direto, sem camada de aprovação.
+-- Cancel v2: edit-pending aplica o cutoff PR-5 contra original_appointment_time.
 --
 -- Identidade = igualdade de dígitos (como cancel v2), NÃO phones_match/last-8.
 -- enable_self_rescheduling recusado no servidor. Cutoff = client_cancel_cutoff_hours
@@ -130,7 +132,9 @@ BEGIN
 
   IF TG_OP = 'UPDATE' THEN
     -- Restaurar pedido de alteração (reject): o horário original já estava reservado.
-    IF COALESCE(OLD.is_edit, false)
+    IF OLD.status = 'pending'
+       AND COALESCE(OLD.is_edit, false)
+       AND NEW.status = 'confirmed'
        AND NEW.appointment_time IS NOT DISTINCT FROM OLD.original_appointment_time THEN
       RETURN NEW;
     END IF;
@@ -229,7 +233,7 @@ BEGIN
     RAISE EXCEPTION 'booking_not_editable';
   END IF;
 
-  v_already_edit := COALESCE(v_booking.is_edit, false);
+  v_already_edit := (v_booking.status = 'pending' AND COALESCE(v_booking.is_edit, false));
   v_reserved_time := CASE
     WHEN v_already_edit THEN COALESCE(v_booking.original_appointment_time, v_booking.appointment_time)
     ELSE v_booking.appointment_time
@@ -240,6 +244,16 @@ BEGIN
   END;
 
   IF v_booking.status = 'confirmed' OR v_already_edit THEN
+    IF EXISTS (
+      SELECT 1
+      FROM public.public_booking_linked_appointments(v_booking.id) l
+      WHERE l.status IN ('Completed', 'NoShow')
+    ) THEN
+      RAISE EXCEPTION 'booking_not_editable';
+    END IF;
+    IF v_reserved_time <= now() THEN
+      RAISE EXCEPTION 'booking_not_editable';
+    END IF;
     IF v_cutoff <= 0
        OR now() > (v_reserved_time - make_interval(hours => v_cutoff)) THEN
       RAISE EXCEPTION 'cancel_window_closed';
@@ -340,9 +354,11 @@ BEGIN
   END IF;
 
   -- Pedido de alteração (confirmed, ou 2ª edição ainda pending).
+  -- Sempre exclui os appointments ligados ao próprio pedido (o original
+  -- continua reservado; senão mover 30 min no mesmo pro conflita consigo).
   IF public.client_edit_request_slot_conflict(
     v_booking.business_id, p_appointment_time, v_duration, p_professional_id,
-    v_booking.id, v_same_slot
+    v_booking.id, true
   ) THEN
     RAISE EXCEPTION 'slot_unavailable';
   END IF;
@@ -522,7 +538,7 @@ BEGIN
     RAISE EXCEPTION 'booking_not_pending';
   END IF;
 
-  v_is_edit := COALESCE(v_booking.is_edit, false);
+  v_is_edit := (v_booking.status = 'pending' AND COALESCE(v_booking.is_edit, false));
 
   SELECT c.id INTO v_client_id
   FROM public.clients c
@@ -575,6 +591,15 @@ BEGIN
   END IF;
 
   IF v_is_edit THEN
+    IF COALESCE(v_booking.original_appointment_time, v_booking.appointment_time) <= now()
+       OR EXISTS (
+         SELECT 1
+         FROM public.public_booking_linked_appointments(v_booking.id) l
+         WHERE l.status IN ('Completed', 'NoShow')
+       ) THEN
+      RAISE EXCEPTION 'booking_not_pending';
+    END IF;
+
     SELECT l.appointment_id
       INTO v_appointment_id
     FROM public.public_booking_linked_appointments(v_booking.id) l
@@ -701,7 +726,7 @@ BEGIN
     RAISE EXCEPTION 'booking_not_found';
   END IF;
 
-  IF COALESCE(v_booking.is_edit, false) THEN
+  IF v_booking.status = 'pending' AND COALESCE(v_booking.is_edit, false) THEN
     UPDATE public.public_bookings
     SET
       appointment_time = COALESCE(original_appointment_time, appointment_time),
@@ -809,7 +834,7 @@ BEGIN
     pb.total_price,
     pb.duration_minutes,
     pb.created_at,
-    COALESCE(pb.is_edit, false) AS is_edit,
+    (pb.status = 'pending' AND COALESCE(pb.is_edit, false)) AS is_edit,
     pb.original_appointment_time
   FROM public_bookings pb
   LEFT JOIN team_members tm ON tm.id = pb.professional_id
@@ -824,3 +849,97 @@ $function$;
 
 REVOKE ALL ON FUNCTION public.get_client_bookings_history_v2(text, uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.get_client_bookings_history_v2(text, uuid) TO anon, authenticated, service_role;
+
+-- 9) Cancel v2: edit-pending aplica o cutoff contra o horário original --------
+CREATE OR REPLACE FUNCTION public.cancel_public_booking_by_client_v2(
+  p_booking_id uuid,
+  p_phone text
+)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_booking public.public_bookings%ROWTYPE;
+  v_cutoff integer;
+  v_digits_in text;
+  v_digits_stored text;
+  v_updated integer;
+  v_cutoff_time timestamptz;
+  v_pending_edit boolean;
+BEGIN
+  -- TODO(PR-9): depósito pago — ainda não há regra de cancelamento/reembolso.
+  v_digits_in := regexp_replace(COALESCE(p_phone, ''), '\D', '', 'g');
+  IF v_digits_in = '' THEN
+    RAISE EXCEPTION 'booking_not_found';
+  END IF;
+
+  SELECT * INTO v_booking
+  FROM public.public_bookings
+  WHERE id = p_booking_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'booking_not_found';
+  END IF;
+
+  v_digits_stored := regexp_replace(COALESCE(v_booking.customer_phone, ''), '\D', '', 'g');
+  IF v_digits_stored = '' OR v_digits_stored IS DISTINCT FROM v_digits_in THEN
+    RAISE EXCEPTION 'booking_not_found';
+  END IF;
+
+  IF v_booking.status IS DISTINCT FROM 'pending'
+     AND v_booking.status IS DISTINCT FROM 'confirmed' THEN
+    RAISE EXCEPTION 'booking_not_cancellable';
+  END IF;
+
+  v_pending_edit := (v_booking.status = 'pending' AND COALESCE(v_booking.is_edit, false));
+  v_cutoff_time := CASE
+    WHEN v_pending_edit THEN COALESCE(v_booking.original_appointment_time, v_booking.appointment_time)
+    ELSE v_booking.appointment_time
+  END;
+
+  IF NOT v_pending_edit AND v_booking.appointment_time <= now() THEN
+    RAISE EXCEPTION 'booking_not_cancellable';
+  END IF;
+
+  IF v_booking.status = 'confirmed' OR v_pending_edit THEN
+    SELECT bs.client_cancel_cutoff_hours
+      INTO v_cutoff
+    FROM public.business_settings bs
+    WHERE bs.user_id::text = v_booking.business_id
+    LIMIT 1;
+    v_cutoff := COALESCE(v_cutoff, 2);
+
+    IF v_cutoff <= 0
+       OR now() > (v_cutoff_time - make_interval(hours => v_cutoff)) THEN
+      RAISE EXCEPTION 'cancel_window_closed';
+    END IF;
+  END IF;
+
+  UPDATE public.public_bookings
+     SET status = 'cancelled',
+         updated_at = NOW()
+   WHERE id = v_booking.id
+     AND status IN ('pending', 'confirmed');
+
+  GET DIAGNOSTICS v_updated = ROW_COUNT;
+  IF v_updated = 0 THEN
+    RAISE EXCEPTION 'booking_not_cancellable';
+  END IF;
+
+  -- Libera a agenda. Pedido já está cancelled: #98 não reescreve (WHERE
+  -- status = 'confirmed'); #123 retorna cedo para cancelled.
+  UPDATE public.appointments a
+     SET status = 'Cancelled',
+         updated_at = NOW()
+   WHERE a.id IN (
+     SELECT l.appointment_id
+     FROM public.public_booking_linked_appointments(v_booking.id) l
+     WHERE l.status IS DISTINCT FROM 'Cancelled'
+   );
+
+  RETURN true;
+END;
+$function$;

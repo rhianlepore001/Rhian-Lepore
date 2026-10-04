@@ -227,6 +227,7 @@ BEGIN
   LIMIT 1;
 END;
 $$;
+GRANT EXECUTE ON FUNCTION public.get_booking_by_id(UUID, TEXT) TO PUBLIC;
 GRANT EXECUTE ON FUNCTION public.get_booking_by_id(UUID, TEXT) TO anon, authenticated;
 
 CREATE OR REPLACE FUNCTION public.update_public_booking_by_client(
@@ -277,6 +278,9 @@ BEGIN
   LIMIT 1;
 END;
 $$;
+GRANT EXECUTE ON FUNCTION public.update_public_booking_by_client(
+  UUID, TEXT, UUID[], UUID, TIMESTAMPTZ, TIMESTAMPTZ, TEXT, TEXT, NUMERIC, INTEGER, JSONB
+) TO PUBLIC;
 GRANT EXECUTE ON FUNCTION public.update_public_booking_by_client(
   UUID, TEXT, UUID[], UUID, TIMESTAMPTZ, TIMESTAMPTZ, TEXT, TEXT, NUMERIC, INTEGER, JSONB
 ) TO anon, authenticated;
@@ -367,6 +371,7 @@ END;
 $$;
 REVOKE ALL ON FUNCTION public.accept_public_booking(UUID) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.accept_public_booking(UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.accept_public_booking(UUID) TO service_role;
 
 CREATE OR REPLACE FUNCTION public.reject_public_booking(p_booking_id UUID)
 RETURNS BOOLEAN
@@ -402,6 +407,7 @@ END;
 $$;
 REVOKE ALL ON FUNCTION public.reject_public_booking(UUID) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.reject_public_booking(UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.reject_public_booking(UUID) TO service_role;
 
 INSERT INTO public.team_members (id, user_id, name, is_owner, active)
 VALUES (

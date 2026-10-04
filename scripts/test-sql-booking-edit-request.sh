@@ -76,6 +76,17 @@ if [ "${1:-}" = "--rollback" ]; then
   rdef="$(P -At -c "SELECT pg_get_functiondef('public.reject_public_booking(uuid)'::regprocedure)")"
   echo "$rdef" | grep -q "status = 'cancelled'" || { echo "rollback: reject v1 não cancela"; exit 1; }
   echo "$rdef" | grep -q reject_public_booking_v2 && { echo "rollback: reject v1 ainda aponta para v2"; exit 1; }
+  c2def="$(P -At -c "SELECT pg_get_functiondef('public.cancel_public_booking_by_client_v2(uuid,text)'::regprocedure)")"
+  echo "$c2def" | grep -q "v_booking.status = 'confirmed'" || { echo "rollback: cancel v2 sem ramo confirmed"; exit 1; }
+  echo "$c2def" | grep -q is_edit && { echo "rollback: cancel v2 ainda tem is_edit"; exit 1; }
+  echo "$c2def" | grep -q original_appointment_time && { echo "rollback: cancel v2 ainda usa original_appointment_time"; exit 1; }
+  gdef="$(P -At -c "SELECT pg_get_functiondef('public.get_booking_by_id(uuid,text)'::regprocedure)")"
+  echo "$gdef" | grep -q phones_match || { echo "rollback: get_booking v1 sem phones_match"; exit 1; }
+  echo "$gdef" | grep -q get_booking_by_id_v2 && { echo "rollback: get_booking v1 ainda aponta para v2"; exit 1; }
+  adef="$(P -At -c "SELECT pg_get_functiondef('public.accept_public_booking(uuid)'::regprocedure)")"
+  echo "$adef" | grep -q "INSERT INTO public.appointments" || { echo "rollback: accept v1 sem INSERT"; exit 1; }
+  echo "$adef" | grep -q is_edit && { echo "rollback: accept v1 ainda tem is_edit"; exit 1; }
+  echo "$adef" | grep -q accept_public_booking_v2 && { echo "rollback: accept v1 ainda aponta para v2"; exit 1; }
   intact
   echo "rollback ok"
   exit 0

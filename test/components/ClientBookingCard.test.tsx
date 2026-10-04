@@ -675,6 +675,35 @@ describe('ClientBookingCard — PR-6 pedido de alteração', () => {
     expect(screen.getByRole('button', { name: /Editar/ })).toBeInTheDocument();
   });
 
+  it('confirmado com is_edit stale não mostra o recado de pedido', () => {
+    render(
+      <MemoryRouter>
+        <ClientBookingCard
+          booking={{
+            ...booking,
+            status: 'confirmed',
+            is_edit: true,
+            appointment_time: '2026-10-06T15:00:00.000Z',
+            original_appointment_time: '2026-10-04T13:00:00.000Z',
+          }}
+          isBeauty={false}
+          businessPhone="11999998888"
+          businessSlug="corte-fino"
+          clientName="Zé"
+          clientPhone="11999998888"
+          businessName="Barbearia São João"
+          region="BR"
+          timeZone="America/Sao_Paulo"
+          cancelCutoffHours={2}
+          onCancelled={vi.fn()}
+        />
+      </MemoryRouter>,
+    );
+    expect(screen.getByText('Confirmado')).toBeInTheDocument();
+    expect(screen.queryByTestId('client-edit-sent-message')).toBeNull();
+    expect(screen.getByText(/12:00/)).toBeInTheDocument();
+  });
+
   it('confirmado com 1h restante esconde Editar e mostra Falar com', () => {
     render(
       <MemoryRouter>

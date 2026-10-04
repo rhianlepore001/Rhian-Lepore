@@ -33,6 +33,7 @@ import {
 import {
     clientEditRequestSentMessage,
     clientEditReservedIso,
+    isClientEditPending,
 } from '../utils/clientEditRequest';
 
 export interface ClientBooking {
@@ -140,7 +141,8 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
     const isNoShow = statusKey === 'no_show' || statusKey === 'noshow';
     const isCancelled = statusKey === 'cancelled';
     const reservedIso = clientEditReservedIso(booking);
-    const displayIso = booking.is_edit && statusKey === 'pending' ? reservedIso : booking.appointment_time;
+    const pendingEdit = isClientEditPending(booking);
+    const displayIso = pendingEdit ? reservedIso : booking.appointment_time;
     const appointmentPassed = new Date(displayIso).getTime() < Date.now();
     const isPastCancelled = isCancelled && appointmentPassed;
     const isFutureCancelled = isCancelled && !appointmentPassed;
@@ -154,7 +156,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
         });
     const talkLabel = talkToBusinessLabel(businessName);
     const canEditOnline = allowEdit && (
-        (statusKey === 'pending' && !booking.is_edit)
+        (statusKey === 'pending' && !pendingEdit)
         || clientCancelCta({
             status: 'confirmed',
             appointmentTime: reservedIso,
@@ -305,7 +307,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                     </span>
                 </div>
 
-                {statusKey === 'pending' && booking.is_edit && (
+                {pendingEdit && (
                     <p
                         data-testid="client-edit-sent-message"
                         className="flex items-start gap-2 px-3 py-2 rounded-xl text-xs leading-snug break-words bg-[var(--color-warning-bg)] text-[var(--color-warning)] border border-[var(--color-warning-border)]"

@@ -102,6 +102,64 @@ BEGIN
   PERFORM pg_temp.check('anon pode update v2',
     has_function_privilege('anon', 'public.update_public_booking_by_client_v2(uuid,text,uuid[],uuid,timestamptz,timestamptz,text,text,numeric,integer,jsonb)', 'EXECUTE')::text, 'true');
 
+  -- Grants v1 intactos após CREATE OR REPLACE (prod: PUBLIC em update/get; accept/reject autenticado)
+  PERFORM pg_temp.check('v1 update PUBLIC EXECUTE',
+    EXISTS (
+      SELECT 1
+      FROM pg_proc p
+      JOIN pg_namespace n ON n.oid = p.pronamespace
+      CROSS JOIN LATERAL aclexplode(p.proacl) a
+      WHERE n.nspname = 'public'
+        AND p.proname = 'update_public_booking_by_client'
+        AND a.grantee = 0
+        AND a.privilege_type = 'EXECUTE'
+    )::text, 'true');
+  PERFORM pg_temp.check('v1 get_booking PUBLIC EXECUTE',
+    EXISTS (
+      SELECT 1
+      FROM pg_proc p
+      JOIN pg_namespace n ON n.oid = p.pronamespace
+      CROSS JOIN LATERAL aclexplode(p.proacl) a
+      WHERE n.nspname = 'public'
+        AND p.proname = 'get_booking_by_id'
+        AND a.grantee = 0
+        AND a.privilege_type = 'EXECUTE'
+    )::text, 'true');
+  PERFORM pg_temp.check('v1 accept not PUBLIC',
+    EXISTS (
+      SELECT 1
+      FROM pg_proc p
+      JOIN pg_namespace n ON n.oid = p.pronamespace
+      CROSS JOIN LATERAL aclexplode(COALESCE(p.proacl, acldefault('f', p.proowner))) a
+      WHERE n.nspname = 'public'
+        AND p.proname = 'accept_public_booking'
+        AND a.grantee = 0
+        AND a.privilege_type = 'EXECUTE'
+    )::text, 'false');
+  PERFORM pg_temp.check('v1 reject not PUBLIC',
+    EXISTS (
+      SELECT 1
+      FROM pg_proc p
+      JOIN pg_namespace n ON n.oid = p.pronamespace
+      CROSS JOIN LATERAL aclexplode(COALESCE(p.proacl, acldefault('f', p.proowner))) a
+      WHERE n.nspname = 'public'
+        AND p.proname = 'reject_public_booking'
+        AND a.grantee = 0
+        AND a.privilege_type = 'EXECUTE'
+    )::text, 'false');
+  PERFORM pg_temp.check('v1 accept not anon',
+    has_function_privilege('anon', 'public.accept_public_booking(uuid)', 'EXECUTE')::text, 'false');
+  PERFORM pg_temp.check('v1 reject not anon',
+    has_function_privilege('anon', 'public.reject_public_booking(uuid)', 'EXECUTE')::text, 'false');
+  PERFORM pg_temp.check('v1 accept authenticated',
+    has_function_privilege('authenticated', 'public.accept_public_booking(uuid)', 'EXECUTE')::text, 'true');
+  PERFORM pg_temp.check('v1 reject authenticated',
+    has_function_privilege('authenticated', 'public.reject_public_booking(uuid)', 'EXECUTE')::text, 'true');
+  PERFORM pg_temp.check('v1 accept service_role',
+    has_function_privilege('service_role', 'public.accept_public_booking(uuid)', 'EXECUTE')::text, 'true');
+  PERFORM pg_temp.check('v1 reject service_role',
+    has_function_privilege('service_role', 'public.reject_public_booking(uuid)', 'EXECUTE')::text, 'true');
+
   UPDATE public.business_settings
      SET enable_self_rescheduling = true,
          client_cancel_cutoff_hours = 2,
@@ -537,5 +595,255 @@ BEGIN
   PERFORM pg_temp.check('v1 reject edit restaura', v_got, 'true');
   PERFORM pg_temp.check('v1 reject não cancelou',
     (SELECT status FROM public.public_bookings WHERE id = v_bk), 'confirmed');
+
+  -- 19) confirmed + is_edit stale: snapshot fresco, não trata como edit em curso
+  v_bk := '61000000-0000-0000-0000-000000000010';
+  v_apt := '71000000-0000-0000-0000-000000000010';
+  v_time := date_trunc('hour', v_now + interval '18 days');
+  v_new := v_time + interval '2 hours';
+  INSERT INTO public.public_bookings (
+    id, business_id, customer_phone, customer_name, service_ids, professional_id,
+    appointment_time, original_appointment_time, original_professional_id,
+    total_price, status, duration_minutes, is_edit
+  ) VALUES (
+    v_bk, v_biz, v_phone, 'Ana', ARRAY[v_svc], v_pro, v_time,
+    v_time - interval '3 hours', v_pro2, 35, 'confirmed', 30, true
+  );
+  INSERT INTO public.appointments (
+    id, user_id, client_id, professional_id, service, appointment_time, price, status,
+    duration_minutes, public_booking_id
+  ) VALUES (
+    v_apt, v_biz, v_cli, v_pro, 'Corte', v_time, 35, 'Confirmed', 30, v_bk
+  );
+  v_got := pg_temp.run_as('anon', NULL, format(
+    $q$SELECT status || '|' || is_edit::text || '|' || (original_appointment_time = %L)::text
+         || '|' || (original_professional_id = %L)::text
+       FROM public.update_public_booking_by_client_v2(
+      %L, %L, ARRAY[%L]::uuid[], %L, %L, %L, 'Ana', %L, 35, 30, '[]'::jsonb)$q$,
+    v_time, v_pro, v_bk, v_phone, v_svc, v_pro2, v_new, v_time, v_phone));
+  PERFORM pg_temp.check('stale is_edit snapshot fresco', v_got, 'pending|true|true|true');
+  PERFORM pg_temp.check('history v2 após pedido is_edit=true',
+    (SELECT is_edit::text FROM public.get_client_bookings_history_v2(v_phone, v_biz::uuid)
+     WHERE id = v_bk), 'true');
+  -- após o pedido, status=pending então history is_edit=true; checar um confirmed stale separado
+  v_bk := '61000000-0000-0000-0000-000000000011';
+  INSERT INTO public.public_bookings (
+    id, business_id, customer_phone, customer_name, service_ids, professional_id,
+    appointment_time, original_appointment_time, total_price, status, duration_minutes, is_edit
+  ) VALUES (
+    v_bk, v_biz, v_phone, 'Ana', ARRAY[v_svc], v_pro,
+    date_trunc('hour', v_now + interval '19 days'),
+    date_trunc('hour', v_now + interval '19 days') - interval '2 hours',
+    35, 'confirmed', 30, true
+  );
+  PERFORM pg_temp.check('history v2 confirmed+is_edit não é pending-edit',
+    (SELECT is_edit::text FROM public.get_client_bookings_history_v2(v_phone, v_biz::uuid)
+     WHERE id = v_bk), 'false');
+
+  -- 20) cancel v2: edit-pending aplica cutoff no horário original
+  UPDATE public.profiles SET booking_lead_time_hours = 0 WHERE id = v_biz;
+  v_bk := '61000000-0000-0000-0000-000000000012';
+  v_apt := '71000000-0000-0000-0000-000000000012';
+  v_time := v_now + interval '1 hour';
+  v_new := date_trunc('hour', v_now + interval '20 days');
+  INSERT INTO public.public_bookings (
+    id, business_id, customer_phone, customer_name, service_ids, professional_id,
+    appointment_time, original_appointment_time, total_price, status, duration_minutes, is_edit
+  ) VALUES (
+    v_bk, v_biz, v_phone, 'Ana', ARRAY[v_svc], v_pro, v_new, v_time, 35, 'pending', 30, true
+  );
+  INSERT INTO public.appointments (
+    id, user_id, client_id, professional_id, service, appointment_time, price, status,
+    duration_minutes, public_booking_id
+  ) VALUES (
+    v_apt, v_biz, v_cli, v_pro, 'Corte', v_time, 35, 'Confirmed', 30, v_bk
+  );
+  v_got := pg_temp.run_as('anon', NULL, format(
+    $q$SELECT public.cancel_public_booking_by_client_v2(%L, %L)::text$q$, v_bk, v_phone));
+  PERFORM pg_temp.check('cancel edit-pending cutoff original', v_got, 'error:cancel_window_closed');
+  PERFORM pg_temp.check('cancel recusado não mexeu status',
+    (SELECT status FROM public.public_bookings WHERE id = v_bk), 'pending');
+  PERFORM pg_temp.check('cancel recusado appointment intacto',
+    (SELECT status FROM public.appointments WHERE id = v_apt), 'Confirmed');
+
+  -- cancel edit-pending fora da janela (original daqui a 3d) ok
+  v_bk := '61000000-0000-0000-0000-000000000013';
+  v_apt := '71000000-0000-0000-0000-000000000013';
+  v_time := date_trunc('hour', v_now + interval '21 days');
+  v_new := v_time + interval '2 hours';
+  INSERT INTO public.public_bookings (
+    id, business_id, customer_phone, customer_name, service_ids, professional_id,
+    appointment_time, original_appointment_time, total_price, status, duration_minutes, is_edit
+  ) VALUES (
+    v_bk, v_biz, v_phone, 'Ana', ARRAY[v_svc], v_pro, v_new, v_time, 35, 'pending', 30, true
+  );
+  INSERT INTO public.appointments (
+    id, user_id, client_id, professional_id, service, appointment_time, price, status,
+    duration_minutes, public_booking_id
+  ) VALUES (
+    v_apt, v_biz, v_cli, v_pro, 'Corte', v_time, 35, 'Confirmed', 30, v_bk
+  );
+  v_got := pg_temp.run_as('anon', NULL, format(
+    $q$SELECT public.cancel_public_booking_by_client_v2(%L, %L)::text$q$, v_bk, v_phone));
+  PERFORM pg_temp.check('cancel edit-pending fora da janela', v_got, 'true');
+  PERFORM pg_temp.check('cancel edit-pending marcou cancelled',
+    (SELECT status FROM public.public_bookings WHERE id = v_bk), 'cancelled');
+  UPDATE public.profiles SET booking_lead_time_hours = 2 WHERE id = v_biz;
+
+  -- 21) mesmo profissional +30 min não conflita com o próprio original
+  v_bk := '61000000-0000-0000-0000-000000000014';
+  v_apt := '71000000-0000-0000-0000-000000000014';
+  v_time := date_trunc('hour', v_now + interval '22 days');
+  INSERT INTO public.public_bookings (
+    id, business_id, customer_phone, customer_name, service_ids, professional_id,
+    appointment_time, total_price, status, duration_minutes
+  ) VALUES (
+    v_bk, v_biz, v_phone, 'Ana', ARRAY[v_svc], v_pro, v_time, 35, 'confirmed', 30
+  );
+  INSERT INTO public.appointments (
+    id, user_id, client_id, professional_id, service, appointment_time, price, status,
+    duration_minutes, public_booking_id
+  ) VALUES (
+    v_apt, v_biz, v_cli, v_pro, 'Corte', v_time, 35, 'Confirmed', 30, v_bk
+  );
+  v_got := pg_temp.run_as('anon', NULL, format(
+    $q$SELECT status || '|' || is_edit::text FROM public.update_public_booking_by_client_v2(
+      %L, %L, ARRAY[%L]::uuid[], %L, %L, %L, 'Ana', %L, 35, 30, '[]'::jsonb)$q$,
+    v_bk, v_phone, v_svc, v_pro, v_time + interval '30 minutes', v_time, v_phone));
+  PERFORM pg_temp.check('mesmo pro +30min sem auto-conflito', v_got, 'pending|true');
+
+  -- 22) accept recusa Completed e não move o appointment
+  v_bk := '61000000-0000-0000-0000-000000000015';
+  v_apt := '71000000-0000-0000-0000-000000000015';
+  v_time := date_trunc('hour', v_now + interval '23 days');
+  v_new := v_time + interval '2 hours';
+  INSERT INTO public.public_bookings (
+    id, business_id, customer_phone, customer_name, service_ids, professional_id,
+    appointment_time, original_appointment_time, original_professional_id,
+    total_price, status, duration_minutes, is_edit
+  ) VALUES (
+    v_bk, v_biz, v_phone, 'Ana', ARRAY[v_svc], v_pro, v_new, v_time, v_pro, 35, 'pending', 30, true
+  );
+  INSERT INTO public.appointments (
+    id, user_id, client_id, professional_id, service, appointment_time, price, status,
+    duration_minutes, public_booking_id
+  ) VALUES (
+    v_apt, v_biz, v_cli, v_pro, 'Corte', v_time, 35, 'Confirmed', 30, v_bk
+  );
+  ALTER TABLE public.appointments DISABLE TRIGGER USER;
+  UPDATE public.appointments SET status = 'Completed' WHERE id = v_apt;
+  ALTER TABLE public.appointments ENABLE TRIGGER USER;
+  v_got := pg_temp.run_as('authenticated', v_owner, format(
+    $q$SELECT public.accept_public_booking_v2(%L)::text$q$, v_bk));
+  PERFORM pg_temp.check('accept Completed → booking_not_pending', v_got, 'error:booking_not_pending');
+  PERFORM pg_temp.check('accept Completed não moveu',
+    (SELECT status || '|' || (appointment_time = v_time)::text FROM public.appointments WHERE id = v_apt),
+    'Completed|true');
+  PERFORM pg_temp.check('accept Completed booking ainda pending',
+    (SELECT status FROM public.public_bookings WHERE id = v_bk), 'pending');
+
+  -- request também recusa confirmed com appointment Completed
+  v_bk := '61000000-0000-0000-0000-000000000016';
+  v_apt := '71000000-0000-0000-0000-000000000016';
+  v_time := date_trunc('hour', v_now + interval '24 days');
+  INSERT INTO public.public_bookings (
+    id, business_id, customer_phone, customer_name, service_ids, professional_id,
+    appointment_time, total_price, status, duration_minutes
+  ) VALUES (
+    v_bk, v_biz, v_phone, 'Ana', ARRAY[v_svc], v_pro, v_time, 35, 'confirmed', 30
+  );
+  INSERT INTO public.appointments (
+    id, user_id, client_id, professional_id, service, appointment_time, price, status,
+    duration_minutes, public_booking_id
+  ) VALUES (
+    v_apt, v_biz, v_cli, v_pro, 'Corte', v_time, 35, 'Confirmed', 30, v_bk
+  );
+  ALTER TABLE public.appointments DISABLE TRIGGER USER;
+  UPDATE public.appointments SET status = 'Completed' WHERE id = v_apt;
+  ALTER TABLE public.appointments ENABLE TRIGGER USER;
+  v_got := pg_temp.run_as('anon', NULL, format(
+    $q$SELECT count(*)::text FROM public.update_public_booking_by_client_v2(
+      %L, %L, ARRAY[%L]::uuid[], %L, %L, %L, 'Ana', %L, 35, 30, '[]'::jsonb)$q$,
+    v_bk, v_phone, v_svc, v_pro, v_time + interval '2 hours', v_time, v_phone));
+  PERFORM pg_temp.check('request Completed → booking_not_editable', v_got, 'error:booking_not_editable');
+
+  -- 23) accept recusa NoShow
+  v_bk := '61000000-0000-0000-0000-000000000017';
+  v_apt := '71000000-0000-0000-0000-000000000017';
+  v_time := date_trunc('hour', v_now + interval '25 days');
+  v_new := v_time + interval '2 hours';
+  INSERT INTO public.public_bookings (
+    id, business_id, customer_phone, customer_name, service_ids, professional_id,
+    appointment_time, original_appointment_time, total_price, status, duration_minutes, is_edit
+  ) VALUES (
+    v_bk, v_biz, v_phone, 'Ana', ARRAY[v_svc], v_pro, v_new, v_time, 35, 'pending', 30, true
+  );
+  INSERT INTO public.appointments (
+    id, user_id, client_id, professional_id, service, appointment_time, price, status,
+    duration_minutes, public_booking_id
+  ) VALUES (
+    v_apt, v_biz, v_cli, v_pro, 'Corte', v_time, 35, 'Confirmed', 30, v_bk
+  );
+  ALTER TABLE public.appointments DISABLE TRIGGER USER;
+  UPDATE public.appointments SET status = 'NoShow' WHERE id = v_apt;
+  ALTER TABLE public.appointments ENABLE TRIGGER USER;
+  v_got := pg_temp.run_as('authenticated', v_owner, format(
+    $q$SELECT public.accept_public_booking_v2(%L)::text$q$, v_bk));
+  PERFORM pg_temp.check('accept NoShow → booking_not_pending', v_got, 'error:booking_not_pending');
+  PERFORM pg_temp.check('accept NoShow não moveu',
+    (SELECT status || '|' || (appointment_time = v_time)::text FROM public.appointments WHERE id = v_apt),
+    'NoShow|true');
+  v_got := pg_temp.run_as('anon', NULL, format(
+    $q$SELECT count(*)::text FROM public.update_public_booking_by_client_v2(
+      %L, %L, ARRAY[%L]::uuid[], %L, %L, %L, 'Ana', %L, 35, 30, '[]'::jsonb)$q$,
+    v_bk, v_phone, v_svc, v_pro, v_new + interval '1 hour', v_time, v_phone));
+  PERFORM pg_temp.check('request NoShow pending-edit → booking_not_editable', v_got, 'error:booking_not_editable');
+
+  -- 24) original já passou: accept recusa; request recusa
+  UPDATE public.profiles SET booking_lead_time_hours = 0 WHERE id = v_biz;
+  v_bk := '61000000-0000-0000-0000-000000000018';
+  v_apt := '71000000-0000-0000-0000-000000000018';
+  v_time := v_now - interval '30 minutes';
+  v_new := date_trunc('hour', v_now + interval '26 days');
+  INSERT INTO public.public_bookings (
+    id, business_id, customer_phone, customer_name, service_ids, professional_id,
+    appointment_time, original_appointment_time, total_price, status, duration_minutes, is_edit
+  ) VALUES (
+    v_bk, v_biz, v_phone, 'Ana', ARRAY[v_svc], v_pro, v_new, v_time, 35, 'pending', 30, true
+  );
+  INSERT INTO public.appointments (
+    id, user_id, client_id, professional_id, service, appointment_time, price, status,
+    duration_minutes, public_booking_id
+  ) VALUES (
+    v_apt, v_biz, v_cli, v_pro, 'Corte', v_time, 35, 'Confirmed', 30, v_bk
+  );
+  v_got := pg_temp.run_as('authenticated', v_owner, format(
+    $q$SELECT public.accept_public_booking_v2(%L)::text$q$, v_bk));
+  PERFORM pg_temp.check('accept original passado → booking_not_pending', v_got, 'error:booking_not_pending');
+  PERFORM pg_temp.check('accept original passado não moveu',
+    (SELECT status || '|' || (appointment_time = v_time)::text FROM public.appointments WHERE id = v_apt),
+    'Confirmed|true');
+  v_got := pg_temp.run_as('anon', NULL, format(
+    $q$SELECT count(*)::text FROM public.update_public_booking_by_client_v2(
+      %L, %L, ARRAY[%L]::uuid[], %L, %L, %L, 'Ana', %L, 35, 30, '[]'::jsonb)$q$,
+    v_bk, v_phone, v_svc, v_pro, v_new + interval '1 hour', v_time, v_phone));
+  PERFORM pg_temp.check('request original passado → booking_not_editable', v_got, 'error:booking_not_editable');
+
+  v_bk := '61000000-0000-0000-0000-000000000019';
+  v_time := v_now - interval '15 minutes';
+  PERFORM set_config('request.jwt.claim.sub', v_owner, true);
+  INSERT INTO public.public_bookings (
+    id, business_id, customer_phone, customer_name, service_ids, professional_id,
+    appointment_time, total_price, status, duration_minutes
+  ) VALUES (
+    v_bk, v_biz, v_phone, 'Ana', ARRAY[v_svc], v_pro, v_time, 35, 'confirmed', 30
+  );
+  PERFORM set_config('request.jwt.claim.sub', '', true);
+  v_got := pg_temp.run_as('anon', NULL, format(
+    $q$SELECT count(*)::text FROM public.update_public_booking_by_client_v2(
+      %L, %L, ARRAY[%L]::uuid[], %L, %L, %L, 'Ana', %L, 35, 30, '[]'::jsonb)$q$,
+    v_bk, v_phone, v_svc, v_pro, date_trunc('hour', v_now + interval '27 days'), v_time, v_phone));
+  PERFORM pg_temp.check('request confirmed passado → booking_not_editable', v_got, 'error:booking_not_editable');
+  UPDATE public.profiles SET booking_lead_time_hours = 2 WHERE id = v_biz;
 END;
 $$;

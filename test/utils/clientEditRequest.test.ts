@@ -3,6 +3,7 @@ import {
   clientEditRequestSentMessage,
   formatAgendaAlteracao,
   clientEditReservedIso,
+  isClientEditPending,
   SERVICE_ONLY_EDIT_SKIP_LABEL,
 } from '@/utils/clientEditRequest';
 
@@ -30,12 +31,24 @@ describe('clientEditRequest', () => {
     )).toBe('Alteração: de 04/10 · 10:00 para 04/10 · 12:00');
   });
 
-  it('horário reservado usa original quando is_edit', () => {
+  it('horário reservado usa original quando pending AND is_edit', () => {
     expect(clientEditReservedIso({
       appointment_time: '2026-10-05T12:00:00.000Z',
       original_appointment_time: '2026-10-04T13:00:00.000Z',
       is_edit: true,
+      status: 'pending',
     })).toBe('2026-10-04T13:00:00.000Z');
+  });
+
+  it('confirmed com is_edit stale usa o horário atual, não o original', () => {
+    expect(clientEditReservedIso({
+      appointment_time: '2026-10-05T12:00:00.000Z',
+      original_appointment_time: '2026-10-04T13:00:00.000Z',
+      is_edit: true,
+      status: 'confirmed',
+    })).toBe('2026-10-05T12:00:00.000Z');
+    expect(isClientEditPending({ status: 'confirmed', is_edit: true })).toBe(false);
+    expect(isClientEditPending({ status: 'pending', is_edit: true })).toBe(true);
   });
 
   it('setting tem o rótulo aprovado', () => {

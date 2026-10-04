@@ -11,7 +11,7 @@
 
 ## PR-6 overhaul booking — pedido de alteração (4 Out 2026, NÃO merge)
 
-Branch `cursor/overhaul-pr6-edit-request-01d7`. Editar um agendamento confirmado vira pedido de alteração (mesmo appointment; original continua reservado). Recusa devolve Confirmado no horário original (não cancela). Setting `service_only_edit_skip_acceptance` (default false). RPCs v2 com dígitos exatos + `enable_self_rescheduling` no servidor. Não aplicar em prod. Prints em `/opt/cursor/artifacts/screenshots/pr6/`.
+Branch `cursor/overhaul-pr6-edit-request-01d7`. Edit pending = `status='pending' AND is_edit` (prod tem confirmed+is_edit stale). Cancel v2 de edit-pending aplica cutoff no original. Conflito de pedido sempre exclui linked do próprio booking. Accept recusa Completed/NoShow/original passado. Não aplicar em prod. Prints em `/opt/cursor/artifacts/screenshots/pr6/`.
 
 ## PR-5 overhaul booking — prazo de cancelamento (4 Out 2026, NÃO merge)
 

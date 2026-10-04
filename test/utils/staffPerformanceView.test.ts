@@ -1,21 +1,30 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import team from '../fixtures/staffPerformance/team.json';
 import { ownerPerformanceSchema } from '../../types/staffPerformance';
+import { getBusinessRemainderNoun } from '../../utils/businessCopy';
 import {
+    comparingHeadline,
     comparisonLabel,
     detectPreset,
+    emptyPeriodSuggestion,
     filtersToSearch,
     formatHours,
     formatPercent,
+    formatWorkHours,
     memberBadge,
+    moneyCompareText,
     moneyDelta,
     parseFilters,
     periodLabel,
+    periodShortLabel,
     presetRange,
     rankLabel,
+    rateCompareText,
     rateDelta,
+    remainderModalCompare,
     sortMembers,
     summarySentence,
+    unrankedSentence,
 } from '../../utils/staffPerformanceView';
 
 const brl = (v: number | null | undefined) =>
@@ -54,10 +63,19 @@ describe('staffPerformanceView — períodos (R3.5, R3.6) sem toISOString', () =
     it('rótulos: mês cheio por extenso, outros por intervalo; comparação "vs agosto" / "vs 01–30 ago"', () => {
         expect(periodLabel('2026-09-01', '2026-09-30')).toBe('setembro de 2026');
         expect(periodLabel('2026-09-03', '2026-10-02')).toBe('03/09 – 02/10/2026');
+        expect(periodShortLabel('2026-09-01', '2026-09-30')).toBe('setembro');
+        expect(comparingHeadline('2026-09-01', '2026-09-30', { start: '2026-08-01', end: '2026-08-31' }))
+            .toBe('Comparando setembro com agosto');
         expect(comparisonLabel({ start: '2026-08-01', end: '2026-08-31' })).toBe('vs agosto');
         expect(comparisonLabel({ start: '2026-08-01', end: '2026-08-30' })).toBe('vs 01–30 ago');
         expect(comparisonLabel({ start: '2026-08-04', end: '2026-09-02' })).toBe('vs 04 ago–02 set');
         expect(comparisonLabel(null)).toBeNull();
+    });
+
+    it('empty state sugere outro período, nunca o atual', () => {
+        expect(emptyPeriodSuggestion('mes_passado')).toEqual({ id: 'ultimos_30', label: 'Últimos 30 dias' });
+        expect(emptyPeriodSuggestion('este_mes')).toEqual({ id: 'mes_passado', label: 'Mês passado' });
+        expect(emptyPeriodSuggestion('ultimos_30')).toEqual({ id: 'este_mes', label: 'Este mês' });
     });
 
     it('URL: lê e escreve de/ate/pro; datas inválidas voltam para "Este mês"', () => {
@@ -82,43 +100,56 @@ describe('staffPerformanceView — formatos (R3.13, R3.14)', () => {
     });
 });
 
-describe('staffPerformanceView — deltas (R3.15)', () => {
-    it('dinheiro: ▲ +R$ 48,00 (+13%) e melhor', () => {
-        expect(moneyDelta(408, 360, { prevSample: 11, formatMoney: brl })).toEqual({ text: '▲ +R$ 48,00 (+13%)', tone: 'good', label: 'melhor' });
-        expect(moneyDelta(300, 360, { prevSample: 11, formatMoney: brl })).toEqual({ text: '▼ −R$ 60,00 (−17%)', tone: 'bad', label: 'pior' });
+describe('staffPerformanceView — comparações em frase, sem seta nem p.p.', () => {
+    it('dinheiro: "R$ 48,00 a mais que em agosto"', () => {
+        expect(moneyCompareText(408, 360, { prevSample: 11, formatMoney: brl, previousName: 'agosto' }))
+            .toBe('R$ 48,00 a mais que em agosto');
+        expect(moneyCompareText(300, 360, { prevSample: 11, formatMoney: brl, previousName: 'agosto' }))
+            .toBe('R$ 60,00 a menos que em agosto');
+        expect(moneyDelta(408, 360, { prevSample: 11, formatMoney: brl, previousName: 'agosto' }))
+            .toMatchObject({ text: 'R$ 48,00 a mais que em agosto', tone: 'good', label: 'melhor' });
     });
 
-    it('neutro: |Δ%| < 5%; "novo" quando o anterior é 0; delta zero some', () => {
+    it('delta zero some; sem valor anterior some', () => {
         expect(moneyDelta(360, 360, { prevSample: 11, formatMoney: brl })).toBeNull();
-        expect(moneyDelta(370, 360, { prevSample: 11, formatMoney: brl })).toMatchObject({ tone: 'neutral', label: 'estável' });
-        expect(moneyDelta(408, 0, { prevSample: 11, formatMoney: brl })).toEqual({ text: 'novo', tone: 'neutral', label: 'novo' });
         expect(moneyDelta(null, 360, { prevSample: 11, formatMoney: brl })).toBeNull();
         expect(moneyDelta(408, null, { prevSample: 0, formatMoney: brl })).toBeNull();
     });
 
-    it('amostra < 8: mostra o número em cinza, sem melhor/pior; queda simétrica também', () => {
-        expect(moneyDelta(408, 360, { prevSample: 5, formatMoney: brl })).toEqual({ text: '▲ +R$ 48,00 (+13%)', tone: 'neutral', label: 'sem_base' });
-        expect(moneyDelta(300, 360, { prevSample: 5, formatMoney: brl })).toEqual({ text: '▼ −R$ 60,00 (−17%)', tone: 'neutral', label: 'sem_base' });
-        expect(moneyDelta(341, 100, { prevSample: 2, formatMoney: brl })).toMatchObject({ tone: 'neutral', label: 'sem_base' });
+    it('amostra < 8: nenhuma comparação numérica', () => {
+        expect(moneyCompareText(408, 360, { prevSample: 5, formatMoney: brl, previousName: 'agosto' }))
+            .toBe('Em agosto teve poucos atendimentos para comparar');
+        expect(moneyDelta(300, 360, { prevSample: 5, formatMoney: brl, previousName: 'agosto' }))
+            .toEqual({ text: 'Em agosto teve poucos atendimentos para comparar', tone: 'neutral', label: 'sem_base' });
+        expect(rateCompareText(0, 1, { prevSample: 2, previousName: 'agosto' }))
+            .toBe('Em agosto teve poucos atendimentos para comparar');
     });
 
-    it('1313 vs 385 com amostra suficiente é melhor +241%; a queda simétrica é pior', () => {
-        expect(moneyDelta(1313, 385, { prevSample: 12, formatMoney: brl })).toEqual({ text: '▲ +R$ 928,00 (+241%)', tone: 'good', label: 'melhor' });
-        expect(moneyDelta(385, 1313, { prevSample: 12, formatMoney: brl })).toEqual({ text: '▼ −R$ 928,00 (−71%)', tone: 'bad', label: 'pior' });
-        expect(moneyDelta(408, 360, { prevSample: 11, formatMoney: brl })).toMatchObject({ tone: 'good', label: 'melhor' });
+    it('percentuais: subiu/caiu de X para Y, sem p.p.', () => {
+        expect(rateCompareText(0.5455, 0.5, { prevSample: 12 })).toBe('subiu de 50% para 55%');
+        expect(rateCompareText(0.04, 0.1, { prevSample: 12, lowerIsBetter: true })).toBe('caiu de 10% para 4%');
+        expect(rateDelta(0.1, 0.04, { prevSample: 12, lowerIsBetter: true }))
+            .toMatchObject({ text: 'subiu de 4% para 10%', tone: 'bad', label: 'pior' });
+        expect(rateCompareText(0.5, 0.5, { prevSample: 12 })).toBeNull();
     });
 
-    it('taxas em p.p.; para faltas, cair é bom', () => {
-        expect(rateDelta(0.5455, 0.5, { prevSample: 12 })).toEqual({ text: '▲ +5 p.p.', tone: 'good', label: 'melhor' });
-        expect(rateDelta(0.04, 0.1, { prevSample: 12, lowerIsBetter: true })).toEqual({ text: '▼ −6 p.p.', tone: 'good', label: 'melhor' });
-        expect(rateDelta(0.1, 0.04, { prevSample: 12, lowerIsBetter: true })).toEqual({ text: '▲ +6 p.p.', tone: 'bad', label: 'pior' });
+    it('modal de retorno: "Em agosto ficaram … Agora, … a mais"', () => {
+        expect(remainderModalCompare(408, 360, { prevSample: 12, formatMoney: brl, previousName: 'agosto' }))
+            .toBe('Em agosto ficaram R$ 360,00. Agora, R$ 48,00 a mais.');
+    });
+
+    it('horas de trabalho com espaço', () => {
+        expect(formatWorkHours(180)).toBe('3 h');
+        expect(formatWorkHours(390)).toBe('6 h 30 min');
+        expect(formatWorkHours(0)).toBeNull();
     });
 });
 
 describe('staffPerformanceView — ranking e selos (R4.8, R3.9–R3.11)', () => {
     it('posição, selos e ordem padrão: ranqueados primeiro, depois sem posição', () => {
         expect(rankLabel(1)).toBe('1º');
-        expect(memberBadge(byName('Caio'), 8)).toBe('Amostra baixa (5 de 8)');
+        expect(memberBadge(byName('Caio'), 8)).toBe('Poucos atendimentos para comparar');
+        expect(unrankedSentence(byName('Caio'), 8)).toBe('Fez 5 atendimentos; o ranking começa em 8');
         expect(memberBadge(byName('Rhian'), 8)).toBe('Dono');
         expect(memberBadge(byName('Duda'), 8)).toBe('Inativo');
         expect(memberBadge(byName('Ana'), 8)).toBeNull();
@@ -133,20 +164,21 @@ describe('staffPerformanceView — ranking e selos (R4.8, R3.9–R3.11)', () => 
 });
 
 describe('staffPerformanceView — frase-resumo determinística (R7.3)', () => {
+    const remainder = getBusinessRemainderNoun('barber');
     it('Ana: retorno, atendimentos, por hora e comparação com agosto', () => {
-        expect(summarySentence(byName('Ana'), { formatMoney: brl, minSample: 8, previousName: 'agosto' }))
-            .toBe('Ana deixou R$ 408,00 para a casa em 12 atendimentos (R$ 68,00 por hora), 13% a mais que em agosto.');
+        expect(summarySentence(byName('Ana'), { formatMoney: brl, minSample: 8, previousName: 'agosto', remainder }))
+            .toBe('Ana deixou R$ 408,00 para a barbearia em 12 atendimentos (R$ 68,00 por hora), R$ 48,00 a mais que em agosto.');
     });
 
     it('amostra baixa e dono', () => {
-        expect(summarySentence(byName('Caio'), { formatMoney: brl, minSample: 8, previousName: 'agosto' }))
-            .toBe('Caio fez 5 atendimentos: poucos para comparar (mínimo 8).');
-        expect(summarySentence(byName('Rhian'), { formatMoney: brl, minSample: 8, previousName: 'agosto' }))
+        expect(summarySentence(byName('Caio'), { formatMoney: brl, minSample: 8, previousName: 'agosto', remainder }))
+            .toBe('Caio fez 5 atendimentos: o ranking começa em 8.');
+        expect(summarySentence(byName('Rhian'), { formatMoney: brl, minSample: 8, previousName: 'agosto', remainder }))
             .toBe('Rhian (dono) fez 3 atendimentos. Como dono, a comissão conta como zero.');
     });
 
     it('sem anterior comparável: frase sem comparação', () => {
-        expect(summarySentence(byName('Bruno'), { formatMoney: brl, minSample: 8, previousName: null }))
-            .toBe('Bruno deixou R$ 300,00 para a casa em 15 atendimentos (R$ 40,00 por hora).');
+        expect(summarySentence(byName('Bruno'), { formatMoney: brl, minSample: 8, previousName: null, remainder }))
+            .toBe('Bruno deixou R$ 300,00 para a barbearia em 15 atendimentos (R$ 40,00 por hora).');
     });
 });

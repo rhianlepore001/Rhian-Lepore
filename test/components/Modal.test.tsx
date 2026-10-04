@@ -64,8 +64,9 @@ describe('Modal Component', () => {
         );
 
         const dialog = screen.getByRole('dialog');
-        expect(dialog).toHaveAttribute('aria-labelledby', 'ui-modal-title');
-        expect(screen.getByText('Titulo Acessivel')).toHaveAttribute('id', 'ui-modal-title');
+        const title = screen.getByText('Titulo Acessivel');
+        expect(dialog.getAttribute('aria-labelledby')).toBe(title.id);
+        expect(title.id).toMatch(/^ui-modal-title-/);
     });
 
     it('chama onClose ao clicar no botao fechar', async () => {

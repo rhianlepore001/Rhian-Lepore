@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useRef } from 'react';
+import React, { useEffect, useCallback, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import FocusTrap from 'focus-trap-react';
@@ -57,6 +57,9 @@ export const Modal: React.FC<ModalProps> = ({
 }) => {
   const { classes, colors } = useBrutalTheme({ override: forceTheme });
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const titleRef = useRef<HTMLHeadingElement | null>(null);
+  const reactId = useId();
+  const titleDomId = title ? `ui-modal-title-${reactId.replace(/:/g, '')}` : labelledById;
   const setModalOpen = useOptionalUI()?.setModalOpen;
 
   const allowEsc = !preventClose && closeOnEsc;
@@ -110,7 +113,7 @@ export const Modal: React.FC<ModalProps> = ({
         focusTrapOptions={{
           escapeDeactivates: false,
           allowOutsideClick: true,
-          initialFocus: false,
+          initialFocus: () => titleRef.current ?? false,
           fallbackFocus: '[data-ui-modal-dialog]',
         }}
       >
@@ -118,7 +121,7 @@ export const Modal: React.FC<ModalProps> = ({
           data-ui-modal-dialog
           role="dialog"
           aria-modal="true"
-          aria-labelledby={title ? 'ui-modal-title' : labelledById}
+          aria-labelledby={titleDomId}
           tabIndex={-1}
           className={[
             'relative w-full',
@@ -126,7 +129,7 @@ export const Modal: React.FC<ModalProps> = ({
             classes.modalContainer,
             isFull
               ? 'flex flex-col pt-[var(--safe-top)] pb-[var(--safe-bottom)]'
-              : 'max-h-[92dvh] md:max-h-[90vh] flex flex-col max-md:max-w-none max-md:rounded-b-none max-md:rounded-t-2xl max-md:animate-slide-up max-md:pb-[var(--safe-bottom)]',
+              : 'max-h-[92dvh] md:max-h-[90vh] flex flex-col max-md:max-w-none max-md:rounded-b-none max-md:rounded-t-2xl max-md:motion-safe:animate-slide-up max-md:pb-[var(--safe-bottom)]',
             'focus:outline-none',
             className,
           ].filter(Boolean).join(' ')}
@@ -135,8 +138,10 @@ export const Modal: React.FC<ModalProps> = ({
             <div className={`${classes.modalHeader} shrink-0`}>
               {title && (
                 <h2
-                  id="ui-modal-title"
-                  className={`text-base md:text-lg font-bold tracking-tight ${colors.text}`}
+                  ref={titleRef}
+                  id={titleDomId}
+                  tabIndex={-1}
+                  className={`text-base md:text-lg font-bold tracking-tight ${colors.text} outline-none`}
                 >
                   {title}
                 </h2>
@@ -146,10 +151,9 @@ export const Modal: React.FC<ModalProps> = ({
                   type="button"
                   onClick={onClose}
                   className={[
-                    'p-1.5 rounded-lg transition-colors duration-150',
+                    'h-11 w-11 p-0 rounded-lg transition-colors duration-150',
                     colors.textMuted,
                     'hover:bg-[var(--color-card-hover)]',
-                    'min-h-[44px] min-w-[44px]',
                     'inline-flex items-center justify-center',
                   ].join(' ')}
                   aria-label="Fechar"

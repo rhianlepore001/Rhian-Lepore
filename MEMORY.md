@@ -9,6 +9,10 @@
 
 ---
 
+## Finance PR-B — Performance da equipe / Meus resultados (4 Out 2026, NÃO merge)
+
+Branch `cursor/fin-b-performance-clara-6a1f`. Só frontend. Um número por card, “Ver a conta” em modal (cálculo real), cópia leiga, rótulo “Ficou para {a barbearia | o salão | o estúdio | o negócio}”, barras de 6 meses preenchidas, lançamentos em lista no mobile. Sem mudança de banco. Não aplicar em prod. Prints em `/opt/cursor/artifacts/screenshots/fin-b/`.
+
 ## PR-7 overhaul booking — sino de pedido + aceite/recusa (4 Out 2026, NÃO merge)
 
 Branch `cursor/overhaul-pr7-booking-notifications-0c8e`. Trigger em `public_bookings` gera notificação in-app (dono + profissional atribuído; “qualquer profissional” só o dono). Escopo #96 `all` libera Aceitar/Recusar para a equipe; senão só dono e o profissional do pedido. Banco recusa com `not_allowed_for_booking`. Pedido de alteração notifica na hora (profissional antigo e novo se trocar). Sino existente: marcar lida / “Marcar todas como lidas”. Não aplicar em prod. Prints em `/opt/cursor/artifacts/screenshots/pr7/`.

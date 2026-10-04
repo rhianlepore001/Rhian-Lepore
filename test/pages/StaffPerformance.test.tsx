@@ -2,6 +2,7 @@ import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import teamJson from '../fixtures/staffPerformance/team.json';
 import detailJson from '../fixtures/staffPerformance/detail.json';
 import { ownerPerformanceSchema } from '../../types/staffPerformance';
@@ -52,15 +53,19 @@ const ANA = '20000000-0000-0000-0000-0000000000a1';
 let lastLocation = '';
 const Spy = () => { const l = useLocation(); lastLocation = l.pathname + l.search; return null; };
 
-const mount = (url = '/financeiro/performance?de=2026-09-01&ate=2026-09-30') =>
-    render(
-        <MemoryRouter initialEntries={[url]}>
-            <Routes>
-                <Route path="/financeiro/performance" element={<><StaffPerformance /><Spy /></>} />
-                <Route path="/financeiro" element={<><div>Financeiro</div><Spy /></>} />
-            </Routes>
-        </MemoryRouter>,
+const mount = (url = '/financeiro/performance?de=2026-09-01&ate=2026-09-30') => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    return render(
+        <QueryClientProvider client={client}>
+            <MemoryRouter initialEntries={[url]}>
+                <Routes>
+                    <Route path="/financeiro/performance" element={<><StaffPerformance /><Spy /></>} />
+                    <Route path="/financeiro" element={<><div>Financeiro</div><Spy /></>} />
+                </Routes>
+            </MemoryRouter>
+        </QueryClientProvider>,
     );
+};
 
 const emptyTeam = () => {
     const t = structuredClone(team) as any;
@@ -98,25 +103,25 @@ describe('StaffPerformance (P2) — /financeiro/performance', () => {
     it('linha de equipe + ranking por Retorno por hora, com selos e aviso de comparação', async () => {
         mount();
         const overview = await screen.findByTestId('team-overview');
-        expect(within(overview).getByText('Retorno total')).toBeInTheDocument();
+        expect(within(overview).getByText('Ficou para a barbearia')).toBeInTheDocument();
         expect(within(overview).getByText('R$ 1.313,00')).toBeInTheDocument();
         expect(within(overview).getByText('38')).toBeInTheDocument();
         expect(within(overview).queryByText('sem base de comparação')).toBeNull();
-        expect(within(overview).getByText(/\+241%/)).toBeInTheDocument();
-        expect(within(overview).getAllByText('melhor').length).toBeGreaterThan(0);
+        expect(within(overview).queryByText(/p\.p\./)).toBeNull();
+        expect(within(overview).queryByText('▲')).toBeNull();
+        expect(screen.getByText('Comparando setembro com agosto')).toBeInTheDocument();
 
         expect(screen.getByText(/Compare cada pessoa principalmente com ela mesma/)).toBeInTheDocument();
         const ana = screen.getAllByTestId(`member-${ANA}`)[0];
-        expect(within(ana).getByText('1º')).toBeInTheDocument();
-        expect(within(ana).getByText('R$ 68,00/h')).toBeInTheDocument();
-        expect(screen.getAllByText('Amostra baixa (5 de 8)').length).toBeGreaterThan(0);
+        expect(within(ana).getByText(/1º Ana/)).toBeInTheDocument();
+        expect(screen.getAllByText('Ainda sem posição no ranking').length).toBeGreaterThan(0);
         expect(screen.getAllByText('Dono').length).toBeGreaterThan(0);
         expect(screen.getAllByText('Inativo').length).toBeGreaterThan(0);
-        expect(screen.getAllByText('Fora do ranking').length).toBeGreaterThan(0);
+        expect(screen.queryByText('Fora do ranking')).toBeNull();
         const caio = team.members.find((m) => m.name === 'Caio')!;
         expect(screen.getAllByTestId(`member-${caio.professional_id}`).every((el) => el.getAttribute('data-unranked') === 'true')).toBe(true);
         expect(screen.getAllByTestId(`member-${ANA}`).every((el) => !el.getAttribute('data-unranked'))).toBe(true);
-        expect(screen.getAllByText(/Ana deixou R\$ 408,00 para a casa em 12 atendimentos \(R\$ 68,00 por hora\), 13% a mais que em agosto\./).length).toBeGreaterThan(0);
+        expect(screen.getAllByText(/Ana deixou R\$ 408,00 para a barbearia em 12 atendimentos \(R\$ 68,00 por hora\), R\$ 48,00 a mais que em agosto\./).length).toBeGreaterThan(0);
         expect(screen.getByText('Sem profissional')).toBeInTheDocument();
         expect(screen.queryByText(/melhor funcionário/i)).not.toBeInTheDocument();
     });
@@ -129,34 +134,33 @@ describe('StaffPerformance (P2) — /financeiro/performance', () => {
         await waitFor(() => expect(fetchStaffPerformance).toHaveBeenLastCalledWith(expect.objectContaining({ professionalId: ANA })));
 
         const headline = await screen.findByTestId('detail-headline');
-        expect(within(headline).getByText('Retorno para a casa')).toBeInTheDocument();
+        expect(within(headline).getByText('Ficou para a barbearia')).toBeInTheDocument();
         expect(within(headline).getByText('R$ 408,00')).toBeInTheDocument();
-        expect(within(headline).getByText('▲ +R$ 48,00 (+13%)')).toBeInTheDocument();
-        expect(within(headline).getAllByText('vs agosto').length).toBeGreaterThan(0);
-        expect(within(headline).getByText('R$ 68,00/h')).toBeInTheDocument();
-        expect(within(headline).getByText(/R\$ 103,33\/h/)).toBeInTheDocument();
+        expect(within(headline).queryByText('vs agosto')).toBeNull();
+        expect(within(headline).queryByText(/p\.p\./)).toBeNull();
+        expect(within(headline).getByText('R$ 68,00')).toBeInTheDocument();
         expect(within(headline).getByText('R$ 62,00')).toBeInTheDocument();
         expect(within(headline).getByText('55%')).toBeInTheDocument();
-        expect(within(headline).getByText('6 de 11')).toBeInTheDocument();
+        expect(within(headline).getByText('6 de 11 clientes')).toBeInTheDocument();
     });
 
     it('detalhe: conta do retorno, secundários, tendência de 6 meses e serviços', async () => {
         mount(`/financeiro/performance?de=2026-09-01&ate=2026-09-30&pro=${ANA}`);
         await screen.findByTestId('detail-headline');
-        fireEvent.click(screen.getByRole('button', { name: /Ver a conta/ }));
-        const conta = screen.getByTestId('retorno-breakdown');
+        fireEvent.click(within(screen.getByTestId('metric-retorno')).getByText('Ver a conta'));
+        const conta = await screen.findByTestId('metric-account');
         expect(within(conta).getByText('Serviços')).toBeInTheDocument();
         expect(within(conta).getByText('R$ 620,00')).toBeInTheDocument();
         expect(within(conta).getByText('− R$ 257,00')).toBeInTheDocument();
         expect(within(conta).getByText('− R$ 45,00')).toBeInTheDocument();
+        expect(within(conta).getByText('O que isso quer dizer')).toBeInTheDocument();
 
-        expect(screen.getByText('12 atendimentos · 2 do Clube')).toBeInTheDocument();
-        expect(screen.getByText('7h (1h do Clube)')).toBeInTheDocument();
-        expect(screen.getByText(/Cancelamentos/)).toBeInTheDocument();
-        expect(screen.queryByText('Cancel.')).toBeNull();
-        expect(screen.getByText('3 de 12 com produto (25%)')).toBeInTheDocument();
+        expect(screen.getByText('2 do Clube')).toBeInTheDocument();
+        expect(screen.getByText('Pela duração marcada na agenda')).toBeInTheDocument();
+        expect(screen.getByText('3 de 12 atendimentos')).toBeInTheDocument();
         expect(screen.getAllByTestId('trend-month')).toHaveLength(6);
         expect(screen.getByText('corte')).toBeInTheDocument();
+        expect(screen.queryByLabelText(/Como calculamos/)).toBeNull();
     });
 
     it('detalhe: voltar para a equipe e atalhos para pagamentos (histórico e relatório)', async () => {
@@ -183,11 +187,11 @@ describe('StaffPerformance (P2) — /financeiro/performance', () => {
         expect(await screen.findByTestId('performance-loading')).toHaveAttribute('aria-busy', 'true');
     });
 
-    it('vazio: mensagem e botão "Mês passado"', async () => {
+    it('vazio: mensagem e botão de outro período, não o atual', async () => {
         fetchStaffPerformance.mockResolvedValue(emptyTeam());
         mount('/financeiro/performance');
         expect(await screen.findByText('Nenhum atendimento concluído neste período.')).toBeInTheDocument();
-        fireEvent.click(screen.getByRole('button', { name: "Ver 'Mês passado'" }));
+        fireEvent.click(screen.getByRole('button', { name: /Ver “Mês passado”/ }));
         await waitFor(() => expect(lastLocation).toContain('de=2026-09-01&ate=2026-09-30'));
     });
 
@@ -250,7 +254,7 @@ describe('StaffPerformance (P2) — /financeiro/performance', () => {
         expect(screen.getAllByText('Cliente 0').length).toBeGreaterThan(0);
         expect(screen.queryByText('Cliente 20')).toBeNull();
         fireEvent.click(screen.getByRole('button', { name: 'Próxima' }));
-        expect(screen.getByText('Cliente 20')).toBeInTheDocument();
+        expect(screen.getAllByText('Cliente 20').length).toBeGreaterThan(0);
         expect(spy.mock.calls.flat().join(' ')).not.toMatch(/Cliente/);
         expect(err.mock.calls.flat().join(' ')).not.toMatch(/Cliente/);
         spy.mockRestore();

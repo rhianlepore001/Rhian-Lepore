@@ -277,8 +277,11 @@ export function validateScheduleDraft(draft: CommissionScheduleDraft): string | 
   } else {
     if (draft.closeDays.length !== 2) return 'Quinzenal precisa de dois dias do mês.';
     const [a, b] = [...draft.closeDays].sort((x, y) => x - y);
-    if (a === b || Math.abs(a - b) < 7) return 'Os dois dias precisam ter pelo menos 7 dias de intervalo.';
     if (a < 1 || b > 31) return 'Escolha dois dias entre 1 e 31.';
+    // >= 7 dias dentro do mês (em fevereiro 29–31 viram 28) e na virada do mês (b - a <= 21).
+    if (Math.min(b, 28) - a < 7 || b - a > 21) {
+      return 'Os dois fechamentos precisam ter pelo menos 7 dias entre eles, inclusive na virada do mês.';
+    }
   }
   if (![0, 2, 5].includes(draft.payOffsetDays)) return 'Prazo de pagamento inválido.';
   if (draft.reminderOffsets.length < 1) return 'Escolha pelo menos um lembrete.';

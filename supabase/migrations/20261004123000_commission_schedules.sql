@@ -45,7 +45,9 @@ CREATE TABLE IF NOT EXISTS public.commission_schedules (
       AND close_days[1] BETWEEN 1 AND 31
       AND close_days[2] BETWEEN 1 AND 31
       AND close_days[1] <> close_days[2]
-      AND abs(close_days[1] - close_days[2]) >= 7
+      -- >= 7 dias dentro do mês (fevereiro: 29–31 viram 28) e na virada do mês.
+      AND least(greatest(close_days[1], close_days[2]), 28) - least(close_days[1], close_days[2]) >= 7
+      AND abs(close_days[1] - close_days[2]) <= 21
     )
   ),
   CONSTRAINT commission_schedules_reminder_offsets CHECK (
@@ -737,8 +739,10 @@ BEGIN
     END IF;
   ELSE
     IF cardinality(v_days) <> 2 OR v_days[1] NOT BETWEEN 1 AND 31 OR v_days[2] NOT BETWEEN 1 AND 31
-       OR v_days[1] = v_days[2] OR abs(v_days[1] - v_days[2]) < 7 THEN
-      RAISE EXCEPTION 'Quinzenal precisa de dois dias com pelo menos 7 dias de intervalo.' USING ERRCODE = '22023';
+       OR v_days[1] = v_days[2]
+       OR least(greatest(v_days[1], v_days[2]), 28) - least(v_days[1], v_days[2]) < 7
+       OR abs(v_days[1] - v_days[2]) > 21 THEN
+      RAISE EXCEPTION 'Os dois fechamentos precisam ter pelo menos 7 dias entre eles, inclusive na virada do mês.' USING ERRCODE = '22023';
     END IF;
   END IF;
 END;

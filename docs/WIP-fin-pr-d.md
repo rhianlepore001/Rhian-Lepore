@@ -11,6 +11,8 @@ Status: pronto para revisão; NÃO aplicado em produção. Migração: `supabase
 6. `_commission_cycle_bounds` simplificado; `set_commission_schedule_v1` ignora anchor do cliente e retorna `first_new_close`; preview do servidor começa após o fim atual.
 7. Checagens de dono via `get_auth_role()`; cron do pg_cron protegido por `pg_extension` + WARNING; link da notificação `/financeiro?tab=commissions`; rollback também remove os novos helpers e restaura `_commission_cycle_core` com md5 de prod (`b004cb3b…`).
 
+8. Quinzenal: exige >= 7 dias dentro do mês e na virada (7 <= d2-d1 <= 21) e também em fevereiro (min(d2,28)-d1 >= 7, ex.: 24/31 rejeitado), no RPC, no CHECK da tabela e no editor.
+
 ## Testes
 - `scripts/test-sql-commission-schedules.sh`: paridade JSON 24 meses (dias 1/5/28, 6570 chamadas) vs cópia congelada do core antigo; backfill; reset dos 8 + aviso; bounds semanal/quinzenal/mensal; clamp 29–31; DST Lisboa; effective_from = próximo fechamento; ciclo pago inalterado; ACL/RLS (anon negado, staff não escreve, cross-tenant negado); idempotência de lembretes; `--rollback` OK.
 - Todos os `scripts/test-sql-*.sh` passam, exceto `test-sql-agenda-blocks-queue.sh` (falha conhecida, assinatura de `create_agenda_block`).
@@ -28,7 +30,7 @@ Status: pronto para revisão; NÃO aplicado em produção. Migração: `supabase
 
 ## Riscos residuais
 - Sem pg_cron, lembretes só aparecem quando o dono abre o app.
-- Quinzenal valida 7 dias só dentro do mês; o intervalo na virada pode ser menor. Primeiro ciclo após troca pode ser bem curto.
+- Primeiro ciclo após troca de regra pode ser bem curto.
 - Rollback mantém notificações já geradas e o dia espelhado.
 - `own_cycle` muda o intervalo exibido para membros com exceção; custo extra de consulta no core.
 - Frontends antigos em cache continuam funcionando, mostrando "Acerto todo dia N".

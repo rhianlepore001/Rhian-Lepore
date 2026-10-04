@@ -582,6 +582,31 @@ BEGIN
     RAISE EXCEPTION 'FAIL semanal dia 7 aceito';
   EXCEPTION WHEN SQLSTATE '22023' THEN NULL;
   END;
+  -- Quinzenal: >= 7 dias dentro do mês E na virada (d2-d1 <= 21) e em fevereiro (min(d2,28)-d1 >= 7).
+  DECLARE
+    bad int[][] := ARRAY[[2, 28], [28, 2], [1, 23], [24, 31], [22, 29], [5, 10]];
+    i int;
+  BEGIN
+    FOR i IN 1 .. array_length(bad, 1) LOOP
+      BEGIN
+        PERFORM public.set_commission_schedule_v1(NULL, 'biweekly', ARRAY[bad[i][1], bad[i][2]], NULL, 2, ARRAY[2, 0], false);
+        RAISE EXCEPTION 'FAIL quinzenal %/% aceito', bad[i][1], bad[i][2];
+      EXCEPTION WHEN SQLSTATE '22023' THEN
+        IF SQLERRM <> 'Os dois fechamentos precisam ter pelo menos 7 dias entre eles, inclusive na virada do mês.' THEN
+          RAISE EXCEPTION 'FAIL mensagem quinzenal %/%: %', bad[i][1], bad[i][2], SQLERRM;
+        END IF;
+      END;
+    END LOOP;
+  END;
+  PERFORM public.set_commission_schedule_v1(NULL, 'biweekly', ARRAY[1, 22], NULL, 2, ARRAY[2, 0], false);
+  PERFORM public.set_commission_schedule_v1(NULL, 'biweekly', ARRAY[10, 17], NULL, 2, ARRAY[2, 0], false);
+  PERFORM public.set_commission_schedule_v1(NULL, 'biweekly', ARRAY[21, 29], NULL, 2, ARRAY[2, 0], false);
+  BEGIN
+    INSERT INTO public.commission_schedules (user_id, frequency, close_days, effective_from)
+    VALUES ('d1000000-0000-0000-0000-0000000000d1', 'biweekly', ARRAY[2, 28], DATE '2099-01-01');
+    RAISE EXCEPTION 'FAIL CHECK aceitou quinzenal 2/28';
+  EXCEPTION WHEN check_violation THEN NULL;
+  END;
   PERFORM public.set_commission_schedule_v1(NULL, 'monthly', ARRAY[30], NULL, 2, ARRAY[2, 0], false);
   PERFORM public._cs_t('mensal 30 salva sem violar CHECK; espelho fica 1',
     (SELECT commission_settlement_day_of_month FROM public.business_settings WHERE user_id = 'd1000000-0000-0000-0000-0000000000d1'), 1);
@@ -591,7 +616,7 @@ BEGIN
   PERFORM public.set_commission_schedule_v1(NULL, 'biweekly', ARRAY[1, 16], NULL, 2, ARRAY[2, 0], false);
   PERFORM public._cs_t('quinzenal não mexe no espelho',
     (SELECT commission_settlement_day_of_month FROM public.business_settings WHERE user_id = 'd1000000-0000-0000-0000-0000000000d1'), 12);
-  RAISE NOTICE 'PASS validação (quinzenal >=7 dias, pagar 0/2/5, dia da semana) e espelho legado só 1..28';
+  RAISE NOTICE 'PASS validação (quinzenal >=7 dias no mês, na virada e em fevereiro; CHECK da tabela; pagar 0/2/5, dia da semana) e espelho legado só 1..28';
 END $$;
 
 -- 13) Exceção por colaborador (negócio F): effective_from = próximo close; janela própria

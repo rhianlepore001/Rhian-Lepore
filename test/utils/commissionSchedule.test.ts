@@ -10,6 +10,7 @@ import {
   previewFromDraft,
   scheduleDraftSummary,
   scheduleSummary,
+  validateScheduleDraft,
 } from '@/utils/commissionSchedule';
 
 describe('commissionSchedule', () => {
@@ -94,5 +95,25 @@ describe('commissionSchedule', () => {
       'Revisamos o pagamento da comissão: agora todos seguem a regra da barbearia. Se alguém precisar de outra regra, crie uma exceção.',
     );
     expect(formatLegacyFrequencyResetNotice('do negócio')).toContain('regra do negócio');
+  });
+
+  it('quinzenal exige >= 7 dias dentro do mês E na virada do mês', () => {
+    const msg = 'Os dois fechamentos precisam ter pelo menos 7 dias entre eles, inclusive na virada do mês.';
+    const d = (closeDays: number[]) => validateScheduleDraft({
+      frequency: 'biweekly', closeDays, payOffsetDays: 2, reminderOffsets: [2],
+    });
+    expect(d([2, 28])).toBe(msg); // virada: 2 dias
+    expect(d([28, 2])).toBe(msg);
+    expect(d([5, 10])).toBe(msg); // dentro do mês: 5 dias
+    expect(d([1, 23])).toBe(msg); // 22 > 21
+    expect(d([24, 31])).toBe(msg); // fevereiro: 31 vira 28, só 4 dias
+    expect(d([5, 5])).toBe(msg);
+    expect(d([1, 22])).toBeNull(); // 21: limite
+    expect(d([10, 17])).toBeNull(); // 7: limite
+    expect(d([5, 20])).toBeNull();
+    expect(d([1, 16])).toBeNull();
+    expect(d([15, 30])).toBeNull();
+    expect(d([10, 31])).toBeNull(); // fevereiro: 10 e 28 = 18 dias
+    expect(d([21, 29])).toBeNull(); // fevereiro: 21 e 28 = 7 dias
   });
 });

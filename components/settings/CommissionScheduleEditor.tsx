@@ -166,7 +166,7 @@ export const CommissionScheduleEditor: React.FC<CommissionScheduleEditorProps> =
         <Field
           id="cs-biweekly"
           label="Fecha nos dias"
-          hint={`Dois dias do mês, com pelo menos 7 dias entre eles.${clampHint ? ' Em meses mais curtos, 29–31 vira o último dia.' : ''}`}
+          hint={`Dois dias do mês, com pelo menos 7 dias entre eles, inclusive na virada do mês.${clampHint ? ' Em meses mais curtos, 29–31 vira o último dia.' : ''}`}
         >
           <div className="grid grid-cols-2 gap-3">
             {[0, 1].map((idx) => (

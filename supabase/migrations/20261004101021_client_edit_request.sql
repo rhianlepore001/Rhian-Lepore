@@ -15,7 +15,7 @@
 -- dispara lead_time no horário original.
 -- service_only_edit_skip_acceptance default false; NÃO vai no JSON público.
 --
--- ROLLBACK: docs/rollbacks/20261004084454_client_edit_request.rollback.sql
+-- ROLLBACK: docs/rollbacks/20261004101021_client_edit_request.rollback.sql
 -- Reverter o frontend ANTES (Minha Área / link público chamam v2).
 
 -- 1) Colunas -----------------------------------------------------------------

@@ -1,4 +1,4 @@
--- ROLLBACK de 20261004084454_client_edit_request
+-- ROLLBACK de 20261004101021_client_edit_request
 -- Idempotente. Restaura update/get/accept/reject/lead-time/history v2
 -- exatamente como nas migrations anteriores (corpos atuais de prod).
 -- Restaura cancel v2 ao corpo exato de 20261004082633 (PR-5).

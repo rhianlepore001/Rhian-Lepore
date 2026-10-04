@@ -1,5 +1,5 @@
 -- Provas PR-6: pedido de alteração do cliente (sem duplicar agendamento).
--- Roda DEPOIS da migration 20261004084454. Falha antes dela (v2 ausente).
+-- Roda DEPOIS da migration 20261004101021. Falha antes dela (v2 ausente).
 
 CREATE TEMP TABLE pr6_fail (msg text);
 

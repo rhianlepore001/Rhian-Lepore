@@ -1,9 +1,9 @@
 import React from 'react';
 import type { PerformanceMetrics } from '../../types/staffPerformance';
 import type { BusinessRemainderNoun } from '../../utils/businessCopy';
-import { buildMetricAccount, TEAM_METRIC_IDS } from '../../utils/staffPerformanceAccount';
+import { buildMetricAccount, TEAM_METRIC_IDS, metricCellClass } from '../../utils/staffPerformanceAccount';
 import { MetricCard } from './MetricCard';
-import { PerformanceSection } from './PerformanceSection';
+import { MetricGrid, PerformanceSection } from './PerformanceSection';
 
 interface TeamOverviewProps {
     totals: PerformanceMetrics | null;
@@ -40,13 +40,13 @@ export const TeamOverview: React.FC<TeamOverviewProps> = ({
 
     return (
         <PerformanceSection title="A equipe no período">
-            <div data-testid="team-overview" className="grid grid-cols-2 gap-3">
+            <MetricGrid testId="team-overview">
                 {accounts.map((account) => (
-                    <div key={account.id} className={account.span === 'full' ? 'col-span-2' : undefined}>
+                    <div key={account.id} className={metricCellClass(account.span)}>
                         <MetricCard account={account} />
                     </div>
                 ))}
-            </div>
+            </MetricGrid>
         </PerformanceSection>
     );
 };

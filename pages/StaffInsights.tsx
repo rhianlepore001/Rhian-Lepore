@@ -4,7 +4,7 @@ import { BarChart3, CalendarX, TrendingUp } from 'lucide-react';
 import { EmptyState, ErrorState, PageHeader, Skeleton } from '../components/ui';
 import { MonthYearSelector } from '../components/MonthYearSelector';
 import { MetricCard } from '../components/performance/MetricCard';
-import { PerformanceSection } from '../components/performance/PerformanceSection';
+import { MetricGrid, PerformanceSection } from '../components/performance/PerformanceSection';
 import { TrendBars } from '../components/performance/TrendBars';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
@@ -12,8 +12,8 @@ import { useBusinessCopy } from '../hooks/useBusinessCopy';
 import { useStaffInsights } from '../hooks/useStaffInsights';
 import { useTenantLocale } from '../hooks/useTenantLocale';
 import type { StaffPeriod } from '../types/insights';
-import { buildMetricAccount, STAFF_METRIC_IDS } from '../utils/staffPerformanceAccount';
-import { comparingHeadline, previousMonthName } from '../utils/staffPerformanceView';
+import { buildMetricAccount, STAFF_METRIC_IDS, metricCellClass } from '../utils/staffPerformanceAccount';
+import { compactPeriodLine, previousMonthName } from '../utils/staffPerformanceView';
 
 const PERIODS: { id: StaffPeriod; label: string }[] = [
   { id: 'day', label: 'Hoje' },
@@ -44,8 +44,8 @@ export const StaffInsights: React.FC = () => {
   const previousRange = data?.period.previous ?? null;
   const previousName = previousRange ? previousMonthName(previousRange) : null;
   const comparing = !empty && period === 'month' && previousRange
-    ? comparingHeadline(data!.period.start, data!.period.end, previousRange)
-    : null;
+    ? compactPeriodLine(data!.period.start, data!.period.end, previousRange, true)
+    : periodLabel;
 
   if (!teamMemberId) {
     return (
@@ -72,15 +72,10 @@ export const StaffInsights: React.FC = () => {
     : [];
 
   return (
-    <div className={`flex flex-col gap-8 ${PAGE_PB}`}>
+    <div className={`flex flex-col gap-6 lg:gap-8 ${PAGE_PB} max-w-[1120px]`}>
       <PageHeader
         title={firstName ? `Meus resultados — ${firstName}` : 'Meus resultados'}
-        subtitle={
-          <span className="inline-flex flex-col gap-1">
-            <span className="first-letter:uppercase">{periodLabel}</span>
-            {comparing && <span>{comparing}</span>}
-          </span>
-        }
+        subtitle={<span>{comparing}</span>}
         meta={
           <div className="flex gap-2 w-full overflow-x-auto pb-1">
             {PERIODS.map((item) => {
@@ -116,11 +111,11 @@ export const StaffInsights: React.FC = () => {
       />
 
       {status === 'loading' && (
-        <div aria-busy="true" className="grid grid-cols-2 gap-3">
+        <div aria-busy="true" className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <Skeleton className="h-[136px]" />
           <Skeleton className="h-[136px]" />
-          <Skeleton className="h-[136px] col-span-2" />
-          <Skeleton className="h-[136px] col-span-2" />
+          <Skeleton className="h-[136px]" />
+          <Skeleton className="h-[136px]" />
         </div>
       )}
 
@@ -138,12 +133,14 @@ export const StaffInsights: React.FC = () => {
 
       {status === 'ready' && x && !empty && (
         <>
-          <section aria-label="Números do período" className="grid grid-cols-2 gap-3">
-            {accounts.map((account) => (
-              <div key={account.id} className={account.span === 'full' ? 'col-span-2' : undefined}>
-                <MetricCard account={account} />
-              </div>
-            ))}
+          <section aria-label="Números do período">
+            <MetricGrid>
+              {accounts.map((account) => (
+                <div key={account.id} className={metricCellClass(account.span)}>
+                  <MetricCard account={account} />
+                </div>
+              ))}
+            </MetricGrid>
           </section>
 
           {data && data.trend.length > 0 && (

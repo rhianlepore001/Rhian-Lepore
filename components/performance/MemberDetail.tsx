@@ -4,11 +4,11 @@ import { Badge, Button } from '../ui';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import type { OwnerPerformance, PerformanceMember } from '../../types/staffPerformance';
 import type { BusinessRemainderNoun } from '../../utils/businessCopy';
-import { buildMetricAccount, MEMBER_METRIC_IDS } from '../../utils/staffPerformanceAccount';
+import { buildMetricAccount, MEMBER_METRIC_IDS, metricCellClass } from '../../utils/staffPerformanceAccount';
 import { memberBadge, rankLabel, unrankedSentence } from '../../utils/staffPerformanceView';
 import { MemberLedger } from './MemberLedger';
 import { MetricCard } from './MetricCard';
-import { PerformanceSection } from './PerformanceSection';
+import { MetricGrid, PerformanceSection } from './PerformanceSection';
 import { TrendBars } from './TrendBars';
 
 interface MemberDetailProps {
@@ -45,36 +45,35 @@ export const MemberDetail: React.FC<MemberDetailProps> = ({
 
     return (
         <div className="flex flex-col gap-8">
-            <div className="space-y-3">
+            <div className="flex flex-col gap-3">
                 <button type="button" onClick={onBack} className={`inline-flex items-center gap-1.5 min-h-[44px] text-sm ${accent.text} hover:underline underline-offset-4`}>
                     <ArrowLeft className="w-4 h-4" aria-hidden="true" /> Toda a equipe
                 </button>
-                <div className="flex flex-col gap-1.5 min-w-0">
-                    <h2 className={`${font.heading} text-lg sm:text-xl lg:text-2xl font-semibold tracking-tight ${colors.text} break-words`}>{m.name}</h2>
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                        {m.rank != null && <span className={`${font.mono} text-sm tabular-nums ${colors.textSecondary}`}>{rankLabel(m.rank)} no ranking</span>}
-                        {badge && <Badge variant="neutral">{badge}</Badge>}
-                    </div>
-                    {m.rank == null && (m.low_sample || m.metrics.atendimentos < data.min_sample) && (
-                        <p className={`text-sm leading-relaxed ${colors.textSecondary}`}>
-                            {unrankedSentence(m, data.min_sample)}
-                        </p>
-                    )}
-                    {m.is_owner && (
-                        <p className={`text-sm leading-relaxed ${colors.textSecondary}`}>
-                            Como dono, a comissão conta como zero.
-                        </p>
-                    )}
+                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 min-w-0">
+                    <h2 className={`${font.heading} text-lg lg:text-xl font-semibold tracking-tight ${colors.text} break-words`}>{m.name}</h2>
+                    {m.rank != null && <span className={`${font.mono} text-sm tabular-nums ${colors.textSecondary}`}>{rankLabel(m.rank)} no ranking</span>}
+                    {badge && <Badge variant="neutral">{badge}</Badge>}
                 </div>
+                {m.rank == null && (m.low_sample || m.metrics.atendimentos < data.min_sample) && (
+                    <p className={`text-sm leading-relaxed ${colors.textSecondary}`}>
+                        {unrankedSentence(m, data.min_sample)}
+                    </p>
+                )}
+                {m.is_owner && (
+                    <p className={`text-sm leading-relaxed ${colors.textSecondary}`}>
+                        Como dono, a comissão conta como zero.
+                    </p>
+                )}
+                <section data-testid="detail-headline" aria-label="Números principais">
+                    <MetricGrid>
+                        {accounts.map((account) => (
+                            <div key={account.id} className={metricCellClass(account.span)}>
+                                <MetricCard account={account} />
+                            </div>
+                        ))}
+                    </MetricGrid>
+                </section>
             </div>
-
-            <section data-testid="detail-headline" aria-label="Números principais" className="grid grid-cols-2 gap-3">
-                {accounts.map((account) => (
-                    <div key={account.id} className={account.span === 'full' ? 'col-span-2' : undefined}>
-                        <MetricCard account={account} />
-                    </div>
-                ))}
-            </section>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <PerformanceSection title="Últimos 6 meses" className="lg:col-span-2">

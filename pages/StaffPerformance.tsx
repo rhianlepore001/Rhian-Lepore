@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, BarChart3, CalendarX } from 'lucide-react';
-import { Button, EmptyState, ErrorState, PageHeader, Skeleton, Badge } from '../components/ui';
+import { Button, EmptyState, ErrorState, PageHeader, Badge } from '../components/ui';
 import { CommissionDetailReport } from '../components/CommissionDetailReport';
 import { CommissionPaymentHistory } from '../components/CommissionPaymentHistory';
 import { DataQualityNotice } from '../components/performance/DataQualityNotice';
 import { MemberDetail } from '../components/performance/MemberDetail';
 import { PerformanceFilters, type RosterEntry } from '../components/performance/PerformanceFilters';
+import { PerformancePageSkeleton } from '../components/performance/PerformancePageSkeleton';
 import { PerformanceSection } from '../components/performance/PerformanceSection';
 import { TeamOverview } from '../components/performance/TeamOverview';
 import { TeamRanking } from '../components/performance/TeamRanking';
@@ -18,14 +19,14 @@ import { supabase } from '../lib/supabase';
 import { useTenantLocale } from '../hooks/useTenantLocale';
 import { getCurrencySymbol } from '../utils/formatters';
 import {
-    comparingHeadline,
+    compactPeriodLine,
     detectPreset,
     emptyPeriodSuggestion,
     filtersToSearch,
     parseFilters,
-    periodLabel,
     presetRange,
     previousMonthName,
+    shopTimezoneDiffersFromDevice,
     timezoneLabel,
     type PerformanceFilters as Filters,
     type SortDir,
@@ -116,9 +117,9 @@ export const StaffPerformance: React.FC = () => {
     const isEmpty = !!data && (filters.pro
         ? !member || (member.metrics.atendimentos === 0 && member.metrics.vendas_produtos === 0 && member.metrics.avulsos === 0)
         : (data.team_totals?.atendimentos ?? 0) === 0 && (data.team_totals?.vendas_produtos ?? 0) === 0 && (data.team_totals?.avulsos ?? 0) === 0);
-    const comparing = !isEmpty && compare && data?.period.previous
-        ? comparingHeadline(filters.start, filters.end, data.period.previous)
-        : null;
+    const comparingLine = !isEmpty && data
+        ? compactPeriodLine(filters.start, filters.end, compare ? data.period.previous : null, compare)
+        : compactPeriodLine(filters.start, filters.end, null, false);
 
     const openReport = async () => {
         if (!member || !user?.id) return;
@@ -137,45 +138,38 @@ export const StaffPerformance: React.FC = () => {
     };
 
     const subtitle = (
-        <span className="inline-flex flex-col gap-1">
-            <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
-                <span className="first-letter:uppercase">{periodLabel(filters.start, filters.end)}</span>
-                {data?.period.partial && <Badge variant="warning">Mês em andamento</Badge>}
-            </span>
-            {comparing && <span>{comparing}</span>}
+        <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span>{data ? comparingLine : compactPeriodLine(filters.start, filters.end, null, false)}</span>
+            {data?.period.partial && <Badge variant="warning">Mês em andamento</Badge>}
         </span>
     );
 
     return (
-        <div className={`flex flex-col gap-8 ${PAGE_PB}`}>
-            <Link to="/financeiro?tab=commissions" className={`inline-flex items-center gap-1.5 min-h-[44px] -mb-4 text-sm ${colors.textSecondary} hover:text-theme-text`}>
-                <ArrowLeft className="w-4 h-4" aria-hidden="true" /> Pagamento de comissão
-            </Link>
-            <PageHeader title="Performance da equipe" subtitle={subtitle} className="pb-0" />
+        <div className={`flex flex-col ${PAGE_PB} max-w-[1120px]`}>
+            <div className="flex flex-col gap-3">
+                <Link to="/financeiro?tab=commissions" className={`hidden lg:inline-flex items-center gap-1.5 min-h-[44px] text-sm ${colors.textSecondary} hover:text-theme-text`}>
+                    <ArrowLeft className="w-4 h-4" aria-hidden="true" /> Financeiro
+                </Link>
+                <PageHeader title="Performance da equipe" subtitle={subtitle} className="!pb-0" />
+                <PerformanceFilters
+                    preset={preset}
+                    start={filters.start}
+                    end={filters.end}
+                    pro={filters.pro}
+                    compare={compare}
+                    roster={roster}
+                    tzLabel={data ? timezoneLabel(data.period.tz) : null}
+                    showTzOnPage={!!data && shopTimezoneDiffersFromDevice(data.period.tz)}
+                    onPreset={(p) => go({ ...presetRange(p, today, settlementDay), pro: filters.pro })}
+                    onCustom={(start, end) => start <= end && go({ start, end, pro: filters.pro })}
+                    onPro={(pro) => go({ ...filters, pro })}
+                    onCompare={setCompare}
+                />
+            </div>
 
-            <PerformanceFilters
-                preset={preset}
-                start={filters.start}
-                end={filters.end}
-                pro={filters.pro}
-                compare={compare}
-                roster={roster}
-                tzLabel={data ? timezoneLabel(data.period.tz) : null}
-                onPreset={(p) => go({ ...presetRange(p, today, settlementDay), pro: filters.pro })}
-                onCustom={(start, end) => start <= end && go({ start, end, pro: filters.pro })}
-                onPro={(pro) => go({ ...filters, pro })}
-                onCompare={setCompare}
-            />
+            <div className="mt-6 lg:mt-8 flex flex-col gap-8">
 
-            {status === 'loading' && (
-                <div data-testid="performance-loading" aria-busy="true" aria-label="Carregando a performance" className="grid grid-cols-2 gap-3">
-                    <Skeleton className="h-[136px] col-span-2" />
-                    <Skeleton className="h-[136px]" />
-                    <Skeleton className="h-[136px]" />
-                    <Skeleton className="h-[136px] col-span-2" />
-                    <Skeleton className="h-72 col-span-2" />
-                </div>
-            )}
+            {status === 'loading' && <PerformancePageSkeleton />}
 
             {status === 'error' && (
                 <ErrorState
@@ -279,6 +273,7 @@ export const StaffPerformance: React.FC = () => {
             <p className={`text-[13px] ${colors.textMuted}`}>
                 Aluguel, luz e outras contas fixas não entram nestes números.
             </p>
+            </div>
 
             {modal === 'history' && member && (
                 <CommissionPaymentHistory

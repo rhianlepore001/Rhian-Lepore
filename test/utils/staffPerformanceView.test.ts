@@ -4,6 +4,7 @@ import { ownerPerformanceSchema } from '../../types/staffPerformance';
 import { getBusinessRemainderNoun } from '../../utils/businessCopy';
 import {
     comparingHeadline,
+    compactPeriodLine,
     comparisonLabel,
     detectPreset,
     emptyPeriodSuggestion,
@@ -23,6 +24,7 @@ import {
     rateDelta,
     remainderModalCompare,
     rankedSentence,
+    shopTimezoneDiffersFromDevice,
     sortMembers,
     summarySentence,
     unrankedSentence,
@@ -67,6 +69,11 @@ describe('staffPerformanceView — períodos (R3.5, R3.6) sem toISOString', () =
         expect(periodShortLabel('2026-09-01', '2026-09-30')).toBe('setembro');
         expect(comparingHeadline('2026-09-01', '2026-09-30', { start: '2026-08-01', end: '2026-08-31' }))
             .toBe('Comparando setembro com agosto');
+        expect(compactPeriodLine('2026-09-01', '2026-09-30', { start: '2026-08-01', end: '2026-08-31' }, true))
+            .toBe('Setembro de 2026 · comparado com agosto');
+        expect(compactPeriodLine('2026-09-01', '2026-09-30', null, true)).toBe('Setembro de 2026');
+        expect(shopTimezoneDiffersFromDevice('America/Sao_Paulo', 'America/Sao_Paulo')).toBe(false);
+        expect(shopTimezoneDiffersFromDevice('America/Sao_Paulo', 'Europe/Lisbon')).toBe(true);
         expect(comparisonLabel({ start: '2026-08-01', end: '2026-08-31' })).toBe('vs agosto');
         expect(comparisonLabel({ start: '2026-08-01', end: '2026-08-30' })).toBe('vs 01–30 ago');
         expect(comparisonLabel({ start: '2026-08-04', end: '2026-09-02' })).toBe('vs 04 ago–02 set');

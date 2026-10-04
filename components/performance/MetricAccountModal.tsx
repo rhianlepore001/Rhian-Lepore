@@ -22,6 +22,7 @@ export const MetricAccountModal: React.FC<MetricAccountModalProps> = ({ account,
             open
             onClose={onClose}
             title={account.title}
+            subtitle={account.period}
             size="md"
             footer={
                 <Button variant="secondary" fullWidth onClick={onClose}>
@@ -30,29 +31,26 @@ export const MetricAccountModal: React.FC<MetricAccountModalProps> = ({ account,
             }
         >
             <div data-testid="metric-account" className="space-y-6">
-                <dl className="space-y-0">
+                <dl>
                     {account.lines.map((line) => {
                         if (line.kind === 'note') {
                             return (
-                                <div key={`${line.label}-${line.value}`} className="pt-3">
-                                    <dt className={`text-sm leading-snug ${colors.textSecondary}`}>{line.label}</dt>
-                                    <dd className={`mt-1 ${font.mono} text-sm tabular-nums ${colors.text}`}>{line.value}</dd>
-                                </div>
+                                <p key={line.label} className={`pt-3 text-sm leading-snug ${colors.textMuted}`}>
+                                    {line.label}
+                                </p>
                             );
                         }
                         if (line.kind === 'formula') {
                             return (
-                                <div
-                                    key={`${line.label}-${line.value}`}
-                                    className={`border-t ${colors.divider} mt-1 pt-3 space-y-1`}
-                                >
+                                <div key={`${line.label}-${line.value}`} className={`mt-1 pt-3 border-t ${colors.divider}`}>
                                     <dt className={`text-sm leading-snug ${colors.textSecondary}`}>
                                         <span className="block">{line.numerator}</span>
                                         <span className="block">÷ {line.denominator}</span>
                                     </dt>
-                                    <dd className={`flex items-baseline justify-between gap-4 pt-1 ${font.mono} text-sm tabular-nums font-bold ${colors.text}`}>
-                                        <span className={`font-sans font-semibold ${colors.text}`}>=</span>
-                                        <span>{line.value}</span>
+                                    <dd className={`mt-2 pt-2 border-t ${colors.divider} flex items-baseline justify-end`}>
+                                        <span className={`${font.mono} text-sm tabular-nums font-bold ${colors.text}`}>
+                                            = {line.value}
+                                        </span>
                                     </dd>
                                 </div>
                             );
@@ -81,7 +79,12 @@ export const MetricAccountModal: React.FC<MetricAccountModalProps> = ({ account,
                     <p className={`text-sm leading-relaxed ${colors.textSecondary}`}>{account.meaning}</p>
                 </div>
                 {account.comparison && (
-                    <p className={`text-sm leading-relaxed ${colors.text}`}>{sentence(account.comparison)}</p>
+                    <p className={`text-sm leading-relaxed ${colors.text}`}>
+                        {account.comparisonCaption && (
+                            <span className={colors.textMuted}>{account.comparisonCaption}: </span>
+                        )}
+                        <span>{account.comparisonCaption ? account.comparison : sentence(account.comparison)}</span>
+                    </p>
                 )}
             </div>
         </Modal>

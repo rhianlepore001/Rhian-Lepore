@@ -44,12 +44,14 @@ export interface MetricAccount {
     id: MetricKey;
     label: string;
     title: string;
+    period: string;
     value: string;
     hint: string | null;
-    span: 'full' | 'half';
+    span: MetricSpan;
     lines: AccountLine[];
     meaning: string;
     comparison: string | null;
+    comparisonCaption: string | null;
     cardValue: number | null;
     reconstructed: number | null;
 }
@@ -154,8 +156,8 @@ function ratioLine(left: string, right: string, result: string): AccountLine {
     };
 }
 
-function noteLine(label: string, value: string): AccountLine {
-    return { kind: 'note', label, value, muted: false };
+function noteLine(label: string): AccountLine {
+    return { kind: 'note', label, value: '', muted: true };
 }
 
 export interface AccountBuildOpts {
@@ -170,10 +172,12 @@ export interface AccountBuildOpts {
     isOwner?: boolean;
 }
 
+export type MetricSpan = 'hero' | 'wide' | 'narrow';
+
 export function metricLabel(id: MetricKey, remainder: BusinessRemainderNoun): string {
     switch (id) {
         case 'retorno': return remainder.remainderLabel;
-        case 'retorno_por_hora': return 'Rende por hora de trabalho';
+        case 'retorno_por_hora': return 'Rende por hora';
         case 'faturamento_por_hora': return 'Fatura por hora';
         case 'ticket_medio': return 'Cada cliente gastou, em média';
         case 'voltou': return 'Saíram com horário marcado';
@@ -186,18 +190,14 @@ export function metricLabel(id: MetricKey, remainder: BusinessRemainderNoun): st
     }
 }
 
-export function metricSpan(id: MetricKey): 'full' | 'half' {
-    if (
-        id === 'retorno'
-        || id === 'retorno_por_hora'
-        || id === 'ticket_medio'
-        || id === 'voltou'
-        || id === 'faturamento_por_hora'
-        || id === 'comissao_periodo'
-    ) {
-        return 'full';
-    }
-    return 'half';
+export function metricSpan(id: MetricKey): MetricSpan {
+    if (id === 'retorno') return 'hero';
+    if (id === 'ticket_medio' || id === 'voltou') return 'wide';
+    return 'narrow';
+}
+
+export function metricCellClass(span: MetricSpan): string {
+    return span === 'narrow' ? '' : 'col-span-2';
 }
 
 export function metricHint(id: MetricKey, m: AnyMetrics): string | null {
@@ -269,40 +269,49 @@ function meaning(id: MetricKey, opts: AccountBuildOpts): string {
     }
 }
 
-function comparisonFor(id: MetricKey, m: AnyMetrics, opts: AccountBuildOpts): string | null {
+function comparisonFor(id: MetricKey, m: AnyMetrics, opts: AccountBuildOpts): { text: string; caption: string | null } | null {
     const prev = opts.previous;
     const prevSample = prev?.atendimentos ?? 0;
     const common = { prevSample, previousName: opts.previousName, formatMoney: opts.formatMoney };
     if (!prev) return null;
-    if (prevSample < MIN_SAMPLE) return fewSampleCompare(opts.previousName);
+    if (prevSample < MIN_SAMPLE) return { text: fewSampleCompare(opts.previousName), caption: null };
+    const caption = opts.previousName
+        ? `Comparado com ${opts.previousName}`
+        : 'Comparado com o período anterior';
     switch (id) {
-        case 'retorno':
-            return hasReturn(m) && hasReturn(prev)
-                ? remainderModalCompare(m.retorno, prev.retorno, common)
-                : null;
+        case 'retorno': {
+            if (!hasReturn(m) || !hasReturn(prev)) return null;
+            const text = remainderModalCompare(m.retorno, prev.retorno, common);
+            return text ? { text, caption: null } : null;
+        }
         case 'retorno_por_hora':
             return hasReturn(m) && hasReturn(prev)
-                ? moneyCompareText(m.retorno_por_hora, prev.retorno_por_hora, common)
+                ? wrapCompare(moneyCompareText(m.retorno_por_hora, prev.retorno_por_hora, common), caption)
                 : null;
         case 'faturamento_por_hora':
-            return moneyCompareText(m.faturamento_por_hora, prev.faturamento_por_hora, common);
+            return wrapCompare(moneyCompareText(m.faturamento_por_hora, prev.faturamento_por_hora, common), caption);
         case 'ticket_medio':
-            return moneyCompareText(m.ticket_medio, prev.ticket_medio, common);
+            return wrapCompare(moneyCompareText(m.ticket_medio, prev.ticket_medio, common), caption);
         case 'voltou':
-            return rateCompareText(m.voltou_taxa, prev.voltou_taxa, common);
+            return wrapCompare(rateCompareText(m.voltou_taxa, prev.voltou_taxa, common), caption);
         case 'faltas':
-            return rateCompareText(m.taxa_faltas, prev.taxa_faltas, { ...common, lowerIsBetter: true });
+            return wrapCompare(rateCompareText(m.taxa_faltas, prev.taxa_faltas, { ...common, lowerIsBetter: true }), caption);
         case 'atendimentos':
-            return moneyCompareText(m.atendimentos, prev.atendimentos, { ...common, formatMoney: (n) => String(n) });
+            return wrapCompare(moneyCompareText(m.atendimentos, prev.atendimentos, { ...common, formatMoney: (n) => String(n) }), caption);
         case 'tempo':
             return null;
         case 'produtos':
-            return rateCompareText(m.attach, prev.attach, common);
+            return wrapCompare(rateCompareText(m.attach, prev.attach, common), caption);
         case 'comissao_periodo':
-            return moneyCompareText(m.comissao_periodo, prev.comissao_periodo, common);
+            return wrapCompare(moneyCompareText(m.comissao_periodo, prev.comissao_periodo, common), caption);
         default:
             return null;
     }
+}
+
+function wrapCompare(text: string | null, caption: string): { text: string; caption: string } | null {
+    if (!text) return null;
+    return { text, caption };
 }
 
 function displayValue(id: MetricKey, m: AnyMetrics, formatMoney: (v: number) => string): string {
@@ -369,18 +378,18 @@ function linesFor(id: MetricKey, m: AnyMetrics, opts: AccountBuildOpts): Account
             ];
         case 'voltou': {
             const waiting = m.imaturos > 0
-                ? [noteLine(`Ainda esperando: atendidos há menos de ${REBOOK_WINDOW_DAYS} dias`, String(m.imaturos))]
+                ? [noteLine(`Ainda esperando: ${plural(m.imaturos, 'cliente atendido', 'clientes atendidos')} há menos de ${REBOOK_WINDOW_DAYS} dias`)]
                 : [];
             return [
                 { label: 'Clientes que marcaram de novo', value: String(m.voltou), muted: m.voltou === 0 },
-                { label: 'Clientes atendidos (já dá para contar)', value: String(m.maduros), muted: m.maduros === 0 },
+                { label: 'Clientes atendidos', value: String(m.maduros), muted: m.maduros === 0 },
                 ratioLine(`${m.voltou} clientes marcaram de novo`, `${m.maduros} clientes atendidos`, formatPercent(m.voltou_taxa)),
                 ...waiting,
             ];
         }
         case 'faltas': {
             const open = m.sem_desfecho > 0
-                ? [noteLine('Horários passados sem marcar se o cliente veio', String(m.sem_desfecho))]
+                ? [noteLine(`Horários passados sem marcar se o cliente veio: ${m.sem_desfecho}`)]
                 : [];
             return [
                 { label: 'Não apareceram', value: String(m.faltas), muted: m.faltas === 0 },
@@ -430,16 +439,19 @@ export function buildMetricAccount(id: MetricKey, m: AnyMetrics, opts: AccountBu
     const label = metricLabel(id, opts.remainder);
     const period = periodShortLabel(opts.periodStart, opts.periodEnd);
     const cardValue = cardNumeric(id, m);
+    const compare = comparisonFor(id, m, opts);
     return {
         id,
         label,
-        title: `${label} · ${period}`,
+        title: label,
+        period,
         value: displayValue(id, m, opts.formatMoney),
         hint: metricHint(id, m),
         span: metricSpan(id),
         lines: linesFor(id, m, opts),
         meaning: meaning(id, opts),
-        comparison: comparisonFor(id, m, opts),
+        comparison: compare?.text || null,
+        comparisonCaption: compare?.caption ?? null,
         cardValue,
         reconstructed: reconstructMetric(id, m),
     };
@@ -449,9 +461,9 @@ export const TEAM_METRIC_IDS: MetricKey[] = ['retorno', 'atendimentos', 'faltas'
 export const MEMBER_METRIC_IDS: MetricKey[] = [
     'retorno',
     'retorno_por_hora',
+    'atendimentos',
     'ticket_medio',
     'voltou',
-    'atendimentos',
     'tempo',
     'faltas',
     'produtos',
@@ -461,9 +473,9 @@ export const STAFF_METRIC_IDS: MetricKey[] = [
     'atendimentos',
     'tempo',
     'faturamento_por_hora',
+    'comissao_periodo',
     'ticket_medio',
     'voltou',
     'faltas',
     'produtos',
-    'comissao_periodo',
 ];

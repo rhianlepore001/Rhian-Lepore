@@ -11,6 +11,8 @@ interface ModalProps {
   open: boolean;
   onClose: () => void;
   title?: string;
+  /** Linha secundária no header, abaixo do título (ex.: período da conta). */
+  subtitle?: string;
   children: React.ReactNode;
   size?: ModalSize;
   footer?: React.ReactNode;
@@ -43,6 +45,7 @@ export const Modal: React.FC<ModalProps> = ({
   open,
   onClose,
   title,
+  subtitle,
   children,
   size = 'lg',
   footer,
@@ -136,16 +139,21 @@ export const Modal: React.FC<ModalProps> = ({
         >
           {(title || showCloseButton) && (
             <div className={`${classes.modalHeader} shrink-0`}>
-              {title && (
-                <h2
-                  ref={titleRef}
-                  id={titleDomId}
-                  tabIndex={-1}
-                  className={`min-w-0 pr-2 text-base md:text-lg font-bold tracking-tight ${colors.text} outline-none`}
-                >
-                  {title}
-                </h2>
-              )}
+              <div className="min-w-0 flex-1 pr-2">
+                {title && (
+                  <h2
+                    ref={titleRef}
+                    id={titleDomId}
+                    tabIndex={-1}
+                    className={`text-base md:text-lg font-bold tracking-tight ${colors.text} outline-none truncate`}
+                  >
+                    {title}
+                  </h2>
+                )}
+                {subtitle && (
+                  <p className={`mt-0.5 text-sm ${colors.textMuted}`}>{subtitle}</p>
+                )}
+              </div>
               {showCloseButton && (
                 <button
                   type="button"

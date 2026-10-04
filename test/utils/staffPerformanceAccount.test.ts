@@ -46,7 +46,8 @@ describe('staffPerformanceAccount — a conta fecha com o valor do card', () => 
         expect(account.reconstructed).toBe(reconstructed);
         expect(account.lines.length).toBeGreaterThan(0);
         expect(account.meaning.length).toBeGreaterThan(10);
-        expect(account.title).toContain('setembro');
+        expect(account.title).toBe(account.label);
+        expect(account.period).toBe('setembro');
         expect(account.title).not.toMatch(/p\.p\./);
     });
 
@@ -89,9 +90,9 @@ describe('staffPerformanceAccount — a conta fecha com o valor do card', () => 
         expect(account.hint).toBe('6 de 11 clientes');
         expect(account.meaning).toContain('em até 2 dias');
         expect(account.comparison).toBe('subiu de 50% para 55%');
+        expect(account.comparisonCaption).toBe('Comparado com agosto');
         expect(account.lines.find((l) => l.kind === 'formula')?.numerator).toBe('6 clientes marcaram de novo');
-        expect(account.lines.find((l) => l.kind === 'note')?.label).toBe('Ainda esperando: atendidos há menos de 2 dias');
-        expect(account.lines.find((l) => l.kind === 'note')?.value).toBe('1');
+        expect(account.lines.find((l) => l.kind === 'note')?.label).toBe('Ainda esperando: 1 cliente atendido há menos de 2 dias');
     });
 
     it('equipe: comissão da equipe, não “de a equipe”', () => {
@@ -121,7 +122,7 @@ describe('staffPerformanceAccount — a conta fecha com o valor do card', () => 
     ])('%s: cards de meia largura entram em pares no grid', (_label, ids) => {
         let pending = 0;
         for (const id of ids) {
-            if (metricSpan(id) === 'full') expect(pending % 2).toBe(0);
+            if (metricSpan(id) !== 'narrow') expect(pending % 2).toBe(0);
             else pending += 1;
         }
         expect(pending % 2).toBe(0);

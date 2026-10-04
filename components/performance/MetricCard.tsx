@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ChevronRight } from 'lucide-react';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import type { MetricAccount } from '../../utils/staffPerformanceAccount';
 import { MetricAccountModal } from './MetricAccountModal';
@@ -20,11 +21,12 @@ export const MetricCard: React.FC<MetricCardProps> = ({ account }) => {
                 aria-haspopup="dialog"
                 onClick={() => setOpen(true)}
                 className={[
-                    'w-full text-left min-w-0 flex flex-col',
+                    'w-full h-full text-left min-w-0 flex flex-col',
                     'p-4 md:p-5',
                     `border ${colors.border} ${radius.card} ${colors.card}`,
                     'focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-input-focus)]',
-                    colors.surfaceHover,
+                    'transition-colors duration-150',
+                    'hover:bg-[var(--color-card-hover)] active:bg-[var(--color-card-hover)]',
                 ].join(' ')}
             >
                 <span className={`text-[13px] md:text-sm leading-snug ${colors.textSecondary}`}>
@@ -38,7 +40,10 @@ export const MetricCard: React.FC<MetricCardProps> = ({ account }) => {
                 {account.hint && (
                     <span className={`mt-2 text-[13px] leading-snug ${colors.textMuted}`}>{account.hint}</span>
                 )}
-                <span className={`mt-3 text-[13px] ${accent.text}`}>Ver a conta</span>
+                <span className={`mt-3 inline-flex items-center gap-1 text-[13px] ${accent.text}`}>
+                    Ver a conta
+                    <ChevronRight className="w-3.5 h-3.5" aria-hidden="true" />
+                </span>
             </button>
             {open && <MetricAccountModal account={account} onClose={() => setOpen(false)} />}
         </>

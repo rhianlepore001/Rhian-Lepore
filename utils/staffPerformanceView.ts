@@ -85,12 +85,36 @@ export function periodShortLabel(start: string, end: string): string {
     return `${pad(s.getDate())}/${pad(s.getMonth() + 1)} – ${pad(e.getDate())}/${pad(e.getMonth() + 1)}`;
 }
 
+function capitalizePt(text: string): string {
+    if (!text) return text;
+    return text.charAt(0).toLocaleUpperCase('pt-BR') + text.slice(1);
+}
+
 /** Uma vez no topo da página. Sem "vs" nos cards. */
 export function comparingHeadline(start: string, end: string, prev: DateRange | null | undefined): string | null {
     if (!prev) return null;
     const current = isFullMonth(start, end) ? MONTHS[parseLocalISODate(start).getMonth()] : periodShortLabel(start, end);
     const previous = previousMonthName(prev) ?? periodShortLabel(prev.start, prev.end);
     return `Comparando ${current} com ${previous}`;
+}
+
+/** Título + uma linha: "Setembro de 2026 · comparado com agosto". */
+export function compactPeriodLine(
+    start: string,
+    end: string,
+    prev: DateRange | null | undefined,
+    compare: boolean,
+): string {
+    const period = capitalizePt(periodLabel(start, end));
+    if (!compare || !prev) return period;
+    const previous = previousMonthName(prev) ?? periodShortLabel(prev.start, prev.end);
+    return `${period} · comparado com ${previous}`;
+}
+
+/** Só mostra o fuso na página quando o do salão é outro. */
+export function shopTimezoneDiffersFromDevice(shopTz: string, deviceTz?: string): boolean {
+    const device = deviceTz ?? (typeof Intl === 'undefined' ? '' : Intl.DateTimeFormat().resolvedOptions().timeZone);
+    return Boolean(shopTz && device && shopTz !== device);
 }
 
 /** R3.6: "vs agosto" · "vs 01–30 ago" · "vs 04 ago–02 set". */

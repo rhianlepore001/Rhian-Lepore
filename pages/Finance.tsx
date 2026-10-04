@@ -1,5 +1,6 @@
 ﻿import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { prefetchStaffPerformanceFromLocation } from '../hooks/useStaffPerformance';
 import { Card } from '../components/ui/Card';
 import { PageHeader } from '../components/ui/PageHeader';
 import { Button, Modal, Table, Badge, ConfirmModal, useToast, ErrorState, SkeletonCard } from '@/components/ui';
@@ -589,7 +590,14 @@ useEffect(() => {
               Exportar
             </Button>
             {!isStaff && (
-              <Button variant="ghost" size="sm" icon={<BarChart3 className="h-4 w-4" />} onClick={() => navigate('/financeiro/performance')}>
+              <Button
+                variant="ghost"
+                size="sm"
+                icon={<BarChart3 className="h-4 w-4" />}
+                onClick={() => navigate('/financeiro/performance')}
+                onMouseEnter={() => prefetchStaffPerformanceFromLocation()}
+                onPointerDown={() => prefetchStaffPerformanceFromLocation()}
+              >
                 Performance da equipe
               </Button>
             )}

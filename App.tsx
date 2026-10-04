@@ -13,6 +13,7 @@ import { DynamicBranding } from './components/DynamicBranding';
 import { DevBugButton } from './components/DevBugButton';
 import { HashRouterSync } from './components/HashRouterSync';
 import { PerformanceAccessGuard } from './components/performance/PerformanceAccessGuard';
+import { PerformancePageSkeleton } from './components/performance/PerformancePageSkeleton';
 import { getBusinessCopy, resolveBusinessTheme } from './utils/businessCopy';
 
 
@@ -58,7 +59,10 @@ const DashboardCockpitDemo = React.lazy(() => import('./pages/DashboardCockpitDe
 const FinanceChartDemo = React.lazy(() => import('./pages/FinanceChartDemo').then(module => ({ default: module.FinanceChartDemo })));
 const Placeholder = React.lazy(() => import('./pages/Placeholder').then(module => ({ default: module.Placeholder })));
 const StaffInsights = React.lazy(() => import('./pages/StaffInsights').then(module => ({ default: module.StaffInsights })));
-const StaffPerformance = React.lazy(() => import('./pages/StaffPerformance').then(module => ({ default: module.StaffPerformance })));
+const StaffPerformance = React.lazy(() => {
+  void import('./hooks/useStaffPerformance').then((m) => m.prefetchStaffPerformanceFromLocation());
+  return import('./pages/StaffPerformance').then((module) => ({ default: module.StaffPerformance }));
+});
 const Products = React.lazy(() => import('./pages/Products').then(module => ({ default: module.Products })));
 
 const LoadingFull = () => (
@@ -240,7 +244,7 @@ const AppRoutes: React.FC = () => {
           <Route path="/clientes/:id" element={<OwnerRouteGuard><ClientCRM /></OwnerRouteGuard>} />
           <Route path="/produtos" element={<Products />} />
           <Route path="/financeiro" element={<Finance />} />
-          <Route path="/financeiro/performance" element={<PerformanceAccessGuard><OwnerRouteGuard><StaffPerformance /></OwnerRouteGuard></PerformanceAccessGuard>} />
+          <Route path="/financeiro/performance" element={<PerformanceAccessGuard><OwnerRouteGuard><Suspense fallback={<PerformancePageSkeleton />}><StaffPerformance /></Suspense></OwnerRouteGuard></PerformanceAccessGuard>} />
           <Route path="/insights" element={<OwnerRouteGuard><Reports /></OwnerRouteGuard>} />
           <Route path="/meus-insights" element={<StaffInsights />} />
 

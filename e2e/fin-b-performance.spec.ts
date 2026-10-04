@@ -449,8 +449,16 @@ test.describe('Finance PR-B — performance clara', () => {
     const guard = await openTeam(page, THEMES[0], { rpcCalls });
     await expect(page.getByRole('heading', { name: 'Performance da equipe' })).toBeVisible({ timeout: 30_000 });
     await expect(page.getByTestId('team-overview')).toBeVisible();
-    await expect(page.getByText('Comparando setembro com agosto')).toBeVisible();
+    await expect(page.getByText('Setembro de 2026 · comparado com agosto')).toBeVisible();
     await expect(page.getByTestId('metric-retorno')).toBeVisible();
+    await expect(page.getByTestId('metric-atendimentos')).toBeVisible();
+    await expect(page.getByTestId('metric-faltas')).toBeVisible();
+    const bottomBar = 844 - 72;
+    for (const id of ['metric-retorno', 'metric-atendimentos', 'metric-faltas']) {
+      const box = await page.getByTestId(id).boundingBox();
+      expect(box, id).toBeTruthy();
+      expect(box!.y + box!.height, `${id} acima da barra`).toBeLessThan(bottomBar);
+    }
     await expect(page.getByText('Ver a conta').first()).toBeVisible();
     await expect(page.locator('[data-testid="team-overview"]')).not.toContainText('p.p.');
     await expect(page.locator('[data-testid="team-overview"]')).not.toContainText('▲');

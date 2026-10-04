@@ -109,7 +109,7 @@ describe('StaffPerformance (P2) — /financeiro/performance', () => {
         expect(within(overview).queryByText('sem base de comparação')).toBeNull();
         expect(within(overview).queryByText(/p\.p\./)).toBeNull();
         expect(within(overview).queryByText('▲')).toBeNull();
-        expect(screen.getByText('Comparando setembro com agosto')).toBeInTheDocument();
+        expect(screen.getByText('Setembro de 2026 · comparado com agosto')).toBeInTheDocument();
 
         expect(screen.getByText(/Compare cada pessoa principalmente com ela mesma/)).toBeInTheDocument();
         const ana = screen.getAllByTestId(`member-${ANA}`)[0];
@@ -268,10 +268,10 @@ describe('StaffPerformance (P2) — /financeiro/performance', () => {
         expect(await screen.findByText('Nenhum lançamento neste período.')).toBeInTheDocument();
     });
 
-    it('link "← Pagamento de comissão" volta ao Financeiro', async () => {
+    it('link "← Financeiro" volta ao Financeiro', async () => {
         mount();
         await screen.findByTestId('team-overview');
-        fireEvent.click(screen.getByRole('link', { name: /Pagamento de comissão/ }));
+        fireEvent.click(screen.getByRole('link', { name: /^Financeiro$/, hidden: true }));
         await waitFor(() => expect(lastLocation).toBe('/financeiro?tab=commissions'));
     });
 });

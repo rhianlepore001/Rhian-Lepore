@@ -35,13 +35,24 @@ COMMENT ON COLUMN public.notifications.event_key IS
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Users can view own notifications" ON public.notifications;
-CREATE POLICY "Users can view own notifications"
+DROP POLICY IF EXISTS "Users can select own notifications" ON public.notifications;
+DROP POLICY IF EXISTS "Users can update own notifications" ON public.notifications;
+
+CREATE POLICY "Users can select own notifications"
   ON public.notifications
-  FOR ALL
+  FOR SELECT
   USING (auth.uid()::text = user_id);
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.notifications TO authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.notifications TO service_role;
+CREATE POLICY "Users can update own notifications"
+  ON public.notifications
+  FOR UPDATE
+  USING (auth.uid()::text = user_id)
+  WITH CHECK (auth.uid()::text = user_id);
+
+REVOKE ALL ON TABLE public.notifications FROM anon, authenticated;
+GRANT SELECT ON TABLE public.notifications TO authenticated;
+GRANT UPDATE (read) ON TABLE public.notifications TO authenticated;
+GRANT ALL ON TABLE public.notifications TO service_role;
 
 CREATE UNIQUE INDEX IF NOT EXISTS notifications_unread_event_key_uid_idx
   ON public.notifications (user_id, event_key)
@@ -341,8 +352,8 @@ BEGIN
 END;
 $function$;
 
-REVOKE ALL ON FUNCTION public.caller_can_act_on_public_booking(public.public_bookings) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.caller_can_act_on_public_booking(public.public_bookings) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.caller_can_act_on_public_booking(public.public_bookings) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.caller_can_act_on_public_booking(public.public_bookings) TO service_role;
 
 -- 6) accept v2 ---------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.accept_public_booking_v2(p_booking_id UUID)

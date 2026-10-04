@@ -212,6 +212,48 @@ BEGIN
   END IF;
   PERFORM pg_temp.check('RLS X lê as próprias (n>0)', (v_got::int > 0)::text, 'true');
 
+  -- Grants: authenticated não INSERT/DELETE; só UPDATE(read) na própria linha
+  SELECT id INTO v_id FROM public.notifications WHERE user_id = v_uid_x LIMIT 1;
+  v_got := pg_temp.run_as('authenticated', v_uid_x,
+    format('INSERT INTO public.notifications (user_id, title, message) VALUES (%L, ''x'', ''y'') RETURNING id::text', v_uid_x));
+  PERFORM pg_temp.check('auth não INSERT notification', (v_got LIKE 'error:%')::text, 'true');
+
+  v_got := pg_temp.run_as('authenticated', v_uid_x,
+    format('DELETE FROM public.notifications WHERE id = %L::uuid RETURNING id::text', v_id));
+  PERFORM pg_temp.check('auth não DELETE notification', (v_got LIKE 'error:%')::text, 'true');
+  PERFORM pg_temp.check('DELETE não removeu',
+    (SELECT count(*)::text FROM public.notifications WHERE id = v_id), '1');
+
+  v_got := pg_temp.run_as('authenticated', v_uid_x,
+    format('UPDATE public.notifications SET title = ''hack'' WHERE id = %L::uuid RETURNING title', v_id));
+  PERFORM pg_temp.check('auth não UPDATE title', (v_got LIKE 'error:%')::text, 'true');
+
+  v_got := pg_temp.run_as('authenticated', v_uid_x,
+    format('UPDATE public.notifications SET user_id = %L WHERE id = %L::uuid RETURNING user_id', v_uid_y, v_id));
+  PERFORM pg_temp.check('auth não UPDATE user_id', (v_got LIKE 'error:%')::text, 'true');
+
+  v_got := pg_temp.run_as('authenticated', v_uid_x,
+    format('UPDATE public.notifications SET read = true WHERE id = %L::uuid RETURNING read::text', v_id));
+  PERFORM pg_temp.check('auth UPDATE read próprio', v_got, 'true');
+  UPDATE public.notifications SET read = false WHERE id = v_id;
+
+  v_got := pg_temp.run_as('authenticated', v_uid_y,
+    format('UPDATE public.notifications SET read = true WHERE id = %L::uuid RETURNING read::text', v_id));
+  PERFORM pg_temp.check('auth não UPDATE read de outro', (v_got IS DISTINCT FROM 'true')::text, 'true');
+  PERFORM pg_temp.check('read do outro intacto',
+    (SELECT read::text FROM public.notifications WHERE id = v_id), 'false');
+
+  PERFORM pg_temp.check('auth sem execute caller_can_act',
+    has_function_privilege(
+      'authenticated',
+      'public.caller_can_act_on_public_booking(public.public_bookings)',
+      'EXECUTE'
+    )::text,
+    'false');
+  v_got := pg_temp.run_as('authenticated', v_uid_x,
+    'SELECT public.caller_can_act_on_public_booking((SELECT p FROM public.public_bookings p LIMIT 1))::text');
+  PERFORM pg_temp.check('auth não chama caller_can_act', (v_got LIKE 'error:%')::text, 'true');
+
   -- Aceite/recusa: dono, X, Y, Y com scope all
   UPDATE public.business_settings
      SET staff_appointment_edit_scope = 'none'

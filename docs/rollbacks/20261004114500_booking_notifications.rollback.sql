@@ -38,6 +38,18 @@ $$;
 
 ALTER TABLE public.notifications REPLICA IDENTITY DEFAULT;
 
+DROP POLICY IF EXISTS "Users can select own notifications" ON public.notifications;
+DROP POLICY IF EXISTS "Users can update own notifications" ON public.notifications;
+DROP POLICY IF EXISTS "Users can view own notifications" ON public.notifications;
+CREATE POLICY "Users can view own notifications"
+  ON public.notifications
+  FOR ALL
+  USING (auth.uid()::text = user_id);
+
+REVOKE ALL ON TABLE public.notifications FROM anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.notifications TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.notifications TO service_role;
+
 
 -- accept/reject v2: corpos exatos de 20261004101021
 CREATE OR REPLACE FUNCTION public.accept_public_booking_v2(p_booking_id UUID)

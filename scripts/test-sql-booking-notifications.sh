@@ -74,6 +74,13 @@ grants() {
   [ "$anon_a" = f ] && [ "$anon_r" = f ] && [ "$auth_a" = t ] && [ "$auth_r" = t ]
 }
 
+grants_pr7() {
+  grants
+  act_auth="$(P -At -c "SELECT has_function_privilege('authenticated', 'public.caller_can_act_on_public_booking(public.public_bookings)', 'EXECUTE')")"
+  echo "grants caller_can_act_auth:$act_auth"
+  [ "$act_auth" = f ]
+}
+
 if [ "${1:-}" = "--rollback" ]; then
   P -f "$MIG"
   P -f "$MIG"
@@ -88,6 +95,12 @@ if [ "${1:-}" = "--rollback" ]; then
   [ "$trg" = 0 ] && [ "$fn" = t ] && [ "$act" = t ] && [ "$col" = 0 ]
   [ "$md5a" = "$MD5_A6" ] || { echo "rollback: accept_v2 md5 != PR-6"; exit 1; }
   [ "$md5r" = "$MD5_R6" ] || { echo "rollback: reject_v2 md5 != PR-6"; exit 1; }
+  pol="$(P -At -c "SELECT polcmd FROM pg_policy WHERE polrelid = 'public.notifications'::regclass AND polname = 'Users can view own notifications'")"
+  extra_pol="$(P -At -c "SELECT count(*) FROM pg_policy WHERE polrelid = 'public.notifications'::regclass AND polname IN ('Users can select own notifications','Users can update own notifications')")"
+  auth_priv="$(P -At -c "SELECT string_agg(privilege_type, ',' ORDER BY privilege_type) FROM information_schema.role_table_grants WHERE table_schema='public' AND table_name='notifications' AND grantee='authenticated'")"
+  echo "rollback policy polcmd:$pol extra:$extra_pol auth_priv:$auth_priv"
+  [ "$pol" = "*" ] && [ "$extra_pol" = 0 ]
+  [ "$auth_priv" = "DELETE,INSERT,SELECT,UPDATE" ]
   grants
   intact
   echo "rollback ok"
@@ -105,6 +118,6 @@ P -f "$MIG"
 echo "migration aplicada 2x"
 
 P -f "$ROOT/supabase/tests/booking_notifications.test.sql"
-grants
+grants_pr7
 intact
 echo "booking notifications idempotente; testes ok; #98/#120/#121/#122/#123 intactos"

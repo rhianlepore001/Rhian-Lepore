@@ -473,48 +473,51 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
 
     return (
         <div className="space-y-5 md:space-y-6 pb-10">
-            {/* Cabeçalho */}
-            <header className="px-1 md:px-0 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            {/* Cabeçalho + cartão-resumo (PR-G): ciclo, período, totais e A pagar/Pagos num só cartão. */}
+            <header className="px-1 md:px-0 flex items-center gap-1 min-w-0">
+                <h2 className={`text-xl sm:text-2xl md:text-3xl min-w-0 ${font.heading} ${colors.text} tracking-tight`}>Pagamento de comissão</h2>
+                <InfoButton text="Quanto cada colaborador tem a receber e o registro de cada repasse. O saldo soma as comissões registradas ainda não pagas." />
+            </header>
+
+            <section
+                data-testid="payout-summary-card"
+                aria-label="Resumo do ciclo"
+                className={`border ${colors.border} ${radius.card} ${colors.card} p-4 md:p-5`}
+            >
                 <div className="min-w-0">
-                    <div className="flex items-center gap-1 min-w-0">
-                        <h2 className={`text-xl sm:text-2xl md:text-3xl min-w-0 ${font.heading} ${colors.text} tracking-tight`}>Pagamento de comissão</h2>
-                        <InfoButton text="Quanto cada colaborador tem a receber e o registro de cada repasse. O saldo soma as comissões registradas ainda não pagas." />
-                    </div>
                     {cycleData ? (
-                        <div className="mt-2 flex flex-col gap-2">
-                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                                <div className={`inline-flex items-center border ${colors.border} ${radius.button} ${colors.card}`}>
-                                    <button
-                                        type="button"
-                                        aria-label="Ciclo anterior"
-                                        disabled={loadState === 'loading'}
-                                        onClick={() => goToCycle(cycleData.previous_end)}
-                                        className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] md:min-h-[40px] ${colors.textSecondary} ${colors.surfaceHover} disabled:opacity-40`}
-                                    >
-                                        <ChevronLeft className="w-4 h-4" aria-hidden="true" />
-                                    </button>
-                                    <span className={`px-2 text-sm font-semibold ${colors.text} whitespace-nowrap`} aria-live="polite">
-                                        {({ weekly: 'Semanal', biweekly: 'Quinzenal', monthly: 'Mensal' } as Record<string, string>)[cycleData.frequency ?? 'monthly'] ?? 'Ciclo'}
-                                        {' · '}
-                                        {cycleData.cycle.open ? 'em aberto' : 'fechado'}
-                                    </span>
-                                    <button
-                                        type="button"
-                                        aria-label="Próximo ciclo"
-                                        disabled={loadState === 'loading' || cycleData.cycle.open}
-                                        onClick={() => goToCycle(cycleData.next_end)}
-                                        className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] md:min-h-[40px] ${colors.textSecondary} ${colors.surfaceHover} disabled:opacity-40 disabled:cursor-not-allowed`}
-                                    >
-                                        <ChevronRight className="w-4 h-4" aria-hidden="true" />
-                                    </button>
-                                </div>
+                        <div className="flex flex-col gap-3 min-[480px]:flex-row min-[480px]:items-center min-[480px]:gap-4 min-w-0">
+                            <div className={`inline-flex items-center self-start shrink-0 border ${colors.border} ${radius.button} ${colors.surface}`}>
+                                <button
+                                    type="button"
+                                    aria-label="Ciclo anterior"
+                                    disabled={loadState === 'loading'}
+                                    onClick={() => goToCycle(cycleData.previous_end)}
+                                    className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] md:min-h-[40px] ${colors.textSecondary} ${colors.surfaceHover} disabled:opacity-40`}
+                                >
+                                    <ChevronLeft className="w-4 h-4" aria-hidden="true" />
+                                </button>
+                                <span className={`px-2 text-sm font-semibold ${colors.text} whitespace-nowrap`} aria-live="polite">
+                                    {({ weekly: 'Semanal', biweekly: 'Quinzenal', monthly: 'Mensal' } as Record<string, string>)[cycleData.frequency ?? 'monthly'] ?? 'Ciclo'}
+                                    {' · '}
+                                    {cycleData.cycle.open ? 'em aberto' : 'fechado'}
+                                </span>
+                                <button
+                                    type="button"
+                                    aria-label="Próximo ciclo"
+                                    disabled={loadState === 'loading' || cycleData.cycle.open}
+                                    onClick={() => goToCycle(cycleData.next_end)}
+                                    className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] md:min-h-[40px] ${colors.textSecondary} ${colors.surfaceHover} disabled:opacity-40 disabled:cursor-not-allowed`}
+                                >
+                                    <ChevronRight className="w-4 h-4" aria-hidden="true" />
+                                </button>
                             </div>
-                            {/* 390: período em destaque numa linha, prazos na seguinte; ≥640: uma linha só. */}
-                            <p className={`text-sm leading-relaxed ${colors.textSecondary} tabular-nums`} data-testid="commission-cycle-header">
-                                <span className={`block sm:inline font-semibold ${colors.text}`}>
+                            {/* Período em destaque; prazos logo abaixo, em tom secundário. */}
+                            <p className={`text-sm leading-snug ${colors.textSecondary} tabular-nums min-w-0`} data-testid="commission-cycle-header">
+                                <span className={`block font-semibold ${colors.text}`}>
                                     Período {formatDayMonth(cycleData.cycle.start)} – {formatDayMonth(cycleData.cycle.end)}
                                 </span>
-                                <span className="hidden sm:inline" aria-hidden="true">{' · '}</span>
+                                <span className="sr-only">{' · '}</span>
                                 <span className="whitespace-nowrap">fecha em {formatDayMonth(cycleData.cycle.end)}</span>
                                 {cycleData.cycle.pay_due || cycleData.pay_due ? (
                                     <span className="whitespace-nowrap">{' · '}pagar até {formatDayMonth((cycleData.cycle.pay_due || cycleData.pay_due)!)}</span>
@@ -522,17 +525,55 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                             </p>
                         </div>
                     ) : (
-                        <p className={`${colors.textSecondary} text-sm mt-1 tabular-nums flex flex-wrap gap-x-2`}>
-                            <span className="whitespace-nowrap">Último ciclo fechado · {cycle.label}</span>
-                            <span className={`whitespace-nowrap ${colors.textMuted}`}>Acerto todo dia {settlementDay}</span>
+                        <p className={`text-sm leading-snug ${colors.textSecondary} tabular-nums min-w-0`}>
+                            <span className={`block font-semibold ${colors.text}`}>Último ciclo fechado · {cycle.label}</span>
+                            <span className="whitespace-nowrap">Acerto todo dia {settlementDay}</span>
                         </p>
                     )}
                 </div>
-                <div role="tablist" aria-label="Repasses" className={`inline-flex gap-1 p-1 ${colors.surface} ${radius.button} w-fit`}>
+
+                {loadState === 'loading' && (
+                    <div className={`mt-4 pt-4 border-t ${colors.border}`} aria-busy="true">
+                        <Skeleton className="h-8 w-48" />
+                    </div>
+                )}
+                {loadState === 'ready' && commissionsDue.length > 0 && (
+                    <div className={`mt-4 pt-4 border-t ${colors.border}`} data-testid="payout-summary">
+                        {cycleData && cycleData.totals.a_pagar_ciclo <= 0 && cycleData.totals.pago_ciclo <= 0 ? (
+                            <p className={`text-sm ${colors.textSecondary}`}>Nenhuma comissão pendente neste ciclo.</p>
+                        ) : !cycleData && totalDue <= 0 ? (
+                            <p className={`text-sm ${colors.textSecondary}`}>Nenhuma comissão pendente.</p>
+                        ) : (
+                            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-4">
+                                <div className="min-w-0">
+                                    <p className={`text-[13px] font-medium ${colors.textSecondary}`}>A pagar</p>
+                                    <strong data-testid="payout-summary-amount" className={`mt-1 block ${font.mono} text-[28px] md:text-3xl leading-tight font-bold tabular-nums whitespace-nowrap ${colors.text}`}>
+                                        {formatMoney(cycleData ? cycleData.totals.a_pagar_ciclo : totalDue)}
+                                    </strong>
+                                    <p className="mt-0.5">
+                                        <span className="sr-only">{' · '}</span>
+                                        <span className={`text-sm whitespace-nowrap ${colors.textSecondary}`}>
+                                            {cycleData
+                                                ? `${cycleData.totals.pendentes} ${cycleData.totals.pendentes === 1 ? 'pendente' : 'pendentes'}`
+                                                : `${withBalance} ${withBalance === 1 ? 'colaborador com saldo' : 'colaboradores com saldo'}`}
+                                        </span>
+                                    </p>
+                                </div>
+                                {cycleData && (
+                                    <div className="text-right">
+                                        <p className={`text-[13px] font-medium ${colors.textSecondary}`}>Pago neste ciclo</p>
+                                        <p className={`mt-1 ${font.mono} text-lg leading-tight md:text-xl font-semibold tabular-nums whitespace-nowrap ${colors.text}`}>{formatMoney(cycleData.totals.pago_ciclo)}</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
+                <div role="tablist" aria-label="Repasses" className={`mt-4 grid grid-cols-2 md:inline-grid md:grid-cols-[auto_auto] gap-1 p-1 ${colors.surface} ${radius.button} md:w-fit`}>
                     {subTab('pending', 'A pagar')}
                     {subTab('paid', 'Pagos')}
                 </div>
-            </header>
+            </section>
 
             {activeTab === 'pending' && (
                 <section aria-label="A pagar" className="space-y-4">
@@ -568,31 +609,6 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
 
                     {loadState === 'ready' && commissionsDue.length > 0 && (
                         <>
-                            <p className={`text-sm ${colors.textSecondary} flex flex-wrap items-baseline gap-x-2 gap-y-1`} data-testid="payout-summary">
-                                {cycleData ? (
-                                    cycleData.totals.a_pagar_ciclo > 0 || cycleData.totals.pago_ciclo > 0 ? (
-                                        <>
-                                            <span>A pagar</span>
-                                            <strong className={`${font.mono} text-lg md:text-xl tabular-nums whitespace-nowrap ${colors.text}`}>{formatMoney(cycleData.totals.a_pagar_ciclo)}</strong>
-                                            <span aria-hidden="true">·</span>
-                                            <span className="whitespace-nowrap">{cycleData.totals.pendentes} {cycleData.totals.pendentes === 1 ? 'pendente' : 'pendentes'}</span>
-                                            <span aria-hidden="true" className="hidden sm:inline">·</span>
-                                            <span className="basis-full sm:basis-auto whitespace-nowrap">Pago neste ciclo <span className={`${font.mono} tabular-nums ${colors.text}`}>{formatMoney(cycleData.totals.pago_ciclo)}</span></span>
-                                        </>
-                                    ) : (
-                                        <span>Nenhuma comissão pendente neste ciclo.</span>
-                                    )
-                                ) : totalDue > 0 ? (
-                                    <>
-                                        <span>A pagar</span>
-                                        <strong className={`${font.mono} text-lg md:text-xl tabular-nums whitespace-nowrap ${colors.text}`}>{formatMoney(totalDue)}</strong>
-                                        <span aria-hidden="true" className="hidden sm:inline">·</span>
-                                        <span className="basis-full sm:basis-auto">{withBalance} {withBalance === 1 ? 'colaborador com saldo' : 'colaboradores com saldo'}</span>
-                                    </>
-                                ) : (
-                                    <span>Nenhuma comissão pendente.</span>
-                                )}
-                            </p>
                             <PayoutList
                                 rows={commissionsDue}
                                 theme={theme}

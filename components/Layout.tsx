@@ -34,7 +34,8 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   return (
     <div
-      className={`h-[100dvh] overflow-y-auto ${colors.bg} text-theme-text font-sans selection:bg-theme-accent selection:text-[var(--color-on-accent)] font-medium relative transition-colors duration-300`}
+      data-app-scroll
+      className={`h-[100dvh] overflow-y-auto overflow-x-hidden ${colors.bg} text-theme-text font-sans selection:bg-theme-accent selection:text-[var(--color-on-accent)] font-medium relative transition-colors duration-300`}
       style={{ '--header-top': headerTop } as React.CSSProperties}
     >
       {/* Background layer — now handled by CSS variables in index.html */}

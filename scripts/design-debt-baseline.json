@@ -146,7 +146,9 @@
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
   },
   "components/HelpButtons.tsx": {
-    "text-white hardcoded (use colors.text)": 7,
+    "text-white hardcoded (use colors.text)": 7
+  },
+  "components/AIAssistantButton.tsx": {
     "modal custom fixed inset-0 (use ui/Modal)": 1,
     "shadow generico (use tokens shadow-*, MASTER.md §8)": 1
   },

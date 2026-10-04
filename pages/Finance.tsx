@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo, useCallback } from 'react';
+﻿import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { prefetchStaffPerformanceFromLocation } from '../hooks/useStaffPerformance';
 import { FinanceKpi } from '../components/finance/FinanceKpi';
@@ -10,7 +10,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { Wallet, TrendingUp, TrendingDown, Calendar, Download, Filter, Users, History, Trash2, Plus, Check, Smartphone, Banknote, CreditCard, User, Clock, Scissors, BarChart3, Bot } from 'lucide-react';
 import { FinanceCashflowChart } from '../components/finance/FinanceCashflowChart';
-import { AIAssistantButton } from '../components/HelpButtons';
 import { CommissionsManagement } from '../components/CommissionsManagement';
 import { MonthStepper } from '../components/finance/MonthStepper';
 import { FinanceMoreMenu } from '../components/finance/FinanceMoreMenu';
@@ -18,6 +17,7 @@ import { MonthlyHistory } from '../components/MonthlyHistory';
 import { TabNav } from '../components/TabNav';
 import { formatCurrency } from '../utils/formatters';
 import { combineDateAndTime, getTodayDateString } from '../utils/date';
+import { ASSISTANT_ENABLED } from '../utils/featureFlags';
 import { logger } from '../utils/Logger';
 import { mapError, formatUserFacingError } from '../utils/mapError';
 import { filterStaffTransactions, mapFinanceTransaction } from '../services/finance';
@@ -48,6 +48,11 @@ import {
   isInstantInRange,
   previousMonthIndex,
 } from '../utils/financeCashflow';
+
+// Assistente desligado (PR-G): com a constante em false o import some do bundle.
+const AIAssistantPanel = ASSISTANT_ENABLED
+  ? lazy(() => import('../components/AIAssistantButton').then((m) => ({ default: m.AIAssistantButton })))
+  : null;
 
 type FinanceTabType = 'overview' | 'commissions' | 'history';
 
@@ -573,9 +578,22 @@ const [searchParams, setSearchParams] = useSearchParams();
       : []),
   ], [accent.text, canDeleteTransactions, colors, currencyRegion, status.danger, status.success]);
 
+  // "⋯" do celular: só Filtrar/Exportar na Visão geral; sem itens, sem botão.
+  const moreItems = [
+    ...(activeTab === 'overview'
+      ? [
+        { id: 'filter', label: 'Filtrar', icon: <Filter className="h-4 w-4" />, onSelect: () => setShowFilterModal(true) },
+        { id: 'export', label: 'Exportar', icon: <Download className="h-4 w-4" />, onSelect: handleExport },
+      ]
+      : []),
+    ...(ASSISTANT_ENABLED
+      ? [{ id: 'assistant', label: 'Assistente', icon: <Bot className="h-4 w-4" />, onSelect: () => setAssistantOpen(true) }]
+      : []),
+  ];
+
   return (
     <div className="space-y-4 md:space-y-6">
-      {/* Topo (PR-F #9). Celular: título + mês (‹ ›) + "⋯" numa linha; Filtrar/Exportar/Assistente no "⋯"
+      {/* Topo (PR-F #9). Celular: título + mês (‹ ›) + "⋯" numa linha; Filtrar/Exportar no "⋯" (assistente desligado, PR-G)
           e "Registrar receita" no "+". Computador: mês ao lado do título, ações visíveis. */}
       <header className="flex flex-col gap-3 pb-1 md:flex-row md:items-start md:justify-between md:gap-6 md:pb-2">
         <div className="min-w-0 flex-1">
@@ -599,19 +617,9 @@ const [searchParams, setSearchParams] = useSearchParams();
                   : 'order-last min-[360px]:order-none min-[360px]:ml-auto md:ml-0'}
               />
             )}
-            <FinanceMoreMenu
-              label="Mais ações do financeiro"
-              className="md:hidden"
-              items={[
-                ...(activeTab === 'overview'
-                  ? [
-                    { id: 'filter', label: 'Filtrar', icon: <Filter className="h-4 w-4" />, onSelect: () => setShowFilterModal(true) },
-                    { id: 'export', label: 'Exportar', icon: <Download className="h-4 w-4" />, onSelect: handleExport },
-                  ]
-                  : []),
-                { id: 'assistant', label: 'Assistente', icon: <Bot className="h-4 w-4" />, onSelect: () => setAssistantOpen(true) },
-              ]}
-            />
+            {moreItems.length > 0 && (
+              <FinanceMoreMenu label="Mais ações do financeiro" className="md:hidden" items={moreItems} />
+            )}
           </div>
           <div className="mt-3 hidden md:flex flex-wrap items-center gap-2">
             {activeTab === 'overview' && (
@@ -624,15 +632,17 @@ const [searchParams, setSearchParams] = useSearchParams();
                 </Button>
               </>
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              icon={<Bot className="h-4 w-4" />}
-              aria-label="Abrir assistente IA"
-              onClick={() => setAssistantOpen(true)}
-            >
-              Assistente
-            </Button>
+            {ASSISTANT_ENABLED && (
+              <Button
+                variant="outline"
+                size="sm"
+                icon={<Bot className="h-4 w-4" />}
+                aria-label="Abrir assistente IA"
+                onClick={() => setAssistantOpen(true)}
+              >
+                Assistente
+              </Button>
+            )}
           </div>
         </div>
         <div className="hidden md:flex items-center gap-2 shrink-0">
@@ -654,13 +664,17 @@ const [searchParams, setSearchParams] = useSearchParams();
           </Button>
         </div>
       </header>
-      {/* Painel fora do bloco que some no celular: abre pelo botão (computador) ou pelo "⋯". */}
-      <AIAssistantButton
-        hideTrigger
-        context="suas finanças, entradas e saídas de dinheiro e relatórios"
-        open={assistantOpen}
-        onOpenChange={setAssistantOpen}
-      />
+      {/* Painel do assistente: só montado com ASSISTANT_ENABLED (hoje desligado). */}
+      {AIAssistantPanel && assistantOpen && (
+        <Suspense fallback={null}>
+          <AIAssistantPanel
+            hideTrigger
+            context="suas finanças, entradas e saídas de dinheiro e relatórios"
+            open={assistantOpen}
+            onOpenChange={setAssistantOpen}
+          />
+        </Suspense>
+      )}
 
       {/* Abas: controle segmentado de uma linha. Staff só tem a Visão geral (sem controle). */}
       {!isStaff && (

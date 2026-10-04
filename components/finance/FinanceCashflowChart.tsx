@@ -356,27 +356,31 @@ export const FinanceCashflowChart = memo(function FinanceCashflowChart({
         )}
       </div>
 
-      <table className="sr-only">
-        <caption>{`Entradas e saídas — ${periodLabel}`}</caption>
-        <thead>
-          <tr>
-            <th>Período</th>
-            <th>Entradas</th>
-            <th>Saídas</th>
-            <th>Sobrou</th>
-          </tr>
-        </thead>
-        <tbody>
-          {points.map((p, i) => (
-            <tr key={p.key}>
-              <td>{summaries[i]}</td>
-              <td>{formatCurrency(p.receita, currencyRegion)}</td>
-              <td>{formatCurrency(p.despesas, currencyRegion)}</td>
-              <td>{formatSobrou(p.sobrou, currencyRegion)}</td>
+      {/* Tabela só para leitor de tela. O sr-only fica num <div>: numa <table> o width:1px é
+          ignorado (a tabela cresce até o conteúdo, ~650 px) e empurra a rolagem lateral do app. */}
+      <div className="sr-only">
+        <table>
+          <caption>{`Entradas e saídas — ${periodLabel}`}</caption>
+          <thead>
+            <tr>
+              <th>Período</th>
+              <th>Entradas</th>
+              <th>Saídas</th>
+              <th>Sobrou</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {points.map((p, i) => (
+              <tr key={p.key}>
+                <td>{summaries[i]}</td>
+                <td>{formatCurrency(p.receita, currencyRegion)}</td>
+                <td>{formatCurrency(p.despesas, currencyRegion)}</td>
+                <td>{formatSobrou(p.sobrou, currencyRegion)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 });

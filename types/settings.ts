@@ -53,6 +53,11 @@ export const businessSettingsSchema = z.object({
   client_cancel_cutoff_hours: z.number().int().optional(),
   /** Observação livre (≤500). Não migrada de cancellation_policy. */
   client_cancel_note: z.string().nullable().optional(),
+  /**
+   * Se true, troca só de serviço (duração que cabe) não pede aprovação.
+   * Coluna nova (PR-6); default de produto false.
+   */
+  service_only_edit_skip_acceptance: z.boolean().optional(),
   created_at: z.string().nullable().optional(),
   updated_at: z.string().nullable().optional(),
 });

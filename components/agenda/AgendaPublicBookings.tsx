@@ -2,6 +2,7 @@ import React from 'react';
 import { AlertTriangle, Check, X } from 'lucide-react';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { formatCurrency, formatPhone, type Region } from '../../utils/formatters';
+import { formatAgendaAlteracao } from '../../utils/clientEditRequest';
 
 export interface AgendaPublicBookingItem {
   id: string;
@@ -12,6 +13,7 @@ export interface AgendaPublicBookingItem {
   professional_id?: string | null;
   service_ids?: string[] | null;
   is_edit?: boolean | null;
+  original_appointment_time?: string | null;
   notes?: string | null;
   customer_notes?: string | null;
   observation?: string | null;
@@ -32,6 +34,7 @@ export interface AgendaPublicBookingsProps {
   teamMembers: AgendaPublicBookingMember[];
   services: AgendaPublicBookingService[];
   currencyRegion: Region;
+  timeZone?: string;
   onAccept: (booking: AgendaPublicBookingItem) => void;
   onReject: (bookingId: string) => void;
   acceptError?: { id: string; message: string } | null;
@@ -58,6 +61,7 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
   teamMembers,
   services,
   currencyRegion,
+  timeZone = 'America/Sao_Paulo',
   onAccept,
   onReject,
   acceptError = null,
@@ -133,8 +137,17 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
               </div>
 
               {booking.is_edit && (
-                <p className="mt-1.5 text-xs font-bold text-[var(--color-info)]">
-                  Alteração de agendamento
+                <p
+                  data-testid="agenda-booking-alteracao"
+                  className="mt-1.5 text-xs font-bold text-[var(--color-info)]"
+                >
+                  {booking.original_appointment_time
+                    ? formatAgendaAlteracao(
+                      booking.original_appointment_time,
+                      booking.appointment_time,
+                      timeZone,
+                    )
+                    : 'Alteração de agendamento'}
                 </p>
               )}
 

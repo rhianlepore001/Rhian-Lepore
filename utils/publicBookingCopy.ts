@@ -4,6 +4,7 @@ export function getPublicBookingSuccessCopy(input: {
   isBeauty: boolean;
   status?: string | null;
   isEdit?: boolean;
+  editSentSubtitle?: string | null;
 }): {
   title: string;
   subtitle: string;
@@ -39,11 +40,14 @@ export function getPublicBookingSuccessCopy(input: {
   }
 
   if (input.isEdit) {
+    const subtitle = (input.editSentSubtitle ?? '').trim() || (
+      isBeauty
+        ? 'O salão ainda precisa confirmar o novo horário. Acompanhe na Minha Área.'
+        : 'PEDIDO ENVIADO. AGUARDANDO CONFIRMAÇÃO DO SALÃO.'
+    );
     return {
       title: isBeauty ? 'Alteração enviada' : 'ALTERAÇÃO ENVIADA',
-      subtitle: isBeauty
-        ? 'O salão ainda precisa confirmar o novo horário. Acompanhe na Minha Área.'
-        : 'PEDIDO ENVIADO. AGUARDANDO CONFIRMAÇÃO DO SALÃO.',
+      subtitle,
       whatsappCta: 'Pedir confirmação no WhatsApp',
       stepperLastLabel: 'Enviado',
     };

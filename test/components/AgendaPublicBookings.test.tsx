@@ -81,4 +81,26 @@ describe('AgendaPublicBookings', () => {
     expect(screen.getByRole('button', { name: /Aceitar/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Recusar/ })).toBeInTheDocument();
   });
+
+  it('pedido de edição mostra Alteração: de {antes} para {depois}', () => {
+    render(
+      <AgendaPublicBookings
+        bookings={[{
+          ...booking,
+          is_edit: true,
+          original_appointment_time: '2026-10-04T13:00:00.000Z',
+          appointment_time: '2026-10-04T15:00:00.000Z',
+        }]}
+        teamMembers={members}
+        services={services}
+        currencyRegion="BR"
+        timeZone="America/Sao_Paulo"
+        onAccept={vi.fn()}
+        onReject={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId('agenda-booking-alteracao')).toHaveTextContent(
+      'Alteração: de 04/10 · 10:00 para 04/10 · 12:00',
+    );
+  });
 });

@@ -30,6 +30,10 @@ import {
     isCancelWindowClosedError,
     talkToBusinessLabel,
 } from '../utils/clientCancelCutoff';
+import {
+    clientEditRequestSentMessage,
+    clientEditReservedIso,
+} from '../utils/clientEditRequest';
 
 export interface ClientBooking {
     id: string;
@@ -44,6 +48,8 @@ export interface ClientBooking {
     created_at: string;
     /** get_client_booking_cancellations: cancelado pelo estabelecimento (item 5b). */
     cancelled_by_business?: boolean;
+    is_edit?: boolean | null;
+    original_appointment_time?: string | null;
 }
 
 interface ClientBookingCardProps {
@@ -133,7 +139,9 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
     const statusKey = booking.status.trim().toLowerCase();
     const isNoShow = statusKey === 'no_show' || statusKey === 'noshow';
     const isCancelled = statusKey === 'cancelled';
-    const appointmentPassed = new Date(booking.appointment_time).getTime() < Date.now();
+    const reservedIso = clientEditReservedIso(booking);
+    const displayIso = booking.is_edit && statusKey === 'pending' ? reservedIso : booking.appointment_time;
+    const appointmentPassed = new Date(displayIso).getTime() < Date.now();
     const isPastCancelled = isCancelled && appointmentPassed;
     const isFutureCancelled = isCancelled && !appointmentPassed;
     const isUpcoming = ['pending', 'confirmed'].includes(statusKey) && !appointmentPassed;
@@ -141,10 +149,18 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
         ? 'whatsapp'
         : clientCancelCta({
             status: statusKey,
-            appointmentTime: booking.appointment_time,
+            appointmentTime: reservedIso,
             cutoffHours: cancelCutoffHours,
         });
     const talkLabel = talkToBusinessLabel(businessName);
+    const canEditOnline = allowEdit && (
+        (statusKey === 'pending' && !booking.is_edit)
+        || clientCancelCta({
+            status: 'confirmed',
+            appointmentTime: reservedIso,
+            cutoffHours: cancelCutoffHours,
+        }) === 'cancel'
+    );
     const isPastSlot = ['pending', 'confirmed'].includes(statusKey) && appointmentPassed;
     const isCompleted = statusKey === 'completed';
     const isPast = isPastSlot && !isCancelled && !isNoShow;
@@ -158,7 +174,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
     const statusCfg = STATUS_CONFIG[badgeKey] ?? STATUS_CONFIG.completed;
 
     const businessTz = resolveBusinessTimezone({ timezone: timeZone, region });
-    const appointmentDate = new Date(booking.appointment_time);
+    const appointmentDate = new Date(displayIso);
     const formattedDate = formatClientCardDate(appointmentDate, businessTz);
     const dateInSentence = formatClientCardDateInSentence(appointmentDate, businessTz);
     const formattedTime = appointmentDate.toLocaleTimeString('pt-BR', {
@@ -289,6 +305,16 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                     </span>
                 </div>
 
+                {statusKey === 'pending' && booking.is_edit && (
+                    <p
+                        data-testid="client-edit-sent-message"
+                        className="flex items-start gap-2 px-3 py-2 rounded-xl text-xs leading-snug break-words bg-[var(--color-warning-bg)] text-[var(--color-warning)] border border-[var(--color-warning-border)]"
+                    >
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-px" aria-hidden="true" />
+                        {clientEditRequestSentMessage(reservedIso, businessTz)}
+                    </p>
+                )}
+
                 {/* Services */}
                 <div>
                     <p className={`text-xs uppercase tracking-wider font-medium mb-1.5 ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`}>
@@ -348,7 +374,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                                 WhatsApp
                             </button>
                         )}
-                        {allowEdit && (
+                        {canEditOnline && (
                             <button
                                 type="button"
                                 onClick={() => navigate(`/book/${businessSlug}?edit=${booking.id}`)}
@@ -364,7 +390,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                             data-testid="client-cancel-cta"
                             data-cta="cancel"
                             onClick={() => setShowConfirm(true)}
-                            className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl text-xs font-semibold bg-[var(--color-danger-bg)] text-[var(--color-danger)] border border-[var(--color-danger-border)] ${allowEdit ? '' : 'col-span-2'}`}
+                            className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl text-xs font-semibold bg-[var(--color-danger-bg)] text-[var(--color-danger)] border border-[var(--color-danger-border)] ${canEditOnline ? '' : 'col-span-2'}`}
                         >
                             <X className="w-3.5 h-3.5 shrink-0" />
                             Cancelar

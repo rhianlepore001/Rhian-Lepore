@@ -22,6 +22,10 @@ import {
     cancelCutoffPresetLabel,
     clampClientCancelCutoffHours,
 } from '../../utils/clientCancelCutoff';
+import {
+    SERVICE_ONLY_EDIT_SKIP_HELP,
+    SERVICE_ONLY_EDIT_SKIP_LABEL,
+} from '../../utils/clientEditRequest';
 
 export const PublicBookingSettings: React.FC = () => {
     const { user } = useAuth();
@@ -40,6 +44,7 @@ export const PublicBookingSettings: React.FC = () => {
     const [leadTimeCustomError, setLeadTimeCustomError] = useState<string | null>(null);
     const [maxBookingsPerDay, setMaxBookingsPerDay] = useState<number | null>(null);
     const [enableSelfRescheduling, setEnableSelfRescheduling] = useState(true);
+    const [serviceOnlySkip, setServiceOnlySkip] = useState(false);
     const [cancelCutoffHours, setCancelCutoffHours] = useState(DEFAULT_CLIENT_CANCEL_CUTOFF_HOURS);
     const [cancelNote, setCancelNote] = useState('');
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
@@ -49,6 +54,7 @@ export const PublicBookingSettings: React.FC = () => {
     useEffect(() => {
         if (settings) {
             setEnableSelfRescheduling(settings.enable_self_rescheduling ?? true);
+            setServiceOnlySkip(settings.service_only_edit_skip_acceptance ?? false);
             setPublicProductsEnabled(settings.public_products_enabled ?? false);
             setCancelCutoffHours(clampClientCancelCutoffHours(settings.client_cancel_cutoff_hours ?? DEFAULT_CLIENT_CANCEL_CUTOFF_HOURS));
             setCancelNote(cancellationPolicyNotesForDisplay(
@@ -85,6 +91,7 @@ export const PublicBookingSettings: React.FC = () => {
         try {
             await updateSettingsMutation.mutateAsync({
                 enable_self_rescheduling: enableSelfRescheduling,
+                service_only_edit_skip_acceptance: serviceOnlySkip,
                 public_products_enabled: publicProductsEnabled,
                 client_cancel_cutoff_hours: cancelCutoffHours,
                 client_cancel_note: cancelNote.trim() === '' ? '' : cancelNote.trim().slice(0, MAX_CLIENT_CANCEL_NOTE_LENGTH),
@@ -359,6 +366,17 @@ export const PublicBookingSettings: React.FC = () => {
                                     ariaLabel="Cliente pode editar na Minha Área"
                                 />
                             </SettingsRow>
+                        <SettingsRow
+                            label={SERVICE_ONLY_EDIT_SKIP_LABEL}
+                            help={SERVICE_ONLY_EDIT_SKIP_HELP}
+                            data-testid="service-only-edit-skip-row"
+                        >
+                            <SettingsSwitch
+                                checked={serviceOnlySkip}
+                                onChange={setServiceOnlySkip}
+                                ariaLabel={SERVICE_ONLY_EDIT_SKIP_LABEL}
+                            />
+                        </SettingsRow>
                     </div>
                 </SettingsSection>
                 </div>

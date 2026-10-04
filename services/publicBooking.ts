@@ -141,7 +141,7 @@ export async function submitPublicBooking(input: SubmitPublicBookingInput): Prom
   const parsed = submitPublicBookingInputSchema.parse(input);
 
   if (parsed.editingBookingId) {
-    const { data: updatedRows, error: updateError } = await supabase.rpc('update_public_booking_by_client', {
+    const { data: updatedRows, error: updateError } = await supabase.rpc('update_public_booking_by_client_v2', {
       p_booking_id: parsed.editingBookingId,
       p_phone: parsed.customerPhone,
       p_service_ids: parsed.serviceIds,
@@ -262,7 +262,7 @@ export async function acceptCompanyPublicBooking(bookingId: string): Promise<{
   appointmentId: string;
   serviceNames: string;
 } | null> {
-  const { data, error } = await supabase.rpc('accept_public_booking', {
+  const { data, error } = await supabase.rpc('accept_public_booking_v2', {
     p_booking_id: bookingId,
   });
   if (error) {
@@ -293,7 +293,7 @@ export async function confirmPublicBooking(bookingId: string, businessId: string
 }
 
 export async function rejectPublicBooking(bookingId: string, businessId: string): Promise<void> {
-  const { error } = await supabase.rpc('reject_public_booking', {
+  const { error } = await supabase.rpc('reject_public_booking_v2', {
     p_booking_id: bookingId,
   });
   if (!error) return;
@@ -344,7 +344,7 @@ export async function fetchClientBookingCancellations(
 }
 
 export async function fetchEditBooking(editId: string, businessId: string, phone: string) {
-  const { data, error } = await supabase.rpc('get_booking_by_id', {
+  const { data, error } = await supabase.rpc('get_booking_by_id_v2', {
     p_booking_id: editId,
     p_phone: phone,
   });

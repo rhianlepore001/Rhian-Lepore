@@ -631,3 +631,68 @@ describe('ClientBookingCard — PR-5 prazo de cancelamento', () => {
     expect(screen.queryByRole('button', { name: /Falar com/ })).toBeNull();
   });
 });
+
+describe('ClientBookingCard — PR-6 pedido de alteração', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (useToast as ReturnType<typeof vi.fn>).mockReturnValue({ showToast });
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-10-04T12:00:00.000Z'));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('pending is_edit mostra o recado do horário original e o selo Aguardando', () => {
+    render(
+      <MemoryRouter>
+        <ClientBookingCard
+          booking={{
+            ...booking,
+            status: 'pending',
+            is_edit: true,
+            appointment_time: '2026-10-04T16:00:00.000Z',
+            original_appointment_time: '2026-10-04T15:00:00.000Z',
+          }}
+          isBeauty={false}
+          businessPhone="11999998888"
+          businessSlug="corte-fino"
+          clientName="Zé"
+          clientPhone="11999998888"
+          businessName="Barbearia São João"
+          region="BR"
+          timeZone="America/Sao_Paulo"
+          cancelCutoffHours={2}
+          onCancelled={vi.fn()}
+        />
+      </MemoryRouter>,
+    );
+    expect(screen.getByText('Aguardando')).toBeInTheDocument();
+    expect(screen.getByTestId('client-edit-sent-message')).toHaveTextContent(
+      'Pedido de alteração enviado. Seu horário original (dom., 04 de out. às 12:00) continua reservado até a resposta.',
+    );
+    expect(screen.getByRole('button', { name: /Editar/ })).toBeInTheDocument();
+  });
+
+  it('confirmado com 1h restante esconde Editar e mostra Falar com', () => {
+    render(
+      <MemoryRouter>
+        <ClientBookingCard
+          booking={{ ...booking, status: 'confirmed', appointment_time: '2026-10-04T13:00:00.000Z' }}
+          isBeauty={false}
+          businessPhone="11999998888"
+          businessSlug="corte-fino"
+          clientName="Zé"
+          clientPhone="11999998888"
+          businessName="Barbearia São João"
+          region="PT"
+          cancelCutoffHours={2}
+          onCancelled={vi.fn()}
+        />
+      </MemoryRouter>,
+    );
+    expect(screen.queryByRole('button', { name: /Editar/ })).toBeNull();
+    expect(screen.getByRole('button', { name: /Falar com Barbearia São João/ })).toBeInTheDocument();
+  });
+});

@@ -158,7 +158,7 @@ describe('public booking service', () => {
       originalAppointmentTime: '2026-05-30T10:00:00-03:00',
     });
 
-    expect(supabase.rpc).toHaveBeenCalledWith('update_public_booking_by_client', expect.objectContaining({
+    expect(supabase.rpc).toHaveBeenCalledWith('update_public_booking_by_client_v2', expect.objectContaining({
       p_booking_id: 'booking-001',
       p_phone: '11999999999',
       p_service_ids: ['service-001'],
@@ -256,7 +256,7 @@ describe('public booking service', () => {
     await rejectPublicBooking('booking-002', 'business-001');
 
     expect(updateMock).toHaveBeenCalledWith({ status: 'confirmed' });
-    expect(supabase.rpc).toHaveBeenCalledWith('reject_public_booking', {
+    expect(supabase.rpc).toHaveBeenCalledWith('reject_public_booking_v2', {
       p_booking_id: 'booking-002',
     });
   });
@@ -292,7 +292,7 @@ describe('public booking service', () => {
     const result = await acceptCompanyPublicBooking('booking-001');
 
     expect(result).toEqual({ appointmentId: 'appt-001', serviceNames: 'Corte' });
-    expect(supabase.rpc).toHaveBeenCalledWith('accept_public_booking', {
+    expect(supabase.rpc).toHaveBeenCalledWith('accept_public_booking_v2', {
       p_booking_id: 'booking-001',
     });
   });

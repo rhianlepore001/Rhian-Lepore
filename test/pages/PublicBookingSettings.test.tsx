@@ -55,4 +55,11 @@ describe('PublicBookingSettings — PR-1 copy do toggle de edição do cliente',
     expect(screen.queryByText(/Não envia e-mail/i)).toBeNull();
     expect(screen.queryByText(/Cliente reagenda sozinho via link de e-mail/i)).toBeNull();
   });
+
+  it('toggle Trocar só o serviço sem aprovação vem desligado', () => {
+    render(<PublicBookingSettings />);
+    expect(screen.getByText('Trocar só o serviço sem aprovação')).toBeInTheDocument();
+    expect(screen.getByLabelText('Trocar só o serviço sem aprovação')).not.toBeChecked();
+    expect(screen.getByTestId('service-only-edit-skip-row')).toBeInTheDocument();
+  });
 });

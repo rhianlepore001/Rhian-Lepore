@@ -32,7 +32,13 @@ import { fetchEditBooking, fetchPublicClientByPhone, fetchClientByPhone, fetchPu
 import { shouldLandOnClientArea } from '../utils/publicBookingLanding';
 import { getPublicBookingAwaitingWhatsAppText, getPublicBookingSuccessCopy } from '../utils/publicBookingCopy';
 import { resolveCancellationPolicyDisplay } from '../utils/cancellationPolicyCopy';
-import { readCancelCutoffHours } from '../utils/clientCancelCutoff';
+import {
+    CANCEL_WINDOW_CLOSED_MESSAGE,
+    isCancelWindowClosedError,
+    readCancelCutoffHours,
+    talkToBusinessLabel,
+} from '../utils/clientCancelCutoff';
+import { clientEditRequestSentMessage } from '../utils/clientEditRequest';
 import { isSlotUnavailableError } from '../utils/supabaseRpc';
 import {
     isLeadTimeViolationError,
@@ -150,6 +156,7 @@ export const PublicBooking: React.FC = () => {
     const [nextDayBusy, setNextDayBusy] = useState(false);
     const [leadTimeAlert, setLeadTimeAlert] = useState<string | null>(null);
     const [leadTimeAlertKey, setLeadTimeAlertKey] = useState(0);
+    const [editWindowClosed, setEditWindowClosed] = useState(false);
     const [fullDates, setFullDates] = useState<string[]>([]);
     const [acceptedPolicy, setAcceptedPolicy] = useState(false);
     const [acceptedMarketing, setAcceptedMarketing] = useState(false);
@@ -598,7 +605,7 @@ export const PublicBooking: React.FC = () => {
 
     const handleEditBooking = (booking: any) => {
         setEditingBookingId(booking.id);
-        setOriginalTimeISO(booking.appointment_time);
+        setOriginalTimeISO(booking.original_appointment_time || booking.appointment_time);
         // Data/hora do agendamento no fuso do negócio (não do navegador).
         setSelectedDate(dateStringToLocalDate(getDateStringInTimeZone(booking.appointment_time, businessTimezone)));
         setSelectedTime(formatTimeInTimeZone(booking.appointment_time, businessTimezone));
@@ -754,6 +761,9 @@ export const PublicBooking: React.FC = () => {
                     leadTimeViolationMessage(leadTimeHoursFromError(error, slotsResult.leadTimeHours)),
                 );
                 setLeadTimeAlertKey((key) => key + 1);
+            } else if (isCancelWindowClosedError(error)) {
+                setEditWindowClosed(true);
+                showToast(CANCEL_WINDOW_CLOSED_MESSAGE, 'info');
             } else if (isSlotUnavailableError(error)) {
                 showToast('Este horário acabou de ser ocupado. Escolha outro.', 'error');
             } else {
@@ -769,14 +779,31 @@ export const PublicBooking: React.FC = () => {
         ? buildWhatsAppLink(business.phone, currencyRegion)
         : null;
 
+    const handleTalkEdit = () => {
+        if (!business?.phone) {
+            showToast('O estabelecimento ainda não informou um WhatsApp.', 'info');
+            return;
+        }
+        const name = (customerName || client?.name || '').trim();
+        const msg = name
+            ? `Olá! Sou ${name}. Queria alterar meu horário.`
+            : 'Olá! Queria alterar meu horário.';
+        window.open(buildWhatsAppLink(business.phone, currencyRegion, msg), '_blank', 'noopener,noreferrer');
+    };
+
     const stepIndex = { services: 0, datetime: 1, contact: 2, success: 3 };
     const currentStepNum = stepIndex[step as keyof typeof stepIndex] ?? 0;
     const isBookingCancelled = activeBooking?.status === 'cancelled';
+    const editSentIso = activeBooking?.original_appointment_time || originalTimeISO || activeBooking?.appointment_time;
     const successCopy = getPublicBookingSuccessCopy({
         isBeauty,
         status: activeBooking?.status,
-        isEdit: Boolean(editingBookingId),
+        isEdit: Boolean(activeBooking?.is_edit),
+        editSentSubtitle: activeBooking?.is_edit && editSentIso
+            ? clientEditRequestSentMessage(editSentIso, businessTimezone)
+            : null,
     });
+    const talkEditLabel = talkToBusinessLabel(business?.business_name);
     const stepLabels = ['Serviços', 'Agenda', 'Dados', successCopy.stepperLastLabel];
     // Resumo pós-agendamento: usa o horário gravado, exibido no fuso do negócio.
     const bookedAt: Date | null = parseDate(activeBooking?.appointment_time ?? null);
@@ -1158,11 +1185,11 @@ export const PublicBooking: React.FC = () => {
                                 <p className={`${colors.textMuted} text-sm`}>Selecione o melhor dia e horário para você.</p>
                             </div>
                             <div className="max-w-2xl mx-auto">
-                                <CalendarPicker selectedDate={selectedDate} onDateSelect={(date) => { setLeadTimeAlert(null); setSelectedDate(date); }} forceTheme={themeOverride} fullDates={fullDates} today={businessToday} />
+                                <CalendarPicker selectedDate={selectedDate} onDateSelect={(date) => { setLeadTimeAlert(null); setEditWindowClosed(false); setSelectedDate(date); }} forceTheme={themeOverride} fullDates={fullDates} today={businessToday} />
                             </div>
                             {selectedDate && (
                                 <div className="animate-reveal-fragment duration-700 max-w-2xl mx-auto">
-                                    <TimeGrid selectedTime={selectedTime} onTimeSelect={(time) => { setLeadTimeAlert(null); setSelectedTime(time); }} availableSlots={availableSlots} emptyMessage={leadEmptyMessage} emptyAction={leadEmptyAction} alertMessage={leadTimeAlert} alertKey={leadTimeAlertKey} forceTheme={themeOverride} />
+                                    <TimeGrid selectedTime={selectedTime} onTimeSelect={(time) => { setLeadTimeAlert(null); setEditWindowClosed(false); setSelectedTime(time); }} availableSlots={availableSlots} emptyMessage={leadEmptyMessage} emptyAction={leadEmptyAction} alertMessage={leadTimeAlert} alertKey={leadTimeAlertKey} forceTheme={themeOverride} />
                                 </div>
                             )}
                         </div>
@@ -1291,11 +1318,19 @@ export const PublicBooking: React.FC = () => {
                             )}
                             <button
                                 type="button"
-                                onClick={quickStep === 'contact' ? handleSubmit : handleQuickNext}
-                                disabled={!canQuickProceed() || (quickStep === 'contact' && isSubmitting)}
+                                onClick={quickStep === 'contact' && editWindowClosed ? handleTalkEdit : (quickStep === 'contact' ? handleSubmit : handleQuickNext)}
+                                disabled={quickStep === 'contact' && editWindowClosed
+                                    ? false
+                                    : (!canQuickProceed() || (quickStep === 'contact' && isSubmitting))}
                                 className={`flex-1 py-3.5 min-h-12 flex items-center justify-center gap-2 transition-all ${classes.buttonPrimary} disabled:opacity-50 disabled:cursor-not-allowed`}
+                                data-testid={quickStep === 'contact' && editWindowClosed ? 'client-edit-talk' : undefined}
                             >
-                                {quickStep === 'contact' && isSubmitting ? (
+                                {quickStep === 'contact' && editWindowClosed ? (
+                                    <>
+                                        <MessageSquare className="w-5 h-5" />
+                                        <span className="font-semibold">{talkEditLabel}</span>
+                                    </>
+                                ) : quickStep === 'contact' && isSubmitting ? (
                                     <Loader2 className="w-5 h-5 animate-spin" />
                                 ) : quickStep === 'contact' ? (
                                     <>
@@ -1397,9 +1432,16 @@ export const PublicBooking: React.FC = () => {
                                                         <p className={`text-sm mb-6 ${colors.textSecondary}`}>As alterações serão aplicadas ao seu agendamento e o profissional será notificado caso necessário.</p>
                                                         <div className="flex gap-4 max-w-sm mx-auto">
                                                             <button onClick={() => setStep('edit_options')} className={`flex-1 py-3 font-black text-xs uppercase tracking-widest ${classes.buttonSecondary}`}>Cancelar</button>
+                                                            {editWindowClosed ? (
+                                                                <button type="button" onClick={handleTalkEdit} data-testid="client-edit-talk" className={`flex-1 py-3 font-black text-xs uppercase tracking-widest ${classes.buttonPrimary} flex items-center justify-center gap-2`}>
+                                                                    <MessageSquare className="w-4 h-4" />
+                                                                    {talkEditLabel}
+                                                                </button>
+                                                            ) : (
                                                             <button onClick={handleSubmit} disabled={isSubmitting} className={`flex-1 py-3 font-black text-xs uppercase tracking-widest ${classes.buttonPrimary} flex items-center justify-center gap-2`}>
                                                                 {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar'}
                                                             </button>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1563,13 +1605,14 @@ export const PublicBooking: React.FC = () => {
                                                 <div className="w-full space-y-8 md:space-y-12 max-w-2xl mx-auto">
                                                     <div className={`${colors.card} ${colors.border} border-2 p-6 md:p-8 ${shadow.elevated} rounded-2xl`}>
                                                         <h3 className={`mb-8 ${colors.text} font-heading text-xl text-center md:text-left`}>Seleção de Agenda</h3>
-                                                        <CalendarPicker selectedDate={selectedDate} onDateSelect={(date) => { setLeadTimeAlert(null); setSelectedDate(date); }} forceTheme={themeOverride} fullDates={fullDates} today={businessToday} />
+                                                        <CalendarPicker selectedDate={selectedDate} onDateSelect={(date) => { setLeadTimeAlert(null); setEditWindowClosed(false); setSelectedDate(date); }} forceTheme={themeOverride} fullDates={fullDates} today={businessToday} />
                                                     </div>
                                                     {selectedDate && (
                                                         <div className="animate-reveal-fragment duration-700">
                                                             <h4 className={`mb-6 ${accent.text} font-heading text-lg text-center md:text-left`}>Horários Disponíveis</h4>
                                                             <TimeGrid selectedTime={selectedTime} onTimeSelect={(time) => {
                                                                 setLeadTimeAlert(null);
+                                                                setEditWindowClosed(false);
                                                                 setSelectedTime(time);
                                                                 const isLogged = !!client;
                                                                 if (editingBookingId) {
@@ -1617,7 +1660,10 @@ export const PublicBooking: React.FC = () => {
                                         {successCopy.title}
                                     </h2>
 
-                                    <p className={`text-lg md:text-xl mb-12 max-w-md mx-auto leading-relaxed ${colors.textMuted}`}>
+                                    <p
+                                        className={`text-lg md:text-xl mb-12 max-w-md mx-auto leading-relaxed ${colors.textMuted}`}
+                                        data-testid={activeBooking?.is_edit ? 'client-edit-sent-message' : undefined}
+                                    >
                                         {successCopy.subtitle}
                                     </p>
 
@@ -1804,6 +1850,13 @@ export const PublicBooking: React.FC = () => {
                             </div>
 
                             <div className="pt-2">
+                                {editWindowClosed ? (
+                                    <button type="button" onClick={handleTalkEdit} data-testid="client-edit-talk"
+                                        className={`w-full py-5 flex items-center justify-center gap-3 transition-all group overflow-hidden relative ${classes.buttonPrimary}`}>
+                                        <MessageSquare className="w-5 h-5" />
+                                        <span>{talkEditLabel}</span>
+                                    </button>
+                                ) : (
                                 <button onClick={handleSubmit}
                                     disabled={(!client && (!customerName || !customerPhone)) || !acceptedPolicy || isSubmitting}
                                     className={`w-full py-5 flex items-center justify-center gap-3 transition-all group overflow-hidden relative ${classes.buttonPrimary} disabled:opacity-50 disabled:cursor-not-allowed`}>
@@ -1816,6 +1869,7 @@ export const PublicBooking: React.FC = () => {
                                         </>
                                     )}
                                 </button>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -1886,7 +1940,10 @@ export const PublicBooking: React.FC = () => {
                         {successCopy.title}
                     </h2>
 
-                    <p className={`text-lg md:text-xl mb-12 max-w-md mx-auto leading-relaxed ${colors.textMuted}`}>
+                    <p
+                        className={`text-lg md:text-xl mb-12 max-w-md mx-auto leading-relaxed ${colors.textMuted}`}
+                        data-testid={activeBooking?.is_edit ? 'client-edit-sent-message' : undefined}
+                    >
                         {successCopy.subtitle}
                     </p>
 

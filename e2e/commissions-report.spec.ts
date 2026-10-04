@@ -328,18 +328,24 @@ function renderPdfPages(pdfPath: string, prefix: string): string[] {
 
 function stitchPngsVertical(inputs: string[], output: string) {
   try {
+    const filter = `${inputs.map((_, i) => `[${i}:v]`).join('')}vstack=inputs=${inputs.length}`;
+    execFileSync('ffmpeg', [
+      '-y',
+      ...inputs.flatMap((p) => ['-i', p]),
+      '-filter_complex', filter,
+      output,
+    ], { stdio: 'pipe' });
+    return;
+  } catch {
+    // Pillow abaixo
+  }
+  try {
     execFileSync('python3', [
       '-c',
       'from PIL import Image; import sys\nimgs=[Image.open(p).convert("RGB") for p in sys.argv[1:-1]]\nw=max(i.width for i in imgs); h=sum(i.height for i in imgs)\nout=Image.new("RGB",(w,h),(255,255,255)); y=0\nfor im in imgs:\n    out.paste(im,(0,y)); y+=im.height\nout.save(sys.argv[-1])',
       ...inputs,
       output,
     ], { stdio: 'pipe' });
-    return;
-  } catch {
-    // ImageMagick abaixo
-  }
-  try {
-    execFileSync('convert', [...inputs, '-append', output], { stdio: 'pipe' });
     return;
   } catch {
     fs.copyFileSync(inputs[inputs.length > 1 ? 1 : 0], output);

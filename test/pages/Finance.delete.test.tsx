@@ -18,6 +18,10 @@ const AUTH = {
 
 const deleteMutate = vi.fn();
 
+const { mockOverview } = vi.hoisted(() => ({
+  mockOverview: vi.fn(),
+}));
+
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => AUTH,
 }));
@@ -28,6 +32,11 @@ vi.mock('@/hooks/useFinance', () => ({
   useDeleteFinanceTransaction: () => ({ mutateAsync: deleteMutate, isPending: false }),
   useMarkExpenseAsPaid: () => ({ mutateAsync: vi.fn() }),
   useCreateFinanceRecord: () => ({ mutateAsync: vi.fn() }),
+  useFinanceOverview: (...args: unknown[]) => mockOverview(...args),
+}));
+
+vi.mock('@/hooks/useSettings', () => ({
+  useBusinessSettings: () => ({ data: { timezone: 'America/Sao_Paulo' } }),
 }));
 
 vi.mock('@/services/finance', async (orig) => {
@@ -49,8 +58,6 @@ vi.mock('@/components/MonthlyHistory', () => ({ MonthlyHistory: () => null }));
 vi.mock('@/hooks/useTenantLocale', () => ({
   useTenantLocale: () => ({ region: 'BR', currencyRegion: 'BR', currencySymbol: 'R$' }),
 }));
-
-import { fetchFinanceStats } from '@/services/finance';
 
 const nowIso = '2026-10-04T14:00:00.000Z';
 
@@ -81,8 +88,7 @@ describe('Finance — exclusão', () => {
     AUTH.role = 'owner';
     AUTH.user = { id: 'owner-1' };
     deleteMutate.mockReset().mockResolvedValue({ ok: true, kind: 'manual' });
-    vi.mocked(fetchFinanceStats).mockReset();
-    vi.mocked(fetchFinanceStats).mockResolvedValue(stats([
+    const txs = [
       {
         id: 'apt-1',
         created_at: nowIso,
@@ -113,7 +119,15 @@ describe('Finance — exclusão', () => {
         payment_method: 'pix',
         status: 'paid',
       },
-    ]));
+    ];
+    mockOverview.mockReturnValue({
+      data: { current: stats(txs), previous: stats([]), queueServed: 0 },
+      isPending: false,
+      isFetching: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    });
   });
 
   it('dono vê Excluir e a confirmação do serviço', async () => {

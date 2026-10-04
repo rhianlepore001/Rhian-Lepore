@@ -1,256 +1,188 @@
-import React, { useId, useMemo } from 'react';
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
-import { useBrutalTheme } from '../../hooks/useBrutalTheme';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useThemeTokens } from '../../hooks/useThemeTokens';
 import { formatCurrency, type Region } from '../../utils/formatters';
+import {
+  DESKTOP_MAX_BAR_WIDTH,
+  cashflowSummaryParts,
+  formatCashflowSummary,
+  gridAlphaFor,
+  formatSobrou,
+  formatYTick,
+  layoutCashflowBars,
+  monthAriaLabel,
+  showDayAxisLabel,
+  withAlpha,
+  type DayBucket,
+  type WeekBucket,
+} from '../../utils/financeCashflow';
 
-export interface CashflowDayPoint {
-  name: string;
+export type CashflowVariant = 'week' | 'day';
+
+export interface CashflowTotals {
   receita: number;
   despesas: number;
+  sobrou: number;
 }
 
 interface FinanceCashflowChartProps {
-  data: CashflowDayPoint[];
+  days: DayBucket[];
+  weeks: WeekBucket[];
+  totals: CashflowTotals;
   currencyRegion: Region;
+  periodLabel: string;
+  monthIndex: number;
+  variant?: CashflowVariant;
   height?: number;
-  periodLabel?: string;
 }
 
-interface TooltipPayloadItem {
-  dataKey?: string | number;
-  value?: number;
-  color?: string;
-  name?: string;
-  payload?: CashflowDayPoint;
+const PLOT_HEIGHT = 168;
+const Y_AXIS = 36;
+const X_AXIS = 24;
+const TOP_PAD = 16;
+const RIGHT_PAD = 8;
+const CHART_RESERVE = 340;
+/** 3 linhas de text-xs leading-relaxed: intervalo + pares (até 2 linhas) sem mexer no layout. */
+const TOOLTIP_RESERVE = 60;
+const FALLBACK_SUCCESS = '#10B981';
+const FALLBACK_DANGER = '#EF4444';
+const FALLBACK_TEXT = '#6E6B64';
+/** Totais: 16–24 px, sem truncar dinheiro. */
+const TOTAL_FONT_SIZE = 'clamp(16px, 5vw, 24px)';
+
+function subscribeDesktop(cb: () => void) {
+  const mql = window.matchMedia('(min-width: 768px)');
+  mql.addEventListener('change', cb);
+  return () => mql.removeEventListener('change', cb);
 }
 
-function compactAxisTick(value: number): string {
-  if (value === 0) return '0';
-  const abs = Math.abs(value);
-  if (abs >= 1000) {
-    const k = value / 1000;
-    return Number.isInteger(k) ? `${k}k` : `${k.toFixed(1).replace('.', ',')}k`;
-  }
-  return String(Math.round(value));
+function useIsDesktop() {
+  return useSyncExternalStore(
+    subscribeDesktop,
+    () => window.matchMedia('(min-width: 768px)').matches,
+    () => false,
+  );
 }
 
-function dayLabel(name: string): string {
-  const n = Number(name);
-  return Number.isFinite(n) ? String(n) : name;
+function subscribeReducedMotion(cb: () => void) {
+  const mql = window.matchMedia('(prefers-reduced-motion: reduce)');
+  mql.addEventListener('change', cb);
+  return () => mql.removeEventListener('change', cb);
 }
 
-function xAxisTicks(data: CashflowDayPoint[]): string[] {
-  const n = data.length;
-  if (n <= 8) return data.map((d) => d.name);
-  const step = n <= 16 ? 2 : n <= 24 ? 3 : 5;
-  const ticks: string[] = [];
-  for (let i = 0; i < n; i += step) ticks.push(data[i].name);
-  const last = data[n - 1].name;
-  if (ticks[ticks.length - 1] !== last) {
-    const prev = Number(ticks[ticks.length - 1]);
-    const lastN = Number(last);
-    if (Number.isFinite(prev) && Number.isFinite(lastN) && lastN - prev < Math.ceil(step / 2)) {
-      ticks[ticks.length - 1] = last;
-    } else {
-      ticks.push(last);
+function usePrefersReducedMotion() {
+  return useSyncExternalStore(
+    subscribeReducedMotion,
+    () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    () => true,
+  );
+}
+
+type Point = DayBucket | WeekBucket;
+
+function isWeek(p: Point): p is WeekBucket {
+  return 'startDay' in p && 'weekIndex' in p;
+}
+
+export const FinanceCashflowChart = memo(function FinanceCashflowChart({
+  days,
+  weeks,
+  totals,
+  currencyRegion,
+  periodLabel,
+  monthIndex,
+  variant,
+  height = PLOT_HEIGHT,
+}: FinanceCashflowChartProps) {
+  const isDesktop = useIsDesktop();
+  const reduceMotion = usePrefersReducedMotion();
+  const mode: CashflowVariant = variant ?? (isDesktop ? 'day' : 'week');
+  const points: Point[] = mode === 'week' ? weeks : days;
+  const tokens = useThemeTokens();
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(330);
+  const [active, setActive] = useState<number | null>(null);
+
+  useEffect(() => {
+    setActive(null);
+  }, [mode]);
+
+  const income = tokens.success || FALLBACK_SUCCESS;
+  const expense = tokens.danger || FALLBACK_DANGER;
+  const axis = tokens.textMuted || FALLBACK_TEXT;
+  const grid = withAlpha(tokens.text || FALLBACK_TEXT, gridAlphaFor(tokens.card));
+
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const update = () => setWidth(Math.max(el.clientWidth || 0, 280));
+    update();
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', update);
+      return () => window.removeEventListener('resize', update);
     }
-  }
-  return ticks;
-}
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
-type DualBarShapeProps = {
-  x?: number;
-  y?: number;
-  width?: number;
-  height?: number;
-  payload?: CashflowDayPoint & { maxValue: number };
-  revenueFill: string;
-  expenseFill: string;
-};
+  const plotWidth = Math.max(width - Y_AXIS - RIGHT_PAD, 80);
+  const plotHeight = height;
+  const svgH = plotHeight + TOP_PAD + X_AXIS;
+  const svgW = width;
 
-function DualCashflowBar({
-  x = 0,
-  y = 0,
-  width = 0,
-  height = 0,
-  payload,
-  revenueFill,
-  expenseFill,
-}: DualBarShapeProps) {
-  if (!payload?.maxValue || width <= 0 || height <= 0) return null;
-
-  const scale = height / payload.maxValue;
-  const hIn = payload.receita > 0 ? Math.max(payload.receita * scale, 3) : 0;
-  const hOut = payload.despesas > 0 ? Math.max(payload.despesas * scale, 3) : 0;
-  const hasIn = hIn > 0;
-  const hasOut = hOut > 0;
-
-  if (hasIn && hasOut) {
-    const gap = width >= 12 ? 2 : 1;
-    const barW = Math.max(4, (width - gap) / 2);
-    const rx = Math.min(3, barW / 2);
-    return (
-      <g>
-        <rect x={x} y={y + height - hIn} width={barW} height={hIn} rx={rx} ry={rx} fill={revenueFill} />
-        <rect x={x + barW + gap} y={y + height - hOut} width={barW} height={hOut} rx={rx} ry={rx} fill={expenseFill} />
-      </g>
-    );
-  }
-
-  const barW = Math.max(6, width * 0.82);
-  const x0 = x + (width - barW) / 2;
-  const h = hasIn ? hIn : hOut;
-  const fill = hasIn ? revenueFill : expenseFill;
-  const rx = Math.min(4, barW / 2);
-  return <rect x={x0} y={y + height - h} width={barW} height={h} rx={rx} ry={rx} fill={fill} />;
-}
-
-function CashflowTooltip({
-  active,
-  label,
-  payload,
-  currencyRegion,
-  periodLabel,
-}: {
-  active?: boolean;
-  label?: string;
-  payload?: TooltipPayloadItem[];
-  currencyRegion: Region;
-  periodLabel?: string;
-}) {
-  if (!active || !payload?.length) return null;
-
-  const point = payload[0]?.payload;
-  const receita = Number(point?.receita ?? 0);
-  const despesas = Number(point?.despesas ?? 0);
-  const net = receita - despesas;
-  const empty = receita === 0 && despesas === 0;
-
-  return (
-    <div
-      className="min-w-[168px] rounded-xl px-3 py-2.5"
-      style={{
-        background: 'var(--color-card)',
-        border: '1px solid var(--color-divider)',
-        color: 'var(--color-text)',
-        boxShadow: 'var(--elevation-2, 0 8px 24px rgba(0,0,0,0.12))',
-      }}
-    >
-      <p className="text-xs font-semibold tabular-nums" style={{ color: 'var(--color-text)' }}>
-        Dia {dayLabel(String(label ?? ''))}
-        {periodLabel ? (
-          <span className="font-normal" style={{ color: 'var(--color-text-muted)' }}>
-            {' '}
-            · {periodLabel}
-          </span>
-        ) : null}
-      </p>
-      {empty ? (
-        <p className="mt-1.5 text-xs" style={{ color: 'var(--color-text-muted)' }}>
-          Sem movimento
-        </p>
-      ) : (
-        <ul className="mt-2 space-y-1">
-          <li className="flex items-center justify-between gap-6 text-xs tabular-nums">
-            <span className="inline-flex items-center gap-1.5" style={{ color: 'var(--color-text-secondary)' }}>
-              <span className="h-1.5 w-1.5 rounded-full" style={{ background: 'var(--color-success)' }} aria-hidden />
-              Entradas
-            </span>
-            <span className="font-mono font-semibold" style={{ color: 'var(--color-text)' }}>
-              {formatCurrency(receita, currencyRegion)}
-            </span>
-          </li>
-          <li className="flex items-center justify-between gap-6 text-xs tabular-nums">
-            <span className="inline-flex items-center gap-1.5" style={{ color: 'var(--color-text-secondary)' }}>
-              <span className="h-1.5 w-1.5 rounded-full" style={{ background: 'var(--color-danger)' }} aria-hidden />
-              Saídas
-            </span>
-            <span className="font-mono font-semibold" style={{ color: 'var(--color-text)' }}>
-              {formatCurrency(despesas, currencyRegion)}
-            </span>
-          </li>
-          <li
-            className="mt-1 flex items-center justify-between gap-6 border-t pt-1.5 text-xs tabular-nums"
-            style={{ borderColor: 'var(--color-divider)' }}
-          >
-            <span style={{ color: 'var(--color-text-muted)' }}>Líquido</span>
-            <span
-              className="font-mono font-semibold"
-              style={{ color: net < 0 ? 'var(--color-danger)' : 'var(--color-success)' }}
-            >
-              {formatCurrency(net, currencyRegion)}
-            </span>
-          </li>
-        </ul>
-      )}
-    </div>
-  );
-}
-
-/**
- * Fluxo diário em barras agrupadas (padrão Stripe / Nubank).
- * Área interpolada distorce meses esparsos — típico de barbearia/salão.
- */
-export const FinanceCashflowChart: React.FC<FinanceCashflowChartProps> = ({
-  data,
-  currencyRegion,
-  height = 240,
-  periodLabel,
-}) => {
-  const { isDark } = useBrutalTheme();
-  const rawId = useId().replace(/:/g, '');
-  const revenueFillId = `cashflow-in-${rawId}`;
-  const expenseFillId = `cashflow-out-${rawId}`;
-
-  const totals = useMemo(
-    () =>
-      data.reduce(
-        (acc, d) => {
-          acc.receita += d.receita || 0;
-          acc.despesas += d.despesas || 0;
-          return acc;
-        },
-        { receita: 0, despesas: 0 },
-      ),
-    [data],
+  const maxBarWidth = mode === 'day' ? DESKTOP_MAX_BAR_WIDTH : 36;
+  const layout = useMemo(
+    () => layoutCashflowBars(points, { plotWidth, plotHeight, maxBarWidth }),
+    [points, plotWidth, plotHeight, maxBarWidth],
   );
 
-  const ticks = useMemo(() => xAxisTicks(data), [data]);
-  const plotData = useMemo(
-    () =>
-      data.map((d) => ({
-        ...d,
-        maxValue: Math.max(d.receita || 0, d.despesas || 0),
-      })),
-    [data],
+  const summaries = useMemo(
+    () => points.map((p) => (
+      isWeek(p)
+        ? formatCashflowSummary(p.startDay, p.endDay, monthIndex, p.receita, p.despesas, currencyRegion)
+        : formatCashflowSummary(p.day, p.day, monthIndex, p.receita, p.despesas, currencyRegion)
+    )),
+    [points, monthIndex, currencyRegion],
   );
 
-  const theme = useMemo(
-    () => ({
-      grid: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15,10,30,0.06)',
-      axis: 'var(--color-text-muted)',
-      cursor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(124, 58, 237, 0.08)',
-      revenue: 'var(--color-success)',
-      expense: 'var(--color-danger)',
-    }),
-    [isDark],
+  const summaryParts = useMemo(
+    () => points.map((p) => (
+      isWeek(p)
+        ? cashflowSummaryParts(p.startDay, p.endDay, monthIndex, p.receita, p.despesas, currencyRegion)
+        : cashflowSummaryParts(p.day, p.day, monthIndex, p.receita, p.despesas, currencyRegion)
+    )),
+    [points, monthIndex, currencyRegion],
   );
 
   const hasActivity = totals.receita > 0 || totals.despesas > 0;
 
+  const onActivate = useCallback((index: number) => {
+    setActive(index);
+  }, []);
+
+  const activateFromTarget = useCallback((event: { currentTarget: EventTarget & { dataset: DOMStringMap } }) => {
+    const idx = Number(event.currentTarget.dataset.idx);
+    if (Number.isFinite(idx)) onActivate(idx);
+  }, [onActivate]);
+
+  const onKey = useCallback((event: React.KeyboardEvent<SVGRectElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      activateFromTarget(event);
+    } else if (event.key === 'Escape') {
+      setActive(null);
+    }
+  }, [activateFromTarget]);
+
+  const tooltip = active != null ? summaryParts[active] : null;
+
+  const aria = monthAriaLabel(periodLabel, totals.receita, totals.despesas, currencyRegion);
+
   if (!hasActivity) {
     return (
       <div
-        className="flex h-[200px] w-full items-center justify-center rounded-xl border border-dashed px-4 text-center"
-        style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-muted)' }}
+        className="flex w-full items-center justify-center rounded-xl border border-dashed px-4 text-center"
+        style={{ minHeight: CHART_RESERVE, borderColor: tokens.border || 'rgba(128,128,128,0.2)', color: axis }}
         data-testid="finance-cashflow-empty"
       >
         <p className="text-sm leading-relaxed">
@@ -263,93 +195,188 @@ export const FinanceCashflowChart: React.FC<FinanceCashflowChartProps> = ({
   }
 
   return (
-    <div className="finance-cashflow-chart w-full" data-testid="finance-cashflow-chart">
+    <div
+      className="finance-cashflow-chart w-full"
+      data-testid="finance-cashflow-chart"
+      style={{ minHeight: CHART_RESERVE }}
+    >
       <div
-        className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1.5"
+        className="flex flex-wrap gap-x-4 gap-y-3 pb-4 md:max-w-2xl md:gap-x-8"
         data-testid="finance-cashflow-totals"
+        style={{ minHeight: 72 }}
       >
-        <span className="inline-flex items-baseline gap-1.5 text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-          <span className="h-1.5 w-1.5 translate-y-[-1px] rounded-full" style={{ background: theme.revenue }} aria-hidden />
-          Entradas
-          <span className="font-mono text-sm font-semibold tabular-nums" style={{ color: 'var(--color-text)' }}>
-            {formatCurrency(totals.receita, currencyRegion)}
-          </span>
-        </span>
-        <span className="inline-flex items-baseline gap-1.5 text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-          <span className="h-1.5 w-1.5 translate-y-[-1px] rounded-full" style={{ background: theme.expense }} aria-hidden />
-          Saídas
-          <span className="font-mono text-sm font-semibold tabular-nums" style={{ color: 'var(--color-text)' }}>
-            {formatCurrency(totals.despesas, currencyRegion)}
-          </span>
-        </span>
+        <div className="flex min-w-0 gap-x-4 md:gap-x-8" style={{ flex: '2 1 auto' }}>
+          <div className="min-w-0 flex-1">
+            <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide" style={{ color: axis }}>
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: income }} aria-hidden />
+              Entradas
+            </p>
+            <p className="mt-1 font-mono font-black tabular-nums tracking-tight whitespace-nowrap" style={{ color: tokens.text || '#111', fontSize: TOTAL_FONT_SIZE }} data-testid="finance-cashflow-entradas">
+              {formatCurrency(totals.receita, currencyRegion)}
+            </p>
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide" style={{ color: axis }}>
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: expense }} aria-hidden />
+              Saídas
+            </p>
+            <p className="mt-1 font-mono font-black tabular-nums tracking-tight whitespace-nowrap" style={{ color: tokens.text || '#111', fontSize: TOTAL_FONT_SIZE }} data-testid="finance-cashflow-saidas">
+              {formatCurrency(totals.despesas, currencyRegion)}
+            </p>
+          </div>
+        </div>
+        <div className="min-w-0" style={{ flex: '1 1 auto' }}>
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: axis }}>Sobrou</p>
+          <p
+            className="mt-1 font-mono font-black tabular-nums tracking-tight whitespace-nowrap"
+            style={{ color: totals.sobrou < 0 ? expense : (tokens.text || '#111'), fontSize: TOTAL_FONT_SIZE }}
+            data-testid="finance-cashflow-sobrou"
+          >
+            {formatSobrou(totals.sobrou, currencyRegion)}
+          </p>
+        </div>
+      </div>
+
+      <div ref={wrapRef} className="relative w-full" style={{ height: svgH }}>
+        <svg
+          width="100%"
+          height={svgH}
+          viewBox={`0 0 ${svgW} ${svgH}`}
+          role="img"
+          aria-label={aria}
+          data-testid="finance-cashflow-svg"
+          style={{ display: 'block' }}
+        >
+          {layout.ticks.map((tick) => {
+            const y = TOP_PAD + plotHeight - (tick / layout.yMax) * plotHeight;
+            return (
+              <g key={`tick-${tick}`}>
+                <line
+                  x1={Y_AXIS}
+                  x2={svgW - RIGHT_PAD}
+                  y1={y}
+                  y2={y}
+                  stroke={grid}
+                  strokeWidth={1}
+                />
+                <text
+                  x={Y_AXIS - 6}
+                  y={y + 3}
+                  textAnchor="end"
+                  fill={axis}
+                  data-testid="cashflow-ytick"
+                  fontSize={12}
+                  fontFamily="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"
+                >
+                  {formatYTick(tick)}
+                </text>
+              </g>
+            );
+          })}
+
+          {layout.bars.map((bar) => (
+            <path
+              key={bar.key}
+              d={bar.d}
+              transform={`translate(${Y_AXIS}, ${TOP_PAD})`}
+              fill={bar.series === 'income' ? income : expense}
+              data-testid={`cashflow-bar-${bar.series}`}
+              data-width={bar.width}
+              data-height={bar.height}
+              style={{ transition: reduceMotion ? 'none' : undefined }}
+            />
+          ))}
+
+          {points.map((p, i) => {
+            const show = mode === 'week' || showDayAxisLabel(isWeek(p) ? p.startDay : p.day, days.length);
+            if (!show) return null;
+            const hit = layout.hits[i];
+            return (
+              <text
+                key={`x-${p.key}`}
+                x={Y_AXIS + hit.x + hit.width / 2}
+                y={TOP_PAD + plotHeight + 16}
+                textAnchor="middle"
+                fill={axis}
+                fontSize={12}
+                fontFamily="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"
+              >
+                {p.label}
+              </text>
+            );
+          })}
+
+          {layout.hits.map((hit) => (
+            <rect
+              key={`hit-${hit.dataIndex}`}
+              x={Y_AXIS + hit.x}
+              y={TOP_PAD}
+              width={hit.width}
+              height={plotHeight}
+              fill={active === hit.dataIndex ? withAlpha(tokens.accent || '#7c3aed', 0.08) : 'transparent'}
+              data-idx={hit.dataIndex}
+              data-testid={`cashflow-hit-${hit.dataIndex}`}
+              tabIndex={0}
+              role="button"
+              aria-label={summaries[hit.dataIndex]}
+              onPointerDown={activateFromTarget}
+              onPointerEnter={mode === 'day' ? activateFromTarget : undefined}
+              onFocus={activateFromTarget}
+              onKeyDown={onKey}
+              style={{ outline: 'none', cursor: 'pointer' }}
+            />
+          ))}
+        </svg>
       </div>
 
       <div
-        className="w-full outline-none [&_svg]:outline-none [&_.recharts-surface]:outline-none [&_.recharts-wrapper]:outline-none [&_.recharts-tooltip-wrapper]:outline-none"
-        style={{ height }}
+        data-testid="finance-cashflow-tooltip"
+        className="mt-2 px-0.5 text-xs leading-relaxed"
+        style={{ color: tooltip ? (tokens.text || axis) : axis, minHeight: TOOLTIP_RESERVE }}
+        aria-live="polite"
       >
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={plotData}
-            margin={{ top: 8, right: 6, left: 0, bottom: 0 }}
-            barCategoryGap={4}
-            accessibilityLayer
-          >
-            <defs>
-              <linearGradient id={revenueFillId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={theme.revenue} stopOpacity={0.95} />
-                <stop offset="100%" stopColor={theme.revenue} stopOpacity={0.55} />
-              </linearGradient>
-              <linearGradient id={expenseFillId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={theme.expense} stopOpacity={0.95} />
-                <stop offset="100%" stopColor={theme.expense} stopOpacity={0.5} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="0" stroke={theme.grid} vertical={false} />
-            <XAxis
-              dataKey="name"
-              ticks={ticks}
-              tickFormatter={dayLabel}
-              stroke={theme.axis}
-              tick={{ fill: theme.axis, fontSize: 12, fontFamily: 'var(--font-mono, ui-monospace, monospace)' }}
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              interval={0}
-            />
-            <YAxis
-              stroke={theme.axis}
-              tick={{ fill: theme.axis, fontSize: 12, fontFamily: 'var(--font-mono, ui-monospace, monospace)' }}
-              tickLine={false}
-              axisLine={false}
-              width={40}
-              domain={[0, 'auto']}
-              allowDecimals={false}
-              tickCount={4}
-              tickFormatter={compactAxisTick}
-            />
-            <Tooltip
-              cursor={{ fill: theme.cursor, radius: 6 }}
-              content={<CashflowTooltip currencyRegion={currencyRegion} periodLabel={periodLabel} />}
-              wrapperStyle={{ outline: 'none', zIndex: 20 }}
-              offset={12}
-              allowEscapeViewBox={{ x: true, y: false }}
-            />
-            <Bar
-              dataKey="maxValue"
-              name="Movimento"
-              shape={(props) => (
-                <DualCashflowBar
-                  {...props}
-                  revenueFill={`url(#${revenueFillId})`}
-                  expenseFill={`url(#${expenseFillId})`}
-                />
-              )}
-              isAnimationActive={false}
-            />
-          </BarChart>
-        </ResponsiveContainer>
+        {tooltip ? (
+          <>
+            <p className="font-semibold" data-testid="finance-cashflow-tooltip-range">{tooltip.range}</p>
+            <p className="flex flex-wrap gap-x-3 gap-y-0.5">
+              {tooltip.pairs.map((pair) => (
+                <span key={pair.label} className="whitespace-nowrap" data-testid="finance-cashflow-tooltip-pair">
+                  <span style={{ color: axis }}>{pair.label}</span>{' '}
+                  <span className="font-mono font-semibold tabular-nums">{pair.value}</span>
+                </span>
+              ))}
+            </p>
+          </>
+        ) : (
+          <p>
+            {mode === 'week'
+              ? 'Toque numa semana para ver entradas, saídas e o que sobrou.'
+              : 'Passe o cursor ou foque um dia para ver o resumo.'}
+          </p>
+        )}
       </div>
+
+      <table className="sr-only">
+        <caption>{`Entradas e saídas — ${periodLabel}`}</caption>
+        <thead>
+          <tr>
+            <th>Período</th>
+            <th>Entradas</th>
+            <th>Saídas</th>
+            <th>Sobrou</th>
+          </tr>
+        </thead>
+        <tbody>
+          {points.map((p, i) => (
+            <tr key={p.key}>
+              <td>{summaries[i]}</td>
+              <td>{formatCurrency(p.receita, currencyRegion)}</td>
+              <td>{formatCurrency(p.despesas, currencyRegion)}</td>
+              <td>{formatSobrou(p.sobrou, currencyRegion)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
-};
+});

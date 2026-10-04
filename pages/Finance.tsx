@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback, useMemo } from 'react';
+﻿import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { prefetchStaffPerformanceFromLocation } from '../hooks/useStaffPerformance';
 import { Card } from '../components/ui/Card';
@@ -15,19 +15,37 @@ import { MonthYearSelector } from '../components/MonthYearSelector';
 import { MonthlyHistory } from '../components/MonthlyHistory';
 import { TabNav } from '../components/TabNav';
 import { formatCurrency } from '../utils/formatters';
-import { combineDateAndTime, formatLocalDateString, getTodayDateString } from '../utils/date';
+import { combineDateAndTime, getTodayDateString } from '../utils/date';
 import { logger } from '../utils/Logger';
 import { mapError, formatUserFacingError } from '../utils/mapError';
-import { fetchFinanceStats, filterStaffTransactions, mapFinanceTransaction } from '../services/finance';
+import { filterStaffTransactions, mapFinanceTransaction } from '../services/finance';
 import {
   financeDeleteConfirmMessage,
   mapFinanceDeleteError,
   shouldShowFinanceDelete,
   type FinanceDeleteKind,
 } from '../utils/financeDelete';
-import { fetchQueueCompletedCount } from '../services/queue';
-import { useMonthlyHistory, useFinanceDropdowns, useDeleteFinanceTransaction, useMarkExpenseAsPaid, useCreateFinanceRecord } from '../hooks/useFinance';
+import {
+  useMonthlyHistory,
+  useFinanceDropdowns,
+  useDeleteFinanceTransaction,
+  useMarkExpenseAsPaid,
+  useCreateFinanceRecord,
+  useFinanceOverview,
+} from '../hooks/useFinance';
 import { useTenantLocale } from '../hooks/useTenantLocale';
+import { useBusinessSettings } from '../hooks/useSettings';
+import { resolveBusinessTimezone } from '../utils/businessTimezone';
+import {
+  MONTH_NAMES,
+  bucketDaysByWeeks,
+  bucketMonthByDays,
+  calcSobrou,
+  formatMonthGrowth,
+  getZonedMonthRange,
+  isInstantInRange,
+  previousMonthIndex,
+} from '../utils/financeCashflow';
 
 type FinanceTabType = 'overview' | 'commissions' | 'history';
 
@@ -101,21 +119,6 @@ export const Finance: React.FC = () => {
   const { user, region, role, companyId, teamMemberId } = useAuth();
 const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [fetchError, setFetchError] = useState<string | null>(null);
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [summary, setSummary] = useState({
-    revenue: 0,
-    expenses: 0,
-    commissionsPending: 0,
-    profit: 0,
-    growth: 0,
-    previousMonthRevenue: 0,
-    revenueByMethod: { pix: 0, mbway: 0, dinheiro: 0, cartao: 0 },
-    pendingExpenses: 0,
-    queueServed: 0,
-  });
-  const [chartData, setChartData] = useState<any[]>([]);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -151,9 +154,42 @@ const [searchParams, setSearchParams] = useSearchParams();
   const { accent, colors, isBeauty, classes, status } = useBrutalTheme();
   const { showToast } = useToast();
   const { region: currencyRegion, currencySymbol } = useTenantLocale();
+  const { data: businessSettings } = useBusinessSettings();
+  const timeZone = resolveBusinessTimezone({ timezone: businessSettings?.timezone, region });
 
   const queryUserId = isStaff && companyId ? companyId : (user?.id || '');
-  const { data: monthlyHistoryData, refetch: refetchMonthlyHistory } = useMonthlyHistory(user?.id || '', 12);
+  const monthRange = useMemo(
+    () => getZonedMonthRange(selectedYear, selectedMonth, timeZone),
+    [selectedYear, selectedMonth, timeZone],
+  );
+  const prevMonth = previousMonthIndex(selectedYear, selectedMonth);
+  const prevRange = useMemo(
+    () => getZonedMonthRange(prevMonth.year, prevMonth.monthIndex, timeZone),
+    [prevMonth.year, prevMonth.monthIndex, timeZone],
+  );
+
+  const {
+    data: overview,
+    isPending: overviewPending,
+    isFetching: overviewFetching,
+    isError: overviewError,
+    error: overviewErr,
+    refetch: refetchOverview,
+  } = useFinanceOverview({
+    companyId: queryUserId,
+    startIso: monthRange.startIso,
+    endIso: monthRange.endIso,
+    prevStartIso: prevRange.startIso,
+    prevEndIso: prevRange.endIso,
+    professionalId: isStaff ? teamMemberId : null,
+    enabled: !!user && activeTab === 'overview',
+  });
+
+  const { data: monthlyHistoryData, refetch: refetchMonthlyHistory } = useMonthlyHistory(
+    queryUserId,
+    12,
+    activeTab === 'history' && !isStaff,
+  );
   const monthlyHistory = React.useMemo(() => {
     if (!monthlyHistoryData) return [];
     const translateMonth = (m: string) => {
@@ -191,162 +227,128 @@ const [searchParams, setSearchParams] = useSearchParams();
   const markExpensePaidMutation = useMarkExpenseAsPaid();
   const createRecordMutation = useCreateFinanceRecord();
 
-  const months = [
-    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-  ];
+  const months = MONTH_NAMES;
 
-useEffect(() => {
+  useEffect(() => {
     if (isStaff && activeTab !== 'overview') {
       setActiveTab('overview');
-      return;
     }
-
-    if (activeTab === 'overview') {
-      fetchFinanceData();
-    } else if (activeTab === 'history') {
-      refetchMonthlyHistory();
-    }
-  }, [activeTab, selectedMonth, selectedYear, user, isStaff]);
+  }, [activeTab, isStaff]);
 
   useEffect(() => {
     const isNewQuery = searchParams.get('new') === 'true';
     if (isNewQuery && user) {
       handleOpenNewTransaction();
-      // Limpar o parâmetro da URL para evitar reabrir ao atualizar
       searchParams.delete('new');
       setSearchParams(searchParams);
     }
   }, [searchParams, user]);
 
-  const fetchFinanceData = async () => {
-    setLoading(true);
-    setFetchError(null);
-    if (!user) {
-      setLoading(false);
-      return;
+  const derived = useMemo(() => {
+    const emptyDays = bucketMonthByDays([], selectedYear, selectedMonth, timeZone);
+    const emptyWeeks = bucketDaysByWeeks(emptyDays, selectedYear, selectedMonth);
+    const emptySummary = {
+      revenue: 0,
+      expenses: 0,
+      commissionsPending: 0,
+      profit: 0,
+      growthLabel: '0,0%',
+      previousMonthRevenue: 0,
+      revenueByMethod: { pix: 0, mbway: 0, dinheiro: 0, cartao: 0 },
+      pendingExpenses: 0,
+      queueServed: 0,
+    };
+    if (!overview?.current) {
+      return {
+        transactions: [] as Transaction[],
+        days: emptyDays,
+        weeks: emptyWeeks,
+        totals: { receita: 0, despesas: 0, sobrou: 0 },
+        summary: emptySummary,
+      };
     }
 
-    try {
-      // Calculate start and end dates for the selected month
-      const startOfMonth = new Date(selectedYear, selectedMonth, 1);
-      const endOfMonth = new Date(selectedYear, selectedMonth + 1, 0);
+    const formatted = (overview.current.transactions || []).map(mapFinanceTransaction);
+    const scoped = isStaff
+      ? filterStaffTransactions(formatted, teamMemberId)
+      : formatted;
+    const inMonth = scoped.filter((t) => isInstantInRange(t.rawDate, monthRange.startIso, monthRange.endIso));
+    const cashTxns = inMonth.map((t) => ({
+      instant: t.rawDate,
+      type: t.type,
+      amount: t.type === 'expense' ? (t.expense || 0) : (t.amount || 0),
+    }));
+    const days = bucketMonthByDays(cashTxns, selectedYear, selectedMonth, timeZone);
+    const weeks = bucketDaysByWeeks(days, selectedYear, selectedMonth);
+    const receita = days.reduce((s, d) => s + d.receita, 0);
+    const despesas = isStaff ? 0 : days.reduce((s, d) => s + d.despesas, 0);
+    const sobrou = calcSobrou(receita, despesas);
 
-      const startDateParam = startOfMonth.toISOString().split('T')[0];
-      const endDateParam = endOfMonth.toISOString().split('T')[0];
+    const prevFormatted = (overview.previous?.transactions || []).map(mapFinanceTransaction);
+    const prevScoped = isStaff
+      ? filterStaffTransactions(prevFormatted, teamMemberId)
+      : prevFormatted;
+    const prevInRange = prevScoped.filter((t) => isInstantInRange(t.rawDate, prevRange.startIso, prevRange.endIso));
+    const previousMonthRevenue = prevInRange
+      .filter((t) => t.type === 'revenue')
+      .reduce((s, t) => s + (t.amount || 0), 0);
 
-      const queryUserId = isStaff && companyId ? companyId : user.id;
-
-      const data = await fetchFinanceStats({
-        companyId: queryUserId,
-        startDate: startDateParam,
-        endDate: endDateParam,
-        professionalId: isStaff ? teamMemberId : null,
+    const growthLabel = isStaff
+      ? '0,0%'
+      : formatMonthGrowth({
+        currentRevenue: receita,
+        previousRevenue: previousMonthRevenue,
+        previousRecords: prevInRange.length,
       });
 
-      if (data) {
-        // Calculate growth vs previous month
-        const prevMonth = selectedMonth === 0 ? 11 : selectedMonth - 1;
-        const prevYear = selectedMonth === 0 ? selectedYear - 1 : selectedYear;
-        const prevStartDate = new Date(prevYear, prevMonth, 1).toISOString().split('T')[0];
-        const prevEndDate = new Date(prevYear, prevMonth + 1, 0).toISOString().split('T')[0];
+    const filtered = inMonth.filter((t) => {
+      const matchesType = filterType === 'all' || (filterType === 'revenue' ? t.type === 'revenue' : t.type === 'expense');
+      const matchesPayment = filterPaymentMethod === 'all' || t.payment_method === filterPaymentMethod;
+      return matchesType && matchesPayment;
+    });
 
-        const prevData = await fetchFinanceStats({
-          companyId: queryUserId,
-          startDate: prevStartDate,
-          endDate: prevEndDate,
-          professionalId: isStaff ? teamMemberId : null,
-        });
+    return {
+      transactions: filtered as Transaction[],
+      days,
+      weeks,
+      totals: { receita, despesas, sobrou },
+      summary: {
+        revenue: receita,
+        expenses: despesas,
+        commissionsPending: isStaff ? 0 : (overview.current.commissions_pending || 0),
+        profit: isStaff ? receita : sobrou,
+        growthLabel,
+        previousMonthRevenue,
+        revenueByMethod: overview.current.revenue_by_method || { pix: 0, mbway: 0, dinheiro: 0, cartao: 0 },
+        pendingExpenses: isStaff ? 0 : (overview.current.pendingExpenses || 0),
+        queueServed: overview.queueServed || 0,
+      },
+    };
+  }, [
+    overview,
+    isStaff,
+    teamMemberId,
+    monthRange.startIso,
+    monthRange.endIso,
+    prevRange.startIso,
+    prevRange.endIso,
+    selectedYear,
+    selectedMonth,
+    timeZone,
+    filterType,
+    filterPaymentMethod,
+  ]);
 
-        const growth = prevData && prevData.revenue > 0
-          ? ((data.revenue - prevData.revenue) / prevData.revenue) * 100
-          : 0;
+  const transactions = derived.transactions;
+  const summary = derived.summary;
+  const loading = overviewPending && !overview;
+  const fetchError = overviewError
+    ? formatUserFacingError(mapError(overviewErr, 'Não foi possível carregar o financeiro.'))
+    : null;
 
-        let queueServed = 0;
-        try {
-          queueServed = await fetchQueueCompletedCount({
-            businessId: queryUserId,
-            startDate: startDateParam,
-            endDate: endDateParam,
-            professionalId: isStaff ? teamMemberId : null,
-          });
-        } catch {
-          queueServed = 0;
-        }
-
-        setSummary({
-          revenue: data.revenue || 0,
-          expenses: data.expenses || 0,
-          commissionsPending: data.commissions_pending || 0,
-          profit: data.profit || 0,
-          growth: growth || 0,
-          previousMonthRevenue: prevData?.revenue || 0,
-          revenueByMethod: data.revenue_by_method || { pix: 0, mbway: 0, dinheiro: 0, cartao: 0 },
-          pendingExpenses: data.pendingExpenses || 0,
-          queueServed,
-        });
-
-        const formattedTransactions = (data.transactions || []).map(mapFinanceTransaction);
-        const staffFiltered = isStaff
-          ? filterStaffTransactions(formattedTransactions, teamMemberId)
-          : formattedTransactions;
-
-        // Gráfico entradas/saídas por dia do mês selecionado, agregado das
-        // transações do período. (O chart_data da RPC vem em outro contrato —
-        // {month, revenue} mensal — e não alimenta as séries receita/despesas.)
-        const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
-        const dailyBuckets = Array.from({ length: daysInMonth }, (_, i) => ({
-          name: String(i + 1).padStart(2, '0'),
-          receita: 0,
-          despesas: 0,
-        }));
-        for (const t of staffFiltered) {
-          const d: Date = t.rawDate;
-          if (d.getMonth() !== selectedMonth || d.getFullYear() !== selectedYear) continue;
-          const idx = d.getDate() - 1;
-          if (t.type === 'revenue') dailyBuckets[idx].receita += t.amount || 0;
-          else dailyBuckets[idx].despesas += t.expense || t.amount || 0;
-        }
-        setChartData(dailyBuckets);
-
-        const filtered = staffFiltered.filter((t: any) => {
-          const matchesType = filterType === 'all' || (filterType === 'revenue' ? t.type === 'revenue' : t.type === 'expense');
-          const matchesPayment = filterPaymentMethod === 'all' || t.payment_method === filterPaymentMethod;
-          return matchesType && matchesPayment;
-        });
-
-        setTransactions(filtered);
-
-        // Recalcula resumo para staff (apenas os próprios atendimentos)
-        if (isStaff) {
-          const staffRevenue = staffFiltered
-            .filter((t: any) => t.type === 'revenue')
-            .reduce((sum: number, t: any) => sum + (t.amount || 0), 0);
-          setSummary({
-            revenue: staffRevenue,
-            expenses: 0,
-            commissionsPending: 0,
-            profit: staffRevenue,
-            growth: 0,
-            previousMonthRevenue: 0,
-            revenueByMethod: { pix: 0, mbway: 0, dinheiro: 0, cartao: 0 },
-            pendingExpenses: 0,
-            queueServed,
-          });
-          return;
-        }
-      }
-    } catch (error) {
-      logger.error('Error fetching finance data', error);
-      setFetchError(formatUserFacingError(mapError(error, 'Não foi possível carregar o financeiro.')));
-    } finally {
-      setLoading(false);
-    }
+  const fetchFinanceData = () => {
+    void refetchOverview();
   };
-
-  const fetchMonthlyHistory = useCallback(async () => {
-    await refetchMonthlyHistory();
-  }, [refetchMonthlyHistory]);
 
   const handleDeleteTransaction = (t: Transaction) => {
     setPendingDelete(t);
@@ -392,7 +394,6 @@ useEffect(() => {
   };
 
   const handleApplyFilter = () => {
-    fetchFinanceData();
     setShowFilterModal(false);
   };
 
@@ -401,7 +402,6 @@ useEffect(() => {
     setEndDate('');
     setFilterType('all');
     setFilterPaymentMethod('all');
-    fetchFinanceData();
     setShowFilterModal(false);
   };
 
@@ -668,7 +668,7 @@ useEffect(() => {
                   <SkeletonCard />
                 </section>
               )}
-              <SkeletonCard className="min-h-[240px]" />
+              <SkeletonCard className="min-h-[340px]" />
               <SkeletonCard className="min-h-[160px]" />
             </>
           ) : fetchError ? (
@@ -687,7 +687,9 @@ useEffect(() => {
               subtitle={
                 isStaff
                   ? `${revenueCount} atendimentos em ${periodLabel}`
-                  : `${summary.growth > 0 ? '+' : ''}${summary.growth.toFixed(1)}% vs mês anterior`
+                  : summary.growthLabel === 'Mês anterior com pouco movimento'
+                    ? summary.growthLabel
+                    : `${summary.growthLabel} vs mês anterior`
               }
               iconClass={iconClass}
             />
@@ -762,18 +764,26 @@ useEffect(() => {
           )}
 
           <Card
-            title="Entradas e saídas"
-            action={
-              <span className={`text-xs font-medium tabular-nums ${colors.textMuted}`}>{periodLabel}</span>
+            id="finance-cashflow"
+            className="scroll-mt-16 md:scroll-mt-24"
+            title={
+              <div>
+                <h3 className={`text-base md:text-lg font-bold tracking-tight ${colors.text}`}>
+                  Entradas e saídas
+                </h3>
+                <p className={`mt-0.5 text-xs ${colors.textMuted}`}>{periodLabel}</p>
+              </div>
             }
             style={{ overflow: 'visible' }}
           >
-            <div className="w-full">
+            <div className="w-full" aria-busy={overviewFetching}>
               <FinanceCashflowChart
-                data={chartData}
+                days={derived.days}
+                weeks={derived.weeks}
+                totals={derived.totals}
                 currencyRegion={currencyRegion}
-                height={220}
                 periodLabel={periodLabel}
+                monthIndex={selectedMonth}
               />
             </div>
           </Card>
@@ -846,7 +856,7 @@ useEffect(() => {
           <Card title="Histórico mensal — últimos 12 meses">
             <MonthlyHistory
               data={monthlyHistory}
-              currencySymbol={currencySymbol}
+              currencyRegion={currencyRegion}
               accentColor={isBeauty ? 'beauty-neon' : 'accent-gold'}
               isBeauty={isBeauty}
             />

@@ -82,6 +82,24 @@ describe('AgendaPublicBookings', () => {
     expect(screen.getByRole('button', { name: /Recusar/ })).toBeInTheDocument();
   });
 
+  it('esconde Aceitar/Recusar quando o usuário não pode agir no pedido de outro profissional', () => {
+    render(
+      <AgendaPublicBookings
+        bookings={[booking]}
+        teamMembers={members}
+        services={services}
+        currencyRegion="BR"
+        onAccept={vi.fn()}
+        onReject={vi.fn()}
+        canActOnBooking={() => false}
+      />,
+    );
+
+    expect(screen.queryByRole('button', { name: /Aceitar/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Recusar/ })).not.toBeInTheDocument();
+    expect(screen.getByText('Maria Silva')).toBeInTheDocument();
+  });
+
   it('pedido de edição mostra Alteração: de {antes} para {depois}', () => {
     render(
       <AgendaPublicBookings

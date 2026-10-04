@@ -44,6 +44,7 @@ export interface AgendaPublicBookingsProps {
   timeZone?: string;
   onAccept: (booking: AgendaPublicBookingItem) => void;
   onReject: (bookingId: string) => void;
+  canActOnBooking?: (booking: AgendaPublicBookingItem) => boolean;
   acceptError?: { id: string; message: string } | null;
 }
 
@@ -71,6 +72,7 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
   timeZone = 'America/Sao_Paulo',
   onAccept,
   onReject,
+  canActOnBooking = () => true,
   acceptError = null,
 }) => {
   const { colors, accent, classes } = useBrutalTheme();
@@ -105,6 +107,7 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
           const note = bookingNote(booking);
           const pendingEdit = isClientEditPending({ ...booking, status: booking.status ?? 'pending' });
           const when = `${isToday ? 'Hoje' : bookingDate.toLocaleDateString('pt-BR', { timeZone, day: '2-digit', month: '2-digit' })} · ${formatTimeInTimeZone(booking.appointment_time, timeZone)}`;
+          const canAct = canActOnBooking(booking);
 
           return (
             <li
@@ -123,22 +126,26 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
                   {when}
                 </span>
                 <div className="flex flex-wrap gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => onAccept(booking)}
-                    className={`px-4 min-h-[48px] py-2 rounded-lg text-sm font-bold inline-flex items-center gap-1 ${classes.buttonSuccess}`}
-                    title="Aceitar"
-                  >
-                    <Check className="w-3.5 h-3.5" aria-hidden /> Aceitar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onReject(booking.id)}
-                    className={`px-4 min-h-[48px] py-2 rounded-lg text-sm font-bold inline-flex items-center gap-1 ${classes.buttonDanger}`}
-                    title="Recusar"
-                  >
-                    <X className="w-3.5 h-3.5" aria-hidden /> Recusar
-                  </button>
+                  {canAct && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => onAccept(booking)}
+                        className={`px-4 min-h-[48px] py-2 rounded-lg text-sm font-bold inline-flex items-center gap-1 ${classes.buttonSuccess}`}
+                        title="Aceitar"
+                      >
+                        <Check className="w-3.5 h-3.5" aria-hidden /> Aceitar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onReject(booking.id)}
+                        className={`px-4 min-h-[48px] py-2 rounded-lg text-sm font-bold inline-flex items-center gap-1 ${classes.buttonDanger}`}
+                        title="Recusar"
+                      >
+                        <X className="w-3.5 h-3.5" aria-hidden /> Recusar
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
 

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { SETTINGS_ITEMS, SettingsItem, findActiveSettingsItem, isPathActive } from '../constants';
+import { SettingsItem, findActiveSettingsItem, isPathActive, settingsItemsForRole } from '../constants';
 import { useAppTour } from '../hooks/useAppTour';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 
@@ -165,9 +165,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
   useAppTour();
   const { accent, colors } = useBrutalTheme();
 
-  const menuItems = role === 'staff'
-    ? SETTINGS_ITEMS.filter((item) => item.path === '/configuracoes/servicos')
-    : SETTINGS_ITEMS.filter((item) => isDev || !item.devOnly);
+  const menuItems = settingsItemsForRole(role, isDev);
 
   const currentPage = findActiveSettingsItem(menuItems, location.pathname);
   const currentPageTitle = currentPage?.label || 'Configurações';

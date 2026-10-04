@@ -26,7 +26,7 @@ import { AgendaPublicLinkBar } from '../components/agenda/AgendaPublicLinkBar';
 import { AppointmentDetailsActions } from '../components/agenda/AppointmentDetailsActions';
 import { RescheduleAppointmentModal } from '../components/agenda/RescheduleAppointmentModal';
 import { useStaffAppointmentPermission } from '../hooks/useStaffAppointmentPermission';
-import { isStaffEditForbiddenError, STAFF_EDIT_FORBIDDEN_MESSAGE } from '../utils/staffAppointmentPermission';
+import { isStaffEditForbiddenError, STAFF_EDIT_FORBIDDEN_MESSAGE, canActOnPublicBooking } from '../utils/staffAppointmentPermission';
 import { AllAppointmentsModal } from '../components/dashboard/modals/AllAppointmentsModal';
 import { CheckoutModal } from '../components/CheckoutModal';
 import { EmptyState } from '../components/EmptyState';
@@ -809,7 +809,7 @@ export const Agenda: React.FC = () => {
             if (blocked) {
                 setAcceptBlockError({ id: booking.id, message: blocked });
             } else {
-                showToast('Erro ao aceitar agendamento.', 'error');
+                showToast(mapError(error, 'Erro ao aceitar agendamento.').message, 'error');
             }
         } finally {
             setIsProcessing(false);
@@ -824,7 +824,7 @@ export const Agenda: React.FC = () => {
             fetchData();
         } catch (error) {
             logger.error('Error rejecting booking', error);
-            showToast('Erro ao recusar a solicitação.', 'error');
+            showToast(mapError(error, 'Erro ao recusar a solicitação.').message, 'error');
         }
     };
 
@@ -1446,6 +1446,12 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                 timeZone={shopTimeZone}
                 onAccept={handleAcceptBooking}
                 onReject={handleRejectBooking}
+                canActOnBooking={(booking) => canActOnPublicBooking({
+                    role,
+                    scope: staffPermission.scope,
+                    teamMemberId,
+                    professionalId: booking.professional_id,
+                })}
                 acceptError={acceptBlockError}
             />
 

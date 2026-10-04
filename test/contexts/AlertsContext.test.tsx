@@ -8,7 +8,7 @@ let auth: AuthState;
 const rpc = vi.fn(async () => ({ data: [{ total_due: 10, is_owner: false }], error: null }));
 const chain = (): any => {
     const c: any = {};
-    ['select', 'eq', 'in', 'lt', 'order', 'update'].forEach((m) => { c[m] = vi.fn(() => c); });
+    ['select', 'eq', 'in', 'lt', 'order', 'update', 'limit'].forEach((m) => { c[m] = vi.fn(() => c); });
     c.single = vi.fn(async () => ({ data: { commission_settlement_day_of_month: new Date().getDate() }, error: null }));
     c.maybeSingle = vi.fn(async () => ({ data: null, error: null }));
     c.then = (res: any) => Promise.resolve({ data: [], error: null }).then(res);

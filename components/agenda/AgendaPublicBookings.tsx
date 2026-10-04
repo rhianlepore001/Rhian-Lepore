@@ -4,8 +4,7 @@ import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { formatCurrency, formatPhone, type Region } from '../../utils/formatters';
 import {
   formatAgendaAlteracao,
-  formatAgendaOnlineRequestsTitle,
-  formatAgendaPublicBookingsSummary,
+  formatAgendaRequestsBanner,
   isClientEditPending,
 } from '../../utils/clientEditRequest';
 import { formatTimeInTimeZone, getDateStringInTimeZone, getTodayInTimeZone } from '../../utils/businessTimezone';
@@ -46,6 +45,7 @@ export interface AgendaPublicBookingsProps {
   onReject: (bookingId: string) => void;
   canActOnBooking?: (booking: AgendaPublicBookingItem) => boolean;
   acceptError?: { id: string; message: string } | null;
+  highlightedBookingId?: string | null;
 }
 
 function bookingNote(booking: AgendaPublicBookingItem): string {
@@ -74,14 +74,17 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
   onReject,
   canActOnBooking = () => true,
   acceptError = null,
+  highlightedBookingId = null,
 }) => {
   const { colors, accent, classes } = useBrutalTheme();
 
   if (bookings.length === 0) return null;
 
-  const edits = bookings.filter((b) => isClientEditPending({ ...b, status: b.status ?? 'pending' })).length;
-  const newOnes = bookings.length - edits;
-  const summary = formatAgendaPublicBookingsSummary(edits, newOnes);
+  const banner = formatAgendaRequestsBanner({
+    bookings,
+    canActOnBooking,
+    teamMembers,
+  });
 
   return (
     <section data-testid="agenda-public-bookings" className="shrink-0 space-y-2">
@@ -90,10 +93,10 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
           <AlertTriangle className={`w-4 h-4 mt-0.5 shrink-0 ${accent.text}`} aria-hidden />
           <div className="min-w-0">
             <h3 className={`${colors.text} font-bold text-sm leading-snug`}>
-              {formatAgendaOnlineRequestsTitle(bookings.length)}
+              {banner.title}
             </h3>
             <p className={`${colors.textSecondary} text-xs leading-snug break-words`}>
-              {summary}
+              {banner.summary}
             </p>
           </div>
         </div>
@@ -113,7 +116,10 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
             <li
               key={booking.id}
               data-testid={`agenda-public-booking-${booking.id}`}
-              className={`${colors.card} ${colors.border} rounded-xl px-3 py-2.5`}
+              data-highlighted={highlightedBookingId === booking.id ? 'true' : 'false'}
+              className={`${colors.card} ${colors.border} rounded-xl px-3 py-2.5 scroll-mt-24 ${
+                highlightedBookingId === booking.id ? `ring-2 ${accent.border} ${accent.bgDim}` : ''
+              }`}
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, Search, LogOut, User as UserIcon, Settings, AlertTriangle, Compass, ArrowLeft, Scissors, Sparkles, Sun, Moon } from 'lucide-react';
+import { Bell, Search, LogOut, User as UserIcon, Settings, Compass, ArrowLeft, Scissors, Sparkles, Sun, Moon } from 'lucide-react';
 import { BugReportButton } from './BugReportButton';
 import { useAuth } from '../contexts/AuthContext';
 import { useAlerts } from '../contexts/AlertsContext';
@@ -9,10 +9,15 @@ import { useAppTour } from '../hooks/useAppTour';
 import { useTheme } from '../contexts/ThemeContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useBusinessCopy } from '../hooks/useBusinessCopy';
+import { useBusinessSettings } from '../hooks/useSettings';
+import { resolveBusinessTimezone } from '../utils/businessTimezone';
+import { NotificationPanel } from './NotificationPanel';
 
 export const Header: React.FC = () => {
-  const { businessName, fullName, logout, avatarUrl, isDev, setDevUserType, role } = useAuth();
+  const { businessName, fullName, logout, avatarUrl, isDev, setDevUserType, role, region } = useAuth();
   const { alerts, notifications, unreadCount, markNotificationRead, markAllNotificationsRead } = useAlerts();
+  const { data: businessSettings } = useBusinessSettings();
+  const timeZone = resolveBusinessTimezone({ timezone: businessSettings?.timezone, region });
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { startTour } = useAppTour();
@@ -64,7 +69,6 @@ export const Header: React.FC = () => {
   const unreadLabel = unreadCount === 1
     ? '1 notificação não lida'
     : `${unreadCount} notificações não lidas`;
-  const hasItems = notifications.length > 0 || alerts.length > 0;
 
   return (
     <>
@@ -185,86 +189,17 @@ export const Header: React.FC = () => {
               </button>
 
               {showNotifications && (
-                <div
-                  data-testid="notifications-panel"
-                  className={`fixed inset-x-4 md:inset-auto md:absolute md:right-0 top-[calc(5rem+var(--safe-top))] md:top-full mt-2 md:w-80 z-50 animate-in fade-in slide-in-from-top-2 shadow-promax-glass ring-1 ring-[var(--color-border)]
-                ${colors.card} border ${colors.border} rounded-xl
-              `}
-                >
-                  <div className={`p-3 border-b ${colors.divider} flex items-center justify-between gap-2`}>
-                    <div className={`font-bold ${colors.text} uppercase text-xs tracking-wider`}>
-                      Notificações
-                    </div>
-                    {notifications.length > 0 && (
-                      <button
-                        type="button"
-                        data-testid="mark-all-read"
-                        onClick={() => { void markAllNotificationsRead(); }}
-                        className={`text-xs font-semibold ${accent.text} hover:underline min-h-[44px] px-1`}
-                      >
-                        Marcar todas como lidas
-                      </button>
-                    )}
-                  </div>
-                  <div className="max-h-64 overflow-y-auto">
-                    {!hasItems ? (
-                      <div className="p-4 text-center text-text-secondary text-xs">
-                        <p className={`text-sm ${colors.text}`}>Tudo certo</p>
-                        <p className="mt-1">Nenhum aviso no momento.</p>
-                      </div>
-                    ) : (
-                      <>
-                        {notifications.map((item) => (
-                          <div
-                            key={item.id}
-                            data-testid="bell-notification"
-                            onClick={() => {
-                              void markNotificationRead(item.id);
-                              navigate(item.link || '/agenda');
-                              setShowNotifications(false);
-                            }}
-                            className={`p-3 hover:bg-[var(--color-card-hover)] border-b ${colors.divider} last:border-0 cursor-pointer transition-colors group`}
-                          >
-                            <div className="flex items-start gap-2">
-                              <Bell className={`w-4 h-4 flex-shrink-0 mt-0.5 ${accent.text}`} />
-                              <div className="flex-1 min-w-0">
-                                <p className={`text-sm ${colors.text} group-hover:text-theme-accent transition-colors break-words`}>
-                                  {item.message || item.title}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                        {alerts.map((alert) => (
-                          <div
-                            key={alert.id}
-                            onClick={() => {
-                              if (alert.actionPath) {
-                                navigate(alert.actionPath);
-                                setShowNotifications(false);
-                              }
-                            }}
-                            className={`p-3 hover:bg-[var(--color-card-hover)] border-b ${colors.divider} last:border-0 cursor-pointer transition-colors group ${alert.actionPath ? '' : 'cursor-default'} ${alert.type === 'danger' ? 'border-l-2 border-l-[var(--color-danger)] pl-2' : ''}`}
-                          >
-                            <div className="flex items-start gap-2">
-                              <AlertTriangle className={`w-4 h-4 flex-shrink-0 mt-0.5 ${alert.type === 'danger' ? 'text-[var(--color-danger)]' :
-                                alert.type === 'warning' ? 'text-[var(--color-warning)]' : 'text-[var(--color-success)]'
-                                }`} />
-                              <div className="flex-1">
-                                <p className={`text-sm ${colors.text} ${alert.actionPath ? `group-hover:text-theme-accent` : ''} transition-colors`}>
-                                  {alert.text}
-                                </p>
-                                <p className={`text-xs ${colors.textSecondary} mt-1 uppercase tracking-wide`}>
-                                  {alert.type === 'danger' ? 'Urgente' : alert.type === 'warning' ? 'Atenção' : 'Info'}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </>
-                    )}
-                  </div>
-                </div>
+                <NotificationPanel
+                  notifications={notifications}
+                  alerts={alerts}
+                  timeZone={timeZone}
+                  onMarkRead={(id) => { void markNotificationRead(id); }}
+                  onMarkAll={() => { void markAllNotificationsRead(); }}
+                  onNavigate={(path) => {
+                    navigate(path);
+                    setShowNotifications(false);
+                  }}
+                />
               )}
             </div>
 

@@ -175,6 +175,7 @@ export const Agenda: React.FC = () => {
     const [blockFormError, setBlockFormError] = useState<string | null>(null);
     const [blockServerAdjust, setBlockServerAdjust] = useState<{ startsAt: string; endsAt: string; message: string } | null>(null);
     const [acceptBlockError, setAcceptBlockError] = useState<{ id: string; message: string } | null>(null);
+    const [highlightedBookingId, setHighlightedBookingId] = useState<string | null>(null);
     const [selectedBlock, setSelectedBlock] = useState<AgendaBlock | null>(null);
     const [showHistoryModal, setShowHistoryModal] = useState(false);
     const [showAllAppointmentsModal, setShowAllAppointmentsModal] = useState(false);
@@ -260,6 +261,28 @@ export const Agenda: React.FC = () => {
             setPublicBookings((prev) => mergePendingPublicBooking(prev, row as typeof prev[number]));
         },
     );
+
+    const focusBookingId = searchParams.get('booking');
+    useEffect(() => {
+        if (!focusBookingId) {
+            setHighlightedBookingId(null);
+            return;
+        }
+        const found = publicBookings.find((booking) => booking.id === focusBookingId);
+        if (!found?.appointment_time) return;
+        const dateStr = getDateStringInTimeZone(found.appointment_time, shopTimeZone);
+        if (formatLocalDateString(selectedDate) !== dateStr) {
+            navigate(`/agenda?date=${dateStr}&booking=${focusBookingId}`, { replace: true });
+            return;
+        }
+        setHighlightedBookingId(focusBookingId);
+        const el = document.querySelector(`[data-testid="agenda-public-booking-${CSS.escape(focusBookingId)}"]`);
+        el?.scrollIntoView({ block: 'center', behavior: 'auto' });
+        const clearTimer = window.setTimeout(() => setHighlightedBookingId(null), 2500);
+        return () => {
+            window.clearTimeout(clearTimer);
+        };
+    }, [focusBookingId, publicBookings, selectedDate, shopTimeZone, navigate]);
 
     useEffect(() => {
         if (user && effectiveUserId) {
@@ -1446,6 +1469,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                 timeZone={shopTimeZone}
                 onAccept={handleAcceptBooking}
                 onReject={handleRejectBooking}
+                highlightedBookingId={highlightedBookingId}
                 canActOnBooking={(booking) => canActOnPublicBooking({
                     role,
                     scope: staffPermission.scope,

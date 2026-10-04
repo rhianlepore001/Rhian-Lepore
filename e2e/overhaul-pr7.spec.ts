@@ -236,7 +236,9 @@ async function stubApp(
     }
 
     if (pathname.includes('/rest/v1/notifications') && (method === 'PATCH' || method === 'POST')) {
-      unread.splice(0, unread.length);
+      unread.forEach((row) => {
+        (row as { read: boolean }).read = true;
+      });
       await route.fallback();
       return;
     }
@@ -331,7 +333,10 @@ test.describe('PR-7 notificações de pedido', () => {
       await page.goto(`${BASE}/#/agenda`, { waitUntil: 'domcontentloaded' });
       await expect(page.getByTestId('notification-badge')).toHaveText('1', { timeout: 20_000 });
       await openBell(page);
-      await expect(page.getByTestId('bell-notification')).toHaveText(NEW_COPY);
+      await expect(page.getByTestId('bell-notification-message')).toHaveText(NEW_COPY);
+      await expect(page.getByTestId('bell-relative-time')).toHaveText('agora');
+      await expect(page.getByTestId('bell-unread-dot')).toBeVisible();
+      await expect(page.getByTestId('mark-all-read')).toBeVisible();
       await shot(page, `bell-owner-novo-pedido-${vp.name}`);
       guard.assertNoLeak();
     });
@@ -352,7 +357,10 @@ test.describe('PR-7 notificações de pedido', () => {
       await page.goto(`${BASE}/#/agenda`, { waitUntil: 'domcontentloaded' });
       await expect(page.getByTestId('notification-badge')).toHaveText('1', { timeout: 20_000 });
       await openBell(page);
-      await expect(page.getByTestId('bell-notification')).toHaveText(NEW_COPY);
+      await expect(page.getByTestId('bell-notification-message')).toHaveText(NEW_COPY);
+      await expect(page.getByTestId('bell-relative-time')).toHaveText('agora');
+      await expect(page.getByTestId('bell-unread-dot')).toBeVisible();
+      await expect(page.getByTestId('mark-all-read')).toBeVisible();
       await shot(page, `bell-staff-novo-pedido-${vp.name}`);
       guard.assertNoLeak();
     });
@@ -377,7 +385,8 @@ test.describe('PR-7 notificações de pedido', () => {
       await page.goto(`${BASE}/#/agenda`, { waitUntil: 'domcontentloaded' });
       await expect(page.getByTestId('notification-badge')).toHaveText('1', { timeout: 20_000 });
       await openBell(page);
-      await expect(page.getByTestId('bell-notification')).toHaveText(EDIT_COPY);
+      await expect(page.getByTestId('bell-notification-message')).toHaveText(EDIT_COPY);
+      await expect(page.getByTestId('bell-relative-time')).toHaveText('agora');
       await shot(page, `bell-alteracao-${vp.name}`);
       guard.assertNoLeak();
     });
@@ -397,6 +406,8 @@ test.describe('PR-7 notificações de pedido', () => {
       await expect(page.getByText('Zé Cliente')).toBeVisible();
       await expect(page.getByRole('button', { name: /^Aceitar$/ })).toHaveCount(0);
       await expect(page.getByRole('button', { name: /^Recusar$/ })).toHaveCount(0);
+      await expect(page.getByText('aceite ou recuse')).toHaveCount(0);
+      await expect(page.getByText('Pedido para Aline X. Só Aline X ou o dono podem responder.')).toBeVisible();
       await shot(page, `agenda-staff-sem-botoes-${vp.name}`);
       guard.assertNoLeak();
     });
@@ -418,11 +429,37 @@ test.describe('PR-7 notificações de pedido', () => {
       await openBell(page);
       await page.getByTestId('mark-all-read').click();
       await expect(page.getByTestId('notification-badge')).toHaveCount(0);
-      await expect(page.getByText('Tudo certo')).toBeVisible();
+      await expect(page.getByTestId('mark-all-read')).toHaveCount(0);
+      await expect(page.getByTestId('bell-notification')).toHaveAttribute('data-read', 'true');
+      await expect(page.getByText('Nenhuma notificação nova')).toHaveCount(0);
+      await expect(page.getByTestId('bell-notification-message')).toHaveText(NEW_COPY);
       await shot(page, `bell-after-read-${vp.name}`);
       guard.assertNoLeak();
     });
   }
+
+  test('clicar na notificação marca lida e foca o pedido na agenda', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    const guard = await installProdWriteGuard(page);
+    await page.clock.setFixedTime(new Date(NOW));
+    guard.stubRpc('list_company_pending_public_bookings', { body: [X_REQUEST] });
+    guard.stubRpc('list_agenda_blocks', { body: [] });
+    guard.stubRpc('get_commissions_due', { body: [] });
+    guard.stubTable('notifications', { body: [] });
+    await stubApp(page, 'owner', {
+      notifications: [notif('n-owner-new', OWNER_ID, NEW_COPY, 'new')],
+      pending: [X_REQUEST],
+    });
+    await page.goto(`${BASE}/#/agenda`, { waitUntil: 'domcontentloaded' });
+    await expect(page.getByTestId('notification-badge')).toHaveText('1', { timeout: 20_000 });
+    await openBell(page);
+    await page.getByTestId('bell-notification').click();
+    await expect(page).toHaveURL(/booking=aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa07/);
+    await expect(page.getByTestId('agenda-public-booking-aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa07'))
+      .toHaveAttribute('data-highlighted', 'true');
+    await expect(page.getByTestId('notification-badge')).toHaveCount(0);
+    guard.assertNoLeak();
+  });
 
   test('staff não vê cards de Ajustes do dono', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });

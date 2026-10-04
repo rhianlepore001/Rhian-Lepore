@@ -178,14 +178,14 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         return generatedAlerts;
     };
 
-    const fetchUnreadNotifications = useCallback(async (): Promise<AppNotification[]> => {
+    const fetchNotifications = useCallback(async (): Promise<AppNotification[]> => {
         if (!user) return [];
         const { data, error } = await supabase
             .from('notifications')
             .select('id, title, message, type, read, link, booking_id, created_at')
             .eq('user_id', user.id)
-            .eq('read', false)
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false })
+            .limit(30);
         if (error) {
             logger.error('Error loading notifications', error);
             return [];
@@ -203,7 +203,7 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
         setLoading(true);
         try {
-            const nextNotifications = await fetchUnreadNotifications();
+            const nextNotifications = await fetchNotifications();
             setNotifications(nextNotifications);
 
             if (!companyId || role !== 'owner') {
@@ -223,11 +223,11 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         } finally {
             setLoading(false);
         }
-    }, [user, role, companyId, authLoading, fetchUnreadNotifications]);
+    }, [user, role, companyId, authLoading, fetchNotifications]);
 
     const markNotificationRead = useCallback(async (id: string) => {
         if (!user) return;
-        setNotifications((prev) => prev.filter((n) => n.id !== id));
+        setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
         const { error } = await supabase
             .from('notifications')
             .update({ read: true })
@@ -235,14 +235,14 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             .eq('user_id', user.id);
         if (error) {
             logger.error('Error marking notification read', error);
-            const restored = await fetchUnreadNotifications();
+            const restored = await fetchNotifications();
             setNotifications(restored);
         }
-    }, [user, fetchUnreadNotifications]);
+    }, [user, fetchNotifications]);
 
     const markAllNotificationsRead = useCallback(async () => {
         if (!user) return;
-        setNotifications([]);
+        setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
         const { error } = await supabase
             .from('notifications')
             .update({ read: true })
@@ -250,10 +250,10 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             .eq('read', false);
         if (error) {
             logger.error('Error marking all notifications read', error);
-            const restored = await fetchUnreadNotifications();
+            const restored = await fetchNotifications();
             setNotifications(restored);
         }
-    }, [user, fetchUnreadNotifications]);
+    }, [user, fetchNotifications]);
 
     useEffect(() => {
         void refreshAlerts();
@@ -302,7 +302,7 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 table: 'notifications',
                 ...(notificationsFilter ? { filter: notificationsFilter } : {}),
             }, () => {
-                void fetchUnreadNotifications().then(setNotifications);
+                void fetchNotifications().then(setNotifications);
             })
             .subscribe();
 
@@ -312,9 +312,9 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             supabase.removeChannel(bookingUpdateChannel);
             supabase.removeChannel(notificationsChannel);
         };
-    }, [user, role, companyId, authLoading, refreshAlerts, fetchUnreadNotifications]);
+    }, [user, role, companyId, authLoading, refreshAlerts, fetchNotifications]);
 
-    const unreadCount = notifications.length + alerts.length;
+    const unreadCount = notifications.filter((n) => !n.read).length + alerts.length;
 
     return (
         <AlertsContext.Provider value={{

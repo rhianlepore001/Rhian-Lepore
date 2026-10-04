@@ -68,6 +68,11 @@ describe('mapError', () => {
     expect(out.code).toBe('#slotunav');
   });
 
+  it('traduz self_rescheduling_disabled', () => {
+    const out = mapError({ message: 'self_rescheduling_disabled' }, 'fallback');
+    expect(out.message).toBe('O estabelecimento não permite remarcar pelo app. Fale com o salão.');
+  });
+
   it('traduz e-mail já cadastrado no Auth (user_already_exists)', () => {
     const out = mapError(
       { code: 'user_already_exists', message: 'User already registered' },

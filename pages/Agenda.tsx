@@ -1443,6 +1443,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                 teamMembers={teamMembers}
                 services={services}
                 currencyRegion={currencyRegion}
+                timeZone={shopTimeZone}
                 onAccept={handleAcceptBooking}
                 onReject={handleRejectBooking}
                 acceptError={acceptBlockError}

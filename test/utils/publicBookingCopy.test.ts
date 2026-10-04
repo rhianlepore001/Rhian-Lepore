@@ -91,6 +91,20 @@ describe('publicBookingCopy — cancelado (item 5b)', () => {
     expect(barber.stepperLastLabel).toBe('Cancelado');
   });
 
+  it('pedido de alteração usa a copy exata do horário original', () => {
+    const subtitle =
+      'Pedido de alteração enviado. Seu horário original (dom., 04 de out. às 10:00) continua reservado até a resposta.';
+    const copy = getPublicBookingSuccessCopy({
+      isBeauty: false,
+      status: 'pending',
+      isEdit: true,
+      editSentSubtitle: subtitle,
+    });
+    expect(copy.title).toBe('ALTERAÇÃO ENVIADA');
+    expect(copy.subtitle).toBe(subtitle);
+    expect(copy.stepperLastLabel).toBe('Enviado');
+  });
+
   it('tela de sucesso não atribui o cancelamento ao estabelecimento (recusa ou cliente em outra aba)', () => {
     for (const isBeauty of [false, true]) {
       for (const isEdit of [false, true]) {

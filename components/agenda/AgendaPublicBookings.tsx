@@ -2,6 +2,13 @@ import React from 'react';
 import { AlertTriangle, Check, X } from 'lucide-react';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { formatCurrency, formatPhone, type Region } from '../../utils/formatters';
+import {
+  formatAgendaAlteracao,
+  formatAgendaOnlineRequestsTitle,
+  formatAgendaPublicBookingsSummary,
+  isClientEditPending,
+} from '../../utils/clientEditRequest';
+import { formatTimeInTimeZone, getDateStringInTimeZone, getTodayInTimeZone } from '../../utils/businessTimezone';
 
 export interface AgendaPublicBookingItem {
   id: string;
@@ -11,7 +18,9 @@ export interface AgendaPublicBookingItem {
   total_price: number;
   professional_id?: string | null;
   service_ids?: string[] | null;
+  status?: string | null;
   is_edit?: boolean | null;
+  original_appointment_time?: string | null;
   notes?: string | null;
   customer_notes?: string | null;
   observation?: string | null;
@@ -32,6 +41,7 @@ export interface AgendaPublicBookingsProps {
   teamMembers: AgendaPublicBookingMember[];
   services: AgendaPublicBookingService[];
   currencyRegion: Region;
+  timeZone?: string;
   onAccept: (booking: AgendaPublicBookingItem) => void;
   onReject: (bookingId: string) => void;
   acceptError?: { id: string; message: string } | null;
@@ -58,6 +68,7 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
   teamMembers,
   services,
   currencyRegion,
+  timeZone = 'America/Sao_Paulo',
   onAccept,
   onReject,
   acceptError = null,
@@ -66,11 +77,9 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
 
   if (bookings.length === 0) return null;
 
-  const edits = bookings.filter((b) => b.is_edit).length;
+  const edits = bookings.filter((b) => isClientEditPending({ ...b, status: b.status ?? 'pending' })).length;
   const newOnes = bookings.length - edits;
-  let summary = 'Feitos pelo link público — aceite ou recuse.';
-  if (edits > 0 && newOnes > 0) summary = `${newOnes} novo(s) e ${edits} alteração(ões).`;
-  else if (edits > 0) summary = `${edits} alteração(ões) aguardando aprovação.`;
+  const summary = formatAgendaPublicBookingsSummary(edits, newOnes);
 
   return (
     <section data-testid="agenda-public-bookings" className="shrink-0 space-y-2">
@@ -79,7 +88,7 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
           <AlertTriangle className={`w-4 h-4 mt-0.5 shrink-0 ${accent.text}`} aria-hidden />
           <div className="min-w-0">
             <h3 className={`${colors.text} font-bold text-sm leading-snug`}>
-              {bookings.length === 1 ? '1 solicitação online' : `${bookings.length} solicitações online`}
+              {formatAgendaOnlineRequestsTitle(bookings.length)}
             </h3>
             <p className={`${colors.textSecondary} text-xs leading-snug break-words`}>
               {summary}
@@ -92,9 +101,10 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
         {bookings.map((booking) => {
           const professional = teamMembers.find((m) => m.id === booking.professional_id);
           const bookingDate = new Date(booking.appointment_time);
-          const isToday = bookingDate.toDateString() === new Date().toDateString();
+          const isToday = getDateStringInTimeZone(booking.appointment_time, timeZone) === getTodayInTimeZone(timeZone);
           const note = bookingNote(booking);
-          const when = `${isToday ? 'Hoje' : bookingDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} · ${bookingDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+          const pendingEdit = isClientEditPending({ ...booking, status: booking.status ?? 'pending' });
+          const when = `${isToday ? 'Hoje' : bookingDate.toLocaleDateString('pt-BR', { timeZone, day: '2-digit', month: '2-digit' })} · ${formatTimeInTimeZone(booking.appointment_time, timeZone)}`;
 
           return (
             <li
@@ -132,9 +142,18 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
                 </div>
               </div>
 
-              {booking.is_edit && (
-                <p className="mt-1.5 text-xs font-bold text-[var(--color-info)]">
-                  Alteração de agendamento
+              {pendingEdit && (
+                <p
+                  data-testid="agenda-booking-alteracao"
+                  className="mt-1.5 text-xs font-bold text-[var(--color-info)]"
+                >
+                  {booking.original_appointment_time
+                    ? formatAgendaAlteracao(
+                      booking.original_appointment_time,
+                      booking.appointment_time,
+                      timeZone,
+                    )
+                    : 'Alteração de agendamento'}
                 </p>
               )}
 

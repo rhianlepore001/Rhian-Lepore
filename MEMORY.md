@@ -9,6 +9,10 @@
 
 ---
 
+## PR-6 overhaul booking — pedido de alteração (4 Out 2026, NÃO merge)
+
+Branch `cursor/overhaul-pr6-edit-request-01d7`. Edit pending = `status='pending' AND is_edit` (prod tem confirmed+is_edit stale). Cancel v2 de edit-pending aplica cutoff no original. Conflito de pedido sempre exclui linked do próprio booking. Accept recusa Completed/NoShow/original passado. Não aplicar em prod. Prints em `/opt/cursor/artifacts/screenshots/pr6/`.
+
 ## PR-5 overhaul booking — prazo de cancelamento (4 Out 2026, NÃO merge)
 
 Branch `cursor/overhaul-pr5-cancel-cutoff-494b`. `client_cancel_cutoff_hours` (0/1/2/6/12/24/48, default 2) + `client_cancel_note`. RPC `cancel_public_booking_by_client_v2`; v1 (`cancel_public_booking_by_client`) só encaminha para v2. Política gerada da regra real. Não aplicar em prod. Prints em `/opt/cursor/artifacts/screenshots/pr5/`.

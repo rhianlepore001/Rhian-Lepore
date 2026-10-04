@@ -20,6 +20,9 @@ import {
   showDayAxisLabel,
   weekdayMon0,
   yAxisTicks,
+  niceYMax,
+  gridAlphaFor,
+  cashflowSummaryParts,
 } from '@/utils/financeCashflow';
 
 const LIS = 'Europe/Lisbon';
@@ -179,8 +182,8 @@ describe('layout do gráfico', () => {
     expect(layout.bars.find((b) => b.dataIndex === 1)).toBeUndefined();
     expect(layout.ticks).toEqual(yAxisTicks(330));
     expect(formatYTick(0)).toBe('0');
-    expect(formatYTick(250)).toBe('250');
-    expect(formatYTick(500)).toBe('500');
+    expect(formatYTick(200)).toBe('200');
+    expect(formatYTick(400)).toBe('400');
   });
 
   it('duas barras do mesmo grupo ficam lado a lado com 2 px de vão', () => {
@@ -215,5 +218,52 @@ describe('rótulos', () => {
   it('previousMonthIndex atravessa o ano', () => {
     expect(previousMonthIndex(2026, 0)).toEqual({ year: 2025, monthIndex: 11 });
     expect(previousMonthIndex(2026, 8)).toEqual({ year: 2026, monthIndex: 7 });
+  });
+});
+
+describe('escala Y "nice" com 10% de folga', () => {
+  it('330 → 400 com ticks 0/200/400', () => {
+    expect(niceYMax(330)).toBe(400);
+    expect(yAxisTicks(330)).toEqual([0, 200, 400]);
+  });
+
+  it('usa o menor passo nice >= max × 1,1', () => {
+    expect(niceYMax(220)).toBe(250); // 242
+    expect(niceYMax(100)).toBe(200); // 110
+    expect(niceYMax(90)).toBe(100); // 99
+    expect(niceYMax(1800)).toBe(2000); // 1980
+    expect(niceYMax(4500)).toBe(5000); // 4950
+    expect(niceYMax(4600)).toBe(10000); // 5060
+    expect(niceYMax(0.5)).toBe(1);
+    expect(yAxisTicks(220)).toEqual([0, 125, 250]);
+  });
+
+  it('máximo zero ou negativo cai em 1', () => {
+    expect(niceYMax(0)).toBe(1);
+    expect(niceYMax(-5)).toBe(1);
+  });
+});
+
+describe('grelha', () => {
+  it('10% no modo escuro, 6% no claro', () => {
+    expect(gridAlphaFor('#1A1816')).toBe(0.1);
+    expect(gridAlphaFor('#221F35')).toBe(0.1);
+    expect(gridAlphaFor('#FFFFFF')).toBe(0.06);
+    expect(gridAlphaFor('')).toBe(0.06);
+  });
+});
+
+describe('resumo da semana em partes', () => {
+  it('linha 1 = intervalo; linha 2 = três pares rótulo/valor', () => {
+    const parts = cashflowSummaryParts(1, 6, 8, 330, 30, 'PT');
+    expect(parts.range).toBe('1–6 set');
+    expect(parts.pairs.map((p) => p.label)).toEqual(['Entradas', 'Saídas', 'Sobrou']);
+    expect(parts.pairs[0].value).toMatch(/330,00\s€/);
+    expect(parts.pairs[1].value).toMatch(/30,00\s€/);
+    expect(parts.pairs[2].value).toMatch(/300,00\s€/);
+  });
+
+  it('dia único mostra só um dia', () => {
+    expect(cashflowSummaryParts(4, 4, 8, 0, 30, 'PT').range).toBe('4 set');
   });
 });

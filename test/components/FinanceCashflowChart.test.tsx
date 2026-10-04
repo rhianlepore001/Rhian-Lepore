@@ -96,5 +96,11 @@ describe('FinanceCashflowChart', () => {
     expect(tip.textContent).toMatch(/Saídas/);
     expect(tip.textContent).toMatch(/Sobrou/);
     expect(tip.textContent).toMatch(/set/);
+    expect(screen.getByTestId('finance-cashflow-tooltip-range').textContent).toMatch(/^\d+–\d+ set$/);
+    const pairs = screen.getAllByTestId('finance-cashflow-tooltip-pair');
+    expect(pairs).toHaveLength(3);
+    for (const pair of pairs) expect(pair.className).toMatch(/whitespace-nowrap/);
+    expect(pairs[0].parentElement?.className).toMatch(/flex-wrap/);
+    expect(pairs[0].parentElement?.className).toMatch(/gap-x-3/);
   });
 });

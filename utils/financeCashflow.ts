@@ -191,6 +191,33 @@ export function showDayAxisLabel(day: number, daysInMonth: number): boolean {
   return day === 1 || day % 5 === 0 || day === daysInMonth;
 }
 
+export interface CashflowSummaryParts {
+  range: string;
+  pairs: { label: 'Entradas' | 'Saídas' | 'Sobrou'; value: string }[];
+}
+
+export function cashflowSummaryParts(
+  startDay: number,
+  endDay: number,
+  monthIndex: number,
+  receita: number,
+  despesas: number,
+  region: Region,
+): CashflowSummaryParts {
+  const abbrev = MONTH_ABBREV[monthIndex] ?? '';
+  const range = startDay === endDay
+    ? `${startDay} ${abbrev}`
+    : `${startDay}–${endDay} ${abbrev}`;
+  return {
+    range,
+    pairs: [
+      { label: 'Entradas', value: formatCurrency(receita, region) },
+      { label: 'Saídas', value: formatCurrency(despesas, region) },
+      { label: 'Sobrou', value: formatSobrou(calcSobrou(receita, despesas), region) },
+    ],
+  };
+}
+
 export function formatCashflowSummary(
   startDay: number,
   endDay: number,
@@ -199,29 +226,48 @@ export function formatCashflowSummary(
   despesas: number,
   region: Region,
 ): string {
-  const abbrev = MONTH_ABBREV[monthIndex] ?? '';
-  const range = startDay === endDay
-    ? `${startDay} ${abbrev}`
-    : `${startDay}–${endDay} ${abbrev}`;
-  return `${range} · Entradas ${formatCurrency(receita, region)} · Saídas ${formatCurrency(despesas, region)} · Sobrou ${formatSobrou(calcSobrou(receita, despesas), region)}`;
+  const { range, pairs } = cashflowSummaryParts(startDay, endDay, monthIndex, receita, despesas, region);
+  return [range, ...pairs.map((p) => `${p.label} ${p.value}`)].join(' · ');
 }
 
-export function niceCeiling(value: number): number {
-  if (value <= 0) return 1;
-  const exp = Math.floor(Math.log10(value));
-  const frac = value / 10 ** exp;
-  let niceFrac: number;
-  if (frac <= 1) niceFrac = 1;
-  else if (frac <= 2) niceFrac = 2;
-  else if (frac <= 2.5) niceFrac = 2.5;
-  else if (frac <= 5) niceFrac = 5;
-  else niceFrac = 10;
-  return niceFrac * 10 ** exp;
+/** Passos "nice" por década. Inclui 4 para que 330 (×1,1 = 363) feche em 400 (0/200/400). */
+const NICE_STEPS = [1, 2, 2.5, 4, 5, 10] as const;
+export const Y_HEADROOM = 1.1;
+
+/** Menor valor nice (passo × 10^n) que é >= max × 1,1. */
+export function niceYMax(maxValue: number): number {
+  if (!(maxValue > 0)) return 1;
+  const target = maxValue * Y_HEADROOM;
+  const exp = Math.floor(Math.log10(target));
+  const base = 10 ** exp;
+  for (const step of NICE_STEPS) {
+    const candidate = Number((step * base).toPrecision(12));
+    if (candidate >= target - 1e-9) return Math.max(candidate, 1);
+  }
+  return 10 * base;
 }
 
 export function yAxisTicks(maxValue: number): [number, number, number] {
-  const top = niceCeiling(maxValue);
+  const top = niceYMax(maxValue);
   return [0, top / 2, top];
+}
+
+function relativeLuminance(hex: string): number | null {
+  const m = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) return null;
+  let h = m[1];
+  if (h.length === 3) h = h.split('').map((c) => c + c).join('');
+  const [r, g, b] = [0, 2, 4].map((i) => {
+    const c = parseInt(h.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/** Opacidade da grelha: 10% sobre card escuro, 6% sobre card claro. */
+export function gridAlphaFor(cardColor: string): number {
+  const lum = relativeLuminance(cardColor || '');
+  return lum != null && lum < 0.2 ? 0.1 : 0.06;
 }
 
 export function formatYTick(value: number): string {

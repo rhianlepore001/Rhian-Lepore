@@ -52,15 +52,23 @@ Prints em `/opt/cursor/artifacts/screenshots/fin-c/` (não versionados):
 
 E2E: `e2e/finance-cashflow.spec.ts` (tenant mockado, project `chromium-legacy`).
 
+### Rodada de polimento (box, 4 out 2026)
+- [x] Card do gráfico com `scroll-mt-16 md:scroll-mt-24` (header fixo h-14 / ~5rem); e2e verifica título abaixo do header.
+- [x] Totais: flex-wrap, `min-w-0`, `clamp(16px, 5vw, 24px)`, tabular-nums, sem truncar; Sobrou desce para linha própria quando não cabe. E2E 360 px com 24 690,00 € / 12 345,00 € verifica `scrollWidth <= clientWidth`.
+- [x] Escala Y: `niceYMax` = menor de {1, 2, 2,5, 4, 5}×10^n >= max×1,1 (330 → 0/200/400). O 4 entrou para 330 dar 400.
+- [x] Tooltip: linha 1 intervalo; linha 2 três pares `whitespace-nowrap` em flex-wrap gap-x-3.
+- [x] Grelha 10% no escuro (6% no claro) via `gridAlphaFor(card)`; ticks Y com `textMuted`, e2e verifica contraste >= 4,5:1.
+- [x] Shot extra `small-previous-390-with-chart-light` (viewport 390×1500).
+
 ---
 
 ## Por fazer / riscos
 
 1. **RPC sem fuso (bloqueado neste PR)** — `get_finance_stats` faz `p_start_date::TIMESTAMP` e alarga o fim ao dia civil. Sem migration, o cliente filtra `[start, end)` e agrega o gráfico/KPIs a partir das transações. Totais da RPC (`revenue_by_method`, comissões pendentes) podem vazar 1 dia na borda. Correção de verdade = migration/RPC `timestamptz`.
 2. **Perf 4G / 4× CPU / PWA instalada** — não medido em Android real. CLS não medido com Web Vitals; só altura reservada.
-3. **Header sticky** — no 390 o título do card («Entradas e saídas» + mês) pode ficar por baixo do header; totais + barras entram. Ajustar offset de scroll ou `scroll-margin-top` no card.
+3. ~~Header sticky~~ — resolvido com `scroll-margin-top`.
 4. **graphify** — CLI não estava no ambiente; `graphify update .` não correu.
-5. **Auto-crítica visual ~8,5/10** — no desktop os 3 totais ainda respiram (já há `md:max-w-2xl`); eixo Y usa nice-scale (ex.: 0/125/250 se o máximo é ~220, não força 0/250/500).
+5. **Auto-crítica visual** — no desktop as barras diárias de 12 px ficam esparsas numa largura de 1440.
 6. **`.env.local` dummy** — criado só para o Playwright local; **não commitar**.
 
 ---

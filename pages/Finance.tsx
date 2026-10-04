@@ -765,6 +765,7 @@ const [searchParams, setSearchParams] = useSearchParams();
 
           <Card
             id="finance-cashflow"
+            className="scroll-mt-16 md:scroll-mt-24"
             title={
               <div>
                 <h3 className={`text-base md:text-lg font-bold tracking-tight ${colors.text}`}>

@@ -124,6 +124,13 @@ const SEPTEMBER_TX = [
   tx({ id: 's5a', created_at: '2026-09-30T22:30:00.000+01:00', amount: 80, service_name: 'Pomada' }),
 ];
 
+/** Valores grandes para verificar que os totais cabem a 360 px sem truncar. */
+const BIG_SEPTEMBER_TX = [
+  tx({ id: 'b1', created_at: '2026-09-02T10:00:00.000+01:00', amount: 12345, service_name: 'Pacote' }),
+  tx({ id: 'b2', created_at: '2026-09-15T10:00:00.000+01:00', amount: 12345, service_name: 'Pacote' }),
+  tx({ id: 'b3', created_at: '2026-09-20T10:00:00.000+01:00', expense: 12345, type: 'expense', service_name: 'Obra' }),
+];
+
 const TINY_AUGUST_TX = [
   tx({ id: 'a1', created_at: '2026-08-12T10:00:00.000+01:00', amount: 20, service_name: 'Ajuste' }),
 ];
@@ -227,14 +234,55 @@ async function setMode(page: Page, mode: 'light' | 'dark') {
   await page.waitForTimeout(1100);
 }
 
+/** Resize + repaint forçado: sem isso o Chromium headless deixa tiles sem pintar (fundo preto). */
+async function resizeAndRepaint(page: Page, width: number, height: number, mode: 'light' | 'dark' = 'light') {
+  await page.setViewportSize({ width, height });
+  await setMode(page, mode === 'light' ? 'dark' : 'light');
+  await setMode(page, mode);
+}
+
 async function frameChart(page: Page) {
   await page.evaluate(() => {
     const el = document.getElementById('finance-cashflow')
       || document.querySelector('[data-testid="finance-cashflow-chart"]');
+    // scroll-margin-top no card desconta o header fixo.
     el?.scrollIntoView({ block: 'start' });
-    window.scrollBy(0, -88);
   });
   await page.waitForTimeout(250);
+  await expectChartTitleBelowHeader(page);
+}
+
+async function expectChartTitleBelowHeader(page: Page) {
+  const { titleTop, headerBottom } = await page.evaluate(() => {
+    const title = document.querySelector('#finance-cashflow h3');
+    const header = document.querySelector('header');
+    return {
+      titleTop: title?.getBoundingClientRect().top ?? -1,
+      headerBottom: header?.getBoundingClientRect().bottom ?? 0,
+    };
+  });
+  expect(titleTop).toBeGreaterThanOrEqual(headerBottom);
+}
+
+function luminance(rgb: string): number {
+  const [r, g, b] = (rgb.match(/\d+(\.\d+)?/g) ?? ['0', '0', '0']).slice(0, 3).map((v) => {
+    const c = Number(v) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+async function expectYTicksAA(page: Page) {
+  const { fill, card } = await page.evaluate(() => {
+    const tick = document.querySelector('[data-testid="cashflow-ytick"]') as SVGTextElement | null;
+    const cardEl = document.getElementById('finance-cashflow');
+    return {
+      fill: tick ? getComputedStyle(tick).fill : '',
+      card: cardEl ? getComputedStyle(cardEl).backgroundColor : '',
+    };
+  });
+  const [hi, lo] = [luminance(fill), luminance(card)].sort((a, b) => b - a);
+  expect((hi + 0.05) / (lo + 0.05)).toBeGreaterThanOrEqual(4.5);
 }
 
 async function openFinanceSeptember(page: Page) {
@@ -269,7 +317,20 @@ test.describe('PR-C gráfico entradas e saídas', () => {
     await page.getByText('Mês anterior com pouco movimento').scrollIntoViewIfNeeded();
     await shot(page, 'small-previous-390-light');
 
+    // Segunda versão: viewport alto para caber o KPI com «pouco movimento» e o card do gráfico.
+    await resizeAndRepaint(page, 390, 1500);
+    await page.evaluate(() => {
+      document.querySelector('[data-testid="finance-cashflow-chart"]')
+        ?.scrollIntoView({ block: 'end' });
+    });
+    await page.waitForTimeout(250);
+    await expect(page.getByText('Mês anterior com pouco movimento')).toBeInViewport();
+    await expect(page.getByTestId('finance-cashflow-chart')).toBeInViewport();
+    await shot(page, 'small-previous-390-with-chart-light');
+    await resizeAndRepaint(page, 390, 844);
+
     await frameChart(page);
+    await expectYTicksAA(page);
     await shot(page, 'overview-390-light');
 
     await page.getByTestId('cashflow-hit-0').click();
@@ -279,6 +340,7 @@ test.describe('PR-C gráfico entradas e saídas', () => {
 
     await setMode(page, 'dark');
     await frameChart(page);
+    await expectYTicksAA(page);
     await shot(page, 'overview-390-dark');
 
     await page.setViewportSize({ width: 360, height: 800 });
@@ -295,6 +357,49 @@ test.describe('PR-C gráfico entradas e saídas', () => {
     await setMode(page, 'dark');
     await frameChart(page);
     await shot(page, 'overview-1440-dark');
+
+    guard.assertNoLeak();
+  });
+
+  test('totais grandes cabem a 360 px sem overflow', async ({ page }) => {
+    const guard = await installProdWriteGuard(page);
+    guard.stubRpc('get_finance_stats', (_route, payload) => {
+      const start = String((payload as { p_start_date?: string })?.p_start_date ?? '');
+      if (start.startsWith('2026-08')) return { body: statsBody(TINY_AUGUST_TX) };
+      return { body: statsBody(BIG_SEPTEMBER_TX) };
+    });
+    guard.stubRpc('get_monthly_finance_history', { body: [] });
+    await stubSession(page);
+
+    await page.setViewportSize({ width: 360, height: 800 });
+    await openFinanceSeptember(page);
+    await setMode(page, 'light');
+    await frameChart(page);
+
+    await expect(page.getByTestId('finance-cashflow-entradas')).toHaveText(/24[.\s]690,00\s€/);
+    await expect(page.getByTestId('finance-cashflow-sobrou')).toHaveText(/12[.\s]345,00\s€/);
+
+    const metrics = await page.evaluate(() => {
+      const ids = ['finance-cashflow-totals', 'finance-cashflow-entradas', 'finance-cashflow-saidas', 'finance-cashflow-sobrou'];
+      const card = document.getElementById('finance-cashflow')!.getBoundingClientRect();
+      return ids.map((id) => {
+        const el = document.querySelector(`[data-testid="${id}"]`) as HTMLElement;
+        const r = el.getBoundingClientRect();
+        return {
+          id,
+          scrollWidth: el.scrollWidth,
+          clientWidth: el.clientWidth,
+          insideCard: r.left >= card.left - 0.5 && r.right <= card.right + 0.5,
+          ellipsis: getComputedStyle(el).textOverflow === 'ellipsis',
+        };
+      });
+    });
+    for (const m of metrics) {
+      expect(m.scrollWidth, `${m.id} overflow`).toBeLessThanOrEqual(m.clientWidth);
+      expect(m.insideCard, `${m.id} dentro do card`).toBe(true);
+      expect(m.ellipsis, `${m.id} sem truncar`).toBe(false);
+    }
+    await shot(page, 'overview-360-big-light');
 
     guard.assertNoLeak();
   });

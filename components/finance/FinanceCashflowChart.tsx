@@ -3,7 +3,9 @@ import { useThemeTokens } from '../../hooks/useThemeTokens';
 import { formatCurrency, type Region } from '../../utils/formatters';
 import {
   DESKTOP_MAX_BAR_WIDTH,
+  cashflowSummaryParts,
   formatCashflowSummary,
+  gridAlphaFor,
   formatSobrou,
   formatYTick,
   layoutCashflowBars,
@@ -39,9 +41,13 @@ const X_AXIS = 24;
 const TOP_PAD = 16;
 const RIGHT_PAD = 8;
 const CHART_RESERVE = 340;
+/** 3 linhas de text-xs leading-relaxed: intervalo + pares (até 2 linhas) sem mexer no layout. */
+const TOOLTIP_RESERVE = 60;
 const FALLBACK_SUCCESS = '#10B981';
 const FALLBACK_DANGER = '#EF4444';
-const FALLBACK_TEXT = '#6B6252';
+const FALLBACK_TEXT = '#6E6B64';
+/** Totais: 16–24 px, sem truncar dinheiro. */
+const TOTAL_FONT_SIZE = 'clamp(16px, 5vw, 24px)';
 
 function subscribeDesktop(cb: () => void) {
   const mql = window.matchMedia('(min-width: 768px)');
@@ -103,7 +109,7 @@ export const FinanceCashflowChart = memo(function FinanceCashflowChart({
   const income = tokens.success || FALLBACK_SUCCESS;
   const expense = tokens.danger || FALLBACK_DANGER;
   const axis = tokens.textMuted || FALLBACK_TEXT;
-  const grid = withAlpha(tokens.text || FALLBACK_TEXT, 0.06);
+  const grid = withAlpha(tokens.text || FALLBACK_TEXT, gridAlphaFor(tokens.card));
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -139,6 +145,15 @@ export const FinanceCashflowChart = memo(function FinanceCashflowChart({
     [points, monthIndex, currencyRegion],
   );
 
+  const summaryParts = useMemo(
+    () => points.map((p) => (
+      isWeek(p)
+        ? cashflowSummaryParts(p.startDay, p.endDay, monthIndex, p.receita, p.despesas, currencyRegion)
+        : cashflowSummaryParts(p.day, p.day, monthIndex, p.receita, p.despesas, currencyRegion)
+    )),
+    [points, monthIndex, currencyRegion],
+  );
+
   const hasActivity = totals.receita > 0 || totals.despesas > 0;
 
   const onActivate = useCallback((index: number) => {
@@ -159,7 +174,7 @@ export const FinanceCashflowChart = memo(function FinanceCashflowChart({
     }
   }, [activateFromTarget]);
 
-  const tooltip = active != null ? summaries[active] : null;
+  const tooltip = active != null ? summaryParts[active] : null;
 
   const aria = monthAriaLabel(periodLabel, totals.receita, totals.despesas, currencyRegion);
 
@@ -186,33 +201,35 @@ export const FinanceCashflowChart = memo(function FinanceCashflowChart({
       style={{ minHeight: CHART_RESERVE }}
     >
       <div
-        className="grid grid-cols-3 gap-2 md:max-w-2xl md:gap-8 pb-4"
+        className="flex flex-wrap gap-x-4 gap-y-3 pb-4 md:max-w-2xl md:gap-x-8"
         data-testid="finance-cashflow-totals"
         style={{ minHeight: 72 }}
       >
-        <div className="min-w-0">
-          <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide" style={{ color: axis }}>
-            <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: income }} aria-hidden />
-            Entradas
-          </p>
-          <p className="mt-1 truncate font-mono text-xl font-black tabular-nums tracking-tight md:text-2xl" style={{ color: tokens.text || '#111' }}>
-            {formatCurrency(totals.receita, currencyRegion)}
-          </p>
+        <div className="flex min-w-0 gap-x-4 md:gap-x-8" style={{ flex: '2 1 auto' }}>
+          <div className="min-w-0 flex-1">
+            <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide" style={{ color: axis }}>
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: income }} aria-hidden />
+              Entradas
+            </p>
+            <p className="mt-1 font-mono font-black tabular-nums tracking-tight whitespace-nowrap" style={{ color: tokens.text || '#111', fontSize: TOTAL_FONT_SIZE }} data-testid="finance-cashflow-entradas">
+              {formatCurrency(totals.receita, currencyRegion)}
+            </p>
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide" style={{ color: axis }}>
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: expense }} aria-hidden />
+              Saídas
+            </p>
+            <p className="mt-1 font-mono font-black tabular-nums tracking-tight whitespace-nowrap" style={{ color: tokens.text || '#111', fontSize: TOTAL_FONT_SIZE }} data-testid="finance-cashflow-saidas">
+              {formatCurrency(totals.despesas, currencyRegion)}
+            </p>
+          </div>
         </div>
-        <div className="min-w-0">
-          <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide" style={{ color: axis }}>
-            <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: expense }} aria-hidden />
-            Saídas
-          </p>
-          <p className="mt-1 truncate font-mono text-xl font-black tabular-nums tracking-tight md:text-2xl" style={{ color: tokens.text || '#111' }}>
-            {formatCurrency(totals.despesas, currencyRegion)}
-          </p>
-        </div>
-        <div className="min-w-0">
+        <div className="min-w-0" style={{ flex: '1 1 auto' }}>
           <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: axis }}>Sobrou</p>
           <p
-            className="mt-1 truncate font-mono text-xl font-black tabular-nums tracking-tight md:text-2xl"
-            style={{ color: totals.sobrou < 0 ? expense : (tokens.text || '#111') }}
+            className="mt-1 font-mono font-black tabular-nums tracking-tight whitespace-nowrap"
+            style={{ color: totals.sobrou < 0 ? expense : (tokens.text || '#111'), fontSize: TOTAL_FONT_SIZE }}
             data-testid="finance-cashflow-sobrou"
           >
             {formatSobrou(totals.sobrou, currencyRegion)}
@@ -247,6 +264,7 @@ export const FinanceCashflowChart = memo(function FinanceCashflowChart({
                   y={y + 3}
                   textAnchor="end"
                   fill={axis}
+                  data-testid="cashflow-ytick"
                   fontSize={12}
                   fontFamily="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"
                 >
@@ -311,15 +329,32 @@ export const FinanceCashflowChart = memo(function FinanceCashflowChart({
         </svg>
       </div>
 
-      <p
+      <div
         data-testid="finance-cashflow-tooltip"
-        className="mt-2 min-h-10 px-0.5 text-xs leading-relaxed"
-        style={{ color: tooltip ? (tokens.text || axis) : axis }}
+        className="mt-2 px-0.5 text-xs leading-relaxed"
+        style={{ color: tooltip ? (tokens.text || axis) : axis, minHeight: TOOLTIP_RESERVE }}
+        aria-live="polite"
       >
-        {tooltip ?? (mode === 'week'
-          ? 'Toque numa semana para ver entradas, saídas e o que sobrou.'
-          : 'Passe o cursor ou foque um dia para ver o resumo.')}
-      </p>
+        {tooltip ? (
+          <>
+            <p className="font-semibold" data-testid="finance-cashflow-tooltip-range">{tooltip.range}</p>
+            <p className="flex flex-wrap gap-x-3 gap-y-0.5">
+              {tooltip.pairs.map((pair) => (
+                <span key={pair.label} className="whitespace-nowrap" data-testid="finance-cashflow-tooltip-pair">
+                  <span style={{ color: axis }}>{pair.label}</span>{' '}
+                  <span className="font-mono font-semibold tabular-nums">{pair.value}</span>
+                </span>
+              ))}
+            </p>
+          </>
+        ) : (
+          <p>
+            {mode === 'week'
+              ? 'Toque numa semana para ver entradas, saídas e o que sobrou.'
+              : 'Passe o cursor ou foque um dia para ver o resumo.'}
+          </p>
+        )}
+      </div>
 
       <table className="sr-only">
         <caption>{`Entradas e saídas — ${periodLabel}`}</caption>

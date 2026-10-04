@@ -493,8 +493,10 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                     >
                                         <ChevronLeft className="w-4 h-4" aria-hidden="true" />
                                     </button>
-                                    <span className={`px-1 text-sm font-semibold ${colors.text} tabular-nums whitespace-nowrap`} aria-live="polite">
-                                        {formatDayMonth(cycleData.cycle.start)} – {formatDayMonth(cycleData.cycle.end)}
+                                    <span className={`px-2 text-sm font-semibold ${colors.text} whitespace-nowrap`} aria-live="polite">
+                                        {({ weekly: 'Semanal', biweekly: 'Quinzenal', monthly: 'Mensal' } as Record<string, string>)[cycleData.frequency ?? 'monthly'] ?? 'Ciclo'}
+                                        {' · '}
+                                        {cycleData.cycle.open ? 'em aberto' : 'fechado'}
                                     </span>
                                     <button
                                         type="button"
@@ -507,12 +509,16 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                                     </button>
                                 </div>
                             </div>
-                            <p className={`text-sm ${colors.textSecondary} tabular-nums`} data-testid="commission-cycle-header">
-                                Período {formatDayMonth(cycleData.cycle.start)} – {formatDayMonth(cycleData.cycle.end)}
-                                {' · '}fecha em {formatDayMonth(cycleData.cycle.end)}
-                                {cycleData.cycle.pay_due || cycleData.pay_due
-                                    ? ` · pagar até ${formatDayMonth((cycleData.cycle.pay_due || cycleData.pay_due)!)}`
-                                    : ''}
+                            {/* 390: período em destaque numa linha, prazos na seguinte; ≥640: uma linha só. */}
+                            <p className={`text-sm leading-relaxed ${colors.textSecondary} tabular-nums`} data-testid="commission-cycle-header">
+                                <span className={`block sm:inline font-semibold ${colors.text}`}>
+                                    Período {formatDayMonth(cycleData.cycle.start)} – {formatDayMonth(cycleData.cycle.end)}
+                                </span>
+                                <span className="hidden sm:inline" aria-hidden="true">{' · '}</span>
+                                <span className="whitespace-nowrap">fecha em {formatDayMonth(cycleData.cycle.end)}</span>
+                                {cycleData.cycle.pay_due || cycleData.pay_due ? (
+                                    <span className="whitespace-nowrap">{' · '}pagar até {formatDayMonth((cycleData.cycle.pay_due || cycleData.pay_due)!)}</span>
+                                ) : null}
                             </p>
                         </div>
                     ) : (

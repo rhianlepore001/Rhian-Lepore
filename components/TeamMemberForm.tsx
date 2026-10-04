@@ -17,6 +17,7 @@ import {
     scheduleRowToDraft,
     type CommissionScheduleDraft,
     draftsEqual,
+    scheduleDraftSummary,
     validateScheduleDraft,
 } from '../utils/commissionSchedule';
 import { fetchCommissionSchedules, saveCommissionSchedule } from '../services/commissionSchedule';
@@ -73,6 +74,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     const [scheduleCurrentEnd, setScheduleCurrentEnd] = useState<string | null>(null);
     const [scheduleReady, setScheduleReady] = useState(false);
     const [hadException, setHadException] = useState(false);
+    const [businessDraft, setBusinessDraft] = useState<CommissionScheduleDraft | null>(null);
     const showSchedule = Boolean(initialData?.id) && !isOwner && !isOwnerForm;
 
     useEffect(() => {
@@ -81,6 +83,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
             .then((payload) => {
                 setScheduleFromIso(payload.today);
                 const business = scheduleRowToDraft(payload.business);
+                setBusinessDraft(business);
                 const exception = payload.exceptions.find((row) => row.professional_id === initialData.id);
                 const hasCustom = Boolean(exception && (exception.schedule.close_days?.length ?? 0) > 0);
                 setScheduleCurrentEnd((hasCustom ? exception?.current_end : null) ?? payload.current_end);
@@ -433,18 +436,26 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                 {showSchedule && scheduleReady && (
                     <div
                         data-testid="collaborator-schedule-exception"
-                        className={`space-y-4 p-4 rounded-xl border ${colors.border} ${colors.surface}`}
+                        className={`space-y-6 p-4 rounded-xl border ${colors.border} ${colors.surface}`}
                     >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="min-w-0">
+                                <p className={`text-xs font-medium ${colors.textMuted}`}>Ciclo de acerto</p>
+                                <label htmlFor="use-business-schedule" className={`mt-1 block text-sm font-semibold ${colors.text} cursor-pointer`}>
+                                    Usar regra do negócio
+                                </label>
+                                <p className={`mt-1 text-xs leading-relaxed ${colors.textSecondary}`}>
+                                    {useBusinessDefault
+                                        ? `Segue a regra de todos${businessDraft ? `: ${scheduleDraftSummary(businessDraft)}` : ''}.`
+                                        : 'Desligado: este colaborador tem um ciclo próprio, que vale a partir do próximo fechamento dele.'}
+                                </p>
+                            </div>
                             <SettingsSwitch
                                 id="use-business-schedule"
                                 checked={useBusinessDefault}
                                 onChange={setUseBusinessDefault}
                                 ariaLabel="Usar regra do negócio"
                             />
-                            <label htmlFor="use-business-schedule" className={`text-sm font-semibold ${colors.text} cursor-pointer`}>
-                                Usar regra do negócio
-                            </label>
                         </div>
                         {!useBusinessDefault && (
                             <CommissionScheduleEditor

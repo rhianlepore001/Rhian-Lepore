@@ -313,6 +313,24 @@ async function shot(page: Page, name: string) {
   await page.screenshot({ path: path.join(ARTIFACTS, `${name}.png`), fullPage: true });
 }
 
+async function shotEl(page: Page, locator: ReturnType<Page['locator']>, name: string) {
+  fs.mkdirSync(ARTIFACTS, { recursive: true });
+  const vp = page.viewportSize()!;
+  const h = await locator.evaluate((el) => el.getBoundingClientRect().height);
+  await page.setViewportSize({ width: vp.width, height: Math.ceil(h) + 520 });
+  await locator.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+  await settle(page);
+  const box = (await locator.boundingBox())!;
+  await page.screenshot({
+    path: path.join(ARTIFACTS, `${name}.png`),
+    clip: { x: 0, y: Math.max(0, box.y - 16), width: vp.width, height: box.height + 32 },
+  });
+  await page.setViewportSize(vp);
+}
+
+const scheduleSection = (page: Page) =>
+  page.getByTestId('commission-schedule-editor').locator('xpath=ancestor::section[1]');
+
 async function openSettingsEditor(page: Page) {
   await page.goto(`${BASE}/#/configuracoes/equipe`, { waitUntil: 'domcontentloaded' });
   await expect(page.getByTestId('commission-schedule-editor')).toBeVisible({ timeout: 20_000 });
@@ -331,7 +349,7 @@ test.describe('Fin PR-D ciclo de comissão', () => {
     await openSettingsEditor(page);
     await expect(page.getByTestId('commission-schedule-notice')).toContainText('regra da barbearia');
     await expect(page.getByRole('tab', { name: 'Mensal' })).toHaveAttribute('aria-selected', 'true');
-    await shot(page, 'settings-390-light-monthly');
+    await shotEl(page, scheduleSection(page), 'settings-390-light-monthly');
 
     await page.getByRole('tab', { name: 'Quinzenal' }).click();
     await expect(page.getByTestId('commission-schedule-preview')).toContainText(
@@ -340,12 +358,12 @@ test.describe('Fin PR-D ciclo de comissão', () => {
     await expect(page.getByTestId('commission-schedule-change')).toContainText(
       'A mudança vale a partir do próximo fechamento (20/10). O período atual continua até 05/10.',
     );
-    await shot(page, 'settings-390-light-biweekly');
+    await shotEl(page, scheduleSection(page), 'settings-390-light-biweekly');
 
     await page.getByRole('tab', { name: 'Semanal' }).click();
     await page.getByRole('button', { name: 'Sex' }).click();
     await expect(page.getByTestId('commission-schedule-preview')).toContainText('09/10');
-    await shot(page, 'settings-390-light-weekly');
+    await shotEl(page, scheduleSection(page), 'settings-390-light-weekly');
 
     await page.getByTestId('commission-schedule-save').click();
     await expect(page.getByText('Pagamento da comissão salvo.')).toBeVisible({ timeout: 10_000 });
@@ -362,13 +380,13 @@ test.describe('Fin PR-D ciclo de comissão', () => {
     await page.locator('#header-theme-toggle').click();
     await page.waitForTimeout(1000);
     await page.getByTestId('commission-schedule-editor').scrollIntoViewIfNeeded();
-    await shot(page, 'settings-390-dark-monthly');
+    await shotEl(page, scheduleSection(page), 'settings-390-dark-monthly');
 
     await page.locator('#header-theme-toggle').click();
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.waitForTimeout(1000);
     await page.getByTestId('commission-schedule-editor').scrollIntoViewIfNeeded();
-    await shot(page, 'settings-1440-light-monthly');
+    await shotEl(page, scheduleSection(page), 'settings-1440-light-monthly');
     guard.assertNoLeak();
   });
 
@@ -384,9 +402,14 @@ test.describe('Fin PR-D ciclo de comissão', () => {
     const toggle = page.getByLabel('Usar regra do negócio');
     await expect(toggle).toBeVisible({ timeout: 10_000 });
     await expect(toggle).toBeChecked();
-    await toggle.click();
-    await expect(page.getByTestId('commission-schedule-editor')).toBeVisible();
-    await shot(page, 'exception-drawer-390');
+    await page.locator('label[for="use-business-schedule"]').filter({ hasText: 'Usar regra do negócio' }).click();
+    const drawer = page.getByTestId('collaborator-schedule-exception');
+    await expect(drawer.getByTestId('commission-schedule-editor')).toBeVisible();
+    await drawer.getByRole('tab', { name: 'Semanal' }).click();
+    await drawer.getByRole('button', { name: 'Sex' }).click();
+    await shotEl(page, page.getByTestId('collaborator-schedule-exception'), 'exception-drawer-390');
+    await page.getByTestId('collaborator-schedule-exception').scrollIntoViewIfNeeded();
+    await shot(page, 'exception-drawer-390-viewport');
     guard.assertNoLeak();
   });
 
@@ -429,6 +452,8 @@ test.describe('Fin PR-D ciclo de comissão', () => {
     await stubApp(page, 'home', 'light');
     await page.goto(`${BASE}/#/dashboard`, { waitUntil: 'domcontentloaded' });
     await expect(page.getByTestId('attention-commission-due')).toBeVisible({ timeout: 20_000 });
+    await page.getByTestId('attention-commission-due').scrollIntoViewIfNeeded();
+    await page.waitForTimeout(800);
     await shot(page, 'inicio-banner-390');
     await page.locator('#header-notifications-btn').click();
     await expect(page.getByTestId('notifications-panel')).toBeVisible();

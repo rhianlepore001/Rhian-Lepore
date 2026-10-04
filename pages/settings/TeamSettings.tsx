@@ -419,19 +419,24 @@ export const TeamSettings: React.FC = () => {
                     {scheduleNotice && (
                         <div
                             data-testid="commission-schedule-notice"
-                            className={`flex flex-col sm:flex-row sm:items-start gap-3 p-4 rounded-xl border ${accent.borderDim} ${accent.bgDim}`}
+                            role="status"
+                            className={`p-4 rounded-xl border ${accent.borderDim} ${accent.bgDim}`}
                         >
-                            <AlertCircle className={`w-5 h-5 ${accent.text} flex-shrink-0 mt-0.5`} />
-                            <p className={`text-sm leading-relaxed ${colors.text} flex-1`}>
-                                {formatLegacyFrequencyResetNotice(ruleOfBusiness)}
-                            </p>
-                            <Button
-                                variant="secondary"
-                                onClick={() => void handleDismissScheduleNotice()}
-                                className="w-full sm:w-auto shrink-0 min-h-[44px]"
-                            >
-                                Entendi
-                            </Button>
+                            <div className="flex items-start gap-3">
+                                <AlertCircle className={`w-5 h-5 ${accent.text} flex-shrink-0 mt-0.5`} aria-hidden="true" />
+                                <p className={`text-sm leading-relaxed ${colors.text} flex-1 min-w-0`}>
+                                    {formatLegacyFrequencyResetNotice(ruleOfBusiness)}
+                                </p>
+                            </div>
+                            <div className="mt-3 sm:pl-8">
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => void handleDismissScheduleNotice()}
+                                    className="w-full sm:w-auto min-h-[44px]"
+                                >
+                                    Entendi
+                                </Button>
+                            </div>
                         </div>
                     )}
 

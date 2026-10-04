@@ -1,4 +1,5 @@
 import React from 'react';
+import { Bell, CalendarClock, Check, Info } from 'lucide-react';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import {
   type CommissionPaymentFrequency,
@@ -34,6 +35,19 @@ const FREQS: { id: CommissionPaymentFrequency; label: string }[] = [
 
 const PAYS: PayOffsetDays[] = [0, 2, 5];
 const REMS: ReminderOffset[] = [2, 1, 0];
+const PAY_SHORT: Record<PayOffsetDays, string> = { 0: 'No dia', 2: '+2 dias', 5: '+5 dias' };
+const reminderChipLabel = (off: ReminderOffset) => (off === 0 ? 'No dia de pagar' : off === 1 ? '1 dia antes' : '2 dias antes');
+
+const Field: React.FC<{ label: string; hint?: string; id: string; children: React.ReactNode }> = ({ label, hint, id, children }) => {
+  const { colors } = useBrutalTheme();
+  return (
+    <div role="group" aria-labelledby={`${id}-label`}>
+      <p id={`${id}-label`} className={`text-sm font-semibold ${colors.text}`}>{label}</p>
+      {hint && <p className={`mt-1 text-xs leading-relaxed ${colors.textMuted}`}>{hint}</p>}
+      <div className="mt-3">{children}</div>
+    </div>
+  );
+};
 
 export const CommissionScheduleEditor: React.FC<CommissionScheduleEditorProps> = ({
   draft,
@@ -56,45 +70,58 @@ export const CommissionScheduleEditor: React.FC<CommissionScheduleEditorProps> =
     : null;
 
   const setFreq = (frequency: CommissionPaymentFrequency) => {
+    if (frequency === draft.frequency) return;
     onChange({ ...draft, frequency, closeDays: defaultCloseDays(frequency) });
   };
 
-  const chip = (active: boolean) =>
-    `min-h-[44px] min-w-[44px] px-3 text-sm font-semibold ${radius.button} border transition-colors ${
+  const focusRing = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-input-focus)]';
+  // Opção de escolha única/múltipla: neutra em repouso, accent sólido quando escolhida.
+  const option = (active: boolean, extra = '') =>
+    `min-h-[44px] text-sm font-semibold tabular-nums ${radius.button} border transition-colors duration-150 ${focusRing} disabled:opacity-50 disabled:cursor-not-allowed ${
       active
-        ? `${accent.bgDim} ${accent.text} ${accent.border}`
-        : `${colors.surface} ${colors.textSecondary} ${colors.border} hover:border-[var(--color-border-strong)]`
-    }`;
+        ? 'bg-theme-accent text-[var(--color-on-accent)] border-transparent'
+        : `${colors.card} ${colors.text} ${colors.border} hover:bg-[var(--color-card-hover)]`
+    } ${extra}`;
+
+  const sortedBiweekly = [...draft.closeDays].sort((a, b) => a - b);
+  const clampHint = draft.frequency === 'monthly'
+    ? (draft.closeDays[0] ?? 0) >= 29
+    : draft.frequency === 'biweekly' && draft.closeDays.some((d) => d >= 29);
 
   return (
-    <div className="space-y-6" data-testid="commission-schedule-editor">
-      <div>
-        <p className={`text-xs font-mono uppercase tracking-widest mb-2 ${colors.textMuted}`}>Frequência</p>
-        <div role="tablist" aria-label="Frequência do acerto" className={`grid grid-cols-3 gap-1 p-1 ${colors.surface} ${radius.button}`}>
-          {FREQS.map((f) => (
-            <button
-              key={f.id}
-              type="button"
-              role="tab"
-              aria-selected={draft.frequency === f.id}
-              disabled={disabled}
-              onClick={() => setFreq(f.id)}
-              className={`min-h-[44px] text-sm font-semibold ${radius.button} ${
-                draft.frequency === f.id
-                  ? `${colors.card} ${colors.text} border ${colors.border}`
-                  : `${colors.textMuted} border border-transparent`
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
+    <div className="space-y-8 max-w-xl" data-testid="commission-schedule-editor">
+      <Field id="cs-freq" label="Frequência">
+        <div
+          role="tablist"
+          aria-label="Frequência do acerto"
+          className={`grid grid-cols-3 gap-1 p-1 ${colors.surface} border ${colors.border} ${radius.button}`}
+        >
+          {FREQS.map((f) => {
+            const active = draft.frequency === f.id;
+            return (
+              <button
+                key={f.id}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                disabled={disabled}
+                onClick={() => setFreq(f.id)}
+                className={`min-h-[40px] text-sm font-semibold ${radius.button} transition-colors duration-150 ${focusRing} ${
+                  active
+                    ? `${colors.card} ${colors.text} shadow-[0_1px_3px_rgba(0,0,0,0.12)]`
+                    : `${colors.textSecondary} hover:text-theme-text`
+                }`}
+              >
+                {f.label}
+              </button>
+            );
+          })}
         </div>
-      </div>
+      </Field>
 
       {draft.frequency === 'weekly' && (
-        <div>
-          <p className={`text-xs font-mono uppercase tracking-widest mb-2 ${colors.textMuted}`}>Dia da semana</p>
-          <div className="flex flex-wrap gap-2">
+        <Field id="cs-weekday" label="Fecha toda" hint="O ciclo vai do dia seguinte ao fechamento até o próximo.">
+          <div className="grid grid-cols-7 gap-1.5">
             {WEEKDAY_TINY.map((label, dow) => (
               <button
                 key={dow}
@@ -102,56 +129,59 @@ export const CommissionScheduleEditor: React.FC<CommissionScheduleEditorProps> =
                 disabled={disabled}
                 aria-pressed={draft.closeDays[0] === dow}
                 onClick={() => onChange({ ...draft, closeDays: [dow] })}
-                className={chip(draft.closeDays[0] === dow)}
+                className={option(draft.closeDays[0] === dow, 'px-0')}
               >
                 {label}
               </button>
             ))}
           </div>
-        </div>
+        </Field>
       )}
 
       {draft.frequency === 'monthly' && (
-        <div>
-          <p className={`text-xs font-mono uppercase tracking-widest mb-2 ${colors.textMuted}`}>Dia do mês</p>
-          <div className="grid grid-cols-7 gap-1">
+        <Field
+          id="cs-monthday"
+          label="Fecha todo dia"
+          hint={clampHint ? 'Em meses mais curtos, o fechamento vai para o último dia do mês.' : undefined}
+        >
+          <div className="grid grid-cols-7 gap-1.5">
             {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
               <button
                 key={day}
                 type="button"
                 disabled={disabled}
                 aria-pressed={draft.closeDays[0] === day}
+                aria-label={`Dia ${day}`}
                 onClick={() => onChange({ ...draft, closeDays: [day] })}
-                className={`min-h-[40px] text-sm font-semibold tabular-nums ${radius.button} border ${
-                  draft.closeDays[0] === day
-                    ? `${accent.bgDim} ${accent.text} ${accent.border}`
-                    : `${colors.surface} ${colors.textSecondary} ${colors.border}`
-                }`}
+                className={option(draft.closeDays[0] === day, 'min-h-[44px] px-0')}
               >
                 {day}
               </button>
             ))}
           </div>
-        </div>
+        </Field>
       )}
 
       {draft.frequency === 'biweekly' && (
-        <div className="space-y-3">
-          <p className={`text-xs font-mono uppercase tracking-widest ${colors.textMuted}`}>Dois dias do mês</p>
+        <Field
+          id="cs-biweekly"
+          label="Fecha nos dias"
+          hint={`Dois dias do mês, com pelo menos 7 dias entre eles.${clampHint ? ' Em meses mais curtos, 29–31 vira o último dia.' : ''}`}
+        >
           <div className="grid grid-cols-2 gap-3">
             {[0, 1].map((idx) => (
-              <label key={idx} className="block">
-                <span className={`text-xs ${colors.textMuted}`}>{idx === 0 ? 'Primeiro dia' : 'Segundo dia'}</span>
+              <label key={idx} className="block min-w-0">
+                <span className={`block text-xs font-medium mb-1.5 ${colors.textSecondary}`}>{idx === 0 ? '1º fechamento' : '2º fechamento'}</span>
                 <select
                   disabled={disabled}
-                  value={draft.closeDays[idx] ?? (idx === 0 ? 5 : 20)}
+                  value={sortedBiweekly[idx] ?? (idx === 0 ? 5 : 20)}
                   onChange={(e) => {
-                    const next = [...draft.closeDays];
+                    const next = [...sortedBiweekly];
                     next[idx] = parseInt(e.target.value, 10);
                     if (next.length < 2) next[1] = idx === 0 ? 20 : 5;
                     onChange({ ...draft, closeDays: next });
                   }}
-                  className={`mt-1 w-full min-h-[44px] px-3 rounded-xl ${colors.inputBg} ${colors.text} border ${colors.border} outline-none`}
+                  className={`w-full min-h-[44px] px-3 ${radius.button} ${colors.inputBg} ${colors.text} border ${colors.border} tabular-nums ${focusRing}`}
                 >
                   {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
                     <option key={day} value={day}>Dia {day}</option>
@@ -160,77 +190,75 @@ export const CommissionScheduleEditor: React.FC<CommissionScheduleEditorProps> =
               </label>
             ))}
           </div>
-        </div>
+        </Field>
       )}
 
-      <div>
-        <p className={`text-xs font-mono uppercase tracking-widest mb-2 ${colors.textMuted}`}>Pagar até</p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+      <Field id="cs-pay" label="Prazo para pagar" hint="Contado a partir do fechamento.">
+        <div className="grid grid-cols-3 gap-1.5">
           {PAYS.map((off) => (
             <button
               key={off}
               type="button"
               disabled={disabled}
               aria-pressed={draft.payOffsetDays === off}
+              aria-label={payOffsetLabel(off)}
               onClick={() => onChange({ ...draft, payOffsetDays: off })}
-              className={`min-h-[44px] px-3 text-sm font-semibold text-left ${radius.button} border ${
-                draft.payOffsetDays === off
-                  ? `${accent.bgDim} ${accent.text} ${accent.border}`
-                  : `${colors.surface} ${colors.textSecondary} ${colors.border}`
-              }`}
+              className={option(draft.payOffsetDays === off, 'px-2')}
             >
-              {payOffsetLabel(off)}
+              {PAY_SHORT[off]}
             </button>
           ))}
         </div>
-      </div>
+      </Field>
 
-      <div>
-        <p className={`text-xs font-mono uppercase tracking-widest mb-2 ${colors.textMuted}`}>Lembretes</p>
-        <div className="space-y-2">
+      <Field id="cs-rem" label="Lembretes" hint="Chegam no sino e no Início.">
+        <div className="flex flex-wrap gap-2">
           {REMS.map((off) => {
             const on = draft.reminderOffsets.includes(off);
             return (
-              <label
+              <button
                 key={off}
-                className={`flex items-center gap-3 min-h-[44px] px-3 rounded-xl border ${colors.border} ${colors.surface}`}
+                type="button"
+                role="checkbox"
+                aria-checked={on}
+                disabled={disabled}
+                onClick={() => {
+                  const next = on
+                    ? draft.reminderOffsets.filter((x) => x !== off)
+                    : [...draft.reminderOffsets, off].sort((a, b) => b - a);
+                  onChange({ ...draft, reminderOffsets: next as ReminderOffset[] });
+                }}
+                className={option(on, 'inline-flex items-center gap-2 px-3')}
               >
-                <input
-                  type="checkbox"
-                  disabled={disabled}
-                  checked={on}
-                  onChange={() => {
-                    const next = on
-                      ? draft.reminderOffsets.filter((x) => x !== off)
-                      : [...draft.reminderOffsets, off].sort((a, b) => b - a);
-                    onChange({ ...draft, reminderOffsets: next as ReminderOffset[] });
-                  }}
-                  className="h-4 w-4 rounded border-[var(--color-border)]"
-                />
-                <span className={`text-sm ${colors.text}`}>{reminderOffsetLabel(off)}</span>
-              </label>
+                {on ? <Check className="w-4 h-4" aria-hidden="true" /> : <Bell className="w-4 h-4 opacity-60" aria-hidden="true" />}
+                {reminderChipLabel(off)}
+              </button>
             );
           })}
         </div>
-      </div>
+      </Field>
 
       {error && (
         <p className="text-sm text-[var(--color-danger)]" role="alert">{error}</p>
       )}
 
       {preview && (
-        <div
-          data-testid="commission-schedule-preview"
-          className={`p-4 rounded-xl border ${colors.border} ${colors.surface} text-sm leading-relaxed ${colors.text}`}
-        >
-          {preview.text}
+        <div className={`${radius.button} border ${accent.borderDim} ${accent.bgDim} p-4 space-y-3`}>
+          <div className="flex items-start gap-3">
+            <CalendarClock className={`w-5 h-5 mt-0.5 shrink-0 ${accent.text}`} aria-hidden="true" />
+            <p data-testid="commission-schedule-preview" className={`text-sm leading-relaxed ${colors.text} tabular-nums`}>
+              {preview.text}
+            </p>
+          </div>
+          {changeText && (
+            <div className={`flex items-start gap-3 pt-3 border-t ${accent.borderDim}`}>
+              <Info className={`w-5 h-5 mt-0.5 shrink-0 ${colors.textSecondary}`} aria-hidden="true" />
+              <p data-testid="commission-schedule-change" className={`text-sm leading-relaxed ${colors.textSecondary} tabular-nums`}>
+                {changeText}
+              </p>
+            </div>
+          )}
         </div>
-      )}
-
-      {changeText && (
-        <p data-testid="commission-schedule-change" className={`text-sm ${colors.textSecondary}`}>
-          {changeText}
-        </p>
       )}
     </div>
   );

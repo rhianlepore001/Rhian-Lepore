@@ -36,7 +36,7 @@ describe('StaffInsights — Meus resultados (P3, D1)', () => {
     render(<MemoryRouter><StaffInsights /></MemoryRouter>);
     expect(await screen.findByRole('heading', { name: 'Meus resultados' })).toBeInTheDocument();
     expect(screen.getByText(/Ana · /)).toBeInTheDocument();
-    expect(screen.getByText('12')).toBeInTheDocument();
+    expect(await screen.findByText('12')).toBeInTheDocument();
     expect(screen.getByText('2 do Clube')).toBeInTheDocument();
     expect(screen.getByText('R$ 103,33')).toBeInTheDocument();
     expect(screen.getByText('R$ 62,00')).toBeInTheDocument();

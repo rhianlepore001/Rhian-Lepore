@@ -11,7 +11,9 @@
 import { test, expect, type Page, type Route } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BASE = process.env.E2E_BASE_URL || 'http://localhost:3000';
 const PROJECT_REF = 'lcqwrngscsziysyfhpfj';
 const STAFF_ID = '6fc5cf83-b7b6-4be7-9ba7-414d9d2e92f1';
@@ -225,6 +227,11 @@ async function installStaffMocks(page: Page) {
       return;
     }
 
+    if (pathname.includes('/rest/v1/rpc/get_staff_performance_v1')) {
+      await fulfillJson(route, JSON.parse(fs.readFileSync(path.join(ROOT, 'test/fixtures/staffPerformance/staff.json'), 'utf8')));
+      return;
+    }
+
     if (pathname.includes('/rest/v1/finance_records')) {
       await fulfillJson(route, [
         { commission_value: 32 },
@@ -249,53 +256,34 @@ async function installStaffMocks(page: Page) {
 test.describe('Staff Insights — privacidade de faturamento', () => {
   test.setTimeout(120_000);
 
-  test('mostra quantidade e comissão, sem valor bruto', async ({ page }) => {
+  test('mostra quantidade e comissão, sem retorno da casa nem ranking', async ({ page }) => {
     fs.mkdirSync(ARTIFACTS, { recursive: true });
     await page.setViewportSize({ width: 390, height: 844 });
     await installStaffMocks(page);
 
     await page.goto(`${BASE}/#/meus-insights`, { waitUntil: 'domcontentloaded' });
-    await expect(page.getByRole('heading', { name: /Meus Resultados/i })).toBeVisible({
+    await expect(page.getByRole('heading', { name: /Meus resultados/i })).toBeVisible({
       timeout: 30_000,
     });
 
-    // Dados mockados devem aparecer
-    await expect(page.getByText('Meus serviços')).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText('Produtos vendidos')).toBeVisible();
-    await expect(page.getByText('Corte degradê').first()).toBeVisible();
-    await expect(page.getByText('Pomada Black').first()).toBeVisible();
-
-    // Comissões (valores financeiros permitidos) — aparecem
-    await expect(page.getByText('Comissões').first()).toBeVisible();
-    await expect(page.getByText('só a sua comissão')).toBeVisible();
+    await expect(page.getByTestId('metric-comissao_periodo')).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('Comissão gerada')).toBeVisible();
+    await expect(page.getByText('R$ 257,00')).toBeVisible();
+    await expect(page.getByText('Só os seus números')).toBeVisible();
 
     const bodyText = await page.locator('main').innerText();
-
-    // Não pode vazar faturamento bruto dos mocks (80, 40, 90, 45)
-    expect(bodyText).not.toMatch(/R\$\s*80([.,]00)?/);
-    expect(bodyText).not.toMatch(/R\$\s*40([.,]00)?/);
-    expect(bodyText).not.toMatch(/R\$\s*90([.,]00)?/);
-    expect(bodyText).not.toMatch(/R\$\s*45([.,]00)?/);
-    expect(bodyText.toLowerCase()).not.toContain('ticket');
+    expect(bodyText).not.toMatch(/Ficou para/i);
+    expect(bodyText.toLowerCase()).not.toContain('ranking');
+    expect(bodyText).not.toContain('Bruno');
     expect(bodyText.toLowerCase()).not.toContain('faturamento');
-
-    // Quantidades devem aparecer
-    expect(bodyText).toMatch(/2×|2x/i);
-    expect(bodyText).toMatch(/3\s*un\.|un\./i);
+    expect(bodyText).not.toMatch(/R\$\s*80([.,]00)?/);
+    expect(bodyText).not.toMatch(/R\$\s*90([.,]00)?/);
 
     const topShot = path.join(ARTIFACTS, 'staff-insights-privacy-top.png');
     await page.screenshot({ path: topShot, fullPage: false });
-
-    await page.getByText('Produtos vendidos').scrollIntoViewIfNeeded();
-    await page.waitForTimeout(300);
-    const productsShot = path.join(ARTIFACTS, 'staff-insights-privacy-products.png');
-    await page.screenshot({ path: productsShot, fullPage: false });
-
     const fullShot = path.join(ARTIFACTS, 'staff-insights-privacy-full.png');
     await page.screenshot({ path: fullShot, fullPage: true });
-
-    // Sanity: artefatos gravados
     expect(fs.existsSync(topShot)).toBeTruthy();
-    expect(fs.existsSync(productsShot)).toBeTruthy();
+    expect(fs.existsSync(fullShot)).toBeTruthy();
   });
 });

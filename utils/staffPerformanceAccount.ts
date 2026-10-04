@@ -172,7 +172,14 @@ export function metricLabel(id: MetricKey, remainder: BusinessRemainderNoun): st
 }
 
 export function metricSpan(id: MetricKey): 'full' | 'half' {
-    if (id === 'retorno' || id === 'retorno_por_hora' || id === 'ticket_medio' || id === 'voltou' || id === 'faturamento_por_hora') {
+    if (
+        id === 'retorno'
+        || id === 'retorno_por_hora'
+        || id === 'ticket_medio'
+        || id === 'voltou'
+        || id === 'faturamento_por_hora'
+        || id === 'comissao_periodo'
+    ) {
         return 'full';
     }
     return 'half';
@@ -421,7 +428,7 @@ export function buildMetricAccount(id: MetricKey, m: AnyMetrics, opts: AccountBu
     };
 }
 
-export const TEAM_METRIC_IDS: MetricKey[] = ['retorno', 'atendimentos', 'voltou', 'faltas'];
+export const TEAM_METRIC_IDS: MetricKey[] = ['retorno', 'atendimentos', 'faltas', 'voltou'];
 export const MEMBER_METRIC_IDS: MetricKey[] = [
     'retorno',
     'retorno_por_hora',
@@ -435,10 +442,10 @@ export const MEMBER_METRIC_IDS: MetricKey[] = [
 ];
 export const STAFF_METRIC_IDS: MetricKey[] = [
     'atendimentos',
+    'tempo',
     'faturamento_por_hora',
     'ticket_medio',
     'voltou',
-    'tempo',
     'faltas',
     'produtos',
     'comissao_periodo',

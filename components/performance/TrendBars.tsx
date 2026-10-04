@@ -11,9 +11,11 @@ interface TrendBarsProps {
 }
 
 export const TrendBars: React.FC<TrendBarsProps> = ({ title, points, formatValue, testId }) => {
-    const { colors, font, accent, radius } = useBrutalTheme();
+    const { colors, accent, radius } = useBrutalTheme();
     const values = points.map((p) => p.value);
     const max = Math.max(0, ...values.map((v) => v ?? 0));
+
+    const hasLowSample = points.some((p) => p.low_sample && p.atendimentos > 0 && p.value != null);
 
     return (
         <figure className="min-w-0">
@@ -37,20 +39,19 @@ export const TrendBars: React.FC<TrendBarsProps> = ({ title, points, formatValue
                             ) : (
                                 <span
                                     aria-hidden="true"
+                                    data-low-sample={p.low_sample || undefined}
                                     className={`w-full max-w-[2.5rem] ${radius.badge === 'rounded-full' ? 'rounded-t-md' : 'rounded-t-sm'} ${accent.bg} ${p.low_sample ? 'opacity-40' : ''}`}
                                     style={{ height: `${h}%` }}
                                 />
                             )}
                             <span className={`text-xs ${colors.textMuted}`} aria-hidden="true">{monthShortLabel(p.month)}</span>
-                            {p.low_sample && !empty && (
-                                <span className={`text-xs leading-tight text-center ${colors.textMuted}`} aria-hidden="true">
-                                    poucos atendimentos
-                                </span>
-                            )}
                         </li>
                     );
                 })}
             </ol>
+            {hasLowSample && (
+                <p className={`mt-3 text-[13px] ${colors.textMuted}`}>Barra mais clara: poucos atendimentos.</p>
+            )}
         </figure>
     );
 };

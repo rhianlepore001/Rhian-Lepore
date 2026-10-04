@@ -7,6 +7,7 @@ import {
     STAFF_METRIC_IDS,
     TEAM_METRIC_IDS,
     buildMetricAccount,
+    metricSpan,
     reconstructMetric,
     type MetricKey,
 } from '../../utils/staffPerformanceAccount';
@@ -96,5 +97,18 @@ describe('staffPerformanceAccount — a conta fecha com o valor do card', () => 
             remainder: getBusinessRemainderNoun(null),
         });
         expect(account.label).toBe('Ficou para o negócio');
+    });
+
+    it.each([
+        ['equipe', TEAM_METRIC_IDS],
+        ['colaborador', MEMBER_METRIC_IDS],
+        ['meus resultados', STAFF_METRIC_IDS],
+    ])('%s: cards de meia largura entram em pares no grid', (_label, ids) => {
+        let pending = 0;
+        for (const id of ids) {
+            if (metricSpan(id) === 'full') expect(pending % 2).toBe(0);
+            else pending += 1;
+        }
+        expect(pending % 2).toBe(0);
     });
 });

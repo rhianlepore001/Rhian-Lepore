@@ -63,7 +63,7 @@ async function titleLine(page: Page) {
 test.describe('Fin PR-F layout', () => {
   test.setTimeout(150_000);
 
-  test('#9 Financeiro 390: título + mês na mesma linha + "⋯" (Filtrar, Exportar, Assistente)', async ({ page }) => {
+  test('#9 Financeiro 390: título + mês na mesma linha + "⋯" (Filtrar, Exportar)', async ({ page }) => {
     const guard = await installProdWriteGuard(page);
     await stubApp(page, guard, 'light');
     await page.setViewportSize({ width: 390, height: 844 });
@@ -91,7 +91,8 @@ test.describe('Fin PR-F layout', () => {
     await more.click();
     const menu = page.getByRole('menu', { name: 'Mais ações do financeiro' });
     await expect(menu).toBeVisible();
-    await expect(menu.getByRole('menuitem')).toHaveText(['Filtrar', 'Exportar', 'Assistente']);
+    // PR-G: assistente desligado (ASSISTANT_ENABLED=false).
+    await expect(menu.getByRole('menuitem')).toHaveText(['Filtrar', 'Exportar']);
     await expect(menu.getByRole('menuitem').first()).toBeFocused();
     await page.keyboard.press('ArrowDown');
     await expect(menu.getByRole('menuitem', { name: 'Exportar' })).toBeFocused();
@@ -105,11 +106,6 @@ test.describe('Fin PR-F layout', () => {
     await expect(page.getByRole('dialog', { name: 'Filtrar transações' })).toBeVisible();
     await page.keyboard.press('Escape');
 
-    await more.click();
-    await page.getByRole('menuitem', { name: 'Assistente' }).click();
-    await expect(page.getByRole('button', { name: 'Fechar assistente' })).toBeVisible();
-    await page.getByRole('button', { name: 'Fechar assistente' }).click();
-
     // Seta de mês continua funcionando no topo.
     await page.getByRole('button', { name: 'Mês anterior' }).click();
     await expect(stepper).toContainText(/set\.? 2026|setembro 2026/i);
@@ -122,11 +118,11 @@ test.describe('Fin PR-F layout', () => {
     await snap(page, 'financeiro-390-dark-menu', false);
     await page.keyboard.press('Escape');
 
-    // Pagamentos não tem mês (usa ciclos): só título + "⋯".
+    // Pagamentos não tem mês (usa ciclos) nem ações extras: só o título (PR-G: sem "⋯" vazio).
     await setMode(page, 'light');
     await page.getByRole('tab', { name: 'Pagamentos' }).click();
     await expect(page.getByTestId('finance-month-stepper')).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Mais ações do financeiro' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Mais ações do financeiro' })).toHaveCount(0);
 
     await page.setViewportSize({ width: 320, height: 700 });
     await page.getByRole('tab', { name: 'Visão geral' }).click();
@@ -136,7 +132,7 @@ test.describe('Fin PR-F layout', () => {
     guard.assertNoLeak();
   });
 
-  test('#9 Financeiro 1440: mês ao lado do título; Filtrar/Exportar/Assistente visíveis, sem "⋯"', async ({ page }) => {
+  test('#9 Financeiro 1440: mês ao lado do título; Filtrar/Exportar visíveis, sem "⋯"', async ({ page }) => {
     const guard = await installProdWriteGuard(page);
     await stubApp(page, guard, 'light');
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -145,7 +141,7 @@ test.describe('Fin PR-F layout', () => {
     await expect(page.getByText(/mês atual/i)).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Filtrar' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Exportar' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Abrir assistente IA' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Abrir assistente IA' })).toHaveCount(0); // PR-G
     await expect(page.getByRole('button', { name: 'Mais ações do financeiro' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Registrar receita' })).toBeVisible();
     await snap(page, 'financeiro-1440-light', false);

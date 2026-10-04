@@ -113,23 +113,27 @@ export const cycle = {
 export interface StubOptions {
   cycle?: unknown;
   monthlyHistory?: unknown[];
+  /** 'beauty' = salão (acento roxo). Padrão: 'barber'. */
+  theme?: 'barber' | 'beauty';
+  businessName?: string;
 }
 
 export async function stubApp(page: Page, guard: ProdWriteGuard, mode: 'light' | 'dark', opts: StubOptions = {}) {
   const session = fakeSession(OWNER_ID, 'owner.fine@example.test', 'Rhian Owner');
+  const theme = opts.theme ?? 'barber';
   await page.addInitScript(
-    ({ key, value, colorMode }) => {
+    ({ key, value, colorMode, themeId }) => {
       localStorage.setItem(key, JSON.stringify(value));
       localStorage.setItem('agendix_color_mode', colorMode);
       document.documentElement.setAttribute('data-mode', colorMode);
-      document.documentElement.setAttribute('data-theme', 'barber');
+      document.documentElement.setAttribute('data-theme', themeId);
       void navigator.serviceWorker?.getRegistrations?.().then((rs) => rs.forEach((r) => r.unregister()));
     },
-    { key: `sb-${PROJECT_REF}-auth-token`, value: session, colorMode: mode },
+    { key: `sb-${PROJECT_REF}-auth-token`, value: session, colorMode: mode, themeId: theme },
   );
   const profile = {
     id: OWNER_ID, role: 'owner', company_id: OWNER_ID, full_name: 'Rhian Owner',
-    business_name: 'Studio Atlas', user_type: 'barber', region: 'PT', subscription_status: 'active',
+    business_name: opts.businessName ?? 'Studio Atlas', user_type: theme, region: 'PT', subscription_status: 'active',
     trial_ends_at: null, tutorial_completed: true, aios_enabled: false, photo_url: null,
   };
   await page.route(/\.supabase\.co\/(auth|rest)\//, async (route) => {

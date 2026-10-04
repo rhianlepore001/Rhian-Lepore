@@ -51,7 +51,7 @@ vi.mock('@/services/queue', () => ({
   fetchQueueCompletedCount: vi.fn().mockResolvedValue(0),
 }));
 
-vi.mock('@/components/HelpButtons', () => ({ AIAssistantButton: () => null }));
+vi.mock('@/components/HelpButtons', () => ({ InfoButton: () => null }));
 vi.mock('@/components/CommissionsManagement', () => ({ CommissionsManagement: () => null }));
 vi.mock('@/components/finance/FinanceCashflowChart', () => ({ FinanceCashflowChart: () => null }));
 vi.mock('@/components/MonthlyHistory', () => ({ MonthlyHistory: () => null }));

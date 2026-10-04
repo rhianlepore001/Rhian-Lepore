@@ -106,6 +106,16 @@ describe('CommissionsManagement — ciclo do servidor (P1, get_commission_cycle_
         expect(summary).toHaveTextContent(/Pago neste ciclo\s*R\$\s0,00/);
     });
 
+    it('PR-G: ciclo, período, resumo e A pagar/Pagos ficam num só cartão', async () => {
+        mount();
+        const card = await screen.findByTestId('payout-summary-card');
+        expect(within(card).getByRole('button', { name: 'Ciclo anterior' })).toBeInTheDocument();
+        expect(within(card).getByTestId('commission-cycle-header')).toHaveTextContent('Período 06/09 – 05/10');
+        expect(await within(card).findByTestId('payout-summary')).toHaveTextContent('5 pendentes');
+        expect(within(card).getByTestId('payout-summary-amount')).toHaveTextContent(money('699,00'));
+        expect(within(card).getByRole('tablist', { name: 'Repasses' })).toBeInTheDocument();
+    });
+
     it('linha: valor do ciclo, saldo de ciclos anteriores, contexto e selo Inativo; dono fora (R6.3, R4.1.3)', async () => {
         mount();
         const caio = await screen.findByTestId('payout-row-20000000-0000-0000-0000-0000000000c1');

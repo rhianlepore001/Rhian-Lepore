@@ -769,6 +769,8 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                 <CommissionPaymentHistory
                     professionalId={detailsProfessional.professional_id}
                     professionalName={detailsProfessional.professional_name}
+                    cpf={detailsProfessional.cpf}
+                    commissionRate={detailsProfessional.commission_rate}
                     onClose={() => { setShowHistoryModal(false); setDetailsProfessional(null); }}
                     accentColor={accentColor}
                     currencySymbol={moneySymbol}

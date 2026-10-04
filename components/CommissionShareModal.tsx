@@ -1,173 +1,132 @@
-import React, { useRef, useState } from 'react';
-import { MessageCircle, Download, Loader2, Copy, Check as CheckIcon } from 'lucide-react';
+import React, { useState } from 'react';
+import { Copy, Check as CheckIcon, FileText, List } from 'lucide-react';
 import { Modal } from './ui/Modal';
 import { Button } from './ui/Button';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
-import { useTenantLocale } from '../hooks/useTenantLocale';
+import {
+    buildCommissionCopyText,
+    buildDetailedPdfLines,
+    buildSummaryPdfLines,
+    commissionPdfFileName,
+    type CommissionPdfVariant,
+    type CommissionReportShareInput,
+} from '../utils/commissionReport';
+import { shareOrDownloadCommissionPdf } from '../utils/commissionPdf';
 
 interface CommissionShareModalProps {
-    professionalName: string;
-    cpf?: string | null;
-    periodLabel: string;
-    netAmount: number;
-    currencySymbol: string;
+    report: CommissionReportShareInput;
     onClose: () => void;
-    reportRef?: React.RefObject<HTMLDivElement>;
 }
 
 export const CommissionShareModal: React.FC<CommissionShareModalProps> = ({
-    professionalName,
-    cpf,
-    periodLabel,
-    netAmount,
-    currencySymbol: _currencySymbol,
+    report,
     onClose,
 }) => {
-    const [downloading, setDownloading] = useState(false);
+    const [busy, setBusy] = useState<CommissionPdfVariant | null>(null);
     const [copied, setCopied] = useState(false);
-    const summaryRef = useRef<HTMLDivElement>(null);
-    const { colors, accent, font } = useBrutalTheme();
-    const { formatMoney } = useTenantLocale();
+    const { colors, radius } = useBrutalTheme();
 
-    const moneyLabel = formatMoney(netAmount);
-
-    const whatsappText = [
-        `*Resumo de Comissões*`,
-        ``,
-        `Profissional: ${professionalName}`,
-        cpf ? `CPF: ${cpf}` : null,
-        `Período: ${periodLabel}`,
-        ``,
-        `*Valor a receber: ${moneyLabel}*`,
-        ``,
-        `_Gerado pelo AgendiX_`
-    ].filter(Boolean).join('\n');
-
-    const handleWhatsApp = () => {
-        const url = `https://wa.me/?text=${encodeURIComponent(whatsappText)}`;
-        window.open(url, '_blank');
+    const handlePdf = async (variant: CommissionPdfVariant) => {
+        if (busy) return;
+        setBusy(variant);
+        try {
+            const lines = variant === 'resumido'
+                ? buildSummaryPdfLines(report)
+                : buildDetailedPdfLines(report);
+            const fileName = commissionPdfFileName({
+                professionalName: report.professionalName,
+                periodLabel: report.periodLabel,
+                variant,
+            });
+            await shareOrDownloadCommissionPdf({ fileName, lines, variant });
+        } catch (err) {
+            console.error('PDF share error:', err);
+        } finally {
+            setBusy(null);
+        }
     };
 
     const handleCopyText = async () => {
-        if (navigator.share && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-            try {
-                await navigator.share({
-                    title: 'Resumo de Comissões - AgendiX',
-                    text: whatsappText
-                });
-                return;
-            } catch (err) {
-                // Share failed or cancelled
-            }
-        }
-
+        const text = buildCommissionCopyText(report);
         try {
             if (navigator.clipboard && window.isSecureContext) {
-                await navigator.clipboard.writeText(whatsappText);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2500);
+                await navigator.clipboard.writeText(text);
             } else {
-                throw new Error('Clipboard API unavailable');
-            }
-        } catch {
-            try {
                 const el = document.createElement('textarea');
-                el.value = whatsappText;
+                el.value = text;
                 el.style.position = 'fixed';
                 el.style.left = '-9999px';
-                el.style.top = '0';
-                el.style.opacity = '0';
                 document.body.appendChild(el);
-                el.focus();
                 el.select();
-                const successful = document.execCommand('copy');
+                document.execCommand('copy');
                 document.body.removeChild(el);
-                if (successful) {
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2500);
-                }
-            } catch (fallbackErr) {
-                console.error('Fallback copy failed', fallbackErr);
             }
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2500);
+        } catch (err) {
+            console.error('Copy failed', err);
         }
     };
 
-    const handlePDF = async () => {
-        const target = summaryRef.current;
-        if (!target) return;
-        setDownloading(true);
-        try {
-            const html2canvas = (await import('html2canvas-pro')).default;
-            const canvas = await html2canvas(target, {
-                backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--color-card').trim() || 'var(--color-card)',
-                scale: 2
-            });
-            const link = document.createElement('a');
-            link.download = `comissao-${professionalName.replace(/\s+/g, '-').toLowerCase()}-${periodLabel.replace(/[^a-z0-9]/gi, '-')}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-        } catch (err) {
-            console.error('PDF export error:', err);
-        } finally {
-            setDownloading(false);
-        }
-    };
+    const choiceClass = `w-full text-left p-4 border ${colors.border} ${radius.card} ${colors.card} ${colors.surfaceHover} transition-colors disabled:opacity-60`;
 
     return (
         <Modal
             open
             onClose={onClose}
-            title="Compartilhar Resumo"
+            title="Compartilhar"
             size="sm"
         >
-            <div className="space-y-4">
-                <div ref={summaryRef} className={`${colors.card} p-4`}>
-                    <div className={`${colors.surface} rounded-xl p-4 space-y-3 ${colors.border} border`}>
-                        <p className={`${colors.textMuted} text-xs ${font.mono} uppercase tracking-widest`}>Resumo de Comissões</p>
-                        <div className="space-y-1">
-                            <p className={`${colors.text} font-bold text-lg leading-tight`}>{professionalName}</p>
-                            {cpf && <p className={`${colors.textSecondary} text-xs ${font.mono}`}>CPF: {cpf}</p>}
-                        </div>
-                        <div className={`border-t ${colors.divider} pt-3`}>
-                            <p className={`${colors.textMuted} text-xs ${font.mono}`}>Período</p>
-                            <p className={`${colors.text} text-sm ${font.mono}`}>{periodLabel}</p>
-                        </div>
-                        <div className={`border-t ${colors.divider} pt-3`}>
-                            <p className={`${colors.textMuted} text-xs ${font.mono} uppercase`}>Valor a receber</p>
-                            <p className={`text-2xl ${font.mono} font-bold ${accent.text}`}>{moneyLabel}</p>
-                        </div>
-                        <p className={`${colors.textMuted} opacity-60 text-xs ${font.mono}`}>Gerado pelo AgendiX</p>
-                    </div>
-                </div>
-
-                <div className="flex flex-col gap-3">
-                    <Button
-                        variant="primary"
-                        fullWidth
-                        icon={<MessageCircle className="w-4 h-4" />}
-                        onClick={handleWhatsApp}
-                    >
-                        Compartilhar via WhatsApp
-                    </Button>
-                    <Button
-                        variant="secondary"
-                        fullWidth
-                        icon={copied ? <CheckIcon className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                        onClick={handleCopyText}
-                    >
-                        {copied ? 'Copiado!' : 'Copiar texto'}
-                    </Button>
-                    <Button
-                        variant="secondary"
-                        fullWidth
-                        loading={downloading}
-                        icon={!downloading ? <Download className="w-4 h-4" /> : undefined}
-                        onClick={handlePDF}
-                        disabled={downloading}
-                    >
-                        {downloading ? 'Gerando...' : 'Baixar Imagem'}
-                    </Button>
-                </div>
+            <div className="space-y-3" data-testid="commission-share-sheet">
+                <p className={`text-sm ${colors.textSecondary}`}>
+                    Envie um PDF para o colaborador conferir o valor.
+                </p>
+                <button
+                    type="button"
+                    data-testid="share-option-resumido"
+                    className={choiceClass}
+                    disabled={!!busy}
+                    onClick={() => handlePdf('resumido')}
+                >
+                    <span className="flex items-start gap-3">
+                        <FileText className={`mt-0.5 h-5 w-5 shrink-0 ${colors.text}`} aria-hidden="true" />
+                        <span>
+                            <span className={`block font-semibold ${colors.text}`}>
+                                {busy === 'resumido' ? 'Gerando PDF…' : 'Relatório resumido'}
+                            </span>
+                            <span className={`mt-1 block text-xs leading-relaxed ${colors.textMuted}`}>
+                                Profissional, período, {report.commissionRate}%, subtotal, base e valor líquido.
+                            </span>
+                        </span>
+                    </span>
+                </button>
+                <button
+                    type="button"
+                    data-testid="share-option-detalhado"
+                    className={choiceClass}
+                    disabled={!!busy}
+                    onClick={() => handlePdf('detalhado')}
+                >
+                    <span className="flex items-start gap-3">
+                        <List className={`mt-0.5 h-5 w-5 shrink-0 ${colors.text}`} aria-hidden="true" />
+                        <span>
+                            <span className={`block font-semibold ${colors.text}`}>
+                                {busy === 'detalhado' ? 'Gerando PDF…' : 'Relatório detalhado'}
+                            </span>
+                            <span className={`mt-1 block text-xs leading-relaxed ${colors.textMuted}`}>
+                                Cada linha: data, serviço, cliente, valor, taxa, base, % e comissão — para conferir se está certo.
+                            </span>
+                        </span>
+                    </span>
+                </button>
+                <Button
+                    variant="ghost"
+                    fullWidth
+                    icon={copied ? <CheckIcon className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    onClick={handleCopyText}
+                >
+                    {copied ? 'Copiado!' : 'Copiar texto'}
+                </Button>
             </div>
         </Modal>
     );

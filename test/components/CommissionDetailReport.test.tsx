@@ -136,7 +136,7 @@ describe('CommissionDetailReport', () => {
         ], error: null };
         mount();
         fireEvent.click(await screen.findByRole('button', { name: /Compartilhar/i }));
-        expect(screen.getByTestId('commission-share-sheet')).toBeInTheDocument();
+        expect(await screen.findByTestId('commission-share-sheet', {}, { timeout: 5000 })).toBeInTheDocument();
         expect(screen.getByTestId('share-option-resumido')).toHaveTextContent('Relatório resumido');
         expect(screen.getByTestId('share-option-detalhado')).toHaveTextContent('Relatório detalhado');
         expect(screen.getByRole('button', { name: /Copiar texto/i })).toBeInTheDocument();

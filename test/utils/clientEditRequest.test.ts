@@ -2,8 +2,12 @@ import { describe, expect, it, vi, afterEach, beforeEach } from 'vitest';
 import {
   clientEditRequestSentMessage,
   formatAgendaAlteracao,
+  formatAgendaOnlineRequestsTitle,
+  formatAgendaPublicBookingsSummary,
+  formatClientEditReservedLine,
   clientEditReservedIso,
   isClientEditPending,
+  CLIENT_EDIT_PENDING_STATUS_LABEL,
   SERVICE_ONLY_EDIT_SKIP_LABEL,
 } from '@/utils/clientEditRequest';
 
@@ -20,6 +24,12 @@ describe('clientEditRequest', () => {
     const msg = clientEditRequestSentMessage('2026-10-04T13:00:00.000Z', 'America/Sao_Paulo');
     expect(msg).toBe(
       'Pedido de alteração enviado. Seu horário original (dom., 04 de out. às 10:00) continua reservado até a resposta.',
+    );
+  });
+
+  it('linha do horário original reservado', () => {
+    expect(formatClientEditReservedLine('2026-10-04T15:00:00.000Z', 'America/Sao_Paulo')).toBe(
+      'Horário original reservado: dom., 04 de out. às 12:00',
     );
   });
 
@@ -53,5 +63,17 @@ describe('clientEditRequest', () => {
 
   it('setting tem o rótulo aprovado', () => {
     expect(SERVICE_ONLY_EDIT_SKIP_LABEL).toBe('Trocar só o serviço sem aprovação');
+    expect(CLIENT_EDIT_PENDING_STATUS_LABEL).toBe('Alteração pendente');
+  });
+
+  it('banner da Agenda flexiona singular e plural', () => {
+    expect(formatAgendaOnlineRequestsTitle(1)).toBe('1 solicitação online');
+    expect(formatAgendaOnlineRequestsTitle(2)).toBe('2 solicitações online');
+    expect(formatAgendaPublicBookingsSummary(1, 0)).toBe('1 alteração aguardando aprovação');
+    expect(formatAgendaPublicBookingsSummary(2, 0)).toBe('2 alterações aguardando aprovação');
+    expect(formatAgendaPublicBookingsSummary(1, 1)).toBe('1 pedido novo e 1 alteração');
+    expect(formatAgendaPublicBookingsSummary(1, 2)).toBe('2 pedidos novos e 1 alteração');
+    expect(formatAgendaPublicBookingsSummary(2, 1)).toBe('1 pedido novo e 2 alterações');
+    expect(formatAgendaPublicBookingsSummary(0, 3)).toBe('Feitos pelo link público — aceite ou recuse.');
   });
 });

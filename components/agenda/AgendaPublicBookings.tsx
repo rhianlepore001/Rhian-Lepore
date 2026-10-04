@@ -2,7 +2,12 @@ import React from 'react';
 import { AlertTriangle, Check, X } from 'lucide-react';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { formatCurrency, formatPhone, type Region } from '../../utils/formatters';
-import { formatAgendaAlteracao, isClientEditPending } from '../../utils/clientEditRequest';
+import {
+  formatAgendaAlteracao,
+  formatAgendaOnlineRequestsTitle,
+  formatAgendaPublicBookingsSummary,
+  isClientEditPending,
+} from '../../utils/clientEditRequest';
 import { formatTimeInTimeZone, getDateStringInTimeZone, getTodayInTimeZone } from '../../utils/businessTimezone';
 
 export interface AgendaPublicBookingItem {
@@ -74,9 +79,7 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
 
   const edits = bookings.filter((b) => isClientEditPending({ ...b, status: b.status ?? 'pending' })).length;
   const newOnes = bookings.length - edits;
-  let summary = 'Feitos pelo link público — aceite ou recuse.';
-  if (edits > 0 && newOnes > 0) summary = `${newOnes} novo(s) e ${edits} alteração(ões).`;
-  else if (edits > 0) summary = `${edits} alteração(ões) aguardando aprovação.`;
+  const summary = formatAgendaPublicBookingsSummary(edits, newOnes);
 
   return (
     <section data-testid="agenda-public-bookings" className="shrink-0 space-y-2">
@@ -85,7 +88,7 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
           <AlertTriangle className={`w-4 h-4 mt-0.5 shrink-0 ${accent.text}`} aria-hidden />
           <div className="min-w-0">
             <h3 className={`${colors.text} font-bold text-sm leading-snug`}>
-              {bookings.length === 1 ? '1 solicitação online' : `${bookings.length} solicitações online`}
+              {formatAgendaOnlineRequestsTitle(bookings.length)}
             </h3>
             <p className={`${colors.textSecondary} text-xs leading-snug break-words`}>
               {summary}

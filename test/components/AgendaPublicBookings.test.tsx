@@ -102,5 +102,31 @@ describe('AgendaPublicBookings', () => {
     expect(screen.getByTestId('agenda-booking-alteracao')).toHaveTextContent(
       'Alteração: de 04/10 · 10:00 para 04/10 · 12:00',
     );
+    expect(screen.getByText('1 alteração aguardando aprovação')).toBeInTheDocument();
+  });
+
+  it('flexiona o resumo com pedidos novos e alterações', () => {
+    render(
+      <AgendaPublicBookings
+        bookings={[
+          booking,
+          {
+            ...booking,
+            id: 'pb2',
+            is_edit: true,
+            original_appointment_time: '2026-10-04T13:00:00.000Z',
+            appointment_time: '2026-10-04T15:00:00.000Z',
+          },
+        ]}
+        teamMembers={members}
+        services={services}
+        currencyRegion="BR"
+        timeZone="America/Sao_Paulo"
+        onAccept={vi.fn()}
+        onReject={vi.fn()}
+      />,
+    );
+    expect(screen.getByText('2 solicitações online')).toBeInTheDocument();
+    expect(screen.getByText('1 pedido novo e 1 alteração')).toBeInTheDocument();
   });
 });

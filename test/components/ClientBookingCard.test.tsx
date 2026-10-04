@@ -644,7 +644,7 @@ describe('ClientBookingCard — PR-6 pedido de alteração', () => {
     vi.useRealTimers();
   });
 
-  it('pending is_edit mostra o recado do horário original e o selo Aguardando', () => {
+  it('pending is_edit mostra o horário pedido, o selo Alteração pendente e o original reservado', () => {
     render(
       <MemoryRouter>
         <ClientBookingCard
@@ -668,9 +668,14 @@ describe('ClientBookingCard — PR-6 pedido de alteração', () => {
         />
       </MemoryRouter>,
     );
-    expect(screen.getByText('Aguardando')).toBeInTheDocument();
+    expect(screen.getByText('Alteração pendente')).toBeInTheDocument();
+    expect(screen.queryByText('Aguardando')).toBeNull();
+    expect(screen.getByText(/13:00/)).toBeInTheDocument();
     expect(screen.getByTestId('client-edit-sent-message')).toHaveTextContent(
       'Pedido de alteração enviado. Seu horário original (dom., 04 de out. às 12:00) continua reservado até a resposta.',
+    );
+    expect(screen.getByTestId('client-edit-reserved-line')).toHaveTextContent(
+      'Horário original reservado: dom., 04 de out. às 12:00',
     );
     expect(screen.getByRole('button', { name: /Editar/ })).toBeInTheDocument();
   });

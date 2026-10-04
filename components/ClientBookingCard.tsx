@@ -33,7 +33,9 @@ import {
 import {
     clientEditRequestSentMessage,
     clientEditReservedIso,
+    formatClientEditReservedLine,
     isClientEditPending,
+    CLIENT_EDIT_PENDING_STATUS_LABEL,
 } from '../utils/clientEditRequest';
 
 export interface ClientBooking {
@@ -79,6 +81,11 @@ interface ClientBookingCardProps {
 const STATUS_CONFIG: Record<string, { label: string; className: string; icon: React.ReactNode }> = {
     pending: {
         label: 'Aguardando',
+        className: 'bg-[var(--color-warning-bg)] text-[var(--color-warning)] border border-[var(--color-warning-border)]',
+        icon: <AlertCircle className="w-3 h-3" />,
+    },
+    edit_pending: {
+        label: CLIENT_EDIT_PENDING_STATUS_LABEL,
         className: 'bg-[var(--color-warning-bg)] text-[var(--color-warning)] border border-[var(--color-warning-border)]',
         icon: <AlertCircle className="w-3 h-3" />,
     },
@@ -142,8 +149,8 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
     const isCancelled = statusKey === 'cancelled';
     const reservedIso = clientEditReservedIso(booking);
     const pendingEdit = isClientEditPending(booking);
-    const displayIso = pendingEdit ? reservedIso : booking.appointment_time;
-    const appointmentPassed = new Date(displayIso).getTime() < Date.now();
+    const headerIso = booking.appointment_time;
+    const appointmentPassed = new Date(pendingEdit ? reservedIso : headerIso).getTime() < Date.now();
     const isPastCancelled = isCancelled && appointmentPassed;
     const isFutureCancelled = isCancelled && !appointmentPassed;
     const isUpcoming = ['pending', 'confirmed'].includes(statusKey) && !appointmentPassed;
@@ -172,11 +179,13 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
             ? 'past'
             : isPastCancelled
                 ? 'cancelled_quiet'
-                : statusKey;
+                : pendingEdit
+                    ? 'edit_pending'
+                    : statusKey;
     const statusCfg = STATUS_CONFIG[badgeKey] ?? STATUS_CONFIG.completed;
 
     const businessTz = resolveBusinessTimezone({ timezone: timeZone, region });
-    const appointmentDate = new Date(displayIso);
+    const appointmentDate = new Date(headerIso);
     const formattedDate = formatClientCardDate(appointmentDate, businessTz);
     const dateInSentence = formatClientCardDateInSentence(appointmentDate, businessTz);
     const formattedTime = appointmentDate.toLocaleTimeString('pt-BR', {
@@ -299,7 +308,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                         </div>
                     </div>
                     <span className={`
-                        inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold shrink-0
+                        inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold shrink-0 text-center leading-tight max-w-[9.5rem]
                         ${statusCfg.className}
                     `}>
                         {statusCfg.icon}
@@ -308,6 +317,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                 </div>
 
                 {pendingEdit && (
+                    <>
                     <p
                         data-testid="client-edit-sent-message"
                         className="flex items-start gap-2 px-3 py-2 rounded-xl text-xs leading-snug break-words bg-[var(--color-warning-bg)] text-[var(--color-warning)] border border-[var(--color-warning-border)]"
@@ -315,6 +325,13 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                         <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-px" aria-hidden="true" />
                         {clientEditRequestSentMessage(reservedIso, businessTz)}
                     </p>
+                    <p
+                        data-testid="client-edit-reserved-line"
+                        className="text-xs leading-snug break-words text-theme-textSecondary"
+                    >
+                        {formatClientEditReservedLine(reservedIso, businessTz)}
+                    </p>
+                    </>
                 )}
 
                 {/* Services */}

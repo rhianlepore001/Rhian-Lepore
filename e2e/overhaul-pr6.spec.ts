@@ -187,6 +187,12 @@ async function shot(page: Page, name: string, selector?: string) {
   fs.mkdirSync(ARTIFACTS, { recursive: true });
   await settle(page);
   const dest = path.join(ARTIFACTS, `${name}.png`);
+  const mobile = name.endsWith('-390');
+  if (selector && mobile) {
+    await page.locator(selector).first().scrollIntoViewIfNeeded();
+    await page.screenshot({ path: dest, fullPage: false });
+    return;
+  }
   if (selector) {
     const loc = page.locator(selector).first();
     await loc.scrollIntoViewIfNeeded();
@@ -400,8 +406,12 @@ test.describe('PR-6 pedido de alteração', () => {
       await mockPublicClient(page);
       await page.goto(`${BASE}/#/minha-area/pr6-edit`, { waitUntil: 'domcontentloaded' });
       const card = page.locator(`[data-booking-id="${PENDING_EDIT.id}"]`);
-      await expect(card.getByText('Aguardando')).toBeVisible({ timeout: 20_000 });
+      await expect(card.getByText('Alteração pendente')).toBeVisible({ timeout: 20_000 });
+      await expect(card.getByText('14:00')).toBeVisible();
       await expect(card.getByTestId('client-edit-sent-message')).toHaveText(EDIT_SENT);
+      await expect(card.getByTestId('client-edit-reserved-line')).toHaveText(
+        'Horário original reservado: dom., 04 de out. às 12:00',
+      );
       await shot(page, `client-card-pending-change-${vp.name}`, `[data-booking-id="${PENDING_EDIT.id}"]`);
       guard.assertNoLeak();
     });
@@ -416,6 +426,7 @@ test.describe('PR-6 pedido de alteração', () => {
       await page.goto(`${BASE}/#/agenda`, { waitUntil: 'domcontentloaded' });
       await expect(page.getByTestId('agenda-public-bookings')).toBeVisible({ timeout: 30_000 });
       await expect(page.getByTestId('agenda-booking-alteracao')).toHaveText(ALTERACAO);
+      await expect(page.getByText('1 alteração aguardando aprovação')).toBeVisible();
       await shot(page, `agenda-request-alteracao-${vp.name}`, '[data-testid="agenda-public-bookings"]');
       guard.assertNoLeak();
     });

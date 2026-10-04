@@ -23,6 +23,30 @@ export function formatAgendaAlteracao(fromIso: string, toIso: string, timeZone: 
   return `Alteração: de ${fmt(fromIso)} para ${fmt(toIso)}`;
 }
 
+export const CLIENT_EDIT_PENDING_STATUS_LABEL = 'Alteração pendente';
+
+export function formatClientEditReservedLine(originalIso: string, timeZone: string): string {
+  return `Horário original reservado: ${formatClientEditDateTime(originalIso, timeZone)}`;
+}
+
+export function formatAgendaOnlineRequestsTitle(count: number): string {
+  return count === 1 ? '1 solicitação online' : `${count} solicitações online`;
+}
+
+export function formatAgendaPublicBookingsSummary(edits: number, newOnes: number): string {
+  if (edits > 0 && newOnes > 0) {
+    const novos = newOnes === 1 ? '1 pedido novo' : `${newOnes} pedidos novos`;
+    const alts = edits === 1 ? '1 alteração' : `${edits} alterações`;
+    return `${novos} e ${alts}`;
+  }
+  if (edits > 0) {
+    return edits === 1
+      ? '1 alteração aguardando aprovação'
+      : `${edits} alterações aguardando aprovação`;
+  }
+  return 'Feitos pelo link público — aceite ou recuse.';
+}
+
 export function isClientEditPending(booking: {
   status?: string | null;
   is_edit?: boolean | null;

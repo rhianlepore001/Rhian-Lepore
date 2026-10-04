@@ -158,12 +158,19 @@ describe('staffPerformanceView — ranking e selos (R4.8, R3.9–R3.11)', () => 
         expect(rankLabel(1)).toBe('1º');
         expect(memberBadge(byName('Caio'), 8)).toBe('Poucos atendimentos para comparar');
         expect(unrankedSentence(byName('Caio'), 8)).toBe('Fez 5 atendimentos; o ranking começa em 8');
+        expect(unrankedSentence(byName('Rhian'), 8)).toBe('Fez 3 atendimentos. O dono não entra no ranking.');
         expect(rankedSentence(byName('Bruno'))).toBe('Fez 15 atendimentos');
         expect(rankedSentence(byName('Rhian'))).toBe('Fez 3 atendimentos. Como dono, a comissão conta como zero.');
         expect(memberBadge(byName('Rhian'), 8)).toBe('Dono');
         expect(memberBadge(byName('Duda'), 8)).toBe('Inativo');
         expect(memberBadge(byName('Ana'), 8)).toBeNull();
         expect(sortMembers(data.members, 'rank').map((m) => m.name)).toEqual(['Ana', 'Bruno', 'Caio', 'Duda', 'Rhian (dono)']);
+    });
+
+    it('dono não entra no ranking', () => {
+        expect(byName('Rhian').is_owner).toBe(true);
+        expect(unrankedSentence(byName('Rhian'), 8)).toBe('Fez 3 atendimentos. O dono não entra no ranking.');
+        expect(unrankedSentence(byName('Rhian'), 8)).not.toMatch(/ranking começa/);
     });
 
     it('ordenar por coluna mantém os sem posição abaixo; ticket desc, faltas asc', () => {

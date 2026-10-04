@@ -304,7 +304,9 @@ export function memberBadge(m: PerformanceMember, minSample: number): string | n
 }
 
 export function unrankedSentence(m: PerformanceMember, minSample: number): string {
-    return `Fez ${plural(m.metrics.atendimentos, 'atendimento', 'atendimentos')}; o ranking começa em ${minSample}`;
+    const did = `Fez ${plural(m.metrics.atendimentos, 'atendimento', 'atendimentos')}`;
+    if (m.is_owner) return `${did}. O dono não entra no ranking.`;
+    return `${did}; o ranking começa em ${minSample}`;
 }
 
 export function rankedSentence(m: PerformanceMember): string {

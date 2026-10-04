@@ -271,6 +271,13 @@ export const CommissionDetailReport: React.FC<CommissionDetailReportProps> = ({
                     </header>
 
                     <div className="min-h-0 flex-1 overflow-y-auto pt-4 space-y-5">
+                        {showShare ? (
+                            <CommissionShareModal
+                                report={shareInput}
+                                onClose={() => setShowShare(false)}
+                            />
+                        ) : (
+                        <>
                         <section className={`${colors.surface} border ${colors.border} ${radius.card} p-4`}>
                             <p className={`${colors.text} font-semibold text-lg leading-tight`}>{professionalName}</p>
                             <p className={`mt-1 text-xs ${font.mono} ${colors.textSecondary}`}>
@@ -391,16 +398,11 @@ export const CommissionDetailReport: React.FC<CommissionDetailReportProps> = ({
                                 </p>
                             </>
                         )}
+                        </>
+                        )}
                     </div>
                 </div>
             </Modal>
-
-            {showShare && (
-                <CommissionShareModal
-                    report={shareInput}
-                    onClose={() => setShowShare(false)}
-                />
-            )}
         </>
     );
 };

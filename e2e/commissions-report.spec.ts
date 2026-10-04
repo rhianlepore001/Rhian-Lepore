@@ -145,7 +145,7 @@ async function installMocks(page: Page, mode: 'light' | 'dark') {
     { key: `sb-${PROJECT_REF}-auth-token`, value: session, colorMode: mode },
   );
 
-  await page.route(`**/${PROJECT_REF}.supabase.co/**`, async (route) => {
+  await page.route(/supabase\.co/, async (route) => {
     const req = route.request();
     const url = new URL(req.url());
     const pathname = url.pathname;
@@ -246,18 +246,40 @@ async function installMocks(page: Page, mode: 'light' | 'dark') {
       return;
     }
     if (pathname.includes('/rest/v1/finance_records')) {
-      const paid = url.searchParams.get('commission_paid') === 'eq.true'
-        || url.search.includes('commission_paid=eq.true');
-      const paidAt = url.searchParams.get('commission_paid_at')
-        || (url.search.match(/commission_paid_at=eq\.([^&]+)/)?.[1] ?? null);
-      const decodedAt = paidAt ? decodeURIComponent(paidAt) : null;
-      let rows = paid ? paidRows : [];
+      const select = url.searchParams.get('select') || '';
+      const historySelect = select.includes('commission_paid_at');
+      const paidAtEq = url.search.match(/commission_paid_at=eq\.([^&]+)/)?.[1] ?? null;
+      const decodedAt = paidAtEq ? decodeURIComponent(paidAtEq) : null;
+      let rows = historySelect || select.includes('revenue') ? paidRows : [];
       if (decodedAt) rows = rows.filter((r) => r.commission_paid_at === decodedAt);
-      await fulfillJson(route, rows);
+      if (select.includes('revenue') && !decodedAt && url.search.includes('commission_paid=eq.false')) {
+        rows = [];
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        headers: {
+          'access-control-allow-origin': '*',
+          'access-control-allow-headers': '*',
+          'access-control-expose-headers': '*',
+          'content-range': `${rows.length ? `0-${rows.length - 1}` : '*'}/${rows.length}`,
+        },
+        body: JSON.stringify(rows),
+      });
       return;
     }
     if (pathname.includes('/rest/v1/commission_payments')) {
-      await fulfillJson(route, payments);
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        headers: {
+          'access-control-allow-origin': '*',
+          'access-control-allow-headers': '*',
+          'access-control-expose-headers': '*',
+          'content-range': `0-${payments.length - 1}/${payments.length}`,
+        },
+        body: JSON.stringify(payments),
+      });
       return;
     }
     if (pathname.includes('/rest/v1/')) {
@@ -322,7 +344,7 @@ test.describe('Comissões — histórico, relatório pago e PDF', () => {
     await page.getByRole('button', { name: 'Ver relatório' }).first().click();
     await expect(page.getByText(/Pago em/i).first()).toBeVisible();
     await expect(page.getByTestId('report-mobile-list')).toBeVisible();
-    await expect(page.getByRole('button', { name: /Pagar/i })).toHaveCount(0);
+    await expect(page.getByRole('dialog').getByRole('button', { name: 'Pagar' })).toHaveCount(0);
     await page.screenshot({ path: path.join(ARTIFACTS, 'relatorio-pago-390-light.png'), fullPage: false });
 
     await page.getByRole('button', { name: /Compartilhar/i }).click();

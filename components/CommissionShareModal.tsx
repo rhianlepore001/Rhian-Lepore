@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, Check as CheckIcon, FileText, List } from 'lucide-react';
-import { Modal } from './ui/Modal';
+import { Copy, Check as CheckIcon, FileText, List, X } from 'lucide-react';
 import { Button } from './ui/Button';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import {
@@ -68,66 +67,75 @@ export const CommissionShareModal: React.FC<CommissionShareModalProps> = ({
         }
     };
 
-    const choiceClass = `w-full text-left p-4 border ${colors.border} ${radius.card} ${colors.card} ${colors.surfaceHover} transition-colors disabled:opacity-60`;
+    const choiceClass = `w-full text-left p-4 border ${colors.border} ${radius.card} ${colors.card} ${colors.surfaceHover} transition-colors disabled:opacity-60 min-h-[44px]`;
 
     return (
-        <Modal
-            open
-            onClose={onClose}
-            title="Compartilhar"
-            size="sm"
+        <div
+            className={`mt-2 border ${colors.border} ${radius.card} ${colors.card} p-4 space-y-3`}
+            data-testid="commission-share-sheet"
+            role="dialog"
+            aria-labelledby="commission-share-title"
         >
-            <div className="space-y-3" data-testid="commission-share-sheet">
-                <p className={`text-sm ${colors.textSecondary}`}>
-                    Envie um PDF para o colaborador conferir o valor.
-                </p>
+            <div className="flex items-center justify-between gap-2">
+                <h4 id="commission-share-title" className={`text-base font-semibold ${colors.text}`}>Compartilhar</h4>
                 <button
                     type="button"
-                    data-testid="share-option-resumido"
-                    className={choiceClass}
-                    disabled={!!busy}
-                    onClick={() => handlePdf('resumido')}
+                    onClick={onClose}
+                    aria-label="Fechar compartilhar"
+                    className={`p-2 ${radius.button} ${colors.textMuted} hover:text-theme-text hover:bg-theme-surface`}
                 >
-                    <span className="flex items-start gap-3">
-                        <FileText className={`mt-0.5 h-5 w-5 shrink-0 ${colors.text}`} aria-hidden="true" />
-                        <span>
-                            <span className={`block font-semibold ${colors.text}`}>
-                                {busy === 'resumido' ? 'Gerando PDF…' : 'Relatório resumido'}
-                            </span>
-                            <span className={`mt-1 block text-xs leading-relaxed ${colors.textMuted}`}>
-                                Profissional, período, {report.commissionRate}%, subtotal, base e valor líquido.
-                            </span>
-                        </span>
-                    </span>
+                    <X className="h-4 w-4" />
                 </button>
-                <button
-                    type="button"
-                    data-testid="share-option-detalhado"
-                    className={choiceClass}
-                    disabled={!!busy}
-                    onClick={() => handlePdf('detalhado')}
-                >
-                    <span className="flex items-start gap-3">
-                        <List className={`mt-0.5 h-5 w-5 shrink-0 ${colors.text}`} aria-hidden="true" />
-                        <span>
-                            <span className={`block font-semibold ${colors.text}`}>
-                                {busy === 'detalhado' ? 'Gerando PDF…' : 'Relatório detalhado'}
-                            </span>
-                            <span className={`mt-1 block text-xs leading-relaxed ${colors.textMuted}`}>
-                                Cada linha: data, serviço, cliente, valor, taxa, base, % e comissão — para conferir se está certo.
-                            </span>
-                        </span>
-                    </span>
-                </button>
-                <Button
-                    variant="ghost"
-                    fullWidth
-                    icon={copied ? <CheckIcon className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                    onClick={handleCopyText}
-                >
-                    {copied ? 'Copiado!' : 'Copiar texto'}
-                </Button>
             </div>
-        </Modal>
+            <p className={`text-sm ${colors.textSecondary}`}>
+                Envie um PDF para o colaborador conferir o valor.
+            </p>
+            <button
+                type="button"
+                data-testid="share-option-resumido"
+                className={choiceClass}
+                disabled={!!busy}
+                onClick={() => handlePdf('resumido')}
+            >
+                <span className="flex items-start gap-3">
+                    <FileText className={`mt-0.5 h-5 w-5 shrink-0 ${colors.text}`} aria-hidden="true" />
+                    <span>
+                        <span className={`block font-semibold ${colors.text}`}>
+                            {busy === 'resumido' ? 'Gerando PDF…' : 'Relatório resumido'}
+                        </span>
+                        <span className={`mt-1 block text-xs leading-relaxed ${colors.textMuted}`}>
+                            Profissional, período, {report.commissionRate}%, subtotal, base e valor líquido.
+                        </span>
+                    </span>
+                </span>
+            </button>
+            <button
+                type="button"
+                data-testid="share-option-detalhado"
+                className={choiceClass}
+                disabled={!!busy}
+                onClick={() => handlePdf('detalhado')}
+            >
+                <span className="flex items-start gap-3">
+                    <List className={`mt-0.5 h-5 w-5 shrink-0 ${colors.text}`} aria-hidden="true" />
+                    <span>
+                        <span className={`block font-semibold ${colors.text}`}>
+                            {busy === 'detalhado' ? 'Gerando PDF…' : 'Relatório detalhado'}
+                        </span>
+                        <span className={`mt-1 block text-xs leading-relaxed ${colors.textMuted}`}>
+                            Cada linha: data, serviço, cliente, valor, taxa, base, % e comissão — para conferir se está certo.
+                        </span>
+                    </span>
+                </span>
+            </button>
+            <Button
+                variant="ghost"
+                fullWidth
+                icon={copied ? <CheckIcon className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                onClick={handleCopyText}
+            >
+                {copied ? 'Copiado!' : 'Copiar texto'}
+            </Button>
+        </div>
     );
 };

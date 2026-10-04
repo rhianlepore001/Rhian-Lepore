@@ -84,7 +84,7 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
                 .eq('status', 'paid')
                 .order('paid_at', { ascending: false });
 
-            setPayments(groupPaidRecordsByTimestamp(data || [], paymentRows || [], tz));
+            setPayments(groupPaidRecordsByTimestamp(Array.isArray(data) ? data : [], Array.isArray(paymentRows) ? paymentRows : [], tz));
         } catch (error) {
             console.error('Error fetching payment history:', error);
         } finally {
@@ -270,14 +270,16 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
                                             </div>
                                         </div>
 
+                                        <div className="md:flex md:justify-end">
                                         <Button
-                                            variant="secondary"
+                                            variant="primary"
                                             size="sm"
-                                            className="w-full"
+                                            className="w-full md:w-auto"
                                             onClick={() => setSelected(payment)}
                                         >
                                             Ver relatório
                                         </Button>
+                                        </div>
                                     </div>
                                 </article>
                             ))}

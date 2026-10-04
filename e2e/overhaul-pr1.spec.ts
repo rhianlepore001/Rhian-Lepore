@@ -23,7 +23,7 @@ const VIEWPORTS = [
 ] as const;
 
 const GENERATED_POLICY =
-  'Você pode cancelar pela Minha Área até o horário do atendimento. Não há cobrança automática.';
+  'Você pode cancelar até 2h antes pela Minha Área';
 
 function b64url(obj: unknown): string {
   return Buffer.from(JSON.stringify(obj)).toString('base64url');

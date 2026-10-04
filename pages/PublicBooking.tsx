@@ -32,6 +32,7 @@ import { fetchEditBooking, fetchPublicClientByPhone, fetchClientByPhone, fetchPu
 import { shouldLandOnClientArea } from '../utils/publicBookingLanding';
 import { getPublicBookingAwaitingWhatsAppText, getPublicBookingSuccessCopy } from '../utils/publicBookingCopy';
 import { resolveCancellationPolicyDisplay } from '../utils/cancellationPolicyCopy';
+import { readCancelCutoffHours } from '../utils/clientCancelCutoff';
 import { isSlotUnavailableError } from '../utils/supabaseRpc';
 import {
     isLeadTimeViolationError,
@@ -2006,7 +2007,16 @@ export const PublicBooking: React.FC = () => {
                             </h3>
                             <div className={`leading-relaxed text-sm md:text-base ${colors.textSecondary} max-h-[50vh] overflow-y-auto pr-1 md:pr-2 custom-scrollbar`}>
                                 <p className="whitespace-pre-wrap" data-testid="public-cancellation-policy">
-                                    {resolveCancellationPolicyDisplay(businessSettings?.cancellation_policy)}
+                                    {resolveCancellationPolicyDisplay({
+                                        cutoffHours: readCancelCutoffHours(
+                                            (businessSettings as { client_cancel_cutoff_hours?: number } | null | undefined)
+                                                ?.client_cancel_cutoff_hours,
+                                        ),
+                                        businessName: business.business_name,
+                                        clientCancelNote: (businessSettings as { client_cancel_note?: string | null } | null | undefined)
+                                            ?.client_cancel_note,
+                                        legacyPolicy: businessSettings?.cancellation_policy,
+                                    })}
                                 </p>
                             </div>
                             <button onClick={() => setShowPolicyModal(false)}

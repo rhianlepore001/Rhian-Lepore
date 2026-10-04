@@ -25,6 +25,8 @@ import { validityHeadline } from '../utils/membershipValidity';
 import { formatFirstName } from '../utils/formatters';
 import { resolveBusinessTimezone } from '../utils/businessTimezone';
 import { useScrollToError } from '../hooks/useScrollToError';
+import { resolveCancellationPolicyDisplay } from '../utils/cancellationPolicyCopy';
+import { readCancelCutoffHours } from '../utils/clientCancelCutoff';
 
 interface BusinessProfile {
     id: string;
@@ -145,6 +147,15 @@ export const ClientArea: React.FC = () => {
     const businessTimezone = resolveBusinessTimezone({
         timezone: (businessSettings as { timezone?: string | null } | null | undefined)?.timezone,
         region: business?.region,
+    });
+    const cancelCutoffHours = readCancelCutoffHours(
+        (businessSettings as { client_cancel_cutoff_hours?: number } | null | undefined)?.client_cancel_cutoff_hours,
+    );
+    const policyText = resolveCancellationPolicyDisplay({
+        cutoffHours: cancelCutoffHours,
+        businessName: business?.business_name,
+        clientCancelNote: (businessSettings as { client_cancel_note?: string | null } | null | undefined)?.client_cancel_note,
+        legacyPolicy: (businessSettings as { cancellation_policy?: string | null } | null | undefined)?.cancellation_policy,
     });
 
     // Tokens do DS: beauty = claro (silk), barber = escuro. O script anti-FOUC do
@@ -603,6 +614,12 @@ export const ClientArea: React.FC = () => {
                                         </p>
                                     </div>
                                 )}
+                                <p
+                                    className="text-xs leading-relaxed text-theme-textSecondary whitespace-pre-wrap"
+                                    data-testid="client-cancellation-policy"
+                                >
+                                    {policyText}
+                                </p>
                                 {upcomingBookings.length === 0 ? (
                                     <EmptyState
                                         icon={<Calendar className="w-10 h-10" />}
@@ -629,6 +646,7 @@ export const ClientArea: React.FC = () => {
                                             clubOffered={clubOffered}
                                             isClubMember={isClubMember}
                                             onOpenClub={openClubTab}
+                                            cancelCutoffHours={cancelCutoffHours}
                                         />
                                     ))
                                 )}
@@ -663,6 +681,7 @@ export const ClientArea: React.FC = () => {
                                                 clubOffered={clubOffered}
                                                 isClubMember={isClubMember}
                                                 onOpenClub={openClubTab}
+                                                cancelCutoffHours={cancelCutoffHours}
                                             />
                                         ))}
                                         {historySlice.length < historyBookings.length && (

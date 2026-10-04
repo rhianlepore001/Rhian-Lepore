@@ -50,6 +50,7 @@ const CODE_MAP: Record<string, string> = {
   '42501': 'Você não tem permissão para essa ação.',
   slot_unavailable: PUBLIC_SLOT_UNAVAILABLE_MESSAGE,
   booking_not_cancellable: 'Não foi possível cancelar este agendamento. Tente de novo ou fale com o salão.',
+  cancel_window_closed: 'O prazo para cancelar online já passou. Fale com o estabelecimento.',
   agenda_blocked: AGENDA_BLOCKED_MESSAGE,
   professional_blocked: AGENDA_BLOCKED_MESSAGE,
   block_finished: messageForAgendaBlockResultCode('block_finished'),
@@ -112,6 +113,9 @@ function pickCode(raw: RawErrorShape): string {
   }
   if (msg.includes('booking_not_cancellable')) {
     return 'booking_not_cancellable';
+  }
+  if (msg.includes('cancel_window_closed')) {
+    return 'cancel_window_closed';
   }
   if (raw.status === 401) return 'auth_expired';
   if (raw.status === 403) return 'permission_denied';

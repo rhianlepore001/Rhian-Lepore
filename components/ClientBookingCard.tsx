@@ -23,6 +23,13 @@ import {
     SLOT_CTA,
 } from '../utils/clientBookings';
 import { getPublicBookingAwaitingWhatsAppText } from '../utils/publicBookingCopy';
+import {
+    CANCEL_WINDOW_CLOSED_MESSAGE,
+    DEFAULT_CLIENT_CANCEL_CUTOFF_HOURS,
+    clientCancelCta,
+    isCancelWindowClosedError,
+    talkToBusinessLabel,
+} from '../utils/clientCancelCutoff';
 
 export interface ClientBooking {
     id: string;
@@ -58,6 +65,8 @@ interface ClientBookingCardProps {
     isClubMember?: boolean;
     onOpenClub?: () => void;
     onCancelled: (bookingId: string) => void;
+    /** `business_settings.client_cancel_cutoff_hours` (0 = não cancela online). */
+    cancelCutoffHours?: number;
 }
 
 const STATUS_CONFIG: Record<string, { label: string; className: string; icon: React.ReactNode }> = {
@@ -113,11 +122,13 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
     isClubMember = false,
     onOpenClub,
     onCancelled,
+    cancelCutoffHours = DEFAULT_CLIENT_CANCEL_CUTOFF_HOURS,
 }) => {
     const navigate = useNavigate();
     const { showToast } = useToast();
     const [cancelling, setCancelling] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
+    const [windowClosed, setWindowClosed] = useState(false);
 
     const statusKey = booking.status.trim().toLowerCase();
     const isNoShow = statusKey === 'no_show' || statusKey === 'noshow';
@@ -126,6 +137,14 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
     const isPastCancelled = isCancelled && appointmentPassed;
     const isFutureCancelled = isCancelled && !appointmentPassed;
     const isUpcoming = ['pending', 'confirmed'].includes(statusKey) && !appointmentPassed;
+    const cancelCta = windowClosed
+        ? 'whatsapp'
+        : clientCancelCta({
+            status: statusKey,
+            appointmentTime: booking.appointment_time,
+            cutoffHours: cancelCutoffHours,
+        });
+    const talkLabel = talkToBusinessLabel(businessName);
     const isPastSlot = ['pending', 'confirmed'].includes(statusKey) && appointmentPassed;
     const isCompleted = statusKey === 'completed';
     const isPast = isPastSlot && !isCancelled && !isNoShow;
@@ -183,7 +202,12 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
             showToast('Agendamento cancelado.', 'success');
         } catch (error) {
             logger.error('Error cancelling public booking', error);
-            showToast('Não foi possível cancelar. Tente de novo ou fale com o salão.', 'error');
+            if (isCancelWindowClosedError(error)) {
+                setWindowClosed(true);
+                showToast(CANCEL_WINDOW_CLOSED_MESSAGE, 'info');
+            } else {
+                showToast('Não foi possível cancelar. Tente de novo ou fale com o salão.', 'error');
+            }
         } finally {
             setCancelling(false);
             setShowConfirm(false);
@@ -197,6 +221,15 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
     const handleWhatsApp = () => {
         if (!businessPhone) return;
         const msg = `Olá! Sou ${clientName} e tenho uma dúvida sobre meu agendamento de ${dateInSentence} às ${formattedTime}.`;
+        window.open(buildWhatsAppLink(businessPhone, region, msg), '_blank', 'noopener,noreferrer');
+    };
+
+    const handleTalkToBusiness = () => {
+        if (!businessPhone) {
+            showToast('O estabelecimento ainda não informou um WhatsApp.', 'info');
+            return;
+        }
+        const msg = `Olá! Sou ${clientName}. Queria cancelar meu horário de ${dateInSentence} às ${formattedTime}.`;
         window.open(buildWhatsAppLink(businessPhone, region, msg), '_blank', 'noopener,noreferrer');
     };
 
@@ -325,14 +358,30 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                                 Editar
                             </button>
                         )}
+                        {cancelCta === 'cancel' && (
                         <button
                             type="button"
+                            data-testid="client-cancel-cta"
+                            data-cta="cancel"
                             onClick={() => setShowConfirm(true)}
                             className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl text-xs font-semibold bg-[var(--color-danger-bg)] text-[var(--color-danger)] border border-[var(--color-danger-border)] ${allowEdit ? '' : 'col-span-2'}`}
                         >
                             <X className="w-3.5 h-3.5 shrink-0" />
                             Cancelar
                         </button>
+                        )}
+                        {cancelCta === 'whatsapp' && (
+                        <button
+                            type="button"
+                            data-testid="client-cancel-cta"
+                            data-cta="whatsapp"
+                            onClick={handleTalkToBusiness}
+                            className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl text-xs font-semibold bg-theme-surface text-theme-text border border-theme-border ${allowEdit ? '' : 'col-span-2'}`}
+                        >
+                            <MessageSquare className="w-3.5 h-3.5 shrink-0" />
+                            {talkLabel}
+                        </button>
+                        )}
                     </div>
                 )}
 

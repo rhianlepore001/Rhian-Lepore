@@ -10,6 +10,18 @@ import { SettingsSection } from '../../components/SettingsSection';
 import { SettingsSwitch } from '../../components/SettingsSwitch';
 import { SettingsRow } from '../../components/ui/SettingsRow';
 import { LEAD_TIME_PRESETS, clampLeadTimeHours, isLeadTimePreset, leadTimePresetLabel, parseCustomLeadTimeHours, LEAD_TIME_CUSTOM_EMPTY_ERROR, LEAD_TIME_CUSTOM_RANGE_HINT } from '../../utils/bookingLeadTime';
+import {
+    CANCELLATION_POLICY_NOTES_HINT,
+    cancellationPolicyNotesForDisplay,
+    generatedCancellationPolicyText,
+} from '../../utils/cancellationPolicyCopy';
+import {
+    CLIENT_CANCEL_CUTOFF_PRESETS,
+    DEFAULT_CLIENT_CANCEL_CUTOFF_HOURS,
+    MAX_CLIENT_CANCEL_NOTE_LENGTH,
+    cancelCutoffPresetLabel,
+    clampClientCancelCutoffHours,
+} from '../../utils/clientCancelCutoff';
 
 export const PublicBookingSettings: React.FC = () => {
     const { user } = useAuth();
@@ -28,6 +40,8 @@ export const PublicBookingSettings: React.FC = () => {
     const [leadTimeCustomError, setLeadTimeCustomError] = useState<string | null>(null);
     const [maxBookingsPerDay, setMaxBookingsPerDay] = useState<number | null>(null);
     const [enableSelfRescheduling, setEnableSelfRescheduling] = useState(true);
+    const [cancelCutoffHours, setCancelCutoffHours] = useState(DEFAULT_CLIENT_CANCEL_CUTOFF_HOURS);
+    const [cancelNote, setCancelNote] = useState('');
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
     const businessSlug = profile?.business_slug ?? null;
@@ -36,6 +50,11 @@ export const PublicBookingSettings: React.FC = () => {
         if (settings) {
             setEnableSelfRescheduling(settings.enable_self_rescheduling ?? true);
             setPublicProductsEnabled(settings.public_products_enabled ?? false);
+            setCancelCutoffHours(clampClientCancelCutoffHours(settings.client_cancel_cutoff_hours ?? DEFAULT_CLIENT_CANCEL_CUTOFF_HOURS));
+            setCancelNote(cancellationPolicyNotesForDisplay(
+                settings.client_cancel_note,
+                settings.cancellation_policy,
+            ));
         }
     }, [settings]);
 
@@ -67,6 +86,8 @@ export const PublicBookingSettings: React.FC = () => {
             await updateSettingsMutation.mutateAsync({
                 enable_self_rescheduling: enableSelfRescheduling,
                 public_products_enabled: publicProductsEnabled,
+                client_cancel_cutoff_hours: cancelCutoffHours,
+                client_cancel_note: cancelNote.trim() === '' ? '' : cancelNote.trim().slice(0, MAX_CLIENT_CANCEL_NOTE_LENGTH),
             });
 
             const hoursToSave = leadTimeCustom
@@ -208,6 +229,66 @@ export const PublicBookingSettings: React.FC = () => {
                                 )}
                             </label>
                         )}
+                    </div>
+                </SettingsSection>
+                </div>
+
+                <div data-testid="cancel-cutoff-section" className="scroll-mt-[14rem] md:scroll-mt-8">
+                <SettingsSection title="Cliente pode cancelar até">
+                    <div className="space-y-4">
+                        <p className={`${colors.textMuted} text-xs leading-relaxed`}>
+                            Prazo em relação ao horário marcado (padrão 2h). Pedido ainda em Aguardando pode cancelar até o horário.
+                        </p>
+                        <div className="grid grid-cols-3 gap-2 md:flex md:flex-wrap md:max-w-xl" role="group" aria-label="Cliente pode cancelar até">
+                            {CLIENT_CANCEL_CUTOFF_PRESETS.map((hours) => {
+                                const pressed = cancelCutoffHours === hours;
+                                return (
+                                    <button
+                                        key={hours}
+                                        type="button"
+                                        data-testid={`cancel-cutoff-preset-${hours}`}
+                                        aria-pressed={pressed}
+                                        onClick={() => setCancelCutoffHours(hours)}
+                                        className={`min-h-[44px] px-2 sm:px-3 py-2.5 text-xs sm:text-sm font-semibold rounded-xl transition-all border w-full md:w-auto ${
+                                            hours === 0 ? 'whitespace-normal col-span-3 md:col-span-1' : 'whitespace-nowrap'
+                                        } ${
+                                            pressed
+                                                ? `${accent.bgDim} ${accent.border} ${accent.text}`
+                                                : `${colors.inputBg} ${colors.border} ${colors.textMuted}`
+                                        }`}
+                                    >
+                                        {cancelCutoffPresetLabel(hours)}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        <div
+                            className="rounded-2xl border border-theme-border bg-theme-surface px-4 py-3.5 space-y-1.5"
+                            data-testid="cancel-cutoff-generated"
+                        >
+                            <p className={`${colors.textMuted} text-xs font-semibold uppercase tracking-[0.14em]`}>
+                                O que o cliente lê
+                            </p>
+                            <p className={`${colors.text} text-sm leading-relaxed`}>
+                                {generatedCancellationPolicyText(cancelCutoffHours, profile?.business_name)}
+                            </p>
+                        </div>
+                        <label className={`${classes.label} block`} htmlFor="client-cancel-note">
+                            Observações (opcional)
+                        </label>
+                        <textarea
+                            id="client-cancel-note"
+                            data-testid="client-cancel-note"
+                            value={cancelNote}
+                            maxLength={MAX_CLIENT_CANCEL_NOTE_LENGTH}
+                            onChange={(e) => setCancelNote(e.target.value.slice(0, MAX_CLIENT_CANCEL_NOTE_LENGTH))}
+                            rows={3}
+                            placeholder="Ex.: avisar pelo WhatsApp se for atrasar."
+                            className={classes.input}
+                        />
+                        <p className={`${colors.textMuted} text-xs leading-relaxed`} data-testid="client-cancel-note-hint">
+                            {CANCELLATION_POLICY_NOTES_HINT}
+                        </p>
                     </div>
                 </SettingsSection>
                 </div>

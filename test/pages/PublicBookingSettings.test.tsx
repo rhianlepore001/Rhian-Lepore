@@ -3,7 +3,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
 vi.mock('../../hooks/useSettings', () => ({
-  useBusinessSettings: () => ({ data: { enable_self_rescheduling: true, public_products_enabled: false } }),
+  useBusinessSettings: () => ({ data: { enable_self_rescheduling: true, public_products_enabled: false, client_cancel_cutoff_hours: 2 } }),
   useUpdateBusinessSettings: () => ({ mutateAsync: vi.fn() }),
   useProfileFields: () => ({ data: { business_slug: 'bob', public_booking_enabled: true } }),
   useUpdateProfileFields: () => ({ mutateAsync: vi.fn() }),
@@ -20,8 +20,9 @@ vi.mock('../../components/ui', () => ({
 
 vi.mock('../../hooks/useBrutalTheme', () => ({
   useBrutalTheme: () => ({
-    accent: { bgDim: '', text: '' },
-    colors: { textMuted: '', text: '', textSecondary: '' },
+    accent: { bgDim: '', border: '', text: '', bg: '' },
+    colors: { textMuted: '', text: '', textSecondary: '', inputBg: '', border: '' },
+    classes: { label: 'label', input: 'input' },
   }),
 }));
 

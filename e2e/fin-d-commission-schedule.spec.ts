@@ -11,7 +11,7 @@ import { installProdWriteGuard, type ProdWriteGuard } from './helpers/prodWriteG
 const BASE = process.env.E2E_BASE_URL || 'http://localhost:3000';
 const PROJECT_REF = process.env.E2E_SUPABASE_REF || 'lcqwrngscsziysyfhpfj';
 const OWNER_ID = '2310b54d-5963-4dc6-9afb-8f308116a698';
-const ANA_ID = '20000000-0000-0000-0000-0000000000a1';
+const ANA_ID = '7d3f2a9c-4b1e-4c8a-9f6d-2e5b8a1c0d4f';  // uuid v4 válido (teamMemberSchema)
 const ARTIFACTS = '/opt/cursor/artifacts/screenshots/fin-d';
 const NOW = '2026-10-04T15:00:00.000Z';
 

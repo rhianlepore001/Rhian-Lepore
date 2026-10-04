@@ -4,8 +4,10 @@
  */
 import React, { useState } from 'react';
 import { Bot, X, Send } from 'lucide-react';
-import { useBusinessCopy } from '../hooks/useBusinessCopy';
 import { Button } from './ui/Button';
+
+/** Nome exibido no painel. Fica aqui (e não em businessCopy) para só entrar no bundle com o assistente ligado. */
+const ASSISTANT_NAME = 'Assistente AgendiX';
 
 interface AIAssistantButtonProps {
     context: string;
@@ -28,7 +30,6 @@ export const AIAssistantButton: React.FC<AIAssistantButtonProps> = ({ context, o
         { role: 'assistant', content: `Olá! Sou seu assistente pessoal. Como posso ajudar com ${context}?` }
     ]);
     const [input, setInput] = useState('');
-    const { assistantName } = useBusinessCopy();
 
     const handleSend = () => {
         if (!input.trim()) return;
@@ -71,7 +72,7 @@ export const AIAssistantButton: React.FC<AIAssistantButtonProps> = ({ context, o
                         <div className="p-4 border-b border-[var(--color-border)] flex justify-between items-center">
                             <div className="flex items-center gap-2">
                                 <Bot className="w-5 h-5 text-theme-accent" />
-                                <h3 className="font-bold text-[var(--color-text)]">{assistantName}</h3>
+                                <h3 className="font-bold text-[var(--color-text)]">{ASSISTANT_NAME}</h3>
                             </div>
                             <button onClick={() => setIsOpen(false)} className="text-text-secondary hover:text-[var(--color-text)]" aria-label="Fechar assistente" title="Fechar">
                                 <X className="w-5 h-5" />

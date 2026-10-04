@@ -15,7 +15,6 @@ export interface BusinessCopy {
   staffLinkAccountMessage: string;
   activationBannerMessage: string;
   homeNavLabel: string;
-  assistantName: string;
   rolePlaceholder: string;
   /** Exemplo do campo Especialidades no perfil do profissional. */
   specialtiesPlaceholder: string;
@@ -45,7 +44,6 @@ const BARBER_COPY: BusinessCopy = {
   activationBannerMessage:
     'Sua barbearia está oficialmente online. Você completou as configurações iniciais e está pronto para decolar!',
   homeNavLabel: 'Início',
-  assistantName: 'Assistente AgendiX',
   rolePlaceholder: 'Ex: Barbeiro',
   specialtiesPlaceholder: 'Ex: Corte, Barba, Degradê',
   clubPlanNamePlaceholder: 'Corte Ilimitado',
@@ -74,7 +72,6 @@ const BEAUTY_COPY: BusinessCopy = {
   activationBannerMessage:
     'Seu salão está oficialmente online. Você completou as configurações iniciais e está pronto para decolar!',
   homeNavLabel: 'Início',
-  assistantName: 'Assistente AgendiX',
   rolePlaceholder: 'Ex: Cabeleireira',
   specialtiesPlaceholder: 'Ex: Corte, Coloração, Escova',
   clubPlanNamePlaceholder: 'Beleza Ilimitada',

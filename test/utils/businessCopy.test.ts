@@ -14,7 +14,8 @@ describe('businessCopy', () => {
     expect(getBusinessCopy('beauty').slugPlaceholder).toBe('meu-studio');
     expect(getBusinessCopy('barber').rolePlaceholder).toBe('Ex: Barbeiro');
     expect(getBusinessCopy('beauty').rolePlaceholder).toBe('Ex: Cabeleireira');
-    expect(getBusinessCopy('barber').assistantName).toBe('Assistente AgendiX');
+    // PR-G: o nome do assistente fica no próprio módulo (lazy), fora do bundle principal.
+    expect(getBusinessCopy('barber')).not.toHaveProperty('assistantName');
     expect(getBusinessCopy('beauty').segmentLabelShort).toBe('Salão');
     expect(getBusinessCopy('beauty').registerSubtitle).toContain('salão');
   });

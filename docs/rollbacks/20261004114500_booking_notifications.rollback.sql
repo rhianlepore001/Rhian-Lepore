@@ -47,8 +47,8 @@ CREATE POLICY "Users can view own notifications"
   USING (auth.uid()::text = user_id);
 
 REVOKE ALL ON TABLE public.notifications FROM anon, authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.notifications TO authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.notifications TO service_role;
+GRANT ALL ON TABLE public.notifications TO anon, authenticated;
+GRANT ALL ON TABLE public.notifications TO service_role;
 
 
 -- accept/reject v2: corpos exatos de 20261004101021

@@ -97,10 +97,13 @@ if [ "${1:-}" = "--rollback" ]; then
   [ "$md5r" = "$MD5_R6" ] || { echo "rollback: reject_v2 md5 != PR-6"; exit 1; }
   pol="$(P -At -c "SELECT polcmd FROM pg_policy WHERE polrelid = 'public.notifications'::regclass AND polname = 'Users can view own notifications'")"
   extra_pol="$(P -At -c "SELECT count(*) FROM pg_policy WHERE polrelid = 'public.notifications'::regclass AND polname IN ('Users can select own notifications','Users can update own notifications')")"
+  ALL_PRIV="DELETE,INSERT,REFERENCES,SELECT,TRIGGER,TRUNCATE,UPDATE"
   auth_priv="$(P -At -c "SELECT string_agg(privilege_type, ',' ORDER BY privilege_type) FROM information_schema.role_table_grants WHERE table_schema='public' AND table_name='notifications' AND grantee='authenticated'")"
-  echo "rollback policy polcmd:$pol extra:$extra_pol auth_priv:$auth_priv"
+  anon_priv="$(P -At -c "SELECT string_agg(privilege_type, ',' ORDER BY privilege_type) FROM information_schema.role_table_grants WHERE table_schema='public' AND table_name='notifications' AND grantee='anon'")"
+  echo "rollback policy polcmd:$pol extra:$extra_pol auth_priv:$auth_priv anon_priv:$anon_priv"
   [ "$pol" = "*" ] && [ "$extra_pol" = 0 ]
-  [ "$auth_priv" = "DELETE,INSERT,SELECT,UPDATE" ]
+  [ "$auth_priv" = "$ALL_PRIV" ]
+  [ "$anon_priv" = "$ALL_PRIV" ]
   grants
   intact
   echo "rollback ok"

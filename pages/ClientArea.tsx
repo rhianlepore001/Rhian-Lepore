@@ -614,12 +614,17 @@ export const ClientArea: React.FC = () => {
                                         </p>
                                     </div>
                                 )}
-                                <p
-                                    className="text-xs leading-relaxed text-theme-textSecondary whitespace-pre-wrap"
+                                <div
+                                    className="rounded-xl border border-theme-border bg-theme-surface px-3 py-2.5"
                                     data-testid="client-cancellation-policy"
                                 >
-                                    {policyText}
-                                </p>
+                                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-theme-textSecondary mb-1">
+                                        Política de cancelamento
+                                    </p>
+                                    <p className="text-xs leading-relaxed text-theme-textSecondary whitespace-pre-wrap">
+                                        {policyText}
+                                    </p>
+                                </div>
                                 {upcomingBookings.length === 0 ? (
                                     <EmptyState
                                         icon={<Calendar className="w-10 h-10" />}

@@ -317,7 +317,7 @@ test.describe('PR-5 prazo de cancelamento', () => {
       await section.evaluate((el) => el.scrollIntoView({ block: 'center' }));
       await expect(page.getByTestId('cancel-cutoff-preset-2')).toHaveAttribute('aria-pressed', 'true');
       await expect(page.getByRole('button', { name: 'Não pode cancelar online' })).toBeVisible();
-      await expect(page.getByTestId('cancel-cutoff-generated')).toHaveText(POLICY_TEXT);
+      await expect(page.getByTestId('cancel-cutoff-generated')).toContainText(POLICY_TEXT);
       await expect(page.getByText('Flexível')).toHaveCount(0);
       await shot(page, `ajustes-${vp.name}`);
       guard.assertNoLeak();

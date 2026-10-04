@@ -352,7 +352,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                             <button
                                 type="button"
                                 onClick={() => navigate(`/book/${businessSlug}?edit=${booking.id}`)}
-                                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl text-xs font-semibold bg-theme-surface text-theme-text border border-theme-border"
+                                className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl text-xs font-semibold bg-theme-surface text-theme-text border border-theme-border ${cancelCta === 'whatsapp' ? 'col-span-2' : ''}`}
                             >
                                 <Edit3 className="w-3.5 h-3.5 shrink-0" />
                                 Editar
@@ -376,7 +376,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                             data-testid="client-cancel-cta"
                             data-cta="whatsapp"
                             onClick={handleTalkToBusiness}
-                            className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl text-xs font-semibold bg-theme-surface text-theme-text border border-theme-border ${allowEdit ? '' : 'col-span-2'}`}
+                            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl text-xs font-semibold bg-theme-surface text-theme-text border border-theme-border col-span-2"
                         >
                             <MessageSquare className="w-3.5 h-3.5 shrink-0" />
                             {talkLabel}

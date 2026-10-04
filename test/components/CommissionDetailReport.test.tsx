@@ -135,8 +135,11 @@ describe('CommissionDetailReport', () => {
             { id: 'r1', created_at: '2026-08-10T12:00:00Z', service_name: 'Corte', client_name: null, description: null, revenue: 100, payment_method: 'pix', commission_rate: 40, commission_value: 40, appointments: null },
         ], error: null };
         mount();
-        // CI com coverage é lento: dá folga ao findBy e ao teste (antes ambos 5 s → timeout).
-        fireEvent.click(await screen.findByRole('button', { name: /Compartilhar/i }, { timeout: 10000 }));
+        // O botão nasce desabilitado até os lançamentos carregarem; no CI (coverage) clicar
+        // antes disso não abria nada. Espera habilitar antes de clicar.
+        const shareBtn = await screen.findByRole('button', { name: /Compartilhar/i }, { timeout: 10000 });
+        await waitFor(() => expect(shareBtn).toBeEnabled(), { timeout: 10000 });
+        fireEvent.click(shareBtn);
         expect(await screen.findByTestId('commission-share-sheet', {}, { timeout: 10000 })).toBeInTheDocument();
         expect(screen.getByTestId('share-option-resumido')).toHaveTextContent('Relatório resumido');
         expect(screen.getByTestId('share-option-detalhado')).toHaveTextContent('Relatório detalhado');

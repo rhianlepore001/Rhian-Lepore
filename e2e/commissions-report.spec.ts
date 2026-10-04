@@ -383,7 +383,15 @@ test.describe('Comissões — histórico, relatório pago e PDF', () => {
       localStorage.setItem('agendix_color_mode', 'dark');
       document.documentElement.setAttribute('data-mode', 'dark');
     });
+    await expect(page.locator('input[type="date"]').first()).toHaveCSS('color-scheme', 'dark');
     await page.screenshot({ path: path.join(ARTIFACTS, 'historico-390-dark.png'), fullPage: false });
+
+    await page.getByRole('button', { name: 'Ver relatório' }).first().click();
+    await expect(page.getByTestId('report-mobile-list')).toBeVisible();
+    await page.screenshot({ path: path.join(ARTIFACTS, 'relatorio-pago-390-dark.png'), fullPage: false });
+    await page.getByRole('button', { name: 'Fechar' }).click();
+    await expect(page.getByTestId('payment-history-card').first()).toBeVisible();
+
     await page.evaluate(() => {
       localStorage.setItem('agendix_color_mode', 'light');
       document.documentElement.setAttribute('data-mode', 'light');

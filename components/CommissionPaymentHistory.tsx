@@ -40,7 +40,7 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
     const { formatMoney } = useTenantLocale();
     const isBeauty = accentColor.includes('beauty');
     const theme: ThemeVariant = isBeauty ? 'beauty' : 'barber';
-    const { colors, accent, font, status, radius } = useBrutalTheme({ override: theme });
+    const { colors, accent, font, status, radius, isDark } = useBrutalTheme({ override: theme });
     const [payments, setPayments] = useState<GroupedCommissionPayment[]>([]);
     const [loading, setLoading] = useState(true);
     const [startDate, setStartDate] = useState('');
@@ -97,7 +97,22 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
     const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
     const totalServices = payments.reduce((sum, p) => sum + p.servicesCount, 0);
 
-    const dateInputClass = `w-full p-2 md:p-2.5 ${colors.inputBg} ${colors.inputBorder} border ${radius.input} ${colors.text} text-xs focus:border-[var(--color-input-focus)] outline-none transition-colors`;
+    const dateInputClass = [
+        'w-full p-2 md:p-2.5 text-xs outline-none transition-colors',
+        colors.inputBg,
+        colors.inputBorder,
+        'border',
+        radius.input,
+        'text-[var(--color-text)]',
+        isDark ? '[color-scheme:dark]' : '[color-scheme:light]',
+        'focus:border-[var(--color-input-focus)]',
+        '[&::-webkit-calendar-picker-indicator]:cursor-pointer',
+        '[&::-webkit-calendar-picker-indicator]:opacity-100',
+    ].join(' ');
+    const dateInputStyle: React.CSSProperties = {
+        color: 'var(--color-text)',
+        colorScheme: isDark ? 'dark' : 'light',
+    };
 
     if (selected) {
         return (
@@ -153,6 +168,7 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
                                             value={startDate}
                                             onChange={(e) => setStartDate(e.target.value)}
                                             className={dateInputClass}
+                                            style={dateInputStyle}
                                         />
                                     </div>
                                     <div className="flex-1">
@@ -161,6 +177,7 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
                                             value={endDate}
                                             onChange={(e) => setEndDate(e.target.value)}
                                             className={dateInputClass}
+                                            style={dateInputStyle}
                                         />
                                     </div>
                                 </div>

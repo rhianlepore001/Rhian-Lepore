@@ -312,7 +312,7 @@ export function useBrutalTheme(options?: UseBrutalThemeOptions): BrutalThemeToke
       buttonSuccess: isLight
         ? `bg-[var(--color-success)] text-[var(--color-on-success)] ${radius.button} hover:opacity-90 transition-all duration-150 ease-out`
         : `bg-[var(--color-success-bg)] text-[var(--color-success)] border border-[var(--color-success-border)] ${radius.button} hover:brightness-110 transition-all duration-150 ease-out`,
-      buttonOutline: `bg-transparent border border-[var(--color-accent-border)] text-theme-accent hover:bg-[var(--color-accent-dim)] ${radius.button} transition-all duration-150 ease-out`,
+      buttonOutline: `bg-transparent border text-[var(--color-accent)] [border-color:color-mix(in_srgb,var(--color-accent)_50%,transparent)] hover:bg-[var(--color-accent-dim)] hover:[border-color:color-mix(in_srgb,var(--color-accent)_75%,transparent)] hover:text-[var(--color-accent)] ${radius.button} transition-all duration-150 ease-out`,
 
       input: `w-full px-4 py-3 ${radius.input} text-sm text-theme-text bg-[var(--color-input-bg)] border border-[var(--color-input-border)] focus:outline-none focus:border-theme-accent focus:bg-[var(--color-card-hover)] transition-all`,
       inputFocus: `focus:outline-none focus:border-theme-accent focus:ring-0`,

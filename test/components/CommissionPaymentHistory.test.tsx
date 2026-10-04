@@ -79,6 +79,16 @@ describe('CommissionPaymentHistory', () => {
         expect(cards).toHaveLength(2);
         expect(screen.getAllByRole('button', { name: 'Ver relatório' })).toHaveLength(2);
         expect(screen.queryByText(/Nenhum pagamento/i)).toBeNull();
+        const dates = document.querySelectorAll<HTMLInputElement>('input[type="date"]');
+        expect(dates.length).toBe(2);
+        dates.forEach((el) => {
+            expect(el.style.color).toBe('var(--color-text)');
+            expect(el.style.colorScheme).toBe('dark');
+            expect(el.className).toMatch(/color-scheme:dark/);
+        });
+        const reportBtn = screen.getAllByRole('button', { name: 'Ver relatório' })[0];
+        expect(reportBtn.className).toMatch(/var\(--color-accent\)/);
+        expect(reportBtn.className).not.toMatch(/opacity-50/);
     });
 
     it('Ver relatório abre o modo pago com o timestamp daquele card', async () => {

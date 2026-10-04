@@ -241,13 +241,13 @@ async function stubSession(page: Page, role: 'owner' | 'staff') {
 }
 
 async function openDelete(page: Page, label: string, width: number) {
+  await page.getByText('Transações recentes').scrollIntoViewIfNeeded();
   if (width < 768) {
     await page.getByTestId('finance-tx-card').filter({ hasText: label }).first().click();
-    await page.getByTestId('finance-delete').last().click();
-  } else {
-    const row = page.getByRole('row').filter({ hasText: label }).first();
-    await row.getByTestId('finance-delete').click();
+    await page.getByRole('dialog').getByTestId('finance-delete').click();
+    return;
   }
+  await page.locator(`tr:has-text("${label}")`).first().locator('[data-testid="finance-delete"]').click();
 }
 
 test.describe('PR-A exclusão financeira', () => {
@@ -281,7 +281,12 @@ test.describe('PR-A exclusão financeira', () => {
       await stubSession(page, 'owner');
       await page.goto(`${BASE}/#/financeiro`, { waitUntil: 'domcontentloaded' });
       await expect(page.getByRole('heading', { name: 'Financeiro' })).toBeVisible({ timeout: 20_000 });
-      await expect(page.getByText('Corte').first()).toBeVisible({ timeout: 15_000 });
+      await page.getByText('Transações recentes').scrollIntoViewIfNeeded();
+      if (vp.width < 768) {
+        await expect(page.getByTestId('finance-tx-card').first()).toBeVisible({ timeout: 15_000 });
+      } else {
+        await expect(page.getByTestId('finance-delete').filter({ visible: true }).first()).toBeVisible({ timeout: 15_000 });
+      }
 
       await openDelete(page, 'Corte', vp.width);
       await expect(page.getByTestId('finance-delete-confirm')).toContainText('atendimento de Maria Silva');
@@ -295,15 +300,15 @@ test.describe('PR-A exclusão financeira', () => {
 
       await openDelete(page, 'Barba', vp.width);
       await page.getByRole('dialog').getByRole('button', { name: 'Excluir' }).click();
-      const blockToast = page.getByRole('alert');
-      await expect(blockToast).toContainText('já foi paga a Ana Souza', { timeout: 10_000 });
+      const blockToast = page.locator('[data-toast-placement="top"]').filter({ hasText: 'já foi paga a Ana Souza' });
+      await expect(blockToast).toBeVisible({ timeout: 10_000 });
       await expect(blockToast).not.toContainText(/PGRST|#/);
       await shot(page, `bloqueio-comissao-paga-${vp.name}`);
 
       await openDelete(page, 'Caixa extra', vp.width);
       await page.getByRole('dialog').getByRole('button', { name: 'Excluir' }).click();
-      const okToast = page.getByRole('status');
-      await expect(okToast).toContainText('excluída com sucesso', { timeout: 10_000 });
+      const okToast = page.locator('[data-toast-placement="top"]').filter({ hasText: 'excluída com sucesso' });
+      await expect(okToast).toBeVisible({ timeout: 10_000 });
       await expect(page.getByText('Caixa extra')).toHaveCount(0);
       await shot(page, `sucesso-toast-${vp.name}`);
       guard.assertNoLeak();
@@ -317,6 +322,7 @@ test.describe('PR-A exclusão financeira', () => {
       await stubSession(page, 'staff');
       await page.goto(`${BASE}/#/financeiro`, { waitUntil: 'domcontentloaded' });
       await expect(page.getByText('Meu Financeiro')).toBeVisible({ timeout: 20_000 });
+      await page.getByText('Transações recentes').scrollIntoViewIfNeeded();
       await expect(page.getByTestId('finance-delete')).toHaveCount(0);
       if (vp.width < 768) {
         await page.getByTestId('finance-tx-card').first().click();

@@ -368,6 +368,7 @@ test.describe('PR-7 notificações de pedido', () => {
       };
       guard.stubRpc('list_company_pending_public_bookings', { body: [editReq] });
       guard.stubRpc('list_agenda_blocks', { body: [] });
+      guard.stubRpc('get_commissions_due', { body: [] });
       guard.stubTable('notifications', { body: [] });
       await stubApp(page, 'owner', {
         notifications: [notif('n-owner-edit', OWNER_ID, EDIT_COPY, 'edit')],

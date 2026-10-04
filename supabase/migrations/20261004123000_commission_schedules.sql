@@ -72,10 +72,7 @@ CREATE POLICY commission_schedules_owner_select
   TO authenticated
   USING (
     user_id = auth.uid()::text
-    AND EXISTS (
-      SELECT 1 FROM public.profiles p
-      WHERE p.id = auth.uid()::text AND p.role = 'owner'
-    )
+    AND public.get_auth_role() = 'owner'
   );
 
 REVOKE ALL ON TABLE public.commission_schedules FROM PUBLIC, anon, authenticated;
@@ -109,6 +106,11 @@ CREATE TABLE IF NOT EXISTS public.commission_frequency_reset_backup (
   commission_payment_frequency text,
   commission_payment_day int
 );
+
+-- Backup interno do reset: nunca exposto pelo PostgREST (Supabase dá ALL a anon/authenticated por padrão).
+ALTER TABLE public.commission_frequency_reset_backup ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.commission_frequency_reset_backup FROM PUBLIC, anon, authenticated;
+GRANT ALL ON TABLE public.commission_frequency_reset_backup TO service_role;
 
 ALTER TABLE public.business_settings
   ADD COLUMN IF NOT EXISTS commission_schedule_notice boolean NOT NULL DEFAULT false;
@@ -317,26 +319,28 @@ STABLE
 SECURITY DEFINER
 SET search_path = public
 AS $$
+-- Próximo fechamento >= p_from (ou > p_from). A regra r = _commission_rule_for_close(v)
+-- vale para todo d em [v, t], t = primeira transição (effective_from) >= v; um close
+-- c de r só é válido se c <= t. Senão, recomeça em t + 1 com a regra seguinte.
 DECLARE
   v date := CASE WHEN p_inclusive THEN p_from ELSE p_from + 1 END;
   r record;
-  r2 record;
   c date;
+  t date;
   i int;
 BEGIN
   IF v IS NULL THEN RETURN NULL; END IF;
-  FOR i IN 1..40 LOOP
+  FOR i IN 1..60 LOOP
     r := public._commission_rule_for_close(p_tenant, p_professional_id, v);
     c := public._commission_first_close_of_rule(r.frequency, r.close_days, r.anchor_date, v);
-    IF c IS NULL THEN
-      RETURN NULL;
-    END IF;
-    r2 := public._commission_rule_for_close(p_tenant, p_professional_id, c);
-    IF r2.frequency = r.frequency AND r2.close_days = r.close_days
-       AND public._commission_first_close_of_rule(r2.frequency, r2.close_days, r2.anchor_date, c) = c THEN
+    t := public._commission_rule_transition(p_tenant, p_professional_id, v, true);
+    IF c IS NOT NULL AND (t IS NULL OR c <= t) THEN
       RETURN c;
     END IF;
-    v := GREATEST(v + 1, r2.effective_from);
+    IF t IS NULL THEN
+      RETURN NULL;
+    END IF;
+    v := t + 1;
   END LOOP;
   RETURN NULL;
 END;
@@ -350,29 +354,50 @@ STABLE
 SECURITY DEFINER
 SET search_path = public
 AS $$
+-- Último fechamento < p_before. A regra r = _commission_rule_for_close(v) vale para
+-- todo d em (l, v], l = última transição < v; um close c de r só é válido se c > l.
+-- Senão, recomeça em l (que pertence à regra anterior e costuma ser o último close dela).
 DECLARE
   v date := p_before - 1;
   r record;
-  r2 record;
   c date;
+  l date;
   i int;
 BEGIN
   IF p_before IS NULL THEN RETURN NULL; END IF;
-  FOR i IN 1..40 LOOP
+  FOR i IN 1..60 LOOP
     r := public._commission_rule_for_close(p_tenant, p_professional_id, v);
     c := public._commission_last_close_of_rule(r.frequency, r.close_days, r.anchor_date, v);
-    IF c IS NULL THEN
-      RETURN NULL;
-    END IF;
-    r2 := public._commission_rule_for_close(p_tenant, p_professional_id, c);
-    IF r2.frequency = r.frequency AND r2.close_days = r.close_days
-       AND public._commission_first_close_of_rule(r2.frequency, r2.close_days, r2.anchor_date, c) = c THEN
+    l := public._commission_rule_transition(p_tenant, p_professional_id, v, false);
+    IF c IS NOT NULL AND (l IS NULL OR c > l) THEN
       RETURN c;
     END IF;
-    v := LEAST(v - 1, r2.effective_from - 1);
+    IF l IS NULL THEN
+      RETURN NULL;
+    END IF;
+    v := l;
   END LOOP;
   RETURN NULL;
 END;
+$$;
+
+-- Primeira transição >= p_date (p_after) ou última < p_date, considerando as linhas
+-- do negócio e, se houver colaborador, as dele.
+CREATE OR REPLACE FUNCTION public._commission_rule_transition(
+  p_tenant text, p_professional_id uuid, p_date date, p_after boolean)
+RETURNS date
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT CASE WHEN p_after
+    THEN min(s.effective_from) FILTER (WHERE s.effective_from >= p_date)
+    ELSE max(s.effective_from) FILTER (WHERE s.effective_from < p_date)
+  END
+  FROM public.commission_schedules s
+  WHERE s.user_id = p_tenant
+    AND (s.professional_id IS NULL OR s.professional_id = p_professional_id)
 $$;
 
 -- start/end/pay_due da versão em vigor no fechamento p_ref_date (já um close, ou snap).
@@ -384,6 +409,7 @@ STABLE
 SECURITY DEFINER
 SET search_path = public
 AS $$
+-- Ciclo que contém p_ref_date (se p_ref_date é um fechamento, o ciclo que termina nele).
 DECLARE
   v_end date := p_ref_date;
   v_start date;
@@ -394,22 +420,21 @@ BEGIN
     RETURN NULL;
   END IF;
   IF NOT public._commission_is_close(p_tenant, p_professional_id, v_end) THEN
-    r := public._commission_rule_for_close(p_tenant, p_professional_id, v_end + 1);
-    IF r.frequency = 'monthly' AND cardinality(r.close_days) = 1 THEN
-      v_end := public._commission_settle_date(p_ref_date, r.close_days[1]);
-    ELSE
-      v_end := public._commission_next_close(p_tenant, p_professional_id, p_ref_date, true);
-    END IF;
+    v_end := public._commission_next_close(p_tenant, p_professional_id, p_ref_date, true);
   END IF;
   IF v_end IS NULL THEN
     RETURN NULL;
   END IF;
   r := public._commission_rule_for_close(p_tenant, p_professional_id, v_end);
   v_prev := public._commission_prev_close(p_tenant, p_professional_id, v_end);
-  IF v_prev IS NULL THEN
-    v_start := v_end - 27;
-  ELSE
+  IF v_prev IS NOT NULL THEN
     v_start := v_prev + 1;
+  ELSIF r.frequency = 'weekly' THEN
+    v_start := v_end - 6;
+  ELSIF r.frequency = 'biweekly' THEN
+    v_start := v_end - 14;
+  ELSE
+    v_start := public._commission_settle_date((date_trunc('month', v_end) - interval '1 month')::date, r.close_days[1]) + 1;
   END IF;
   RETURN jsonb_build_object(
     'start', v_start,
@@ -420,6 +445,50 @@ BEGIN
     'pay_offset_days', COALESCE(r.pay_offset_days, 0),
     'reminder_offsets', to_jsonb(COALESCE(r.reminder_offsets, ARRAY[2, 0]))
   );
+END;
+$$;
+
+-- Janela própria do colaborador com exceção ativa (NULL = segue a regra do negócio).
+-- Ciclo do colaborador = o que termina no último fechamento dele <= p_biz_end.
+CREATE OR REPLACE FUNCTION public._commission_member_window(
+  p_tenant text, p_professional_id uuid, p_biz_end date)
+RETURNS jsonb
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_end date;
+  v_own boolean;
+  b jsonb;
+BEGIN
+  IF p_professional_id IS NULL OR p_biz_end IS NULL OR NOT EXISTS (
+    SELECT 1 FROM public.commission_schedules s
+    WHERE s.user_id = p_tenant AND s.professional_id = p_professional_id
+  ) THEN
+    RETURN NULL;
+  END IF;
+  v_end := public._commission_prev_close(p_tenant, p_professional_id, p_biz_end + 1);
+  IF v_end IS NULL THEN
+    RETURN NULL;
+  END IF;
+  SELECT COALESCE(cardinality(s.close_days), 0) > 0 INTO v_own
+  FROM public.commission_schedules s
+  WHERE s.user_id = p_tenant AND s.professional_id = p_professional_id
+    AND s.effective_from < v_end
+  ORDER BY s.effective_from DESC, s.created_at DESC
+  LIMIT 1;
+  IF NOT COALESCE(v_own, false) THEN
+    RETURN NULL;
+  END IF;
+  b := public._commission_cycle_bounds(p_tenant, p_professional_id, v_end);
+  IF b IS NULL THEN
+    RETURN NULL;
+  END IF;
+  RETURN jsonb_build_object(
+    'start', b ->> 'start', 'end', b ->> 'end', 'pay_due', b ->> 'pay_due',
+    'frequency', b ->> 'frequency', 'close_days', b -> 'close_days');
 END;
 $$;
 
@@ -448,6 +517,8 @@ DECLARE
   v_freq text;
   v_open_end date;
   v_rule record;
+  v_prev_end date;
+  v_next_end date;
 BEGIN
   SELECT upper(p.region) INTO v_region FROM public.profiles p WHERE p.id = p_tenant;
   SELECT LEAST(GREATEST(COALESCE(bs.commission_settlement_day_of_month, 5), 1), 31) INTO v_day
@@ -501,21 +572,36 @@ BEGIN
   v_from := v_start::timestamp AT TIME ZONE v_tz;
   v_to := (v_end + 1)::timestamp AT TIME ZONE v_tz;
 
-  WITH fr AS (
+  WITH mw AS (
+    SELECT tm.id, public._commission_member_window(p_tenant, tm.id, v_end) AS w
+    FROM public.team_members tm
+    WHERE tm.user_id = p_tenant AND COALESCE(tm.is_owner, false) = false
+  ),
+  mwin AS (
+    SELECT mw.id, mw.w,
+      COALESCE((mw.w ->> 'start')::date, v_start) AS m_start,
+      COALESCE((mw.w ->> 'end')::date, v_end) AS m_end,
+      COALESCE((mw.w ->> 'start')::date, v_start)::timestamp AT TIME ZONE v_tz AS m_from,
+      (COALESCE((mw.w ->> 'end')::date, v_end) + 1)::timestamp AT TIME ZONE v_tz AS m_to
+    FROM mw
+  ),
+  fr AS (
     SELECT f.professional_id, COALESCE(f.commission_value, 0) AS cv, f.commission_paid, f.created_at,
-           EXISTS (SELECT 1 FROM public.product_sales ps WHERE ps.finance_record_id = f.id) AS is_product
+           EXISTS (SELECT 1 FROM public.product_sales ps WHERE ps.finance_record_id = f.id) AS is_product,
+           w.m_from, w.m_to
     FROM public.finance_records f
+    JOIN mwin w ON w.id = f.professional_id
     WHERE f.user_id = p_tenant AND f.type = 'revenue' AND COALESCE(f.commission_value, 0) > 0
   ),
   agg AS (
     SELECT fr.professional_id,
-      COALESCE(sum(fr.cv) FILTER (WHERE COALESCE(fr.commission_paid, false) = false AND fr.created_at >= v_from AND fr.created_at < v_to), 0) AS a_pagar_ciclo,
+      COALESCE(sum(fr.cv) FILTER (WHERE COALESCE(fr.commission_paid, false) = false AND fr.created_at >= fr.m_from AND fr.created_at < fr.m_to), 0) AS a_pagar_ciclo,
       COALESCE(sum(fr.cv) FILTER (WHERE COALESCE(fr.commission_paid, false) = false), 0) AS saldo_acumulado,
-      COALESCE(sum(fr.cv) FILTER (WHERE COALESCE(fr.commission_paid, false) = false AND fr.created_at < v_from), 0) AS saldo_anterior,
+      COALESCE(sum(fr.cv) FILTER (WHERE COALESCE(fr.commission_paid, false) = false AND fr.created_at < fr.m_from), 0) AS saldo_anterior,
       min((fr.created_at AT TIME ZONE v_tz)::date) FILTER (WHERE COALESCE(fr.commission_paid, false) = false) AS primeiro_nao_pago,
-      COALESCE(sum(fr.cv) FILTER (WHERE COALESCE(fr.commission_paid, false) = true AND fr.created_at >= v_from AND fr.created_at < v_to), 0) AS pago_calculado,
-      count(*) FILTER (WHERE COALESCE(fr.commission_paid, false) = false AND NOT fr.is_product AND fr.created_at >= v_from AND fr.created_at < v_to) AS servicos_ciclo,
-      count(*) FILTER (WHERE COALESCE(fr.commission_paid, false) = false AND fr.is_product AND fr.created_at >= v_from AND fr.created_at < v_to) AS produtos_ciclo
+      COALESCE(sum(fr.cv) FILTER (WHERE COALESCE(fr.commission_paid, false) = true AND fr.created_at >= fr.m_from AND fr.created_at < fr.m_to), 0) AS pago_calculado,
+      count(*) FILTER (WHERE COALESCE(fr.commission_paid, false) = false AND NOT fr.is_product AND fr.created_at >= fr.m_from AND fr.created_at < fr.m_to) AS servicos_ciclo,
+      count(*) FILTER (WHERE COALESCE(fr.commission_paid, false) = false AND fr.is_product AND fr.created_at >= fr.m_from AND fr.created_at < fr.m_to) AS produtos_ciclo
     FROM fr GROUP BY fr.professional_id
   ),
   rows AS (
@@ -528,13 +614,15 @@ BEGIN
       COALESCE(a.pago_calculado, 0) AS pago_calculado,
       COALESCE(a.servicos_ciclo, 0) AS servicos_ciclo, COALESCE(a.produtos_ciclo, 0) AS produtos_ciclo,
       cp.amount AS pago_ciclo, cp.paid_at AS pago_ciclo_em,
-      lp.paid_at AS last_paid_at, lp.amount AS last_amount, lp.start_date AS last_start, lp.end_date AS last_end
+      lp.paid_at AS last_paid_at, lp.amount AS last_amount, lp.start_date AS last_start, lp.end_date AS last_end,
+      w.w AS own_cycle
     FROM public.team_members tm
+    JOIN mwin w ON w.id = tm.id
     LEFT JOIN agg a ON a.professional_id = tm.id
     LEFT JOIN LATERAL (
       SELECT sum(c.amount) AS amount, max(c.paid_at) AS paid_at FROM public.commission_payments c
       WHERE c.user_id = p_tenant AND c.professional_id = tm.id AND c.status = 'paid'
-        AND c.start_date <= v_end AND c.end_date >= v_start
+        AND c.start_date <= w.m_end AND c.end_date >= w.m_start
       HAVING count(*) > 0
     ) cp ON true
     LEFT JOIN LATERAL (
@@ -560,10 +648,18 @@ BEGIN
         ELSE 'nada_a_pagar' END,
       'ultimo_pagamento', CASE WHEN r.last_paid_at IS NOT NULL THEN jsonb_build_object(
         'paid_at', r.last_paid_at, 'amount', r.last_amount, 'start_date', r.last_start, 'end_date', r.last_end) END)
+      || CASE WHEN r.own_cycle IS NULL THEN '{}'::jsonb ELSE jsonb_build_object('own_cycle', r.own_cycle) END
     ORDER BY r.inactive, r.a_pagar_ciclo DESC, r.name), '[]'::jsonb)
   INTO v_members
   FROM rows r
   WHERE NOT r.inactive OR r.saldo_acumulado > 0 OR r.last_paid_at IS NOT NULL;
+
+  v_prev_end := COALESCE(
+    public._commission_prev_close(p_tenant, NULL, v_end),
+    public._commission_settle_date((date_trunc('month', v_end) - interval '1 month')::date, v_day));
+  v_next_end := COALESCE(
+    public._commission_next_close(p_tenant, NULL, v_end, false),
+    public._commission_settle_date((date_trunc('month', v_end) + interval '1 month')::date, v_day));
 
   RETURN jsonb_build_object(
     'cycle', jsonb_build_object(
@@ -575,8 +671,8 @@ BEGIN
     'pay_due', v_pay_due,
     'pay_offset_days', COALESCE((v_bounds ->> 'pay_offset_days')::int, 0),
     'currency', CASE WHEN v_region = 'PT' THEN 'EUR' ELSE 'BRL' END,
-    'previous_end', public._commission_prev_close(p_tenant, NULL, v_end),
-    'next_end', public._commission_next_close(p_tenant, NULL, v_end, false),
+    'previous_end', v_prev_end,
+    'next_end', v_next_end,
     'members', v_members,
     'totals', jsonb_build_object(
       'a_pagar_ciclo', (SELECT COALESCE(round(sum((e ->> 'a_pagar_ciclo')::numeric + (e ->> 'saldo_anterior')::numeric), 2), 0) FROM jsonb_array_elements(v_members) e),
@@ -599,9 +695,7 @@ AS $$
 DECLARE
   v_uid uuid := auth.uid();
 BEGIN
-  IF v_uid IS NULL OR NOT EXISTS (
-    SELECT 1 FROM public.profiles p WHERE p.id = v_uid::text AND p.role = 'owner'
-  ) THEN
+  IF v_uid IS NULL OR public.get_auth_role() IS DISTINCT FROM 'owner' THEN
     RAISE EXCEPTION 'Apenas o dono pode alterar o pagamento da comissão.' USING ERRCODE = 'insufficient_privilege';
   END IF;
   RETURN v_uid;
@@ -714,17 +808,17 @@ BEGIN
     v_tenant, p_professional_id,
     COALESCE(p_frequency, 'monthly'),
     COALESCE(v_days, ARRAY[5]),
-    CASE WHEN p_frequency = 'weekly' THEN COALESCE(p_anchor_date, v_eff) ELSE NULL END,
+    CASE WHEN p_frequency = 'weekly' AND NOT (p_use_business_default AND p_professional_id IS NOT NULL) THEN v_eff ELSE NULL END,
     COALESCE(p_pay_offset_days, 2),
     COALESCE(p_reminder_offsets, ARRAY[2, 0]),
     v_eff, v_uid)
   RETURNING id INTO v_id;
 
   IF p_professional_id IS NULL AND NOT p_use_business_default THEN
-    IF p_frequency = 'monthly' THEN
-      v_mirror := LEAST(GREATEST(v_days[1], 1), 31);
-    ELSIF p_frequency = 'biweekly' THEN
-      v_mirror := LEAST(GREATEST(v_days[1], 1), 31);
+    -- Espelho só para leitores legados (StaffPerformance, "Acerto todo dia N").
+    -- business_settings tem CHECK 1..28 em prod: 29–31 e semanal/quinzenal não espelham.
+    IF p_frequency = 'monthly' AND v_days[1] BETWEEN 1 AND 28 THEN
+      v_mirror := v_days[1];
     ELSE
       v_mirror := NULL;
     END IF;
@@ -739,6 +833,7 @@ BEGIN
     'id', v_id,
     'effective_from', v_eff,
     'current_end', v_eff,
+    'first_new_close', public._commission_next_close(v_tenant, p_professional_id, v_eff, false),
     'professional_id', p_professional_id);
 END;
 $$;
@@ -781,9 +876,10 @@ BEGIN
   ELSE
     v_days := p_close_days;
   END IF;
-  v_from := v_today;
+  -- A mudança vale do próximo fechamento em diante: a prévia lista os closes da regra nova depois dele.
+  v_from := COALESCE(v_current_end, v_today) + 1;
   FOR i IN 1..2 LOOP
-    v_c := public._commission_first_close_of_rule(p_frequency, v_days, p_anchor_date, v_from);
+    v_c := public._commission_first_close_of_rule(p_frequency, v_days, NULL, v_from);
     EXIT WHEN v_c IS NULL;
     v_closes := v_closes || v_c;
     v_p := v_c + COALESCE(p_pay_offset_days, 0);
@@ -904,7 +1000,7 @@ BEGIN
     RETURN NULL;
   END IF;
   INSERT INTO public.notifications (user_id, title, message, type, read, link, event_key)
-  VALUES (p_tenant, p_title, p_message, 'commission_reminder', false, '/financeiro', v_key)
+  VALUES (p_tenant, p_title, p_message, 'commission_reminder', false, '/financeiro?tab=commissions', v_key)
   RETURNING id INTO v_id;
   UPDATE public.commission_reminder_log SET notification_id = v_id WHERE id = v_log;
   RETURN v_id;
@@ -942,12 +1038,18 @@ BEGIN
       RAISE EXCEPTION 'Apenas o dono pode gerar lembretes de comissão.' USING ERRCODE = 'insufficient_privilege';
     END IF;
     v_tenants := ARRAY[v_uid::text];
+    p_now := now();  -- o cliente não escolhe a data (só cron/service_role testam outra)
   ELSE
     SELECT coalesce(array_agg(DISTINCT s.user_id), ARRAY[]::text[]) INTO v_tenants
     FROM public.commission_schedules s;
   END IF;
 
   FOREACH v_tenant IN ARRAY v_tenants LOOP
+    -- Sem colaborador ativo (fora o dono) não há comissão a lembrar.
+    CONTINUE WHEN NOT EXISTS (
+      SELECT 1 FROM public.team_members tm
+      WHERE tm.user_id = v_tenant AND COALESCE(tm.is_owner, false) = false
+        AND tm.active IS NOT FALSE AND tm.deleted_at IS NULL);
     v_tz := public._staff_perf_tz(v_tenant);
     v_today := (p_now AT TIME ZONE v_tz)::date;
     v_open := public._commission_next_close(v_tenant, NULL, v_today, true);
@@ -981,13 +1083,16 @@ BEGIN
     END LOOP;
 
     FOR v_prof IN
-      SELECT DISTINCT professional_id FROM public.commission_schedules
-      WHERE user_id = v_tenant AND professional_id IS NOT NULL
+      SELECT DISTINCT s.professional_id FROM public.commission_schedules s
+      JOIN public.team_members tm ON tm.id = s.professional_id AND tm.user_id = v_tenant
+      WHERE s.user_id = v_tenant AND s.professional_id IS NOT NULL
+        AND COALESCE(tm.is_owner, false) = false AND tm.active IS NOT FALSE AND tm.deleted_at IS NULL
     LOOP
       v_open := public._commission_next_close(v_tenant, v_prof, v_today, true);
       v_prev := public._commission_prev_close(v_tenant, v_prof, COALESCE(v_open, v_today + 1));
       FOREACH v_end IN ARRAY ARRAY[v_open, v_prev] LOOP
         CONTINUE WHEN v_end IS NULL;
+        CONTINUE WHEN public._commission_member_window(v_tenant, v_prof, v_end) IS NULL;
         v_bounds := public._commission_cycle_bounds(v_tenant, v_prof, v_end);
         CONTINUE WHEN v_bounds IS NULL;
         v_pay := (v_bounds ->> 'pay_due')::date;
@@ -1101,6 +1206,8 @@ BEGIN
     'public._commission_next_close(text,uuid,date,boolean)',
     'public._commission_prev_close(text,uuid,date)',
     'public._commission_cycle_bounds(text,uuid,date)',
+    'public._commission_rule_transition(text,uuid,date,boolean)',
+    'public._commission_member_window(text,uuid,date)',
     'public._commission_require_owner()',
     'public._commission_validate_rule(text,int[],int,int[],boolean)',
     'public._commission_emit_reminder(text,uuid,date,int,text,text)'
@@ -1145,7 +1252,8 @@ BEGIN
     );
   END IF;
 EXCEPTION WHEN OTHERS THEN
-  NULL;
+  -- Sem pg_cron utilizável os lembretes continuam pelo load do dono (RPC); não aborta a migration.
+  RAISE WARNING 'pg_cron indisponível para agendix_commission_reminders: %', SQLERRM;
 END $$;
 
 COMMIT;

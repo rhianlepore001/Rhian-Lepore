@@ -31,6 +31,8 @@ DROP FUNCTION IF EXISTS public._commission_emit_reminder(text, uuid, date, int, 
 DROP FUNCTION IF EXISTS public._commission_insert_reminder(text, uuid, date, int, text, text);
 DROP FUNCTION IF EXISTS public._commission_validate_rule(text, int[], int, int[], boolean);
 DROP FUNCTION IF EXISTS public._commission_require_owner();
+DROP FUNCTION IF EXISTS public._commission_member_window(text, uuid, date);
+DROP FUNCTION IF EXISTS public._commission_rule_transition(text, uuid, date, boolean);
 DROP FUNCTION IF EXISTS public._commission_cycle_bounds(text, uuid, date);
 DROP FUNCTION IF EXISTS public._commission_prev_close(text, uuid, date);
 DROP FUNCTION IF EXISTS public._commission_next_close(text, uuid, date, boolean);

@@ -28,6 +28,10 @@ RB="$ROOT/docs/rollbacks/20261004123000_commission_schedules.rollback.sql"
 "${PSQL[@]}" -f "$ROOT/supabase/tests/commission_schedules.harness.sql"
 OLD_MD5="$("${PSQL[@]}" -At -c "SELECT md5(pg_get_functiondef('public._commission_cycle_core(text,date,timestamptz)'::regprocedure))")"
 echo "cycle_core md5 pré-PR-D: $OLD_MD5"
+# Cópia congelada do core pré-PR-D para a paridade (24 meses, JSON inteiro).
+"${PSQL[@]}" -c "DO \$\$ BEGIN EXECUTE replace(pg_get_functiondef('public._commission_cycle_core(text,date,timestamptz)'::regprocedure), 'public._commission_cycle_core(', 'public._legacy_commission_cycle_core('); END \$\$;"
+PROD_MD5="b004cb3b0b79f14dbb9f7e1c5b12c4ec"  # md5 lido de prod em 2026-10-04 (read-only)
+[ "$OLD_MD5" = "$PROD_MD5" ] || { echo "FAIL corpo pré-PR-D local ($OLD_MD5) != prod ($PROD_MD5)"; exit 1; }
 
 MODE="${1:-}"
 "${PSQL[@]}" -f "$MIG"
@@ -44,4 +48,5 @@ if [ "$MODE" = "--rollback" ]; then
   exit 0
 fi
 
-"${PSQL[@]}" -At -f "$ROOT/supabase/tests/commission_schedules.test.sql" 2>&1 | sed 's/^psql:[^ ]* NOTICE:  /  /; s/^NOTICE:  /  /'
+PGOPTIONS="-c client_min_messages=notice" "${PSQL[@]}" -At -f "$ROOT/supabase/tests/commission_schedules.test.sql" 2>&1 | sed 's/^psql:[^ ]* NOTICE:  /  /; s/^NOTICE:  /  /'
+echo "PASS todos os testes de commission_schedules"

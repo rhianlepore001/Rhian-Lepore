@@ -1,4 +1,4 @@
--- ROLLBACK de 20261004083800_client_cancel_cutoff
+-- ROLLBACK de 20261004082633_client_cancel_cutoff
 -- Idempotente. Não toca #120 (reschedule), #121 (lead time), #122 (broadcast)
 -- nem #123 (completed/no_show / get_client_bookings_history_v2 / outcome).
 -- Restaura get_public_business_settings_json exatamente como em

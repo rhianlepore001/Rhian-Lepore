@@ -27,7 +27,7 @@
 -- TODO(PR-9): pedido com sinal pago — caminho de cancelamento/reembolso ainda
 -- não existe; esta RPC não distingue depósito.
 --
--- ROLLBACK: docs/rollbacks/20261004083800_client_cancel_cutoff.rollback.sql
+-- ROLLBACK: docs/rollbacks/20261004082633_client_cancel_cutoff.rollback.sql
 -- Reverter o frontend ANTES (Minha Área chama v2; a página pública lê as
 -- colunas novas no JSON).
 

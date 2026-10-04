@@ -1,5 +1,5 @@
 -- Provas PR-5: cutoff de cancelamento do cliente + libera agenda.
--- Roda DEPOIS da migration 20261004083800. Falha antes dela (v2 ausente).
+-- Roda DEPOIS da migration 20261004082633. Falha antes dela (v2 ausente).
 
 CREATE TEMP TABLE pr5_fail (msg text);
 

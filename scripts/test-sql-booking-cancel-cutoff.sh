@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Testa 20261004083800_client_cancel_cutoff num Postgres local descartável.
+# Testa 20261004082633_client_cancel_cutoff num Postgres local descartável.
 #   scripts/test-sql-booking-cancel-cutoff.sh             # harness #123 -> teste FALHA -> migration 2x -> passa
 #   scripts/test-sql-booking-cancel-cutoff.sh --rollback  # migration + rollback: some v2/colunas; #120-#123 intactos
 set -euo pipefail
@@ -11,8 +11,8 @@ if [ -z "$PGBIN" ] || [ ! -x "$PGBIN/psql" ]; then
 fi
 TMP="$(mktemp -d)"
 PORT="${PGPORT_TEST:-55483}"
-MIG="$ROOT/supabase/migrations/20261004083800_client_cancel_cutoff.sql"
-RB="$ROOT/docs/rollbacks/20261004083800_client_cancel_cutoff.rollback.sql"
+MIG="$ROOT/supabase/migrations/20261004082633_client_cancel_cutoff.sql"
+RB="$ROOT/docs/rollbacks/20261004082633_client_cancel_cutoff.rollback.sql"
 MIG123="$ROOT/supabase/migrations/20261004072408_public_booking_completed_noshow.sql"
 cleanup() { "$PGBIN/pg_ctl" -D "$TMP/data" -m immediate stop >/dev/null 2>&1 || true; rm -rf "$TMP"; }
 trap cleanup EXIT

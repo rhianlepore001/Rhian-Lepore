@@ -114,7 +114,7 @@ function financeStats() {
   };
 }
 
-async function installMocks(page: Page, mode: 'light' | 'dark') {
+async function installMocks(page: Page, mode: 'light' | 'dark', financeRows = paidRows) {
   const accessToken = fakeJwt(OWNER_ID);
   const session = {
     access_token: accessToken,
@@ -250,7 +250,7 @@ async function installMocks(page: Page, mode: 'light' | 'dark') {
       const historySelect = select.includes('commission_paid_at');
       const paidAtEq = url.search.match(/commission_paid_at=eq\.([^&]+)/)?.[1] ?? null;
       const decodedAt = paidAtEq ? decodeURIComponent(paidAtEq) : null;
-      let rows = historySelect || select.includes('revenue') ? paidRows : [];
+      let rows = historySelect || select.includes('revenue') ? financeRows : [];
       if (decodedAt) rows = rows.filter((r) => r.commission_paid_at === decodedAt);
       if (select.includes('revenue') && !decodedAt && url.search.includes('commission_paid=eq.false')) {
         rows = [];
@@ -311,6 +311,51 @@ function pdfToPng(pdfPath: string, pngPath: string) {
   execFileSync('pdftocairo', ['-png', '-singlefile', '-r', '144', pdfPath, pngPath.replace(/\.png$/, '')], { stdio: 'pipe' });
 }
 
+function renderPdfPages(pdfPath: string, prefix: string): string[] {
+  const dir = path.dirname(prefix);
+  fs.mkdirSync(dir, { recursive: true });
+  try {
+    execFileSync('pdftoppm', ['-png', '-r', '120', pdfPath, prefix], { stdio: 'pipe' });
+  } catch {
+    execFileSync('pdftocairo', ['-png', '-r', '120', pdfPath, prefix], { stdio: 'pipe' });
+  }
+  const base = path.basename(prefix);
+  return fs.readdirSync(dir)
+    .filter((f) => f.startsWith(base) && f.endsWith('.png'))
+    .sort()
+    .map((f) => path.join(dir, f));
+}
+
+function stitchPngsVertical(inputs: string[], output: string) {
+  try {
+    execFileSync('python3', [
+      '-c',
+      'from PIL import Image; import sys\nimgs=[Image.open(p).convert("RGB") for p in sys.argv[1:-1]]\nw=max(i.width for i in imgs); h=sum(i.height for i in imgs)\nout=Image.new("RGB",(w,h),(255,255,255)); y=0\nfor im in imgs:\n    out.paste(im,(0,y)); y+=im.height\nout.save(sys.argv[-1])',
+      ...inputs,
+      output,
+    ], { stdio: 'pipe' });
+    return;
+  } catch {
+    // ImageMagick abaixo
+  }
+  try {
+    execFileSync('convert', [...inputs, '-append', output], { stdio: 'pipe' });
+    return;
+  } catch {
+    fs.copyFileSync(inputs[inputs.length > 1 ? 1 : 0], output);
+  }
+}
+
+function pdfToStitchedPng(pdfPath: string, pngPath: string) {
+  const tmp = path.join(path.dirname(pngPath), `pages-${path.basename(pngPath, '.png')}`);
+  fs.mkdirSync(tmp, { recursive: true });
+  const pages = renderPdfPages(pdfPath, path.join(tmp, 'p'));
+  if (pages.length < 2) {
+    throw new Error(`PDF deveria quebrar página, gerou ${pages.length}`);
+  }
+  stitchPngsVertical(pages, pngPath);
+}
+
 test.describe('Comissões — histórico, relatório pago e PDF', () => {
   test.setTimeout(120_000);
 
@@ -324,6 +369,8 @@ test.describe('Comissões — histórico, relatório pago e PDF', () => {
     const cards = page.getByTestId('payment-history-card');
     await expect(cards).toHaveCount(2);
     await expect(page.getByRole('button', { name: 'Ver relatório' })).toHaveCount(2);
+    await expect(page.getByText('06/08 – 05/09/2026')).toBeVisible();
+    await expect(page.getByText('06/09 – 10/09/2026')).toBeVisible();
     await page.screenshot({ path: path.join(ARTIFACTS, 'historico-390-light.png'), fullPage: false });
 
     await page.evaluate(() => {
@@ -371,5 +418,32 @@ test.describe('Comissões — histórico, relatório pago e PDF', () => {
     await summary.saveAs(summaryPdf);
     expect(summary.suggestedFilename()).toMatch(/comissao-ana-souza-.*resumido\.pdf/);
     pdfToPng(summaryPdf, path.join(ARTIFACTS, 'pdf-resumido.png'));
+  });
+
+  test('PDF detalhado com 25 linhas quebra página', async ({ page }) => {
+    fs.mkdirSync(ARTIFACTS, { recursive: true });
+    const many = Array.from({ length: 25 }, (_, i) => ({
+      ...paidRows[2],
+      id: `fr-many-${i + 1}`,
+      service_name: `Serviço ${i + 1}`,
+      client_name: `Cliente ${i + 1}`,
+      created_at: `2026-09-08T${String(8 + (i % 10)).padStart(2, '0')}:${String((i * 3) % 60).padStart(2, '0')}:00.000Z`,
+      revenue: 50,
+      commission_value: 20,
+      commission_paid_at: AFTERNOON,
+    }));
+    await page.setViewportSize({ width: 390, height: 844 });
+    await installMocks(page, 'light', [...paidRows.filter((r) => r.commission_paid_at === MORNING), ...many]);
+    await openHistory(page);
+    await page.getByRole('button', { name: 'Ver relatório' }).first().click();
+    await expect(page.getByTestId('report-mobile-list')).toBeVisible();
+    await page.getByRole('button', { name: /Compartilhar/i }).click();
+    const [detailed] = await Promise.all([
+      page.waitForEvent('download'),
+      page.getByTestId('share-option-detalhado').click(),
+    ]);
+    const detailedPdf = path.join(ARTIFACTS, 'comissao-detalhado-25.pdf');
+    await detailed.saveAs(detailedPdf);
+    pdfToStitchedPng(detailedPdf, path.join(ARTIFACTS, 'pdf-detalhado-quebra.png'));
   });
 });

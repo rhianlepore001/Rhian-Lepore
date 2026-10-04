@@ -1,6 +1,6 @@
 import { getBusinessCopy } from './businessCopy';
-import { getDateStringInTimeZone } from './businessTimezone';
-import { formatCycleLabel, formatIsoToBr } from './commissionCycle';
+import { addDaysToDateString, getDateStringInTimeZone, zonedDateTimeToIso } from './businessTimezone';
+import { formatIsoToBr } from './commissionCycle';
 
 export type CommissionReportMode = 'pending' | 'paid';
 export type CommissionPdfVariant = 'resumido' | 'detalhado';
@@ -53,6 +53,38 @@ export interface CommissionReportQueryFilters {
     eq: [string, unknown][];
     gte?: [string, string];
     lte?: [string, string];
+    lt?: [string, string];
+}
+
+export interface CommissionHistoryRangeBounds {
+    gte: string;
+    lt: string;
+}
+
+export interface CommissionPdfTableRow {
+    date: string;
+    service: string;
+    client: string;
+    amount: string;
+    fee: string;
+    base: string;
+    rate: string;
+    commission: string;
+}
+
+export interface CommissionPdfModel {
+    variant: CommissionPdfVariant;
+    businessName: string;
+    businessTypeHeading: string;
+    title: string;
+    professionalName: string;
+    periodLabel: string;
+    commissionRate: number;
+    statusLabel: string;
+    serviceCount: number;
+    rows: CommissionPdfTableRow[];
+    totals: { gross: string; fee: string; base: string; commission: string; showFee: boolean };
+    generatedAtLabel: string;
 }
 
 const DASH = '—';
@@ -87,12 +119,22 @@ export function resolveCommissionServiceName(row: {
     return DASH;
 }
 
+function capitalizePt(value: string): string {
+    if (!value) return value;
+    return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
 /** Tipo do negócio via helper existente; 'negócio' se o segmento for desconhecido. */
 export function reportBusinessTypeLabel(userType: string | null | undefined): string {
     if (userType === 'barber' || userType === 'beauty') {
         return getBusinessCopy(userType).businessNoun;
     }
     return 'negócio';
+}
+
+/** Cabeçalho do PDF: Barbearia / Salão / Negócio, a partir do helper dinâmico. */
+export function reportBusinessTypeHeading(userType: string | null | undefined): string {
+    return capitalizePt(reportBusinessTypeLabel(userType));
 }
 
 export function formatDatePtBrTz(iso: string, tz: string): string {
@@ -109,10 +151,30 @@ export function formatPaidAtLabel(iso: string, tz: string): string {
     return day ? `Pago em ${day}` : 'Pago';
 }
 
+/** 06/08 – 05/09/2026 (mesmo ano) ou 06/08/2025 – 05/01/2026. */
 export function periodLabelFromRange(start: string, end: string, tz: string): string {
     const a = /^\d{4}-\d{2}-\d{2}$/.test(start) ? start : getDateStringInTimeZone(start, tz);
     const b = /^\d{4}-\d{2}-\d{2}$/.test(end) ? end : getDateStringInTimeZone(end, tz);
-    return formatCycleLabel(a, b);
+    const fa = formatIsoToBr(a);
+    const fb = formatIsoToBr(b);
+    if (!fa || !fb) return [fa, fb].filter(Boolean).join(' – ');
+    if (a.slice(0, 4) === b.slice(0, 4)) return `${fa.slice(0, 5)} – ${fb}`;
+    return `${fa} – ${fb}`;
+}
+
+/**
+ * Limites de commission_paid_at no fuso do negócio.
+ * `${date}T00:00:00` sem offset é lido como UTC pelo PostgREST.
+ */
+export function historyPaidAtRangeBounds(
+    startDate: string,
+    endDate: string,
+    tz: string,
+): CommissionHistoryRangeBounds {
+    return {
+        gte: zonedDateTimeToIso(startDate, '00:00', tz),
+        lt: zonedDateTimeToIso(addDaysToDateString(endDate, 1), '00:00', tz),
+    };
 }
 
 function paidAtMs(iso: string): number {
@@ -200,6 +262,7 @@ export function commissionReportFilters(opts: {
     ];
     if (opts.mode === 'paid') {
         eq.push(['commission_paid', true]);
+        // String crua do PostgREST (microsegundos). Nunca Date / toISOString().
         if (opts.paidAt) eq.push(['commission_paid_at', opts.paidAt]);
         return { eq };
     }
@@ -231,77 +294,55 @@ export function commissionPdfFileName(opts: {
     return `comissao-${name}-${period}-${opts.variant}.pdf`;
 }
 
-function headerLines(input: CommissionReportShareInput, variant: CommissionPdfVariant): string[] {
-    const title = variant === 'resumido' ? 'Relatório resumido de comissões' : 'Relatório detalhado de comissões';
-    const lines = [
-        input.businessName || 'AgendiX',
-        input.businessType,
-        '',
-        title,
-        '',
-        `Profissional: ${input.professionalName}`,
-    ];
-    if (input.cpf) lines.push(`CPF: ${input.cpf}`);
-    lines.push(`Período: ${input.periodLabel}`);
-    lines.push(`Comissão: ${input.commissionRate}%`);
-    if (input.paidAtLabel) lines.push(input.paidAtLabel);
-    return lines;
-}
-
-function totalLines(input: CommissionReportShareInput): string[] {
-    const { formatMoney: money, totals } = input;
-    const lines = [
-        '',
-        `Subtotal bruto: ${money(totals.gross)}`,
-    ];
-    if (totals.fee > 0) {
-        lines.push(`(-) Taxa maquininha: ${money(totals.fee)}`);
-    }
-    lines.push(`(=) Base de cálculo: ${money(totals.base)}`);
-    lines.push(`Comissão: ${money(totals.commission)}`);
-    lines.push('');
-    lines.push(`Valor líquido a receber: ${money(totals.commission)}`);
-    return lines;
-}
-
-export function buildSummaryPdfLines(input: CommissionReportShareInput): string[] {
-    return [
-        ...headerLines(input, 'resumido'),
-        ...totalLines(input),
-        '',
-        'Gerado pelo AgendiX',
-    ];
-}
-
-function formatDetailDate(iso: string): string {
+function formatPdfTableDate(iso: string): string {
     const ymd = iso.slice(0, 10);
     if (/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return `${ymd.slice(8, 10)}/${ymd.slice(5, 7)}`;
     return iso;
 }
 
-export function buildDetailedPdfLines(input: CommissionReportShareInput): string[] {
-    const { formatMoney: money } = input;
-    const lines = [
-        ...headerLines(input, 'detalhado'),
-        '',
-        'Linhas',
-    ];
-    for (const row of input.records) {
-        const client = row.client_name ? ` · ${row.client_name}` : '';
-        lines.push(
-            `${formatDetailDate(row.created_at)} · ${row.service_name}${client}`,
-        );
-        lines.push(
-            `Valor ${money(row.amount)}  Taxa ${money(row.machine_fee_amount)}  Base ${money(row.commission_base)}  ${row.commission_rate}%  Comissão ${money(row.commission_value)}`,
-        );
-    }
-    lines.push(...totalLines(input));
-    if (input.paidAtLabel) {
-        lines.push(input.paidAtLabel);
-    }
-    lines.push('');
-    lines.push('Gerado pelo AgendiX');
-    return lines;
+export function formatPdfGeneratedAt(now: Date = new Date()): string {
+    const date = now.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const time = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', hour12: false });
+    return `Gerado pelo AgendiX em ${date} ${time}`;
+}
+
+export function buildCommissionPdfModel(
+    input: CommissionReportShareInput,
+    variant: CommissionPdfVariant,
+    now: Date = new Date(),
+): CommissionPdfModel {
+    const money = input.formatMoney;
+    return {
+        variant,
+        businessName: input.businessName || 'AgendiX',
+        businessTypeHeading: input.businessType,
+        title: variant === 'resumido'
+            ? 'Relatório resumido de comissões'
+            : 'Relatório detalhado de comissões',
+        professionalName: input.professionalName,
+        periodLabel: input.periodLabel,
+        commissionRate: input.commissionRate,
+        statusLabel: input.paidAtLabel?.trim() || 'Pendente',
+        serviceCount: input.records.length,
+        rows: input.records.map((row) => ({
+            date: formatPdfTableDate(row.created_at),
+            service: row.service_name,
+            client: row.client_name || '—',
+            amount: money(row.amount),
+            fee: money(row.machine_fee_amount),
+            base: money(row.commission_base),
+            rate: `${row.commission_rate}%`,
+            commission: money(row.commission_value),
+        })),
+        totals: {
+            gross: money(input.totals.gross),
+            fee: money(input.totals.fee),
+            base: money(input.totals.base),
+            commission: money(input.totals.commission),
+            showFee: input.totals.fee > 0,
+        },
+        generatedAtLabel: formatPdfGeneratedAt(now),
+    };
 }
 
 export function buildCommissionCopyText(input: CommissionReportShareInput): string {

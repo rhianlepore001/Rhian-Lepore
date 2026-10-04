@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { X, Calendar, Loader2, Check, Clock, TrendingUp } from 'lucide-react';
+import { X, Calendar, Loader2, Check, Clock, TrendingUp, FileText, ChevronRight } from 'lucide-react';
 import { Modal } from '@/components/ui';
 import { Button } from './ui/Button';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
@@ -10,6 +10,7 @@ import { resolveBusinessTimezone } from '../utils/businessTimezone';
 import {
     formatPaidAtLabel,
     groupPaidRecordsByTimestamp,
+    historyPaidAtRangeBounds,
     periodLabelFromRange,
     type GroupedCommissionPayment,
 } from '../utils/commissionReport';
@@ -65,14 +66,15 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
     const fetchPaymentHistory = async () => {
         setLoading(true);
         try {
+            const bounds = historyPaidAtRangeBounds(startDate, endDate, tz);
             const { data, error } = await supabase
                 .from('finance_records')
                 .select('commission_paid_at, created_at, commission_value')
                 .eq('professional_id', professionalId)
                 .eq('commission_paid', true)
                 .not('commission_paid_at', 'is', null)
-                .gte('commission_paid_at', `${startDate}T00:00:00`)
-                .lte('commission_paid_at', `${endDate}T23:59:59`)
+                .gte('commission_paid_at', bounds.gte)
+                .lt('commission_paid_at', bounds.lt)
                 .order('commission_paid_at', { ascending: false });
 
             if (error) throw error;
@@ -140,7 +142,7 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
                         </button>
                     </div>
 
-                    <div className={`${colors.surface} p-3 md:p-4 ${radius.card} ${colors.border} border`}>
+                    <div className={`bg-card-elevated p-3 md:p-4 ${radius.card} ${colors.border} border`}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <label className={`${colors.textMuted} text-xs uppercase ${font.mono} block px-1`}>Período de consulta</label>
@@ -245,7 +247,7 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
                                             </div>
                                         </div>
 
-                                        <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 ${radius.card} ${colors.surface} ${colors.border} border`}>
+                                        <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 ${radius.card} bg-card-elevated ${colors.border} border`}>
                                             <div className="flex items-center gap-3">
                                                 <div className={`w-8 h-8 ${radius.badge} ${colors.card} ${colors.border} border flex items-center justify-center`}>
                                                     <Calendar className={`w-4 h-4 ${colors.textSecondary}`} />
@@ -270,16 +272,16 @@ export const CommissionPaymentHistory: React.FC<CommissionPaymentHistoryProps> =
                                             </div>
                                         </div>
 
-                                        <div className="md:flex md:justify-end">
                                         <Button
-                                            variant="primary"
+                                            variant="outline"
                                             size="sm"
-                                            className="w-full md:w-auto"
+                                            fullWidth
+                                            icon={<FileText />}
+                                            iconRight={<ChevronRight />}
                                             onClick={() => setSelected(payment)}
                                         >
                                             Ver relatório
                                         </Button>
-                                        </div>
                                     </div>
                                 </article>
                             ))}

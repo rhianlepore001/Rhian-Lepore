@@ -12,7 +12,7 @@ import {
     commissionReportFilters,
     formatPaidAtLabel,
     periodLabelFromRange,
-    reportBusinessTypeLabel,
+    reportBusinessTypeHeading,
     resolveCommissionServiceName,
     type CommissionReportMode,
     type CommissionReportShareInput,
@@ -115,6 +115,7 @@ export const CommissionDetailReport: React.FC<CommissionDetailReportProps> = ({
             for (const [col, val] of filters.eq) q = q.eq(col, val);
             if (filters.gte) q = q.gte(filters.gte[0], filters.gte[1]);
             if (filters.lte) q = q.lte(filters.lte[0], filters.lte[1]);
+            if (filters.lt) q = q.lt(filters.lt[0], filters.lt[1]);
             const { data, error } = await q.order('created_at', { ascending: true });
 
             if (error) throw error;
@@ -199,7 +200,7 @@ export const CommissionDetailReport: React.FC<CommissionDetailReportProps> = ({
         totals: { gross: totalGross, fee: totalFee, base: totalBase, commission: totalCommission },
         paidAtLabel: paidLabel,
         businessName: businessName || 'AgendiX',
-        businessType: reportBusinessTypeLabel(userType),
+        businessType: reportBusinessTypeHeading(userType),
         formatMoney,
     }), [professionalName, cpf, viewPeriod.label, commissionRate, records, totalGross, totalFee, totalBase, totalCommission, paidLabel, businessName, userType, formatMoney]);
 
@@ -237,9 +238,9 @@ export const CommissionDetailReport: React.FC<CommissionDetailReportProps> = ({
 
     return (
         <>
-            <Modal open size="full" onClose={onClose} showCloseButton={false}>
-                <div className="-m-5 flex min-h-[calc(100dvh-8rem)] flex-col md:-m-6">
-                    <header className={`shrink-0 border-b ${colors.divider} pb-3`}>
+            <Modal open size="full" onClose={onClose} showCloseButton={false} bodyClassName="flex flex-1 flex-col overflow-hidden p-0">
+                <div className="flex min-h-0 flex-1 flex-col">
+                    <header className={`shrink-0 border-b px-4 pt-4 pb-3 ${colors.divider}`}>
                         <div className="flex items-center gap-2">
                             <h3 className={`min-w-0 flex-1 truncate text-base font-bold tracking-tight md:text-lg ${colors.text}`}>
                                 Relatório de comissões
@@ -270,7 +271,7 @@ export const CommissionDetailReport: React.FC<CommissionDetailReportProps> = ({
                         </p>
                     </header>
 
-                    <div className="min-h-0 flex-1 overflow-y-auto pt-4 space-y-5">
+                    <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-4 pb-5 space-y-5">
                         {showShare ? (
                             <CommissionShareModal
                                 report={shareInput}
@@ -278,7 +279,7 @@ export const CommissionDetailReport: React.FC<CommissionDetailReportProps> = ({
                             />
                         ) : (
                         <>
-                        <section className={`${colors.surface} border ${colors.border} ${radius.card} p-4`}>
+                        <section className={`bg-card-elevated border ${colors.border} ${radius.card} p-4`}>
                             <p className={`${colors.text} font-semibold text-lg leading-tight`}>{professionalName}</p>
                             <p className={`mt-1 text-xs ${font.mono} ${colors.textSecondary}`}>
                                 CPF: {cpf || 'Não cadastrado'}

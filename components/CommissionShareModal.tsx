@@ -4,8 +4,7 @@ import { Button } from './ui/Button';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import {
     buildCommissionCopyText,
-    buildDetailedPdfLines,
-    buildSummaryPdfLines,
+    buildCommissionPdfModel,
     commissionPdfFileName,
     type CommissionPdfVariant,
     type CommissionReportShareInput,
@@ -29,15 +28,13 @@ export const CommissionShareModal: React.FC<CommissionShareModalProps> = ({
         if (busy) return;
         setBusy(variant);
         try {
-            const lines = variant === 'resumido'
-                ? buildSummaryPdfLines(report)
-                : buildDetailedPdfLines(report);
+            const model = buildCommissionPdfModel(report, variant);
             const fileName = commissionPdfFileName({
                 professionalName: report.professionalName,
                 periodLabel: report.periodLabel,
                 variant,
             });
-            await shareOrDownloadCommissionPdf({ fileName, lines, variant });
+            await shareOrDownloadCommissionPdf({ fileName, model });
         } catch (err) {
             console.error('PDF share error:', err);
         } finally {

@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { getBusinessCopy } from '@/utils/businessCopy';
+import { zonedDateTimeToIso } from '@/utils/businessTimezone';
 import {
-    buildDetailedPdfLines,
-    buildSummaryPdfLines,
+    buildCommissionPdfModel,
     commissionPdfFileName,
     commissionReportFilters,
     formatPaidAtLabel,
     groupPaidRecordsByTimestamp,
+    historyPaidAtRangeBounds,
+    periodLabelFromRange,
+    reportBusinessTypeHeading,
     reportBusinessTypeLabel,
     resolveCommissionServiceName,
 } from '@/utils/commissionReport';
@@ -72,6 +75,17 @@ describe('groupPaidRecordsByTimestamp', () => {
         );
         expect(groups).toHaveLength(2);
     });
+
+    it('preserva a string crua com microsegundos como chave do grupo', () => {
+        const paidAt = '2026-09-10T15:00:00.123456+00:00';
+        const groups = groupPaidRecordsByTimestamp(
+            [{ commission_paid_at: paidAt, created_at: '2026-08-10T12:00:00.000Z', commission_value: 10 }],
+            [],
+            'Europe/Lisbon',
+        );
+        expect(groups[0].paidAt).toBe(paidAt);
+        expect(groups[0].paidAt).not.toBe(new Date(paidAt).toISOString());
+    });
 });
 
 describe('commissionReportFilters', () => {
@@ -92,6 +106,26 @@ describe('commissionReportFilters', () => {
         expect(filters.lte).toBeUndefined();
     });
 
+    it('modo pago usa a string crua com microsegundos, nunca toISOString', () => {
+        const paidAt = '2026-09-10T15:00:00.123456+00:00';
+        const truncated = new Date(paidAt).toISOString();
+        expect(truncated).toBe('2026-09-10T15:00:00.123Z');
+        expect(truncated).not.toBe(paidAt);
+        const filters = commissionReportFilters({
+            mode: 'paid',
+            userId: 'owner-1',
+            professionalId: 'ana',
+            periodStart: '2026-08-06',
+            periodEnd: '2026-09-05',
+            paidAt,
+        });
+        expect(filters.eq).toContainEqual(['commission_paid_at', paidAt]);
+        expect(filters.eq).not.toContainEqual(['commission_paid_at', truncated]);
+        const raw = filters.eq.find(([col]) => col === 'commission_paid_at')?.[1];
+        expect(raw).toBe(paidAt);
+        expect(String(raw)).toContain('.123456');
+    });
+
     it('modo pendente filtra commission_paid=false e o período', () => {
         const filters = commissionReportFilters({
             mode: 'pending',
@@ -104,6 +138,33 @@ describe('commissionReportFilters', () => {
         expect(filters.gte).toEqual(['created_at', '2026-08-06']);
         expect(filters.lte).toEqual(['created_at', '2026-09-05T23:59:59']);
         expect(filters.eq.some(([col]) => col === 'commission_paid_at')).toBe(false);
+    });
+});
+
+describe('historyPaidAtRangeBounds', () => {
+    it('usa meia-noite no fuso do negócio, não T00:00:00 UTC', () => {
+        const lisbon = historyPaidAtRangeBounds('2026-08-06', '2026-09-05', 'Europe/Lisbon');
+        expect(lisbon.gte).toBe(zonedDateTimeToIso('2026-08-06', '00:00', 'Europe/Lisbon'));
+        expect(lisbon.lt).toBe(zonedDateTimeToIso('2026-09-06', '00:00', 'Europe/Lisbon'));
+        expect(lisbon.gte).toBe('2026-08-06T00:00:00+01:00');
+        expect(lisbon.lt).toBe('2026-09-06T00:00:00+01:00');
+        expect(lisbon.gte).not.toBe('2026-08-06T00:00:00');
+
+        const sp = historyPaidAtRangeBounds('2026-08-06', '2026-09-05', 'America/Sao_Paulo');
+        expect(sp.gte).toBe('2026-08-06T00:00:00-03:00');
+        expect(sp.lt).toBe('2026-09-06T00:00:00-03:00');
+    });
+});
+
+describe('periodLabelFromRange', () => {
+    const tz = 'Europe/Lisbon';
+
+    it('mostra o ano no período (mesmo ano compacto)', () => {
+        expect(periodLabelFromRange('2026-08-06', '2026-09-05', tz)).toBe('06/08 – 05/09/2026');
+    });
+
+    it('mostra os dois anos quando o período cruza o ano', () => {
+        expect(periodLabelFromRange('2025-12-06', '2026-01-05', tz)).toBe('06/12/2025 – 05/01/2026');
     });
 });
 
@@ -125,11 +186,11 @@ describe('resolveCommissionServiceName', () => {
     });
 });
 
-describe('PDF builders e nome do arquivo', () => {
+describe('PDF model e nome do arquivo', () => {
     const share = {
         professionalName: 'Ana Souza',
         cpf: '123.456.789-00',
-        periodLabel: '06/08 – 05/09',
+        periodLabel: '06/08 – 05/09/2026',
         commissionRate: 40,
         records: [
             {
@@ -156,58 +217,61 @@ describe('PDF builders e nome do arquivo', () => {
         totals: { gross: 90, fee: 2, base: 88, commission: 35.2 },
         paidAtLabel: 'Pago em 10/09/2026',
         businessName: 'Studio Atlas',
-        businessType: 'negócio',
+        businessType: 'Barbearia',
         formatMoney: money,
     };
 
-    it('resumo tem totais e não lista cada serviço', () => {
-        const lines = buildSummaryPdfLines(share);
-        expect(lines.join('\n')).toContain('Studio Atlas');
-        expect(lines.join('\n')).toContain('negócio');
-        expect(lines.join('\n')).toContain('Relatório resumido de comissões');
-        expect(lines.join('\n')).toContain('Profissional: Ana Souza');
-        expect(lines.join('\n')).toContain('Período: 06/08 – 05/09');
-        expect(lines.join('\n')).toContain('Comissão: 40%');
-        expect(lines.join('\n')).toContain('Subtotal bruto');
-        expect(lines.join('\n')).toContain('Base de cálculo');
-        expect(lines.join('\n')).toContain('Valor líquido a receber');
-        expect(lines.join('\n')).toContain('Pago em 10/09/2026');
-        expect(lines.join('\n')).not.toContain('Corte');
-        expect(lines.join('\n')).not.toContain('João');
+    it('resumo tem cabeçalho, info, totais e só a contagem de serviços', () => {
+        const model = buildCommissionPdfModel(share, 'resumido', new Date('2026-10-04T15:00:00.000Z'));
+        expect(model.businessName).toBe('Studio Atlas');
+        expect(model.businessTypeHeading).toBe('Barbearia');
+        expect(model.title).toBe('Relatório resumido de comissões');
+        expect(model.professionalName).toBe('Ana Souza');
+        expect(model.periodLabel).toBe('06/08 – 05/09/2026');
+        expect(model.commissionRate).toBe(40);
+        expect(model.statusLabel).toBe('Pago em 10/09/2026');
+        expect(model.serviceCount).toBe(2);
+        expect(model.totals.commission).toContain('35,20');
+        expect(model.generatedAtLabel).toMatch(/^Gerado pelo AgendiX em /);
+        expect(model.rows).toHaveLength(2);
     });
 
-    it('detalhado inclui cada linha para conferência', () => {
-        const lines = buildDetailedPdfLines(share);
-        expect(lines.join('\n')).toContain('Relatório detalhado de comissões');
-        expect(lines.join('\n')).toContain('Corte');
-        expect(lines.join('\n')).toContain('João');
-        expect(lines.join('\n')).toContain('Barba');
-        expect(lines.join('\n')).toContain('Valor');
-        expect(lines.join('\n')).toContain('Taxa');
-        expect(lines.join('\n')).toContain('Base');
-        expect(lines.join('\n')).toContain('Comissão');
-        expect(lines.join('\n')).toContain('Valor líquido a receber');
-        expect(lines.join('\n')).toContain('Pago em 10/09/2026');
+    it('detalhado inclui cada linha da tabela', () => {
+        const model = buildCommissionPdfModel(share, 'detalhado');
+        expect(model.title).toBe('Relatório detalhado de comissões');
+        expect(model.rows.map((r) => r.service)).toEqual(['Corte', 'Barba']);
+        expect(model.rows[0].client).toBe('João');
+        expect(model.rows[1].client).toBe('—');
+        expect(model.rows[0].date).toBe('10/08');
+        expect(model.statusLabel).toBe('Pago em 10/09/2026');
+    });
+
+    it('pendente aparece no status quando não há paidAtLabel', () => {
+        const model = buildCommissionPdfModel({ ...share, paidAtLabel: null }, 'resumido');
+        expect(model.statusLabel).toBe('Pendente');
     });
 
     it('nome do arquivo segue comissao-<nome>-<periodo>-<variante>.pdf', () => {
         expect(commissionPdfFileName({
             professionalName: 'Ana Souza',
-            periodLabel: '06/08 – 05/09',
+            periodLabel: '06/08 – 05/09/2026',
             variant: 'resumido',
-        })).toBe('comissao-ana-souza-06-08-05-09-resumido.pdf');
+        })).toBe('comissao-ana-souza-06-08-05-09-2026-resumido.pdf');
         expect(commissionPdfFileName({
             professionalName: 'Caio Lima',
-            periodLabel: '06/08 – 05/09',
+            periodLabel: '06/08 – 05/09/2026',
             variant: 'detalhado',
-        })).toBe('comissao-caio-lima-06-08-05-09-detalhado.pdf');
+        })).toBe('comissao-caio-lima-06-08-05-09-2026-detalhado.pdf');
     });
 
-    it('tipo do negócio usa o helper e cai em negócio', () => {
+    it('tipo do negócio usa o helper, capitaliza no cabeçalho e cai em negócio', () => {
         expect(reportBusinessTypeLabel('barber')).toBe(getBusinessCopy('barber').businessNoun);
         expect(reportBusinessTypeLabel('beauty')).toBe(getBusinessCopy('beauty').businessNoun);
         expect(reportBusinessTypeLabel(null)).toBe('negócio');
         expect(reportBusinessTypeLabel('studio')).toBe('negócio');
+        expect(reportBusinessTypeHeading('barber')).toBe('Barbearia');
+        expect(reportBusinessTypeHeading('beauty')).toBe('Salão');
+        expect(reportBusinessTypeHeading(null)).toBe('Negócio');
         expect(formatPaidAtLabel('2026-09-10T15:00:00.000Z', 'Europe/Lisbon')).toBe('Pago em 10/09/2026');
     });
 });

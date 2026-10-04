@@ -95,6 +95,21 @@ describe('CommissionDetailReport', () => {
         expect(await screen.findByTestId('report-total-commission')).toHaveTextContent(/40,00/);
     });
 
+    it('modo pago envia microsegundos crus, sem toISOString', async () => {
+        const paidAt = '2026-09-10T15:00:00.123456+00:00';
+        const truncated = new Date(paidAt).toISOString();
+        expect(truncated).toBe('2026-09-10T15:00:00.123Z');
+        tableData.finance_records = { data: [
+            { id: 'r1', created_at: '2026-08-10T12:00:00Z', service_name: 'Corte', client_name: 'João', description: null, revenue: 100, payment_method: 'pix', commission_rate: 40, commission_value: 40, appointments: null },
+        ], error: null };
+        mount({ mode: 'paid', paidAt, periodStart: '2026-08-06', periodEnd: '2026-09-05' });
+        await waitFor(() => {
+            const fr = calls.find((c) => c.table === 'finance_records');
+            expect(fr?.filters).toContainEqual(['eq', 'commission_paid_at', paidAt]);
+            expect(fr?.filters).not.toContainEqual(['eq', 'commission_paid_at', truncated]);
+        });
+    });
+
     it('pendente vazio oferece o último pagamento', async () => {
         tableData.commission_payments = {
             data: [{ paid_at: '2026-09-10T15:00:00.000Z', start_date: '2026-08-06', end_date: '2026-09-05' }],

@@ -1,4 +1,4 @@
--- Harness local para 20261003220000_public_booking_completed_noshow.
+-- Harness local para 20261004072408_public_booking_completed_noshow.
 -- Postgres descartável. Não toca o Supabase de produção.
 
 CREATE ROLE anon NOLOGIN;

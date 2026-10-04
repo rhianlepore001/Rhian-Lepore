@@ -17,7 +17,7 @@
 --   no_show   = há pelo menos um NoShow e nenhum Completed;
 --   mistura Completed+NoShow permanece confirmed (não reescreve).
 --
--- Rollback: docs/rollbacks/20261003220000_public_booking_completed_noshow.rollback.sql
+-- Rollback: docs/rollbacks/20261004072408_public_booking_completed_noshow.rollback.sql
 
 -- 1) Constraint --------------------------------------------------------------
 ALTER TABLE public.public_bookings DROP CONSTRAINT IF EXISTS public_bookings_status_check;

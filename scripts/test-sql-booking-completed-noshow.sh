@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Testa 20261003220000_public_booking_completed_noshow num Postgres local descartável.
+# Testa 20261004072408_public_booking_completed_noshow num Postgres local descartável.
 #   scripts/test-sql-booking-completed-noshow.sh             # harness -> teste FALHA -> migration 2x -> passa
 #   scripts/test-sql-booking-completed-noshow.sh --rollback  # migration + rollback: some trigger/v2; #120/#121/#122 intactos
 set -euo pipefail
@@ -11,8 +11,8 @@ if [ -z "$PGBIN" ] || [ ! -x "$PGBIN/psql" ]; then
 fi
 TMP="$(mktemp -d)"
 PORT="${PGPORT_TEST:-55473}"
-MIG="$ROOT/supabase/migrations/20261003220000_public_booking_completed_noshow.sql"
-RB="$ROOT/docs/rollbacks/20261003220000_public_booking_completed_noshow.rollback.sql"
+MIG="$ROOT/supabase/migrations/20261004072408_public_booking_completed_noshow.sql"
+RB="$ROOT/docs/rollbacks/20261004072408_public_booking_completed_noshow.rollback.sql"
 cleanup() { "$PGBIN/pg_ctl" -D "$TMP/data" -m immediate stop >/dev/null 2>&1 || true; rm -rf "$TMP"; }
 trap cleanup EXIT
 "$PGBIN/initdb" -D "$TMP/data" -U postgres -A trust >/dev/null

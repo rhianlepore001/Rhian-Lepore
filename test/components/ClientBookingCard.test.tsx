@@ -509,7 +509,7 @@ describe('ClientBookingCard — PR-4 Finalizado / Não compareceu / Clube', () =
       clubOffered: true,
       isClubMember: true,
     });
-    expect(screen.getByTestId('client-booking-club')).toHaveTextContent('Seu Clube está ativo neste horário.');
+    expect(screen.getByTestId('client-booking-club')).toHaveTextContent('Seu Clube está ativo.');
     unmount();
 
     renderPr4({

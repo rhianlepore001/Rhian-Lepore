@@ -155,7 +155,7 @@ describe('clientBookings — PR-4 Finalizado / Não compareceu', () => {
     expect(clubSentence('pending', invite)).toBeNull();
     expect(CLUB_SENTENCE.completed).toBe('Seu Clube segue ativo.');
     expect(CLUB_SENTENCE.completed).not.toMatch(/visita entrou/i);
-    expect(CLUB_SENTENCE.confirmed).toBe('Seu Clube está ativo neste horário.');
+    expect(CLUB_SENTENCE.confirmed).toBe('Seu Clube está ativo.');
     expect(CLUB_SENTENCE.no_show).toBe('Seu Clube continua ativo.');
     expect(CLUB_SENTENCE.cancelled).toBe('Seu Clube segue valendo.');
   });

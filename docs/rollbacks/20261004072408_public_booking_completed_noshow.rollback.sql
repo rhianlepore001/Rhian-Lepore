@@ -1,4 +1,4 @@
--- ROLLBACK de 20261003220000_public_booking_completed_noshow
+-- ROLLBACK de 20261004072408_public_booking_completed_noshow
 -- Idempotente. Não toca #120 (reschedule), #121 (lead time) nem #122 (broadcast).
 -- no_show volta para confirmed antes de restaurar a constraint antiga.
 --

@@ -56,7 +56,7 @@ export const NO_SHOW_MESSAGE = 'Sentimos sua falta. Quer marcar outro horário?'
 
 /** Frases para membro com effective_status = active. Sem acúmulo de visita nem desconto. */
 export const CLUB_SENTENCE: Record<'confirmed' | 'completed' | 'no_show' | 'cancelled', string> = {
-  confirmed: 'Seu Clube está ativo neste horário.',
+  confirmed: 'Seu Clube está ativo.',
   completed: 'Seu Clube segue ativo.',
   no_show: 'Seu Clube continua ativo.',
   cancelled: 'Seu Clube segue valendo.',

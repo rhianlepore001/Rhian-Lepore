@@ -1,5 +1,7 @@
 import React from 'react';
 import { TrendingUp, TrendingDown, Award, AlertCircle } from 'lucide-react';
+import { formatCurrency, type Region } from '../utils/formatters';
+import { formatMonthGrowth } from '../utils/financeCashflow';
 
 interface MonthData {
     month: string;
@@ -7,19 +9,21 @@ interface MonthData {
     revenue: number;
     expenses: number;
     profit: number;
-    growth: number; // percentage
+    growth: number;
+    previousRevenue?: number;
+    previousRecords?: number;
 }
 
 interface MonthlyHistoryProps {
     data: MonthData[];
-    currencySymbol: string;
+    currencyRegion: Region;
     accentColor?: string;
     isBeauty?: boolean;
 }
 
 export const MonthlyHistory: React.FC<MonthlyHistoryProps> = ({
     data,
-    currencySymbol,
+    currencyRegion,
 }) => {
     if (data.length === 0) {
         return (
@@ -30,16 +34,16 @@ export const MonthlyHistory: React.FC<MonthlyHistoryProps> = ({
         );
     }
 
-    // Find best and worst months
     const bestMonth = data.reduce((max, month) => month.profit > max.profit ? month : max, data[0]);
     const worstMonth = data.reduce((min, month) => month.profit < min.profit ? month : min, data[0]);
 
     const avgGrowth = data.reduce((sum, month) => sum + month.growth, 0) / data.length;
     const totalRevenue = data.reduce((sum, month) => sum + month.revenue, 0);
+    const avgSign = avgGrowth > 0 ? '+' : avgGrowth < 0 ? '−' : '';
+    const avgGrowthLabel = `${avgSign}${Math.abs(avgGrowth).toFixed(1).replace('.', ',')}%`;
 
     return (
         <div className="space-y-6">
-            {/* Insights Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-[var(--color-success-bg)] border border-[var(--color-success-border)] rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-2">
@@ -50,7 +54,7 @@ export const MonthlyHistory: React.FC<MonthlyHistoryProps> = ({
                         {bestMonth.month} {bestMonth.year}
                     </p>
                     <p className="text-sm text-[var(--color-success)] font-mono">
-                        {currencySymbol} {bestMonth.profit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        {formatCurrency(bestMonth.profit, currencyRegion)}
                     </p>
                 </div>
 
@@ -60,7 +64,7 @@ export const MonthlyHistory: React.FC<MonthlyHistoryProps> = ({
                         <p className="text-xs font-mono text-theme-accent uppercase">Crescimento Médio</p>
                     </div>
                     <p className="text-lg font-heading text-[var(--color-text)]">
-                        {avgGrowth > 0 ? '+' : ''}{avgGrowth.toFixed(1)}%
+                        {avgGrowthLabel}
                     </p>
                     <p className="text-sm text-theme-accent font-mono">
                         por mês
@@ -76,12 +80,11 @@ export const MonthlyHistory: React.FC<MonthlyHistoryProps> = ({
                         12 meses
                     </p>
                     <p className="text-sm text-[var(--color-info)] font-mono">
-                        {currencySymbol} {totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        {formatCurrency(totalRevenue, currencyRegion)}
                     </p>
                 </div>
             </div>
 
-            {/* History Table */}
             <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                     <thead>
@@ -97,6 +100,14 @@ export const MonthlyHistory: React.FC<MonthlyHistoryProps> = ({
                         {data.map((month, index) => {
                             const isBest = month.month === bestMonth.month && month.year === bestMonth.year;
                             const isWorst = month.month === worstMonth.month && month.year === worstMonth.year;
+                            const prev = data[index + 1];
+                            const growthLabel = formatMonthGrowth({
+                                currentRevenue: month.revenue,
+                                previousRevenue: prev?.revenue ?? 0,
+                                previousRecords: prev ? 8 : 0,
+                            });
+                            const muted = growthLabel === 'Mês anterior com pouco movimento';
+                            const growthPositive = !growthLabel.startsWith('−') && !muted;
 
                             return (
                                 <tr
@@ -110,18 +121,18 @@ export const MonthlyHistory: React.FC<MonthlyHistoryProps> = ({
                                         </div>
                                     </td>
                                     <td className="p-3 text-right font-mono text-[var(--color-success)]">
-                                        {currencySymbol} {month.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                        {formatCurrency(month.revenue, currencyRegion)}
                                     </td>
                                     <td className="p-3 text-right font-mono text-[var(--color-danger)]">
-                                        {currencySymbol} {month.expenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                        {formatCurrency(month.expenses, currencyRegion)}
                                     </td>
                                     <td className={`p-3 text-right font-mono font-bold ${month.profit >= 0 ? 'text-theme-accent' : 'text-[var(--color-danger)]'}`}>
-                                        {currencySymbol} {month.profit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                        {formatCurrency(month.profit, currencyRegion)}
                                     </td>
                                     <td className="p-3 text-right">
-                                        <div className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-mono ${month.growth >= 0 ? 'bg-[var(--color-success-bg)] text-[var(--color-success)]' : 'bg-[var(--color-danger-bg)] text-[var(--color-danger)]'}`}>
-                                            {month.growth >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                                            {month.growth > 0 ? '+' : ''}{month.growth.toFixed(1)}%
+                                        <div className={`inline-flex max-w-[11rem] items-center gap-1 px-2 py-1 rounded text-xs font-mono ${muted ? 'bg-[var(--color-surface)] text-[var(--color-text-muted)]' : growthPositive ? 'bg-[var(--color-success-bg)] text-[var(--color-success)]' : 'bg-[var(--color-danger-bg)] text-[var(--color-danger)]'}`}>
+                                            {!muted && (growthPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />)}
+                                            {growthLabel}
                                         </div>
                                     </td>
                                 </tr>

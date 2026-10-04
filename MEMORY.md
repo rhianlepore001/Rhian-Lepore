@@ -9,6 +9,10 @@
 
 ---
 
+## Finance PR-C — gráfico Entradas e saídas + fuso do mês (4 Out 2026, draft)
+
+Branch `cursor/fin-c-cashflow-chart-e4e7`. Só frontend. SVG próprio (sem recharts na rota Financeiro); semanas no mobile / dias no desktop; intervalo `[start,end)` ISO no fuso do negócio; react-query paralelo; histórico só na aba Histórico. Prints em `/opt/cursor/artifacts/screenshots/fin-c/`.
+
 ## Comissões — histórico + PDF (4 Out 2026, draft)
 
 Branch `cursor/comissoes-relatorio-pdf-mobile-57c7`, PR #129. Front-end only. Review: `commission_paid_at` eq usa string crua (microsegundos); intervalo do histórico no fuso do negócio; PDF jspdf-autotable; padding 16px no relatório 390. Prints em `/opt/cursor/artifacts/screenshots/comissoes/`.

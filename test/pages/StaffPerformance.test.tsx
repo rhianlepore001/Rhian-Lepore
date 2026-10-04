@@ -143,6 +143,7 @@ describe('StaffPerformance (P2) — /financeiro/performance', () => {
         expect(within(headline).getByText('R$ 62,00')).toBeInTheDocument();
         expect(within(headline).getByText('55%')).toBeInTheDocument();
         expect(within(headline).getByText('6 de 11 clientes')).toBeInTheDocument();
+        expect(screen.queryByText(/o ranking começa em 8/)).toBeNull();
     });
 
     it('detalhe: conta do retorno, secundários, tendência de 6 meses e serviços', async () => {

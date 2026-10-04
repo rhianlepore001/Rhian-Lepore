@@ -55,7 +55,7 @@ export const MemberDetail: React.FC<MemberDetailProps> = ({
                         {m.rank != null && <span className={`${font.mono} text-sm tabular-nums ${colors.textSecondary}`}>{rankLabel(m.rank)} no ranking</span>}
                         {badge && <Badge variant="neutral">{badge}</Badge>}
                     </div>
-                    {m.rank == null && (
+                    {m.rank == null && (m.low_sample || m.metrics.atendimentos < data.min_sample) && (
                         <p className={`text-sm leading-relaxed ${colors.textSecondary}`}>
                             {unrankedSentence(m, data.min_sample)}
                         </p>

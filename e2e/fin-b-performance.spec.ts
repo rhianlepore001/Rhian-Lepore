@@ -542,11 +542,9 @@ test.describe('Finance PR-B — performance clara', () => {
         await expect(page.getByTestId('metric-account')).toBeVisible();
         await shot(page, `equipe-conta-${suffix}`);
         await closeAccount(page).click();
-
-        await page.evaluate(() => {
-          const row = [...document.querySelectorAll('[data-unranked]')].find((n) => n.getClientRects().length > 0);
-          row?.scrollIntoView({ block: 'center' });
-        });
+        await expect(page.getByRole('dialog')).toHaveCount(0);
+        await page.waitForTimeout(400);
+        await page.locator('[data-unranked]').filter({ visible: true }).first().scrollIntoViewIfNeeded();
         await shot(page, `sem-ranking-${suffix}`);
 
         await page.locator(`[data-testid="member-${ANA}"]`).filter({ visible: true }).getByRole('link', { name: /Ana/ }).click();

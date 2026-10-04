@@ -46,6 +46,13 @@ export const businessSettingsSchema = z.object({
    * Só existe depois da migration de agenda_blocks; default no produto é true.
    */
   staff_can_block_agenda: z.boolean().nullable().optional(),
+  /**
+   * Prazo (h) para o cliente cancelar online. 0 = não cancela pelo app.
+   * Coluna nova (PR-5); default de produto 2.
+   */
+  client_cancel_cutoff_hours: z.number().int().optional(),
+  /** Observação livre (≤500). Não migrada de cancellation_policy. */
+  client_cancel_note: z.string().nullable().optional(),
   created_at: z.string().nullable().optional(),
   updated_at: z.string().nullable().optional(),
 });

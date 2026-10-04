@@ -25,10 +25,13 @@ import {
 } from '../../utils/businessTimezone';
 import {
     CANCELLATION_POLICY_NOTES_HINT,
-    GENERATED_CANCELLATION_POLICY_TEXT,
-    composeCancellationPolicyForSave,
-    splitCancellationPolicyForEditor,
+    cancellationPolicyNotesForDisplay,
+    generatedCancellationPolicyText,
 } from '../../utils/cancellationPolicyCopy';
+import {
+    DEFAULT_CLIENT_CANCEL_CUTOFF_HOURS,
+    MAX_CLIENT_CANCEL_NOTE_LENGTH,
+} from '../../utils/clientCancelCutoff';
 
 export const GeneralSettings: React.FC = () => {
     const { user, companyId, region, updateRegion } = useAuth();
@@ -105,7 +108,10 @@ export const GeneralSettings: React.FC = () => {
 
     React.useEffect(() => {
         if (settings) {
-            setCancellationPolicy(splitCancellationPolicyForEditor(settings.cancellation_policy).notes);
+            setCancellationPolicy(cancellationPolicyNotesForDisplay(
+                settings.client_cancel_note,
+                settings.cancellation_policy,
+            ));
             if (settings.business_hours) setBusinessHours(settings.business_hours as any);
         }
     }, [settings]);
@@ -221,7 +227,9 @@ export const GeneralSettings: React.FC = () => {
             updateRegion(selectedRegion);
 
             await updateSettingsMutation.mutateAsync({
-                cancellation_policy: composeCancellationPolicyForSave(cancellationPolicy),
+                client_cancel_note: cancellationPolicy.trim() === ''
+                    ? ''
+                    : cancellationPolicy.trim().slice(0, MAX_CLIENT_CANCEL_NOTE_LENGTH),
                 business_hours: businessHours as any,
             });
 
@@ -482,7 +490,10 @@ export const GeneralSettings: React.FC = () => {
                             O que o cliente lê
                         </p>
                         <p className={`${colors.text} text-sm leading-relaxed`}>
-                            {GENERATED_CANCELLATION_POLICY_TEXT}
+                            {generatedCancellationPolicyText(
+                                settings?.client_cancel_cutoff_hours ?? DEFAULT_CLIENT_CANCEL_CUTOFF_HOURS,
+                                businessName || profile?.business_name,
+                            )}
                         </p>
                     </div>
                     <label className={`${classes.label} mt-4 block`} htmlFor="cancellation-policy-notes">
@@ -492,7 +503,8 @@ export const GeneralSettings: React.FC = () => {
                         id="cancellation-policy-notes"
                         data-testid="cancellation-policy-notes"
                         value={cancellationPolicy}
-                        onChange={e => setCancellationPolicy(e.target.value)}
+                        maxLength={MAX_CLIENT_CANCEL_NOTE_LENGTH}
+                        onChange={e => setCancellationPolicy(e.target.value.slice(0, MAX_CLIENT_CANCEL_NOTE_LENGTH))}
                         rows={3}
                         placeholder="Ex.: avisar pelo WhatsApp se for atrasar."
                         className={classes.input}

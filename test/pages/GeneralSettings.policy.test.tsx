@@ -51,7 +51,7 @@ vi.mock('../../hooks/useBrutalTheme', () => ({
 }));
 
 import { GeneralSettings } from '../../pages/settings/GeneralSettings';
-import { CANCELLATION_POLICY_NOTES_HINT, GENERATED_CANCELLATION_POLICY_TEXT } from '@/utils/cancellationPolicyCopy';
+import { CANCELLATION_POLICY_NOTES_HINT } from '@/utils/cancellationPolicyCopy';
 
 describe('GeneralSettings — PR-1 política gerada da regra real (D3)', () => {
   beforeEach(() => {
@@ -78,9 +78,9 @@ describe('GeneralSettings — PR-1 política gerada da regra real (D3)', () => {
     expect(screen.queryByText(/cobrança de 50%/i)).toBeNull();
   });
 
-  it('mostra o texto gerado da regra real (cancelar até o horário, sem cobrança automática)', () => {
+  it('mostra o texto gerado da regra real (cancelar até 2h antes)', () => {
     render(<GeneralSettings />);
-    expect(screen.getByText(GENERATED_CANCELLATION_POLICY_TEXT)).toBeInTheDocument();
+    expect(screen.getByText('Você pode cancelar até 2h antes pela Minha Área')).toBeInTheDocument();
   });
 
   it('mostra a dica sob o campo de observações, sem prometer multa', () => {

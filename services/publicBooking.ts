@@ -309,7 +309,7 @@ export async function rejectPublicBooking(bookingId: string, businessId: string)
 }
 
 export async function cancelPublicBooking(bookingId: string, phone: string): Promise<void> {
-  const { data, error } = await supabase.rpc('cancel_public_booking_by_client', {
+  const { data, error } = await supabase.rpc('cancel_public_booking_by_client_v2', {
     p_booking_id: bookingId,
     p_phone: phone,
   });

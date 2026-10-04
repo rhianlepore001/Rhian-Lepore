@@ -266,7 +266,7 @@ describe('public booking service', () => {
 
     await cancelPublicBooking('booking-001', '11999999999');
 
-    expect(supabase.rpc).toHaveBeenCalledWith('cancel_public_booking_by_client', {
+    expect(supabase.rpc).toHaveBeenCalledWith('cancel_public_booking_by_client_v2', {
       p_booking_id: 'booking-001',
       p_phone: '11999999999',
     });

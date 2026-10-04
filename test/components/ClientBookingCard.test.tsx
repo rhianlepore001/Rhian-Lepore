@@ -521,3 +521,113 @@ describe('ClientBookingCard — PR-4 Finalizado / Não compareceu / Clube', () =
     expect(screen.getByTestId('client-booking-club')).toHaveTextContent('Seu Clube segue valendo.');
   });
 });
+
+describe('ClientBookingCard — PR-5 prazo de cancelamento', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (useToast as ReturnType<typeof vi.fn>).mockReturnValue({ showToast });
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-10-04T12:00:00.000Z'));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('confirmado com 3h restantes mostra Cancelar', () => {
+    render(
+      <MemoryRouter>
+        <ClientBookingCard
+          booking={{ ...booking, status: 'confirmed', appointment_time: '2026-10-04T15:00:00.000Z' }}
+          isBeauty={false}
+          businessPhone="11999998888"
+          businessSlug="corte-fino"
+          clientName="Zé"
+          clientPhone="11999998888"
+          businessName="Barbearia São João"
+          region="PT"
+          cancelCutoffHours={2}
+          onCancelled={vi.fn()}
+        />
+      </MemoryRouter>,
+    );
+    expect(screen.getByTestId('client-cancel-cta')).toHaveAttribute('data-cta', 'cancel');
+    expect(screen.getByRole('button', { name: /^Cancelar$/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^WhatsApp$/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Falar com Barbearia São João/ })).toBeNull();
+  });
+
+  it('confirmado com 1h restante vira Falar com o estabelecimento', () => {
+    render(
+      <MemoryRouter>
+        <ClientBookingCard
+          booking={{ ...booking, status: 'confirmed', appointment_time: '2026-10-04T13:00:00.000Z' }}
+          isBeauty={false}
+          businessPhone="11999998888"
+          businessSlug="corte-fino"
+          clientName="Zé"
+          clientPhone="11999998888"
+          businessName="Barbearia São João"
+          region="PT"
+          cancelCutoffHours={2}
+          onCancelled={vi.fn()}
+        />
+      </MemoryRouter>,
+    );
+    expect(screen.getByTestId('client-cancel-cta')).toHaveAttribute('data-cta', 'whatsapp');
+    expect(screen.getByRole('button', { name: /Falar com Barbearia São João/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Cancelar$/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^WhatsApp$/ })).toBeNull();
+  });
+
+  it('janela fechada no servidor troca o botão e mostra recado curto', async () => {
+    vi.useRealTimers();
+    (cancelPublicBooking as ReturnType<typeof vi.fn>).mockRejectedValue(
+      Object.assign(new Error('cancel_window_closed'), { message: 'cancel_window_closed' }),
+    );
+    render(
+      <MemoryRouter>
+        <ClientBookingCard
+          booking={{ ...booking, status: 'confirmed', appointment_time: '2026-12-08T10:00:00.000Z' }}
+          isBeauty={false}
+          businessPhone="11999998888"
+          businessSlug="corte-fino"
+          clientName="Zé"
+          clientPhone="11999998888"
+          businessName="Barbearia São João"
+          region="PT"
+          cancelCutoffHours={2}
+          onCancelled={vi.fn()}
+        />
+      </MemoryRouter>,
+    );
+    await userEvent.click(screen.getByRole('button', { name: /^Cancelar$/ }));
+    await userEvent.click(screen.getByRole('button', { name: /^Confirmar$/ }));
+    expect(await screen.findByRole('button', { name: /Falar com Barbearia São João/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^WhatsApp$/ })).toBeNull();
+    expect(showToast).toHaveBeenCalledWith(
+      'O prazo para cancelar online já passou. Fale com o estabelecimento.',
+      'info',
+    );
+  });
+
+  it('horário passado não mostra Cancelar nem Falar com', () => {
+    render(
+      <MemoryRouter>
+        <ClientBookingCard
+          booking={{ ...booking, status: 'confirmed', appointment_time: '2026-10-04T11:00:00.000Z' }}
+          isBeauty={false}
+          businessPhone="11999998888"
+          businessSlug="corte-fino"
+          clientName="Zé"
+          clientPhone="11999998888"
+          businessName="Barbearia São João"
+          cancelCutoffHours={2}
+          onCancelled={vi.fn()}
+        />
+      </MemoryRouter>,
+    );
+    expect(screen.queryByRole('button', { name: /^Cancelar$/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Falar com/ })).toBeNull();
+  });
+});

@@ -9,6 +9,10 @@
 
 ---
 
+## PR-5 overhaul booking — prazo de cancelamento (4 Out 2026, NÃO merge)
+
+Branch `cursor/overhaul-pr5-cancel-cutoff-494b`. `client_cancel_cutoff_hours` (0/1/2/6/12/24/48, default 2) + `client_cancel_note`. RPC `cancel_public_booking_by_client_v2`; v1 (`cancel_public_booking_by_client`) só encaminha para v2. Política gerada da regra real. Não aplicar em prod. Prints em `/opt/cursor/artifacts/screenshots/pr5/`.
+
 ## PR-4 overhaul booking — Finalizado / Não compareceu (3 Out 2026, NÃO merge)
 
 Branch `feat/overhaul-pr4-completed-noshow`. Status `no_show` na constraint de `public_bookings`; trigger appointments→pedido para Completed/NoShow/undo (só a partir de completed/no_show; cancelled não ressuscita); RPC `get_client_bookings_history_v2` infere na leitura (v1 intacta; listagem por dígitos, não last-8). Fila grava `appointments.status = 'Completed'`. Copy do Clube: membro ativo = frases factuais; senão convite à aba Clube. Não aplicar em prod neste PR.

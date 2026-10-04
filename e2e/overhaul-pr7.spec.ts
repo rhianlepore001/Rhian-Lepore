@@ -237,7 +237,7 @@ async function stubApp(
 
     if (pathname.includes('/rest/v1/notifications') && (method === 'PATCH' || method === 'POST')) {
       unread.splice(0, unread.length);
-      await fulfillJson(route, []);
+      await route.fallback();
       return;
     }
 

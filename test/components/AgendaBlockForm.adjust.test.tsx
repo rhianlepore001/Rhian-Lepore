@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AgendaBlockForm } from '../../components/agenda/AgendaBlockForm';
@@ -26,6 +26,15 @@ vi.mock('../../components/ui/Button', () => ({
     <button type="button" onClick={onClick} {...rest}>{children}</button>
   ),
 }));
+
+// Fixa o relógio: o formulário recusa datas passadas, e initialDate é fixo.
+beforeAll(() => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date('2026-10-03T15:00:00.000Z'));
+});
+afterAll(() => {
+  vi.useRealTimers();
+});
 
 const serverStart = '2026-10-03T18:08:00.000Z';
 const serverEnd = '2026-10-04T03:00:00.000Z';

@@ -238,6 +238,7 @@ async function mockSupabase(page: Page, role: 'anon' | 'owner' | 'staff', opts: 
       return fulfillJson(route, { slots: ['10:00', '10:30', '15:00'] });
     }
     if (rpc === 'get_client_bookings_history') return fulfillJson(route, BOOKINGS);
+    if (rpc === 'get_client_bookings_history_v2') return fulfillJson(route, BOOKINGS);
     if (rpc === 'get_client_booking_cancellations') return fulfillJson(route, {});
     if (rpc === 'get_public_membership_plans') return fulfillJson(route, []);
     if (rpc === 'get_public_client_membership') return fulfillJson(route, null);
@@ -435,7 +436,8 @@ test.describe('PR-1 overhaul copy/cards', () => {
       await expect(page.getByText('Cancelado.')).toHaveCount(0);
       await expect(page.getByTestId('client-history-list').getByRole('button', { name: /Editar/ })).toHaveCount(0);
       await expect(page.getByTestId('client-history-list').getByRole('button', { name: /^Cancelar$/ })).toHaveCount(0);
-      await expect(page.getByTestId('client-history-list').getByRole('button', { name: /^Agendar de novo$/ })).toHaveCount(3);
+      await expect(page.getByTestId('client-history-list').getByRole('button', { name: /^Agendar de novo$/ })).toHaveCount(2);
+      await expect(page.getByTestId('client-history-list').getByRole('button', { name: /^Agendar horário$/ })).toHaveCount(1);
       await expect(page.getByTestId('client-history-list').getByRole('button', { name: /Reagendar horário/ })).toHaveCount(0);
       await shot(page, `after-historico-past-${vp.name}`, '[data-booking-id="bk-past-confirmed"]');
       await shot(page, `after-historico-cancelled-${vp.name}`, '[data-booking-id="bk-past-cancelled"]');

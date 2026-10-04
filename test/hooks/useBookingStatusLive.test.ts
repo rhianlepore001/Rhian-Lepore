@@ -164,6 +164,17 @@ describe('useBookingStatusLive', () => {
     expect(onEvent.mock.calls[0][0].status).toBe('completed');
   });
 
+  it('broadcast de no_show chega ao card', () => {
+    const onEvent = vi.fn();
+    renderHook(() => useBookingStatusLive([ID_A], onEvent, vi.fn()));
+    act(() => {
+      channels.get(bookingRealtimeTopic(ID_A))?.broadcast?.({
+        payload: { id: ID_A, status: 'no_show', appointment_time: '2026-10-10T14:00:00.000Z', op: 'UPDATE' },
+      });
+    });
+    expect(onEvent.mock.calls[0][0].status).toBe('no_show');
+  });
+
   it('cleanup remove canais e ignora eventos depois do unmount', () => {
     const onEvent = vi.fn();
     const onRefetch = vi.fn();

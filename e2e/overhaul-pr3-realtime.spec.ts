@@ -121,6 +121,7 @@ function stubClientRpcs(guard: ProdWriteGuard, bookingsRef: { rows: unknown[] })
   guard.stubRpc('get_public_profile_by_slug', { body: PROFILE_PUBLIC });
   guard.stubRpc('get_public_business_settings_json', { body: SETTINGS_PUBLIC });
   guard.stubRpc('get_client_bookings_history', () => ({ body: bookingsRef.rows }));
+  guard.stubRpc('get_client_bookings_history_v2', () => ({ body: bookingsRef.rows }));
   guard.stubRpc('get_client_booking_cancellations', { body: {} });
   guard.stubRpc('get_public_membership_plans', { body: [] });
   guard.stubRpc('get_public_client_membership', { body: null });

@@ -11,7 +11,7 @@
 
 ## Finance PR-B — Performance da equipe / Meus resultados (4 Out 2026, NÃO merge)
 
-Branch `cursor/fin-b-performance-clara-6a1f`. Só frontend. Um número por card, “Ver a conta” em modal (cálculo real), cópia leiga, rótulo “Ficou para {a barbearia | o salão | o estúdio | o negócio}”, barras de 6 meses preenchidas, lançamentos em lista no mobile. Sem mudança de banco. Não aplicar em prod. Prints em `/opt/cursor/artifacts/screenshots/fin-b/`.
+Branch `cursor/fin-b-performance-clara-6a1f`, draft https://github.com/rhianlepore001/Rhian-Lepore/pull/128. Só frontend. Um número por card, “Ver a conta” em modal (equação nos percentuais), cópia leiga, rótulo “Ficou para {a barbearia | o salão | o estúdio | o negócio}”. Header compacto; grade 1+2 no mobile e 2+3/4 no desktop (max 1120). Prefetch da RPC no boot da rota. Sem banco/prod. Prints em `/opt/cursor/artifacts/screenshots/fin-b/`.
 
 ## PR-7 overhaul booking — sino de pedido + aceite/recusa (4 Out 2026, NÃO merge)
 

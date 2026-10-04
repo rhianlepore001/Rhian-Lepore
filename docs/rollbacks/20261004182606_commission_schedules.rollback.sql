@@ -1,4 +1,4 @@
--- Rollback de 20261004123000_commission_schedules.sql
+-- Rollback de 20261004182606_commission_schedules.sql
 -- Restaura _commission_cycle_core ao corpo de 20261003110000 e remove o que este PR criou.
 -- Não mexe em commission_payments nem em finance_records.
 

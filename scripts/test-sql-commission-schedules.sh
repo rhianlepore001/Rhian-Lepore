@@ -18,8 +18,8 @@ trap cleanup EXIT
 export PGOPTIONS="-c client_min_messages=warning"
 PSQL=("$PGBIN/psql" -h "$TMP" -p "$PORT" -U postgres -d postgres -v ON_ERROR_STOP=1 -q)
 MIG_P1="$ROOT/supabase/migrations/20261003110000_staff_performance_v1.sql"
-MIG="$ROOT/supabase/migrations/20261004123000_commission_schedules.sql"
-RB="$ROOT/docs/rollbacks/20261004123000_commission_schedules.rollback.sql"
+MIG="$ROOT/supabase/migrations/20261004182606_commission_schedules.sql"
+RB="$ROOT/docs/rollbacks/20261004182606_commission_schedules.rollback.sql"
 [ -f "$MIG" ] || { echo "faltou $MIG"; exit 1; }
 [ -f "$RB" ] || { echo "faltou $RB"; exit 1; }
 

@@ -1,4 +1,4 @@
--- Testes de 20261004123000_commission_schedules (via scripts/test-sql-commission-schedules.sh).
+-- Testes de 20261004182606_commission_schedules (via scripts/test-sql-commission-schedules.sh).
 CREATE FUNCTION public._cs_t(p_label text, p_got numeric, p_exp numeric) RETURNS void LANGUAGE plpgsql AS $$
 BEGIN
   IF p_got IS DISTINCT FROM p_exp THEN RAISE EXCEPTION 'FAIL %: obtido %, esperado %', p_label, p_got, p_exp; END IF;

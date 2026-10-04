@@ -1,6 +1,6 @@
 # Fin PR-D — Ciclo de comissão (PR #133) — estado final
 
-Status: pronto para revisão; NÃO aplicado em produção. Migração: `supabase/migrations/20261004123000_commission_schedules.sql`; rollback: `docs/rollbacks/20261004123000_commission_schedules.rollback.sql`.
+Status: APLICADO em produção em 2026-10-04 (versão 20261004182606, ~19:26 BST). O arquivo foi renomeado para a versão de prod; o único diff vs o conteúdo aplicado é a linha de comentário do caminho do rollback. Migração: `supabase/migrations/20261004182606_commission_schedules.sql`; rollback: `docs/rollbacks/20261004182606_commission_schedules.rollback.sql`.
 
 ## Correções da revisão (sobre o trabalho do agente Cursor)
 1. `_commission_prev_close` pulava para `effective_from - 1` após troca de regra (primeiro ciclo novo começava em data errada e podia recobrir período pago). Reescrito com `_commission_rule_transition` (next/prev close consistentes).
@@ -36,3 +36,13 @@ Status: pronto para revisão; NÃO aplicado em produção. Migração: `supabase
 - Frontends antigos em cache continuam funcionando, mostrando "Acerto todo dia N".
 - e2e é baseado em mocks; paridade provada localmente (dias 1/5/28), não com dados de prod.
 - Banner do Início limitado a lembretes dos últimos 3 dias; aviso único vai para os 3 tenants afetados.
+
+## Deploy em produção (2026-10-04)
+- Conteúdo aplicado via Supabase MCP `apply_migration` (name commission_schedules): md5 dos statements em `supabase_migrations.schema_migrations` = md5 do arquivo no git antes do rename (`7c90649e54e0679034a7230fa8d02d7f`).
+- Pré-checagens (10/10) bateram com os valores esperados.
+- md5(prosrc) das 21 funções novas/substituídas = Postgres local após a mesma migration.
+- ACL: internas sem EXECUTE para anon/authenticated; authenticated só nas RPCs v1 públicas; anon sem nenhuma.
+- RLS ligada em commission_schedules, commission_reminder_log, commission_frequency_reset_backup; só a policy SELECT do dono.
+- Backfill: 62 linhas (28 business_settings + 34 donos sem business_settings), 61×{5} e 1×{1}, 0 divergências com o dia de acerto.
+- Reset: 8 colaboradores → mensal dia 5, 8 linhas de backup, aviso para 2 negócios (2310b54d, 6d16babf).
+- Paridade real: `_commission_cycle_core` para 2 negócios dia 5 × 4 fins de ciclo (p_now fixo) — JSON idêntico ao de antes, tirando as chaves novas aditivas (frequency, pay_due, pay_offset_days, cycle.pay_due).

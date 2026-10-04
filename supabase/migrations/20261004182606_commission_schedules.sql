@@ -9,7 +9,7 @@
 -- - Backfill mensal {dia de acerto ou 5}, effective_from 2000-01-01, pay_offset 0
 -- - Reset dos colaboradores weekly/biweekly ignorados para a regra do negócio
 --
--- ROLLBACK: docs/rollbacks/20261004123000_commission_schedules.rollback.sql
+-- ROLLBACK: docs/rollbacks/20261004182606_commission_schedules.rollback.sql
 -- =============================================================================
 
 BEGIN;

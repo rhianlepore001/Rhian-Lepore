@@ -699,15 +699,17 @@ export async function fetchQueueCompletedCount(input: {
   endDate: string;
   professionalId?: string | null;
 }): Promise<number> {
-  const start = `${input.startDate}T00:00:00`;
-  const end = `${input.endDate}T23:59:59`;
+  const isIsoRange = input.startDate.includes('T');
+  const start = isIsoRange ? input.startDate : `${input.startDate}T00:00:00`;
+  const end = isIsoRange ? input.endDate : `${input.endDate}T23:59:59`;
   let query = supabase
     .from('queue_entries')
     .select('id', { count: 'exact', head: true })
     .eq('business_id', input.businessId)
     .eq('status', 'completed')
-    .gte('joined_at', start)
-    .lte('joined_at', end);
+    .gte('joined_at', start);
+
+  query = isIsoRange ? query.lt('joined_at', end) : query.lte('joined_at', end);
 
   if (input.professionalId) {
     query = query.eq('professional_id', input.professionalId);

@@ -158,7 +158,7 @@ describe('StaffPerformance (P2) — /financeiro/performance', () => {
         expect(within(conta).getByText('O que isso quer dizer')).toBeInTheDocument();
 
         expect(screen.getByText('2 do Clube')).toBeInTheDocument();
-        expect(screen.getByText('Pela duração marcada na agenda')).toBeInTheDocument();
+        expect(screen.getByText('Pela agenda')).toBeInTheDocument();
         expect(screen.getByText('3 de 12 atendimentos')).toBeInTheDocument();
         expect(screen.getAllByTestId('trend-month')).toHaveLength(6);
         expect(screen.getByText('corte')).toBeInTheDocument();

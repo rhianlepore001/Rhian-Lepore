@@ -8,6 +8,7 @@ import {
     TEAM_METRIC_IDS,
     buildMetricAccount,
     metricSpan,
+    metricRestLgCols,
     reconstructMetric,
     type MetricKey,
 } from '../../utils/staffPerformanceAccount';
@@ -127,5 +128,18 @@ describe('staffPerformanceAccount — a conta fecha com o valor do card', () => 
             else pending += 1;
         }
         expect(pending % 2).toBe(0);
+    });
+
+    it('resto do grid: 3 cards → 3 colunas; 8 → 4', () => {
+        expect(metricRestLgCols(3)).toBe(3);
+        expect(metricRestLgCols(8)).toBe(4);
+        expect(metricRestLgCols(4)).toBe(4);
+        expect(metricRestLgCols(0)).toBe(4);
+    });
+
+    it('hints curtos na grade 2-col', () => {
+        const staffOpts = { ...opts, voice: 'self' as const, previous: staffData.me.previous };
+        expect(buildMetricAccount('faturamento_por_hora', staffData.me.metrics, staffOpts).hint).toMatch(/pagas$/);
+        expect(buildMetricAccount('tempo', ana.metrics, opts).hint).toBe('Pela agenda');
     });
 });

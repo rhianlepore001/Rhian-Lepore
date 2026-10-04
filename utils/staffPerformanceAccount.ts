@@ -197,7 +197,13 @@ export function metricSpan(id: MetricKey): MetricSpan {
 }
 
 export function metricCellClass(span: MetricSpan): string {
-    return span === 'narrow' ? '' : 'col-span-2';
+    return span === 'narrow' ? 'lg:col-span-1' : 'col-span-2 lg:col-span-1';
+}
+
+/** Desktop: 3 colunas só quando fecha a linha (3, 6, 9…). Senão 4, sem card órfão. */
+export function metricRestLgCols(count: number): 3 | 4 {
+    if (count > 0 && count % 4 !== 0 && count % 3 === 0) return 3;
+    return 4;
 }
 
 export function metricHint(id: MetricKey, m: AnyMetrics): string | null {
@@ -210,7 +216,7 @@ export function metricHint(id: MetricKey, m: AnyMetrics): string | null {
         }
         case 'faturamento_por_hora': {
             const hours = formatWorkHours(m.tempo_pago_min);
-            return hours ? `Em ${hours} de atendimentos pagos` : null;
+            return hours ? `Em ${hours} pagas` : null;
         }
         case 'ticket_medio':
             return m.atendimentos_pagos
@@ -223,7 +229,7 @@ export function metricHint(id: MetricKey, m: AnyMetrics): string | null {
         case 'atendimentos':
             return m.atendimentos_clube ? `${m.atendimentos_clube} do Clube` : null;
         case 'tempo':
-            return 'Pela duração marcada na agenda';
+            return 'Pela agenda';
         case 'produtos':
             return m.atendimentos ? `${m.visitas_com_produto} de ${m.atendimentos} atendimentos` : null;
         case 'comissao_periodo':

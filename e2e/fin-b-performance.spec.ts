@@ -190,6 +190,56 @@ function pageScroller(page: Page) {
   });
 }
 
+async function assertMetricValuesSingleLine(page: Page) {
+  const values = page.locator('[data-metric-value]');
+  const n = await values.count();
+  expect(n, 'nenhum número de métrica').toBeGreaterThan(0);
+  for (let i = 0; i < n; i += 1) {
+    const metrics = await values.nth(i).evaluate((el) => {
+      const cs = getComputedStyle(el);
+      const fs = parseFloat(cs.fontSize);
+      const lh = parseFloat(cs.lineHeight);
+      const line = Number.isFinite(lh) && lh > 8 ? lh : fs;
+      const box = el.getBoundingClientRect();
+      return {
+        text: (el.textContent || '').trim(),
+        height: box.height,
+        line,
+        scrollWidth: el.scrollWidth,
+        clientWidth: el.clientWidth,
+      };
+    });
+    expect(metrics.height, `${metrics.text} quebrou linha (h=${metrics.height} lh=${metrics.line})`).toBeLessThanOrEqual(metrics.line * 1.55);
+    expect(metrics.scrollWidth, `${metrics.text} estourou a célula`).toBeLessThanOrEqual(metrics.clientWidth + 1);
+  }
+}
+
+async function assertNoOrphanMetricRow(page: Page) {
+  const rest = page.getByTestId('performance-rest-grid');
+  if (await rest.count()) {
+    const info = await rest.evaluate((el) => {
+      const cols = getComputedStyle(el).gridTemplateColumns.split(/\s+/).filter(Boolean).length;
+      const count = el.children.length;
+      const lastRow = count % cols === 0 ? cols : count % cols;
+      return { cols, count, lastRow };
+    });
+    expect(info.lastRow, `linha órfã no resto (${info.count} cards / ${info.cols} colunas)`).toBe(info.cols);
+  }
+  const hero = page.getByTestId('performance-hero-row');
+  if (await hero.count()) {
+    const w = await hero.evaluate((el) => {
+      const kids = [...el.children] as HTMLElement[];
+      const width = el.getBoundingClientRect().width;
+      return { kids: kids.length, width, childW: kids.map((k) => k.getBoundingClientRect().width) };
+    });
+    if (w.kids === 1) {
+      expect(w.childW[0], 'hero sozinho deve ocupar a linha').toBeGreaterThan(w.width * 0.8);
+    } else {
+      expect(w.kids).toBe(2);
+    }
+  }
+}
+
 async function assertNoHorizontalScroll(page: Page) {
   const box = await pageScroller(page);
   expect(box.scrollWidth, `scroll horizontal ${box.scrollWidth} > ${box.clientWidth}`).toBeLessThanOrEqual(box.clientWidth + 1);
@@ -427,7 +477,7 @@ function closeAccount(page: Page) {
 }
 
 async function openEveryCard(page: Page) {
-  const cards = page.locator('[data-testid^="metric-"]');
+  const cards = page.locator('button[data-testid^="metric-"]');
   const n = await cards.count();
   expect(n).toBeGreaterThan(0);
   for (let i = 0; i < n; i += 1) {
@@ -469,7 +519,9 @@ test.describe('Finance PR-B — performance clara', () => {
     expect(rpcCalls.count).toBe(beforeModal);
     await page.setViewportSize({ width: 360, height: 800 });
     await assertNoHorizontalScroll(page);
+    await assertMetricValuesSingleLine(page);
     await page.setViewportSize({ width: 390, height: 844 });
+    await assertMetricValuesSingleLine(page);
     await assertFabClearance(page);
     guard.assertNoLeak();
   });
@@ -515,18 +567,42 @@ test.describe('Finance PR-B — performance clara', () => {
   test('meus resultados: fala com o colaborador e abre a conta', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     const guard = await openStaff(page, THEMES[0]);
-    await expect(page.getByRole('heading', { name: /Meus resultados/ })).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByRole('heading', { name: 'Meus resultados' })).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText(/Ana · /)).toBeVisible();
+    await expect(page.getByText('outubro 2026')).toBeVisible();
+    await expect(page.getByText('MÊS ATUAL')).toHaveCount(0);
     await expect(page.getByText('Só os seus números')).toBeVisible();
     await expect(page.getByText(/Ficou para/)).toHaveCount(0);
     await expect(page.getByText('Bruno')).toHaveCount(0);
+    const first = await page.getByTestId('metric-atendimentos').boundingBox();
+    expect(first, 'primeiro card').toBeTruthy();
+    expect(first!.y, `primeiro card em y=${first!.y}`).toBeLessThan(220);
+    await assertMetricValuesSingleLine(page);
     await openEveryCard(page);
     await page.getByTestId('metric-ticket_medio').click();
     await expect(page.getByRole('dialog').getByText(/seus clientes/i)).toBeVisible();
     await closeAccount(page).click();
     await page.setViewportSize({ width: 360, height: 800 });
     await assertNoHorizontalScroll(page);
+    await assertMetricValuesSingleLine(page);
+    await page.setViewportSize({ width: 390, height: 844 });
     await assertFabClearance(page);
     guard.assertNoLeak();
+  });
+
+  test('desktop: nenhuma linha com card órfão', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await openTeam(page, THEMES[1]);
+    await expect(page.getByTestId('team-overview')).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId('performance-hero-compare')).toBeVisible();
+    await assertNoOrphanMetricRow(page);
+    await page.locator(`[data-testid="member-${ANA}"]`).filter({ visible: true }).getByRole('link', { name: /Ana/ }).click();
+    await expect(page.getByTestId('detail-headline')).toBeVisible({ timeout: 20_000 });
+    await assertNoOrphanMetricRow(page);
+    await openStaff(page, THEMES[1]);
+    await expect(page.getByRole('heading', { name: 'Meus resultados' })).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId('performance-hero-row')).toHaveCount(0);
+    await assertNoOrphanMetricRow(page);
   });
 
   test('vazio: não sugere o período atual', async ({ page }) => {
@@ -631,12 +707,44 @@ test.describe('Finance PR-B — performance clara', () => {
     const cls = await page.evaluate(() => (window as unknown as { __cls?: number }).__cls ?? null);
 
     fs.mkdirSync(ARTIFACTS, { recursive: true });
-    const report = { firstNumbersMs, fullPageMs, cls, budgets: { firstNumbersMs: 2500, fullPageMs: 3500, cls: 0.05 } };
+    const report: Record<string, unknown> = {
+      firstNumbersMs,
+      fullPageMs,
+      cls,
+      budgets: { firstNumbersMs: 2500, fullPageMs: 3500, inAppFirstNumbersMs: 1000, cls: 0.05 },
+    };
+
+    await client.send('Network.emulateNetworkConditions', {
+      offline: false,
+      latency: 0,
+      downloadThroughput: -1,
+      uploadThroughput: -1,
+    });
+    await client.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+    await page.goto(`${BASE}/#/financeiro`);
+    const perfBtn = page.getByRole('button', { name: 'Performance da equipe' });
+    await expect(perfBtn).toBeVisible({ timeout: 20_000 });
+    let rpcAt: number | null = null;
+    const onReq = (req: { url: () => string }) => {
+      if (req.url().includes('get_staff_performance_v1')) rpcAt = Date.now();
+    };
+    page.on('request', onReq);
+    await perfBtn.hover();
+    await page.waitForTimeout(80);
+    const tIn = Date.now();
+    await perfBtn.click();
+    await expect(page.getByTestId('metric-retorno')).toBeVisible({ timeout: 10_000 });
+    const inAppFirstNumbersMs = Date.now() - tIn;
+    page.off('request', onReq);
+    report.inAppFirstNumbersMs = inAppFirstNumbersMs;
+    report.rpcPrefetchMsBeforeClick = rpcAt == null ? null : tIn - rpcAt;
+
     fs.writeFileSync(PERF_FILE, `${JSON.stringify(report, null, 2)}\n`);
     test.info().annotations.push({ type: 'perf', description: JSON.stringify(report) });
     if (cls != null) expect(cls, `CLS ${cls}`).toBeLessThanOrEqual(0.05);
-    // VM com 4x CPU + 4G: o chunk principal (~230 KB gzip) domina. Gravamos o número real.
-    expect(firstNumbersMs, `primeiros números ${firstNumbersMs}ms`).toBeLessThanOrEqual(5_000);
+    // VM com 4x CPU + 4G: o chunk principal (~230 KB gzip) domina o cold load. Gravamos o número real.
+    expect(firstNumbersMs, `primeiros números (cold) ${firstNumbersMs}ms`).toBeLessThanOrEqual(5_000);
     expect(fullPageMs, `página ${fullPageMs}ms`).toBeLessThanOrEqual(7_000);
+    expect(inAppFirstNumbersMs, `in-app ${inAppFirstNumbersMs}ms`).toBeLessThanOrEqual(1_000);
   });
 });

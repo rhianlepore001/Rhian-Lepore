@@ -1,10 +1,8 @@
 ﻿import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { BarChart3, CalendarX, TrendingUp } from 'lucide-react';
+import { BarChart3, CalendarX, ChevronLeft, ChevronRight, TrendingUp } from 'lucide-react';
 import { EmptyState, ErrorState, PageHeader, Skeleton } from '../components/ui';
-import { MonthYearSelector } from '../components/MonthYearSelector';
-import { MetricCard } from '../components/performance/MetricCard';
-import { MetricGrid, PerformanceSection } from '../components/performance/PerformanceSection';
+import { MetricCluster, MetricGrid, PerformanceSection } from '../components/performance/PerformanceSection';
 import { TrendBars } from '../components/performance/TrendBars';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
@@ -12,7 +10,7 @@ import { useBusinessCopy } from '../hooks/useBusinessCopy';
 import { useStaffInsights } from '../hooks/useStaffInsights';
 import { useTenantLocale } from '../hooks/useTenantLocale';
 import type { StaffPeriod } from '../types/insights';
-import { buildMetricAccount, STAFF_METRIC_IDS, metricCellClass } from '../utils/staffPerformanceAccount';
+import { buildMetricAccount, STAFF_METRIC_IDS } from '../utils/staffPerformanceAccount';
 import { compactPeriodLine, previousMonthName } from '../utils/staffPerformanceView';
 
 const PERIODS: { id: StaffPeriod; label: string }[] = [
@@ -21,12 +19,14 @@ const PERIODS: { id: StaffPeriod; label: string }[] = [
   { id: 'month', label: 'Mês' },
 ];
 
+const MONTHS = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+
 const PAGE_PB = 'pb-[calc(8rem+var(--safe-bottom))] md:pb-16';
 
 export const StaffInsights: React.FC = () => {
   const { role, fullName, teamMemberId } = useAuth();
   const { remainder } = useBusinessCopy();
-  const { accent, colors, font, radius, isBeauty } = useBrutalTheme();
+  const { accent, colors, font, radius } = useBrutalTheme();
   const { formatMoney } = useTenantLocale();
   const now = new Date();
   const [period, setPeriod] = useState<StaffPeriod>('month');
@@ -46,6 +46,18 @@ export const StaffInsights: React.FC = () => {
   const comparing = !empty && period === 'month' && previousRange
     ? compactPeriodLine(data!.period.start, data!.period.end, previousRange, true)
     : periodLabel;
+  const subtitle = firstName ? `${firstName} · ${comparing}` : comparing;
+
+  const goMonth = (delta: number) => {
+    const d = new Date(selectedYear, selectedMonth + delta, 1);
+    const nextM = d.getMonth();
+    const nextY = d.getFullYear();
+    if (nextY > now.getFullYear() || (nextY === now.getFullYear() && nextM > now.getMonth())) return;
+    setSelectedMonth(nextM);
+    setSelectedYear(nextY);
+    setPeriod('month');
+  };
+  const canGoNext = !(selectedYear === now.getFullYear() && selectedMonth === now.getMonth());
 
   if (!teamMemberId) {
     return (
@@ -72,51 +84,77 @@ export const StaffInsights: React.FC = () => {
     : [];
 
   return (
-    <div className={`flex flex-col gap-4 lg:gap-8 ${PAGE_PB} max-w-[1120px]`}>
+    <div className={`flex flex-col gap-3 lg:gap-8 ${PAGE_PB} max-w-[1120px]`}>
       <PageHeader
-        title={firstName ? `Meus resultados — ${firstName}` : 'Meus resultados'}
-        subtitle={<span>{comparing}</span>}
-        className="!pb-0"
-        meta={
-          <div className="flex gap-2 w-full overflow-x-auto pb-1">
-            {PERIODS.map((item) => {
-              const disabled = item.id !== 'month' && !isCurrentMonth;
-              const active = period === item.id;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  disabled={disabled}
-                  onClick={() => {
-                    setPeriod(item.id);
-                    if (item.id !== 'month') {
-                      setSelectedMonth(now.getMonth());
-                      setSelectedYear(now.getFullYear());
-                    }
-                  }}
-                  className={`px-3.5 min-h-[44px] min-w-[72px] text-sm shrink-0 border ${radius.button} ${
-                    active ? `${accent.bg} text-[var(--color-on-accent)] ${accent.border}` : `${colors.border} ${colors.textMuted}`
-                  } ${disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
-                >
-                  {item.label}
-                </button>
-              );
-            })}
-          </div>
-        }
-        action={
-          period === 'month' ? (
-            <MonthYearSelector selectedMonth={selectedMonth} selectedYear={selectedYear} onChange={(m, y) => { setSelectedMonth(m); setSelectedYear(y); setPeriod('month'); }} accentColor={isBeauty ? 'beauty-neon' : 'accent-gold'} />
-          ) : undefined
-        }
+        title="Meus resultados"
+        subtitle={<span>{subtitle}</span>}
+        className="!pb-0 !gap-1"
       />
 
+      <div className="flex items-center gap-2 min-w-0">
+        <div
+          role="group"
+          aria-label="Período"
+          className={`flex p-0.5 min-w-0 ${colors.surface} ${radius.button}`}
+        >
+          {PERIODS.map((item) => {
+            const disabled = item.id !== 'month' && !isCurrentMonth;
+            const active = period === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                disabled={disabled}
+                onClick={() => {
+                  setPeriod(item.id);
+                  if (item.id !== 'month') {
+                    setSelectedMonth(now.getMonth());
+                    setSelectedYear(now.getFullYear());
+                  }
+                }}
+                className={`px-2.5 min-h-[36px] min-w-[52px] text-sm shrink-0 ${radius.button} ${
+                  active ? `${accent.bg} text-[var(--color-on-accent)]` : colors.textMuted
+                } ${disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+              >
+                {item.label}
+              </button>
+            );
+          })}
+        </div>
+        {period === 'month' && (
+          <div className="ml-auto inline-flex items-center shrink-0">
+            <button
+              type="button"
+              onClick={() => goMonth(-1)}
+              className={`h-11 w-11 inline-flex items-center justify-center ${colors.textSecondary} hover:text-theme-text`}
+              aria-label="Mês anterior"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span className={`text-sm whitespace-nowrap tabular-nums ${colors.text}`}>
+              {MONTHS[selectedMonth]} {selectedYear}
+            </span>
+            <button
+              type="button"
+              onClick={() => goMonth(1)}
+              disabled={!canGoNext}
+              className={`h-11 w-11 inline-flex items-center justify-center ${colors.textSecondary} hover:text-theme-text disabled:opacity-30`}
+              aria-label="Próximo mês"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+      </div>
+
       {status === 'loading' && (
-        <div aria-busy="true" className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <Skeleton className="h-[136px]" />
-          <Skeleton className="h-[136px]" />
-          <Skeleton className="h-[136px]" />
-          <Skeleton className="h-[136px]" />
+        <div aria-busy="true">
+          <MetricGrid>
+            <Skeleton className="h-[136px]" />
+            <Skeleton className="h-[136px]" />
+            <Skeleton className="h-[136px]" />
+            <Skeleton className="h-[136px]" />
+          </MetricGrid>
         </div>
       )}
 
@@ -135,13 +173,7 @@ export const StaffInsights: React.FC = () => {
       {status === 'ready' && x && !empty && (
         <>
           <section aria-label="Números do período">
-            <MetricGrid>
-              {accounts.map((account) => (
-                <div key={account.id} className={metricCellClass(account.span)}>
-                  <MetricCard account={account} />
-                </div>
-              ))}
-            </MetricGrid>
+            <MetricCluster accounts={accounts} />
           </section>
 
           {data && data.trend.length > 0 && (

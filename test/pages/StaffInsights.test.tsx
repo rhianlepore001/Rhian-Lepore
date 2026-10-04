@@ -34,14 +34,15 @@ describe('StaffInsights — Meus resultados (P3, D1)', () => {
 
   it('mostra só as próprias métricas operacionais, com linguagem de colaborador', async () => {
     render(<MemoryRouter><StaffInsights /></MemoryRouter>);
-    expect(await screen.findByRole('heading', { name: /Meus resultados/ })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Meus resultados' })).toBeInTheDocument();
+    expect(screen.getByText(/Ana · /)).toBeInTheDocument();
     expect(screen.getByText('12')).toBeInTheDocument();
     expect(screen.getByText('2 do Clube')).toBeInTheDocument();
     expect(screen.getByText('R$ 103,33')).toBeInTheDocument();
     expect(screen.getByText('R$ 62,00')).toBeInTheDocument();
     expect(screen.getByText('55%')).toBeInTheDocument();
     expect(screen.getByText('R$ 257,00')).toBeInTheDocument();
-    expect(screen.getByText('Pela duração marcada na agenda')).toBeInTheDocument();
+    expect(screen.getByText('Pela agenda')).toBeInTheDocument();
     expect(screen.getByText('3 de 12 atendimentos')).toBeInTheDocument();
     expect(screen.queryByText(/Retorno para a casa/i)).toBeNull();
     expect(screen.queryByText(/Ficou para/i)).toBeNull();

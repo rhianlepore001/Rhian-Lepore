@@ -4,11 +4,10 @@ import { Badge, Button } from '../ui';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import type { OwnerPerformance, PerformanceMember } from '../../types/staffPerformance';
 import type { BusinessRemainderNoun } from '../../utils/businessCopy';
-import { buildMetricAccount, MEMBER_METRIC_IDS, metricCellClass } from '../../utils/staffPerformanceAccount';
+import { buildMetricAccount, MEMBER_METRIC_IDS } from '../../utils/staffPerformanceAccount';
 import { memberBadge, rankLabel, unrankedSentence } from '../../utils/staffPerformanceView';
 import { MemberLedger } from './MemberLedger';
-import { MetricCard } from './MetricCard';
-import { MetricGrid, PerformanceSection } from './PerformanceSection';
+import { MetricCluster, PerformanceSection } from './PerformanceSection';
 import { TrendBars } from './TrendBars';
 
 interface MemberDetailProps {
@@ -65,13 +64,7 @@ export const MemberDetail: React.FC<MemberDetailProps> = ({
                     </p>
                 )}
                 <section data-testid="detail-headline" aria-label="Números principais" className="mt-2 lg:mt-3">
-                    <MetricGrid>
-                        {accounts.map((account) => (
-                            <div key={account.id} className={metricCellClass(account.span)}>
-                                <MetricCard account={account} />
-                            </div>
-                        ))}
-                    </MetricGrid>
+                    <MetricCluster accounts={accounts} />
                 </section>
             </div>
 

@@ -9,9 +9,10 @@
 
 ---
 
-## PR-A Finance — exclusão de transação (4 Out 2026, NÃO merge)
+## PR-A Finance — exclusão de transação (4 Out 2026, em prod)
 
-Branch `cursor/finance-delete-transaction-9a2a`. RPC nova `delete_finance_transaction` (não existia em prod). Dono só; venda de produto não apaga o atendimento; bloqueia comissão paga e despesa ligada a `commission_payments`. Não aplicar em prod. Prints em `/opt/cursor/artifacts/screenshots/fin-a/`.
+Branch `cursor/finance-delete-transaction-9a2a`. RPC nova `delete_finance_transaction` (não existia em prod). Dono só; venda de produto não apaga o atendimento; bloqueia comissão paga e despesa ligada a `commission_payments`. Aplicado em prod como migration 20261004115121. Prints em `/opt/cursor/artifacts/screenshots/fin-a/`.
+
 ## PR-7 overhaul booking — sino de pedido + aceite/recusa (4 Out 2026, NÃO merge)
 
 Branch `cursor/overhaul-pr7-booking-notifications-0c8e`. Trigger em `public_bookings` gera notificação in-app (dono + profissional atribuído; “qualquer profissional” só o dono). Escopo #96 `all` libera Aceitar/Recusar para a equipe; senão só dono e o profissional do pedido. Banco recusa com `not_allowed_for_booking`. Pedido de alteração notifica na hora (profissional antigo e novo se trocar). Sino existente: marcar lida / “Marcar todas como lidas”. Não aplicar em prod. Prints em `/opt/cursor/artifacts/screenshots/pr7/`.

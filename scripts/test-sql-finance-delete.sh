@@ -13,8 +13,8 @@ trap cleanup EXIT
 "$PGBIN/initdb" -D "$TMP/data" -U postgres -A trust >/dev/null
 "$PGBIN/pg_ctl" -D "$TMP/data" -o "-p $PORT -k $TMP -c listen_addresses=''" -l "$TMP/log" start >/dev/null
 PSQL=("$PGBIN/psql" -h "$TMP" -p "$PORT" -U postgres -d postgres -v ON_ERROR_STOP=1 -q)
-MIG="$ROOT/supabase/migrations/20261004120000_finance_delete_transaction.sql"
-RB="$ROOT/docs/rollbacks/20261004120000_finance_delete_transaction.rollback.sql"
+MIG="$ROOT/supabase/migrations/20261004115121_finance_delete_transaction.sql"
+RB="$ROOT/docs/rollbacks/20261004115121_finance_delete_transaction.rollback.sql"
 exists() { "$PGBIN/psql" -h "$TMP" -p "$PORT" -U postgres -d postgres -At -c "SELECT count(*) FROM pg_proc p WHERE p.pronamespace='public'::regnamespace AND p.proname='delete_finance_transaction'"; }
 "${PSQL[@]}" -f "$ROOT/supabase/tests/finance_delete_transaction.harness.sql"
 [ "$(exists)" = "0" ] || { echo "FAIL harness já tinha delete_finance_transaction"; exit 1; }

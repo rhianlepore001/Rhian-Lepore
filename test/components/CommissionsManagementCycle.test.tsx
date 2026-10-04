@@ -136,8 +136,8 @@ describe('CommissionsManagement — ciclo do servidor (P1, get_commission_cycle_
         expect((screen.getByDisplayValue('20/08/2026') as HTMLInputElement).value).toBe('20/08/2026');
         expect((screen.getByDisplayValue('05/09/2026') as HTMLInputElement).value).toBe('05/09/2026');
         expect(screen.getByText(/marca as comissões de 20\/08 a 05\/09/i)).toBeInTheDocument();
-        await waitFor(() => expect(screen.getByRole('button', { name: /Pagar / })).toBeEnabled());
-        fireEvent.click(screen.getByRole('button', { name: /Pagar / }));
+        await waitFor(() => expect(within(screen.getByRole('dialog')).getByRole('button', { name: /^Pagar R\$/ })).toBeEnabled());
+        fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^Pagar R\$/ }));
         await waitFor(() => expect(rpc).toHaveBeenCalledWith('pay_commission_v1', expect.objectContaining({
             p_professional_id: '20000000-0000-0000-0000-0000000000f1',
             p_start: '2026-08-20',
@@ -191,8 +191,8 @@ describe('CommissionsManagement — ciclo do servidor (P1, get_commission_cycle_
         expect(screen.getByText(/Neste ciclo/)).toBeInTheDocument();
         expect((screen.getByDisplayValue('06/09/2026') as HTMLInputElement).value).toBe('06/09/2026');
         expect(calls.some((c) => c.table === 'finance_records')).toBe(false);
-        await waitFor(() => expect(screen.getByRole('button', { name: /Pagar / })).toBeEnabled());
-        fireEvent.click(screen.getByRole('button', { name: /Pagar / }));
+        await waitFor(() => expect(within(screen.getByRole('dialog')).getByRole('button', { name: /^Pagar R\$/ })).toBeEnabled());
+        fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^Pagar R\$/ }));
         await waitFor(() => expect(rpc).toHaveBeenCalledWith('pay_commission_v1', expect.objectContaining({
             p_professional_id: '20000000-0000-0000-0000-0000000000a1', p_start: '2026-09-06', p_end: '2026-10-04',
         })));

@@ -25,6 +25,7 @@ const schedulesPayloadSchema = z.object({
     professional_id: z.string(),
     name: z.string(),
     schedule: scheduleRowSchema,
+    current_end: isoDate.nullable().optional(),
   })),
   current_end: isoDate.nullable(),
 }).passthrough();

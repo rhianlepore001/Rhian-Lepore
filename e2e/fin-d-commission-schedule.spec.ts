@@ -150,7 +150,7 @@ const reminderNotif = {
   message: 'Faltam 2 dias para o fechamento do ciclo. Você paga até 07/10.',
   type: 'commission_reminder',
   read: false,
-  link: '/financeiro',
+  link: '/financeiro?tab=commissions',
   booking_id: null,
   event_key: `commission:${OWNER_ID}:_:2026-10-05:2`,
   created_at: NOW,
@@ -335,7 +335,7 @@ test.describe('Fin PR-D ciclo de comissão', () => {
 
     await page.getByRole('tab', { name: 'Quinzenal' }).click();
     await expect(page.getByTestId('commission-schedule-preview')).toContainText(
-      'Próximos fechamentos: 05/10 e 20/10. Você paga até 07/10 e 22/10.',
+      'Próximos fechamentos: 20/10 e 05/11. Você paga até 22/10 e 07/11.',
     );
     await expect(page.getByTestId('commission-schedule-change')).toContainText(
       'A mudança vale a partir do próximo fechamento (20/10). O período atual continua até 05/10.',

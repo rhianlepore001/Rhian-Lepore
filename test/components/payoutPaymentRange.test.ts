@@ -82,3 +82,26 @@ describe('datas pt-BR do modal', () => {
         expect(parseBrToIso('31/02/2026')).toBeNull();
     });
 });
+
+describe('payoutPaymentRange — exceção do colaborador (PR-D)', () => {
+    const own = { start: '2026-09-28', end: '2026-10-04', pay_due: '2026-10-04', frequency: 'weekly' };
+    const semanal = eva({
+        professional_name: 'Semanal',
+        total_due: 70,
+        cycle: { ...eva().cycle!, inactive: false, saldo_anterior: 0, own },
+    });
+
+    it('usa a janela própria, não o ciclo do negócio', () => {
+        expect(payoutPaymentRange(semanal, cycle, previousEnd)).toEqual({ start: '2026-09-28', end: '2026-10-04', amount: 70 });
+    });
+
+    it('janela própria em andamento: paga até hoje', () => {
+        expect(payoutPaymentRange(semanal, cycle, previousEnd, { today: '2026-10-01', open: false }))
+            .toEqual({ start: '2026-09-28', end: '2026-10-01', amount: 70 });
+    });
+
+    it('rótulo da exceção', async () => {
+        const { ownCycleLabel } = await import('../../components/commissions/PayoutList');
+        expect(ownCycleLabel(own)).toBe('Exceção · Semanal · 28/09 – 04/10');
+    });
+});

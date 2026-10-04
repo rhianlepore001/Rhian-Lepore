@@ -934,7 +934,8 @@ BEGIN
   SELECT COALESCE(jsonb_agg(jsonb_build_object(
       'professional_id', tm.id,
       'name', tm.name,
-      'schedule', to_jsonb(s)
+      'schedule', to_jsonb(s),
+      'current_end', public._commission_next_close(v_tenant, tm.id, v_today, true)
     ) ORDER BY tm.name), '[]'::jsonb)
   INTO v_ex
   FROM public.team_members tm

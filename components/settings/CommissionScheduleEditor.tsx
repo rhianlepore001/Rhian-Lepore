@@ -6,6 +6,7 @@ import {
   type PayOffsetDays,
   type ReminderOffset,
   WEEKDAY_TINY,
+  addIsoDays,
   defaultCloseDays,
   draftsEqual,
   formatScheduleChangeNotice,
@@ -44,14 +45,15 @@ export const CommissionScheduleEditor: React.FC<CommissionScheduleEditorProps> =
 }) => {
   const { colors, accent, radius } = useBrutalTheme();
   const error = validateScheduleDraft(draft);
-  const preview = error ? null : previewFromDraft(draft, fromIso);
   const dirty = !saved || !draftsEqual(draft, saved);
-  const firstNew = preview?.closes.find((c) => currentEnd && c > currentEnd) ?? preview?.closes[1];
-  const changeText = dirty && currentEnd && firstNew && firstNew !== currentEnd
+  // A mudança só vale depois do fechamento atual: a prévia mostra os fechamentos da regra
+  // nova a partir do dia seguinte a ele (igual ao servidor, set_commission_schedule_v1).
+  const previewFrom = dirty && currentEnd && currentEnd >= fromIso ? addIsoDays(currentEnd, 1) : fromIso;
+  const preview = error ? null : previewFromDraft(draft, previewFrom);
+  const firstNew = preview?.closes[0];
+  const changeText = dirty && currentEnd && firstNew
     ? formatScheduleChangeNotice(currentEnd, firstNew)
-    : dirty && currentEnd && preview?.closes[0] === currentEnd && preview.closes[1]
-      ? formatScheduleChangeNotice(currentEnd, preview.closes[1])
-      : null;
+    : null;
 
   const setFreq = (frequency: CommissionPaymentFrequency) => {
     onChange({ ...draft, frequency, closeDays: defaultCloseDays(frequency) });

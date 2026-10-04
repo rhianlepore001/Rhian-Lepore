@@ -54,8 +54,11 @@ export const Dashboard: React.FC = () => {
     }
   }, []);
 
+  // Só lembretes recentes (até 3 dias): um aviso antigo não lido não fica preso no Início.
   const commissionNotice = notifications.find((n) =>
-    !n.read && (n.type === 'commission_reminder' || (n.event_key ?? '').startsWith('commission:')),
+    !n.read
+    && (n.type === 'commission_reminder' || (n.event_key ?? '').startsWith('commission:'))
+    && Date.now() - new Date(n.created_at).getTime() < 3 * 24 * 60 * 60 * 1000,
   );
 
   useEffect(() => {
@@ -123,7 +126,7 @@ export const Dashboard: React.FC = () => {
         id: 'commission-due',
         text: commissionNotice.message || 'Hoje é prazo para pagar as comissões da equipe.',
         tone: 'info',
-        onClick: () => navigate('/financeiro'),
+        onClick: () => navigate(commissionNotice.link || '/financeiro?tab=commissions'),
       });
     }
 

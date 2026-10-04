@@ -16,6 +16,7 @@ import {
     defaultScheduleDraft,
     scheduleRowToDraft,
     type CommissionScheduleDraft,
+    draftsEqual,
     validateScheduleDraft,
 } from '../utils/commissionSchedule';
 import { fetchCommissionSchedules, saveCommissionSchedule } from '../services/commissionSchedule';
@@ -71,6 +72,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     });
     const [scheduleCurrentEnd, setScheduleCurrentEnd] = useState<string | null>(null);
     const [scheduleReady, setScheduleReady] = useState(false);
+    const [hadException, setHadException] = useState(false);
     const showSchedule = Boolean(initialData?.id) && !isOwner && !isOwnerForm;
 
     useEffect(() => {
@@ -78,10 +80,11 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
         void fetchCommissionSchedules()
             .then((payload) => {
                 setScheduleFromIso(payload.today);
-                setScheduleCurrentEnd(payload.current_end);
                 const business = scheduleRowToDraft(payload.business);
                 const exception = payload.exceptions.find((row) => row.professional_id === initialData.id);
                 const hasCustom = Boolean(exception && (exception.schedule.close_days?.length ?? 0) > 0);
+                setScheduleCurrentEnd((hasCustom ? exception?.current_end : null) ?? payload.current_end);
+                setHadException(hasCustom);
                 setUseBusinessDefault(!hasCustom);
                 const draft = hasCustom ? scheduleRowToDraft(exception!.schedule) : business;
                 setScheduleDraft(draft);
@@ -187,7 +190,12 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                     .eq('user_id', user.id);
                 if (updateError) throw updateError;
 
-                if (showSchedule) {
+                // Só grava quando a regra do colaborador mudou de fato (editar telefone não cria versão nova).
+                const scheduleChanged = showSchedule && scheduleReady && (
+                    hadException === useBusinessDefault
+                    || (!useBusinessDefault && !draftsEqual(scheduleDraft, savedSchedule))
+                );
+                if (scheduleChanged) {
                     await saveCommissionSchedule({
                         professionalId: initialData.id,
                         frequency: scheduleDraft.frequency,

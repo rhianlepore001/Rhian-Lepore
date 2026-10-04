@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+vi.mock('../../contexts/AuthContext', () => ({ useAuth: () => ({ userType: 'barber' }) }));
+
 import { CommissionScheduleEditor } from '../../components/settings/CommissionScheduleEditor';
 import { defaultScheduleDraft, type CommissionScheduleDraft } from '../../utils/commissionSchedule';
 
@@ -27,8 +29,9 @@ describe('CommissionScheduleEditor', () => {
     render(<Harness />);
     expect(screen.getByTestId('commission-schedule-preview')).toHaveTextContent('Próximos fechamentos: 05/10 e 05/11.');
     await user.click(screen.getByRole('tab', { name: 'Quinzenal' }));
+    // A regra nova só vale depois do fechamento atual (05/10): a prévia começa em 06/10.
     expect(screen.getByTestId('commission-schedule-preview')).toHaveTextContent(
-      'Próximos fechamentos: 05/10 e 20/10. Você paga até 07/10 e 22/10. Lembrete em 03/10, 07/10, 18/10 e 22/10.',
+      'Próximos fechamentos: 20/10 e 05/11. Você paga até 22/10 e 07/11. Lembrete em 18/10, 22/10, 03/11 e 07/11.',
     );
     expect(screen.getByTestId('commission-schedule-change')).toHaveTextContent(
       'A mudança vale a partir do próximo fechamento (20/10). O período atual continua até 05/10.',

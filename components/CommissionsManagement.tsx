@@ -165,6 +165,7 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
                     pago_calculado: m.pago_calculado,
                     paid_at: m.pago_ciclo_em,
                     primeiro_nao_pago: m.primeiro_nao_pago,
+                    own: m.own_cycle ?? null,
                 },
             })));
             setLoadState('ready');

@@ -1,5 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { formatLocalDateString } from '../../utils/date';
+import { AgendaMonthPicker } from './AgendaMonthPicker';
 
 export interface AgendaDayScrollerTheme {
   colors: {
@@ -47,9 +49,26 @@ function buildDayRange(anchor: Date, rangeDays: number): Date[] {
   });
 }
 
+function isSameCalendarDay(a: Date, b: Date): boolean {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
+/** Dia alvo ao escolher um mês: hoje se for o mês atual, senão o dia 1. */
+export function resolveMonthJump(month: number, year: number, today = new Date()): Date {
+  const now = startOfDay(today);
+  if (month === now.getMonth() && year === now.getFullYear()) {
+    return now;
+  }
+  return new Date(year, month, 1, 12, 0, 0, 0);
+}
+
 /**
  * Seletor de dias da Agenda: faixa horizontal com snap + arraste (touch e mouse).
- * Sem setas — a navegação entre semanas é o próprio gesto de scroll.
+ * O rótulo do mês abre o painel de mês/ano (AgendaMonthPicker).
  */
 export const AgendaDayScroller: React.FC<AgendaDayScrollerProps> = ({
   selectedDate,
@@ -59,13 +78,18 @@ export const AgendaDayScroller: React.FC<AgendaDayScrollerProps> = ({
   rangeDays = 21,
 }) => {
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const monthBtnRef = useRef<HTMLButtonElement>(null);
+  const pickerId = useId();
+  const [monthOpen, setMonthOpen] = useState(false);
+
   const selectedKey = formatLocalDateString(selectedDate);
-  const weekAnchorKey = formatLocalDateString(mondayOf(selectedDate));
+  // Âncora no próprio dia selecionado: ao pular de mês, a faixa é reconstruída
+  // em torno da nova data (não fica presa à semana antiga).
+  const rangeAnchorKey = formatLocalDateString(startOfDay(selectedDate));
   const days = useMemo(() => {
-    // Âncora ao meio-dia local evita edge cases de fuso ao parsear YYYY-MM-DD.
-    const anchor = new Date(`${weekAnchorKey}T12:00:00`);
+    const anchor = new Date(`${rangeAnchorKey}T12:00:00`);
     return buildDayRange(anchor, rangeDays);
-  }, [weekAnchorKey, rangeDays]);
+  }, [rangeAnchorKey, rangeDays]);
 
   const [isDragging, setIsDragging] = useState(false);
   const dragRef = useRef<{
@@ -92,7 +116,6 @@ export const AgendaDayScroller: React.FC<AgendaDayScrollerProps> = ({
   }, [selectedKey]);
 
   useEffect(() => {
-    // Dois frames: espera layout (larguras reais) antes de centralizar.
     let cancelled = false;
     const id = window.requestAnimationFrame(() => {
       window.requestAnimationFrame(() => {
@@ -107,12 +130,27 @@ export const AgendaDayScroller: React.FC<AgendaDayScrollerProps> = ({
 
   const monthLabel = useMemo(() => {
     const raw = selectedDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-    // Evita "Agosto De 2026" do CSS capitalize — só a primeira letra.
     return raw.charAt(0).toUpperCase() + raw.slice(1);
   }, [selectedDate]);
 
+  const isSelectedToday = isSameCalendarDay(selectedDate, new Date());
+
+  const closeMonthPicker = useCallback(() => {
+    setMonthOpen(false);
+    window.requestAnimationFrame(() => monthBtnRef.current?.focus());
+  }, []);
+
+  const jumpToMonth = useCallback((month: number, year: number) => {
+    setMonthOpen(false);
+    onSelectDate(resolveMonthJump(month, year));
+  }, [onSelectDate]);
+
+  const jumpToToday = useCallback(() => {
+    setMonthOpen(false);
+    onSelectDate(startOfDay(new Date()));
+  }, [onSelectDate]);
+
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    // Touch/pen: deixa o scroll nativo; mouse: drag-to-scroll.
     if (e.pointerType !== 'mouse') return;
     const root = scrollerRef.current;
     if (!root) return;
@@ -149,7 +187,6 @@ export const AgendaDayScroller: React.FC<AgendaDayScrollerProps> = ({
     }
     dragRef.current = { ...drag, active: false, pointerId: null };
     setIsDragging(false);
-    // Evita click fantasma após arraste.
     if (drag.moved) {
       e.preventDefault();
     }
@@ -172,10 +209,63 @@ export const AgendaDayScroller: React.FC<AgendaDayScrollerProps> = ({
   };
 
   return (
-    <div data-testid="agenda-day-scroller">
-      <p className={`mb-1 text-sm font-heading tracking-wide ${colors.textSecondary}`}>
-        {monthLabel}
-      </p>
+    <div data-testid="agenda-day-scroller" className="relative">
+      <div className="mb-1 flex items-center gap-2 min-w-0">
+        <button
+          ref={monthBtnRef}
+          type="button"
+          data-testid="agenda-month-trigger"
+          aria-haspopup="dialog"
+          aria-expanded={monthOpen}
+          aria-controls={monthOpen ? pickerId : undefined}
+          onClick={() => setMonthOpen((v) => !v)}
+          className={[
+            'inline-flex max-w-full items-center gap-1.5 rounded-xl px-1.5 py-1 -ml-1.5',
+            'text-sm font-heading tracking-wide transition-colors',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]',
+            'focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]',
+            colors.textSecondary,
+            'hover:text-theme-text hover:bg-[var(--color-card-hover)]',
+          ].join(' ')}
+        >
+          <span className="truncate">{monthLabel}</span>
+          <ChevronDown
+            className={`h-4 w-4 shrink-0 transition-transform ${monthOpen ? 'rotate-180' : ''}`}
+            aria-hidden="true"
+          />
+        </button>
+
+        {!isSelectedToday && (
+          <button
+            type="button"
+            data-testid="agenda-hoje-chip"
+            onClick={jumpToToday}
+            className={[
+              'inline-flex shrink-0 items-center min-h-[32px] px-2.5 text-xs font-semibold rounded-full border',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]',
+              'focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]',
+              colors.border,
+              accent.text,
+              'hover:bg-[var(--color-accent-dim)]',
+            ].join(' ')}
+          >
+            Hoje
+          </button>
+        )}
+      </div>
+
+      <div id={pickerId}>
+        <AgendaMonthPicker
+          open={monthOpen}
+          selectedMonth={selectedDate.getMonth()}
+          selectedYear={selectedDate.getFullYear()}
+          onClose={closeMonthPicker}
+          onSelectMonth={jumpToMonth}
+          onToday={jumpToToday}
+          colors={colors}
+          accent={accent}
+        />
+      </div>
 
       <div className="relative">
         <div

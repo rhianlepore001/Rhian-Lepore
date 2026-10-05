@@ -41,7 +41,7 @@ describe('AgendaBlockForm', () => {
         members={members}
         showProfessionalSelect
         professionalId="pro-1"
-        initialDate="2026-10-05"
+        initialDate="2026-12-15"
         initialTime="12:00"
         timeZone="America/Sao_Paulo"
         onSubmit={vi.fn()}
@@ -63,14 +63,14 @@ describe('AgendaBlockForm', () => {
         members={members}
         showProfessionalSelect={false}
         professionalId="pro-1"
-        initialDate="2026-10-05"
+        initialDate="2026-12-15"
         timeZone="America/Sao_Paulo"
         conflicts={[{
           id: 'a1',
           kind: 'appointment',
           client_name: 'Ana Souza',
           service: 'Corte',
-          appointment_time: '2026-10-05T12:00:00-03:00',
+          appointment_time: '2026-12-15T12:00:00-03:00',
           status: 'Confirmed',
         }]}
         onSubmit={vi.fn()}
@@ -90,7 +90,7 @@ describe('AgendaBlockForm', () => {
         members={members}
         showProfessionalSelect={false}
         professionalId="pro-1"
-        initialDate="2026-10-05"
+        initialDate="2026-12-15"
         initialTime="12:00"
         timeZone="America/Sao_Paulo"
         onSubmit={onSubmit}
@@ -102,7 +102,7 @@ describe('AgendaBlockForm', () => {
       acknowledgeConflicts: false,
     }));
     const arg = onSubmit.mock.calls[0][0];
-    expect(new Date(arg.startsAt).toISOString()).toBe(new Date('2026-10-05T12:00:00-03:00').toISOString());
-    expect(new Date(arg.endsAt).toISOString()).toBe(new Date('2026-10-05T13:00:00-03:00').toISOString());
+    expect(new Date(arg.startsAt).toISOString()).toBe(new Date('2026-12-15T12:00:00-03:00').toISOString());
+    expect(new Date(arg.endsAt).toISOString()).toBe(new Date('2026-12-15T13:00:00-03:00').toISOString());
   });
 });

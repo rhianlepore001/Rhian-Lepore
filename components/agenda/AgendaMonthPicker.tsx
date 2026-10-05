@@ -38,6 +38,7 @@ export interface AgendaMonthPickerProps extends AgendaMonthPickerTheme {
  * Painel de mês/ano da Agenda: ‹ ano › + grade 12 meses + "Hoje".
  * Sem minDate — gestor precisa de histórico e futuro. Não reutiliza CalendarPicker
  * (que desabilita dias passados no agendamento público).
+ * Células do mês: transparentes no card (não usam surface — evita grade lilás no salão claro).
  */
 export const AgendaMonthPicker: React.FC<AgendaMonthPickerProps> = ({
   open,
@@ -118,7 +119,7 @@ export const AgendaMonthPicker: React.FC<AgendaMonthPickerProps> = ({
           'max-w-sm sm:max-w-md',
           colors.card,
           colors.border,
-          'border rounded-2xl shadow-[var(--shadow-modal)]',
+          'border rounded-2xl shadow-[var(--shadow-card)]',
           className,
         ].join(' ')}
       >
@@ -176,10 +177,12 @@ export const AgendaMonthPicker: React.FC<AgendaMonthPickerProps> = ({
                   'min-h-[44px] px-2 py-2 text-sm font-medium rounded-xl border transition-colors',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]',
                   'focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]',
+                  // Sem colors.surface: no salão claro a surface (#DDD4EF) deixa a grade
+                  // toda lilás e "estoura" o painel. Células vazadas no card, como o menu do Financeiro.
                   isSelected
-                    ? `${accent.bg} text-[var(--color-on-accent)] border-transparent shadow-[var(--shadow-card-accent)]`
-                    : `${colors.surface} ${colors.border} ${colors.text} hover:border-[var(--color-border-strong)] hover:bg-[var(--color-card-hover)]`,
-                  !isSelected && isCurrent ? `ring-1 ring-current ${accent.text}` : '',
+                    ? `${accent.bg} text-[var(--color-on-accent)] border-transparent`
+                    : `${colors.border} ${colors.text} bg-transparent hover:bg-[var(--color-card-hover)] hover:border-[var(--color-border-strong)]`,
+                  !isSelected && isCurrent ? `ring-1 ring-[var(--color-accent-border)] ${accent.text}` : '',
                 ].join(' ')}
               >
                 {label}
@@ -198,6 +201,7 @@ export const AgendaMonthPicker: React.FC<AgendaMonthPickerProps> = ({
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]',
               'focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]',
               colors.border,
+              colors.card,
               accent.text,
               'hover:bg-[var(--color-accent-dim)]',
             ].join(' ')}

@@ -12,6 +12,7 @@ import { useBusinessCopy } from '../hooks/useBusinessCopy';
 import { useBusinessSettings } from '../hooks/useSettings';
 import { resolveBusinessTimezone } from '../utils/businessTimezone';
 import { NotificationPanel } from './NotificationPanel';
+import { resolveHeaderBackTarget } from '../utils/headerBackTarget';
 
 export const Header: React.FC = () => {
   const { businessName, fullName, logout, avatarUrl, isDev, setDevUserType, role, region } = useAuth();
@@ -33,6 +34,7 @@ export const Header: React.FC = () => {
   const isSettingsRoute = pathname.startsWith('/configuracoes');
   const { accent, colors, status, isBeauty, isLight } = useBrutalTheme();
   const { segmentLabel, segmentLabelShort } = useBusinessCopy();
+  const mobileBack = pathname !== '/' ? resolveHeaderBackTarget(pathname) : null;
 
   // Fechar menus ao clicar fora
   useEffect(() => {
@@ -97,12 +99,13 @@ export const Header: React.FC = () => {
               </Link>
             ) : (
               <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
-                {pathname !== '/' && (
+                {mobileBack && (
                   <Link
-                    to="/"
+                    to={mobileBack.to}
+                    data-testid="header-back"
                     className="md:hidden inline-flex items-center justify-center shrink-0 h-11 w-11 rounded-lg group hover:opacity-90 hover:bg-[var(--color-card-hover)] transition-all"
-                    title="Voltar ao início"
-                    aria-label="Voltar ao início"
+                    title={mobileBack.label}
+                    aria-label={mobileBack.label}
                   >
                     <ArrowLeft className={`w-4 h-4 ${accent.text} opacity-70 group-hover:opacity-100 transition-all duration-300 group-hover:-translate-x-1`} />
                   </Link>

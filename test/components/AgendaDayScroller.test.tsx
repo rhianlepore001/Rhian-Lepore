@@ -74,8 +74,49 @@ describe('AgendaDayScroller', () => {
         {...theme}
       />,
     );
-    const listbox = screen.getByRole('listbox');
+    const listbox = screen.getByRole('listbox', { name: 'Calendário de dias' });
     expect(listbox.className).not.toMatch(/50%-28px/);
     expect(listbox.className).toMatch(/snap-x/);
+  });
+
+  it('mês é botão; abre painel e ao escolher mês chama onSelectDate', () => {
+    const onSelectDate = vi.fn();
+    render(
+      <AgendaDayScroller
+        selectedDate={new Date('2026-10-05T12:00:00')}
+        onSelectDate={onSelectDate}
+        {...theme}
+      />,
+    );
+
+    const trigger = screen.getByTestId('agenda-month-trigger');
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(trigger);
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByTestId('agenda-month-picker')).toBeTruthy();
+
+    fireEvent.click(screen.getByTestId('agenda-month-0')); // Janeiro
+    expect(onSelectDate).toHaveBeenCalled();
+    const d: Date = onSelectDate.mock.calls[0][0];
+    expect(d.getMonth()).toBe(0);
+    expect(d.getDate()).toBe(1);
+  });
+
+  it('chip Hoje aparece quando a data não é hoje', () => {
+    const onSelectDate = vi.fn();
+    render(
+      <AgendaDayScroller
+        selectedDate={new Date('2026-01-15T12:00:00')}
+        onSelectDate={onSelectDate}
+        {...theme}
+      />,
+    );
+    fireEvent.click(screen.getByTestId('agenda-hoje-chip'));
+    expect(onSelectDate).toHaveBeenCalled();
+    const d: Date = onSelectDate.mock.calls[0][0];
+    const now = new Date();
+    expect(d.getFullYear()).toBe(now.getFullYear());
+    expect(d.getMonth()).toBe(now.getMonth());
+    expect(d.getDate()).toBe(now.getDate());
   });
 });

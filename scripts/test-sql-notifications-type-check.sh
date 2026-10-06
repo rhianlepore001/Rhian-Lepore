@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Testa 20261006082516_notifications_type_check_allow_used_types num Postgres local
+# Testa 20261006082806_notifications_type_check_allow_used_types num Postgres local
 # descartável (não usa nem toca o Supabase de prod). Usa o espelho de prod de
 # public.notifications (CHECK de type, NOT NULL, FK p/ profiles, RLS, grants), que
 # faltava nos harnesses antigos — por isso PR-7 e lembretes passavam local e
@@ -15,8 +15,8 @@ if [ -z "$PGBIN" ] || [ ! -x "$PGBIN/psql" ]; then
 fi
 TMP="$(mktemp -d)"
 PORT="${PGPORT_TEST:-55495}"
-MIG="$ROOT/supabase/migrations/20261006082516_notifications_type_check_allow_used_types.sql"
-RB="$ROOT/docs/rollbacks/20261006082516_notifications_type_check_allow_used_types.rollback.sql"
+MIG="$ROOT/supabase/migrations/20261006082806_notifications_type_check_allow_used_types.sql"
+RB="$ROOT/docs/rollbacks/20261006082806_notifications_type_check_allow_used_types.rollback.sql"
 FIDELITY="$ROOT/supabase/tests/notifications_prod_fidelity.harness.sql"
 TEST="$ROOT/supabase/tests/notifications_type_check.test.sql"
 PROD_CHECK="CHECK ((type = ANY (ARRAY['info'::text, 'warning'::text, 'success'::text, 'danger'::text])))"

@@ -12,7 +12,7 @@
 -- Continua uma allow-list: qualquer outro valor segue rejeitado. NULL continua
 -- aceito como antes (CHECK com NULL passa; a coluna tem DEFAULT 'info').
 -- Nada mais muda: RLS, grants, FK, índices, funções e trigger intactos.
--- Rollback: docs/rollbacks/20261006082516_notifications_type_check_allow_used_types.rollback.sql
+-- Rollback: docs/rollbacks/20261006082806_notifications_type_check_allow_used_types.rollback.sql
 
 ALTER TABLE public.notifications DROP CONSTRAINT IF EXISTS notifications_type_check;
 ALTER TABLE public.notifications

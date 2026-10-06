@@ -1,4 +1,4 @@
--- Rollback de 20261006082516_notifications_type_check_allow_used_types.
+-- Rollback de 20261006082806_notifications_type_check_allow_used_types.
 -- Restaura EXATAMENTE o CHECK anterior de prod (pg_get_constraintdef em 2026-10-06):
 --   CHECK ((type = ANY (ARRAY['info'::text, 'warning'::text, 'success'::text, 'danger'::text])))
 --

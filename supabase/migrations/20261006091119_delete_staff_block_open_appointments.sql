@@ -20,7 +20,7 @@
 -- Sem atendimento em aberto, o comportamento é o de prod (com e sem login, PR #138).
 -- CREATE OR REPLACE mantém dono (postgres), ACL, SECURITY DEFINER, search_path e
 -- COMMENT; nenhum GRANT/REVOKE aqui.
--- Rollback: docs/rollbacks/20261006084726_delete_staff_block_open_appointments.rollback.sql
+-- Rollback: docs/rollbacks/20261006091119_delete_staff_block_open_appointments.rollback.sql
 
 CREATE OR REPLACE FUNCTION public.delete_staff_collaborator(p_member_id uuid)
  RETURNS void

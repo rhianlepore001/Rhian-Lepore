@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Testa 20261006084726_delete_staff_block_open_appointments num Postgres local descartável
+# Testa 20261006091119_delete_staff_block_open_appointments num Postgres local descartável
 # (não usa nem toca o Supabase de prod).
 #   scripts/test-sql-delete-staff-open-appointments.sh             # antes FALHA → migration 2x → passa (+ regressão do PR #138)
 #   scripts/test-sql-delete-staff-open-appointments.sh --rollback  # migration + rollback: função volta byte a byte à de prod
@@ -17,8 +17,8 @@ PURGE_MIG="$ROOT/supabase/migrations/20261006071036_fix_purge_staff_refresh_toke
 PURGE_TEST="$ROOT/supabase/tests/staff_purge_auth_user.test.sql"
 HARNESS="$ROOT/supabase/tests/delete_staff_open_appointments.harness.sql"
 TEST="$ROOT/supabase/tests/delete_staff_open_appointments.test.sql"
-MIG="$ROOT/supabase/migrations/20261006084726_delete_staff_block_open_appointments.sql"
-RB="$ROOT/docs/rollbacks/20261006084726_delete_staff_block_open_appointments.rollback.sql"
+MIG="$ROOT/supabase/migrations/20261006091119_delete_staff_block_open_appointments.sql"
+RB="$ROOT/docs/rollbacks/20261006091119_delete_staff_block_open_appointments.rollback.sql"
 # delete_staff_collaborator em prod antes da migration (2026-10-06)
 PROD_SRC_MD5="04f5421a5db7f934497b11f6e92e7abf"
 PROD_DEF_MD5="bab4c05346919164cc6899dd2b0cbd9f"

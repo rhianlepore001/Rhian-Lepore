@@ -1,4 +1,4 @@
--- Rollback de 20261006084726_delete_staff_block_open_appointments.
+-- Rollback de 20261006091119_delete_staff_block_open_appointments.
 -- Restaura EXATAMENTE a delete_staff_collaborator de prod antes da migration
 -- (pg_get_functiondef em 2026-10-06; md5(prosrc) 04f5421a5db7f934497b11f6e92e7abf).
 -- Efeito: o servidor volta a permitir excluir profissional com atendimento em

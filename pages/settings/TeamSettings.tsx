@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, Button, ConfirmModal, useToast } from '../../components/ui';
 import { SettingsLayout } from '../../components/SettingsLayout';
 import { SettingsSwitch } from '../../components/SettingsSwitch';
@@ -18,6 +19,15 @@ import { StaffAppointmentPermissionSection } from '../../components/settings/Sta
 import { TeamMemberBlocksSection } from '../../components/agenda/TeamMemberBlocksSection';
 import { AgendaBlockForm } from '../../components/agenda/AgendaBlockForm';
 import { CommissionScheduleEditor } from '../../components/settings/CommissionScheduleEditor';
+import { StaffOpenAppointmentsModal } from '../../components/settings/StaffOpenAppointmentsModal';
+import { fetchOpenAppointmentsForMember } from '../../services/team';
+import {
+    STAFF_LEGACY_LINKED_MESSAGE,
+    StaffHasOpenAppointmentsError,
+    StaffLegacyLinkedRecordsError,
+    agendaAppointmentLink,
+    type OpenAppointment,
+} from '../../utils/staffDelete';
 import {
     useUpcomingAgendaBlocks,
     useCreateAgendaBlock,
@@ -62,6 +72,13 @@ export const TeamSettings: React.FC = () => {
     const [blockConflicts, setBlockConflicts] = useState<AgendaBlockConflict[] | undefined>();
     const [unlockTarget, setUnlockTarget] = useState<AgendaBlock | null>(null);
     const { showToast } = useToast();
+    const navigate = useNavigate();
+    const [openAppointments, setOpenAppointments] = useState<{
+        memberName: string;
+        total: number;
+        items: OpenAppointment[];
+        status: 'loading' | 'ready' | 'error';
+    } | null>(null);
 
     const [scheduleDraft, setScheduleDraft] = useState<CommissionScheduleDraft>(defaultScheduleDraft);
     const [schedulePayload, setSchedulePayload] = useState<CommissionSchedulesPayload | null>(null);
@@ -107,14 +124,52 @@ export const TeamSettings: React.FC = () => {
         setPendingDeleteId(id);
     };
 
+    const showOpenAppointments = (memberId: string, serverCount: number | null) => {
+        const memberName = cardMembers.find((item) => item.id === memberId)?.name ?? '';
+        const fallbackTotal = serverCount ?? 1;
+        setOpenAppointments({ memberName, total: fallbackTotal, items: [], status: 'loading' });
+        if (!companyId) {
+            setOpenAppointments({ memberName, total: fallbackTotal, items: [], status: 'error' });
+            return;
+        }
+        void fetchOpenAppointmentsForMember(companyId, memberId)
+            .then(({ items, total }) => {
+                setOpenAppointments((prev) => prev && {
+                    ...prev,
+                    items,
+                    total: items.length > 0 ? total : fallbackTotal,
+                    status: items.length > 0 ? 'ready' : 'error',
+                });
+            })
+            .catch(() => {
+                setOpenAppointments((prev) => prev && { ...prev, status: 'error' });
+            });
+    };
+
+    const goToAgenda = (path: string) => {
+        setOpenAppointments(null);
+        setIsModalOpen(false);
+        setEditingMember(null);
+        navigate(path);
+    };
+
     const confirmDelete = async () => {
         if (!pendingDeleteId) return;
+        const memberId = pendingDeleteId;
         try {
-            await deleteMemberMutation.mutateAsync(pendingDeleteId);
+            await deleteMemberMutation.mutateAsync(memberId);
             showToast('Profissional excluído.', 'success');
             setIsModalOpen(false);
             setEditingMember(null);
         } catch (error) {
+            if (error instanceof StaffHasOpenAppointmentsError) {
+                showOpenAppointments(memberId, error.openCount);
+                return;
+            }
+            if (error instanceof StaffLegacyLinkedRecordsError) {
+                showToast(STAFF_LEGACY_LINKED_MESSAGE, 'error');
+                return;
+            }
             const message = error instanceof Error && error.message === 'OWNER_OR_MISSING_TEAM_MEMBER'
                 ? 'Não foi possível excluir este profissional. O dono não pode ser removido.'
                 : formatUserFacingError(mapError(error, 'Não foi possível excluir o profissional. Tente de novo.'));
@@ -469,6 +524,19 @@ export const TeamSettings: React.FC = () => {
                     loading={deleteMemberMutation.isPending}
                     onCancel={() => setPendingDeleteId(null)}
                     onConfirm={() => void confirmDelete()}
+                />
+
+                <StaffOpenAppointmentsModal
+                    open={!!openAppointments}
+                    memberName={openAppointments?.memberName ?? ''}
+                    total={openAppointments?.total ?? 1}
+                    items={openAppointments?.items ?? []}
+                    status={openAppointments?.status ?? 'loading'}
+                    timeZone={shopTimeZone}
+                    remainder={remainder}
+                    onClose={() => setOpenAppointments(null)}
+                    onOpenAppointment={(apt) => goToAgenda(agendaAppointmentLink(apt, shopTimeZone))}
+                    onOpenAgenda={() => goToAgenda('/agenda')}
                 />
 
                 <ConfirmModal

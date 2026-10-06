@@ -294,6 +294,31 @@ export const Agenda: React.FC = () => {
     const [showingDetailsAppointment, setShowingDetailsAppointment] = useState<Appointment | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
 
+    // Deep link /agenda?date=YYYY-MM-DD&appointment=<id> (ex.: "Ver atendimento" ao tentar
+    // excluir profissional): quando o dia carrega, mostra a coluna, rola/destaca o card e
+    // abre o detalhe. Uma vez por id (o ref evita reabrir a cada refetch).
+    const focusAppointmentId = searchParams.get('appointment');
+    const handledFocusAppointmentRef = React.useRef<string | null>(null);
+    useEffect(() => {
+        if (!focusAppointmentId) {
+            handledFocusAppointmentRef.current = null;
+            return;
+        }
+        if (loading || handledFocusAppointmentRef.current === focusAppointmentId) return;
+        const found = appointments.find((apt) => apt.id === focusAppointmentId);
+        if (!found) return;
+        handledFocusAppointmentRef.current = focusAppointmentId;
+        if (found.professional_id) {
+            setSelectedProfessionalIds((ids) => ensureProfessionalVisible(ids, found.professional_id));
+        }
+        focusCreated({
+            id: found.id,
+            professionalId: found.professional_id ?? null,
+            time: formatTimeInTimeZone(found.appointment_time, shopTimeZone),
+        });
+        setShowingDetailsAppointment(found);
+    }, [focusAppointmentId, appointments, loading, focusCreated, shopTimeZone]);
+
     useEffect(() => {
         if (isOverdueFilter) {
             fetchOverdueAppointments();

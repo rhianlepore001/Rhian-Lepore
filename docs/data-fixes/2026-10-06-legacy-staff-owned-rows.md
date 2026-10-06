@@ -48,17 +48,27 @@ Demais campos iguais: client_id `9618c8ea-0dd3-4e7f-aeae-b9b9bd52a6cb`, service 
 appointment_time `2026-04-20T08:00:00+00:00`, status `Confirmed`, price 80, professional_id
 `51b36953-d39d-4651-8811-67b0e1fefb0e`, duration 60, origin `agenda`, created_at `2026-04-20T20:19:39.68147+00:00`.
 
-Reversão exata (reintroduz o erro 23503 ao excluir o boiola):
+Reversão exata (reintroduz o erro 23503 ao excluir o boiola). Só o `user_id` (suficiente):
 
 ```sql
 BEGIN;
 UPDATE public.appointments SET user_id = '63d38b7b-a168-4282-a3f5-b98ef703d24f'
 WHERE id = 'db947361-9aab-4020-81aa-3d317da990ca' AND user_id = '2310b54d-5963-4dc6-9afb-8f308116a698';
--- conferir: exatamente 1 linha
-UPDATE public.appointments SET updated_at = '2026-07-12T13:30:48.068417+00:00'
-WHERE id = 'db947361-9aab-4020-81aa-3d317da990ca';
--- obs.: o trigger update_appointments_updated_at sobrescreve updated_at com now();
--- para restaurar o valor antigo é preciso desabilitar o trigger nessa transação.
+-- conferir: exatamente 1 linha; senão ROLLBACK
+COMMIT;
+```
+
+Se também for preciso restaurar o `updated_at` original (o trigger `update_appointments_updated_at`
+sobrescreve com now()), use no lugar:
+
+```sql
+BEGIN;
+ALTER TABLE public.appointments DISABLE TRIGGER update_appointments_updated_at;
+UPDATE public.appointments
+SET user_id = '63d38b7b-a168-4282-a3f5-b98ef703d24f', updated_at = '2026-07-12T13:30:48.068417+00:00'
+WHERE id = 'db947361-9aab-4020-81aa-3d317da990ca' AND user_id = '2310b54d-5963-4dc6-9afb-8f308116a698';
+-- conferir: exatamente 1 linha; senão ROLLBACK
+ALTER TABLE public.appointments ENABLE TRIGGER update_appointments_updated_at;
 COMMIT;
 ```
 

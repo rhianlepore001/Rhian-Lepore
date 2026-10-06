@@ -109,7 +109,8 @@ describe('CommissionsManagement — ciclo do servidor (P1, get_commission_cycle_
     it('PR-G: ciclo, período, resumo e A pagar/Pagos ficam num só cartão', async () => {
         mount();
         const card = await screen.findByTestId('payout-summary-card');
-        expect(within(card).getByRole('button', { name: 'Ciclo anterior' })).toBeInTheDocument();
+        // O cartão aparece antes do ciclo chegar do servidor; espera os dados (sem corrida).
+        expect(await within(card).findByRole('button', { name: 'Ciclo anterior' })).toBeInTheDocument();
         expect(within(card).getByTestId('commission-cycle-header')).toHaveTextContent('Período 06/09 – 05/10');
         expect(await within(card).findByTestId('payout-summary')).toHaveTextContent('5 pendentes');
         expect(within(card).getByTestId('payout-summary-amount')).toHaveTextContent(money('699,00'));

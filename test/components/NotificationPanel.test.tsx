@@ -72,4 +72,38 @@ describe('NotificationPanel', () => {
     expect(onMarkRead).toHaveBeenCalledWith('n1');
     expect(onNavigate).toHaveBeenCalledWith('/agenda?booking=aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa07');
   });
+  // O sino não depende de `type`: todo tipo salvo no banco (incluindo os liberados
+  // pelo CHECK novo e qualquer tipo futuro) mostra a mensagem e navega.
+  it.each([
+    {
+      type: 'edit',
+      booking_id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa08',
+      link: '/agenda',
+      expected: '/agenda?booking=aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa08',
+    },
+    {
+      type: 'commission_reminder',
+      booking_id: null,
+      link: '/financeiro?tab=commissions',
+      expected: '/financeiro?tab=commissions',
+    },
+    { type: 'tipo_futuro', booking_id: null, link: null, expected: '/agenda' },
+  ])('renderiza e navega para type $type', async ({ type, booking_id, link, expected }) => {
+    const onNavigate = vi.fn();
+    const message = `Mensagem do tipo ${type}`;
+    render(
+      <NotificationPanel
+        notifications={[{ ...unread, id: `n-${type}`, type, booking_id, link, message }]}
+        alerts={[]}
+        timeZone="America/Sao_Paulo"
+        now={new Date('2026-10-04T12:00:00.000Z')}
+        onMarkRead={vi.fn()}
+        onMarkAll={vi.fn()}
+        onNavigate={onNavigate}
+      />,
+    );
+    expect(screen.getByTestId('bell-notification-message')).toHaveTextContent(message);
+    await userEvent.click(screen.getByTestId('bell-notification'));
+    expect(onNavigate).toHaveBeenCalledWith(expected);
+  });
 });

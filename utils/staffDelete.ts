@@ -113,11 +113,12 @@ function weekdayDate(iso: string, timeZone: string): string {
     fmt = new Intl.DateTimeFormat('pt-BR', { timeZone, weekday: 'short', day: '2-digit', month: '2-digit' });
     WEEKDAY_FMT_CACHE.set(timeZone, fmt);
   }
-  // "dom., 05/07"
-  return fmt.format(new Date(iso));
+  // "Dom., 05/07" (maiúscula como Hoje/Ontem/Amanhã)
+  const label = fmt.format(new Date(iso));
+  return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
-/** "Hoje · 14:30", "Ontem · 09:00", "Amanhã · 10:15" ou "dom., 05/07 · 11:00" (fuso do negócio). */
+/** "Hoje · 14:30", "Ontem · 09:00", "Amanhã · 10:15" ou "Dom., 05/07 · 11:00" (fuso do negócio). */
 export function formatOpenAppointmentWhen(iso: string, timeZone: string, now: Date = new Date()): string {
   const day = getDateStringInTimeZone(iso, timeZone);
   const today = getTodayInTimeZone(timeZone, now);

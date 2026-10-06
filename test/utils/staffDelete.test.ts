@@ -83,7 +83,7 @@ describe('staffDelete — data/hora e deep link no fuso do negócio', () => {
     expect(formatOpenAppointmentWhen('2026-10-06T13:30:00.000Z', TZ, NOW)).toBe('Hoje · 14:30');
     expect(formatOpenAppointmentWhen('2026-10-05T08:00:00.000Z', TZ, NOW)).toBe('Ontem · 09:00');
     expect(formatOpenAppointmentWhen('2026-10-07T09:15:00.000Z', TZ, NOW)).toBe('Amanhã · 10:15');
-    expect(formatOpenAppointmentWhen('2026-07-05T10:30:00.000Z', TZ, NOW)).toMatch(/^dom\.?, 05\/07 · 11:30$/);
+    expect(formatOpenAppointmentWhen('2026-07-05T10:30:00.000Z', TZ, NOW)).toMatch(/^Dom\.?, 05\/07 · 11:30$/);
   });
 
   it('link usa o dia do negócio, não o UTC', () => {

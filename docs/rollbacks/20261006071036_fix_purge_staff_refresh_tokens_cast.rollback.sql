@@ -1,4 +1,4 @@
--- Rollback de 20261006075444_fix_purge_staff_refresh_tokens_cast.
+-- Rollback de 20261006071036_fix_purge_staff_refresh_tokens_cast.
 -- Restaura EXATAMENTE a definição de prod anterior (pg_get_functiondef em
 -- 2026-10-06; md5(prosrc) = 0bcef78a023f3b03032af24119377b7c,
 -- md5(pg_get_functiondef) = 89c06105ce3faaf49878c328d941753e).

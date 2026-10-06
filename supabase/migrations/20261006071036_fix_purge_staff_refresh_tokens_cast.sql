@@ -15,11 +15,12 @@
 -- (as do dono ficam intactas; nenhum dado de negócio é tocado).
 --
 -- Corpo idêntico ao de prod (pg_get_functiondef em 2026-10-06, md5(prosrc)
--- 0bcef78a023f3b03032af24119377b7c) exceto essas 3 linhas. SECURITY DEFINER,
+-- 0bcef78a023f3b03032af24119377b7c) exceto os 2 casts e o DELETE de notificações.
+-- SECURITY DEFINER,
 -- search_path, dono e ACL preservados (CREATE OR REPLACE mantém dono/ACL; o
 -- REVOKE/GRANT abaixo só reafirma o ACL atual de prod:
 -- {postgres=X/postgres,service_role=X/postgres}).
--- Rollback: docs/rollbacks/20261006075444_fix_purge_staff_refresh_tokens_cast.rollback.sql
+-- Rollback: docs/rollbacks/20261006071036_fix_purge_staff_refresh_tokens_cast.rollback.sql
 
 CREATE OR REPLACE FUNCTION public.purge_staff_auth_user(p_staff_user_id uuid, p_company_id text)
  RETURNS void

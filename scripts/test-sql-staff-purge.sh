@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Testa 20261006075444_fix_purge_staff_refresh_tokens_cast num Postgres local
+# Testa 20261006071036_fix_purge_staff_refresh_tokens_cast num Postgres local
 # descartável (não usa nem toca o Supabase de prod).
 #   scripts/test-sql-staff-purge.sh             # harness (= prod) → teste FALHA → migration 2x → passa
 #   scripts/test-sql-staff-purge.sh --rollback  # migration + rollback: função volta byte a byte à de prod
@@ -16,8 +16,8 @@ TMP="$(mktemp -d)"
 PORT="${PGPORT_TEST:-55491}"
 HARNESS="$ROOT/supabase/tests/staff_purge_auth_user.harness.sql"
 TEST="$ROOT/supabase/tests/staff_purge_auth_user.test.sql"
-MIG="$ROOT/supabase/migrations/20261006075444_fix_purge_staff_refresh_tokens_cast.sql"
-RB="$ROOT/docs/rollbacks/20261006075444_fix_purge_staff_refresh_tokens_cast.rollback.sql"
+MIG="$ROOT/supabase/migrations/20261006071036_fix_purge_staff_refresh_tokens_cast.sql"
+RB="$ROOT/docs/rollbacks/20261006071036_fix_purge_staff_refresh_tokens_cast.rollback.sql"
 # Estado de prod antes da migration (2026-10-06)
 PROD_SRC_MD5="0bcef78a023f3b03032af24119377b7c"
 PROD_DEF_MD5="89c06105ce3faaf49878c328d941753e"

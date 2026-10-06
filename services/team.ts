@@ -8,6 +8,15 @@ import {
   type TeamMemberInput,
   type TeamMemberUpdate,
 } from '@/types/team';
+import {
+  StaffHasOpenAppointmentsError,
+  StaffLegacyLinkedRecordsError,
+  isStaffHasOpenAppointmentsError,
+  isStaffLegacyLinkError,
+  openCountFromError,
+  type OpenAppointment,
+} from '@/utils/staffDelete';
+import { TERMINAL_APPOINTMENT_STATUSES, isOpenAppointmentStatus } from '@/utils/appointmentStatus';
 
 export async function fetchTeamMembers(companyId: string): Promise<TeamMember[]> {
   const { data, error } = await supabase
@@ -85,8 +94,59 @@ export async function deleteTeamMember(
     if ((error.message ?? '').includes('OWNER_OR_MISSING_TEAM_MEMBER')) {
       throw new Error('OWNER_OR_MISSING_TEAM_MEMBER');
     }
+    if (isStaffHasOpenAppointmentsError(error)) {
+      throw new StaffHasOpenAppointmentsError(openCountFromError(error));
+    }
+    if (isStaffLegacyLinkError(error)) {
+      throw new StaffLegacyLinkedRecordsError();
+    }
     throw error;
   }
+}
+
+/**
+ * Atendimentos em aberto do profissional (mesma regra da guarda do servidor),
+ * só do negócio do dono (RLS + user_id). Mais antigos primeiro (atrasados no topo).
+ */
+export async function fetchOpenAppointmentsForMember(
+  companyId: string,
+  memberId: string,
+  limit = 20,
+): Promise<{ items: OpenAppointment[]; total: number }> {
+  const terminal = `(${TERMINAL_APPOINTMENT_STATUSES.map((s) => `"${s}"`).join(',')})`;
+  const { data, error, count } = await supabase
+    .from('appointments')
+    .select('id, appointment_time, status, service, duration_minutes, clients(name)', { count: 'exact' })
+    .eq('user_id', companyId)
+    .eq('professional_id', memberId)
+    .not('status', 'in', terminal)
+    .order('appointment_time', { ascending: true })
+    .limit(limit);
+
+  if (error) throw error;
+  const rows = (data ?? []) as Array<{
+    id: string;
+    appointment_time: string;
+    status: string;
+    service: string | null;
+    duration_minutes: number | null;
+    clients: { name: string | null } | { name: string | null }[] | null;
+  }>;
+  const items = rows
+    .filter((row) => isOpenAppointmentStatus(row.status))
+    .map((row) => {
+      const client = Array.isArray(row.clients) ? row.clients[0] : row.clients;
+      return {
+        id: row.id,
+        appointment_time: row.appointment_time,
+        status: row.status,
+        service: row.service ?? null,
+        duration_minutes: row.duration_minutes ?? null,
+        client_name: client?.name ?? null,
+      };
+    });
+  const hidden = rows.length - items.length;
+  return { items, total: Math.max(items.length, (count ?? rows.length) - hidden) };
 }
 
 export function generateSlug(name: string): string {

@@ -121,3 +121,15 @@ export function isNoShowStatus(status: string | null | undefined): boolean {
   const s = (status ?? '').trim().toLowerCase();
   return s === 'noshow' || s === 'no_show';
 }
+
+/**
+ * Status terminais (Finalizado, Cancelado, Não compareceu). Mesma lista da guarda
+ * de delete_staff_collaborator (migration *_delete_staff_block_open_appointments).
+ */
+export const TERMINAL_APPOINTMENT_STATUSES = ['Completed', 'Cancelled', 'NoShow'] as const;
+
+/** Em aberto = qualquer status que não seja terminal (Pending, Confirmed...). */
+export function isOpenAppointmentStatus(status: string | null | undefined): boolean {
+  const s = (status ?? '').trim().toLowerCase();
+  return s !== 'completed' && s !== 'cancelled' && s !== 'noshow' && s !== 'no_show';
+}

@@ -5,9 +5,13 @@ import {
   agendaBlockBandLabel,
   canCreateAgendaBlock,
   canManageAgendaBlock,
+  canPickAgendaBlockProfessional,
+  DEFAULT_STAFF_AGENDA_BLOCK_SCOPE,
   isAgendaBlockedError,
   messageForAgendaBlockResultCode,
   normalizeStaffCanBlockAgenda,
+  resolveStaffAgendaBlockScope,
+  STAFF_AGENDA_BLOCK_SCOPE_OPTIONS,
 } from '@/utils/agendaBlockPermission';
 
 const SELF = 'member-self';
@@ -24,32 +28,70 @@ describe('permissão para bloquear agenda', () => {
     expect(normalizeStaffCanBlockAgenda('false')).toBe(false);
   });
 
-  it('dono sempre cria e remove, em qualquer profissional, flag ligada ou não', () => {
-    expect(canCreateAgendaBlock({ role: 'owner', staffCanBlock: false, teamMemberId: null, professionalId: OTHER })).toBe(true);
-    expect(canManageAgendaBlock({ role: 'owner', staffCanBlock: false, teamMemberId: null, professionalId: OTHER })).toBe(true);
+  it('dono sempre cria e remove, em qualquer profissional e qualquer opção', () => {
+    for (const scope of ['none', 'own', 'all'] as const) {
+      expect(canCreateAgendaBlock({ role: 'owner', scope, teamMemberId: null, professionalId: OTHER })).toBe(true);
+      expect(canManageAgendaBlock({ role: 'owner', scope, teamMemberId: null, professionalId: OTHER })).toBe(true);
+      expect(canPickAgendaBlockProfessional({ role: 'owner', scope })).toBe(true);
+    }
   });
 
-  it('staff com flag ligada só na própria coluna', () => {
-    expect(canCreateAgendaBlock({ role: 'staff', staffCanBlock: true, teamMemberId: SELF, professionalId: SELF })).toBe(true);
-    expect(canManageAgendaBlock({ role: 'staff', staffCanBlock: true, teamMemberId: SELF, professionalId: SELF })).toBe(true);
-    expect(canCreateAgendaBlock({ role: 'staff', staffCanBlock: true, teamMemberId: SELF, professionalId: OTHER })).toBe(false);
-    expect(canManageAgendaBlock({ role: 'staff', staffCanBlock: true, teamMemberId: SELF, professionalId: OTHER })).toBe(false);
+  it('own (= booleano ligado de antes): staff só na própria coluna', () => {
+    expect(canCreateAgendaBlock({ role: 'staff', scope: 'own', teamMemberId: SELF, professionalId: SELF })).toBe(true);
+    expect(canManageAgendaBlock({ role: 'staff', scope: 'own', teamMemberId: SELF, professionalId: SELF })).toBe(true);
+    expect(canCreateAgendaBlock({ role: 'staff', scope: 'own', teamMemberId: SELF, professionalId: OTHER })).toBe(false);
+    expect(canManageAgendaBlock({ role: 'staff', scope: 'own', teamMemberId: SELF, professionalId: OTHER })).toBe(false);
+    expect(canCreateAgendaBlock({ role: 'staff', scope: 'own', teamMemberId: SELF })).toBe(true);
+    expect(canPickAgendaBlockProfessional({ role: 'staff', scope: 'own' })).toBe(false);
   });
 
-  it('staff com flag desligada não cria nem remove, nem na própria', () => {
-    expect(canCreateAgendaBlock({ role: 'staff', staffCanBlock: false, teamMemberId: SELF, professionalId: SELF })).toBe(false);
-    expect(canManageAgendaBlock({ role: 'staff', staffCanBlock: false, teamMemberId: SELF, professionalId: SELF })).toBe(false);
+  it('none (= booleano desligado): staff não cria nem remove, nem na própria', () => {
+    expect(canCreateAgendaBlock({ role: 'staff', scope: 'none', teamMemberId: SELF, professionalId: SELF })).toBe(false);
+    expect(canManageAgendaBlock({ role: 'staff', scope: 'none', teamMemberId: SELF, professionalId: SELF })).toBe(false);
+    expect(canCreateAgendaBlock({ role: 'staff', scope: 'none', teamMemberId: SELF })).toBe(false);
+    expect(canPickAgendaBlockProfessional({ role: 'staff', scope: 'none' })).toBe(false);
   });
 
-  it('staff sem teamMemberId não cria', () => {
-    expect(canCreateAgendaBlock({ role: 'staff', staffCanBlock: true, teamMemberId: null })).toBe(false);
+  it('all: staff cria e remove em qualquer coluna e escolhe o profissional', () => {
+    expect(canCreateAgendaBlock({ role: 'staff', scope: 'all', teamMemberId: SELF, professionalId: OTHER })).toBe(true);
+    expect(canManageAgendaBlock({ role: 'staff', scope: 'all', teamMemberId: SELF, professionalId: OTHER })).toBe(true);
+    expect(canCreateAgendaBlock({ role: 'staff', scope: 'all', teamMemberId: SELF })).toBe(true);
+    expect(canPickAgendaBlockProfessional({ role: 'staff', scope: 'all' })).toBe(true);
+  });
+
+  it('staff sem teamMemberId (login órfão) não cria nem remove em nenhuma opção', () => {
+    for (const scope of ['none', 'own', 'all'] as const) {
+      expect(canCreateAgendaBlock({ role: 'staff', scope, teamMemberId: null })).toBe(false);
+      expect(canManageAgendaBlock({ role: 'staff', scope, teamMemberId: null, professionalId: OTHER })).toBe(false);
+    }
   });
 
   it('rótulo da faixa: Bloqueado se pode gerir; Agenda bloqueada se staff sem permissão', () => {
-    expect(agendaBlockBandLabel({ role: 'owner', staffCanBlock: true, teamMemberId: null, professionalId: SELF })).toBe('Bloqueado');
-    expect(agendaBlockBandLabel({ role: 'staff', staffCanBlock: true, teamMemberId: SELF, professionalId: SELF })).toBe('Bloqueado');
-    expect(agendaBlockBandLabel({ role: 'staff', staffCanBlock: false, teamMemberId: SELF, professionalId: SELF })).toBe('Agenda bloqueada');
-    expect(agendaBlockBandLabel({ role: 'staff', staffCanBlock: true, teamMemberId: SELF, professionalId: OTHER })).toBe('Agenda bloqueada');
+    expect(agendaBlockBandLabel({ role: 'owner', scope: 'none', teamMemberId: null, professionalId: SELF })).toBe('Bloqueado');
+    expect(agendaBlockBandLabel({ role: 'staff', scope: 'own', teamMemberId: SELF, professionalId: SELF })).toBe('Bloqueado');
+    expect(agendaBlockBandLabel({ role: 'staff', scope: 'none', teamMemberId: SELF, professionalId: SELF })).toBe('Agenda bloqueada');
+    expect(agendaBlockBandLabel({ role: 'staff', scope: 'own', teamMemberId: SELF, professionalId: OTHER })).toBe('Agenda bloqueada');
+    expect(agendaBlockBandLabel({ role: 'staff', scope: 'all', teamMemberId: SELF, professionalId: OTHER })).toBe('Bloqueado');
+  });
+
+  it('scope efetivo: coluna nova vence; sem ela vale o booleano antigo; padrão = own', () => {
+    expect(DEFAULT_STAFF_AGENDA_BLOCK_SCOPE).toBe('own');
+    expect(resolveStaffAgendaBlockScope({ staff_agenda_block_scope: 'all', staff_can_block_agenda: true })).toBe('all');
+    expect(resolveStaffAgendaBlockScope({ staff_agenda_block_scope: 'none', staff_can_block_agenda: true })).toBe('none');
+    expect(resolveStaffAgendaBlockScope({ staff_can_block_agenda: false })).toBe('none');
+    expect(resolveStaffAgendaBlockScope({ staff_can_block_agenda: true })).toBe('own');
+    expect(resolveStaffAgendaBlockScope({ staff_agenda_block_scope: 'tudo', staff_can_block_agenda: false })).toBe('none');
+    expect(resolveStaffAgendaBlockScope({ staff_agenda_block_scope: 'tudo' })).toBe('own');
+    expect(resolveStaffAgendaBlockScope(null)).toBe('own');
+    expect(resolveStaffAgendaBlockScope(undefined)).toBe('own');
+  });
+
+  it('opções do card em pt-BR, na ordem none/own/all', () => {
+    expect(STAFF_AGENDA_BLOCK_SCOPE_OPTIONS.map((o) => [o.value, o.label])).toEqual([
+      ['none', 'Não podem bloquear'],
+      ['own', 'Podem bloquear a própria agenda'],
+      ['all', 'Podem bloquear todas'],
+    ]);
   });
 
   it('reconhece o erro do banco', () => {

@@ -7,7 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useBusinessSettings } from '../hooks/useSettings';
-import { canCreateAgendaBlock, normalizeStaffCanBlockAgenda } from '../utils/agendaBlockPermission';
+import { canCreateAgendaBlock, resolveStaffAgendaBlockScope } from '../utils/agendaBlockPermission';
 
 interface QuickActionsModalProps {
     onClose: () => void;
@@ -20,10 +20,10 @@ export const QuickActionsModal: React.FC<QuickActionsModalProps> = ({ onClose })
     const { colors, accent, status, radius, shadow } = useBrutalTheme();
     const isStaff = role === 'staff';
     const { data: settings, isLoading: settingsLoading } = useBusinessSettings();
-    const staffCanBlock = settingsLoading && isStaff
-        ? false
-        : normalizeStaffCanBlockAgenda(settings?.staff_can_block_agenda);
-    const showBlock = canCreateAgendaBlock({ role, staffCanBlock, teamMemberId });
+    const blockScope = settingsLoading && isStaff
+        ? 'none'
+        : resolveStaffAgendaBlockScope(settings);
+    const showBlock = canCreateAgendaBlock({ role, scope: blockScope, teamMemberId });
 
     useEffect(() => {
         setModalOpen(true);

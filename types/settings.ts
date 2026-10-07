@@ -47,6 +47,12 @@ export const businessSettingsSchema = z.object({
    */
   staff_can_block_agenda: z.boolean().nullable().optional(),
   /**
+   * O que a equipe pode bloquear na agenda ('none' | 'own' | 'all'). Só existe
+   * depois da migration 20261007140000_agenda_block_scope (padrão 'own'); string
+   * livre aqui (normalizada em utils/agendaBlockPermission).
+   */
+  staff_agenda_block_scope: z.string().nullable().optional(),
+  /**
    * Prazo (h) para o cliente cancelar online. 0 = não cancela pelo app.
    * Coluna nova (PR-5); default de produto 2.
    */

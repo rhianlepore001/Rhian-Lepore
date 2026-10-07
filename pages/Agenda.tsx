@@ -55,7 +55,8 @@ import {
     canManageAgendaBlock,
     messageForAgendaBlockResultCode,
     messageForBookingAcceptError,
-    normalizeStaffCanBlockAgenda,
+    resolveStaffAgendaBlockScope,
+    canPickAgendaBlockProfessional,
 } from '../utils/agendaBlockPermission';
 import { isAgendaBlockConflictResult, type AgendaBlock, type AgendaBlockConflict } from '../types/agendaBlocks';
 import { useAppTour } from '../hooks/useAppTour';
@@ -135,8 +136,8 @@ export const Agenda: React.FC = () => {
     // Horário de funcionamento + fuso do negócio (dono e colaborador leem via RLS "company read").
     const { data: businessSettings } = useBusinessSettings();
     const shopTimeZone = resolveBusinessTimezone({ timezone: businessSettings?.timezone, region });
-    const staffCanBlock = normalizeStaffCanBlockAgenda(businessSettings?.staff_can_block_agenda);
-    const canOpenBlockFromPlus = canCreateAgendaBlock({ role, staffCanBlock, teamMemberId });
+    const blockScope = resolveStaffAgendaBlockScope(businessSettings);
+    const canOpenBlockFromPlus = canCreateAgendaBlock({ role, scope: blockScope, teamMemberId });
     const effectiveUserId = companyId ?? user?.id;
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
@@ -1116,7 +1117,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
         });
         const canBlockHere = canCreateAgendaBlock({
             role,
-            staffCanBlock,
+            scope: blockScope,
             teamMemberId,
             professionalId,
         });
@@ -1563,7 +1564,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                         onSelectBlock={(block) => setSelectedBlock(block as AgendaBlock)}
                         blockCaption={(professionalId) => agendaBlockBandLabel({
                             role,
-                            staffCanBlock,
+                            scope: blockScope,
                             teamMemberId,
                             professionalId,
                         })}
@@ -1924,7 +1925,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                 canBlock={choiceFromSlot
                     ? canCreateAgendaBlock({
                         role,
-                        staffCanBlock,
+                        scope: blockScope,
                         teamMemberId,
                         professionalId: wizardPrefill?.professionalId ?? blockProfessionalId,
                     })
@@ -1946,7 +1947,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                     setBlockServerAdjust(null);
                 }}
                 members={teamMembers}
-                showProfessionalSelect={!isStaff && !choiceFromSlot}
+                showProfessionalSelect={canPickAgendaBlockProfessional({ role, scope: blockScope }) && !choiceFromSlot}
                 professionalId={blockProfessionalId}
                 onProfessionalIdChange={setBlockProfessionalId}
                 initialDate={agendaDateStr}
@@ -1966,7 +1967,7 @@ Obrigada pela confiança! Te espero no ${businessName}.`;
                 timeZone={shopTimeZone}
                 canUnlock={!!selectedBlock && canManageAgendaBlock({
                     role,
-                    staffCanBlock,
+                    scope: blockScope,
                     teamMemberId,
                     professionalId: selectedBlock.professional_id,
                 })}

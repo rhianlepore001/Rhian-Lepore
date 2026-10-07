@@ -1,9 +1,61 @@
 /**
  * Permissão para criar/remover bloqueio de agenda.
- * O banco aplica a mesma regra nas RPCs create_agenda_block / delete_agenda_block.
+ * O banco aplica a mesma regra nas RPCs create_agenda_block / delete_agenda_block
+ * (staff_can_manage_agenda_block, migration 20261007140000_agenda_block_scope).
+ * Esconder botões aqui é só UX — não é a proteção.
  */
 
 export const DEFAULT_STAFF_CAN_BLOCK_AGENDA = true;
+
+/**
+ * O que a equipe pode bloquear (business_settings.staff_agenda_block_scope):
+ *   none = só o dono; own = cada um na própria coluna; all = qualquer profissional.
+ * O dono sempre pode.
+ */
+export type StaffAgendaBlockScope = 'none' | 'own' | 'all';
+
+export const STAFF_AGENDA_BLOCK_SCOPES: readonly StaffAgendaBlockScope[] = ['none', 'own', 'all'];
+
+/** Padrão = comportamento anterior (booleano ligado): cada um na própria agenda. */
+export const DEFAULT_STAFF_AGENDA_BLOCK_SCOPE: StaffAgendaBlockScope = 'own';
+
+export const STAFF_AGENDA_BLOCK_SCOPE_OPTIONS: ReadonlyArray<{
+  value: StaffAgendaBlockScope;
+  label: string;
+  description: string;
+}> = [
+  {
+    value: 'none',
+    label: 'Não podem bloquear',
+    description: 'Só você bloqueia e desbloqueia a agenda.',
+  },
+  {
+    value: 'own',
+    label: 'Podem bloquear a própria agenda',
+    description: 'Cada colaborador trava e destrava só a própria coluna.',
+  },
+  {
+    value: 'all',
+    label: 'Podem bloquear todas',
+    description: 'Colaboradores travam e destravam a agenda de qualquer profissional, inclusive a sua.',
+  },
+];
+
+export function isStaffAgendaBlockScope(value: unknown): value is StaffAgendaBlockScope {
+  return typeof value === 'string' && (STAFF_AGENDA_BLOCK_SCOPES as readonly string[]).includes(value);
+}
+
+/**
+ * Scope efetivo a partir das configurações. Usa a coluna nova quando existe; senão
+ * (banco antes da migration / sem linha) cai no booleano antigo: false = none, resto = own.
+ */
+export function resolveStaffAgendaBlockScope(
+  settings: { staff_agenda_block_scope?: unknown; staff_can_block_agenda?: unknown } | null | undefined,
+): StaffAgendaBlockScope {
+  const scope = settings?.staff_agenda_block_scope;
+  if (isStaffAgendaBlockScope(scope)) return scope;
+  return normalizeStaffCanBlockAgenda(settings?.staff_can_block_agenda) ? DEFAULT_STAFF_AGENDA_BLOCK_SCOPE : 'none';
+}
 
 export function agendaBlockedMessage(professionalName: string): string {
   const name = professionalName.trim() || 'profissional';
@@ -67,32 +119,43 @@ export function normalizeStaffCanBlockAgenda(value: unknown): boolean {
 
 export function canManageAgendaBlock(input: {
   role: string | null | undefined;
-  staffCanBlock: boolean;
+  scope: StaffAgendaBlockScope;
   teamMemberId: string | null | undefined;
   professionalId: string | null | undefined;
 }): boolean {
   if (input.role !== 'staff') return true;
-  if (!input.staffCanBlock) return false;
+  if (input.scope === 'none') return false;
   if (!input.teamMemberId || !input.professionalId) return false;
+  if (input.scope === 'all') return true;
   return input.teamMemberId === input.professionalId;
 }
 
 export function canCreateAgendaBlock(input: {
   role: string | null | undefined;
-  staffCanBlock: boolean;
+  scope: StaffAgendaBlockScope;
   teamMemberId: string | null | undefined;
   professionalId?: string | null;
 }): boolean {
   if (input.role !== 'staff') return true;
-  if (!input.staffCanBlock) return false;
+  if (input.scope === 'none') return false;
   if (!input.teamMemberId) return false;
+  if (input.scope === 'all') return true;
   if (input.professionalId == null || input.professionalId === '') return true;
   return input.teamMemberId === input.professionalId;
 }
 
+/** Colaborador escolhe o profissional no formulário (só com "Podem bloquear todas"). */
+export function canPickAgendaBlockProfessional(input: {
+  role: string | null | undefined;
+  scope: StaffAgendaBlockScope;
+}): boolean {
+  if (input.role !== 'staff') return true;
+  return input.scope === 'all';
+}
+
 export function agendaBlockBandLabel(input: {
   role: string | null | undefined;
-  staffCanBlock: boolean;
+  scope: StaffAgendaBlockScope;
   teamMemberId: string | null | undefined;
   professionalId: string | null | undefined;
 }): string {

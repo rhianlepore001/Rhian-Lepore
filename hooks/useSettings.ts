@@ -5,12 +5,13 @@ import {
   updateBusinessSettings,
   updateBusinessTimezone,
   updateStaffAppointmentEditScope,
-  updateStaffCanBlockAgenda,
+  updateStaffAgendaBlockScope,
   fetchProfileFields,
   updateProfileFields,
 } from '@/services/settings';
 import type { BusinessSettingsUpdate, ProfileFields } from '@/types/settings';
 import type { StaffAppointmentEditScope } from '@/utils/staffAppointmentPermission';
+import type { StaffAgendaBlockScope } from '@/utils/agendaBlockPermission';
 
 export function useBusinessSettings() {
   const { companyId } = useAuth();
@@ -62,12 +63,12 @@ export function useUpdateStaffAppointmentEditScope() {
   });
 }
 
-export function useUpdateStaffCanBlockAgenda() {
+export function useUpdateStaffAgendaBlockScope() {
   const { companyId } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (enabled: boolean) => updateStaffCanBlockAgenda(companyId!, enabled),
+    mutationFn: (scope: StaffAgendaBlockScope) => updateStaffAgendaBlockScope(companyId!, scope),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings', companyId, 'business'] });
     },

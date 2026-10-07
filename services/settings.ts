@@ -9,6 +9,7 @@ import {
 } from '@/types/settings';
 import { isSelectableTimeZone } from '@/utils/businessTimezone';
 import { isStaffAppointmentEditScope, type StaffAppointmentEditScope } from '@/utils/staffAppointmentPermission';
+import { isStaffAgendaBlockScope, type StaffAgendaBlockScope } from '@/utils/agendaBlockPermission';
 
 export async function fetchBusinessSettings(
   companyId: string,
@@ -111,25 +112,34 @@ export async function updateStaffAppointmentEditScope(
   return 'saved';
 }
 
-export type StaffCanBlockAgendaSaveResult = 'saved' | 'unsupported';
+export type StaffAgendaBlockScopeSaveResult = 'saved' | 'unsupported';
 
-function isMissingStaffCanBlockColumn(error: { code?: string; message?: string }): boolean {
+function isMissingStaffBlockScopeColumn(error: { code?: string; message?: string }): boolean {
   if (error.code === '42703' || error.code === 'PGRST204') {
-    return /staff_can_block_agenda/i.test(error.message ?? '') || !error.message;
+    return /staff_agenda_block_scope/i.test(error.message ?? '') || !error.message;
   }
   return false;
 }
 
-export async function updateStaffCanBlockAgenda(
+/**
+ * Salva o que a equipe pode bloquear na agenda (none/own/all). Só o dono
+ * consegue (RLS de business_settings). O banco mantém o booleano antigo
+ * staff_can_block_agenda em sincronia (trigger). Antes da migration devolve
+ * 'unsupported' sem quebrar a tela.
+ */
+export async function updateStaffAgendaBlockScope(
   companyId: string,
-  enabled: boolean,
-): Promise<StaffCanBlockAgendaSaveResult> {
+  scope: StaffAgendaBlockScope,
+): Promise<StaffAgendaBlockScopeSaveResult> {
+  if (!isStaffAgendaBlockScope(scope)) {
+    throw new Error(`invalid_staff_agenda_block_scope: ${String(scope)}`);
+  }
   const { error } = await supabase
     .from('business_settings')
-    .upsert({ user_id: companyId, staff_can_block_agenda: enabled }, { onConflict: 'user_id' });
+    .upsert({ user_id: companyId, staff_agenda_block_scope: scope }, { onConflict: 'user_id' });
 
   if (error) {
-    if (isMissingStaffCanBlockColumn(error)) return 'unsupported';
+    if (isMissingStaffBlockScopeColumn(error)) return 'unsupported';
     throw error;
   }
   return 'saved';

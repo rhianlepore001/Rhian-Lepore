@@ -384,7 +384,7 @@ Em `/workspace/screens/auto-confirm/before/`. Geradas por `e2e/auto-confirm-befo
 
 ## 11. Implementação (PR)
 
-### Banco — `20261011160000_auto_confirm_online_bookings.sql` (aditiva)
+### Banco — `20261011161117_auto_confirm_online_bookings.sql` (aditiva)
 
 - `business_settings.online_booking_requires_approval boolean NOT NULL DEFAULT true`.
 - **Opção B** (menor raio): `accept_public_booking_v2` **intocado**. A função interna
@@ -402,7 +402,7 @@ Em `/workspace/screens/auto-confirm/before/`. Geradas por `e2e/auto-confirm-befo
 - `notify_booking_recipients`: ramo `status='confirmed'` com título “Novo agendamento”.
 - `cancel_public_booking_by_client_v2`: janela de 15 min a partir da marca, só enquanto o horário não chegou.
 - `get_public_business_settings_json`: chave `online_booking_auto_confirm` (sem linha/coluna → `false`).
-- Rollback exato em `docs/rollbacks/20261011160000_auto_confirm_online_bookings.rollback.sql`: restaura as 4 funções
+- Rollback exato em `docs/rollbacks/20261011161117_auto_confirm_online_bookings.rollback.sql`: restaura as 4 funções
   byte a byte e remove as 2 funções internas, a tabela e a **coluna** — a escolha do dono se perde no rollback (o front
   trata coluna ausente como manual).
 

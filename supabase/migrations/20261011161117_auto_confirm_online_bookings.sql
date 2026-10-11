@@ -18,7 +18,7 @@
 --
 -- accept/reject v2, update v2 e os triggers ficam intocados.
 -- CREATE OR REPLACE mantém dono, ACL, SECURITY DEFINER e search_path das funções.
--- ROLLBACK: docs/rollbacks/20261011160000_auto_confirm_online_bookings.rollback.sql
+-- ROLLBACK: docs/rollbacks/20261011161117_auto_confirm_online_bookings.rollback.sql
 -- =============================================================================
 
 BEGIN;

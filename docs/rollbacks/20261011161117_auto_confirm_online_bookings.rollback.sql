@@ -1,4 +1,4 @@
--- ROLLBACK exato de 20261011160000_auto_confirm_online_bookings.
+-- ROLLBACK exato de 20261011161117_auto_confirm_online_bookings.
 -- Restaura as 4 funções com o corpo de prod de 2026-10-07 (md5 de pg_get_functiondef
 -- indicado em cada uma; CREATE OR REPLACE mantém dono/ACL/SECURITY DEFINER/search_path),
 -- remove as funções internas, a tabela de marca e a coluna do toggle.

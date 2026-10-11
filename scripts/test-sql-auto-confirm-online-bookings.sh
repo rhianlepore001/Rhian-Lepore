@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Testa 20261011160000_auto_confirm_online_bookings num Postgres local descartável.
+# Testa 20261011161117_auto_confirm_online_bookings num Postgres local descartável.
 #   scripts/test-sql-auto-confirm-online-bookings.sh             # md5=prod → teste FALHA → migration 2x → passa
 #                                                               # + concorrência + regressões
 #   scripts/test-sql-auto-confirm-online-bookings.sh --rollback  # migration + rollback = estado de prod
@@ -12,8 +12,8 @@ if [ -z "$PGBIN" ] || [ ! -x "$PGBIN/psql" ]; then
 fi
 TMP="$(mktemp -d)"
 PORT="${PGPORT_TEST:-55504}"
-MIG="$ROOT/supabase/migrations/20261011160000_auto_confirm_online_bookings.sql"
-RB="$ROOT/docs/rollbacks/20261011160000_auto_confirm_online_bookings.rollback.sql"
+MIG="$ROOT/supabase/migrations/20261011161117_auto_confirm_online_bookings.sql"
+RB="$ROOT/docs/rollbacks/20261011161117_auto_confirm_online_bookings.rollback.sql"
 HARNESS="$ROOT/supabase/tests/auto_confirm_online_bookings.harness.sql"
 TEST="$ROOT/supabase/tests/auto_confirm_online_bookings.test.sql"
 [ -f "$MIG" ] || { echo "faltou migration $MIG"; exit 1; }

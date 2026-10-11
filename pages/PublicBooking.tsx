@@ -30,7 +30,8 @@ import { logger } from '../utils/Logger';
 import { useZonedAvailableSlots } from '../hooks/useZonedAvailableSlots';
 import { fetchEditBooking, fetchPublicClientByPhone, fetchClientByPhone, fetchPublicBookingById, fetchFullDates, findNextDateWithSlots, getFirstAvailableProfessional, uploadClientPhoto, upsertPublicClientSession } from '../services/publicBooking';
 import { shouldLandOnClientArea } from '../utils/publicBookingLanding';
-import { getPublicBookingAwaitingWhatsAppText, getPublicBookingSuccessCopy } from '../utils/publicBookingCopy';
+import { getPublicBookingAwaitingWhatsAppText, getPublicBookingSubmitLabel, getPublicBookingSuccessCopy } from '../utils/publicBookingCopy';
+import { isPublicBookingAutoConfirm } from '../utils/onlineBookingApproval';
 import { resolveCancellationPolicyDisplay } from '../utils/cancellationPolicyCopy';
 import {
     CANCEL_WINDOW_CLOSED_MESSAGE,
@@ -225,9 +226,13 @@ export const PublicBooking: React.FC = () => {
     useEffect(() => {
         if (!slug || !businessId || !client) return;
         if (client.business_id !== businessId) return;
+        // Acabou de agendar nesta visita: fica na tela de confirmação (que tem o
+        // atalho para a Minha Área). O redirecionamento continua valendo para quem
+        // já chega logado no link.
+        if (step === 'success') return;
         if (!shouldLandOnClientArea({ isLoggedInForBusiness: true, searchParams })) return;
         navigate(`/minha-area/${slug}`, { replace: true });
-    }, [slug, businessId, client, searchParams, navigate]);
+    }, [slug, businessId, client, searchParams, navigate, step]);
 
     // Carrega agendamento diretamente pela tabela quando há ?edit= na URL e o cliente está logado
     useEffect(() => {
@@ -796,8 +801,11 @@ export const PublicBooking: React.FC = () => {
     const isBookingCancelled = activeBooking?.status === 'cancelled';
     const editSentIso = activeBooking?.original_appointment_time || originalTimeISO || activeBooking?.appointment_time;
     const pendingEdit = isClientEditPending(activeBooking ?? {});
+    const autoConfirm = isPublicBookingAutoConfirm(businessSettings);
+    const submitLabel = getPublicBookingSubmitLabel({ autoConfirm, isEdit: Boolean(editingBookingId) });
     const successCopy = getPublicBookingSuccessCopy({
         isBeauty,
+        userType: business?.user_type,
         status: activeBooking?.status,
         isEdit: pendingEdit,
         editSentSubtitle: pendingEdit && editSentIso
@@ -820,6 +828,7 @@ export const PublicBooking: React.FC = () => {
         : selectedDate?.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' });
     const successTime = bookedAt ? formatTimeInTimeZone(bookedAt, businessTimezone) : selectedTime;
     const successWhatsAppText = getPublicBookingAwaitingWhatsAppText({
+        confirmed: activeBooking?.status === 'confirmed',
         businessName: business?.business_name || '',
         dateLabel: bookedAt
             ? bookedAt.toLocaleDateString('pt-BR', { timeZone: businessTimezone })
@@ -1342,7 +1351,7 @@ export const PublicBooking: React.FC = () => {
                                     <Loader2 className="w-5 h-5 animate-spin" />
                                 ) : quickStep === 'contact' ? (
                                     <>
-                                        <span className="font-semibold">Confirmar agendamento</span>
+                                        <span className="font-semibold" data-testid="public-booking-submit-label">{submitLabel}</span>
                                         <Check className="w-5 h-5" />
                                     </>
                                 ) : (
@@ -1872,7 +1881,7 @@ export const PublicBooking: React.FC = () => {
                                         <Loader2 className="w-6 h-6 animate-spin" />
                                     ) : (
                                         <>
-                                            <span>Confirmar & Agendar</span>
+                                            <span>{submitLabel}</span>
                                             <Check className="w-5 h-5 group-hover:scale-110 transition-transform" />
                                         </>
                                     )}

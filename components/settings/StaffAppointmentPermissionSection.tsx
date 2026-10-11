@@ -4,15 +4,17 @@ import { Check, Loader2 } from 'lucide-react';
 import { Card, useToast } from '../ui';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
-import { useBusinessSettings, useUpdateStaffAppointmentEditScope, useUpdateStaffCanBlockAgenda } from '../../hooks/useSettings';
+import { useBusinessSettings, useUpdateStaffAppointmentEditScope, useUpdateStaffAgendaBlockScope } from '../../hooks/useSettings';
 import {
   STAFF_APPOINTMENT_EDIT_SCOPE_OPTIONS,
   normalizeStaffAppointmentEditScope,
   type StaffAppointmentEditScope,
 } from '../../utils/staffAppointmentPermission';
-import { normalizeStaffCanBlockAgenda } from '../../utils/agendaBlockPermission';
-import { SettingsRow } from '../ui/SettingsRow';
-import { SettingsSwitch } from '../SettingsSwitch';
+import {
+  STAFF_AGENDA_BLOCK_SCOPE_OPTIONS,
+  resolveStaffAgendaBlockScope,
+  type StaffAgendaBlockScope,
+} from '../../utils/agendaBlockPermission';
 
 /**
  * Configurações › Equipe: o dono escolhe o que os colaboradores podem fazer com
@@ -25,40 +27,41 @@ export const StaffAppointmentPermissionSection: React.FC = () => {
   const { showToast } = useToast();
   const { data: settings, isLoading } = useBusinessSettings();
   const updateScope = useUpdateStaffAppointmentEditScope();
-  const updateCanBlock = useUpdateStaffCanBlockAgenda();
+  const updateBlockScope = useUpdateStaffAgendaBlockScope();
 
   // Coluna só existe após a migration; antes disso a opção fica travada no padrão.
   const columnMissing = !!settings && !Object.prototype.hasOwnProperty.call(settings, 'staff_appointment_edit_scope');
-  const blockColumnMissing = !!settings && !Object.prototype.hasOwnProperty.call(settings, 'staff_can_block_agenda');
+  const blockColumnMissing = !!settings && !Object.prototype.hasOwnProperty.call(settings, 'staff_agenda_block_scope');
   const saved = normalizeStaffAppointmentEditScope(settings?.staff_appointment_edit_scope);
-  const savedCanBlock = normalizeStaffCanBlockAgenda(settings?.staff_can_block_agenda);
+  // Sem a coluna nova (ou sem linha), vale o booleano antigo: ligado = própria agenda.
+  const savedBlockScope = resolveStaffAgendaBlockScope(settings);
   const [selected, setSelected] = useState<StaffAppointmentEditScope>(saved);
-  const [canBlock, setCanBlock] = useState(savedCanBlock);
+  const [blockScope, setBlockScope] = useState<StaffAgendaBlockScope>(savedBlockScope);
 
   useEffect(() => {
     setSelected(saved);
   }, [saved]);
 
   useEffect(() => {
-    setCanBlock(savedCanBlock);
-  }, [savedCanBlock]);
+    setBlockScope(savedBlockScope);
+  }, [savedBlockScope]);
 
   if (role !== 'owner') return null;
 
-  const handleBlockToggle = async (next: boolean) => {
-    if (next === canBlock || updateCanBlock.isPending || blockColumnMissing) return;
-    const previous = canBlock;
-    setCanBlock(next);
+  const handleBlockScopeChange = async (next: StaffAgendaBlockScope) => {
+    if (next === blockScope || updateBlockScope.isPending || blockColumnMissing) return;
+    const previous = blockScope;
+    setBlockScope(next);
     try {
-      const result = await updateCanBlock.mutateAsync(next);
+      const result = await updateBlockScope.mutateAsync(next);
       if (result === 'unsupported') {
-        setCanBlock(previous);
+        setBlockScope(previous);
         showToast('Essa opção fica disponível após a próxima atualização do sistema.', 'info');
         return;
       }
       showToast('Permissão da equipe atualizada.', 'success');
     } catch {
-      setCanBlock(previous);
+      setBlockScope(previous);
       showToast('Não foi possível salvar a permissão. Tente novamente.', 'error');
     }
   };
@@ -138,26 +141,56 @@ export const StaffAppointmentPermissionSection: React.FC = () => {
         )}
       </div>
       </Card>
-      <Card title={<span id="staff-can-block-title">Bloqueio de agenda</span>}>
-        <SettingsRow
-          label="Colaboradores podem bloquear a própria agenda"
-          help="Ligada: cada um trava e destrava só a própria coluna. Desligada: só você bloqueia. Os bloqueios que já existem continuam valendo."
-        >
-          <SettingsSwitch
-            id="staff-can-block-agenda"
-            checked={canBlock}
-            onChange={handleBlockToggle}
-            ariaLabel="Colaboradores podem bloquear a própria agenda"
-          />
-        </SettingsRow>
+      <Card title={<span id="staff-block-scope-title">Bloqueio de agenda</span>}>
+      <div className="space-y-4">
+        <p className={`text-sm ${colors.textMuted}`}>
+          Quem da equipe pode travar horários na agenda (período no dia, dia inteiro ou vários dias). Você, como dono, sempre pode.
+        </p>
+
+        <div role="radiogroup" aria-labelledby="staff-block-scope-title" className="grid gap-2">
+          {STAFF_AGENDA_BLOCK_SCOPE_OPTIONS.map((option) => {
+            const checked = blockScope === option.value;
+            return (
+              <label
+                key={option.value}
+                data-testid={`staff-block-scope-${option.value}`}
+                className={[
+                  'flex items-start gap-3 rounded-xl border p-3 min-h-[44px] transition-colors',
+                  blockColumnMissing || isLoading ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer',
+                  checked ? `${accent.border} ${accent.bgDim}` : colors.border,
+                ].join(' ')}
+              >
+                <input
+                  type="radio"
+                  name="staff-block-scope"
+                  value={option.value}
+                  checked={checked}
+                  disabled={blockColumnMissing || isLoading || updateBlockScope.isPending}
+                  onChange={() => handleBlockScopeChange(option.value)}
+                  className="mt-1 h-4 w-4 shrink-0 accent-[var(--color-accent)]"
+                />
+                <span className="min-w-0">
+                  <span className={`flex items-center gap-2 text-sm font-semibold ${colors.text}`}>
+                    {option.label}
+                    {checked && updateBlockScope.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />}
+                    {checked && !updateBlockScope.isPending && <Check className={`w-3.5 h-3.5 ${accent.text}`} aria-hidden="true" />}
+                  </span>
+                  <span className={`block text-xs mt-0.5 ${colors.textMuted}`}>{option.description}</span>
+                </span>
+              </label>
+            );
+          })}
+        </div>
+
+        <p className={`text-xs ${colors.textMuted}`}>
+          Os bloqueios que já existem continuam valendo quando você muda esta opção.
+        </p>
         {blockColumnMissing && (
-          <p className={`text-xs ${colors.textMuted}`} data-testid="staff-can-block-pending">
-            A escolha fica disponível após a próxima atualização do sistema.
+          <p className={`text-xs ${colors.textMuted}`} data-testid="staff-block-scope-pending">
+            {'Por enquanto vale a escolha anterior. As três opções ficam disponíveis após a próxima atualização do sistema.'}
           </p>
         )}
-        {(updateCanBlock.isPending || isLoading) && (
-          <span className="sr-only">Salvando permissão de bloqueio</span>
-        )}
+      </div>
       </Card>
     </section>
   );

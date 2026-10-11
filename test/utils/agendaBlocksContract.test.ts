@@ -85,6 +85,12 @@ describe('Agenda — pontos de entrada de bloqueio', () => {
     expect(agenda).toMatch(/onEmptySlotClick=\{openEmptySlot\}/);
   });
 
+  it('permissão vem do scope (none/own/all); staff com "todas" escolhe o profissional', () => {
+    expect(agenda).toMatch(/const blockScope = resolveStaffAgendaBlockScope\(businessSettings\)/);
+    expect(agenda).toMatch(/showProfessionalSelect=\{canPickAgendaBlockProfessional\(\{ role, scope: blockScope \}\) && !choiceFromSlot\}/);
+    expect(agenda).not.toMatch(/staffCanBlock/);
+  });
+
   it('deep-link ?block=true abre o formulário de bloqueio', () => {
     expect(agenda).toMatch(/searchParams\.get\('block'\)/);
     expect(agenda).toMatch(/canOpenBlockFromPlus/);
@@ -97,7 +103,7 @@ describe('Equipe — card Bloqueios e toggle', () => {
     expect(team).toMatch(/TeamMemberBlocksSection/);
     expect(team).toMatch(/StaffAppointmentPermissionSection/);
     expect(read('components/settings/StaffAppointmentPermissionSection.tsx'))
-      .toMatch(/Colaboradores podem bloquear a própria agenda/);
+      .toMatch(/STAFF_AGENDA_BLOCK_SCOPE_OPTIONS/);
   });
 });
 

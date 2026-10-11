@@ -1,17 +1,17 @@
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 
 const state: { role: string; settings: Record<string, unknown> | null } = { role: 'owner', settings: null };
 const mutateAsync = vi.fn();
-const mutateCanBlock = vi.fn();
+const mutateBlockScope = vi.fn();
 const showToast = vi.fn();
 
 vi.mock('../../contexts/AuthContext', () => ({ useAuth: () => ({ role: state.role }) }));
 vi.mock('../../hooks/useSettings', () => ({
   useBusinessSettings: () => ({ data: state.settings, isLoading: false }),
   useUpdateStaffAppointmentEditScope: () => ({ mutateAsync, isPending: false }),
-  useUpdateStaffCanBlockAgenda: () => ({ mutateAsync: mutateCanBlock, isPending: false }),
+  useUpdateStaffAgendaBlockScope: () => ({ mutateAsync: mutateBlockScope, isPending: false }),
 }));
 vi.mock('../../hooks/useBrutalTheme', () => ({
   useBrutalTheme: () => ({ colors: { text: '', textMuted: '', textSecondary: '', border: '' }, accent: { text: '', border: '', bgDim: '' } }),
@@ -23,7 +23,10 @@ vi.mock('../../components/ui', () => ({
 
 import { StaffAppointmentPermissionSection } from '../../components/settings/StaffAppointmentPermissionSection';
 
-const radio = (v: string) => screen.getByDisplayValue(v) as HTMLInputElement;
+const editGroup = () => within(screen.getByRole('radiogroup', { name: 'Edição de agendamentos' }));
+const blockGroup = () => within(screen.getByRole('radiogroup', { name: 'Bloqueio de agenda' }));
+const radio = (v: string) => editGroup().getByDisplayValue(v) as HTMLInputElement;
+const blockRadio = (v: string) => blockGroup().getByDisplayValue(v) as HTMLInputElement;
 
 describe('Configurações › Equipe — permissão de edição de agendamentos', () => {
   beforeEach(() => {
@@ -31,7 +34,7 @@ describe('Configurações › Equipe — permissão de edição de agendamentos'
     state.role = 'owner';
     state.settings = { user_id: 'owner-1', staff_appointment_edit_scope: 'none' };
     mutateAsync.mockResolvedValue('saved');
-    mutateCanBlock.mockResolvedValue('saved');
+    mutateBlockScope.mockResolvedValue('saved');
   });
 
   it('dono vê as três opções em pt-BR, com "Não podem editar" marcado por padrão', () => {
@@ -82,13 +85,63 @@ describe('Configurações › Equipe — permissão de edição de agendamentos'
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('interruptor de bloquear agenda começa ligado e salva ao desligar', async () => {
-    state.settings = { user_id: 'owner-1', staff_appointment_edit_scope: 'none', staff_can_block_agenda: true };
+  it('bloqueio: três opções em pt-BR; padrão (booleano ligado, sem coluna nova) = própria agenda', () => {
+    state.settings = { user_id: 'owner-1', staff_appointment_edit_scope: 'none', staff_can_block_agenda: true, staff_agenda_block_scope: 'own' };
     render(<StaffAppointmentPermissionSection />);
-    expect(screen.getByText('Colaboradores podem bloquear a própria agenda')).toBeInTheDocument();
-    const toggle = screen.getByLabelText('Colaboradores podem bloquear a própria agenda') as HTMLInputElement;
-    expect(toggle.checked).toBe(true);
-    fireEvent.click(toggle);
-    await waitFor(() => expect(mutateCanBlock).toHaveBeenCalledWith(false));
+    expect(blockGroup().getByText('Não podem bloquear')).toBeInTheDocument();
+    expect(blockGroup().getByText('Podem bloquear a própria agenda')).toBeInTheDocument();
+    expect(blockGroup().getByText('Podem bloquear todas')).toBeInTheDocument();
+    expect(blockRadio('own').checked).toBe(true);
+    expect(screen.getByText(/Os bloqueios que já existem continuam valendo/)).toBeInTheDocument();
+    expect(screen.queryByRole('switch')).toBeNull();
+  });
+
+  it('bloqueio: valor salvo é refletido (none / all)', () => {
+    state.settings = { user_id: 'owner-1', staff_can_block_agenda: false, staff_agenda_block_scope: 'none' };
+    const { unmount } = render(<StaffAppointmentPermissionSection />);
+    expect(blockRadio('none').checked).toBe(true);
+    unmount();
+    state.settings = { user_id: 'owner-1', staff_can_block_agenda: true, staff_agenda_block_scope: 'all' };
+    render(<StaffAppointmentPermissionSection />);
+    expect(blockRadio('all').checked).toBe(true);
+  });
+
+  it('bloqueio: trocar salva a coluna nova e confirma; edição não é tocada', async () => {
+    state.settings = { user_id: 'owner-1', staff_appointment_edit_scope: 'none', staff_can_block_agenda: true, staff_agenda_block_scope: 'own' };
+    render(<StaffAppointmentPermissionSection />);
+    fireEvent.click(blockRadio('all'));
+    await waitFor(() => expect(mutateBlockScope).toHaveBeenCalledWith('all'));
+    expect(mutateAsync).not.toHaveBeenCalled();
+    expect(showToast).toHaveBeenCalledWith('Permissão da equipe atualizada.', 'success');
+    expect(blockRadio('all').checked).toBe(true);
+    expect(radio('none').checked).toBe(true);
+  });
+
+  it('bloqueio: erro ao salvar volta para a opção anterior', async () => {
+    state.settings = { user_id: 'owner-1', staff_can_block_agenda: true, staff_agenda_block_scope: 'own' };
+    mutateBlockScope.mockRejectedValueOnce(new Error('boom'));
+    render(<StaffAppointmentPermissionSection />);
+    fireEvent.click(blockRadio('none'));
+    await waitFor(() => expect(showToast).toHaveBeenCalledWith('Não foi possível salvar a permissão. Tente novamente.', 'error'));
+    expect(blockRadio('own').checked).toBe(true);
+  });
+
+  it('bloqueio: banco antigo (sem coluna nova) fica travado na escolha do booleano, com aviso', () => {
+    state.settings = { user_id: 'owner-1', staff_can_block_agenda: false };
+    render(<StaffAppointmentPermissionSection />);
+    expect(blockRadio('none').checked).toBe(true);
+    expect(blockRadio('all').disabled).toBe(true);
+    expect(screen.getByTestId('staff-block-scope-pending')).toBeInTheDocument();
+    fireEvent.click(blockRadio('all'));
+    expect(mutateBlockScope).not.toHaveBeenCalled();
+  });
+
+  it('bloqueio: "unsupported" volta e avisa', async () => {
+    state.settings = { user_id: 'owner-1', staff_can_block_agenda: true, staff_agenda_block_scope: 'own' };
+    mutateBlockScope.mockResolvedValueOnce('unsupported');
+    render(<StaffAppointmentPermissionSection />);
+    fireEvent.click(blockRadio('all'));
+    await waitFor(() => expect(showToast).toHaveBeenCalledWith('Essa opção fica disponível após a próxima atualização do sistema.', 'info'));
+    expect(blockRadio('own').checked).toBe(true);
   });
 });

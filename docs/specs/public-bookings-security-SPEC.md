@@ -1,8 +1,8 @@
 # SPEC — public_bookings: anon não lista nem insere direto
 
 Status: pronto para revisão (migração NÃO aplicada em prod, PR em rascunho)
-Migração: `supabase/migrations/20261011210000_public_bookings_anon_lockdown.sql`
-Rollback: `docs/rollbacks/20261011210000_public_bookings_anon_lockdown.rollback.sql`
+Migração: `supabase/migrations/20261011202904_public_bookings_anon_lockdown.sql`
+Rollback: `docs/rollbacks/20261011202904_public_bookings_anon_lockdown.rollback.sql`
 Testes: `scripts/test-sql-public-bookings-security.sh` (+ `--rollback`), `e2e/public-bookings-security.spec.ts`
 
 ## 1. Problema (prod, lido em 2026-10-11, só SELECT)

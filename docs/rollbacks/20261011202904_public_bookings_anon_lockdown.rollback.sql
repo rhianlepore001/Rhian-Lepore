@@ -1,5 +1,5 @@
 -- =============================================================================
--- ROLLBACK de 20261011210000_public_bookings_anon_lockdown
+-- ROLLBACK de 20261011202904_public_bookings_anon_lockdown
 -- Volta exatamente ao estado de prod de 2026-10-11 (policies e ACL de anon).
 -- Idempotente. Não toca em dados.
 -- =============================================================================

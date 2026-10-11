@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Testa 20261011210000_public_bookings_anon_lockdown num Postgres 17 local descartável
+# Testa 20261011202904_public_bookings_anon_lockdown num Postgres 17 local descartável
 # (não usa nem toca o Supabase de prod).
 #   scripts/test-sql-public-bookings-security.sh             # harness = prod (policies/ACL/md5) → teste FALHA
 #                                                           # → migration 2x → passa + regressão auto-confirm
@@ -13,8 +13,8 @@ if [ -z "$PGBIN" ] || [ ! -x "$PGBIN/psql" ]; then
 fi
 TMP="$(mktemp -d)"
 PORT="${PGPORT_TEST:-55505}"
-MIG="$ROOT/supabase/migrations/20261011210000_public_bookings_anon_lockdown.sql"
-RB="$ROOT/docs/rollbacks/20261011210000_public_bookings_anon_lockdown.rollback.sql"
+MIG="$ROOT/supabase/migrations/20261011202904_public_bookings_anon_lockdown.sql"
+RB="$ROOT/docs/rollbacks/20261011202904_public_bookings_anon_lockdown.rollback.sql"
 AC_HARNESS="$ROOT/supabase/tests/auto_confirm_online_bookings.harness.sql"
 AC_MIG="$ROOT/supabase/migrations/20261011161117_auto_confirm_online_bookings.sql"
 HARNESS="$ROOT/supabase/tests/public_bookings_security.harness.sql"

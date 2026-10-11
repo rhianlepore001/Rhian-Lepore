@@ -1,7 +1,7 @@
 -- =============================================================================
 -- public_bookings: fecha a leitura e o INSERT direto por anon
 -- Spec: docs/specs/public-bookings-security-SPEC.md
--- Rollback: docs/rollbacks/20261011210000_public_bookings_anon_lockdown.rollback.sql
+-- Rollback: docs/rollbacks/20261011202904_public_bookings_anon_lockdown.rollback.sql
 --
 -- ANTES (prod, lido em 2026-10-11):
 --   public_bookings_select_anon_fresh  SELECT TO anon

@@ -1,4 +1,4 @@
--- Provas de 20261011210000_public_bookings_anon_lockdown.
+-- Provas de 20261011202904_public_bookings_anon_lockdown.
 -- Roda na cadeia do auto-confirm + public_bookings_security.harness.sql (= prod).
 -- [S] = segurança: FALHA antes da migration, passa depois.
 -- [F] = fluxo que tem que continuar igual: passa antes E depois.

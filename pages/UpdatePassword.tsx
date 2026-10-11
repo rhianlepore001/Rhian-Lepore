@@ -1,238 +1,232 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { AlertCircle, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { Lock, ShieldCheck, AlertCircle, Eye, EyeOff, Save, Loader2 } from 'lucide-react';
-import { Screw } from '../components/Screw';
-import { validatePassword } from '../utils/passwordValidation';
-import { mapError } from '../utils/mapError';
+import { Input } from '../components/ui/Input';
+import { Button } from '../components/ui/Button';
 import { useScrollToError } from '../hooks/useScrollToError';
+import { PasswordRules } from '../components/auth/PasswordRules';
+import { RecoveryCard, RecoveryEyebrow, RecoveryLead, RecoveryShell, RecoveryTitle } from '../components/auth/RecoveryShell';
+import { validatePassword } from '../utils/passwordValidation';
+import { takeRecoveryCallback } from '../utils/authRecoveryLink';
+import {
+  isSessionExpiredError,
+  mapUpdatePasswordError,
+  RECOVERY_INVALID_COPY,
+  resolveRecoverySession,
+  type RecoveryInvalidReason,
+  type RecoverySessionResult,
+} from '../services/passwordRecovery';
+
+type Phase =
+  | { name: 'checking' }
+  | { name: 'invalid'; reason: RecoveryInvalidReason }
+  | { name: 'form' }
+  | { name: 'success' };
+
+export const REDIRECT_AFTER_SUCCESS_MS = 2500;
+
+// O token do e-mail é de uso único: em StrictMode o efeito roda 2x, então a
+// validação é compartilhada entre as montagens.
+let resolving: Promise<RecoverySessionResult> | null = null;
+function resolveOnce(): Promise<RecoverySessionResult> {
+  if (!resolving) {
+    resolving = resolveRecoverySession(supabase.auth, takeRecoveryCallback()).finally(() => {
+      setTimeout(() => {
+        resolving = null;
+      }, 0);
+    });
+  }
+  return resolving;
+}
 
 export const UpdatePassword: React.FC = () => {
-    const navigate = useNavigate();
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [initializing, setInitializing] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState(false);
-    const errorRef = useScrollToError(error);
+  const navigate = useNavigate();
+  const [phase, setPhase] = useState<Phase>({ name: 'checking' });
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [confirmError, setConfirmError] = useState<string | undefined>();
+  const errorRef = useScrollToError(error);
+  const titleRef = useRef<HTMLHeadingElement>(null);
 
-    useEffect(() => {
-        const initializeSession = async () => {
-            try {
-                // Step 1: Try to get existing session first
-                const { data: { session } } = await supabase.auth.getSession();
-
-                if (session) {
-                    // Session already exists, we're good
-                    setInitializing(false);
-                    return;
-                }
-
-                // Step 2: If no session, try to extract tokens from URL
-                // Tokens can be in format: #access_token=xxx OR #/update-password?access_token=xxx
-                const fullHash = window.location.hash;
-                let accessToken = null;
-                let refreshToken = null;
-                let type = null;
-
-                // Try parsing as query string after the path
-                if (fullHash.includes('?')) {
-                    const queryPart = fullHash.substring(fullHash.indexOf('?') + 1);
-                    const queryParams = new URLSearchParams(queryPart);
-                    accessToken = queryParams.get('access_token');
-                    refreshToken = queryParams.get('refresh_token');
-                    type = queryParams.get('type');
-                }
-
-                // Fallback: try parsing as raw hash params (old format)
-                if (!accessToken && fullHash.includes('access_token')) {
-                    const hashParams = new URLSearchParams(fullHash.substring(1));
-                    accessToken = hashParams.get('access_token');
-                    refreshToken = hashParams.get('refresh_token');
-                    type = hashParams.get('type');
-                }
-
-                if (accessToken && refreshToken && type === 'recovery') {
-                    // Set the session manually using the tokens from URL
-                    const { error: sessionError } = await supabase.auth.setSession({
-                        access_token: accessToken,
-                        refresh_token: refreshToken,
-                    });
-
-                    if (sessionError) {
-                        console.error('Error setting session:', sessionError);
-                        setError('Link de recuperação inválido ou expirado. Por favor, solicite novamente.');
-                    } else {
-                        // Clean the URL hash after extracting tokens
-                        window.history.replaceState(null, '', window.location.pathname + '#/update-password');
-                    }
-                } else {
-                    // No tokens found and no existing session
-                    setError('Sessão expirada ou link inválido. Por favor, solicite a recuperação novamente.');
-                }
-            } catch (err) {
-                console.error('Error initializing session:', err);
-                setError('Erro ao processar o link de recuperação.');
-            } finally {
-                setInitializing(false);
-            }
-        };
-
-        initializeSession();
-    }, []);
-
-    const handleUpdatePassword = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (password !== confirmPassword) {
-            setError('As senhas não coincidem.');
-            return;
-        }
-
-        const passwordCheck = validatePassword(password);
-        if (!passwordCheck.isValid) {
-            setError(`Sua senha precisa de: ${passwordCheck.errors.join(', ')}`);
-            return;
-        }
-
-        setLoading(true);
-        setError(null);
-
-        try {
-            const { error } = await supabase.auth.updateUser({
-                password: password
-            });
-
-            if (error) throw error;
-
-            setSuccess(true);
-            setTimeout(() => {
-                navigate('/login');
-            }, 3000);
-        } catch (err: unknown) {
-            console.error('Error updating password:', err);
-            setError(mapError(err, 'Erro ao atualizar a senha.').message);
-        } finally {
-            setLoading(false);
-        }
+  useEffect(() => {
+    let active = true;
+    resolveOnce()
+      .then((result) => {
+        if (!active) return;
+        setPhase(result.status === 'ready' ? { name: 'form' } : { name: 'invalid', reason: result.reason });
+      })
+      .catch((err) => {
+        console.error('Erro ao validar link de redefinição:', err);
+        if (active) setPhase({ name: 'invalid', reason: 'invalid' });
+      });
+    return () => {
+      active = false;
     };
+  }, []);
 
-    if (initializing) {
-        return (
-            <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center">
-                <div className="text-center">
-                    <Loader2 className="w-12 h-12 text-[var(--color-success)] animate-spin mx-auto mb-4" />
-                    <p className="text-[var(--color-text-muted)] font-mono text-sm">Verificando link de recuperação...</p>
-                </div>
-            </div>
-        );
+  useEffect(() => {
+    if (phase.name === 'invalid' || phase.name === 'success') titleRef.current?.focus();
+    if (phase.name !== 'success') return;
+    const t = window.setTimeout(() => navigate('/', { replace: true }), REDIRECT_AFTER_SUCCESS_MS);
+    return () => window.clearTimeout(t);
+  }, [phase.name, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const check = validatePassword(password);
+    if (!check.isValid) {
+      setError('A senha ainda não atende a todos os requisitos abaixo.');
+      return;
     }
+    if (password !== confirm) {
+      setConfirmError('As senhas não são iguais.');
+      setError(null);
+      return;
+    }
+    setConfirmError(undefined);
+    setError(null);
+    setSaving(true);
+    try {
+      const { error: updateError } = await supabase.auth.updateUser({ password });
+      if (updateError) throw updateError;
+      setPhase({ name: 'success' });
+    } catch (err: unknown) {
+      console.error('Erro ao salvar nova senha:', err);
+      if (isSessionExpiredError(err)) {
+        setPhase({ name: 'invalid', reason: 'expired' });
+      } else {
+        setError(mapUpdatePasswordError(err));
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
 
-    return (
-        <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center p-4 relative overflow-hidden">
-            {/* Background Accents */}
-            <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-green-500/5 to-transparent pointer-events-none"></div>
+  const toggle = (
+    <button
+      type="button"
+      onClick={() => setShowPassword((v) => !v)}
+      aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+      aria-pressed={showPassword}
+      className="pointer-events-auto -mr-1 inline-flex h-9 w-9 items-center justify-center rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
+    >
+      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+    </button>
+  );
 
-            <div className="w-full max-w-md z-10">
-                <div className="bg-[var(--color-card)] border-4 border-black shadow-[var(--shadow-brutal)] p-8 relative">
-                    <Screw className="top-[-10px] left-[-10px] text-[var(--color-text-muted)]" />
-                    <Screw className="top-[-10px] right-[-10px] text-[var(--color-text-muted)]" />
-                    <Screw className="bottom-[-10px] left-[-10px] text-[var(--color-text-muted)]" />
-                    <Screw className="bottom-[-10px] right-[-10px] text-[var(--color-text-muted)]" />
+  return (
+    <RecoveryShell testId="update-password-page">
+      {phase.name === 'checking' && (
+        <RecoveryCard>
+          <div role="status" aria-live="polite" className="flex items-center gap-3 py-6" data-testid="recovery-checking">
+            <Loader2 className="h-5 w-5 animate-spin text-[var(--color-accent)] motion-reduce:animate-none" aria-hidden="true" />
+            <span className="text-[15px] text-[var(--color-text-secondary)]">Validando seu link…</span>
+          </div>
+        </RecoveryCard>
+      )}
 
-                    {!success ? (
-                        <>
-                            <div className="text-center mb-8">
-                                <div className="w-16 h-16 bg-[var(--color-success-bg)] border-2 border-[var(--color-success-border)] rounded-2xl flex items-center justify-center mx-auto mb-4">
-                                    <Lock className="w-8 h-8 text-[var(--color-success)]" />
-                                </div>
-                                <h2 className="font-heading text-2xl text-[var(--color-text)] uppercase tracking-wider mb-2">Nova Senha</h2>
-                                <p className="font-mono text-sm text-[var(--color-text-muted)]">
-                                    Defina sua nova credencial de acesso.
-                                </p>
-                            </div>
-
-                            {error && (
-                                <div
-                                    ref={errorRef}
-                                    role="alert"
-                                    tabIndex={-1}
-                                    className="p-4 bg-[var(--color-danger-bg)] border-2 border-[var(--color-danger-border)] text-[var(--color-danger)] text-xs font-mono mb-6 flex items-start gap-3"
-                                >
-                                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                                    <span>{error}</span>
-                                </div>
-                            )}
-
-                            <form onSubmit={handleUpdatePassword} className="space-y-6">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-mono font-bold text-[var(--color-text-muted)] uppercase tracking-widest block">
-                                        Nova Senha
-                                    </label>
-                                    <div className="relative">
-                                        <input
-                                            type={showPassword ? 'text' : 'password'}
-                                            required
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            className="w-full p-4 bg-[var(--color-bg)] border-2 border-[var(--color-border)] text-[var(--color-text)] font-mono text-sm focus:outline-none focus:border-[var(--color-success-border)] transition-all"
-                                            placeholder="••••••••"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowPassword(prev => !prev)}
-                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
-                                        >
-                                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-xs font-mono font-bold text-[var(--color-text-muted)] uppercase tracking-widest block">
-                                        Confirmar Senha
-                                    </label>
-                                    <input
-                                        type={showPassword ? 'text' : 'password'}
-                                        required
-                                        value={confirmPassword}
-                                        onChange={(e) => setConfirmPassword(e.target.value)}
-                                        className="w-full p-4 bg-[var(--color-bg)] border-2 border-[var(--color-border)] text-[var(--color-text)] font-mono text-sm focus:outline-none focus:border-[var(--color-success-border)] transition-all"
-                                        placeholder="••••••••"
-                                    />
-                                </div>
-
-                                <button
-                                    type="submit"
-                                    disabled={loading || !password}
-                                    className="w-full h-14 bg-white hover:bg-neutral-200 text-[var(--color-bg)] font-heading text-lg uppercase tracking-wider transition-all border-2 border-black flex items-center justify-center gap-3 disabled:opacity-50"
-                                >
-                                    {loading ? (
-                                        <span className="animate-pulse">SALVANDO...</span>
-                                    ) : (
-                                        <>
-                                            <Save className="w-5 h-5" />
-                                            ATUALIZAR SENHA
-                                        </>
-                                    )}
-                                </button>
-                            </form>
-                        </>
-                    ) : (
-                        <div className="text-center py-4">
-                            <div className="w-20 h-20 bg-[var(--color-success-bg)] border-2 border-[var(--color-success-border)] rounded-full flex items-center justify-center mx-auto mb-6">
-                                <ShieldCheck className="w-10 h-10 text-[var(--color-success)]" />
-                            </div>
-                            <h2 className="font-heading text-2xl text-[var(--color-text)] uppercase mb-4">Senha Atualizada!</h2>
-                            <p className="font-mono text-sm text-[var(--color-text-muted)] mb-8 leading-relaxed">
-                                Sua senha foi alterada com sucesso. Você será redirecionado para o login em instantes.
-                            </p>
-                        </div>
-                    )}
-                </div>
+      {phase.name === 'invalid' && (
+        <RecoveryCard>
+          <div data-testid="recovery-invalid" data-reason={phase.reason}>
+            <RecoveryEyebrow tone="warning">Link de redefinição</RecoveryEyebrow>
+            <h1 ref={titleRef} tabIndex={-1} className="font-heading text-[26px] sm:text-[28px] font-bold leading-[1.1] tracking-tight focus:outline-none">
+              {RECOVERY_INVALID_COPY[phase.reason].title}
+            </h1>
+            <RecoveryLead>{RECOVERY_INVALID_COPY[phase.reason].body}</RecoveryLead>
+            <div className="mt-7 space-y-3">
+              <Button type="button" variant="primary" size="lg" fullWidth onClick={() => navigate('/forgot-password')} data-testid="recovery-request-new">
+                Pedir novo link
+              </Button>
+              <Link
+                to="/login"
+                className="flex w-full min-h-[44px] items-center justify-center text-sm font-semibold text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors"
+              >
+                Voltar ao login
+              </Link>
             </div>
-        </div>
-    );
+          </div>
+        </RecoveryCard>
+      )}
+
+      {phase.name === 'form' && (
+        <RecoveryCard>
+          <RecoveryEyebrow>Nova senha</RecoveryEyebrow>
+          <RecoveryTitle>Crie sua nova senha</RecoveryTitle>
+          <RecoveryLead>Escolha uma senha que você não usa em outros sites.</RecoveryLead>
+
+          {error && (
+            <div
+              ref={errorRef}
+              role="alert"
+              tabIndex={-1}
+              className="mt-6 flex items-start gap-2.5 rounded-xl border border-[var(--color-danger-border)] bg-[var(--color-danger-bg)] px-3.5 py-3 text-sm text-[var(--color-danger)]"
+            >
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} noValidate className="mt-7 space-y-5" data-testid="update-password-form">
+            <div>
+              <Input
+                id="new-password"
+                type={showPassword ? 'text' : 'password'}
+                label="Nova senha"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (error) setError(null);
+                }}
+                autoComplete="new-password"
+                size="lg"
+                iconRight={toggle}
+                required
+              />
+              <div className="mt-3">
+                <PasswordRules id="password-rules" password={password} />
+              </div>
+            </div>
+
+            <Input
+              id="confirm-password"
+              type={showPassword ? 'text' : 'password'}
+              label="Confirmar nova senha"
+              value={confirm}
+              onChange={(e) => {
+                setConfirm(e.target.value);
+                if (confirmError) setConfirmError(undefined);
+              }}
+              autoComplete="new-password"
+              error={confirmError}
+              size="lg"
+              required
+            />
+
+            <Button type="submit" variant="primary" size="lg" fullWidth loading={saving} data-testid="update-password-submit">
+              {saving ? 'Salvando…' : 'Salvar nova senha'}
+            </Button>
+          </form>
+        </RecoveryCard>
+      )}
+
+      {phase.name === 'success' && (
+        <RecoveryCard>
+          <div data-testid="recovery-success" role="status">
+            <RecoveryEyebrow tone="success">Tudo certo</RecoveryEyebrow>
+            <h1 ref={titleRef} tabIndex={-1} className="font-heading text-[26px] sm:text-[28px] font-bold leading-[1.1] tracking-tight focus:outline-none">
+              Senha atualizada
+            </h1>
+            <RecoveryLead>Você já está conectado. Vamos abrir o seu painel em instantes.</RecoveryLead>
+            <Button type="button" variant="primary" size="lg" fullWidth className="mt-6" onClick={() => navigate('/', { replace: true })}>
+              Ir para o painel agora
+            </Button>
+          </div>
+        </RecoveryCard>
+      )}
+    </RecoveryShell>
+  );
 };

@@ -13,6 +13,7 @@ import { BASE, login } from './helpers/agendixLogin';
 const SHOTS = process.env.SHOTS_DIR || '/workspace/screens/auto-confirm/after';
 const SLUG = process.env.E2E_BOOK_SLUG || 'barbeariasilva';
 const BIZ = process.env.E2E_BOOK_BIZ || '03254cc1-3f37-44f8-a31c-e4fdffd1304b';
+const STAFF_PRO = process.env.E2E_BOOK_STAFF_PRO || '0c9fd56b-1aac-422e-9057-3f8554da6076';
 const HAS_OWNER = Boolean(process.env.E2E_OWNER_EMAIL && process.env.E2E_OWNER_PASS);
 
 const READ_RPCS = new Set([
@@ -25,7 +26,7 @@ const READ_RPCS = new Set([
 ]);
 
 type Stub = (payload: unknown) => { status?: number; body: unknown };
-type Patch = (body: unknown) => unknown;
+type Patch = (body: unknown, url: URL) => unknown;
 
 /** Bloqueia toda escrita em prod; RPCs de leitura passam (opcionalmente com a resposta alterada). */
 async function guard(page: Page, stubs: Record<string, Stub>, patches: Record<string, Patch> = {}, getPatches: Array<[RegExp, Patch]> = []) {
@@ -40,7 +41,7 @@ async function guard(page: Page, stubs: Record<string, Stub>, patches: Record<st
       if (gp) {
         const res = await route.fetch();
         const body = await res.json().catch(() => null);
-        return route.fulfill({ response: res, body: JSON.stringify(gp[1](body)) });
+        return route.fulfill({ response: res, body: JSON.stringify(gp[1](body, url)) });
       }
     }
     if (m === 'GET' || m === 'HEAD' || m === 'OPTIONS' || url.pathname === '/auth/v1/token') return route.continue();
@@ -56,7 +57,7 @@ async function guard(page: Page, stubs: Record<string, Stub>, patches: Record<st
       if (patches[rpc]) {
         const res = await route.fetch();
         const body = await res.json().catch(() => null);
-        return route.fulfill({ response: res, body: JSON.stringify(patches[rpc](body)) });
+        return route.fulfill({ response: res, body: JSON.stringify(patches[rpc](body, url)) });
       }
       return route.continue();
     }
@@ -156,6 +157,10 @@ async function settle(page: Page, ms = 700) {
 
 const MOBILE = { width: 375, height: 812 };
 
+test.afterEach(async ({ page }) => {
+  await page.unrouteAll({ behavior: 'ignoreErrors' });
+});
+
 test.describe('link público: botão final e tela de confirmação', () => {
   test.setTimeout(150_000);
   for (const theme of ['barber', 'beauty'] as const) {
@@ -238,13 +243,13 @@ test.describe('dono: toggle "Aprovar agendamentos online"', () => {
       await expect(row).toBeVisible({ timeout: 30_000 });
       await expect(row).toContainText('Aprovar agendamentos online');
       const sw = page.locator('#online-booking-requires-approval');
-      await expect(sw).toHaveAttribute('aria-checked', 'true'); // padrão: manual
+      await expect(sw).toBeChecked(); // padrão: manual
       await row.scrollIntoViewIfNeeded();
       await page.evaluate(() => window.scrollBy(0, -140));
       await settle(page);
       await page.screenshot({ path: `${SHOTS}/settings-toggle-on-${v.name}.png` });
-      await sw.click();
-      await expect(sw).toHaveAttribute('aria-checked', 'false');
+      await sw.dispatchEvent('click');
+      await expect(sw).not.toBeChecked();
       await expect(page.getByTestId('online-booking-approval-pending-note'))
         .toHaveText('Pedidos que já chegaram continuam esperando sua resposta.');
       await settle(page);
@@ -267,26 +272,44 @@ test.describe('dono: agenda com o agendamento confirmado automaticamente', () =>
       fs.mkdirSync(SHOTS, { recursive: true });
       await page.setViewportSize(v.vp);
       await page.addInitScript((m) => localStorage.setItem('agendix_color_mode', m), v.mode);
-      const when = new Date(Date.now() + 3 * 3600_000);
-      when.setUTCMinutes(0, 0, 0);
+      // Amanhã às 10:00 (Lisboa) — hoje pode ser dia fechado.
+      const tomorrow = new Date(Date.now() + 86400_000);
+      const ymd = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Lisbon', year: 'numeric', month: '2-digit', day: '2-digit' }).format(tomorrow);
+      const when = new Date(`${ymd}T10:00:00+01:00`);
       const appt = {
         id: '00000000-0000-4000-8000-0000000000d1', user_id: BIZ, client_id: '00000000-0000-4000-8000-0000000000c1',
         service: 'Corte Masculino', appointment_time: when.toISOString(), price: 30, status: 'Confirmed',
-        professional_id: null, duration_minutes: 30, notes: null, edited_at: null, origin: 'public_booking',
+        professional_id: STAFF_PRO, duration_minutes: 30, notes: null, edited_at: null, origin: 'public_booking',
         public_booking_id: '00000000-0000-4000-8000-0000000000a1', payment_method: null, created_at: new Date().toISOString(),
         clients: { name: 'Cliente Online (mock)', id: '00000000-0000-4000-8000-0000000000c1', phone: '+351900000001' },
       };
-      const addAppt: Patch = (body) => (Array.isArray(body) ? [...body, appt] : body);
+      const addAppt: Patch = (body, url) => {
+        if (!Array.isArray(body)) return body;
+        const range = url.searchParams.getAll('appointment_time');
+        const gte = range.find((r) => r.startsWith('gte.'))?.slice(4);
+        const lte = range.find((r) => r.startsWith('lte.'))?.slice(4);
+        const t = when.getTime();
+        if (gte && t < new Date(gte).getTime()) return body;
+        if (lte && t > new Date(lte).getTime()) return body;
+        return [...body, appt];
+      };
       const themePatch: Patch = (body) => {
         const patch = (o: unknown) => (o && typeof o === 'object' && 'user_type' in (o as object) ? { ...(o as object), user_type: v.theme } : o);
         return Array.isArray(body) ? body.map(patch) : patch(body);
       };
       const g = await guard(page, { list_company_pending_public_bookings: () => ({ body: [] }) }, {}, [
-        [/\/rest\/v1\/appointments\?.*appointment_time=gte\./, addAppt],
+        [/\/rest\/v1\/appointments\?/, addAppt],
         ...(v.theme === 'beauty' ? [[/\/rest\/v1\/profiles\?/, themePatch] as [RegExp, Patch]] : []),
       ]);
       await login(page, 'owner');
       await page.goto(`${BASE}/#/agenda`, { waitUntil: 'domcontentloaded' });
+      const day = page.locator(`[role=option][data-day="${ymd}"]`);
+      await day.waitFor({ timeout: 30_000 });
+      await page.waitForTimeout(1500);
+      await expect(async () => {
+        await day.dispatchEvent('click');
+        await expect(day).toHaveAttribute('aria-selected', 'true', { timeout: 2_000 });
+      }).toPass({ timeout: 20_000 });
       const card = page.getByText('Cliente Online (mock)').first();
       await expect(card).toBeVisible({ timeout: 30_000 });
       await card.scrollIntoViewIfNeeded();

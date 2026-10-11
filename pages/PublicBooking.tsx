@@ -28,6 +28,7 @@ import { buildWhatsAppLink, formatCurrency, formatDuration, Region } from '../ut
 import { capBookingDuration } from '../utils/serviceDuration';
 import { logger } from '../utils/Logger';
 import { useZonedAvailableSlots } from '../hooks/useZonedAvailableSlots';
+import { mergeFreshPublicBooking } from '../utils/publicBookingFresh';
 import { fetchEditBooking, fetchPublicClientByPhone, fetchClientByPhone, fetchPublicBookingById, fetchFullDates, findNextDateWithSlots, getFirstAvailableProfessional, uploadClientPhoto, upsertPublicClientSession } from '../services/publicBooking';
 import { shouldLandOnClientArea } from '../utils/publicBookingLanding';
 import { getPublicBookingAwaitingWhatsAppText, getPublicBookingSubmitLabel, getPublicBookingSuccessCopy } from '../utils/publicBookingCopy';
@@ -303,7 +304,8 @@ export const PublicBooking: React.FC = () => {
         try {
             const booking = await fetchPublicBookingById(bookingId, businessId, phone);
             if (booking) {
-                setActiveBooking(booking);
+                // Junta (não substitui): a RPC devolve só parte dos campos do pedido.
+                setActiveBooking((prev: any) => mergeFreshPublicBooking(prev, booking));
             }
         } catch (error) {
             logger.error('Error fetching fresh active booking', error);

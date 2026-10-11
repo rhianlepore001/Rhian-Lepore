@@ -64,6 +64,11 @@ export const businessSettingsSchema = z.object({
    * Coluna nova (PR-6); default de produto false.
    */
   service_only_edit_skip_acceptance: z.boolean().optional(),
+  /**
+   * true = agendamento online vira pedido e precisa de aceite (padrão/histórico);
+   * false = entra confirmado direto. Coluna nova; ausente = true.
+   */
+  online_booking_requires_approval: z.boolean().nullable().optional(),
   created_at: z.string().nullable().optional(),
   updated_at: z.string().nullable().optional(),
 });

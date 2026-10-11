@@ -124,3 +124,58 @@ describe('clientCancelCutoff', () => {
     expect(CANCEL_WINDOW_CLOSED_MESSAGE).toMatch(/prazo para cancelar online/i);
   });
 });
+
+describe('clientCancelCta — 15 min depois de um agendamento confirmado automaticamente', () => {
+  const created = '2026-10-04T14:00:00.000Z'; // 1h antes do horário, prazo 2h já fechado
+  const grace = { createdAt: created, minutes: 15 };
+
+  it('dentro de 15 min cancela online mesmo dentro do prazo', () => {
+    expect(clientCancelCta({
+      status: 'confirmed', appointmentTime: APPT, cutoffHours: 2,
+      now: '2026-10-04T14:05:00.000Z', autoConfirmGrace: grace,
+    })).toBe('cancel');
+  });
+
+  it('vale também com "não pode cancelar online" (cutoff 0), como no servidor', () => {
+    expect(clientCancelCta({
+      status: 'confirmed', appointmentTime: APPT, cutoffHours: 0,
+      now: '2026-10-04T14:14:59.999Z', autoConfirmGrace: grace,
+    })).toBe('cancel');
+  });
+
+  it('aos 15 min exatos a janela fecha e volta a regra do prazo', () => {
+    expect(clientCancelCta({
+      status: 'confirmed', appointmentTime: APPT, cutoffHours: 2,
+      now: '2026-10-04T14:15:00.000Z', autoConfirmGrace: grace,
+    })).toBe('whatsapp');
+  });
+
+  it('sem a marca automática (manual) nada muda', () => {
+    expect(clientCancelCta({
+      status: 'confirmed', appointmentTime: APPT, cutoffHours: 2,
+      now: '2026-10-04T14:05:00.000Z', autoConfirmGrace: null,
+    })).toBe('whatsapp');
+    expect(clientCancelCta({
+      status: 'confirmed', appointmentTime: APPT, cutoffHours: 2,
+      now: '2026-10-04T14:05:00.000Z', autoConfirmGrace: { createdAt: null, minutes: 15 },
+    })).toBe('whatsapp');
+  });
+
+  it('horário já passou ou cancelado continua escondido', () => {
+    expect(clientCancelCta({
+      status: 'confirmed', appointmentTime: '2026-10-04T14:04:00.000Z', cutoffHours: 2,
+      now: '2026-10-04T14:05:00.000Z', autoConfirmGrace: { createdAt: '2026-10-04T14:00:00.000Z', minutes: 15 },
+    })).toBe('hidden');
+    expect(clientCancelCta({
+      status: 'cancelled', appointmentTime: APPT, cutoffHours: 2,
+      now: '2026-10-04T14:05:00.000Z', autoConfirmGrace: grace,
+    })).toBe('hidden');
+  });
+
+  it('created_at no futuro (relógio adiantado) não abre a janela', () => {
+    expect(clientCancelCta({
+      status: 'confirmed', appointmentTime: APPT, cutoffHours: 2,
+      now: '2026-10-04T13:55:00.000Z', autoConfirmGrace: grace,
+    })).toBe('whatsapp');
+  });
+});

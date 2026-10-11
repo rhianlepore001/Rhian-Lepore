@@ -45,6 +45,13 @@ export function clientCancelCta(input: {
   appointmentTime: Date | string | number;
   cutoffHours: number;
   now?: Date | string | number;
+  /**
+   * Confirmado automaticamente (aprovação manual desligada): o cliente cancela
+   * online nos primeiros minutos depois de agendar, mesmo dentro do prazo.
+   * O servidor (cancel_public_booking_by_client_v2) é a fonte da verdade; se ele
+   * recusar, a tela cai em "Falar com o negócio".
+   */
+  autoConfirmGrace?: { createdAt: Date | string | number | null | undefined; minutes: number } | null;
 }): ClientCancelCta {
   const status = String(input.status ?? '').trim().toLowerCase();
   const appointmentMs = toMs(input.appointmentTime);
@@ -53,6 +60,11 @@ export function clientCancelCta(input: {
   if (appointmentMs <= nowMs) return 'hidden';
   if (status === 'pending') return 'cancel';
   if (status !== 'confirmed') return 'hidden';
+  if (input.autoConfirmGrace?.createdAt != null) {
+    const createdMs = toMs(input.autoConfirmGrace.createdAt);
+    const graceMs = Math.max(0, input.autoConfirmGrace.minutes) * 60 * 1000;
+    if (Number.isFinite(createdMs) && createdMs <= nowMs && nowMs < createdMs + graceMs) return 'cancel';
+  }
   const cutoff = Number.isFinite(input.cutoffHours) ? Math.trunc(input.cutoffHours) : DEFAULT_CLIENT_CANCEL_CUTOFF_HOURS;
   if (cutoff <= 0) return 'whatsapp';
   const limitMs = appointmentMs - cutoff * 60 * 60 * 1000;

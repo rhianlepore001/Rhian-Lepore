@@ -175,3 +175,35 @@ export async function updateProfileFields(
   if (error) throw error;
   return profileFieldsSchema.parse(data);
 }
+
+export type OnlineBookingApprovalSaveResult = 'saved' | 'unsupported';
+
+function isMissingOnlineBookingApprovalColumn(error: { code?: string; message?: string }): boolean {
+  if (error.code === '42703' || error.code === 'PGRST204') {
+    return /online_booking_requires_approval/i.test(error.message ?? '') || !error.message;
+  }
+  return false;
+}
+
+/**
+ * Salva "Aprovar agendamentos online" em separado do resto: antes da migration
+ * devolve 'unsupported' sem quebrar o salvamento das outras configurações.
+ * Só o dono consegue (RLS de business_settings).
+ */
+export async function updateOnlineBookingRequiresApproval(
+  companyId: string,
+  requiresApproval: boolean,
+): Promise<OnlineBookingApprovalSaveResult> {
+  if (typeof requiresApproval !== 'boolean') {
+    throw new Error(`invalid_online_booking_requires_approval: ${String(requiresApproval)}`);
+  }
+  const { error } = await supabase
+    .from('business_settings')
+    .upsert({ user_id: companyId, online_booking_requires_approval: requiresApproval }, { onConflict: 'user_id' });
+
+  if (error) {
+    if (isMissingOnlineBookingApprovalColumn(error)) return 'unsupported';
+    throw error;
+  }
+  return 'saved';
+}

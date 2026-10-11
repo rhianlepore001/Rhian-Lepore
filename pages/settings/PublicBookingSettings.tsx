@@ -4,7 +4,7 @@ import { SettingsLayout } from '../../components/SettingsLayout';
 import { Save, HelpCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
-import { useBusinessSettings, useUpdateBusinessSettings, useProfileFields, useUpdateProfileFields } from '../../hooks/useSettings';
+import { useBusinessSettings, useUpdateBusinessSettings, useProfileFields, useUpdateProfileFields, useUpdateOnlineBookingRequiresApproval } from '../../hooks/useSettings';
 import { PublicLinkCard } from '../../components/PublicLinkCard';
 import { SettingsSection } from '../../components/SettingsSection';
 import { SettingsSwitch } from '../../components/SettingsSwitch';
@@ -26,6 +26,13 @@ import {
     SERVICE_ONLY_EDIT_SKIP_HELP,
     SERVICE_ONLY_EDIT_SKIP_LABEL,
 } from '../../utils/clientEditRequest';
+import {
+    ONLINE_BOOKING_APPROVAL_HELP,
+    ONLINE_BOOKING_APPROVAL_LABEL,
+    ONLINE_BOOKING_APPROVAL_PENDING_NOTE,
+    ONLINE_BOOKING_APPROVAL_UNSUPPORTED_NOTE,
+    resolveOnlineBookingRequiresApproval,
+} from '../../utils/onlineBookingApproval';
 
 export const PublicBookingSettings: React.FC = () => {
     const { user } = useAuth();
@@ -34,6 +41,7 @@ export const PublicBookingSettings: React.FC = () => {
     const { data: profile } = useProfileFields();
     const updateSettingsMutation = useUpdateBusinessSettings();
     const updateProfileMutation = useUpdateProfileFields();
+    const updateApprovalMutation = useUpdateOnlineBookingRequiresApproval();
     const { showToast } = useToast();
 
     const [publicProductsEnabled, setPublicProductsEnabled] = useState(false);
@@ -45,6 +53,8 @@ export const PublicBookingSettings: React.FC = () => {
     const [maxBookingsPerDay, setMaxBookingsPerDay] = useState<number | null>(null);
     const [enableSelfRescheduling, setEnableSelfRescheduling] = useState(true);
     const [serviceOnlySkip, setServiceOnlySkip] = useState(false);
+    const [requiresApproval, setRequiresApproval] = useState(true);
+    const savedRequiresApproval = resolveOnlineBookingRequiresApproval(settings);
     const [cancelCutoffHours, setCancelCutoffHours] = useState(DEFAULT_CLIENT_CANCEL_CUTOFF_HOURS);
     const [cancelNote, setCancelNote] = useState('');
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
@@ -55,6 +65,7 @@ export const PublicBookingSettings: React.FC = () => {
         if (settings) {
             setEnableSelfRescheduling(settings.enable_self_rescheduling ?? true);
             setServiceOnlySkip(settings.service_only_edit_skip_acceptance ?? false);
+            setRequiresApproval(resolveOnlineBookingRequiresApproval(settings));
             setPublicProductsEnabled(settings.public_products_enabled ?? false);
             setCancelCutoffHours(clampClientCancelCutoffHours(settings.client_cancel_cutoff_hours ?? DEFAULT_CLIENT_CANCEL_CUTOFF_HOURS));
             setCancelNote(cancellationPolicyNotesForDisplay(
@@ -96,6 +107,14 @@ export const PublicBookingSettings: React.FC = () => {
                 client_cancel_cutoff_hours: cancelCutoffHours,
                 client_cancel_note: cancelNote.trim() === '' ? '' : cancelNote.trim().slice(0, MAX_CLIENT_CANCEL_NOTE_LENGTH),
             });
+
+            if (requiresApproval !== savedRequiresApproval) {
+                const approvalResult = await updateApprovalMutation.mutateAsync(requiresApproval);
+                if (approvalResult === 'unsupported') {
+                    setRequiresApproval(true);
+                    showToast(ONLINE_BOOKING_APPROVAL_UNSUPPORTED_NOTE, 'info');
+                }
+            }
 
             const hoursToSave = leadTimeCustom
                 ? parseCustomLeadTimeHours(leadTimeCustomDraft) ?? clampLeadTimeHours(leadTimeHours)
@@ -154,6 +173,29 @@ export const PublicBookingSettings: React.FC = () => {
                         checked={publicBookingEnabled}
                         onChange={setPublicBookingEnabled}
                     />
+                    <div className={`mt-4 pt-4 border-t ${colors.divider}`}>
+                        <SettingsRow
+                            label={ONLINE_BOOKING_APPROVAL_LABEL}
+                            help={ONLINE_BOOKING_APPROVAL_HELP}
+                            data-testid="online-booking-approval-row"
+                        >
+                            <SettingsSwitch
+                                id="online-booking-requires-approval"
+                                ariaLabel={ONLINE_BOOKING_APPROVAL_LABEL}
+                                checked={requiresApproval}
+                                onChange={setRequiresApproval}
+                            />
+                        </SettingsRow>
+                        {savedRequiresApproval && !requiresApproval && (
+                            <p
+                                data-testid="online-booking-approval-pending-note"
+                                role="status"
+                                className={`mt-3 text-xs leading-relaxed rounded-xl border px-3 py-2.5 ${accent.bgDim} ${accent.border} ${colors.textSecondary}`}
+                            >
+                                {ONLINE_BOOKING_APPROVAL_PENDING_NOTE}
+                            </p>
+                        )}
+                    </div>
                 </SettingsSection>
 
                 <div data-testid="lead-time-section" className="scroll-mt-[14rem] md:scroll-mt-8">

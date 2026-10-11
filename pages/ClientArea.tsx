@@ -27,6 +27,7 @@ import { resolveBusinessTimezone } from '../utils/businessTimezone';
 import { useScrollToError } from '../hooks/useScrollToError';
 import { resolveCancellationPolicyDisplay } from '../utils/cancellationPolicyCopy';
 import { readCancelCutoffHours } from '../utils/clientCancelCutoff';
+import { isPublicBookingAutoConfirm } from '../utils/onlineBookingApproval';
 
 interface BusinessProfile {
     id: string;
@@ -148,6 +149,7 @@ export const ClientArea: React.FC = () => {
         timezone: (businessSettings as { timezone?: string | null } | null | undefined)?.timezone,
         region: business?.region,
     });
+    const autoConfirmEnabled = isPublicBookingAutoConfirm(businessSettings);
     const cancelCutoffHours = readCancelCutoffHours(
         (businessSettings as { client_cancel_cutoff_hours?: number } | null | undefined)?.client_cancel_cutoff_hours,
     );
@@ -652,6 +654,7 @@ export const ClientArea: React.FC = () => {
                                             isClubMember={isClubMember}
                                             onOpenClub={openClubTab}
                                             cancelCutoffHours={cancelCutoffHours}
+                                            autoConfirmEnabled={autoConfirmEnabled}
                                         />
                                     ))
                                 )}
@@ -687,6 +690,7 @@ export const ClientArea: React.FC = () => {
                                                 isClubMember={isClubMember}
                                                 onOpenClub={openClubTab}
                                                 cancelCutoffHours={cancelCutoffHours}
+                                                autoConfirmEnabled={autoConfirmEnabled}
                                             />
                                         ))}
                                         {historySlice.length < historyBookings.length && (

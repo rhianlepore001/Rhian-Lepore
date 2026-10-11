@@ -30,6 +30,7 @@ import {
     isCancelWindowClosedError,
     talkToBusinessLabel,
 } from '../utils/clientCancelCutoff';
+import { AUTO_CONFIRM_CANCEL_GRACE_MINUTES } from '../utils/onlineBookingApproval';
 import {
     clientEditRequestSentMessage,
     clientEditReservedIso,
@@ -76,6 +77,11 @@ interface ClientBookingCardProps {
     onCancelled: (bookingId: string) => void;
     /** `business_settings.client_cancel_cutoff_hours` (0 = não cancela online). */
     cancelCutoffHours?: number;
+    /**
+     * Negócio confirma pedidos online automaticamente (aprovação manual desligada).
+     * Liga a janela de cancelamento de 15 min depois de agendar.
+     */
+    autoConfirmEnabled?: boolean;
 }
 
 const STATUS_CONFIG: Record<string, { label: string; className: string; icon: React.ReactNode }> = {
@@ -137,6 +143,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
     onOpenClub,
     onCancelled,
     cancelCutoffHours = DEFAULT_CLIENT_CANCEL_CUTOFF_HOURS,
+    autoConfirmEnabled = false,
 }) => {
     const navigate = useNavigate();
     const { showToast } = useToast();
@@ -160,6 +167,9 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
             status: statusKey,
             appointmentTime: reservedIso,
             cutoffHours: cancelCutoffHours,
+            autoConfirmGrace: autoConfirmEnabled && !booking.is_edit
+                ? { createdAt: booking.created_at, minutes: AUTO_CONFIRM_CANCEL_GRACE_MINUTES }
+                : null,
         });
     const talkLabel = talkToBusinessLabel(businessName);
     const canEditOnline = allowEdit && (

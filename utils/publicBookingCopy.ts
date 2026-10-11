@@ -1,10 +1,24 @@
 import { formatTimeInTimeZone } from './businessTimezone';
+import { getBusinessRemainderNoun } from './businessCopy';
+
+/**
+ * "da barbearia" / "do salão" / "do estúdio" / "do negócio" a partir do tipo do
+ * negócio (nunca "salão" fixo). Sem tipo, cai no tema visual (beauty → salão).
+ */
+function businessOf(userType: string | null | undefined, isBeauty: boolean): { of: string; who: string } {
+  const remainder = getBusinessRemainderNoun(userType ?? (isBeauty ? 'beauty' : 'barber'));
+  const of = `${remainder.article === 'a' ? 'da' : 'do'} ${remainder.noun}`;
+  const who = `${remainder.article === 'a' ? 'A' : 'O'} ${remainder.noun}`;
+  return { of, who };
+}
 
 export function getPublicBookingSuccessCopy(input: {
   isBeauty: boolean;
   status?: string | null;
   isEdit?: boolean;
   editSentSubtitle?: string | null;
+  /** `profiles.user_type` do negócio (barber/beauty/…): define barbearia/salão/estúdio. */
+  userType?: string | null;
 }): {
   title: string;
   subtitle: string;
@@ -13,6 +27,7 @@ export function getPublicBookingSuccessCopy(input: {
 } {
   const isConfirmed = input.status === 'confirmed';
   const isBeauty = input.isBeauty;
+  const business = businessOf(input.userType, isBeauty);
 
   // Item 5b: aqui "cancelled" costuma ser pedido recusado pelo salão ou
   // cancelado pelo próprio cliente em outra aba; não dá para saber quem
@@ -28,13 +43,15 @@ export function getPublicBookingSuccessCopy(input: {
     };
   }
 
+  // Confirmado: aprovação manual desligada (entra confirmado direto) ou pedido
+  // já aceito enquanto o cliente olhava a tela.
   if (isConfirmed) {
     return {
-      title: isBeauty ? 'Sua beleza agendada' : 'AGENDAMENTO CONFIRMADO',
+      title: isBeauty ? 'Agendamento confirmado' : 'AGENDAMENTO CONFIRMADO',
       subtitle: isBeauty
-        ? 'Prepare-se para um momento único de auto-cuidado e transformação.'
-        : 'VOCÊ ESTÁ UM PASSO À FRENTE. PREPARAMOS TUDO PARA SUA CHEGADA.',
-      whatsappCta: 'Confirmar no WhatsApp',
+        ? 'Seu horário está garantido. Te esperamos!'
+        : 'SEU HORÁRIO ESTÁ GARANTIDO. TE ESPERAMOS!',
+      whatsappCta: 'Falar no WhatsApp',
       stepperLastLabel: 'Confirmado',
     };
   }
@@ -42,8 +59,8 @@ export function getPublicBookingSuccessCopy(input: {
   if (input.isEdit) {
     const subtitle = (input.editSentSubtitle ?? '').trim() || (
       isBeauty
-        ? 'O salão ainda precisa confirmar o novo horário. Acompanhe na Minha Área.'
-        : 'PEDIDO ENVIADO. AGUARDANDO CONFIRMAÇÃO DO SALÃO.'
+        ? `${business.who} ainda precisa confirmar o novo horário. Acompanhe na Minha Área.`
+        : `PEDIDO ENVIADO. AGUARDANDO A CONFIRMAÇÃO ${business.of.toUpperCase()}.`
     );
     return {
       title: isBeauty ? 'Alteração enviada' : 'ALTERAÇÃO ENVIADA',
@@ -54,13 +71,23 @@ export function getPublicBookingSuccessCopy(input: {
   }
 
   return {
-    title: isBeauty ? 'Solicitação enviada' : 'SOLICITAÇÃO ENVIADA',
+    title: isBeauty ? 'Pedido enviado' : 'PEDIDO ENVIADO',
     subtitle: isBeauty
-      ? 'Seu pedido está aguardando a confirmação do salão. Acompanhe na Minha Área.'
-      : 'PEDIDO ENVIADO. AGUARDANDO CONFIRMAÇÃO DO SALÃO.',
+      ? `Aguardando a confirmação ${business.of}. Acompanhe na Minha Área.`
+      : `AGUARDANDO A CONFIRMAÇÃO ${business.of.toUpperCase()}. ACOMPANHE NA MINHA ÁREA.`,
     whatsappCta: 'Pedir confirmação no WhatsApp',
     stepperLastLabel: 'Enviado',
   };
+}
+
+/**
+ * Botão final do link público. Com aprovação manual o resultado é um pedido
+ * ("Enviar pedido"); com confirmação automática o horário já fica garantido.
+ * Alteração de agendamento sempre vira pedido (aprovação do negócio), nos dois modos.
+ */
+export function getPublicBookingSubmitLabel(input: { autoConfirm: boolean; isEdit?: boolean }): string {
+  if (input.isEdit) return 'Enviar pedido';
+  return input.autoConfirm ? 'Confirmar agendamento' : 'Enviar pedido';
 }
 
 export function getPublicBookingAwaitingWhatsAppText(input: {
@@ -69,6 +96,8 @@ export function getPublicBookingAwaitingWhatsAppText(input: {
   timeLabel: string;
   serviceLabel?: string;
   professionalName?: string | null;
+  /** true = agendamento já confirmado: a mensagem não pede confirmação. */
+  confirmed?: boolean;
 }): string {
   const businessName = input.businessName.trim();
   const greeting = businessName ? `Olá, ${businessName}!` : 'Olá!';
@@ -77,7 +106,8 @@ export function getPublicBookingAwaitingWhatsAppText(input: {
   const withProfessional = professional
     ? ` com ${professional}`
     : ' com qualquer profissional';
-  return `${greeting} Fiz um agendamento online para ${serviceLabel}${withProfessional} em ${input.dateLabel} às ${input.timeLabel}. Pode confirmar, por favor?`;
+  const base = `${greeting} Fiz um agendamento online para ${serviceLabel}${withProfessional} em ${input.dateLabel} às ${input.timeLabel}.`;
+  return input.confirmed ? base : `${base} Pode confirmar, por favor?`;
 }
 
 export function getOwnerAcceptWhatsAppText(input: {

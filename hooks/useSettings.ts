@@ -8,6 +8,7 @@ import {
   updateStaffAgendaBlockScope,
   fetchProfileFields,
   updateProfileFields,
+  updateOnlineBookingRequiresApproval,
 } from '@/services/settings';
 import type { BusinessSettingsUpdate, ProfileFields } from '@/types/settings';
 import type { StaffAppointmentEditScope } from '@/utils/staffAppointmentPermission';
@@ -96,6 +97,19 @@ export function useUpdateProfileFields() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings', user?.id, 'profile'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard', 'profile', user?.id] });
+    },
+  });
+}
+
+export function useUpdateOnlineBookingRequiresApproval() {
+  const { companyId } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (requiresApproval: boolean) => updateOnlineBookingRequiresApproval(companyId!, requiresApproval),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['settings', companyId, 'business'] });
+      queryClient.invalidateQueries({ queryKey: ['public-booking', 'settings', companyId] });
     },
   });
 }

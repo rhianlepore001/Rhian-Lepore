@@ -191,7 +191,7 @@ test.describe('link público: botão final e tela de confirmação', () => {
             await expect(title).toHaveText(theme === 'beauty' ? 'Agendamento confirmado' : 'AGENDAMENTO CONFIRMADO');
             await expect(page.getByText(/horário está garantido/i)).toBeVisible();
           } else {
-            await expect(title).toHaveText(theme === 'beauty' ? 'Solicitação enviada' : 'SOLICITAÇÃO ENVIADA');
+            await expect(title).toHaveText(theme === 'beauty' ? 'Pedido enviado' : 'PEDIDO ENVIADO');
             await expect(page.getByText(theme === 'beauty'
               ? 'Aguardando a confirmação do salão. Acompanhe na Minha Área.'
               : 'AGUARDANDO A CONFIRMAÇÃO DA BARBEARIA. ACOMPANHE NA MINHA ÁREA.')).toBeVisible();

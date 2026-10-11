@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const upsertMock = vi.fn();
-const fromMock = vi.fn(() => ({ upsert: upsertMock }));
+const fromMock = vi.fn((_table: string) => ({ upsert: upsertMock }));
 vi.mock('@/lib/supabase', () => ({
   supabase: { from: (table: string) => fromMock(table) },
 }));

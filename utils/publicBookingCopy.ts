@@ -71,7 +71,7 @@ export function getPublicBookingSuccessCopy(input: {
   }
 
   return {
-    title: isBeauty ? 'Solicitação enviada' : 'SOLICITAÇÃO ENVIADA',
+    title: isBeauty ? 'Pedido enviado' : 'PEDIDO ENVIADO',
     subtitle: isBeauty
       ? `Aguardando a confirmação ${business.of}. Acompanhe na Minha Área.`
       : `AGUARDANDO A CONFIRMAÇÃO ${business.of.toUpperCase()}. ACOMPANHE NA MINHA ÁREA.`,

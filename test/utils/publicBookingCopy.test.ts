@@ -10,8 +10,8 @@ describe('publicBookingCopy', () => {
     const barber = getPublicBookingSuccessCopy({ isBeauty: false, status: 'pending' });
     const beauty = getPublicBookingSuccessCopy({ isBeauty: true, status: 'pending' });
 
-    expect(barber.title).toBe('SOLICITAÇÃO ENVIADA');
-    expect(beauty.title).toBe('Solicitação enviada');
+    expect(barber.title).toBe('PEDIDO ENVIADO');
+    expect(beauty.title).toBe('Pedido enviado');
     expect(barber.title.toLowerCase()).not.toContain('confirmado');
     expect(beauty.title.toLowerCase()).not.toContain('confirmado');
     expect(barber.subtitle.toLowerCase()).toContain('aguardando');

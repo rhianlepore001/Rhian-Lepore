@@ -165,6 +165,7 @@ export async function updateProfileFields(
   if (error) throw error;
   return profileFieldsSchema.parse(data);
 }
+
 export type OnlineBookingApprovalSaveResult = 'saved' | 'unsupported';
 
 function isMissingOnlineBookingApprovalColumn(error: { code?: string; message?: string }): boolean {

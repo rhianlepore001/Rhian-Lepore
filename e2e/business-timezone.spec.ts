@@ -114,7 +114,7 @@ async function bookSlot(page: import('@playwright/test').Page, time: string) {
     // inputs são sr-only (estilizados via label); clique direto no elemento
     if (!(await cb.isChecked())) await cb.evaluate((el: HTMLInputElement) => el.click());
   }
-  await page.getByRole('button', { name: /Confirmar agendamento/ }).click();
+  await page.getByRole('button', { name: /Enviar pedido|Confirmar agendamento/ }).click();
 }
 
 test.describe('Agendamento online — fuso fixo do negócio', () => {

@@ -8,10 +8,10 @@ import {
   updateStaffCanBlockAgenda,
   fetchProfileFields,
   updateProfileFields,
+  updateOnlineBookingRequiresApproval,
 } from '@/services/settings';
 import type { BusinessSettingsUpdate, ProfileFields } from '@/types/settings';
 import type { StaffAppointmentEditScope } from '@/utils/staffAppointmentPermission';
-import { updateOnlineBookingRequiresApproval } from '@/services/settings';
 
 export function useBusinessSettings() {
   const { companyId } = useAuth();
@@ -99,6 +99,7 @@ export function useUpdateProfileFields() {
     },
   });
 }
+
 export function useUpdateOnlineBookingRequiresApproval() {
   const { companyId } = useAuth();
   const queryClient = useQueryClient();

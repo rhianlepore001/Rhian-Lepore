@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   getPublicBookingAwaitingWhatsAppText,
+  getPublicBookingSubmitLabel,
   getPublicBookingSuccessCopy,
 } from '@/utils/publicBookingCopy';
 
@@ -113,5 +114,60 @@ describe('publicBookingCopy — cancelado (item 5b)', () => {
         expect(copy.title.toLowerCase()).toContain('cancelado');
       }
     }
+  });
+});
+
+describe('publicBookingCopy — confirmação automática', () => {
+  it('botão final: Enviar pedido (manual) x Confirmar agendamento (automático)', () => {
+    expect(getPublicBookingSubmitLabel({ autoConfirm: false })).toBe('Enviar pedido');
+    expect(getPublicBookingSubmitLabel({ autoConfirm: true })).toBe('Confirmar agendamento');
+  });
+
+  it('alteração sempre é pedido, mesmo no automático', () => {
+    expect(getPublicBookingSubmitLabel({ autoConfirm: true, isEdit: true })).toBe('Enviar pedido');
+    expect(getPublicBookingSubmitLabel({ autoConfirm: false, isEdit: true })).toBe('Enviar pedido');
+  });
+
+  it('pending usa o nome do tipo de negócio, nunca "salão" fixo', () => {
+    const barber = getPublicBookingSuccessCopy({ isBeauty: false, status: 'pending', userType: 'barber' });
+    expect(barber.subtitle).toBe('AGUARDANDO A CONFIRMAÇÃO DA BARBEARIA. ACOMPANHE NA MINHA ÁREA.');
+    expect(barber.subtitle).not.toContain('SALÃO');
+    const beauty = getPublicBookingSuccessCopy({ isBeauty: true, status: 'pending', userType: 'beauty' });
+    expect(beauty.subtitle).toBe('Aguardando a confirmação do salão. Acompanhe na Minha Área.');
+  });
+
+  it('sem userType cai no tema (barbearia x salão)', () => {
+    expect(getPublicBookingSuccessCopy({ isBeauty: false, status: 'pending' }).subtitle).toContain('DA BARBEARIA');
+    expect(getPublicBookingSuccessCopy({ isBeauty: true, status: 'pending' }).subtitle).toContain('do salão');
+  });
+
+  it('nenhuma copy de sucesso tem "AGUARDANDO CONFIRMAÇÃO DO SALÃO" para barbearia', () => {
+    for (const isEdit of [false, true]) {
+      const copy = getPublicBookingSuccessCopy({ isBeauty: false, status: 'pending', isEdit, userType: 'barber' });
+      expect(copy.subtitle).not.toMatch(/SALÃO/);
+    }
+  });
+
+  it('confirmed: horário garantido, sem pedir confirmação', () => {
+    const barber = getPublicBookingSuccessCopy({ isBeauty: false, status: 'confirmed', userType: 'barber' });
+    const beauty = getPublicBookingSuccessCopy({ isBeauty: true, status: 'confirmed', userType: 'beauty' });
+    expect(barber.title).toBe('AGENDAMENTO CONFIRMADO');
+    expect(beauty.title).toBe('Agendamento confirmado');
+    expect(beauty.subtitle).toBe('Seu horário está garantido. Te esperamos!');
+    expect(barber.subtitle).toBe('SEU HORÁRIO ESTÁ GARANTIDO. TE ESPERAMOS!');
+    expect(barber.whatsappCta).toBe('Falar no WhatsApp');
+    expect(barber.stepperLastLabel).toBe('Confirmado');
+  });
+
+  it('WhatsApp de confirmado não pede confirmação', () => {
+    const text = getPublicBookingAwaitingWhatsAppText({
+      businessName: 'Corte Fino',
+      dateLabel: '18/09/2026',
+      timeLabel: '10:00',
+      serviceLabel: 'Corte tesoura',
+      professionalName: 'Mario',
+      confirmed: true,
+    });
+    expect(text).toBe('Olá, Corte Fino! Fiz um agendamento online para Corte tesoura com Mario em 18/09/2026 às 10:00.');
   });
 });

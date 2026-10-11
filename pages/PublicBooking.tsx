@@ -1673,7 +1673,7 @@ export const PublicBooking: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    <h2 className={`${colors.text} font-black tracking-tighter text-5xl md:text-7xl mb-6`}>
+                                    <h2 data-testid="public-booking-success-title" data-status={activeBooking.status} className={`${colors.text} font-black tracking-tighter text-[2.6rem] leading-[1.05] min-[400px]:text-5xl md:text-7xl mb-6 break-words`}>
                                         {successCopy.title}
                                     </h2>
 
@@ -1956,7 +1956,7 @@ export const PublicBooking: React.FC = () => {
                         </div>
                     </div>
 
-                    <h2 className={`${colors.text} font-black tracking-tighter text-5xl md:text-7xl mb-6`}>
+                    <h2 data-testid="public-booking-success-title" data-status={activeBooking.status} className={`${colors.text} font-black tracking-tighter text-[2.6rem] leading-[1.05] min-[400px]:text-5xl md:text-7xl mb-6 break-words`}>
                         {successCopy.title}
                     </h2>
 

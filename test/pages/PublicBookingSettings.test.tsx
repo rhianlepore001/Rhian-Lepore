@@ -7,6 +7,7 @@ vi.mock('../../hooks/useSettings', () => ({
   useUpdateBusinessSettings: () => ({ mutateAsync: vi.fn() }),
   useProfileFields: () => ({ data: { business_slug: 'bob', public_booking_enabled: true } }),
   useUpdateProfileFields: () => ({ mutateAsync: vi.fn() }),
+  useUpdateOnlineBookingRequiresApproval: () => ({ mutateAsync: vi.fn().mockResolvedValue('saved') }),
 }));
 
 vi.mock('../../contexts/AuthContext', () => ({

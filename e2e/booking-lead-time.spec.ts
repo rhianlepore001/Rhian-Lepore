@@ -441,7 +441,7 @@ test.describe('PR-2 antecedência mínima', () => {
     for (const cb of await page.locator('input[type=checkbox]').all()) {
       if (!(await cb.isChecked())) await cb.evaluate((el: HTMLInputElement) => el.click());
     }
-    await page.getByRole('button', { name: /Confirmar agendamento/ }).click();
+    await page.getByRole('button', { name: /Enviar pedido|Confirmar agendamento/ }).click();
     if (phase === 'after') {
       await expect(page.getByRole('heading', { name: 'Escolha a data e hora' })).toBeVisible({ timeout: 10_000 });
       await expect(page.getByTestId('lead-time-alert')).toBeVisible({ timeout: 10_000 });

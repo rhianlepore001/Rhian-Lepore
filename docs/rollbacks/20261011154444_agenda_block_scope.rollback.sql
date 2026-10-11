@@ -1,5 +1,5 @@
 -- =============================================================================
--- ROLLBACK de 20261007140000_agenda_block_scope
+-- ROLLBACK de 20261011154444_agenda_block_scope
 -- =============================================================================
 -- Volta exatamente ao estado de prod de 2026-10-07:
 --   1. staff_can_manage_agenda_block(uuid) = pg_get_functiondef de prod

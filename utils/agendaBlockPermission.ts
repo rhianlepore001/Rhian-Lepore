@@ -1,7 +1,7 @@
 /**
  * Permissão para criar/remover bloqueio de agenda.
  * O banco aplica a mesma regra nas RPCs create_agenda_block / delete_agenda_block
- * (staff_can_manage_agenda_block, migration 20261007140000_agenda_block_scope).
+ * (staff_can_manage_agenda_block, migration 20261011154444_agenda_block_scope).
  * Esconder botões aqui é só UX — não é a proteção.
  */
 

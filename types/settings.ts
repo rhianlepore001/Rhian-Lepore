@@ -48,7 +48,7 @@ export const businessSettingsSchema = z.object({
   staff_can_block_agenda: z.boolean().nullable().optional(),
   /**
    * O que a equipe pode bloquear na agenda ('none' | 'own' | 'all'). Só existe
-   * depois da migration 20261007140000_agenda_block_scope (padrão 'own'); string
+   * depois da migration 20261011154444_agenda_block_scope (padrão 'own'); string
    * livre aqui (normalizada em utils/agendaBlockPermission).
    */
   staff_agenda_block_scope: z.string().nullable().optional(),

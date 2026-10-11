@@ -274,8 +274,8 @@ staff:
 
 ### 8.2 Implementação
 
-- Migration `supabase/migrations/20261007140000_agenda_block_scope.sql`; rollback
-  `docs/rollbacks/20261007140000_agenda_block_scope.rollback.sql`.
+- Migration `supabase/migrations/20261011154444_agenda_block_scope.sql`; rollback
+  `docs/rollbacks/20261011154444_agenda_block_scope.rollback.sql`.
 - Testes SQL: `scripts/test-sql-agenda-block-scope.sh` (+ `--rollback`), com as funções reais de prod (md5 conferido).
 - Front: `utils/agendaBlockPermission.ts` (`StaffAgendaBlockScope`, `resolveStaffAgendaBlockScope`,
   `canPickAgendaBlockProfessional`, `STAFF_AGENDA_BLOCK_SCOPE_OPTIONS`), `services/settings.updateStaffAgendaBlockScope`,

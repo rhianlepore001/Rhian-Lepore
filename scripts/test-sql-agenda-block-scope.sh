@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Testa 20261007140000_agenda_block_scope (bloqueio de agenda com 3 opções) num Postgres
+# Testa 20261011154444_agenda_block_scope (bloqueio de agenda com 3 opções) num Postgres
 # local descartável (não usa nem toca o Supabase de prod).
 #   scripts/test-sql-agenda-block-scope.sh             # cadeia = prod (md5) → teste FALHA → migration 2x → passa + regressões de bloqueio/fila
 #   scripts/test-sql-agenda-block-scope.sh --rollback  # migration + rollback: função/colunas/triggers voltam byte a byte a prod
@@ -12,8 +12,8 @@ if [ -z "$PGBIN" ] || [ ! -x "$PGBIN/psql" ]; then
 fi
 TMP="$(mktemp -d)"
 PORT="${PGPORT_TEST:-55503}"
-MIG="$ROOT/supabase/migrations/20261007140000_agenda_block_scope.sql"
-RB="$ROOT/docs/rollbacks/20261007140000_agenda_block_scope.rollback.sql"
+MIG="$ROOT/supabase/migrations/20261011154444_agenda_block_scope.sql"
+RB="$ROOT/docs/rollbacks/20261011154444_agenda_block_scope.rollback.sql"
 HARNESS="$ROOT/supabase/tests/agenda_block_scope.harness.sql"
 TEST="$ROOT/supabase/tests/agenda_block_scope.test.sql"
 # pg_get_functiondef em prod (lcqwrngscsziysyfhpfj), lido em 2026-10-07 (só SELECT).

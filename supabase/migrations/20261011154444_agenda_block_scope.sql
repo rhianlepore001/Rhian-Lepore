@@ -2,7 +2,7 @@
 -- Bloqueio de agenda: 3 opções para a equipe (igual a "Edição de agendamentos")
 -- =============================================================================
 -- Spec: docs/specs/agenda-block-permissions-SPEC.md
--- Rollback: docs/rollbacks/20261007140000_agenda_block_scope.rollback.sql
+-- Rollback: docs/rollbacks/20261011154444_agenda_block_scope.rollback.sql
 --
 -- ANTES (prod, lido em 2026-10-07): business_settings.staff_can_block_agenda
 -- boolean NOT NULL DEFAULT true (28/28 linhas = true; sem linha = true por

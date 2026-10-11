@@ -1,4 +1,4 @@
--- Testes de 20261007140000_agenda_block_scope. Uso: scripts/test-sql-agenda-block-scope.sh
+-- Testes de 20261011154444_agenda_block_scope. Uso: scripts/test-sql-agenda-block-scope.sh
 -- Chama as funções REAIS de prod (create_agenda_block / delete_agenda_block, md5 conferido
 -- pelo script) como role authenticated, igual ao PostgREST.
 \set ON_ERROR_STOP on

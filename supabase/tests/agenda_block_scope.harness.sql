@@ -1,4 +1,4 @@
--- Harness para 20261007140000_agenda_block_scope (bloqueio de agenda com 3 opções).
+-- Harness para 20261011154444_agenda_block_scope (bloqueio de agenda com 3 opções).
 -- Carregar DEPOIS da cadeia que reproduz prod (ver scripts/test-sql-agenda-block-scope.sh):
 --   noshow_slots.harness → 20260925160000 → agenda_blocks.harness → #113 →
 --   agenda_blocks_queue_settle.harness → #115 → agenda_blocks_followup.harness → #117.

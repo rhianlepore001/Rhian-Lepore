@@ -107,12 +107,12 @@ describe('UpdatePassword', () => {
     const pwd = screen.getByLabelText('Nova senha');
     await userEvent.type(pwd, 'fraca');
     await userEvent.click(screen.getByTestId('update-password-submit'));
-    expect(await screen.findByRole('alert')).toHaveTextContent(/requisitos/);
+    expect(await screen.findByRole('alert')).toHaveTextContent('A senha precisa de 8 caracteres e uma letra maiúscula.');
     expect(auth.updateUser).not.toHaveBeenCalled();
 
     await userEvent.clear(pwd);
     await userEvent.type(pwd, 'Nova@Senha1');
-    expect(document.querySelectorAll('[data-ok="true"]').length).toBe(4);
+    expect(screen.getByTestId('password-strength')).toHaveAttribute('data-level', 'strong');
     await userEvent.type(screen.getByLabelText('Confirmar nova senha'), 'Nova@Senha2');
     await userEvent.click(screen.getByTestId('update-password-submit'));
     expect(await screen.findByText('As senhas não são iguais.')).toBeInTheDocument();
@@ -131,6 +131,19 @@ describe('UpdatePassword', () => {
     });
     vi.useRealTimers();
     await waitFor(() => expect(screen.getByText('painel')).toBeInTheDocument());
+  });
+
+  it('aceita senha só com o mínimo (sem número/símbolo) e trata weak_password do servidor', async () => {
+    __setPendingRecoveryCallback({ kind: 'implicit', accessToken: 'A', refreshToken: 'R' });
+    auth.updateUser.mockResolvedValue({ data: {}, error: { code: 'weak_password', status: 422, message: 'Password should contain at least one character of each: 0123456789', reasons: ['characters'] } });
+    renderAt('/update-password');
+    await screen.findByTestId('update-password-form');
+    await userEvent.type(screen.getByLabelText('Nova senha'), 'Barbearia');
+    expect(screen.getByTestId('password-strength')).toHaveAttribute('data-level', 'weak');
+    await userEvent.type(screen.getByLabelText('Confirmar nova senha'), 'Barbearia');
+    await userEvent.click(screen.getByTestId('update-password-submit'));
+    expect(auth.updateUser).toHaveBeenCalledWith({ password: 'Barbearia' });
+    expect(await screen.findByRole('alert')).toHaveTextContent(/Senha fraca: o servidor pediu/);
   });
 
   it('sessão caiu ao salvar → tela de link expirado', async () => {

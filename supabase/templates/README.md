@@ -45,3 +45,14 @@ O remetente "Supabase Auth <noreply@mail.app.supabase.io>" só muda com **SMTP p
 `AgendiX <nao-responda@agendixstudio.com>`, via Resend (ou outro provedor), com SPF, DKIM e
 DMARC publicados no DNS de `agendixstudio.com`. O SMTP padrão do Supabase também tem limite
 baixo de envios por hora, inadequado para produção.
+
+## Política de senha (app e servidor precisam bater)
+
+Regra do app (`utils/passwordPolicy.ts`): mínimo de 8 caracteres e 1 letra maiúscula.
+Número e símbolo são opcionais e só aumentam a força mostrada.
+
+No painel: **Authentication → Providers → Email** (ou **Auth → Settings → Password**)
+- **Minimum password length:** `8`
+- **Password requirements:** `No required characters (default)`
+- Se ligar "Prevent use of leaked passwords", o servidor pode recusar senhas vazadas; o app
+  mostra "Senha fraca: ela já apareceu em vazamentos…".

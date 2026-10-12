@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Testa 20261012150000_signup_trial_promotion num Postgres local descartável (não toca prod).
+# Testa 20261012145609_signup_trial_promotion num Postgres local descartável (não toca prod).
 #   scripts/test-sql-signup-trial-promotion.sh             # TDD (falha antes) → migration 2x → checks → concorrência
 #   scripts/test-sql-signup-trial-promotion.sh --rollback  # migration + rollback = estado de prod (md5 + ACL)
 set -euo pipefail
@@ -11,8 +11,8 @@ PORT="${PGPORT_TEST:-55508}"
 HARNESS="$ROOT/supabase/tests/owner_signup_profile.harness.sql"
 PRE1="$ROOT/supabase/migrations/20261012130157_log_signup_error.sql"
 PRE2="$ROOT/supabase/migrations/20261012130203_owner_signup_profile.sql"
-MIG="$ROOT/supabase/migrations/20261012150000_signup_trial_promotion.sql"
-RB="$ROOT/docs/rollbacks/20261012150000_signup_trial_promotion.rollback.sql"
+MIG="$ROOT/supabase/migrations/20261012145609_signup_trial_promotion.sql"
+RB="$ROOT/docs/rollbacks/20261012145609_signup_trial_promotion.rollback.sql"
 TEST="$ROOT/supabase/tests/signup_trial_promotion.test.sql"
 for f in "$HARNESS" "$PRE1" "$PRE2" "$MIG" "$RB" "$TEST"; do [ -f "$f" ] || { echo "faltou $f"; exit 1; }; done
 export PGOPTIONS="-c client_min_messages=warning"

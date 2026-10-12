@@ -4,7 +4,7 @@
 Os próximos 10 cadastros de dono feitos depois do deploy recebem 30 dias de período de teste.
 A partir do 11º, volta automaticamente aos 20 dias (padrão do `handle_new_user`).
 
-- Migração aditiva `20261012150000_signup_trial_promotion`:
+- Migração aditiva `20261012145609_signup_trial_promotion`:
   - tabelas `trial_promotions` (contador `used`/`max_uses`, `starts_at` = momento da aplicação) e
     `trial_promotion_grants` (PK `user_id`), as duas com RLS e sem grants para anon/authenticated;
   - trigger BEFORE INSERT `apply_signup_trial_promotion` em `profiles`.

@@ -1,4 +1,4 @@
--- Testes de 20261012150000_signup_trial_promotion (rodar via scripts/test-sql-signup-trial-promotion.sh).
+-- Testes de 20261012145609_signup_trial_promotion (rodar via scripts/test-sql-signup-trial-promotion.sh).
 -- Ids com prefixo 0b000000-. Estado de prod: harness de owner_signup_profile + 20261012130157 + 20261012130203.
 BEGIN;
 CREATE TEMP TABLE results (n int, name text, ok boolean, got text, expected text);

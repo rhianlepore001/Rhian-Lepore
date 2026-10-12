@@ -29,7 +29,7 @@
     "auth": ["contexts/AuthContext.tsx", "pages/Login.tsx", "pages/Register.tsx", "pages/UpdatePassword.tsx", "components/OwnerRouteGuard.tsx", "components/DevRouteGuard.tsx", "components/ProtectedLayout.tsx"],
     "db": ["supabase/migrations/", "lib/supabase.ts", "services/", "hooks/"],
     "config": [".env.example", "vite.config.ts", "vercel.json"],
-    "crypto": ["utils/passwordValidation.ts"],
+    "crypto": ["utils/passwordPolicy.ts"],
     "external": ["lib/openrouter.ts", "supabase/functions/"]
   }
 }

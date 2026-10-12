@@ -35,7 +35,12 @@ describe('mapSignupError', () => {
     const view = mapSignupError(error);
     expect(view.code).toBe(code);
     expect(view.expected).toBe(true);
-    expect(view.message).toBe(SIGNUP_MESSAGES[code as keyof typeof SIGNUP_MESSAGES].message);
+    if (code === 'weak_password') {
+      // Motivo real do servidor (tamanho/caracteres/vazada) em pt-BR.
+      expect(view.message).toBe('Senha fraca: use pelo menos 8 caracteres.');
+    } else {
+      expect(view.message).toBe(SIGNUP_MESSAGES[code as keyof typeof SIGNUP_MESSAGES].message);
+    }
     expect(view.message).not.toMatch(/#unknown/);
   });
 

@@ -31,11 +31,12 @@ const user = {
 export interface AuthMockLog {
   recover: { redirectTo: string | null; email: string | null }[];
   passwordUpdates: string[];
+  signups: { email: string | null; password: string | null }[];
   hosts: Set<string>;
 }
 
 export async function mockSupabaseAuth(page: Page, opts: { updateUserError?: { status: number; body: unknown } } = {}): Promise<AuthMockLog> {
-  const log: AuthMockLog = { recover: [], passwordUpdates: [], hosts: new Set() };
+  const log: AuthMockLog = { recover: [], passwordUpdates: [], signups: [], hosts: new Set() };
   page.on('request', (r: Request) => {
     try {
       log.hosts.add(new URL(r.url()).host);
@@ -54,6 +55,11 @@ export async function mockSupabaseAuth(page: Page, opts: { updateUserError?: { s
       const body = req.postDataJSON() as { email?: string } | null;
       log.recover.push({ redirectTo: url.searchParams.get('redirect_to'), email: body?.email ?? null });
       return json(200, {});
+    }
+    if (path === '/signup' && req.method() === 'POST') {
+      const body = req.postDataJSON() as { email?: string; password?: string } | null;
+      log.signups.push({ email: body?.email ?? null, password: body?.password ?? null });
+      return json(200, { access_token: fakeAccessToken(), refresh_token: 'rt-signup', token_type: 'bearer', expires_in: 3600, user: { ...user, email: body?.email ?? MOCK_EMAIL, identities: [{ id: 'i1' }] } });
     }
     if (path === '/user' && req.method() === 'GET') return json(200, user);
     if (path === '/user' && req.method() === 'PUT') {

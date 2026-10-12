@@ -34,7 +34,7 @@ test.describe('recuperação de senha', () => {
     expect(page.url()).toBe(`${BASE}/#/update-password`);
 
     await page.getByLabel('Nova senha', { exact: true }).fill('Nova@Senha1');
-    await expect(page.locator('[data-ok="true"]')).toHaveCount(4);
+    await expect(page.getByTestId('password-strength')).toHaveAttribute('data-level', 'strong');
     await page.getByRole('button', { name: 'Mostrar senha' }).click();
     await expect(page.getByLabel('Nova senha', { exact: true })).toHaveAttribute('type', 'text');
     await page.getByLabel('Confirmar nova senha').fill('Nova@Senha1');

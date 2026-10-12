@@ -6,7 +6,8 @@ import { useAuth, UserType, Region } from '../contexts/AuthContext';
 import { useBrutalTheme, ThemeVariant } from '../hooks/useBrutalTheme';
 import { useScrollToError } from '../hooks/useScrollToError';
 import { PhoneInput } from '../components/PhoneInput';
-import { validatePassword } from '../utils/passwordValidation';
+import { passwordPolicyError } from '../utils/passwordPolicy';
+import { PasswordStrength } from '../components/auth/PasswordStrength';
 import { AgendiXLogo } from '../components/AgendiXLogo';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
@@ -210,9 +211,9 @@ export const Register: React.FC = () => {
         return;
       }
 
-      const passwordValidation = validatePassword(password);
-      if (!passwordValidation.isValid) {
-        setError(passwordValidation.errors.join(', '));
+      const passwordProblem = passwordPolicyError(password);
+      if (passwordProblem) {
+        setError(passwordProblem);
         return;
       }
 
@@ -367,22 +368,25 @@ export const Register: React.FC = () => {
                   className="flex items-center min-w-0 max-w-full appearance-none text-left [&::-webkit-date-and-time-value]:text-left [&::-webkit-date-and-time-value]:min-h-[1.25em]"
                 />
 
-                <Input
-                    id="staff-password"
-                    type={showPassword ? 'text' : 'password'}
-                    label="Senha"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    hint="Mín. 8 caracteres, 1 maiúscula, 1 número e 1 símbolo"
-                    forceTheme={userType}
-                    iconRight={
-                        <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'} className={`pointer-events-auto min-h-[44px] min-w-[44px] inline-flex items-center justify-center ${colors.textMuted} hover:text-theme-text transition-colors`}>
-                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                        </button>
-                    }
-                />
+                <div>
+                  <Input
+                      id="staff-password"
+                      type={showPassword ? 'text' : 'password'}
+                      label="Senha"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      aria-describedby="staff-password-strength"
+                      forceTheme={userType}
+                      iconRight={
+                          <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'} className={`pointer-events-auto min-h-[44px] min-w-[44px] inline-flex items-center justify-center ${colors.textMuted} hover:text-theme-text transition-colors`}>
+                              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                      }
+                  />
+                  <PasswordStrength id="staff-password-strength" password={password} />
+                </div>
 
                 <Input
                     id="staff-confirm"
@@ -539,22 +543,25 @@ export const Register: React.FC = () => {
 
                   <Input id="reg-email" type="email" label="E-mail" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="contato@empresa.com" forceTheme={userType} />
 
-                  <Input
-                      id="reg-password"
-                      type={showPassword ? 'text' : 'password'}
-                      label="Senha"
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      hint="Mín. 8 caracteres, 1 maiúscula, 1 número e 1 símbolo"
-                      forceTheme={userType}
-                      iconRight={
-                          <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'} className={`pointer-events-auto min-h-[44px] min-w-[44px] inline-flex items-center justify-center ${colors.textMuted} hover:text-theme-text transition-colors`}>
-                              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                          </button>
-                      }
-                  />
+                  <div>
+                    <Input
+                        id="reg-password"
+                        type={showPassword ? 'text' : 'password'}
+                        label="Senha"
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        aria-describedby="reg-password-strength"
+                        forceTheme={userType}
+                        iconRight={
+                            <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'} className={`pointer-events-auto min-h-[44px] min-w-[44px] inline-flex items-center justify-center ${colors.textMuted} hover:text-theme-text transition-colors`}>
+                                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                        }
+                    />
+                    <PasswordStrength id="reg-password-strength" password={password} />
+                  </div>
                 </div>
               </div>
 

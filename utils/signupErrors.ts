@@ -7,6 +7,7 @@
  * `reportUnexpectedSignupError` para diagnóstico.
  */
 import { supabase } from '../lib/supabase';
+import { describeServerWeakPassword } from './passwordPolicy';
 
 export type SignupErrorCode =
   | 'invite_email_wrong_password'
@@ -67,7 +68,7 @@ export const SIGNUP_MESSAGES: Record<Exclude<SignupErrorCode, 'unknown'>, { mess
     action: 'login',
   },
   weak_password: {
-    message: 'Senha fraca. Use pelo menos 8 caracteres, com 1 letra maiúscula, 1 número e 1 símbolo.',
+    message: 'Senha fraca. Use pelo menos 8 caracteres e uma letra maiúscula.',
   },
   rate_limited: {
     message: 'Muitas tentativas seguidas. Aguarde 5 minutos e tente de novo.',
@@ -169,7 +170,9 @@ export function mapSignupError(error: unknown): SignupErrorView {
     return { code, message: UNKNOWN_SIGNUP_MESSAGE, expected: false };
   }
   const entry = SIGNUP_MESSAGES[code];
-  return { code, message: entry.message, action: entry.action, expected: true };
+  // O servidor pode exigir mais que o app (painel do Supabase): explica o motivo real.
+  const message = code === 'weak_password' ? describeServerWeakPassword(error) ?? entry.message : entry.message;
+  return { code, message, action: entry.action, expected: true };
 }
 
 /** Referência curta mostrada ao usuário e gravada no log (correlação suporte ↔ log). */

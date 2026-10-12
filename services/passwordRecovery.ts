@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { describeServerWeakPassword } from '../utils/passwordPolicy';
 import {
   buildRecoveryRedirectUrl,
   type RecoveryCallback,
@@ -68,9 +69,8 @@ export function mapUpdatePasswordError(err: unknown): string {
   if (/same_password|should be different|different from the old/.test(text)) {
     return 'A nova senha precisa ser diferente da atual.';
   }
-  if (/weak_password|password should/.test(text)) {
-    return 'Essa senha é fraca demais. Use uma combinação mais difícil de adivinhar.';
-  }
+  const weak = describeServerWeakPassword(err);
+  if (weak) return weak;
   if (/session|jwt|expired|not authenticated|auth session missing/.test(text)) {
     return 'Sua sessão de redefinição expirou. Peça um novo link para continuar.';
   }

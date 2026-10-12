@@ -5,9 +5,9 @@ import { supabase } from '../lib/supabase';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { useScrollToError } from '../hooks/useScrollToError';
-import { PasswordRules } from '../components/auth/PasswordRules';
+import { PasswordStrength } from '../components/auth/PasswordStrength';
 import { RecoveryCard, RecoveryEyebrow, RecoveryLead, RecoveryShell, RecoveryTitle } from '../components/auth/RecoveryShell';
-import { validatePassword } from '../utils/passwordValidation';
+import { passwordPolicyError } from '../utils/passwordPolicy';
 import { takeRecoveryCallback } from '../utils/authRecoveryLink';
 import {
   isSessionExpiredError,
@@ -77,9 +77,9 @@ export const UpdatePassword: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const check = validatePassword(password);
-    if (!check.isValid) {
-      setError('A senha ainda não atende a todos os requisitos abaixo.');
+    const policyProblem = passwordPolicyError(password);
+    if (policyProblem) {
+      setError(policyProblem);
       return;
     }
     if (password !== confirm) {
@@ -182,13 +182,12 @@ export const UpdatePassword: React.FC = () => {
                   if (error) setError(null);
                 }}
                 autoComplete="new-password"
+                aria-describedby="new-password-strength"
                 size="lg"
                 iconRight={toggle}
                 required
               />
-              <div className="mt-3">
-                <PasswordRules id="password-rules" password={password} />
-              </div>
+              <PasswordStrength id="new-password-strength" password={password} />
             </div>
 
             <Input

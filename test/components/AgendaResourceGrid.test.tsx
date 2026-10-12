@@ -113,7 +113,7 @@ describe('AgendaResourceGrid', () => {
     expect(gutter.className).toMatch(/(^|\s)w-12(\s|$)/);
     expect(gutter.className).not.toMatch(/(^|\s)w-16(\s|$)/);
     expect(screen.getByTestId('agenda-filter-all').className).toMatch(/px-0\.5/);
-    expect(screen.getByTestId('agenda-filter-m1').className).toMatch(/px-2\.5/);
+    expect(screen.getByTestId('agenda-filter-m1').className).toMatch(/(^|\s)px-2(\s|$)/);
   });
 
   it('não usa snap CSS no scroller da grade', () => {

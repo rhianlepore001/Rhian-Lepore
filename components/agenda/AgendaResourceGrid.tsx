@@ -148,7 +148,13 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
   const isFiltered = selectedProfessionalIds.length > 0;
   const addableMembers = allMembers.filter((m) => !selectedProfessionalIds.includes(m.id));
   const showAddColumn = isFiltered && addableMembers.length > 0;
-  const headerCell = `h-[4.25rem] border-b ${colors.divider} ${colors.card}`;
+  // Cabeçalho compacto (Todos + profissionais), fixo abaixo da barra do app ao rolar a página.
+  const headerCell = 'h-[3.25rem]';
+  const memberColumnWidth = `shrink-0 min-w-[152px] md:min-w-[176px] flex-1 border-l ${colors.divider}`;
+  const headerViewportRef = useRef<HTMLDivElement>(null);
+  const syncHeaderScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    if (headerViewportRef.current) headerViewportRef.current.scrollLeft = e.currentTarget.scrollLeft;
+  };
 
   useEffect(() => {
     if (!addOpen) return;
@@ -166,19 +172,16 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
   }, [showAddColumn]);
 
   return (
-    <div className={`rounded-2xl border overflow-hidden min-w-0 w-full ${colors.border} ${colors.surface}`}>
+    <div className={`rounded-2xl border overflow-clip min-w-0 w-full ${colors.border} ${colors.surface}`}>
+      {/* Cabeçalho fixo: fora do scroller horizontal (senão o sticky vertical não pega);
+          o scroll lateral da grade é espelhado no viewport do cabeçalho. Fundo sólido. */}
       <div
-        data-testid="agenda-resource-grid"
-        className={`overflow-x-auto max-w-full scrollbar-hide ${colors.surface}`}
+        ref={addWrapRef}
+        data-testid="agenda-grid-header"
+        className={`sticky top-[calc(var(--header-top,0px)+3.5rem)] md:top-[calc(var(--header-top,0px)+5rem)] z-30 flex border-b ${colors.divider} ${colors.card}`}
       >
-        <div className="inline-flex min-w-full [--agenda-slot-h:3rem] md:[--agenda-slot-h:3.5rem]">
-          {/* Gutter de horário */}
-          <div
-            data-agenda-gutter="true"
-            className={`sticky left-0 z-20 w-12 shrink-0 flex flex-col ${colors.card}`}
-          >
-            <div className={`${headerCell} z-30`}>
-              <button
+        <div className={`w-12 shrink-0 ${headerCell}`}>
+          <button
                 type="button"
                 onClick={onSelectAll}
                 aria-pressed={isAllSelected}
@@ -187,13 +190,13 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                 className="w-full h-full flex flex-col items-center justify-center gap-0.5 px-0.5"
               >
                 <span
-                  className={`w-7 h-7 rounded-full flex items-center justify-center border-2 transition-all ${
+                  className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all ${
                     isAllSelected
                       ? `${accent.bg} border-transparent text-[var(--color-on-accent)] shadow-[var(--shadow-card-accent)]`
                       : `${colors.border} ${colors.card} ${colors.textSecondary}`
                   }`}
                 >
-                  <Users className="w-3.5 h-3.5" />
+                  <Users className="w-3 h-3" />
                 </span>
                 <span
                   className={`text-xs font-bold uppercase leading-none ${
@@ -203,7 +206,116 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                   Todos
                 </span>
               </button>
-            </div>
+        </div>
+        <div
+          ref={headerViewportRef}
+          data-testid="agenda-grid-header-viewport"
+          className="flex-1 min-w-0 overflow-x-hidden"
+          aria-hidden={false}
+        >
+          <div className="flex min-w-full">
+            {members.map((member) => {
+              const isMemberSelected = selectedProfessionalIds.includes(member.id);
+              const isSelf = member.id === selfMemberId;
+              return (
+                <div key={member.id} data-testid={`agenda-head-${member.id}`} className={`${memberColumnWidth} ${headerCell}`} title={member.name}>
+                  <button
+                    type="button"
+                    onClick={() => onToggleProfessional(member.id)}
+                    aria-pressed={isMemberSelected}
+                    data-testid={`agenda-filter-${member.id}`}
+                    title={member.name}
+                    className="w-full h-full flex flex-col items-center justify-center gap-0.5 px-2"
+                  >
+                    {member.photo_url ? (
+                      <img
+                        src={member.photo_url}
+                        alt=""
+                        className={`w-7 h-7 rounded-full object-cover border-2 transition-all ${
+                          isMemberSelected
+                            ? `${accent.border} shadow-[var(--shadow-card-accent)]`
+                            : colors.border
+                        }`}
+                      />
+                    ) : (
+                      <span
+                        className={`w-7 h-7 rounded-full flex items-center justify-center border-2 text-xs font-bold transition-all ${
+                          isMemberSelected
+                            ? `${accent.bg} border-transparent text-[var(--color-on-accent)] shadow-[var(--shadow-card-accent)]`
+                            : `${colors.card} ${colors.border} ${colors.text}`
+                        }`}
+                      >
+                        {initials(member.name)}
+                      </span>
+                    )}
+                    <span
+                      className={`text-xs font-bold uppercase tracking-wide truncate leading-none max-w-full px-0.5 ${
+                        isMemberSelected ? accent.text : colors.textMuted
+                      }`}
+                    >
+                      {isSelf ? 'Você' : firstName(member.name)}
+                    </span>
+                  </button>
+                </div>
+              );
+            })}
+            {showAddColumn && (
+              <div className={`shrink-0 w-[4.5rem] border-l ${colors.divider} ${headerCell}`}>
+                <button
+                  type="button"
+                  data-testid="agenda-filter-add"
+                  aria-expanded={addOpen}
+                  aria-haspopup="listbox"
+                  title="Adicionar colaborador"
+                  onClick={() => setAddOpen((o) => !o)}
+                  className="w-full h-full flex flex-col items-center justify-center gap-0.5 px-1"
+                >
+                  <span
+                    className={`w-7 h-7 rounded-full flex items-center justify-center border-2 border-dashed ${colors.border} ${colors.textSecondary}`}
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </span>
+                  <span className={`text-xs font-bold uppercase tracking-wider ${colors.textMuted}`}>Mais</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+              {addOpen && (
+                <ul
+                  role="listbox"
+                  data-testid="agenda-add-menu"
+                  className={`absolute right-0 top-full mt-1 z-40 min-w-[11rem] max-h-64 overflow-auto rounded-xl border ${colors.border} ${colors.card} shadow-[var(--shadow-modal)] py-1`}
+                >
+                  {addableMembers.map((m) => (
+                    <li key={m.id} role="option">
+                      <button
+                        type="button"
+                        data-testid={`agenda-add-${m.id}`}
+                        className={`w-full text-left px-3 py-2.5 min-h-[44px] text-sm font-medium ${colors.text} hover:brightness-110`}
+                        onClick={() => {
+                          onToggleProfessional(m.id);
+                          setAddOpen(false);
+                        }}
+                      >
+                        {m.id === selfMemberId ? 'Você' : firstName(m.name)}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+      </div>
+      <div
+        data-testid="agenda-resource-grid"
+        onScroll={syncHeaderScroll}
+        className={`overflow-x-auto max-w-full scrollbar-hide ${colors.surface}`}
+      >
+        <div className="inline-flex min-w-full [--agenda-slot-h:3rem] md:[--agenda-slot-h:3.5rem]">
+          {/* Gutter de horário */}
+          <div
+            data-agenda-gutter="true"
+            className={`sticky left-0 z-20 w-12 shrink-0 flex flex-col ${colors.card}`}
+          >
             {timeSlots.map((time, idx) => {
               // Primeira linha sempre rotulada (grade pode começar às 07:30 por um encaixe).
               const isHour = time.endsWith(':00') || idx === 0;
@@ -259,48 +371,8 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
               <div
                 key={member.id}
                 data-testid={`agenda-col-${member.id}`}
-                className={`shrink-0 min-w-[152px] md:min-w-[176px] flex-1 flex flex-col overflow-hidden border-l ${colors.divider}`}
+                className={`${memberColumnWidth} flex flex-col overflow-hidden`}
               >
-                <div className={headerCell} title={member.name}>
-                  <button
-                    type="button"
-                    onClick={() => onToggleProfessional(member.id)}
-                    aria-pressed={isMemberSelected}
-                    data-testid={`agenda-filter-${member.id}`}
-                    title={member.name}
-                    className="w-full h-full flex flex-col items-center justify-center gap-0.5 px-2.5"
-                  >
-                    {member.photo_url ? (
-                      <img
-                        src={member.photo_url}
-                        alt=""
-                        className={`w-9 h-9 rounded-full object-cover border-2 transition-all ${
-                          isMemberSelected
-                            ? `${accent.border} shadow-[var(--shadow-card-accent)]`
-                            : colors.border
-                        }`}
-                      />
-                    ) : (
-                      <span
-                        className={`w-9 h-9 rounded-full flex items-center justify-center border-2 text-xs font-bold transition-all ${
-                          isMemberSelected
-                            ? `${accent.bg} border-transparent text-[var(--color-on-accent)] shadow-[var(--shadow-card-accent)]`
-                            : `${colors.card} ${colors.border} ${colors.text}`
-                        }`}
-                      >
-                        {initials(member.name)}
-                      </span>
-                    )}
-                    <span
-                      className={`text-xs font-bold uppercase tracking-wider truncate max-w-full px-0.5 ${
-                        isMemberSelected ? accent.text : colors.textMuted
-                      }`}
-                    >
-                      {isSelf ? 'Você' : firstName(member.name)}
-                    </span>
-                  </button>
-                </div>
-
                 <div className="relative overflow-hidden">
                   {timeSlots.map((time, slotIdx) => {
                     const covering = columnOverlays.filter(
@@ -431,28 +503,9 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
           {/* Ação: adicionar mais colaboradores ao filtro */}
           {showAddColumn && (
             <div
-              ref={addWrapRef}
               data-testid="agenda-col-add"
-              className={`shrink-0 w-[4.5rem] flex flex-col border-l ${colors.divider} relative`}
+              className={`shrink-0 w-[4.5rem] flex flex-col border-l ${colors.divider}`}
             >
-              <div className={headerCell}>
-                <button
-                  type="button"
-                  data-testid="agenda-filter-add"
-                  aria-expanded={addOpen}
-                  aria-haspopup="listbox"
-                  title="Adicionar colaborador"
-                  onClick={() => setAddOpen((o) => !o)}
-                  className="w-full h-full flex flex-col items-center justify-center gap-0.5 px-1"
-                >
-                  <span
-                    className={`w-9 h-9 rounded-full flex items-center justify-center border-2 border-dashed ${colors.border} ${colors.textSecondary}`}
-                  >
-                    <Plus className="w-4 h-4" />
-                  </span>
-                  <span className={`text-xs font-bold uppercase tracking-wider ${colors.textMuted}`}>Mais</span>
-                </button>
-              </div>
               {timeSlots.map((time) => (
                 <div
                   key={time}
@@ -461,29 +514,6 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                 />
               ))}
               {endLabel && <div className="h-7" aria-hidden />}
-              {addOpen && (
-                <ul
-                  role="listbox"
-                  data-testid="agenda-add-menu"
-                  className={`absolute left-0 top-[4.25rem] z-40 min-w-[11rem] max-h-64 overflow-auto rounded-xl border ${colors.border} ${colors.card} shadow-[var(--shadow-modal)] py-1`}
-                >
-                  {addableMembers.map((m) => (
-                    <li key={m.id} role="option">
-                      <button
-                        type="button"
-                        data-testid={`agenda-add-${m.id}`}
-                        className={`w-full text-left px-3 py-2.5 min-h-[44px] text-sm font-medium ${colors.text} hover:brightness-110`}
-                        onClick={() => {
-                          onToggleProfessional(m.id);
-                          setAddOpen(false);
-                        }}
-                      >
-                        {m.id === selfMemberId ? 'Você' : firstName(m.name)}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
             </div>
           )}
         </div>

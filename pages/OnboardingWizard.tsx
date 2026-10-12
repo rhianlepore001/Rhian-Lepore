@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useOnboardingState, OnboardingStep } from '../hooks/useOnboardingState';
+import { useAuth } from '../contexts/AuthContext';
 import { OnboardingLayout } from '../components/OnboardingLayout';
 import { StepBusinessInfo } from '../components/onboarding/StepBusinessInfo';
 import { StepServices } from '../components/onboarding/StepServices';
@@ -19,11 +20,46 @@ export const OnboardingWizard: React.FC = () => {
 
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
 
-    useEffect(() => {
-        if (completed) navigate('/', { replace: true });
-    }, [completed, navigate]);
+    const { loading: authLoading, tutorialCompleted, markTutorialCompleted } = useAuth();
+    const syncAttempted = useRef(false);
+    const [syncError, setSyncError] = useState<string | null>(null);
 
-    if (loading) {
+    // Sai do wizard só quando o AuthContext (que o guard de rota usa) também diz "concluído".
+    // Se o progresso está concluído mas o AuthContext não (perfil ainda sem a flag), sincroniza
+    // UMA vez antes de navegar: nunca ping-pong wizard ↔ "/" (Safari derrubava o app com
+    // "replaceState() more than 100 times").
+    useEffect(() => {
+        if (authLoading || !completed) return;
+        if (tutorialCompleted) {
+            navigate('/', { replace: true });
+            return;
+        }
+        if (syncAttempted.current) return;
+        syncAttempted.current = true;
+        void markTutorialCompleted().then(({ error }) => {
+            if (error) setSyncError('Não conseguimos concluir a configuração da sua conta.');
+        });
+    }, [authLoading, completed, tutorialCompleted, markTutorialCompleted, navigate]);
+
+    if (completed && syncError) {
+        return (
+            <div className={`min-h-screen ${colors.bg} flex items-center justify-center p-4`}>
+                <div className="text-center max-w-sm" data-testid="onboarding-sync-error">
+                    <p className={`${colors.text} text-lg mb-2`}>{syncError}</p>
+                    <p className={`${colors.textSecondary} text-sm mb-6`}>Verifique sua internet e tente de novo.</p>
+                    <button
+                        type="button"
+                        className="px-6 py-3 rounded-lg bg-[var(--color-accent)] text-[var(--color-on-accent,#000)] font-bold"
+                        onClick={() => { syncAttempted.current = false; setSyncError(null); window.location.reload(); }}
+                    >
+                        Tentar de novo
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (loading || authLoading || completed) {
         return (
             <div className={`min-h-screen ${colors.bg} flex items-center justify-center p-4`}>
                 <div className="text-center">
@@ -33,10 +69,6 @@ export const OnboardingWizard: React.FC = () => {
                 </div>
             </div>
         );
-    }
-
-    if (completed) {
-        return null;
     }
 
     const steps: Array<{ title: string; description: string; component: React.ReactNode }> = [

@@ -5,7 +5,6 @@ import { parseDate } from '../utils/date';
 import { resolveIsDev } from '../utils/devAccess';
 import { applyPublicAuthTheme } from '../utils/publicAuthTheme';
 import { normalizeRegion } from '../utils/formatters';
-import { getTrialEndsAt } from '../constants';
 import { isEmailTakenError } from '../utils/mapError';
 import { classifySignupError, signupError } from '../utils/signupErrors';
 
@@ -72,7 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
   const [loading, setLoading] = useState(true);
 
-  const fetchProfileData = async (userId: string) => {
+  const fetchProfileData = async (userId: string, allowEnsure = true): Promise<void> => {
     try {
       const { data: profile, error } = await supabase
         .from('profiles')
@@ -81,6 +80,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .single();
 
       if (error && error.code !== 'PGRST116') throw error;
+
+      // Dono logado sem perfil (conta órfã de um cadastro que falhou no meio): o banco cria o
+      // perfil de dono e o business_settings a partir do metadata do cadastro. Nunca para
+      // convite/colaborador (a RPC devolve skipped_staff). Uma tentativa por carga.
+      if (!profile && allowEnsure) {
+        const ensured = await supabase.rpc('ensure_owner_profile');
+        const status = (ensured?.data as { status?: string } | null)?.status;
+        if (ensured?.error) {
+          console.error('Error ensuring owner profile:', ensured.error);
+        } else if (status === 'created' || status === 'exists') {
+          return fetchProfileData(userId, false);
+        }
+      }
 
       if (profile) {
         // Para staff, userType será definido a partir do perfil do owner (evita flicker de tema)
@@ -451,26 +463,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return { error: null };
         }
 
-        const profileRow = {
-          id: authData.user.id,
-          full_name: data.fullName,
-          business_name: data.businessName,
-          user_type: data.userType,
-          region: data.region,
-          phone: data.phone,
-          birth_date: data.birthDate || null,
-          email: data.email,
-          tutorial_completed: false,
-          subscription_status: 'trial',
-          trial_ends_at: getTrialEndsAt(),
-          aios_enabled: true
-        };
-
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .upsert(profileRow, { onConflict: 'id' });
-
-        if (profileError && profileError.code !== '23505') return { error: profileError };
+        // Perfil de dono: criado pelo banco (trigger handle_new_user no signUp e, se faltar,
+        // ensure_owner_profile — idempotente, só para o próprio usuário). O cliente não tem
+        // INSERT em profiles (42501): o upsert direto deixava a conta órfã.
+        if (authData.session) {
+          const ensured = await supabase.rpc('ensure_owner_profile');
+          if (ensured?.error) return { error: ensured.error };
+          const status = (ensured?.data as { status?: string } | null)?.status;
+          if (status === 'skipped_staff') {
+            return { error: { code: 'owner_profile_skipped', message: 'Não foi possível concluir o cadastro deste e-mail como dono.' } };
+          }
+        }
 
         setCompanyId(resolvedCompanyId);
         setRole('owner');

@@ -235,34 +235,35 @@ describe('AuthContext', () => {
         });
     });
 
-    it('registers owner with own company_id and initial onboarding progress', async () => {
-        const mockUser = { id: 'owner-new', email: 'owner@example.com' };
-        const insertedProfiles: any[] = [];
+    it('registers owner via ensure_owner_profile (sem upsert direto em profiles, que dá 42501 em prod)', async () => {
+        const mockUser = { id: 'owner-new', email: 'owner@example.com', identities: [{ id: 'i1' }] };
+        const profileWrites: any[] = [];
 
         (supabase.auth.getSession as any).mockResolvedValue({ data: { session: null }, error: null });
         (supabase.auth.signUp as any).mockResolvedValue({
-            data: { user: mockUser },
+            data: { user: mockUser, session: { user: mockUser } },
             error: null,
         });
+        // Como prod: cliente não tem INSERT em profiles (REVOKE de 2026-09-18).
+        const denied = { data: null, error: { code: '42501', message: 'permission denied for table profiles' } };
         (supabase.from as any).mockImplementation((table: string) => ({
             insert: vi.fn().mockImplementation((rows) => {
-                if (table === 'profiles') {
-                    insertedProfiles.push(...rows);
-                }
-
+                if (table === 'profiles') { profileWrites.push(rows); return Promise.resolve(denied); }
                 return Promise.resolve({ data: null, error: null });
             }),
             upsert: vi.fn().mockImplementation((row) => {
-                if (table === 'profiles') {
-                    insertedProfiles.push(row);
-                }
+                if (table === 'profiles') { profileWrites.push(row); return Promise.resolve(denied); }
                 return Promise.resolve({ data: null, error: null });
             }),
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
             single: vi.fn().mockResolvedValue({ data: null, error: null }),
         }));
-        (supabase.rpc as any).mockResolvedValue({ data: null, error: null });
+        (supabase.rpc as any).mockImplementation((fn: string) => Promise.resolve(
+            fn === 'ensure_owner_profile'
+                ? { data: { status: 'exists', role: 'owner' }, error: null }
+                : { data: null, error: null },
+        ));
 
         const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -280,23 +281,103 @@ describe('AuthContext', () => {
         });
 
         expect(registerResult.error).toBeNull();
-        expect(insertedProfiles[0]).toMatchObject({
-            id: mockUser.id,
-            tutorial_completed: false,
-            subscription_status: 'trial',
-            aios_enabled: true,
-        });
-        expect(insertedProfiles[0]).not.toHaveProperty('role');
-        expect(insertedProfiles[0]).not.toHaveProperty('company_id');
-        const trialMs = new Date(insertedProfiles[0].trial_ends_at).getTime() - Date.now();
-        const expectedMs = TRIAL_DAYS * 24 * 60 * 60 * 1000;
-        expect(Math.abs(trialMs - expectedMs)).toBeLessThan(5_000);
+        expect(profileWrites).toEqual([]);
+        expect(supabase.rpc).toHaveBeenCalledWith('ensure_owner_profile');
+        expect(supabase.auth.signUp).toHaveBeenCalledWith(expect.objectContaining({
+            options: { data: expect.objectContaining({ role: 'owner', business_name: 'Barbearia Teste', region: 'BR', type: 'barber', phone: '11999999999' }) },
+        }));
         expect(supabase.rpc).toHaveBeenCalledWith('upsert_onboarding_progress', {
             p_company_id: mockUser.id,
             p_current_step: 1,
             p_completed_steps: [],
             p_step_data: {},
         });
+        expect(result.current.companyId).toBe(mockUser.id);
+        expect(result.current.role).toBe('owner');
+    });
+
+    it('cadastro de dono: erro da ensure_owner_profile volta para a tela (sem seguir para o onboarding)', async () => {
+        const mockUser = { id: 'owner-err', email: 'o@example.com', identities: [{ id: 'i1' }] };
+        (supabase.auth.getSession as any).mockResolvedValue({ data: { session: null }, error: null });
+        (supabase.auth.signUp as any).mockResolvedValue({ data: { user: mockUser, session: { user: mockUser } }, error: null });
+        (supabase.from as any).mockImplementation(() => ({
+            select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(),
+            single: vi.fn().mockResolvedValue({ data: null, error: null }),
+        }));
+        (supabase.rpc as any).mockImplementation((fn: string) => Promise.resolve(
+            fn === 'ensure_owner_profile' ? { data: null, error: { code: '500', message: 'boom' } } : { data: null, error: null },
+        ));
+        const { result } = renderHook(() => useAuth(), { wrapper });
+        let r: any;
+        await act(async () => {
+            r = await result.current.register({ email: 'o@example.com', password: 'Password123!', fullName: 'O', businessName: 'B', userType: 'barber', region: 'BR', phone: '1' });
+        });
+        expect(r.error).toMatchObject({ message: 'boom' });
+        expect(supabase.rpc).not.toHaveBeenCalledWith('upsert_onboarding_progress', expect.anything());
+    });
+
+    it('cadastro de dono com confirmação de e-mail ligada (sem sessão): não chama a RPC (o trigger cria o perfil)', async () => {
+        const mockUser = { id: 'owner-conf', email: 'c@example.com', identities: [{ id: 'i1' }] };
+        (supabase.auth.getSession as any).mockResolvedValue({ data: { session: null }, error: null });
+        (supabase.auth.signUp as any).mockResolvedValue({ data: { user: mockUser, session: null }, error: null });
+        (supabase.from as any).mockImplementation(() => ({
+            select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(),
+            single: vi.fn().mockResolvedValue({ data: null, error: null }),
+        }));
+        (supabase.rpc as any).mockResolvedValue({ data: null, error: null });
+        const { result } = renderHook(() => useAuth(), { wrapper });
+        await act(async () => {
+            await result.current.register({ email: 'c@example.com', password: 'Password123!', fullName: 'C', businessName: 'B', userType: 'barber', region: 'BR', phone: '1' });
+        });
+        expect(supabase.rpc).not.toHaveBeenCalledWith('ensure_owner_profile');
+    });
+
+    it('login de dono órfão (sem profile): chama ensure_owner_profile e recarrega o perfil', async () => {
+        const mockUser = { id: 'c804ea7a-orphan', email: 'lead@example.com' };
+        (supabase.auth.getSession as any).mockResolvedValue({ data: { session: { user: mockUser } }, error: null });
+        let created = false;
+        (supabase.from as any).mockImplementation((table: string) => ({
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            single: vi.fn().mockImplementation(() => {
+                if (table === 'profiles') {
+                    return Promise.resolve(created
+                        ? { data: { id: mockUser.id, role: 'owner', company_id: mockUser.id, user_type: 'barber', region: 'BR', business_name: 'Oliveira cortes', full_name: 'Rafael', tutorial_completed: false, subscription_status: 'trial', trial_ends_at: null }, error: null }
+                        : { data: null, error: { code: 'PGRST116', message: 'no rows' } });
+                }
+                if (table === 'onboarding_progress') return Promise.resolve({ data: { is_completed: true }, error: null });
+                return Promise.resolve({ data: null, error: null });
+            }),
+        }));
+        (supabase.rpc as any).mockImplementation((fn: string) => {
+            if (fn === 'ensure_owner_profile') { created = true; return Promise.resolve({ data: { status: 'created', role: 'owner' }, error: null }); }
+            return Promise.resolve({ data: null, error: null });
+        });
+
+        const { result } = renderHook(() => useAuth(), { wrapper });
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        expect(supabase.rpc).toHaveBeenCalledWith('ensure_owner_profile');
+        expect(result.current.businessName).toBe('Oliveira cortes');
+        expect(result.current.companyId).toBe(mockUser.id);
+        expect(result.current.role).toBe('owner');
+        expect(result.current.tutorialCompleted).toBe(true);
+    });
+
+    it('login sem profile e RPC devolve skipped_staff (convite): não insiste nem vira dono', async () => {
+        const mockUser = { id: 'staff-orphan', email: 's@example.com' };
+        (supabase.auth.getSession as any).mockResolvedValue({ data: { session: { user: mockUser } }, error: null });
+        (supabase.from as any).mockImplementation(() => ({
+            select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(),
+            single: vi.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116', message: 'no rows' } }),
+        }));
+        (supabase.rpc as any).mockImplementation((fn: string) => Promise.resolve(
+            fn === 'ensure_owner_profile' ? { data: { status: 'skipped_staff' }, error: null } : { data: null, error: null },
+        ));
+        const { result } = renderHook(() => useAuth(), { wrapper });
+        await waitFor(() => expect(result.current.loading).toBe(false));
+        expect((supabase.rpc as any).mock.calls.filter((c: any[]) => c[0] === 'ensure_owner_profile')).toHaveLength(1);
+        expect(result.current.companyId).toBeNull();
     });
 
     it('recusa cadastro staff sem member_id do convite', async () => {

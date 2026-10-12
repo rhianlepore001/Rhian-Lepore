@@ -4,6 +4,7 @@ import { captureRenderError } from '../lib/autoBugCapture';
 import { AlertTriangle, RefreshCcw } from 'lucide-react';
 import { Button } from './ui/Button';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
+import { isChunkLoadError, reloadOnceForNewVersion } from '../utils/chunkLoadError';
 
 interface Props {
     children: ReactNode;
@@ -12,6 +13,40 @@ interface Props {
 interface State {
     hasError: boolean;
     error: Error | null;
+}
+
+function NewVersionFallback({ onReload }: { onReload: () => void }) {
+    const themeAttr = typeof document !== 'undefined'
+        ? document.documentElement.getAttribute('data-theme')
+        : null;
+    const themeOverride: ThemeVariant = themeAttr === 'beauty' ? 'beauty' : 'barber';
+    const { colors, font } = useBrutalTheme({ override: themeOverride });
+
+    return (
+        <div className={`min-h-screen ${colors.bg} flex items-center justify-center p-4`} data-testid="new-version-screen">
+            <div className={`${colors.card} ${colors.border} border-2 p-8 max-w-md w-full text-center rounded-2xl`}>
+                <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 bg-[var(--color-accent)]/15 border-2 border-[var(--color-accent)]">
+                    <RefreshCcw className="w-10 h-10 text-[var(--color-accent)]" />
+                </div>
+                <h2 className={`text-2xl font-bold ${colors.text} mb-4`}>
+                    Nova versão disponível
+                </h2>
+                <p className={`${colors.textSecondary} mb-8 ${font.mono} text-sm leading-relaxed`}>
+                    Atualizamos o AgendiX. Recarregue a página para continuar de onde parou.
+                </p>
+                <div className="flex justify-center">
+                    <Button
+                        variant="primary"
+                        size="lg"
+                        onClick={onReload}
+                        icon={<RefreshCcw className="w-4 h-4" />}
+                    >
+                        Recarregar
+                    </Button>
+                </div>
+            </div>
+        </div>
+    );
 }
 
 function ErrorFallback({ error, onReset }: { error: Error | null; onReset: () => void }) {
@@ -71,6 +106,13 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+        if (isChunkLoadError(error)) {
+            // Aba de um deploy antigo: não é bug. Recarrega sozinho uma vez (sem loop);
+            // se já recarregou há pouco, fica a tela de "nova versão" com o botão.
+            logger.warn('Chunk desatualizado após deploy; recarregando', { message: error.message });
+            reloadOnceForNewVersion();
+            return;
+        }
         logger.error('Uncaught Error in React Component', error, {
             componentStack: errorInfo.componentStack
         });
@@ -85,6 +127,9 @@ export class ErrorBoundary extends Component<Props, State> {
 
     public render() {
         if (this.state.hasError) {
+            if (isChunkLoadError(this.state.error)) {
+                return <NewVersionFallback onReload={() => window.location.reload()} />;
+            }
             return <ErrorFallback error={this.state.error} onReset={this.handleReset} />;
         }
 

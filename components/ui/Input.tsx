@@ -102,8 +102,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
                 '[&>svg]:w-4 [&>svg]:h-4',
                 colors.textMuted,
               ].join(' ')}
-              aria-hidden="true"
             >
+              {/* Sem aria-hidden: aqui costuma ficar o botão mostrar/ocultar senha. */}
               {iconRight}
             </span>
           )}

@@ -1,136 +1,193 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { AlertCircle, ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { ArrowLeft, Mail, Send, CheckCircle2, AlertCircle } from 'lucide-react';
-import { Screw } from '../components/Screw';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { useScrollToError } from '../hooks/useScrollToError';
+import { RecoveryCard, RecoveryEyebrow, RecoveryLead, RecoveryShell, RecoveryTitle } from '../components/auth/RecoveryShell';
+import { mapRecoveryRequestError, requestPasswordReset, RESEND_COOLDOWN_SECONDS } from '../services/passwordRecovery';
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+function formatCountdown(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
 
 export const ForgotPassword: React.FC = () => {
-    const navigate = useNavigate();
-    const [email, setEmail] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [done, setDone] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const errorRef = useScrollToError(error);
+  const [email, setEmail] = useState('');
+  const [sentTo, setSentTo] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [fieldError, setFieldError] = useState<string | undefined>();
+  const [cooldown, setCooldown] = useState(0);
+  const [resent, setResent] = useState(false);
+  const errorRef = useScrollToError(error);
+  const sentTitleRef = useRef<HTMLHeadingElement>(null);
 
-    const handleResetRequest = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        setError(null);
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = window.setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => window.clearTimeout(t);
+  }, [cooldown]);
 
-        try {
-            const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: window.location.origin,
-            });
+  useEffect(() => {
+    if (sentTo) sentTitleRef.current?.focus();
+  }, [sentTo]);
 
-            if (resetError) throw resetError;
-            setDone(true);
-        } catch (err: unknown) {
-            console.error('Error requesting password reset:', err);
-            setError('Não conseguimos enviar o e-mail agora. Confira o endereço digitado e tente de novo.');
-        } finally {
-            setLoading(false);
-        }
-    };
+  const send = async (target: string, isResend: boolean) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { error: resetError } = await requestPasswordReset(supabase.auth, target, window.location.origin);
+      if (resetError) throw resetError;
+      setSentTo(target);
+      setResent(isResend);
+      setCooldown(RESEND_COOLDOWN_SECONDS);
+    } catch (err: unknown) {
+      console.error('Erro ao pedir redefinição de senha:', err);
+      setError(mapRecoveryRequestError(err));
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    return (
-        <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center p-4 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-[var(--color-accent)]/5 to-transparent pointer-events-none" />
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const value = email.trim();
+    if (!EMAIL_RE.test(value)) {
+      setFieldError('Digite um e-mail válido, como nome@exemplo.com.');
+      return;
+    }
+    setFieldError(undefined);
+    void send(value, false);
+  };
 
-            <div className="w-full max-w-md z-10">
-                <Link
-                    to="/login"
-                    className="flex items-center gap-2 text-xs font-mono text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-all uppercase mb-8 w-fit group min-h-[44px]"
-                >
-                    <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                    Voltar para o Login
-                </Link>
+  const switchEmail = () => {
+    setSentTo(null);
+    setError(null);
+    setResent(false);
+  };
 
-                <div className="bg-[var(--color-card)] border border-[var(--color-border)] shadow-[var(--elevation-3)] rounded-2xl p-8 relative">
-                    <Screw className="top-[-10px] left-[-10px] text-[var(--color-text-muted)]" />
-                    <Screw className="top-[-10px] right-[-10px] text-[var(--color-text-muted)]" />
-                    <Screw className="bottom-[-10px] left-[-10px] text-[var(--color-text-muted)]" />
-                    <Screw className="bottom-[-10px] right-[-10px] text-[var(--color-text-muted)]" />
+  const errorBanner = error && (
+    <div
+      ref={errorRef}
+      role="alert"
+      tabIndex={-1}
+      className="mt-6 flex items-start gap-2.5 rounded-xl border border-[var(--color-danger-border)] bg-[var(--color-danger-bg)] px-3.5 py-3 text-sm text-[var(--color-danger)]"
+    >
+      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+      <span>{error}</span>
+    </div>
+  );
 
-                    {!done ? (
-                        <>
-                            <div className="text-center mb-8">
-                                <div className="w-16 h-16 bg-[var(--color-info-bg)] border-2 border-[var(--color-info-border)] rounded-2xl flex items-center justify-center mx-auto mb-4">
-                                    <Mail className="w-8 h-8 text-[var(--color-info)]" />
-                                </div>
-                                <h2 className="font-heading text-2xl text-[var(--color-text)] uppercase tracking-wider mb-2">
-                                    Recuperar Senha
-                                </h2>
-                                <p className="font-mono text-sm text-[var(--color-text-muted)]">
-                                    Enviaremos um link de recuperação para o seu e-mail.
-                                </p>
-                            </div>
+  return (
+    <RecoveryShell testId="forgot-password-page">
+      {!sentTo ? (
+        <RecoveryCard>
+          <RecoveryEyebrow>Recuperar acesso</RecoveryEyebrow>
+          <RecoveryTitle>Esqueceu sua senha?</RecoveryTitle>
+          <RecoveryLead>
+            Informe o e-mail da sua conta. Vamos enviar um link para você criar uma senha nova.
+          </RecoveryLead>
 
-                            {error && (
-                                <div
-                                    ref={errorRef}
-                                    role="alert"
-                                    tabIndex={-1}
-                                    className="p-4 bg-[var(--color-danger-bg)] border border-[var(--color-danger-border)] text-[var(--color-danger)] text-xs font-mono mb-6 flex items-start gap-3 rounded-xl"
-                                >
-                                    <AlertCircle className="w-4 h-4 shrink-0" />
-                                    <span>{error}</span>
-                                </div>
-                            )}
+          {errorBanner}
 
-                            <form onSubmit={handleResetRequest} className="space-y-6">
-                                <Input
-                                    id="forgot-email"
-                                    type="email"
-                                    label="E-mail da Conta"
-                                    required
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="seu.email@exemplo.com"
-                                    autoComplete="email"
-                                />
+          <form onSubmit={handleSubmit} noValidate className="mt-7 space-y-5">
+            <Input
+              id="forgot-email"
+              type="email"
+              inputMode="email"
+              label="E-mail"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (fieldError) setFieldError(undefined);
+              }}
+              placeholder="nome@exemplo.com"
+              autoComplete="email"
+              autoCapitalize="none"
+              spellCheck={false}
+              error={fieldError}
+              size="lg"
+              required
+            />
+            <Button type="submit" variant="primary" size="lg" fullWidth loading={loading} data-testid="forgot-submit">
+              {loading ? 'Enviando link…' : 'Enviar link de redefinição'}
+            </Button>
+          </form>
 
-                                <Button
-                                    type="submit"
-                                    variant="primary"
-                                    disabled={loading || !email}
-                                    loading={loading}
-                                    className="w-full h-14"
-                                    icon={!loading ? <Send className="w-5 h-5" /> : undefined}
-                                >
-                                    {loading ? 'Enviando...' : 'Enviar link'}
-                                </Button>
-                            </form>
-                        </>
-                    ) : (
-                        <div className="text-center py-4" id="recovery-success-message">
-                            <div className="w-20 h-20 bg-[var(--color-success-bg)] border-2 border-[var(--color-success-border)] rounded-full flex items-center justify-center mx-auto mb-6">
-                                <CheckCircle2 className="w-10 h-10 text-[var(--color-success)]" />
-                            </div>
-                            <h2 className="font-heading text-2xl text-[var(--color-text)] uppercase mb-4">
-                                E-mail Enviado!
-                            </h2>
-                            <p className="font-mono text-sm text-[var(--color-text-muted)] mb-8 leading-relaxed">
-                                Verifique sua caixa de entrada (e pasta de spam) para o link de recuperação.
-                            </p>
-                            <Button
-                                type="button"
-                                variant="primary"
-                                className="w-full h-14"
-                                onClick={() => navigate('/login')}
-                            >
-                                Voltar ao login
-                            </Button>
-                        </div>
-                    )}
-                </div>
+        </RecoveryCard>
+      ) : (
+        <RecoveryCard>
+          <div id="recovery-success-message" data-testid="forgot-sent">
+            <RecoveryEyebrow tone="success">Verifique seu e-mail</RecoveryEyebrow>
+            <h1 ref={sentTitleRef} tabIndex={-1} className="font-heading text-[26px] sm:text-[28px] font-bold leading-[1.1] tracking-tight focus:outline-none">
+              Link enviado
+            </h1>
+            <p className="mt-3 text-[15px] leading-relaxed text-[var(--color-text-secondary)]">
+              Se houver uma conta com este e-mail, o link para criar uma senha nova chega em alguns minutos.
+            </p>
+            <p
+              data-testid="forgot-sent-email"
+              className="mt-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3.5 py-2.5 font-mono text-[13px] text-[var(--color-text)] [overflow-wrap:anywhere]"
+            >
+              {sentTo}
+            </p>
 
-                <p className="text-center mt-8 text-xs font-mono text-[var(--color-text-muted)] uppercase tracking-widest">
-                    Poder. Controle. Precisão.
-                </p>
+            <ol className="mt-6 space-y-3 text-sm text-[var(--color-text-secondary)]">
+              {[
+                'Abra o e-mail no celular ou no computador.',
+                'Toque em “Criar nova senha”. O link funciona uma única vez.',
+                'Não chegou? Confira as pastas de spam e promoções.',
+              ].map((step, i) => (
+                <li key={step} className="flex gap-3">
+                  <span className="font-mono text-xs leading-5 text-[var(--color-accent)] tabular-nums">0{i + 1}</span>
+                  <span className="leading-5">{step}</span>
+                </li>
+              ))}
+            </ol>
+
+            <div aria-live="polite" className="sr-only">
+              {resent ? 'Enviamos um novo link.' : ''}
             </div>
-        </div>
-    );
+
+            {errorBanner}
+
+            <div className="mt-7 space-y-3">
+              <Button
+                type="button"
+                variant="secondary"
+                size="lg"
+                fullWidth
+                loading={loading}
+                disabled={cooldown > 0}
+                onClick={() => void send(sentTo, true)}
+                data-testid="forgot-resend"
+              >
+                {cooldown > 0 ? `Reenviar em ${formatCountdown(cooldown)}` : resent ? 'Reenviar outra vez' : 'Reenviar link'}
+              </Button>
+              <button
+                type="button"
+                onClick={switchEmail}
+                className="w-full min-h-[44px] text-sm font-semibold text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors"
+              >
+                Usar outro e-mail
+              </button>
+            </div>
+          </div>
+        </RecoveryCard>
+      )}
+
+      <Link
+        to="/login"
+        className="mt-6 mx-auto flex w-fit min-h-[44px] items-center gap-2 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        Voltar ao login
+      </Link>
+    </RecoveryShell>
+  );
 };

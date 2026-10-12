@@ -1,4 +1,4 @@
--- Provas de 20261011213000_fix_get_public_booking_by_id_type.
+-- Provas de 20261012074447_fix_get_public_booking_by_id_type.
 -- Roda na cadeia de test-sql-public-bookings-security.sh + migração #144 (= prod).
 -- Antes da migração: toda chamada de get_public_booking_by_id falha (42804) → checks FALHAM.
 SET TIMEZONE = 'UTC';

@@ -1,7 +1,7 @@
 -- =============================================================================
 -- get_public_booking_by_id: corrige o tipo de business_id (text -> uuid)
 -- Spec: docs/specs/booking-status-poll-SPEC.md
--- Rollback: docs/rollbacks/20261011213000_fix_get_public_booking_by_id_type.rollback.sql
+-- Rollback: docs/rollbacks/20261012074447_fix_get_public_booking_by_id_type.rollback.sql
 --
 -- ANTES (prod, pg_get_functiondef em 2026-10-11, md5 55be6c3d5c909db060159c59a162da13):
 --   RETURNS TABLE(..., business_id uuid, ...) mas o SELECT devolve pb.business_id (text):

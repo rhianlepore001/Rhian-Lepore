@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Testa 20261011213000_fix_get_public_booking_by_id_type num Postgres 17 local descartável
+# Testa 20261012074447_fix_get_public_booking_by_id_type num Postgres 17 local descartável
 # (não usa nem toca o Supabase de prod).
 #   scripts/test-sql-booking-status-poll.sh             # = prod (#144 aplicada, md5) → teste FALHA → migration 2x → passa
 #   scripts/test-sql-booking-status-poll.sh --rollback  # migration + rollback: função byte a byte = prod, ACL igual
@@ -12,8 +12,8 @@ if [ -z "$PGBIN" ] || [ ! -x "$PGBIN/psql" ]; then
 fi
 TMP="$(mktemp -d)"
 PORT="${PGPORT_TEST:-55506}"
-MIG="$ROOT/supabase/migrations/20261011213000_fix_get_public_booking_by_id_type.sql"
-RB="$ROOT/docs/rollbacks/20261011213000_fix_get_public_booking_by_id_type.rollback.sql"
+MIG="$ROOT/supabase/migrations/20261012074447_fix_get_public_booking_by_id_type.sql"
+RB="$ROOT/docs/rollbacks/20261012074447_fix_get_public_booking_by_id_type.rollback.sql"
 AC_HARNESS="$ROOT/supabase/tests/auto_confirm_online_bookings.harness.sql"
 AC_MIG="$ROOT/supabase/migrations/20261011161117_auto_confirm_online_bookings.sql"
 PBS_HARNESS="$ROOT/supabase/tests/public_bookings_security.harness.sql"

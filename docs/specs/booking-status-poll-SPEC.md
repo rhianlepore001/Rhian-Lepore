@@ -1,6 +1,6 @@
 # Tela de sucesso do link público: status ao vivo (get_public_booking_by_id)
 
-Status: PR em rascunho. Migração NÃO aplicada em prod (aguarda OK do Rhian).
+Status: aplicada em prod (versão 20261012074447, 2026-10-12; md5 98f253bcc93a7ff36bf4bf63e70d57da).
 
 ## Problema
 Depois de enviar um pedido manual, a cliente vê "Pedido enviado". A tela faz polling a cada 5 s
@@ -29,10 +29,10 @@ engole o erro (logger) e o status nunca muda. Só recarregando a página (outra 
   continua exigindo o uuid exato do pedido, então não abre enumeração.
 
 ## Mudança
-1. Migração `20261011213000_fix_get_public_booking_by_id_type.sql`: `CREATE OR REPLACE` com o corpo
+1. Migração `20261012074447_fix_get_public_booking_by_id_type.sql`: `CREATE OR REPLACE` com o corpo
    exato de prod e uma única troca: `pb.business_id` → `pb.business_id::uuid`. Mesma assinatura,
    mesmo retorno, dono, ACL, SECURITY DEFINER e search_path.
-   Rollback: `docs/rollbacks/20261011213000_fix_get_public_booking_by_id_type.rollback.sql` (corpo de prod exato).
+   Rollback: `docs/rollbacks/20261012074447_fix_get_public_booking_by_id_type.rollback.sql` (corpo de prod exato).
 2. Front: `utils/publicBookingFresh.ts` `mergeFreshPublicBooking(prev, fresh)`. O polling passa a
    juntar a resposta ao pedido atual em vez de substituí-lo. Sem isso, quando a função voltar a
    funcionar, campos que ela não devolve (`is_edit`, `original_appointment_time`, `created_at`,

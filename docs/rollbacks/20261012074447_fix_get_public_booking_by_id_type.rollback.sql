@@ -1,5 +1,5 @@
 -- =============================================================================
--- ROLLBACK de 20261011213000_fix_get_public_booking_by_id_type
+-- ROLLBACK de 20261012074447_fix_get_public_booking_by_id_type
 -- Volta byte a byte ao corpo de prod de 2026-10-11 (md5 55be6c3d5c909db060159c59a162da13),
 -- que falha em toda chamada (bug original). Idempotente; mantém ACL.
 -- Aplicado via MCP (execute_sql), o CRLF do corpo vira LF: md5 92c572ae72cd3550abb31191130332ab

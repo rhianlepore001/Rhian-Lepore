@@ -2,7 +2,6 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
-import { TRIAL_DAYS } from '../constants';
 
 const SECTION_CLASS = 'space-y-2';
 const H2_CLASS = 'font-heading text-xl font-bold tracking-tight';
@@ -75,7 +74,7 @@ export const Legal: React.FC = () => {
                         <section className={SECTION_CLASS}>
                             <h2 className={H2_CLASS}>3. Assinatura e teste</h2>
                             <p className={P_CLASS}>
-                                Novas contas têm {TRIAL_DAYS} dias de período de teste. Após o período, o uso continuado requer
+                                Novas contas começam com um período de teste. Após o período, o uso continuado requer
                                 assinatura ativa. Cancelamentos podem ser feitos a qualquer momento nas configurações.
                             </p>
                         </section>

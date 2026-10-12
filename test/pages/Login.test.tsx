@@ -53,7 +53,7 @@ describe('Login page', () => {
     expect(barberCard).not.toHaveTextContent(/salão/i);
     expect(beautyCard).toHaveTextContent(/salão de beleza/i);
     expect(beautyCard).not.toHaveTextContent(/barbearias/i);
-    expect(screen.getByRole('link', { name: /criar conta — 20 dias grátis/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /^crie sua conta grátis$/i })).toBeInTheDocument();
   });
 
   it('shows, focuses and scrolls to the error message when login fails', async () => {

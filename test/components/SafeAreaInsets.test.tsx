@@ -21,7 +21,6 @@ vi.mock('@/hooks/useSubscription', () => ({
 // Filhos pesados do Layout (dependem de Supabase/contextos) não importam aqui.
 vi.mock('@/components/Sidebar', () => ({ Sidebar: () => null }));
 vi.mock('@/components/Header', () => ({ Header: () => <header data-testid="header" /> }));
-vi.mock('@/components/TrialBanner', () => ({ TrialBanner: () => null }));
 vi.mock('@/components/PaywallModal', () => ({ PaywallModal: () => null }));
 vi.mock('@/components/BrutalBackground', () => ({ BrutalBackground: () => null }));
 
@@ -65,7 +64,7 @@ describe('iOS safe areas (PWA instalado)', () => {
     expect(main.className).toContain('pb-[calc(7rem+var(--safe-bottom))]');
   });
 
-  it('com banner de trial, header e conteúdo somam status bar + 40px do banner', () => {
+  it('em período de teste não há banner no topo: header e conteúdo só descontam a status bar', () => {
     subscription.isTrial = true;
     try {
       const { container } = render(
@@ -76,10 +75,11 @@ describe('iOS safe areas (PWA instalado)', () => {
         </MemoryRouter>
       );
       const root = container.firstElementChild as HTMLElement;
-      expect(root.style.getPropertyValue('--header-top')).toBe('calc(var(--safe-top) + 40px)');
+      expect(root.style.getPropertyValue('--header-top')).toBe('var(--safe-top)');
       const main = container.querySelector('main') as HTMLElement;
-      expect(main.className).toContain('pt-[calc(var(--safe-top)+96px)]');
-      expect(main.className).toContain('md:pt-[calc(var(--safe-top)+120px)]');
+      expect(main.className).toContain('pt-[calc(var(--safe-top)+3.5rem)]');
+      expect(main.className).not.toContain('96px');
+      expect(container.textContent).not.toMatch(/teste grátis/i);
     } finally {
       subscription.isTrial = false;
     }

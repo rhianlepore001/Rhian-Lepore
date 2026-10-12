@@ -61,7 +61,7 @@ export const TrialStatusCard: React.FC<TrialStatusCardProps> = ({ onNavigate, cl
         </div>
       )}
       <div className="flex-1 min-w-0 leading-tight">
-        <p className={`text-[11px] font-medium uppercase tracking-[0.08em] whitespace-nowrap ${colors.textMuted}`}>
+        <p className={`text-xs font-medium uppercase tracking-[0.06em] whitespace-nowrap ${colors.textMuted}`}>
           {isExpired ? 'Assinatura' : 'Período de teste'}
         </p>
         <p className={`${compact ? 'text-[13px]' : 'text-sm'} font-semibold whitespace-nowrap truncate ${tone === 'danger' ? 'text-[var(--color-danger)]' : colors.text}`}>

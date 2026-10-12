@@ -1,4 +1,4 @@
--- Harness local para 20261012130000_owner_signup_profile (Postgres descartável; não toca prod).
+-- Harness local para 20261012130203_owner_signup_profile (Postgres descartável; não toca prod).
 -- Colunas, defaults, constraints, grants, RLS e triggers copiados de prod (lcqwrngscsziysyfhpfj,
 -- 2026-10-12, só SELECT). Funções com o corpo exato de pg_get_functiondef de prod; o script
 -- confere o md5 de cada uma antes de testar. Confirmação de e-mail desligada como em prod:

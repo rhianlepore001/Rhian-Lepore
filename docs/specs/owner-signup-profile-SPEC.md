@@ -15,7 +15,7 @@
 2. `ensure_owner_profile()` (SECURITY DEFINER, EXECUTE só para authenticated/service_role) é idempotente e atua
    só sobre `auth.uid()`. Cria o profile de dono (company_id = id, trial de 20 dias, dados do metadata) e o
    business_settings. Retorna `skipped_staff` para convite, membership ou role≠owner.
-3. `log_signup_error` (migração 20260925130000, pendente em prod).
+3. `log_signup_error` (migração 20261012130157, pendente em prod).
 4. Front: o `register` usa a RPC (sem upsert). O `fetchProfileData` chama a RPC uma vez para dono sem perfil.
    O wizard só navega para '/' quando o AuthContext concorda, e senão sincroniza 1x e mostra "Tentar de novo".
    O erro de chunk mostra "Nova versão disponível" com 1 reload automático a cada 5 min.

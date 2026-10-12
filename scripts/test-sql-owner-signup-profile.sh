@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Testa 20261012130000_owner_signup_profile (+ 20260925130000_log_signup_error) num Postgres 17
+# Testa 20261012130203_owner_signup_profile (+ 20261012130157_log_signup_error) num Postgres 17
 # local descartável (não usa nem toca o Supabase de prod).
 #   scripts/test-sql-owner-signup-profile.sh             # harness = prod → testes FALHAM → migration 2x → passam
 #   scripts/test-sql-owner-signup-profile.sh --rollback  # migration + rollback = prod (md5 + ACL)
@@ -9,10 +9,10 @@ PGBIN="${PGBIN:-$(ls -d /usr/lib/postgresql/*/bin 2>/dev/null | sort -V | tail -
 [ -n "$PGBIN" ] && [ -x "$PGBIN/psql" ] || { echo "Postgres local não encontrado (PGBIN)."; exit 1; }
 TMP="$(mktemp -d)"
 PORT="${PGPORT_TEST:-55507}"
-MIG="$ROOT/supabase/migrations/20261012130000_owner_signup_profile.sql"
-RB="$ROOT/docs/rollbacks/20261012130000_owner_signup_profile.rollback.sql"
-LOGMIG="$ROOT/supabase/migrations/20260925130000_log_signup_error.sql"
-LOGRB="$ROOT/supabase/rollbacks/20260925130000_log_signup_error.rollback.sql"
+MIG="$ROOT/supabase/migrations/20261012130203_owner_signup_profile.sql"
+RB="$ROOT/docs/rollbacks/20261012130203_owner_signup_profile.rollback.sql"
+LOGMIG="$ROOT/supabase/migrations/20261012130157_log_signup_error.sql"
+LOGRB="$ROOT/supabase/rollbacks/20261012130157_log_signup_error.rollback.sql"
 HARNESS="$ROOT/supabase/tests/owner_signup_profile.harness.sql"
 TEST="$ROOT/supabase/tests/owner_signup_profile.test.sql"
 for f in "$MIG" "$RB" "$LOGMIG" "$LOGRB" "$HARNESS" "$TEST"; do [ -f "$f" ] || { echo "faltou $f"; exit 1; }; done

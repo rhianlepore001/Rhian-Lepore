@@ -1,4 +1,4 @@
--- Testes de 20261012130000_owner_signup_profile (rodar via scripts/test-sql-owner-signup-profile.sh).
+-- Testes de 20261012130203_owner_signup_profile (rodar via scripts/test-sql-owner-signup-profile.sh).
 -- Ids com prefixo 0a000000-. Cada check grava em pg_temp.results; o script falha se algum der FAIL.
 BEGIN;
 CREATE TEMP TABLE results (n int, name text, ok boolean, got text, expected text);

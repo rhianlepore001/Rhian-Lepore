@@ -1,5 +1,5 @@
 -- =============================================================================
--- ROLLBACK de 20261012130000_owner_signup_profile
+-- ROLLBACK de 20261012130203_owner_signup_profile
 -- Volta check_email_confirmed ao corpo de prod de 2026-10-12 (md5 c9d96374bdc8f8b0552d779fe1dbc94a,
 -- ACL {postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}) e remove
 -- ensure_owner_profile(). Perfis/business_settings criados enquanto a migração esteve no ar

@@ -21,6 +21,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useUI } from '../contexts/UIContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { findActiveSettingsItem } from '../constants';
+import { TrialStatusCard } from './TrialStatusCard';
 
 interface MoreOptionsDrawerProps {
   onClose: () => void;
@@ -195,6 +196,8 @@ export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose })
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        <TrialStatusCard onNavigate={handleClose} className="mx-3 mt-3" />
 
         <nav className="flex-1 overflow-y-auto py-4 px-3">
           <ul className="space-y-1">

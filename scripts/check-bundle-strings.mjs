@@ -14,7 +14,8 @@ const dist = path.resolve(process.argv[2] || path.join(root, 'dist'));
 const flags = fs.readFileSync(path.join(root, 'utils/featureFlags.ts'), 'utf8');
 const assistantOn = /export const ASSISTANT_ENABLED\s*=\s*true/.test(flags);
 
-const FORBIDDEN = assistantOn ? [] : ['Assistente AgendiX', 'Sou seu assistente pessoal', 'Fechar assistente'];
+// Copy antiga do período de teste (banner removido): não pode voltar ao app.
+const FORBIDDEN = [...(assistantOn ? [] : ['Assistente AgendiX', 'Sou seu assistente pessoal', 'Fechar assistente']), 'Teste grátis'];
 
 const assets = path.join(dist, 'assets');
 if (!fs.existsSync(assets)) {

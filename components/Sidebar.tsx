@@ -6,6 +6,7 @@ import { useUI } from '../contexts/UIContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useTheme } from '../contexts/ThemeContext';
+import { TrialStatusCard } from './TrialStatusCard';
 
 export const Sidebar: React.FC = () => {
   const location = useLocation();
@@ -134,7 +135,8 @@ export const Sidebar: React.FC = () => {
           {isStaff && renderLink('/meus-insights', TrendingUp, 'Meus resultados')}
         </nav>
 
-        <div className={`shrink-0 px-3 py-2 border-t ${colors.divider}`}>
+        <div className={`shrink-0 px-3 pt-3 pb-2 border-t ${colors.divider} space-y-2`}>
+          <TrialStatusCard onNavigate={closeSidebar} compact />
           <button
             onClick={() => {
               logout();

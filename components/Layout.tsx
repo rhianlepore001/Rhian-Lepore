@@ -2,12 +2,10 @@
 import React from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
-import { TrialBanner } from './TrialBanner';
 import { PaywallModal } from './PaywallModal';
 import { BottomMobileNav } from './BottomMobileNav';
 import { BrutalBackground } from './BrutalBackground';
 import { UIProvider } from '../contexts/UIContext';
-import { useSubscription } from '../hooks/useSubscription';
 import { useLocation } from 'react-router-dom';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 
@@ -17,18 +15,15 @@ interface LayoutProps {
 
 const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { pathname, search } = useLocation();
-  const { isTrial, isExpired } = useSubscription();
   const isSettingsRoute = pathname.startsWith('/configuracoes');
   const isBillingRoute = pathname === '/configuracoes/assinatura';
   const { colors, density } = useBrutalTheme();
 
-  const showBanner = !isBillingRoute && (isTrial || isExpired);
+  // Status do período de teste fica no menu lateral / sidebar (sem banner fixo no topo).
   // --header-top inclui a status bar do iOS (PWA instalado); 0px em Android/desktop.
-  const headerTop = showBanner ? 'calc(var(--safe-top) + 40px)' : 'var(--safe-top)';
-  // Header mobile é h-14 (56px), 1 linha; banner trial é h-10 (40px)
-  const paddingTop = showBanner
-    ? 'pt-[calc(var(--safe-top)+96px)] md:pt-[calc(var(--safe-top)+120px)]'
-    : 'pt-[calc(var(--safe-top)+3.5rem)] md:pt-[calc(var(--safe-top)+5rem)]';
+  const headerTop = 'var(--safe-top)';
+  // Header mobile é h-14 (56px), 1 linha
+  const paddingTop = 'pt-[calc(var(--safe-top)+3.5rem)] md:pt-[calc(var(--safe-top)+5rem)]';
   const hideMobileNavForNewFlow = Boolean(new URLSearchParams(search).get('new'));
   const showBottomMobileNav = !isSettingsRoute && !isBillingRoute && !hideMobileNavForNewFlow;
 
@@ -42,9 +37,7 @@ const LayoutContent: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       <BrutalBackground />
 
       {/* pt = faixa da status bar do iOS (fundo sólido para o conteúdo não aparecer por trás) */}
-      <div className={`fixed top-0 left-0 right-0 z-50 pt-[var(--safe-top)] ${colors.bg}`}>
-        <TrialBanner />
-      </div>
+      <div className={`fixed top-0 left-0 right-0 z-50 pt-[var(--safe-top)] ${colors.bg}`} />
       {!isBillingRoute && <PaywallModal />}
       {!isSettingsRoute && <Sidebar />}
       <Header />

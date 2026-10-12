@@ -2,7 +2,7 @@
 import { Appointment, Client, FinanceRecord } from './types';
 import { LucideIcon, Bell, LayoutDashboard, Calendar, Users, UserCog, Settings, DollarSign, Package, CreditCard, Clock, Shield, Trash2, ClipboardList, ShieldAlert, TrendingUp, Crown, Scissors } from 'lucide-react';
 
-/** Duração do trial grátis do produto AgendiX (não o clube de assinatura dos clientes). */
+/** Duração padrão do período de teste do produto AgendiX (não o clube de assinatura dos clientes). */
 export const TRIAL_DAYS = 20;
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;

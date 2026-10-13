@@ -1,4 +1,4 @@
--- ROLLBACK de 20261013123000_client_photos_tenant_isolation
+-- ROLLBACK de 20261013124447_client_photos_tenant_isolation
 -- Restaura policy ALL ampla de prod (2026-10-13). Idempotente.
 
 DROP POLICY IF EXISTS "client_photos_insert_own_folder" ON storage.objects;

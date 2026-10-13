@@ -9,8 +9,8 @@ PGBIN="${PGBIN:-$(ls -d /usr/lib/postgresql/*/bin 2>/dev/null | sort -V | tail -
 TMP="$(mktemp -d)"
 PORT="${PGPORT_TEST:-55521}"
 HARNESS="$ROOT/supabase/tests/alto_a01_client_photos.harness.sql"
-MIG="$ROOT/supabase/migrations/20261013123000_client_photos_tenant_isolation.sql"
-RB="$ROOT/docs/rollbacks/20261013123000_client_photos_tenant_isolation.rollback.sql"
+MIG="$ROOT/supabase/migrations/20261013124447_client_photos_tenant_isolation.sql"
+RB="$ROOT/docs/rollbacks/20261013124447_client_photos_tenant_isolation.rollback.sql"
 TEST="$ROOT/supabase/tests/alto_a01_client_photos.test.sql"
 for f in "$HARNESS" "$MIG" "$RB" "$TEST"; do [ -f "$f" ] || { echo "faltou $f"; exit 1; }; done
 export PGOPTIONS="-c client_min_messages=warning"

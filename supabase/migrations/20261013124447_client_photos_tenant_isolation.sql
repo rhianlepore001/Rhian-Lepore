@@ -1,7 +1,7 @@
 -- =============================================================================
 -- A-01: client_photos — isolamento por pasta do auth.uid()
 -- Spec: docs/specs/alto-a01-client-photos-isolation-SPEC.md
--- Rollback: docs/rollbacks/20261013123000_client_photos_tenant_isolation.rollback.sql
+-- Rollback: docs/rollbacks/20261013124447_client_photos_tenant_isolation.rollback.sql
 --
 -- ANTES (prod 2026-10-13):
 --   "Authenticated users manage client_photos" ALL TO public

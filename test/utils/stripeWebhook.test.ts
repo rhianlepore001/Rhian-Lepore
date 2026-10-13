@@ -91,7 +91,7 @@ describe('stripeWebhookVerify (signatures)', () => {
     const header = buildStripeSignatureHeader(payload, secret, 1_760_000_000);
     const result = verifyStripeSignature(payload + ' ', header, secret, 300, 1_760_000_000);
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.reason).toBe('bad_signature');
+    expect('reason' in result && result.reason).toBe('bad_signature');
   });
 
   it('rejects a bad secret', () => {
@@ -108,6 +108,6 @@ describe('stripeWebhookVerify (signatures)', () => {
     const header = buildStripeSignatureHeader(payload, secret, 1_000_000_000);
     const result = verifyStripeSignature(payload, header, secret, 300, 1_760_000_000);
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.reason).toBe('timestamp_outside_tolerance');
+    expect('reason' in result && result.reason).toBe('timestamp_outside_tolerance');
   });
 });

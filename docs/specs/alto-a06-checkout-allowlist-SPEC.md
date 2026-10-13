@@ -15,3 +15,6 @@
 ## Deploy
 Redeploy da edge function `create-checkout-session` (não é migration SQL).
 Envs opcionais: `CHECKOUT_ALLOWED_ORIGINS` (CSV), `STRIPE_PRICE_*` live.
+
+## Live price IDs (prod Vercel 2026-10-13)
+Included in allowlist: Solo/Team BRL/EUR `price_1UHgT…` from `VITE_STRIPE_PRICE_*`.

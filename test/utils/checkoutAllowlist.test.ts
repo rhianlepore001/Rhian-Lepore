@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   FALLBACK_STRIPE_PRICE_IDS,
+  PRODUCTION_STRIPE_PRICE_IDS,
   collectAllowedOrigins,
   collectAllowedPriceIds,
   isAllowedCheckoutMode,
@@ -14,6 +15,12 @@ describe('checkoutAllowlist (A-06)', () => {
   const prices = collectAllowedPriceIds();
   const origins = collectAllowedOrigins();
 
+
+  it('accepts live production price IDs from Vercel bundle', () => {
+    for (const id of PRODUCTION_STRIPE_PRICE_IDS) {
+      expect(isAllowedPriceId(id, prices)).toBe(true);
+    }
+  });
   it('accepts official plan price IDs and rejects others', () => {
     for (const id of FALLBACK_STRIPE_PRICE_IDS) {
       expect(isAllowedPriceId(id, prices)).toBe(true);
@@ -53,7 +60,7 @@ describe('checkoutAllowlist (A-06)', () => {
       resolve(__dirname, '../../supabase/functions/create-checkout-session/allowlist.ts'),
       'utf8',
     );
-    for (const id of FALLBACK_STRIPE_PRICE_IDS) {
+    for (const id of [...FALLBACK_STRIPE_PRICE_IDS, ...PRODUCTION_STRIPE_PRICE_IDS]) {
       expect(edge).toContain(id);
     }
     expect(edge).toContain('isAllowedReturnUrl');

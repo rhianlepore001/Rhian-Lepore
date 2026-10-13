@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Cake, ChevronRight, MessageCircle, Plus, Search, User, Users } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { logger } from '../utils/Logger';
+import { buildOwnerClientPhotoPath } from '../utils/clientPhotoPath';
 import { PhoneInput } from '../components/PhoneInput';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
@@ -165,7 +166,7 @@ export const Clients: React.FC = () => {
       if (photo) {
         try {
           const fileExt = photo.name.split('.').pop();
-          const fileName = `${authUser.id}/${Date.now()}.${fileExt}`;
+          const fileName = buildOwnerClientPhotoPath(authUser.id, fileExt || 'jpg');
           const { error: uploadError } = await supabase.storage
             .from('client_photos')
             .upload(fileName, photo);

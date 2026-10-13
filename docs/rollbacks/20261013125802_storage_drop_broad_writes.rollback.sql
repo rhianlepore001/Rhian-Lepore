@@ -1,4 +1,4 @@
--- ROLLBACK de 20261013123100_storage_drop_broad_writes (prod 2026-10-13)
+-- ROLLBACK de 20261013125802_storage_drop_broad_writes (prod 2026-10-13)
 
 DROP POLICY IF EXISTS "Authenticated upload marketing images" ON storage.objects;
 CREATE POLICY "Authenticated upload marketing images" ON storage.objects

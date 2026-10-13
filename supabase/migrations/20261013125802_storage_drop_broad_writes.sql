@@ -1,7 +1,7 @@
 -- =============================================================================
 -- A-02: remove writes amplas em marketing_images + Authenticated Delete
 -- Spec: docs/specs/alto-a02-marketing-delete-scope-SPEC.md
--- Rollback: docs/rollbacks/20261013123100_storage_drop_broad_writes.rollback.sql
+-- Rollback: docs/rollbacks/20261013125802_storage_drop_broad_writes.rollback.sql
 --
 -- ANTES (prod 2026-10-13):
 --   Authenticated upload/update/delete marketing images → qualquer authenticated

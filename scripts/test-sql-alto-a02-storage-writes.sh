@@ -5,8 +5,8 @@ PGBIN="${PGBIN:-$(ls -d /usr/lib/postgresql/*/bin 2>/dev/null | sort -V | tail -
 [ -n "$PGBIN" ] && [ -x "$PGBIN/psql" ] || { echo "Postgres local não encontrado (PGBIN)."; exit 1; }
 TMP="$(mktemp -d)"; PORT="${PGPORT_TEST:-55522}"
 HARNESS="$ROOT/supabase/tests/alto_a02_storage_writes.harness.sql"
-MIG="$ROOT/supabase/migrations/20261013123100_storage_drop_broad_writes.sql"
-RB="$ROOT/docs/rollbacks/20261013123100_storage_drop_broad_writes.rollback.sql"
+MIG="$ROOT/supabase/migrations/20261013125802_storage_drop_broad_writes.sql"
+RB="$ROOT/docs/rollbacks/20261013125802_storage_drop_broad_writes.rollback.sql"
 TEST="$ROOT/supabase/tests/alto_a02_storage_writes.test.sql"
 for f in "$HARNESS" "$MIG" "$RB" "$TEST"; do [ -f "$f" ] || { echo "faltou $f"; exit 1; }; done
 export PGOPTIONS="-c client_min_messages=warning"

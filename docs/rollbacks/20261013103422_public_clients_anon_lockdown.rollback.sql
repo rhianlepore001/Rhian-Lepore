@@ -1,4 +1,4 @@
--- ROLLBACK de 20261013120000_public_clients_anon_lockdown
+-- ROLLBACK de 20261013103422_public_clients_anon_lockdown
 -- Restaura policies/ACL/RPCs de prod (2026-10-13). Idempotente.
 
 GRANT ALL ON TABLE public.public_clients TO anon, authenticated, service_role;

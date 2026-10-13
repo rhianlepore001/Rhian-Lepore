@@ -1,7 +1,7 @@
 -- =============================================================================
 -- public_clients: fecha SELECT/INSERT/UPDATE direto por anon (e UPDATE aberto)
 -- Spec: docs/specs/crit-public-clients-billing-SPEC.md
--- Rollback: docs/rollbacks/20261013120000_public_clients_anon_lockdown.rollback.sql
+-- Rollback: docs/rollbacks/20261013103422_public_clients_anon_lockdown.rollback.sql
 --
 -- ANTES (prod, lido em 2026-10-13):
 --   "Public can select client data"  SELECT TO anon,authenticated USING (true)

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Testa 20261013120000 + 20261013120100 (C-01 public_clients + C-02 billing) em Postgres 17 local.
+# Testa 20261013103422 + 20261013103427 (C-01 public_clients + C-02 billing) em Postgres 17 local.
 #   scripts/test-sql-crit-public-clients-billing.sh             # TDD → migrations 2x → passa
 #   scripts/test-sql-crit-public-clients-billing.sh --rollback  # volta md5/ACL de prod
 set -euo pipefail
@@ -9,10 +9,10 @@ PGBIN="${PGBIN:-$(ls -d /usr/lib/postgresql/*/bin 2>/dev/null | sort -V | tail -
 TMP="$(mktemp -d)"
 PORT="${PGPORT_TEST:-55511}"
 HARNESS="$ROOT/supabase/tests/crit_public_clients_billing.harness.sql"
-MIG1="$ROOT/supabase/migrations/20261013120000_public_clients_anon_lockdown.sql"
-MIG2="$ROOT/supabase/migrations/20261013120100_protect_profile_billing.sql"
-RB1="$ROOT/docs/rollbacks/20261013120000_public_clients_anon_lockdown.rollback.sql"
-RB2="$ROOT/docs/rollbacks/20261013120100_protect_profile_billing.rollback.sql"
+MIG1="$ROOT/supabase/migrations/20261013103422_public_clients_anon_lockdown.sql"
+MIG2="$ROOT/supabase/migrations/20261013103427_protect_profile_billing.sql"
+RB1="$ROOT/docs/rollbacks/20261013103422_public_clients_anon_lockdown.rollback.sql"
+RB2="$ROOT/docs/rollbacks/20261013103427_protect_profile_billing.rollback.sql"
 TEST="$ROOT/supabase/tests/crit_public_clients_billing.test.sql"
 for f in "$HARNESS" "$MIG1" "$MIG2" "$RB1" "$RB2" "$TEST"; do [ -f "$f" ] || { echo "faltou $f"; exit 1; }; done
 export PGOPTIONS="-c client_min_messages=warning"
@@ -29,7 +29,7 @@ PROD_PC_POLICIES="Owner can manage public_clients
 Public can register as client
 Public can select client data
 Public can update client data"
-LAST_MIG_PROD="20261012145609"
+LAST_MIG_PROD="20261013103427"
 
 md5s() {
   P -At -c "SELECT p.oid::regprocedure::text || ' ' || md5(pg_get_functiondef(p.oid))

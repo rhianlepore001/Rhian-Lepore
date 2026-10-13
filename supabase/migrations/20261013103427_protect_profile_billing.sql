@@ -1,7 +1,7 @@
 -- =============================================================================
 -- profiles: impede auto-upgrade de billing/entitlement pelo cliente autenticado
 -- Spec: docs/specs/crit-public-clients-billing-SPEC.md
--- Rollback: docs/rollbacks/20261013120100_protect_profile_billing.rollback.sql
+-- Rollback: docs/rollbacks/20261013103427_protect_profile_billing.rollback.sql
 --
 -- ANTES (prod, 2026-10-13): protect_profile_identity só trava id/role/company_id.
 --   authenticated pode UPDATE subscription_status, subscription_plan, trial_ends_at,

@@ -1,4 +1,4 @@
--- ROLLBACK de 20261013120100_protect_profile_billing
+-- ROLLBACK de 20261013103427_protect_profile_billing
 -- Volta protect_profile_identity ao corpo de prod (md5 367809f7…); remove RPC nova;
 -- re-concede UPDATE nas colunas de billing.
 

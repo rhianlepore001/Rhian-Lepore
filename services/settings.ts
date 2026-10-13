@@ -156,7 +156,7 @@ function isMissingNamedColumn(error: { code?: string; message?: string } | null 
 export async function fetchProfileFields(
   userId: string,
 ): Promise<ProfileFields | null> {
-  // booking_lead_time_minutes só existe depois de 20261013200100; antes disso
+  // booking_lead_time_minutes só existe depois de 20261013141528; antes disso
   // cai no select antigo (horas) sem quebrar a tela.
   const withMinutes = await supabase
     .from('profiles')

@@ -1,4 +1,4 @@
--- Harness de 20261013200100_booking_lead_time_minutes: a cadeia auto-confirm não cria
+-- Harness de 20261013141528_booking_lead_time_minutes: a cadeia auto-confirm não cria
 -- get_available_slots_v2; aqui entra o corpo de prod (md5 e4c417d6b16e0dc5a53ec0355f261711, 2026-10-13).
 
 CREATE OR REPLACE FUNCTION public.get_available_slots_v2(p_business_id uuid, p_date date, p_professional_id uuid DEFAULT NULL::uuid, p_duration_min integer DEFAULT 30, p_is_professional boolean DEFAULT false)

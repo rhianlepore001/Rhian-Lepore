@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Testa 20261013200000_client_cancel_policy_text num Postgres local descartável.
+# Testa 20261013141521_client_cancel_policy_text num Postgres local descartável.
 #   scripts/test-sql-client-cancel-policy-text.sh             # md5=prod → teste FALHA → migration 2x → passa
 #   scripts/test-sql-client-cancel-policy-text.sh --rollback  # migration + rollback = estado anterior
 set -euo pipefail
@@ -8,8 +8,8 @@ PGBIN="${PGBIN:-$(ls -d /usr/lib/postgresql/*/bin 2>/dev/null | sort -V | tail -
 [ -x "$PGBIN/psql" ] || { echo "Postgres local não encontrado (PGBIN)."; exit 1; }
 TMP="$(mktemp -d)"
 PORT="${PGPORT_TEST:-55508}"
-MIG="$ROOT/supabase/migrations/20261013200000_client_cancel_policy_text.sql"
-RB="$ROOT/docs/rollbacks/20261013200000_client_cancel_policy_text.rollback.sql"
+MIG="$ROOT/supabase/migrations/20261013141521_client_cancel_policy_text.sql"
+RB="$ROOT/docs/rollbacks/20261013141521_client_cancel_policy_text.rollback.sql"
 TEST="$ROOT/supabase/tests/client_cancel_policy_text.test.sql"
 export PGOPTIONS="-c client_min_messages=warning"
 stop() { "$PGBIN/pg_ctl" -D "$TMP/data" -m immediate stop >/dev/null 2>&1 || true; rm -rf "$TMP/data"; }

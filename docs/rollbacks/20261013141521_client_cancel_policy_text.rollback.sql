@@ -1,4 +1,4 @@
--- ROLLBACK exato de 20261013200000_client_cancel_policy_text.
+-- ROLLBACK exato de 20261013141521_client_cancel_policy_text.
 -- Restaura get_public_business_settings_json com o corpo de prod de 2026-10-12
 -- (md5 de pg_get_functiondef 5422761fd6983134c8b03b144c24d542) e remove a coluna.
 -- Os textos personalizados salvos se perdem; o front volta a mostrar o texto gerado.

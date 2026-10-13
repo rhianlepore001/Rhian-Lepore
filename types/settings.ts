@@ -61,7 +61,7 @@ export const businessSettingsSchema = z.object({
   client_cancel_note: z.string().nullable().optional(),
   /**
    * Texto da política escrito pelo gestor (≤300, texto puro). NULL/vazio = usar o
-   * texto gerado do prazo. Coluna nova (20261013200000); ausente = gerado.
+   * texto gerado do prazo. Coluna nova (20261013141521); ausente = gerado.
    */
   client_cancel_policy_text: z.string().nullable().optional(),
   /**
@@ -92,7 +92,7 @@ export const profileFieldsSchema = z.object({
   daily_goal: z.number().nullable().optional(),
   public_booking_enabled: z.boolean().default(true),
   booking_lead_time_hours: z.number().int().min(0).default(2),
-  /** Antecedência em minutos (20261013200100). NULL/ausente = horas×60. */
+  /** Antecedência em minutos (20261013141528). NULL/ausente = horas×60. */
   booking_lead_time_minutes: z.number().int().min(0).nullable().optional(),
   max_bookings_per_day: z.number().int().positive().nullable().optional(),
   region: z.string().nullable().optional(),

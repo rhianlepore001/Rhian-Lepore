@@ -1,4 +1,4 @@
--- Testes de 20261013200000_client_cancel_policy_text (Postgres local descartável).
+-- Testes de 20261013141521_client_cancel_policy_text (Postgres local descartável).
 -- Falha antes da migration; passa depois. Sem efeito colateral (ROLLBACK no fim).
 BEGIN;
 CREATE TEMP TABLE r (n serial, ok boolean, name text);

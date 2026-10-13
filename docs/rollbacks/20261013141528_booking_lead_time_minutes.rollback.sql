@@ -1,4 +1,4 @@
--- ROLLBACK exato de 20261013200100_booking_lead_time_minutes.
+-- ROLLBACK exato de 20261013141528_booking_lead_time_minutes.
 -- Restaura get_available_slots_v2 (md5 e4c417d6b16e0dc5a53ec0355f261711) e
 -- enforce_lead_time_on_public_bookings (md5 4befcd5bf439cb553cdbe528f586ef30) com o corpo
 -- de prod de 2026-10-13, remove a função interna e a coluna. Volta a valer

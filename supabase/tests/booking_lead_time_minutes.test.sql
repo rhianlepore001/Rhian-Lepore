@@ -1,4 +1,4 @@
--- Testes de 20261013200100_booking_lead_time_minutes (Postgres local descartável).
+-- Testes de 20261013141528_booking_lead_time_minutes (Postgres local descartável).
 -- Falha antes da migration; passa depois. Tudo em transação com ROLLBACK.
 BEGIN;
 CREATE TEMP TABLE r (n serial, ok boolean, name text);

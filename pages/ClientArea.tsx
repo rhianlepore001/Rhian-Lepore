@@ -25,7 +25,8 @@ import { validityHeadline } from '../utils/membershipValidity';
 import { formatFirstName } from '../utils/formatters';
 import { resolveBusinessTimezone } from '../utils/businessTimezone';
 import { useScrollToError } from '../hooks/useScrollToError';
-import { resolveCancellationPolicyDisplay } from '../utils/cancellationPolicyCopy';
+import { resolveCancellationPolicyParts } from '../utils/cancellationPolicyCopy';
+import { CancellationPolicyText } from '../components/CancellationPolicyText';
 import { readCancelCutoffHours } from '../utils/clientCancelCutoff';
 import { isPublicBookingAutoConfirm } from '../utils/onlineBookingApproval';
 
@@ -153,9 +154,10 @@ export const ClientArea: React.FC = () => {
     const cancelCutoffHours = readCancelCutoffHours(
         (businessSettings as { client_cancel_cutoff_hours?: number } | null | undefined)?.client_cancel_cutoff_hours,
     );
-    const policyText = resolveCancellationPolicyDisplay({
+    const policyParts = resolveCancellationPolicyParts({
         cutoffHours: cancelCutoffHours,
         businessName: business?.business_name,
+        clientCancelPolicyText: (businessSettings as { client_cancel_policy_text?: string | null } | null | undefined)?.client_cancel_policy_text,
         clientCancelNote: (businessSettings as { client_cancel_note?: string | null } | null | undefined)?.client_cancel_note,
         legacyPolicy: (businessSettings as { cancellation_policy?: string | null } | null | undefined)?.cancellation_policy,
     });
@@ -623,9 +625,11 @@ export const ClientArea: React.FC = () => {
                                     <p className="text-xs font-semibold uppercase tracking-[0.14em] text-theme-textSecondary mb-1">
                                         Política de cancelamento
                                     </p>
-                                    <p className="text-xs leading-relaxed text-theme-textSecondary whitespace-pre-wrap">
-                                        {policyText}
-                                    </p>
+                                    <CancellationPolicyText
+                                        parts={policyParts}
+                                        className="text-xs leading-relaxed text-theme-textSecondary"
+                                        labelClassName="text-theme-text"
+                                    />
                                 </div>
                                 {upcomingBookings.length === 0 ? (
                                     <EmptyState

@@ -402,13 +402,18 @@ export type AvailableSlotsEmptyReason = 'lead_time' | null;
 export interface AvailableSlotsResult {
   slots: string[];
   leadTimeHours: number;
+  /** Precisão de minutos; ausente (servidor antigo) = horas×60. */
+  leadTimeMinutes: number;
   emptyReason: AvailableSlotsEmptyReason;
 }
 
-function parseAvailableSlotsPayload(data: { slots?: string[]; lead_time_hours?: number; empty_reason?: string } | null): AvailableSlotsResult {
+function parseAvailableSlotsPayload(data: { slots?: string[]; lead_time_hours?: number; lead_time_minutes?: number; empty_reason?: string } | null): AvailableSlotsResult {
+  const leadTimeHours = Number(data?.lead_time_hours ?? 0);
+  const rawMinutes = Number(data?.lead_time_minutes);
   return {
     slots: (data?.slots || []) as string[],
-    leadTimeHours: Number(data?.lead_time_hours ?? 0),
+    leadTimeHours,
+    leadTimeMinutes: Number.isFinite(rawMinutes) && data?.lead_time_minutes != null ? rawMinutes : leadTimeHours * 60,
     emptyReason: data?.empty_reason === 'lead_time' ? 'lead_time' : null,
   };
 }

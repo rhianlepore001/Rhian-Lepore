@@ -322,6 +322,17 @@ describe('public booking service', () => {
     await expect(fetchClientBookingCancellations('351912345678', 'business-001')).rejects.toMatchObject({ code: '42501' });
   });
 
+  it('lê lead_time_minutes quando o servidor devolve (1h30)', async () => {
+    (supabase.rpc as any).mockResolvedValue({
+      data: { slots: ['18:00'], lead_time_hours: 2, lead_time_minutes: 90, empty_reason: null },
+      error: null,
+    });
+    await expect(fetchAvailableSlots('business-001', '2026-10-03', null, 30)).resolves.toMatchObject({
+      leadTimeHours: 2,
+      leadTimeMinutes: 90,
+    });
+  });
+
   it('busca horários via get_available_slots_v2 e devolve antecedência', async () => {
     (supabase.rpc as any).mockResolvedValue({
       data: { slots: ['18:00', '18:30'], lead_time_hours: 8, empty_reason: null },
@@ -330,6 +341,7 @@ describe('public booking service', () => {
     await expect(fetchAvailableSlots('business-001', '2026-10-03', null, 30)).resolves.toEqual({
       slots: ['18:00', '18:30'],
       leadTimeHours: 8,
+      leadTimeMinutes: 480,
       emptyReason: null,
     });
     expect(supabase.rpc).toHaveBeenCalledWith('get_available_slots_v2', {
@@ -347,6 +359,7 @@ describe('public booking service', () => {
     await expect(fetchAvailableSlots('business-001', '2026-10-03', 'pro-1', 45)).resolves.toEqual({
       slots: ['10:00'],
       leadTimeHours: 0,
+      leadTimeMinutes: 0,
       emptyReason: null,
     });
     expect(supabase.rpc).toHaveBeenNthCalledWith(2, 'get_available_slots', expect.objectContaining({

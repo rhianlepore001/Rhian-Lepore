@@ -4,16 +4,30 @@ import { SettingsLayout } from '../../components/SettingsLayout';
 import { Save, HelpCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
-import { useBusinessSettings, useUpdateBusinessSettings, useProfileFields, useUpdateProfileFields, useUpdateOnlineBookingRequiresApproval } from '../../hooks/useSettings';
+import { useBusinessSettings, useUpdateBusinessSettings, useProfileFields, useUpdateProfileFields, useUpdateOnlineBookingRequiresApproval, useUpdateBookingLeadTimeMinutes, useUpdateClientCancelPolicyText } from '../../hooks/useSettings';
+import { CancellationPolicyText } from '../../components/CancellationPolicyText';
 import { PublicLinkCard } from '../../components/PublicLinkCard';
 import { SettingsSection } from '../../components/SettingsSection';
 import { SettingsSwitch } from '../../components/SettingsSwitch';
 import { SettingsRow } from '../../components/ui/SettingsRow';
-import { LEAD_TIME_PRESETS, clampLeadTimeHours, isLeadTimePreset, leadTimePresetLabel, parseCustomLeadTimeHours, LEAD_TIME_CUSTOM_EMPTY_ERROR, LEAD_TIME_CUSTOM_RANGE_HINT } from '../../utils/bookingLeadTime';
+import {
+    LEAD_TIME_PRESETS,
+    LEAD_TIME_CUSTOM_MINUTES_RANGE_HINT,
+    formatLeadTimeDuration,
+    isLeadTimePresetMinutes,
+    leadTimeExample,
+    leadTimeHoursForMinutes,
+    leadTimePresetLabel,
+    parseCustomLeadTime,
+    resolveLeadTimeMinutes,
+    splitLeadTimeMinutes,
+} from '../../utils/bookingLeadTime';
 import {
     CANCELLATION_POLICY_NOTES_HINT,
+    MAX_CLIENT_CANCEL_POLICY_TEXT_LENGTH,
     cancellationPolicyNotesForDisplay,
     generatedCancellationPolicyText,
+    normalizeCustomCancellationPolicyText,
 } from '../../utils/cancellationPolicyCopy';
 import {
     CLIENT_CANCEL_CUTOFF_PRESETS,
@@ -42,13 +56,17 @@ export const PublicBookingSettings: React.FC = () => {
     const updateSettingsMutation = useUpdateBusinessSettings();
     const updateProfileMutation = useUpdateProfileFields();
     const updateApprovalMutation = useUpdateOnlineBookingRequiresApproval();
+    const updateLeadMinutesMutation = useUpdateBookingLeadTimeMinutes();
+    const updatePolicyTextMutation = useUpdateClientCancelPolicyText();
     const { showToast } = useToast();
 
     const [publicProductsEnabled, setPublicProductsEnabled] = useState(false);
     const [publicBookingEnabled, setPublicBookingEnabled] = useState(true);
-    const [leadTimeHours, setLeadTimeHours] = useState(2);
+    /** Antecedência efetiva em minutos (presets = horas cheias). */
+    const [leadTimeMinutes, setLeadTimeMinutes] = useState(120);
     const [leadTimeCustom, setLeadTimeCustom] = useState(false);
-    const [leadTimeCustomDraft, setLeadTimeCustomDraft] = useState('');
+    const [leadTimeCustomHoursDraft, setLeadTimeCustomHoursDraft] = useState('');
+    const [leadTimeCustomMinutesDraft, setLeadTimeCustomMinutesDraft] = useState('');
     const [leadTimeCustomError, setLeadTimeCustomError] = useState<string | null>(null);
     const [maxBookingsPerDay, setMaxBookingsPerDay] = useState<number | null>(null);
     const [enableSelfRescheduling, setEnableSelfRescheduling] = useState(true);
@@ -57,6 +75,8 @@ export const PublicBookingSettings: React.FC = () => {
     const savedRequiresApproval = resolveOnlineBookingRequiresApproval(settings);
     const [cancelCutoffHours, setCancelCutoffHours] = useState(DEFAULT_CLIENT_CANCEL_CUTOFF_HOURS);
     const [cancelNote, setCancelNote] = useState('');
+    /** null = usar o texto gerado do prazo (padrão). */
+    const [cancelPolicyText, setCancelPolicyText] = useState<string | null>(null);
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
     const businessSlug = profile?.business_slug ?? null;
@@ -72,16 +92,20 @@ export const PublicBookingSettings: React.FC = () => {
                 settings.client_cancel_note,
                 settings.cancellation_policy,
             ));
+            setCancelPolicyText(normalizeCustomCancellationPolicyText(settings.client_cancel_policy_text));
         }
     }, [settings]);
 
     useEffect(() => {
         if (profile) {
             setPublicBookingEnabled(profile.public_booking_enabled ?? true);
-            setLeadTimeHours(profile.booking_lead_time_hours ?? 2);
-            const custom = !isLeadTimePreset(profile.booking_lead_time_hours ?? 2);
+            const minutes = resolveLeadTimeMinutes(profile);
+            setLeadTimeMinutes(minutes);
+            const custom = !isLeadTimePresetMinutes(minutes);
             setLeadTimeCustom(custom);
-            setLeadTimeCustomDraft(custom ? String(profile.booking_lead_time_hours ?? '') : '');
+            const split = splitLeadTimeMinutes(minutes);
+            setLeadTimeCustomHoursDraft(custom ? String(split.hours) : '');
+            setLeadTimeCustomMinutesDraft(custom ? String(split.minutes) : '');
             setLeadTimeCustomError(null);
             setMaxBookingsPerDay(profile.max_bookings_per_day ?? null);
         }
@@ -89,13 +113,15 @@ export const PublicBookingSettings: React.FC = () => {
 
     const handleSave = async () => {
         if (!user) return;
+        let minutesToSave = leadTimeMinutes;
         if (leadTimeCustom) {
-            const parsed = parseCustomLeadTimeHours(leadTimeCustomDraft);
-            if (parsed === null) {
-                setLeadTimeCustomError(LEAD_TIME_CUSTOM_EMPTY_ERROR);
+            const parsed = parseCustomLeadTime(leadTimeCustomHoursDraft, leadTimeCustomMinutesDraft);
+            if (parsed.ok === false) {
+                setLeadTimeCustomError(parsed.error);
                 return;
             }
-            setLeadTimeHours(parsed);
+            minutesToSave = parsed.minutes;
+            setLeadTimeMinutes(parsed.minutes);
             setLeadTimeCustomError(null);
         }
         setSaveStatus('saving');
@@ -116,15 +142,24 @@ export const PublicBookingSettings: React.FC = () => {
                 }
             }
 
-            const hoursToSave = leadTimeCustom
-                ? parseCustomLeadTimeHours(leadTimeCustomDraft) ?? clampLeadTimeHours(leadTimeHours)
-                : leadTimeHours;
-
+            // Horas = teto de minutos/60 (compatível e nunca mais permissivo se a
+            // coluna de minutos ainda não existir ou for revertida).
             await updateProfileMutation.mutateAsync({
                 public_booking_enabled: publicBookingEnabled,
-                booking_lead_time_hours: hoursToSave,
+                booking_lead_time_hours: leadTimeHoursForMinutes(minutesToSave),
                 max_bookings_per_day: maxBookingsPerDay,
             });
+            const minutesResult = await updateLeadMinutesMutation.mutateAsync(minutesToSave);
+            if (minutesResult === 'unsupported' && minutesToSave % 60 !== 0) {
+                showToast(`Minutos ainda indisponíveis: a antecedência foi salva como ${formatLeadTimeDuration(leadTimeHoursForMinutes(minutesToSave) * 60)}.`, 'info');
+            }
+
+            const policyTextResult = await updatePolicyTextMutation.mutateAsync(
+                normalizeCustomCancellationPolicyText(cancelPolicyText),
+            );
+            if (policyTextResult === 'unsupported' && normalizeCustomCancellationPolicyText(cancelPolicyText)) {
+                showToast('Texto personalizado da política ainda indisponível: o cliente vê o texto padrão.', 'info');
+            }
 
             window.dispatchEvent(new CustomEvent('setup-step-completed', { detail: { stepId: 'booking' } }));
             setSaveStatus('saved');
@@ -199,14 +234,14 @@ export const PublicBookingSettings: React.FC = () => {
                 </SettingsSection>
 
                 <div data-testid="lead-time-section" className="scroll-mt-[14rem] md:scroll-mt-8">
-                <SettingsSection title="Antecedência mínima">
+                <SettingsSection title="Antecedência mínima para marcar pelo link">
                     <div className="space-y-4">
-                        <p className={`${colors.textMuted} text-xs leading-relaxed`}>
-                            O cliente só marca pelo link com essa antecedência (padrão 2h). Quem marca pela Agenda — você e a equipe — não é afetado.
+                        <p className={`${colors.textMuted} text-xs leading-relaxed`} data-testid="lead-time-help">
+                            Quanto tempo antes do horário o cliente ainda consegue marcar pelo link de agendamento. Horários mais próximos que isso não aparecem para ele.
                         </p>
-                        <div className="grid grid-cols-3 gap-2 md:flex md:flex-wrap md:max-w-xl" role="group" aria-label="Antecedência mínima">
+                        <div className="grid grid-cols-3 gap-2 md:flex md:flex-wrap md:max-w-xl" role="group" aria-label="Antecedência mínima para marcar pelo link">
                             {LEAD_TIME_PRESETS.map((hours) => {
-                                const pressed = !leadTimeCustom && leadTimeHours === hours;
+                                const pressed = !leadTimeCustom && leadTimeMinutes === hours * 60;
                                 return (
                                     <button
                                         key={hours}
@@ -215,8 +250,9 @@ export const PublicBookingSettings: React.FC = () => {
                                         aria-pressed={pressed}
                                         onClick={() => {
                                             setLeadTimeCustom(false);
-                                            setLeadTimeHours(hours);
-                                            setLeadTimeCustomDraft('');
+                                            setLeadTimeMinutes(hours * 60);
+                                            setLeadTimeCustomHoursDraft('');
+                                            setLeadTimeCustomMinutesDraft('');
                                             setLeadTimeCustomError(null);
                                         }}
                                         className={`min-h-[44px] px-2 sm:px-3 py-2.5 text-xs sm:text-sm font-semibold rounded-xl transition-all border w-full md:w-auto whitespace-nowrap ${
@@ -235,7 +271,10 @@ export const PublicBookingSettings: React.FC = () => {
                                 aria-pressed={leadTimeCustom}
                                 onClick={() => {
                                     setLeadTimeCustom(true);
-                                    setLeadTimeCustomDraft(isLeadTimePreset(leadTimeHours) ? '' : String(leadTimeHours));
+                                    const split = splitLeadTimeMinutes(leadTimeMinutes);
+                                    const keep = !isLeadTimePresetMinutes(leadTimeMinutes);
+                                    setLeadTimeCustomHoursDraft(keep ? String(split.hours) : '');
+                                    setLeadTimeCustomMinutesDraft(keep ? String(split.minutes) : '');
                                     setLeadTimeCustomError(null);
                                 }}
                                 className={`min-h-[44px] px-2 sm:px-3 py-2.5 text-xs sm:text-sm font-semibold rounded-xl transition-all border w-full md:w-auto whitespace-nowrap ${
@@ -248,47 +287,82 @@ export const PublicBookingSettings: React.FC = () => {
                             </button>
                         </div>
                         {leadTimeCustom && (
-                            <label className="block max-w-xs">
-                                <span className={classes.label}>Horas de antecedência</span>
-                                <div className="relative mt-1">
-                                    <input
-                                        id="booking-lead-time-custom"
-                                        data-testid="booking-lead-time-custom"
-                                        type="text"
-                                        inputMode="numeric"
-                                        pattern="[0-9]*"
-                                        value={leadTimeCustomDraft}
-                                        aria-invalid={Boolean(leadTimeCustomError)}
-                                        aria-describedby="lead-time-custom-hint"
-                                        onChange={(e) => {
-                                            setLeadTimeCustomDraft(e.target.value.replace(/[^\d]/g, ''));
-                                            if (leadTimeCustomError) setLeadTimeCustomError(null);
-                                        }}
-                                        className={`${classes.input} pr-9 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
-                                    />
-                                    <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-sm ${colors.textMuted}`} aria-hidden="true">h</span>
+                            <fieldset className="max-w-sm" aria-describedby="lead-time-custom-hint">
+                                <legend className={classes.label}>Antecedência personalizada</legend>
+                                <div className="mt-1 grid grid-cols-2 gap-3">
+                                    {([
+                                        { id: 'booking-lead-time-custom', label: 'Horas', unit: 'h', value: leadTimeCustomHoursDraft, set: setLeadTimeCustomHoursDraft, max: 3 },
+                                        { id: 'booking-lead-time-custom-minutes', label: 'Minutos', unit: 'min', value: leadTimeCustomMinutesDraft, set: setLeadTimeCustomMinutesDraft, max: 2 },
+                                    ] as const).map((field) => (
+                                        <label key={field.id} className="block" htmlFor={field.id}>
+                                            <span className={`${colors.textMuted} text-xs`}>{field.label}</span>
+                                            <div className="relative mt-1">
+                                                <input
+                                                    id={field.id}
+                                                    data-testid={field.id}
+                                                    type="text"
+                                                    inputMode="numeric"
+                                                    pattern="[0-9]*"
+                                                    maxLength={field.max}
+                                                    placeholder="0"
+                                                    value={field.value}
+                                                    aria-invalid={Boolean(leadTimeCustomError)}
+                                                    onChange={(e) => {
+                                                        const next = e.target.value.replace(/[^\d]/g, '').slice(0, field.max);
+                                                        field.set(next);
+                                                        const parsed = field.id === 'booking-lead-time-custom'
+                                                            ? parseCustomLeadTime(next, leadTimeCustomMinutesDraft)
+                                                            : parseCustomLeadTime(leadTimeCustomHoursDraft, next);
+                                                        if (parsed.ok) {
+                                                            setLeadTimeMinutes(parsed.minutes);
+                                                            setLeadTimeCustomError(null);
+                                                        } else if (leadTimeCustomError) {
+                                                            setLeadTimeCustomError(null);
+                                                        }
+                                                    }}
+                                                    className={`${classes.input} pr-12 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none`}
+                                                />
+                                                <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-sm ${colors.textMuted}`} aria-hidden="true">{field.unit}</span>
+                                            </div>
+                                        </label>
+                                    ))}
                                 </div>
-                                <p id="lead-time-custom-hint" data-testid="lead-time-custom-hint" className={`mt-1 text-xs ${colors.textMuted}`}>
-                                    {LEAD_TIME_CUSTOM_RANGE_HINT}
+                                <p id="lead-time-custom-hint" data-testid="lead-time-custom-hint" className={`mt-1.5 text-xs ${colors.textMuted}`}>
+                                    {LEAD_TIME_CUSTOM_MINUTES_RANGE_HINT} Ex.: 1h30 ou só 20 min.
                                 </p>
                                 {leadTimeCustomError && (
                                     <p id="lead-time-custom-error" data-testid="lead-time-custom-error" role="alert" className="mt-2 text-sm text-[var(--color-danger)]">
                                         {leadTimeCustomError}
                                     </p>
                                 )}
-                            </label>
+                            </fieldset>
                         )}
+                        <div
+                            className="rounded-2xl border border-theme-border bg-theme-surface px-4 py-3.5 space-y-2"
+                            data-testid="lead-time-example"
+                        >
+                            <p className={`${colors.textMuted} text-xs font-semibold uppercase tracking-[0.14em]`}>Na prática</p>
+                            <p className={`${colors.text} text-sm leading-relaxed`} data-testid="lead-time-example-text">
+                                {leadTimeExample(leadTimeMinutes)}
+                            </p>
+                        </div>
+                        <ul className={`${colors.textMuted} text-xs leading-relaxed space-y-1 list-disc pl-4`} data-testid="lead-time-notes">
+                            <li><span className={`font-semibold ${colors.textSecondary}`}>Sem mínimo:</span> qualquer horário livre que ainda não passou pode ser marcado pelo link.</li>
+                            <li><span className={`font-semibold ${colors.textSecondary}`}>Outro:</span> escolha horas e minutos (ex.: 1h30 ou 20 min), até 720h.</li>
+                            <li><span className={`font-semibold ${colors.textSecondary}`}>Agenda não é afetada:</span> você e a equipe continuam marcando qualquer horário pela Agenda.</li>
+                        </ul>
                     </div>
                 </SettingsSection>
                 </div>
 
                 <div data-testid="cancel-cutoff-section" className="scroll-mt-[14rem] md:scroll-mt-8">
-                <SettingsSection title="Cliente pode cancelar até">
+                <SettingsSection title="Política de cancelamento">
                     <div className="space-y-4">
                         <p className={`${colors.textMuted} text-xs leading-relaxed`}>
-                            Prazo em relação ao horário marcado (padrão 2h). Pedido ainda em Aguardando pode cancelar até o horário.
+                            Até quando o cliente pode cancelar sozinho pela Minha Área, em relação ao horário marcado (padrão 2h). Pedido ainda em Aguardando pode cancelar até o horário.
                         </p>
-                        <div className="grid grid-cols-3 gap-2 md:flex md:flex-wrap md:max-w-xl" role="group" aria-label="Cliente pode cancelar até">
+                        <p className={`${classes.label}`} id="cancel-cutoff-label">Cliente pode cancelar até</p>
+                        <div className="grid grid-cols-3 gap-2 md:flex md:flex-wrap md:max-w-xl" role="group" aria-labelledby="cancel-cutoff-label">
                             {CLIENT_CANCEL_CUTOFF_PRESETS.map((hours) => {
                                 const pressed = cancelCutoffHours === hours;
                                 return (
@@ -311,16 +385,49 @@ export const PublicBookingSettings: React.FC = () => {
                                 );
                             })}
                         </div>
-                        <div
-                            className="rounded-2xl border border-theme-border bg-theme-surface px-4 py-3.5 space-y-1.5"
-                            data-testid="cancel-cutoff-generated"
-                        >
-                            <p className={`${colors.textMuted} text-xs font-semibold uppercase tracking-[0.14em]`}>
-                                O que o cliente lê
-                            </p>
-                            <p className={`${colors.text} text-sm leading-relaxed`}>
-                                {generatedCancellationPolicyText(cancelCutoffHours, profile?.business_name)}
-                            </p>
+                        <div className="space-y-1.5" data-testid="cancel-cutoff-generated">
+                            <div className="flex items-center justify-between gap-3">
+                                <label className={`${classes.label}`} htmlFor="client-cancel-policy-text">
+                                    O que o cliente lê
+                                </label>
+                                {cancelPolicyText != null ? (
+                                    <button
+                                        type="button"
+                                        data-testid="cancel-policy-restore-default"
+                                        onClick={() => setCancelPolicyText(null)}
+                                        className={`text-xs font-semibold underline underline-offset-2 ${accent.text}`}
+                                    >
+                                        Restaurar padrão
+                                    </button>
+                                ) : (
+                                    <span className={`${colors.textMuted} text-xs`} data-testid="cancel-policy-default-badge">Texto padrão</span>
+                                )}
+                            </div>
+                            <textarea
+                                id="client-cancel-policy-text"
+                                data-testid="client-cancel-policy-text"
+                                value={cancelPolicyText ?? generatedCancellationPolicyText(cancelCutoffHours, profile?.business_name)}
+                                maxLength={MAX_CLIENT_CANCEL_POLICY_TEXT_LENGTH}
+                                placeholder={generatedCancellationPolicyText(cancelCutoffHours, profile?.business_name)}
+                                aria-describedby="client-cancel-policy-text-hint"
+                                onChange={(e) => {
+                                    const next = e.target.value.slice(0, MAX_CLIENT_CANCEL_POLICY_TEXT_LENGTH);
+                                    const generated = generatedCancellationPolicyText(cancelCutoffHours, profile?.business_name);
+                                    setCancelPolicyText(next.trim() === generated.trim() ? null : next);
+                                }}
+                                rows={3}
+                                className={classes.input}
+                            />
+                            <div className="flex items-start justify-between gap-3">
+                                <p id="client-cancel-policy-text-hint" className={`${colors.textMuted} text-xs leading-relaxed`} data-testid="client-cancel-policy-text-hint">
+                                    {cancelPolicyText != null
+                                        ? 'Texto seu. Se mudar o prazo acima, revise o texto para não prometer outra regra. Deixe em branco para voltar ao padrão.'
+                                        : 'Gerado a partir do prazo acima. Edite se quiser escrever do seu jeito.'}
+                                </p>
+                                <span className={`${colors.textMuted} text-xs tabular-nums shrink-0`} data-testid="client-cancel-policy-text-count">
+                                    {(cancelPolicyText ?? generatedCancellationPolicyText(cancelCutoffHours, profile?.business_name)).length}/{MAX_CLIENT_CANCEL_POLICY_TEXT_LENGTH}
+                                </span>
+                            </div>
                         </div>
                         <label className={`${classes.label} block`} htmlFor="client-cancel-note">
                             Observações (opcional)
@@ -338,6 +445,22 @@ export const PublicBookingSettings: React.FC = () => {
                         <p className={`${colors.textMuted} text-xs leading-relaxed`} data-testid="client-cancel-note-hint">
                             {CANCELLATION_POLICY_NOTES_HINT}
                         </p>
+                        <div
+                            className="rounded-2xl border border-theme-border bg-theme-surface px-4 py-3.5 space-y-1.5"
+                            data-testid="cancel-policy-preview"
+                        >
+                            <p className={`${colors.textMuted} text-xs font-semibold uppercase tracking-[0.14em]`}>
+                                Prévia para o cliente
+                            </p>
+                            <CancellationPolicyText
+                                parts={{
+                                    policy: normalizeCustomCancellationPolicyText(cancelPolicyText)
+                                        ?? generatedCancellationPolicyText(cancelCutoffHours, profile?.business_name),
+                                    notes: cancelNote.trim(),
+                                }}
+                                className={`${colors.text} text-sm leading-relaxed`}
+                            />
+                        </div>
                     </div>
                 </SettingsSection>
                 </div>

@@ -2,12 +2,17 @@ import React from 'react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
+const updateLeadMinutes = vi.fn().mockResolvedValue('saved');
+const updatePolicyText = vi.fn().mockResolvedValue('saved');
+
 vi.mock('../../hooks/useSettings', () => ({
   useBusinessSettings: () => ({ data: { enable_self_rescheduling: true, public_products_enabled: false, client_cancel_cutoff_hours: 2 } }),
   useUpdateBusinessSettings: () => ({ mutateAsync: vi.fn() }),
   useProfileFields: () => ({ data: { business_slug: 'bob', public_booking_enabled: true } }),
   useUpdateProfileFields: () => ({ mutateAsync: vi.fn() }),
   useUpdateOnlineBookingRequiresApproval: () => ({ mutateAsync: vi.fn().mockResolvedValue('saved') }),
+  useUpdateBookingLeadTimeMinutes: () => ({ mutateAsync: updateLeadMinutes }),
+  useUpdateClientCancelPolicyText: () => ({ mutateAsync: updatePolicyText }),
 }));
 
 vi.mock('../../contexts/AuthContext', () => ({

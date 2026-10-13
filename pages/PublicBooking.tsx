@@ -33,7 +33,8 @@ import { fetchEditBooking, fetchPublicClientByPhone, fetchClientByPhone, fetchPu
 import { shouldLandOnClientArea } from '../utils/publicBookingLanding';
 import { getPublicBookingAwaitingWhatsAppText, getPublicBookingSubmitLabel, getPublicBookingSuccessCopy } from '../utils/publicBookingCopy';
 import { isPublicBookingAutoConfirm } from '../utils/onlineBookingApproval';
-import { resolveCancellationPolicyDisplay } from '../utils/cancellationPolicyCopy';
+import { resolveCancellationPolicyParts } from '../utils/cancellationPolicyCopy';
+import { CancellationPolicyText } from '../components/CancellationPolicyText';
 import {
     CANCEL_WINDOW_CLOSED_MESSAGE,
     isCancelWindowClosedError,
@@ -44,9 +45,9 @@ import { clientEditRequestSentMessage, isClientEditPending } from '../utils/clie
 import { isSlotUnavailableError } from '../utils/supabaseRpc';
 import {
     isLeadTimeViolationError,
-    leadTimeEmptySlotsMessage,
-    leadTimeHoursFromError,
-    leadTimeViolationMessage,
+    leadTimeEmptySlotsMessageMinutes,
+    leadTimeMinutesFromError,
+    leadTimeViolationMessageMinutes,
 } from '../utils/bookingLeadTime';
 import { Checkbox, ConfirmModal, Button, useToast } from '@/components/ui';
 import { PublicBookingMemberships } from '@/components/membership/PublicBookingMemberships';
@@ -527,7 +528,7 @@ export const PublicBooking: React.FC = () => {
     });
     const availableSlots = slotsResult.slots;
     const leadEmptyMessage = slotsResult.emptyReason === 'lead_time'
-        ? leadTimeEmptySlotsMessage(slotsResult.leadTimeHours, selectedDateStr === businessToday, { hasCta: true })
+        ? leadTimeEmptySlotsMessageMinutes(slotsResult.leadTimeMinutes, selectedDateStr === businessToday, { hasCta: true })
         : undefined;
 
     const handleSeeNextDay = async () => {
@@ -765,7 +766,7 @@ export const PublicBooking: React.FC = () => {
                 setStep('datetime');
                 setSlotsRefreshKey((key) => key + 1);
                 setLeadTimeAlert(
-                    leadTimeViolationMessage(leadTimeHoursFromError(error, slotsResult.leadTimeHours)),
+                    leadTimeViolationMessageMinutes(leadTimeMinutesFromError(error, slotsResult.leadTimeMinutes)),
                 );
                 setLeadTimeAlertKey((key) => key + 1);
             } else if (isCancelWindowClosedError(error)) {
@@ -804,6 +805,32 @@ export const PublicBooking: React.FC = () => {
     const editSentIso = activeBooking?.original_appointment_time || originalTimeISO || activeBooking?.appointment_time;
     const pendingEdit = isClientEditPending(activeBooking ?? {});
     const autoConfirm = isPublicBookingAutoConfirm(businessSettings);
+    const policySettings = businessSettings as {
+        client_cancel_cutoff_hours?: number;
+        client_cancel_note?: string | null;
+        client_cancel_policy_text?: string | null;
+        cancellation_policy?: string | null;
+    } | null | undefined;
+    const cancellationPolicyParts = resolveCancellationPolicyParts({
+        cutoffHours: readCancelCutoffHours(policySettings?.client_cancel_cutoff_hours),
+        businessName: business?.business_name,
+        clientCancelPolicyText: policySettings?.client_cancel_policy_text,
+        clientCancelNote: policySettings?.client_cancel_note,
+        legacyPolicy: policySettings?.cancellation_policy,
+    });
+    const inlinePolicy = (
+        <div
+            className={`rounded-xl border px-4 py-3 ${colors.surface} ${colors.border}`}
+            data-testid="public-cancellation-policy-inline"
+        >
+            <p className={`${colors.textMuted} text-xs font-semibold uppercase tracking-wide mb-1.5`}>Política de cancelamento</p>
+            <CancellationPolicyText
+                parts={cancellationPolicyParts}
+                className={`text-sm leading-relaxed ${colors.textSecondary}`}
+                labelClassName={colors.text}
+            />
+        </div>
+    );
     const submitLabel = getPublicBookingSubmitLabel({ autoConfirm, isEdit: Boolean(editingBookingId) });
     const successCopy = getPublicBookingSuccessCopy({
         isBeauty,
@@ -1287,6 +1314,7 @@ export const PublicBooking: React.FC = () => {
                                 )}
 
                                 <div className="space-y-3">
+                                    {inlinePolicy}
                                     <Checkbox
                                         id="privacy-quick"
                                         checked={acceptedPolicy}
@@ -1847,6 +1875,8 @@ export const PublicBooking: React.FC = () => {
                                 </div>
                             )}
 
+                            {inlinePolicy}
+
                             <div className={`flex items-start gap-4 p-4 rounded-xl border ${colors.surface} ${colors.border}`}>
                                 <Checkbox
                                     id="privacy"
@@ -2085,18 +2115,11 @@ export const PublicBooking: React.FC = () => {
                                 Política de cancelamento
                             </h3>
                             <div className={`leading-relaxed text-sm md:text-base ${colors.textSecondary} max-h-[50vh] overflow-y-auto pr-1 md:pr-2 custom-scrollbar`}>
-                                <p className="whitespace-pre-wrap" data-testid="public-cancellation-policy">
-                                    {resolveCancellationPolicyDisplay({
-                                        cutoffHours: readCancelCutoffHours(
-                                            (businessSettings as { client_cancel_cutoff_hours?: number } | null | undefined)
-                                                ?.client_cancel_cutoff_hours,
-                                        ),
-                                        businessName: business.business_name,
-                                        clientCancelNote: (businessSettings as { client_cancel_note?: string | null } | null | undefined)
-                                            ?.client_cancel_note,
-                                        legacyPolicy: businessSettings?.cancellation_policy,
-                                    })}
-                                </p>
+                                <CancellationPolicyText
+                                    parts={cancellationPolicyParts}
+                                    data-testid="public-cancellation-policy"
+                                    labelClassName={colors.text}
+                                />
                             </div>
                             <button onClick={() => setShowPolicyModal(false)}
                                 className={`w-full py-3.5 min-h-12 ${classes.buttonPrimary}`}>

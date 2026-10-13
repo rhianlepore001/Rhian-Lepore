@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fetchAvailableSlots, type AvailableSlotsResult } from '../services/publicBooking';
-import { DEFAULT_BOOKING_LEAD_TIME_HOURS } from '../utils/bookingLeadTime';
+import { DEFAULT_BOOKING_LEAD_TIME_HOURS, DEFAULT_BOOKING_LEAD_TIME_MINUTES } from '../utils/bookingLeadTime';
 import { isZonedSlotInPast } from '../utils/businessTimezone';
 
 interface Params {
@@ -16,6 +16,7 @@ interface Params {
 const EMPTY: AvailableSlotsResult = {
     slots: [],
     leadTimeHours: DEFAULT_BOOKING_LEAD_TIME_HOURS,
+    leadTimeMinutes: DEFAULT_BOOKING_LEAD_TIME_MINUTES,
     emptyReason: null,
 };
 

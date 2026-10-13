@@ -5,7 +5,7 @@ import {
   messageForAgendaBlockResultCode,
   professionalNameFromBlockedError,
 } from './agendaBlockPermission';
-import { isLeadTimeViolationError, leadTimeHoursFromError, leadTimeViolationMessage } from './bookingLeadTime';
+import { isLeadTimeViolationError, leadTimeMinutesFromError, leadTimeViolationMessageMinutes } from './bookingLeadTime';
 import { RESCHEDULE_ERROR_HINTS } from './rescheduleCopy';
 
 /**
@@ -153,7 +153,7 @@ export function mapError(error: unknown, fallback: string): UserFacingError {
   const human = code === 'professional_blocked' && named
     ? agendaBlockedMessage(named)
     : code === 'lead_time_violation'
-      ? leadTimeViolationMessage(leadTimeHoursFromError(error))
+      ? leadTimeViolationMessageMinutes(leadTimeMinutesFromError(error))
     : RESCHEDULE_ERROR_HINTS.has(code) && raw.message
       ? raw.message
       : CODE_MAP[code] ?? fallback;

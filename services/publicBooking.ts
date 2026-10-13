@@ -1,3 +1,4 @@
+import { buildPublicClientPhotoPath } from '../utils/clientPhotoPath';
 import { supabase } from '@/lib/supabase';
 import type { PublicClient } from '@/types';
 import { formatPhone } from '@/utils/formatters';
@@ -555,8 +556,8 @@ export async function getFirstAvailableProfessional(businessId: string, appointm
 }
 
 export async function uploadClientPhoto(businessId: string, file: File) {
-  const fileExt = file.name.split('.').pop();
-  const fileName = `public_${businessId}_${Date.now()}.${fileExt}`;
+  const fileExt = file.name.split('.').pop() || 'jpg';
+  const fileName = buildPublicClientPhotoPath(businessId, fileExt);
   const { error: uploadError } = await supabase.storage.from('client_photos').upload(fileName, file);
   if (uploadError) throw uploadError;
   const { data: { publicUrl } } = supabase.storage.from('client_photos').getPublicUrl(fileName);

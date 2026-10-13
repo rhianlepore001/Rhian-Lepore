@@ -75,11 +75,13 @@ serve(async (req) => {
                 customerId = newCustomer.id;
             }
 
-            // 4. Save stripe_customer_id to profile
-            await supabaseClient
-                .from('profiles')
-                .update({ stripe_customer_id: customerId })
-                .eq('id', user.id);
+            // 4. Save stripe_customer_id via SECURITY DEFINER RPC (billing cols are immutable for clients)
+            const { error: stripeIdError } = await supabaseClient.rpc('set_stripe_customer_id_for_caller', {
+                p_customer_id: customerId,
+            });
+            if (stripeIdError) {
+                throw stripeIdError;
+            }
         }
 
         // 5. Create Checkout Session

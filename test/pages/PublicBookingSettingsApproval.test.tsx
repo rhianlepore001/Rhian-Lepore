@@ -11,12 +11,17 @@ const updateProfile = vi.fn().mockResolvedValue({});
 const updateApproval = vi.fn().mockResolvedValue('saved');
 const showToast = vi.fn();
 
+const updateLeadMinutes = vi.fn().mockResolvedValue('saved');
+const updatePolicyText = vi.fn().mockResolvedValue('saved');
+
 vi.mock('../../hooks/useSettings', () => ({
   useBusinessSettings: () => ({ data: state.settings }),
   useUpdateBusinessSettings: () => ({ mutateAsync: updateSettings }),
   useProfileFields: () => ({ data: state.profile }),
   useUpdateProfileFields: () => ({ mutateAsync: updateProfile }),
   useUpdateOnlineBookingRequiresApproval: () => ({ mutateAsync: updateApproval }),
+  useUpdateBookingLeadTimeMinutes: () => ({ mutateAsync: updateLeadMinutes }),
+  useUpdateClientCancelPolicyText: () => ({ mutateAsync: updatePolicyText }),
 }));
 vi.mock('../../contexts/AuthContext', () => ({
   useAuth: () => ({ user: { id: 'owner-1' }, companyId: 'owner-1' }),

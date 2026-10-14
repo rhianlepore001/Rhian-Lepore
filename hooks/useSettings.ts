@@ -9,6 +9,8 @@ import {
   fetchProfileFields,
   updateProfileFields,
   updateOnlineBookingRequiresApproval,
+  updateBookingLeadTimeMinutes,
+  updateClientCancelPolicyText,
 } from '@/services/settings';
 import type { BusinessSettingsUpdate, ProfileFields } from '@/types/settings';
 import type { StaffAppointmentEditScope } from '@/utils/staffAppointmentPermission';
@@ -107,6 +109,31 @@ export function useUpdateOnlineBookingRequiresApproval() {
 
   return useMutation({
     mutationFn: (requiresApproval: boolean) => updateOnlineBookingRequiresApproval(companyId!, requiresApproval),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['settings', companyId, 'business'] });
+      queryClient.invalidateQueries({ queryKey: ['public-booking', 'settings', companyId] });
+    },
+  });
+}
+
+export function useUpdateBookingLeadTimeMinutes() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (minutes: number) => updateBookingLeadTimeMinutes(user!.id, minutes),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['settings', user?.id, 'profile'] });
+    },
+  });
+}
+
+export function useUpdateClientCancelPolicyText() {
+  const { companyId } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (text: string | null) => updateClientCancelPolicyText(companyId!, text),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings', companyId, 'business'] });
       queryClient.invalidateQueries({ queryKey: ['public-booking', 'settings', companyId] });

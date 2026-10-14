@@ -30,7 +30,7 @@ export const LEGACY_CANCELLATION_POLICY_EXTRAS: readonly string[] = [
 ];
 
 export const CANCELLATION_POLICY_NOTES_HINT =
-  'Aparece abaixo da regra. Não prometa multa: o sistema não cobra.';
+  'Aparece para o cliente abaixo da política, como "Observações: …". Não prometa multa: o sistema não cobra.';
 
 const POLICY_KEYS = new Set(['flexible', 'moderate', 'strict']);
 
@@ -108,20 +108,53 @@ export function splitCancellationPolicyForEditor(stored: string | null | undefin
   };
 }
 
-export function resolveCancellationPolicyDisplay(input: {
+/** Texto da política escrito pelo gestor (`client_cancel_policy_text`). */
+export const MAX_CLIENT_CANCEL_POLICY_TEXT_LENGTH = 300;
+
+/** Prefixo das observações para o cliente. */
+export const CANCELLATION_POLICY_NOTES_PREFIX = 'Observações:';
+
+/** Texto personalizado efetivo: aparado; vazio/só espaços = null (usa o gerado). */
+export function normalizeCustomCancellationPolicyText(text: string | null | undefined): string | null {
+  const trimmed = (text ?? '').trim();
+  if (!trimmed) return null;
+  return trimmed.slice(0, MAX_CLIENT_CANCEL_POLICY_TEXT_LENGTH);
+}
+
+export interface CancellationPolicyDisplayInput {
   cutoffHours?: number | null;
   businessName?: string | null;
+  clientCancelPolicyText?: string | null;
   clientCancelNote?: string | null;
   legacyPolicy?: string | null;
-} | string | null | undefined): string {
+}
+
+export interface CancellationPolicyParts {
+  /** Frase principal: o texto do gestor ou, se vazio, a gerada do prazo. */
+  policy: string;
+  /** Observações (sem prefixo); '' quando não há. */
+  notes: string;
+  isCustom: boolean;
+}
+
+export function resolveCancellationPolicyParts(input: CancellationPolicyDisplayInput): CancellationPolicyParts {
+  const custom = normalizeCustomCancellationPolicyText(input.clientCancelPolicyText);
+  return {
+    policy: custom ?? generatedCancellationPolicyText(input.cutoffHours, input.businessName),
+    notes: cancellationPolicyNotesForDisplay(input.clientCancelNote, input.legacyPolicy),
+    isCustom: custom != null,
+  };
+}
+
+/** Texto único (política + "Observações: …"), para quem precisa de uma string. */
+export function resolveCancellationPolicyDisplay(input: CancellationPolicyDisplayInput | string | null | undefined): string {
   if (input == null || typeof input === 'string') {
     const generated = generatedCancellationPolicyText(DEFAULT_CLIENT_CANCEL_CUTOFF_HOURS, '');
     const notes = cancellationPolicyNotesForDisplay(undefined, typeof input === 'string' ? input : null);
-    return notes ? `${generated}\n\n${notes}` : generated;
+    return notes ? `${generated}\n\n${CANCELLATION_POLICY_NOTES_PREFIX} ${notes}` : generated;
   }
-  const generated = generatedCancellationPolicyText(input.cutoffHours, input.businessName);
-  const notes = cancellationPolicyNotesForDisplay(input.clientCancelNote, input.legacyPolicy);
-  return notes ? `${generated}\n\n${notes}` : generated;
+  const { policy, notes } = resolveCancellationPolicyParts(input);
+  return notes ? `${policy}\n\n${CANCELLATION_POLICY_NOTES_PREFIX} ${notes}` : policy;
 }
 
 export function composeCancellationPolicyForSave(notes: string): string {

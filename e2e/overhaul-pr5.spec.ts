@@ -312,12 +312,12 @@ test.describe('PR-5 prazo de cancelamento', () => {
       const guard = await installProdWriteGuard(page);
       await stubOwner(page);
       await page.goto(`${BASE}/#/configuracoes/agendamento`, { waitUntil: 'domcontentloaded' });
-      await expect(page.getByRole('heading', { name: 'Cliente pode cancelar até' })).toBeVisible({ timeout: 20_000 });
+      await expect(page.getByRole('heading', { name: 'Política de cancelamento' })).toBeVisible({ timeout: 20_000 });
       const section = page.getByTestId('cancel-cutoff-section');
       await section.evaluate((el) => el.scrollIntoView({ block: 'center' }));
       await expect(page.getByTestId('cancel-cutoff-preset-2')).toHaveAttribute('aria-pressed', 'true');
       await expect(page.getByRole('button', { name: 'Não pode cancelar online' })).toBeVisible();
-      await expect(page.getByTestId('cancel-cutoff-generated')).toContainText(POLICY_TEXT);
+      await expect(page.getByTestId('client-cancel-policy-text')).toHaveValue(POLICY_TEXT);
       await expect(page.getByText('Flexível')).toHaveCount(0);
       await shot(page, `ajustes-${vp.name}`);
       guard.assertNoLeak();

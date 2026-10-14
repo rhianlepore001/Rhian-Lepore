@@ -27,6 +27,7 @@ import {
     CANCELLATION_POLICY_NOTES_HINT,
     cancellationPolicyNotesForDisplay,
     generatedCancellationPolicyText,
+    normalizeCustomCancellationPolicyText,
 } from '../../utils/cancellationPolicyCopy';
 import {
     DEFAULT_CLIENT_CANCEL_CUTOFF_HOURS,
@@ -490,10 +491,11 @@ export const GeneralSettings: React.FC = () => {
                             O que o cliente lê
                         </p>
                         <p className={`${colors.text} text-sm leading-relaxed`}>
-                            {generatedCancellationPolicyText(
-                                settings?.client_cancel_cutoff_hours ?? DEFAULT_CLIENT_CANCEL_CUTOFF_HOURS,
-                                businessName || profile?.business_name,
-                            )}
+                            {normalizeCustomCancellationPolicyText(settings?.client_cancel_policy_text)
+                                ?? generatedCancellationPolicyText(
+                                    settings?.client_cancel_cutoff_hours ?? DEFAULT_CLIENT_CANCEL_CUTOFF_HOURS,
+                                    businessName || profile?.business_name,
+                                )}
                         </p>
                     </div>
                     <label className={`${classes.label} mt-4 block`} htmlFor="cancellation-policy-notes">

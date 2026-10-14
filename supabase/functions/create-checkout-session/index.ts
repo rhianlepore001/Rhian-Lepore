@@ -1,6 +1,13 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
+import {
+    collectAllowedOrigins,
+    collectAllowedPriceIds,
+    isAllowedCheckoutMode,
+    isAllowedPriceId,
+    isAllowedReturnUrl,
+} from "./allowlist.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
     apiVersion: "2023-10-16",
@@ -45,6 +52,32 @@ serve(async (req) => {
         if (!priceId) {
             throw new Error("Price ID is required");
         }
+
+        const allowedPrices = collectAllowedPriceIds([
+            Deno.env.get("STRIPE_PRICE_SOLO_BRL"),
+            Deno.env.get("STRIPE_PRICE_TEAM_BRL"),
+            Deno.env.get("STRIPE_PRICE_SOLO_EUR"),
+            Deno.env.get("STRIPE_PRICE_TEAM_EUR"),
+            Deno.env.get("VITE_STRIPE_PRICE_SOLO_BRL"),
+            Deno.env.get("VITE_STRIPE_PRICE_TEAM_BRL"),
+            Deno.env.get("VITE_STRIPE_PRICE_SOLO_EUR"),
+            Deno.env.get("VITE_STRIPE_PRICE_TEAM_EUR"),
+        ]);
+        if (!isAllowedPriceId(priceId, allowedPrices)) {
+            throw new Error("Price ID not allowed");
+        }
+
+        const allowedOrigins = collectAllowedOrigins(Deno.env.get("CHECKOUT_ALLOWED_ORIGINS"));
+        if (!isAllowedReturnUrl(successUrl, allowedOrigins)) {
+            throw new Error("successUrl not allowed");
+        }
+        if (!isAllowedReturnUrl(cancelUrl, allowedOrigins)) {
+            throw new Error("cancelUrl not allowed");
+        }
+        if (!isAllowedCheckoutMode(mode)) {
+            throw new Error("Checkout mode not allowed");
+        }
+        const safeMode = "subscription";
 
         // 1. Check if customer exists in your database
         const { data: profile } = await supabaseClient
@@ -93,7 +126,7 @@ serve(async (req) => {
                     quantity: 1,
                 },
             ],
-            mode: mode,
+            mode: safeMode,
             automatic_payment_methods: {
                 enabled: true,
             },

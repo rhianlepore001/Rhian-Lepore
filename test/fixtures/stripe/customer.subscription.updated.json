@@ -1,0 +1,32 @@
+{
+  "id": "evt_test_sub_updated",
+  "object": "event",
+  "api_version": "2023-10-16",
+  "created": 1760000100,
+  "livemode": false,
+  "pending_webhooks": 1,
+  "request": { "id": null, "idempotency_key": null },
+  "type": "customer.subscription.updated",
+  "data": {
+    "object": {
+      "id": "sub_TEST123",
+      "object": "subscription",
+      "status": "active",
+      "customer": "cus_TESTOWNERA",
+      "current_period_end": 1762592000,
+      "metadata": {
+        "supabase_user_id": "a0000000-0000-4000-8000-0000000000a0",
+        "plan_id": "solo"
+      },
+      "items": {
+        "object": "list",
+        "data": [
+          {
+            "id": "si_test",
+            "price": { "id": "price_1UHgTEBoBv5fVrkrYEFLfgBs" }
+          }
+        ]
+      }
+    }
+  }
+}

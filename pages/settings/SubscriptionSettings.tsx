@@ -63,6 +63,9 @@ export const SubscriptionSettings: React.FC = () => {
 
             const { data, error } = await supabase.functions.invoke('create-checkout-session', {
                 body: {
+                    planId,
+                    currency,
+                    // Legacy priceId kept for older edge revisions; server re-resolves from planId/env.
                     priceId,
                     successUrl: `${window.location.origin}/#/?session_id={CHECKOUT_SESSION_ID}`,
                     cancelUrl: `${window.location.href}`,

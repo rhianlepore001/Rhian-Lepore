@@ -9,6 +9,9 @@ import {
   LEGACY_CANCELLATION_POLICY_TEMPLATES,
   LEGACY_GENERATED_CANCELLATION_POLICY_TEXT,
   resolveCancellationPolicyDisplay,
+  resolveCancellationPolicyParts,
+  normalizeCustomCancellationPolicyText,
+  MAX_CLIENT_CANCEL_POLICY_TEXT_LENGTH,
   splitCancellationPolicyForEditor,
 } from '@/utils/cancellationPolicyCopy';
 
@@ -61,7 +64,7 @@ describe('cancellationPolicyCopy — PR-5 gerada da regra real', () => {
       businessName: 'Corte Fino',
       legacyPolicy: custom,
     })).toBe(
-      `Você pode cancelar até 6h antes pela Minha Área\n\n${custom}`,
+      `Você pode cancelar até 6h antes pela Minha Área\n\nObservações: ${custom}`,
     );
   });
 
@@ -99,7 +102,24 @@ describe('cancellationPolicyCopy — PR-5 gerada da regra real', () => {
 
   it('dica das observações avisa para não prometer multa', () => {
     expect(CANCELLATION_POLICY_NOTES_HINT).toBe(
-      'Aparece abaixo da regra. Não prometa multa: o sistema não cobra.',
+      'Aparece para o cliente abaixo da política, como "Observações: …". Não prometa multa: o sistema não cobra.',
     );
+  });
+
+  it('texto do gestor substitui a frase gerada; vazio volta ao padrão', () => {
+    expect(resolveCancellationPolicyParts({ cutoffHours: 6, businessName: 'X', clientCancelPolicyText: '  Política da casa.  ' })).toEqual({
+      policy: 'Política da casa.', notes: '', isCustom: true,
+    });
+    expect(resolveCancellationPolicyParts({ cutoffHours: 6, businessName: 'X', clientCancelPolicyText: '   ' }).policy).toBe(
+      'Você pode cancelar até 6h antes pela Minha Área',
+    );
+    expect(normalizeCustomCancellationPolicyText('a'.repeat(400))).toHaveLength(MAX_CLIENT_CANCEL_POLICY_TEXT_LENGTH);
+    expect(normalizeCustomCancellationPolicyText(null)).toBeNull();
+  });
+
+  it('texto do gestor + observações formam o texto único com "Observações:"', () => {
+    expect(resolveCancellationPolicyDisplay({
+      cutoffHours: 2, businessName: 'X', clientCancelPolicyText: 'Política da casa.', clientCancelNote: 'Chegue cedo.',
+    })).toBe('Política da casa.\n\nObservações: Chegue cedo.');
   });
 });

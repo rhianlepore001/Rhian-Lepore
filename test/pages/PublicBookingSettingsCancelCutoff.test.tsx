@@ -9,12 +9,17 @@ const state: {
 const updateSettings = vi.fn().mockResolvedValue({});
 const updateProfile = vi.fn().mockResolvedValue({});
 
+const updateLeadMinutes = vi.fn().mockResolvedValue('saved');
+const updatePolicyText = vi.fn().mockResolvedValue('saved');
+
 vi.mock('../../hooks/useSettings', () => ({
   useBusinessSettings: () => ({ data: state.settings }),
   useUpdateBusinessSettings: () => ({ mutateAsync: updateSettings }),
   useProfileFields: () => ({ data: state.profile }),
   useUpdateProfileFields: () => ({ mutateAsync: updateProfile }),
   useUpdateOnlineBookingRequiresApproval: () => ({ mutateAsync: vi.fn().mockResolvedValue('saved') }),
+  useUpdateBookingLeadTimeMinutes: () => ({ mutateAsync: updateLeadMinutes }),
+  useUpdateClientCancelPolicyText: () => ({ mutateAsync: updatePolicyText }),
 }));
 
 vi.mock('../../contexts/AuthContext', () => ({
@@ -76,7 +81,8 @@ describe('PublicBookingSettings — prazo para o cliente cancelar', () => {
 
   it('mostra chips 1h · 2h · 6h · 12h · 24h · 48h · Não pode cancelar online, 2h marcado', () => {
     render(<PublicBookingSettings />);
-    expect(screen.getByRole('heading', { name: 'Cliente pode cancelar até' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Política de cancelamento' })).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Cliente pode cancelar até' })).toBeInTheDocument();
     expect(screen.getByTestId('cancel-cutoff-preset-2')).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByTestId('cancel-cutoff-preset-1')).toBeInTheDocument();
     expect(screen.getByTestId('cancel-cutoff-preset-6')).toBeInTheDocument();
@@ -84,9 +90,10 @@ describe('PublicBookingSettings — prazo para o cliente cancelar', () => {
     expect(screen.getByTestId('cancel-cutoff-preset-24')).toBeInTheDocument();
     expect(screen.getByTestId('cancel-cutoff-preset-48')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Não pode cancelar online' })).toBeInTheDocument();
-    expect(screen.getByTestId('cancel-cutoff-generated')).toHaveTextContent(
+    expect(screen.getByTestId('client-cancel-policy-text')).toHaveValue(
       'Você pode cancelar até 2h antes pela Minha Área',
     );
+    expect(screen.getByTestId('cancel-policy-default-badge')).toHaveTextContent('Texto padrão');
   });
 
   it('salvar envia o cutoff escolhido e a nota', async () => {
@@ -106,8 +113,55 @@ describe('PublicBookingSettings — prazo para o cliente cancelar', () => {
   it('Não pode cancelar online gera a frase de falar com o negócio', () => {
     render(<PublicBookingSettings />);
     fireEvent.click(screen.getByTestId('cancel-cutoff-preset-0'));
-    expect(screen.getByTestId('cancel-cutoff-generated')).toHaveTextContent(
+    expect(screen.getByTestId('client-cancel-policy-text')).toHaveValue(
       'Para cancelar, fale com Barbearia São João.',
     );
+  });
+
+  it('texto padrão acompanha o prazo e salva null (usa o gerado)', async () => {
+    render(<PublicBookingSettings />);
+    fireEvent.click(screen.getByTestId('cancel-cutoff-preset-24'));
+    expect(screen.getByTestId('client-cancel-policy-text')).toHaveValue('Você pode cancelar até 24h antes pela Minha Área');
+    fireEvent.click(screen.getByRole('button', { name: /Salvar Alterações/ }));
+    await waitFor(() => expect(updatePolicyText).toHaveBeenCalledWith(null));
+  });
+
+  it('gestor edita o texto, salva aparado e pode restaurar o padrão', async () => {
+    render(<PublicBookingSettings />);
+    const field = screen.getByTestId('client-cancel-policy-text');
+    expect(field).toHaveAttribute('maxLength', '300');
+    fireEvent.change(field, { target: { value: '  Cancele até 1 dia antes pela Minha Área.  ' } });
+    expect(screen.getByTestId('cancel-policy-restore-default')).toBeInTheDocument();
+    expect(screen.getByTestId('cancel-policy-preview')).toHaveTextContent('Cancele até 1 dia antes pela Minha Área.');
+    fireEvent.click(screen.getByRole('button', { name: /Salvar Alterações/ }));
+    await waitFor(() => expect(updatePolicyText).toHaveBeenCalledWith('Cancele até 1 dia antes pela Minha Área.'));
+
+    fireEvent.click(screen.getByTestId('cancel-policy-restore-default'));
+    expect(screen.getByTestId('client-cancel-policy-text')).toHaveValue('Você pode cancelar até 2h antes pela Minha Área');
+    expect(screen.queryByTestId('cancel-policy-restore-default')).not.toBeInTheDocument();
+  });
+
+  it('texto salvo vem carregado como personalizado', () => {
+    state.settings = { ...state.settings, client_cancel_policy_text: 'Política da casa.' };
+    render(<PublicBookingSettings />);
+    expect(screen.getByTestId('client-cancel-policy-text')).toHaveValue('Política da casa.');
+    expect(screen.getByTestId('cancel-policy-restore-default')).toBeInTheDocument();
+  });
+
+  it('prévia mostra as observações com o prefixo "Observações:", como texto puro', () => {
+    render(<PublicBookingSettings />);
+    fireEvent.change(screen.getByTestId('client-cancel-note'), { target: { value: '<b>Chegue</b> 5 min antes.' } });
+    const preview = screen.getByTestId('cancel-policy-preview');
+    expect(preview).toHaveTextContent('Observações: <b>Chegue</b> 5 min antes.');
+    expect(preview.querySelector('b')).toBeNull();
+  });
+
+  it('banco sem a coluna nova: salva o resto e não quebra', async () => {
+    updatePolicyText.mockResolvedValueOnce('unsupported');
+    render(<PublicBookingSettings />);
+    fireEvent.change(screen.getByTestId('client-cancel-policy-text'), { target: { value: 'Outro texto.' } });
+    fireEvent.click(screen.getByRole('button', { name: /Salvar Alterações/ }));
+    await waitFor(() => expect(updatePolicyText).toHaveBeenCalled());
+    expect(updateSettings).toHaveBeenCalled();
   });
 });

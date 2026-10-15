@@ -341,7 +341,7 @@ test.describe('PR-2 antecedência mínima', () => {
       }
       await page.goto(`${BASE}/#/configuracoes/agendamento`);
       if (phase === 'after') {
-        await expect(page.getByRole('heading', { name: 'Antecedência mínima' })).toBeVisible({ timeout: 20_000 });
+        await expect(page.getByRole('heading', { name: 'Antecedência mínima para marcar pelo link' })).toBeVisible({ timeout: 20_000 });
         await reveal(page, 'lead-time-section');
         await expect(page.getByTestId('lead-time-preset-2')).toBeVisible();
         await expect(page.getByTestId('lead-time-preset-8')).toBeVisible();
@@ -363,12 +363,12 @@ test.describe('PR-2 antecedência mínima', () => {
         await stubAuthReads(page, 'owner');
       }
       await page.goto(`${BASE}/#/configuracoes/agendamento`);
-      await expect(page.getByRole('heading', { name: 'Antecedência mínima' })).toBeVisible({ timeout: 20_000 });
+      await expect(page.getByRole('heading', { name: 'Antecedência mínima para marcar pelo link' })).toBeVisible({ timeout: 20_000 });
       await page.getByTestId('lead-time-preset-custom').click();
       await page.getByTestId('booking-lead-time-custom').fill('');
       await page.getByRole('button', { name: /Salvar Alterações/ }).click();
       await expect(page.getByTestId('lead-time-custom-error')).toBeVisible();
-      await expect(page.getByTestId('lead-time-custom-hint')).toHaveText('0 a 720');
+      await expect(page.getByTestId('lead-time-custom-hint')).toContainText('Horas de 0 a 720 e minutos de 0 a 59.');
       await reveal(page, 'lead-time-section');
       await shot(page, `owner-${width}-settings-outro-error.png`);
     });

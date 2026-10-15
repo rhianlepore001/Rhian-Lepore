@@ -145,14 +145,31 @@ export async function updateStaffAgendaBlockScope(
   return 'saved';
 }
 
+const PROFILE_FIELDS_SELECT = 'business_name, phone, address_street, instagram_handle, logo_url, cover_photo_url, business_slug, monthly_goal, daily_goal, public_booking_enabled, booking_lead_time_hours, max_bookings_per_day, region';
+
+function isMissingNamedColumn(error: { code?: string; message?: string } | null | undefined, column: string): boolean {
+  if (!error) return false;
+  if (error.code !== '42703' && error.code !== 'PGRST204') return false;
+  return !error.message || error.message.includes(column);
+}
+
 export async function fetchProfileFields(
   userId: string,
 ): Promise<ProfileFields | null> {
-  const { data, error } = await supabase
+  // booking_lead_time_minutes só existe depois de 20261013141528; antes disso
+  // cai no select antigo (horas) sem quebrar a tela.
+  const withMinutes = await supabase
     .from('profiles')
-    .select('business_name, phone, address_street, instagram_handle, logo_url, cover_photo_url, business_slug, monthly_goal, daily_goal, public_booking_enabled, booking_lead_time_hours, max_bookings_per_day, region')
+    .select(`${PROFILE_FIELDS_SELECT}, booking_lead_time_minutes`)
     .eq('id', userId)
     .single();
+  let data: unknown = withMinutes.data;
+  let error = withMinutes.error;
+  if (error && isMissingNamedColumn(error, 'booking_lead_time_minutes')) {
+    const legacy = await supabase.from('profiles').select(PROFILE_FIELDS_SELECT).eq('id', userId).single();
+    data = legacy.data;
+    error = legacy.error;
+  }
 
   if (error) throw error;
   if (!data) return null;
@@ -163,17 +180,56 @@ export async function updateProfileFields(
   userId: string,
   updates: ProfileFields,
 ): Promise<ProfileFields> {
-  const parsed = profileFieldsSchema.parse(updates);
+  // Minutos vão em separado (updateBookingLeadTimeMinutes) para não quebrar antes da migration.
+  const { booking_lead_time_minutes: _ignored, ...parsed } = profileFieldsSchema.parse(updates);
 
   const { data, error } = await supabase
     .from('profiles')
     .update(parsed)
     .eq('id', userId)
-    .select('business_name, phone, address_street, instagram_handle, logo_url, cover_photo_url, business_slug, monthly_goal, daily_goal, public_booking_enabled, booking_lead_time_hours, max_bookings_per_day, region')
+    .select(PROFILE_FIELDS_SELECT)
     .single();
 
   if (error) throw error;
   return profileFieldsSchema.parse(data);
+}
+
+export type ColumnSaveResult = 'saved' | 'unsupported';
+
+/** Antecedência em minutos. Antes da migration devolve 'unsupported' (ficam as horas). */
+export async function updateBookingLeadTimeMinutes(
+  userId: string,
+  minutes: number,
+): Promise<ColumnSaveResult> {
+  if (!Number.isInteger(minutes) || minutes < 0 || minutes > 43200) {
+    throw new Error(`invalid_booking_lead_time_minutes: ${String(minutes)}`);
+  }
+  const { error } = await supabase
+    .from('profiles')
+    .update({ booking_lead_time_minutes: minutes })
+    .eq('id', userId);
+  if (error) {
+    if (isMissingNamedColumn(error, 'booking_lead_time_minutes')) return 'unsupported';
+    throw error;
+  }
+  return 'saved';
+}
+
+/** Texto da política (null = usar o gerado). Antes da migration devolve 'unsupported'. */
+export async function updateClientCancelPolicyText(
+  companyId: string,
+  text: string | null,
+): Promise<ColumnSaveResult> {
+  if (text != null && text.length > 300) throw new Error('client_cancel_policy_text_too_long');
+  const { error } = await supabase
+    .from('business_settings')
+    .update({ client_cancel_policy_text: text })
+    .eq('user_id', companyId);
+  if (error) {
+    if (isMissingNamedColumn(error, 'client_cancel_policy_text')) return 'unsupported';
+    throw error;
+  }
+  return 'saved';
 }
 
 export type OnlineBookingApprovalSaveResult = 'saved' | 'unsupported';

@@ -35,6 +35,11 @@ for (const width of [393, 1280]) {
     expect(events.some(args => args[0] === 'trackSingle' && args[2] === 'PageView')).toBe(true);
     await page.goto('/#/register');
     await expect(page.getByLabel('Seu nome')).toBeVisible();
+    expect(await page.evaluate(() => window.fbq?.queue.filter(args => args[2] === 'Lead').length)).toBe(0);
+    await page.locator('form').evaluate(form => {
+      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    });
     await expect.poll(async () => page.evaluate(() => window.fbq?.queue.filter(args => args[2] === 'Lead').length)).toBe(1);
     await page.getByRole('button', { name: 'Preferências de cookies' }).click();
     await page.getByRole('button', { name: 'Recusar', exact: true }).click();

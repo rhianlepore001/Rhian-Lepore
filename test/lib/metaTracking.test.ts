@@ -38,6 +38,23 @@ describe('Meta tracking', () => {
     expect(isMetaRoute('/register', '?company=owner&member=staff', false)).toBe(false);
     expect(isMetaRoute('/register', '?type=beauty', false)).toBe(true);
   });
+  it.each([
+    ['/login', '?token=secret'], ['/register', '?access_token=secret'],
+    ['/register', '?type=beauty&token=secret'], ['/register', '?next=/book/private'],
+  ])('rejects sensitive or unknown query parameters on %s%s', (path, search) => {
+    expect(isMetaRoute(path, search, false)).toBe(false);
+  });
+  it.each(['/book/private', '/minha-area/private', '/agenda', '/login'])('drops a captured registration after leaving for %s', path => {
+    const s = setup(); s.accept();
+    s.tracker.pageView('/register', '', false);
+    const context = s.tracker.captureRegistration();
+    s.tracker.pageView(path, '', path === '/agenda');
+    s.pixel.mockClear(); s.send.mockClear();
+    s.tracker.lead();
+    s.tracker.completeRegistration(context, { email: 'person@example.com' });
+    expect(s.pixel).not.toHaveBeenCalled();
+    expect(s.send).not.toHaveBeenCalled();
+  });
   it('does not load or send anything without consent or a pixel ID', () => {
     for (const id of ['', '123']) {
       const s = setup(id);

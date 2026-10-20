@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MarketingConsent } from '@/components/MarketingConsent';
+import { metaTracker } from '@/lib/metaTracking';
 import { readConsent } from '@/lib/marketingConsent';
 
 vi.mock('@/contexts/AuthContext', () => ({
@@ -24,6 +25,13 @@ describe('MarketingConsent', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Preferências de cookies' }));
     fireEvent.click(screen.getByRole('button', { name: 'Aceitar' }));
     expect(readConsent()).toBe('accepted');
+  });
+  it('does not emit Lead when opening the registration page', () => {
+    localStorage.setItem('agendix:marketing-consent:v1', JSON.stringify({
+      choice: 'accepted', version: 1, savedAt: Date.now(),
+    }));
+    render(<MemoryRouter initialEntries={['/register']}><MarketingConsent /></MemoryRouter>);
+    expect(metaTracker.lead).not.toHaveBeenCalled();
   });
   it('is available on the privacy page without enabling page tracking there', () => {
     render(<MemoryRouter initialEntries={['/privacidade']}><MarketingConsent /></MemoryRouter>);

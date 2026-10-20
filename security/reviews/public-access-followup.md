@@ -12,7 +12,7 @@ Escopo: fila, clube e confirmação pendente de agendamento. Branch `security/ha
 ## Controles
 
 - Tokens: `encode(gen_random_bytes(32),'hex')` do pgcrypto, resolvendo o schema da extensão; somente hash SHA-256 fica no banco privado. O teste usa pgcrypto no schema `extensions`.
-- Agendamentos: vencem no horário original + 48 horas. Antecipar encurta o prazo para o novo horário + 48 horas; adiar nunca aumenta a validade. Tokens preexistentes são limitados ao horário atual + 48 horas. A coluna `expires_at` funciona como teto fixo, evitando renovações sucessivas por remarcação.
+- Agendamentos: vencem no horário agendado + 48 horas. Cada remarcação atualiza `expires_at` para exatamente o novo horário + 48 horas, tanto ao antecipar quanto ao adiar, sem somar prazo à validade anterior. Na aplicação inicial, tokens preexistentes são limitados ao horário atual + 48 horas, preservando eventuais validades menores já gravadas.
 - Fila: validade fixa de entrada + 48 horas. Clube: validade fixa de um ano, renovável somente por emissão explícita do proprietário; cancelar preserva a leitura do estado cancelado até o vencimento.
 - A edição de booking não aceita telefone diferente do já gravado e sempre repassa o telefone existente à implementação interna. A tela de edição também exibe telefone somente para leitura.
 - `materialize_public_booking_appointment` e `accept_public_booking_v2`: `search_path=''`; relações e funções de aplicação já qualificadas.
@@ -26,7 +26,7 @@ Escopo: fila, clube e confirmação pendente de agendamento. Branch `security/ha
 ## Verificação e limites
 
 - TDD frontend: quatro testes inicialmente vermelhos de fila/clube, seguidos pelos mesmos casos aprovados.
-- TDD SQL: a versão anterior do branch falha em `BOOKING_EXPIRY_NOT_48H`; nova migration passa. Exercitados token correto/incorreto/ausente/expirado, outro ID/tenant, duplicidade de clube sem reemissão, status de fila e plano, saída/cancelamento, rotação do proprietário, legado sem token, expiração não extensível, ACLs e search_path.
+- TDD SQL: a versão anterior do branch falha em `BOOKING_EXPIRY_NOT_48H`; nova migration passa. Exercitados token correto/incorreto/ausente/expirado, outro ID/tenant, duplicidade de clube sem reemissão, status de fila e plano, saída/cancelamento, rotação do proprietário, legado sem token, expiração em novo horário + 48 horas, ACLs e search_path. A revisão de expiração reproduz a falha em `BOOKING_EXPIRY_FOLLOWS_RESCHEDULE_PLUS_10_DAYS` antes da correção do trigger e cobre remarcação em +10 dias pela RPC pública, preservando o mesmo link, além de antecipação e novo adiamento.
 - Falha forçada ao persistir hash reverte entrada/pagamento de fila e adesão/cadastro novo do clube. As regressões existentes de atomicidade de booking e preservação do CRM também passam.
 - Ciclo SQL: aplicar duas vezes → testar → reverter → comparar definições/ACLs → reaplicar → testar. Fixture usa definições reais selecionadas de migrations e esquema mínimo explícito; não certifica catálogo remoto, PostgREST ou gateway Realtime.
 - Documentação de funções e ACLs conferida no repositório oficial do Supabase (`apps/docs/content/guides/database/functions.mdx`). Índice de changelog em supabase.com indisponível por política de rede (403). Não há alteração de SDK.

@@ -65,7 +65,7 @@ CREATE OR REPLACE FUNCTION agendix_private.bound_booking_access_expiry() RETURNS
 LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
 BEGIN
  UPDATE agendix_private.public_booking_access
- SET expires_at=least(expires_at,NEW.appointment_time+interval '48 hours') WHERE booking_id=NEW.id;
+ SET expires_at=NEW.appointment_time+interval '48 hours' WHERE booking_id=NEW.id;
  RETURN NEW;
 END $$;
 REVOKE ALL ON FUNCTION agendix_private.bound_booking_access_expiry() FROM PUBLIC,anon,authenticated;

@@ -1,6 +1,6 @@
 # Reversão do acompanhamento privado de fila e clube
 
-Não executar automaticamente nem isoladamente do frontend. Este rollback reabre os acessos legados de fila por telefone e restaura a geração/expiração anterior dos tokens de agendamento. Não remove dados de negócio nem hashes; validades já encurtadas permanecem encurtadas.
+Não executar automaticamente nem isoladamente do frontend. Este rollback reabre os acessos legados de fila por telefone e restaura a geração/expiração anterior dos tokens de agendamento. Não remove dados de negócio nem hashes; validades já encurtadas não são restauradas: o rollback não recalcula `expires_at` nem recupera seus valores anteriores. Após reaplicar a migration, cada remarcação sincroniza a validade com o novo horário + 48 horas, sem prazo adicional.
 
 Arquivo: `20261020155608_private_queue_membership_tokens.rollback.sql`.
 

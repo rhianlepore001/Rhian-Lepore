@@ -1,3 +1,4 @@
+-- Does not restore expiration values shortened by the migration.
 BEGIN;
 DROP TRIGGER IF EXISTS bound_booking_access_expiry ON public.public_bookings;
 DO $$ DECLARE f record; a record; BEGIN

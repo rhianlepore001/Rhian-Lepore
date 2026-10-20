@@ -130,3 +130,14 @@ Branch `security/hardening-audit`, PR #160 draft. Escopo e limites em `security/
 - `graphify update .`: indisponível, comando não instalado (exit 127).
 
 Nenhuma migração, consulta de dados reais, deploy, merge, envio de mensagem ou pagamento remoto foi executado. Os testes SQL usam esquema mínimo e definições selecionadas de migrations; não certificam catálogo remoto nem os gateways PostgREST/Realtime. O índice de changelog do Supabase retornou 403 da política de rede; a referência de funções, `search_path` e grants foi conferida no repositório oficial de documentação.
+
+## Correção da expiração após remarcação — 20/10/2026
+
+- Contrato corrigido na própria migration ainda não publicada: o trigger usa `NEW.appointment_time + interval '48 hours'`, acompanhando antecipações e adiamentos sem acrescentar prazo à validade anterior.
+- TDD: antes da correção, o teste SQL falhou em `BOOKING_EXPIRY_FOLLOWS_RESCHEDULE_PLUS_10_DAYS`. O cenário remarca pela RPC pública de D+10 para D+20, exige validade em D+22 e confirma acesso com o mesmo token. Também confere antecipação para D+5 (validade D+7) e novo adiamento para D+20 (validade D+22).
+- Após a correção, `security/tests/private-booking-cycle.sh --public-access` passou: aplicação duplicada, regressões, rollback com comparação de definições/ACLs e reaplicação. As regressões de fila, clube, CRM e atomicidade continuam aprovadas.
+- Rollback documentado em SQL e Markdown: não restaura validades já encurtadas nem recalcula seus valores anteriores.
+- `npm run typecheck`, `npm run lint` e `npm run build`/postbuild: aprovados. Permanece o aviso conhecido de tamanho de chunks.
+- `npm test -- --run`: **1.773 testes em 249 arquivos aprovados** (364,35s).
+- `git diff --check`: aprovado. `graphify update .`: indisponível (exit 127).
+- Validação apenas local. Sem migration remota, merge ou deploy.

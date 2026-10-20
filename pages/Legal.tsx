@@ -22,7 +22,7 @@ export const Legal: React.FC = () => {
                 <h1 className="font-heading text-3xl font-bold tracking-tight mb-2">
                     {isPrivacy ? 'Política de Privacidade' : 'Termos de Uso'}
                 </h1>
-                <p className="text-xs text-[var(--color-text-muted)] mb-10">Última atualização: setembro de 2026</p>
+                <p className="text-xs text-[var(--color-text-muted)] mb-10">Última atualização: outubro de 2026</p>
 
                 {isPrivacy ? (
                     <div className="space-y-8">
@@ -36,8 +36,9 @@ export const Legal: React.FC = () => {
                         <section className={SECTION_CLASS}>
                             <h2 className={H2_CLASS}>2. Como usamos</h2>
                             <p className={P_CLASS}>
-                                Os dados são usados exclusivamente para prestar o serviço: agenda, fila digital,
-                                relatórios financeiros e comunicação sobre a sua conta. Não vendemos dados a terceiros.
+                                Os dados são usados para prestar o serviço: agenda, fila digital,
+                                relatórios financeiros e comunicação sobre a sua conta. Com sua autorização,
+                                também medimos a eficácia dos nossos anúncios, conforme a seção sobre cookies. Não vendemos dados a terceiros.
                             </p>
                         </section>
                         <section className={SECTION_CLASS}>
@@ -52,6 +53,31 @@ export const Legal: React.FC = () => {
                             <p className={P_CLASS}>
                                 Você pode solicitar acesso, correção ou exclusão dos seus dados a qualquer momento
                                 pelo e-mail de suporte informado na plataforma.
+                            </p>
+                        </section>
+                        <section className={SECTION_CLASS}>
+                            <h2 className={H2_CLASS}>5. Cookies e Meta</h2>
+                            <p className={P_CLASS}>
+                                O armazenamento essencial mantém a sessão e sua preferência de cookies.
+                                Somente com seu consentimento usamos o Meta Pixel e a API de Conversões
+                                nas páginas de entrada e cadastro para medir visitas, início e conclusão
+                                do cadastro e melhorar anúncios. Não rastreamos o painel nem as páginas
+                                públicas de atendimento dos nossos clientes.
+                            </p>
+                            <p className={P_CLASS}>
+                                A Meta pode receber eventos, identificadores de cookies, IP e navegador;
+                                no cadastro, e-mail e telefone são enviados pela API com hash SHA-256
+                                para correspondência. O hash permite associação pela Meta e não torna
+                                esses dados anônimos. A Meta pode processar dados fora do Brasil e do
+                                Espaço Econômico Europeu, conforme sua{' '}
+                                <a href="https://www.facebook.com/privacy/policy/" target="_blank" rel="noopener noreferrer" className="underline">Política de Privacidade</a>.
+                            </p>
+                            <p className={P_CLASS}>
+                                Você pode aceitar ou recusar sem perder acesso ao serviço. A escolha é
+                                salva neste navegador por até 180 dias. Use Preferências de cookies
+                                nesta página para alterar ou retirar seu consentimento, nos termos
+                                da LGPD e do RGPD. A retirada interrompe os próximos envios e remove
+                                os cookies Meta acessíveis neste domínio; não desfaz envios anteriores.
                             </p>
                         </section>
                     </div>

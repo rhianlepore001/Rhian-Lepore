@@ -1,3 +1,4 @@
+import { MarketingConsent } from './components/MarketingConsent';
 import React, { Suspense } from 'react';
 import { HashRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { Layout } from './components/Layout';
@@ -302,6 +303,7 @@ const App: React.FC = () => {
         <AuthProvider>
           <ToastProvider>
             <DynamicBranding />
+            <MarketingConsent />
             <PublicClientProvider>
               <AlertsProvider>
                   <AppRoutes />

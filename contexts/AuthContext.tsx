@@ -1,3 +1,4 @@
+import { metaTracker, normalizeMetaPhone } from '../lib/metaTracking';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
@@ -326,6 +327,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       const isStaffInvite = Boolean(data.companyId && data.teamMemberId);
+      const trackingContext = isStaffInvite ? null : metaTracker.captureRegistration();
 
       const signUpPayload = {
         email: data.email,
@@ -444,6 +446,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (authError) return { error: authError };
 
       if (authData.user) {
+        if (trackingContext) metaTracker.completeRegistration(trackingContext, {
+          email: data.email,
+          phone: normalizeMetaPhone(data.phone, data.region),
+        });
         const resolvedCompanyId = data.companyId || authData.user.id;
 
         if (isStaffInvite && !authData.session) {

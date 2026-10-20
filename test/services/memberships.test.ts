@@ -211,11 +211,11 @@ describe('memberships service — fetchPublicClientMembership', () => {
       error: null,
     });
 
-    const result = await fetchPublicClientMembership('biz-1', '11999999999');
+    const result = await fetchPublicClientMembership('biz-1', 'a'.repeat(64));
 
-    expect(rpcMock).toHaveBeenCalledWith('get_public_client_membership', {
+    expect(rpcMock).toHaveBeenCalledWith('get_client_membership_with_token', {
       p_business_id: 'biz-1',
-      p_phone: '11999999999',
+      p_token: 'a'.repeat(64),
     });
     expect(result?.plan_name).toBe('Corte Ilimitado');
     expect(result?.usage_this_period).toBe(2);
@@ -224,18 +224,18 @@ describe('memberships service — fetchPublicClientMembership', () => {
 
   it('retorna null quando a RPC não acha membership', async () => {
     rpcMock.mockResolvedValueOnce({ data: [], error: null });
-    await expect(fetchPublicClientMembership('biz-1', '11999999999')).resolves.toBeNull();
+    await expect(fetchPublicClientMembership('biz-1', 'a'.repeat(64))).resolves.toBeNull();
   });
 });
 
 describe('memberships service — cancelPublicClientMembership', () => {
   it('chama a RPC de cancelamento público', () => {
     rpcMock.mockResolvedValueOnce({ data: 'ms-pub', error: null });
-    return cancelPublicClientMembership('biz-1', '11999999999').then((id) => {
+    return cancelPublicClientMembership('biz-1', 'a'.repeat(64)).then((id) => {
       expect(id).toBe('ms-pub');
-      expect(rpcMock).toHaveBeenCalledWith('cancel_public_client_membership', {
+      expect(rpcMock).toHaveBeenCalledWith('cancel_client_membership_with_token', {
         p_business_id: 'biz-1',
-        p_phone: '11999999999',
+        p_token: 'a'.repeat(64),
       });
     });
   });

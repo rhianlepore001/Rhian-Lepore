@@ -25,6 +25,7 @@ import {
     cancelPixPayment,
     createPixPayment,
     fetchPublicClientMembership,
+    readMembershipToken,
     cancelPublicClientMembership,
     UpsertMembershipPlanInput,
     CreateMembershipInput,
@@ -222,20 +223,23 @@ export function useCreatePublicPixPayment(businessId: string | null) {
     });
 }
 
-export function usePublicClientMembership(businessId: string | null, phone: string | null) {
+export function usePublicClientMembership(businessId: string | null, privateToken: string | null) {
+    const token = privateToken && /^[a-f0-9]{64}$/.test(privateToken) ? privateToken : businessId ? readMembershipToken(businessId) : null;
     return useQuery({
-        queryKey: ['public-client-membership', businessId, phone],
-        queryFn: () => fetchPublicClientMembership(businessId!, phone!),
-        enabled: !!businessId && !!phone,
+        queryKey: ['public-client-membership', businessId, token],
+        queryFn: () => fetchPublicClientMembership(businessId!, token!),
+        enabled: !!businessId && !!token,
+        retry: false,
+        refetchInterval: 5000,
     });
 }
 
-export function useCancelPublicClientMembership(businessId: string | null, phone: string | null) {
+export function useCancelPublicClientMembership(businessId: string | null, token: string | null) {
     const qc = useQueryClient();
     return useMutation({
-        mutationFn: () => cancelPublicClientMembership(businessId!, phone!),
+        mutationFn: () => cancelPublicClientMembership(businessId!, token!),
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['public-client-membership', businessId, phone] });
+            qc.invalidateQueries({ queryKey: ['public-client-membership', businessId] });
         },
     });
 }

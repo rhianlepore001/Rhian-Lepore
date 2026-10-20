@@ -1,18 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { fetchQueueStatusSnapshot, readQueuePhoneProof } from '@/services/queue';
+import { fetchQueueStatusSnapshot, readQueueToken } from '@/services/queue';
 
 export function useQueueStatusSnapshot(entryId: string | undefined) {
   return useQuery({
     queryKey: ['queueStatus', entryId],
     queryFn: () => {
-      const phone = readQueuePhoneProof(entryId!);
-      if (!phone) {
-        throw new Error('Queue phone proof missing');
+      const token = readQueueToken(entryId!);
+      if (!token) {
+        throw new Error('Abra o link privado da fila.');
       }
-      return fetchQueueStatusSnapshot(entryId!, phone);
+      return fetchQueueStatusSnapshot(entryId!, token);
     },
-    enabled: !!entryId && !!readQueuePhoneProof(entryId),
+    enabled: !!entryId && !!readQueueToken(entryId),
     refetchInterval: 10_000,
   });
 }

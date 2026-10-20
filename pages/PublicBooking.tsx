@@ -1,6 +1,5 @@
 ﻿import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
 import { Star, Calendar, Clock, MapPin, Instagram, Scissors, Sparkles, User, ArrowRight, Check, ChevronLeft, ChevronRight, Phone, Users, Loader2, X, AlertTriangle, Send, MessageSquare, LayoutDashboard, Package, Minus, Plus } from 'lucide-react';
 import { PhoneInput } from '../components/PhoneInput';
@@ -27,8 +26,8 @@ import { buildWhatsAppLink, formatCurrency, formatDuration, Region } from '../ut
 import { capBookingDuration } from '../utils/serviceDuration';
 import { logger } from '../utils/Logger';
 import { useZonedAvailableSlots } from '../hooks/useZonedAvailableSlots';
-import { mergeFreshPublicBooking } from '../utils/publicBookingFresh';
-import { fetchEditBooking, fetchPublicBookingById, fetchFullDates, findNextDateWithSlots, getFirstAvailableProfessional } from '../services/publicBooking';
+import { usePrivateBookingStatusPoll } from '../hooks/usePrivateBookingStatusPoll';
+import { fetchEditBooking, fetchFullDates, findNextDateWithSlots, getFirstAvailableProfessional } from '../services/publicBooking';
 import { getPublicBookingAwaitingWhatsAppText, getPublicBookingSubmitLabel, getPublicBookingSuccessCopy } from '../utils/publicBookingCopy';
 import { isPublicBookingAutoConfirm } from '../utils/onlineBookingApproval';
 import { resolveCancellationPolicyParts } from '../utils/cancellationPolicyCopy';
@@ -226,50 +225,7 @@ export const PublicBooking: React.FC = () => {
         return () => { cancelled = true; };
     }, [editParam, businessId, businessSettingsFetched, linkToken]);
 
-    const fetchFreshActiveBooking = async (bookingId: string) => {
-        const token = activeBooking?.management_token || linkToken;
-        if (!businessId || !token) return;
-
-        try {
-            const booking = await fetchPublicBookingById(bookingId, businessId, token);
-            if (booking) {
-                // Junta (não substitui): a RPC devolve só parte dos campos do pedido.
-                setActiveBooking((prev: any) => mergeFreshPublicBooking(prev, booking));
-            }
-        } catch (error) {
-            logger.error('Error fetching fresh active booking', error);
-        }
-    };
-
-    useEffect(() => {
-        if (!activeBooking?.id) return;
-        const channel = supabase
-            .channel(`booking_status_${activeBooking.id}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'public_bookings',
-                    filter: `id=eq.${activeBooking.id}`
-                },
-                () => {
-                    fetchFreshActiveBooking(activeBooking.id);
-                }
-            )
-            .subscribe();
-
-        const interval = setInterval(() => {
-            if (activeBooking.status === 'pending') {
-                fetchFreshActiveBooking(activeBooking.id);
-            }
-        }, 5000);
-
-        return () => {
-            supabase.removeChannel(channel);
-            clearInterval(interval);
-        };
-    }, [activeBooking?.id, activeBooking?.status]);
+    usePrivateBookingStatusPoll(activeBooking, businessId, linkToken, setActiveBooking);
 
     useEffect(() => {
         // Mesmo cuidado dos horários: fuso muda quando os settings chegam;
@@ -1181,7 +1137,7 @@ export const PublicBooking: React.FC = () => {
                                         </div>
                                         <div className="space-y-1.5 sm:col-span-2">
                                             <label className={`${colors.textMuted} text-xs font-semibold uppercase tracking-wide block`}>WhatsApp</label>
-                                            <PhoneInput value={customerPhone} onChange={setCustomerPhone} defaultRegion={currencyRegion as 'BR' | 'PT'} />
+                                            {editingBookingId ? <p className="text-sm text-theme-textSecondary">{customerPhone} · Para alterar o telefone, fale com o estabelecimento.</p> : <PhoneInput value={customerPhone} onChange={setCustomerPhone} defaultRegion={currencyRegion as 'BR' | 'PT'} />}
                                         </div>
                                     </div>
 
@@ -1728,7 +1684,7 @@ export const PublicBooking: React.FC = () => {
                                     </div>
                                     <div className="space-y-2">
                                         <label className={`${colors.textMuted} ${font.label} text-xs uppercase tracking-widest block font-bold`}>WhatsApp</label>
-                                        <PhoneInput value={customerPhone} onChange={setCustomerPhone} defaultRegion={currencyRegion as 'BR' | 'PT'} />
+                                        {editingBookingId ? <p className="text-sm text-theme-textSecondary">{customerPhone} · Para alterar o telefone, fale com o estabelecimento.</p> : <PhoneInput value={customerPhone} onChange={setCustomerPhone} defaultRegion={currencyRegion as 'BR' | 'PT'} />}
                                     </div>
                                 </div>
 

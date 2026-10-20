@@ -7,7 +7,7 @@ import { useToast } from '../ui/Toast';
 import { PlanCard } from './PlanCard';
 import { PixDisplay } from './PixDisplay';
 import { MbwayDisplay } from './MbwayDisplay';
-import { MembershipPlan } from '../../services/memberships';
+import { MembershipPlan, readMembershipToken } from '../../services/memberships';
 import { detectPixKeyType, generatePixPayload, validatePixKey } from '../../lib/pix-generator';
 import { generatePixTxid } from '../../lib/pix-txid';
 import { clubDigitalMethod, ClubCheckoutMethod, minClientPhoneDigits } from '../../lib/club-payment';
@@ -50,6 +50,7 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
   const [clientName, setClientName] = useState(prefillName);
   const [clientPhone, setClientPhone] = useState(prefillPhone);
   const [submitting, setSubmitting] = useState(false);
+  const [privatePath, setPrivatePath] = useState<string | null>(null);
   const [pixBrCode, setPixBrCode] = useState<string | null>(null);
 
   useEffect(() => {
@@ -126,6 +127,9 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
         paymentMethod,
       });
 
+      const token = readMembershipToken(businessId);
+      if (token) setPrivatePath(`/minha-area/${encodeURIComponent(slug)}?tab=clube&token=${encodeURIComponent(token)}`);
+
       if (paymentMethod === 'pix' && brCode && txid) {
         const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
         try {
@@ -184,6 +188,8 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
           {backLabel}
         </Link>
       )}
+
+      {privatePath && <div data-private-booking-link data-html2canvas-ignore className="space-y-2"><Link to={privatePath} className="underline">Ver ou cancelar meu plano</Link><p className="text-sm">Guarde este link privado. Ele dá acesso ao seu plano.</p><button type="button" onClick={() => { void navigator.clipboard.writeText(`${window.location.origin}/#${privatePath}`).then(() => showToast('Link privado copiado.', 'success')).catch(() => showToast('Não foi possível copiar o link.', 'error')); }}>Copiar link privado</button></div>}
 
       {!embedded && (
         <header className="min-w-0">

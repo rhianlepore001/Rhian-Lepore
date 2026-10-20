@@ -1,814 +1,92 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams, Link, useSearchParams } from 'react-router-dom';
+import React from 'react';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { ClientQueuePanel } from '../components/queue/ClientQueuePanel';
-import { hasQueueQrVisit } from '../services/queue';
-import { supabase } from '../lib/supabase';
-import { usePublicClient } from '../contexts/PublicClientContext';
-import { useBusinessProfileBySlug, useBusinessSettings } from '../hooks/usePublicBooking';
-import { ClientBookingCard, ClientBooking } from '../components/ClientBookingCard';
-import { PrivateBookingArea } from './PrivateBookingArea';
-import { pendingAwaitingBanner, splitClientBookings } from '../utils/clientBookings';
-import { applyBookingStatusEvent } from '../utils/bookingRealtime';
-import { useBookingStatusLive } from '../hooks/useBookingStatusLive';
-import { usePublicBusinessCopy } from '../hooks/useBusinessCopy';
-import { PhoneInput } from '../components/PhoneInput';
-import {
-    Calendar, History, User, LogOut, ArrowRight,
-    Loader2, CalendarX, Sparkles, Mail, Phone,
-    Edit2, Check, X, ChevronLeft, Clock, Crown
-} from 'lucide-react';
 import { ClientMembershipPanel } from '../components/membership/ClientMembershipPanel';
 import { PublicClubFlow } from '../components/membership/PublicClubFlow';
-import { useCancelPublicClientMembership, usePublicClientMembership, usePublicMembershipPlans } from '../hooks/useMemberships';
+import { useBusinessProfileBySlug } from '../hooks/usePublicBooking';
+import { usePublicClientMembership, useCancelPublicClientMembership } from '../hooks/useMemberships';
+import { membershipTokenKey, readMembershipToken } from '../services/memberships';
+import { hasQueueQrVisit, storeQueueTicket } from '../services/queue';
+import { PrivateBookingArea } from './PrivateBookingArea';
 import { useToast } from '../components/ui/Toast';
-import { validityHeadline } from '../utils/membershipValidity';
-import { formatFirstName } from '../utils/formatters';
-import { resolveBusinessTimezone } from '../utils/businessTimezone';
-import { useScrollToError } from '../hooks/useScrollToError';
-import { resolveCancellationPolicyParts } from '../utils/cancellationPolicyCopy';
-import { CancellationPolicyText } from '../components/CancellationPolicyText';
-import { readCancelCutoffHours } from '../utils/clientCancelCutoff';
-import { isPublicBookingAutoConfirm } from '../utils/onlineBookingApproval';
-
-interface BusinessProfile {
-    id: string;
-    business_name: string;
-    user_type: string;
-    phone: string | null;
-    logo_url: string | null;
-    cover_photo_url: string | null;
-    region?: string;
-    allow_client_rescheduling?: boolean;
-}
-
-type Tab = 'upcoming' | 'history' | 'club' | 'queue' | 'profile';
-
-const ITEMS_PER_PAGE = 8;
+import type { Region } from '../utils/formatters';
 
 export const ClientArea: React.FC = () => {
     const [params] = useSearchParams();
     return params.get('tab') === 'fila' || params.get('tab') === 'clube'
-        ? <PublicClientPortal />
+        ? <PrivateClientPortal key={params.toString()} />
         : <PrivateBookingArea />;
 };
 
-const PublicClientPortal: React.FC = () => {
-    const { slug } = useParams<{ slug: string }>();
-    const [searchParams] = useSearchParams();
-    const {
-        client,
-        login,
-        register,
-        logout,
-        loading: clientLoading,
-        hydrateFromStorage,
-    } = usePublicClient();
-
-    const { data: businessProfile, isLoading: loadingProfile, isError: profileError } = useBusinessProfileBySlug(slug ?? '');
-    const businessId = businessProfile?.id ?? null;
-    const { data: businessSettings, isLoading: loadingSettings } = useBusinessSettings(businessId);
-
-    const business = useMemo<BusinessProfile | null>(() => {
-        if (!businessProfile) return null;
-        const allowRescheduling = businessSettings?.enable_self_rescheduling ?? true;
-        return {
-            id: businessProfile.id,
-            business_name: businessProfile.business_name,
-            user_type: businessProfile.user_type,
-            phone: businessProfile.phone ?? null,
-            logo_url: businessProfile.logo_url ?? null,
-            cover_photo_url: businessProfile.cover_photo_url ?? null,
-            region: businessProfile.region,
-            allow_client_rescheduling: allowRescheduling,
-        };
-    }, [businessProfile, businessSettings]);
-
-    const businessLoading = loadingProfile || (!!businessId && loadingSettings);
-    const businessError = profileError || !business;
-
-    const sessionClient = useMemo(() => {
-        if (!client || !business) return null;
-        if (client.business_id !== business.id) return null;
-        return client;
-    }, [client, business]);
-
-    useEffect(() => {
-        if (business?.id && client?.business_id !== business.id) {
-            hydrateFromStorage(business.id);
-        }
-    }, [business?.id, hydrateFromStorage]);
-
-    // Auth gate
-    const [phone, setPhone] = useState('');
-    const [gateStep, setGateStep] = useState<'phone' | 'register'>('phone');
-    const [gateName, setGateName] = useState('');
-    const [gateError, setGateError] = useState('');
-    const [gateSubmitting, setGateSubmitting] = useState(false);
-    const gateErrorRef = useScrollToError(gateError);
-
-    // Bookings
-    const [bookings, setBookings] = useState<ClientBooking[]>([]);
-    const [bookingsLoading, setBookingsLoading] = useState(false);
-
-    // UI
-    const queueFirst = searchParams.get('tab') === 'fila';
-    const [activeTab, setActiveTab] = useState<Tab>(queueFirst ? 'queue' : 'upcoming');
-
-    useEffect(() => {
-        if (searchParams.get('tab') === 'fila') setActiveTab('queue');
-        if (searchParams.get('tab') === 'clube') setActiveTab('club');
-    }, [searchParams]);
-    const [historyPage, setHistoryPage] = useState(1);
-
-    // Profile edit
-    const [editingProfile, setEditingProfile] = useState(false);
-    const [editName, setEditName] = useState('');
-    const [editEmail, setEditEmail] = useState('');
-    const [profileSaving, setProfileSaving] = useState(false);
-
+const PrivateClientPortal: React.FC = () => {
+    const { slug = '' } = useParams<{ slug: string }>();
+    const [params] = useSearchParams();
+    const [accessReady, setAccessReady] = React.useState(false);
+    const queue = params.get('tab') === 'fila';
+    const { data: business, isLoading } = useBusinessProfileBySlug(slug);
+    const businessId = business?.id ?? null;
+    const linkToken = params.get('token');
+    const token = linkToken ?? (businessId ? readMembershipToken(businessId) : null);
+    const validToken = /^[a-f0-9]{64}$/.test(token ?? '');
+    const membership = usePublicClientMembership(queue ? null : businessId, token);
+    const cancel = useCancelPublicClientMembership(businessId, token);
     const { showToast } = useToast();
-    const { data: membership, isLoading: membershipLoading } = usePublicClientMembership(
-        sessionClient?.business_id ?? business?.id ?? null,
-        null
-    );
-    const { data: clubPlans } = usePublicMembershipPlans(businessId);
-    const clubOffered = (clubPlans?.length ?? 0) > 0;
-    const isClubMember = membership?.effective_status === 'active';
-    const openClubTab = () => setActiveTab('club');
-    const cancelMembership = useCancelPublicClientMembership(
-        sessionClient?.business_id ?? business?.id ?? null,
-        sessionClient?.phone ?? null
-    );
-
-    const handleCancelMembership = async () => {
+    React.useEffect(() => {
+        if (!businessId) return;
+        if (!linkToken || !/^[a-f0-9]{64}$/.test(linkToken)) { setAccessReady(true); return; }
+        if (queue) {
+            const entryId = params.get('queue');
+            if (entryId) storeQueueTicket({ businessId, entryId, token: linkToken, slug });
+        } else {
+            localStorage.setItem(membershipTokenKey(businessId), linkToken);
+        }
+        setAccessReady(true);
+    }, [businessId, linkToken, params, queue, slug]);
+    React.useEffect(() => {
+        if (!business) return;
+        const isBeauty = business.user_type === 'beauty';
+        document.documentElement.setAttribute('data-theme', isBeauty ? 'beauty' : 'barber');
+        document.documentElement.setAttribute('data-mode', isBeauty ? 'light' : 'dark');
+    }, [business]);
+    const handleCancel = async () => {
         try {
-            await cancelMembership.mutateAsync();
+            await cancel.mutateAsync();
             showToast('Plano cancelado.', 'success');
         } catch {
-            showToast('Não foi possível cancelar o plano. Tente novamente.', 'error');
+            showToast('Não foi possível cancelar o plano. Tente novamente ou fale com o estabelecimento.', 'error');
         }
     };
-
-    const isBeauty = business?.user_type === 'beauty';
-    const { businessNoun } = usePublicBusinessCopy(business?.user_type);
-    const region = (business?.region as 'BR' | 'PT') ?? 'BR';
-    const businessTimezone = resolveBusinessTimezone({
-        timezone: (businessSettings as { timezone?: string | null } | null | undefined)?.timezone,
-        region: business?.region,
-    });
-    const autoConfirmEnabled = isPublicBookingAutoConfirm(businessSettings);
-    const cancelCutoffHours = readCancelCutoffHours(
-        (businessSettings as { client_cancel_cutoff_hours?: number } | null | undefined)?.client_cancel_cutoff_hours,
-    );
-    const policyParts = resolveCancellationPolicyParts({
-        cutoffHours: cancelCutoffHours,
-        businessName: business?.business_name,
-        clientCancelPolicyText: (businessSettings as { client_cancel_policy_text?: string | null } | null | undefined)?.client_cancel_policy_text,
-        clientCancelNote: (businessSettings as { client_cancel_note?: string | null } | null | undefined)?.client_cancel_note,
-        legacyPolicy: (businessSettings as { cancellation_policy?: string | null } | null | undefined)?.cancellation_policy,
-    });
-
-    // Tokens do DS: beauty = claro (silk), barber = escuro. O script anti-FOUC do
-    // index.html remove data-mode nas rotas públicas; aqui restauramos assim que
-    // o negócio carrega para os var(--color-*) resolverem certo.
-    useEffect(() => {
-        if (!business) return;
-        const html = document.documentElement;
-        html.setAttribute('data-theme', isBeauty ? 'beauty' : 'barber');
-        html.setAttribute('data-mode', isBeauty ? 'light' : 'dark');
-    }, [business, isBeauty]);
-
-    const fetchBookings = useCallback(async (opts?: { silent?: boolean }) => {
-        void opts;
-        setBookings([]);
-        setBookingsLoading(false);
-    }, []);
-
-    useEffect(() => {
-        void fetchBookings();
-    }, [fetchBookings]);
-
-    const handleBookingCancelled = (id: string) => {
-        setBookings(prev =>
-            prev.map(b => b.id === id ? { ...b, status: 'cancelled' } : b)
-        );
-    };
-
-    const handlePhoneCheck = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!business) return;
-        setGateError('');
-        const clean = phone.replace(/\D/g, '');
-        if (clean.length < 10) {
-            setGateError('Digite um telefone válido');
-            return;
-        }
-        setGateStep('register');
-    };
-
-    const handleRegister = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!business) return;
-        setGateError('');
-        if (!gateName.trim()) {
-            setGateError('Preencha seu nome');
-            return;
-        }
-        setGateSubmitting(true);
-        try {
-            const newClient = await register({
-                name: gateName.trim(),
-                phone,
-                photo_url: null,
-                business_id: business.id,
-            });
-            if (!newClient) {
-                setGateError('Não foi possível criar o cadastro. Tente novamente.');
-            }
-        } catch {
-            setGateError('Erro ao cadastrar. Tente novamente.');
-        } finally {
-            setGateSubmitting(false);
-        }
-    };
-
-    const handleSaveProfile = async () => {
-        if (!sessionClient) return;
-        setProfileSaving(true);
-        try {
-            await register({
-                name: editName,
-                phone: sessionClient.phone,
-                email: editEmail || null,
-                photo_url: sessionClient.photo_url ?? null,
-                business_id: sessionClient.business_id,
-            });
-            setEditingProfile(false);
-        } catch {
-            // silently fail
-        } finally {
-            setProfileSaving(false);
-        }
-    };
-
-    const startEdit = () => {
-        setEditName(sessionClient?.name ?? '');
-        setEditEmail(sessionClient?.email ?? '');
-        setEditingProfile(true);
-    };
-
-    // Próximos = ativos futuros + cancelados futuros (item 5b: o cliente vê o
-    // cancelamento e pode reagendar). Contadores usam só os ativos.
-    const {
-        upcoming: upcomingBookings,
-        activeUpcoming: activeUpcomingBookings,
-        history: historyBookings,
-    } = splitClientBookings(bookings);
-    const historySlice = historyBookings.slice(0, historyPage * ITEMS_PER_PAGE);
-    const pendingUpcomingCount = upcomingBookings.filter(b => b.status === 'pending').length;
-    const liveBookingIds = useMemo(
-        () => bookings.map((booking) => booking.id),
-        [bookings],
-    );
-
-    useBookingStatusLive(
-        liveBookingIds,
-        (event) => {
-            setBookings((prev) => applyBookingStatusEvent(prev, event));
-        },
-        () => {
-            void fetchBookings({ silent: true });
-        },
-        Boolean(sessionClient && business),
-    );
-
-    if (businessLoading || clientLoading) {
-        return (
-            <div className={`min-h-screen flex items-center justify-center ${isBeauty ? 'bg-theme-bg' : 'bg-theme-bg'}`}>
-                <Loader2 className={`w-8 h-8 animate-spin ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`} />
-            </div>
-        );
-    }
-
-    if (businessError || !business) {
-        return (
-            <div className="min-h-screen bg-theme-bg flex flex-col items-center justify-center gap-4 p-8">
-                <CalendarX className="w-12 h-12 text-[var(--color-text-muted)]" />
-                <p className="text-theme-textSecondary text-center">Estabelecimento não encontrado.</p>
-                <Link to="/" className="text-xs text-[var(--color-text-muted)] underline">Voltar ao início</Link>
-            </div>
-        );
-    }
-
-    if (!sessionClient) {
-        return (
-            <div className={`min-h-screen flex flex-col ${isBeauty ? 'bg-theme-bg' : 'bg-theme-bg'}`}>
-                <header className={`px-6 py-5 border-b ${isBeauty ? 'border-theme-border bg-theme-card backdrop-blur-sm' : 'border-theme-border bg-theme-card backdrop-blur-sm'}`}>
-                    <Link
-                        to={`/book/${slug}`}
-                        className={`inline-flex items-center gap-2 text-xs font-medium transition-colors ${isBeauty ? 'text-theme-textSecondary hover:text-[var(--color-text-muted)]' : 'text-[var(--color-text-muted)] hover:text-theme-textSecondary'}`}
-                    >
-                        <ChevronLeft className="w-4 h-4" />
-                        Voltar ao agendamento
-                    </Link>
-                </header>
-
-                <div className="flex-1 flex items-center justify-center p-6">
-                    <div className="w-full max-w-sm space-y-8">
-                        <div className="text-center">
-                            {business.logo_url
-                                ? <img src={business.logo_url} alt={business.business_name} className="w-16 h-16 rounded-2xl mx-auto mb-4 object-cover" />
-                                : (
-                                    <div className={`w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center ${isBeauty ? 'bg-theme-surface' : 'bg-theme-surface'}`}>
-                                        <Sparkles className={`w-7 h-7 ${isBeauty ? 'text-[var(--color-text-muted)]' : 'text-[var(--color-text-muted)]'}`} />
-                                    </div>
-                                )
-                            }
-                            <h1 className={`text-2xl font-bold ${isBeauty ? 'text-theme-text' : 'text-theme-text'}`}>
-                                {business.business_name}
-                            </h1>
-                            <p className={`text-sm mt-1 ${isBeauty ? 'text-[var(--color-text-muted)]' : 'text-[var(--color-text-muted)]'}`}>
-                                Minha Área
-                            </p>
-                        </div>
-
-                        <div className={`rounded-2xl p-6 ${isBeauty ? 'bg-theme-card shadow-lg border border-theme-border' : 'bg-theme-surface border border-theme-border'}`}>
-                            {gateStep === 'phone' ? (
-                                <form onSubmit={handlePhoneCheck} className="space-y-5">
-                                    <div className="text-center mb-2">
-                                        <Phone className={`w-8 h-8 mx-auto mb-2 ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`} />
-                                        <h2 className={`font-bold text-lg ${isBeauty ? 'text-theme-text' : 'text-theme-text'}`}>
-                                            Acesse sua área
-                                        </h2>
-                                        <p className={`text-xs mt-1 ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`}>
-                                            {queueFirst
-                                                ? 'Informe o WhatsApp usado ao entrar na fila para recuperar sua senha'
-                                                : 'Use o mesmo número do seu agendamento'}
-                                        </p>
-                                    </div>
-
-                                    <div>
-                                        <label className={`text-xs font-medium block mb-2 ${isBeauty ? 'text-[var(--color-text-muted)]' : 'text-theme-textSecondary'}`}>
-                                            Seu WhatsApp / Telefone
-                                        </label>
-                                        <PhoneInput
-                                            value={phone}
-                                            onChange={v => { setPhone(v); setGateError(''); }}
-                                            placeholder="Telefone"
-                                        />
-                                    </div>
-
-                                    {gateError && (
-                                        <div
-                                            ref={gateErrorRef}
-                                            role="alert"
-                                            tabIndex={-1}
-                                            className="text-[var(--color-danger)] text-xs text-center"
-                                        >
-                                            {gateError}
-                                        </div>
-                                    )}
-
-                                    <button
-                                        type="submit"
-                                        disabled={gateSubmitting || phone.replace(/\D/g, '').length < 10}
-                                        className={`
-                                            w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all
-                                            disabled:opacity-40
-                                            ${isBeauty
-                                                ? 'bg-theme-surface text-theme-text hover:bg-[var(--color-card-hover)]'
-                                                : 'bg-theme-accent text-[var(--color-on-accent)] hover:bg-[var(--color-card-hover)]'
-                                            }
-                                        `}
-                                    >
-                                        {gateSubmitting
-                                            ? <Loader2 className="w-4 h-4 animate-spin" />
-                                            : <><span>Continuar</span><ArrowRight className="w-4 h-4" /></>
-                                        }
-                                    </button>
-                                </form>
-                            ) : (
-                                <form onSubmit={handleRegister} className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
-                                    <div className="text-center mb-2">
-                                        <User className={`w-8 h-8 mx-auto mb-2 ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`} />
-                                        <h2 className={`font-bold text-lg ${isBeauty ? 'text-theme-text' : 'text-theme-text'}`}>
-                                            Criar cadastro
-                                        </h2>
-                                        <p className={`text-xs mt-1 ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`}>
-                                            Primeira vez? Informe seu nome.
-                                        </p>
-                                    </div>
-
-                                    <div className={`flex items-center justify-between text-xs px-3 py-2 rounded-lg ${isBeauty ? 'bg-theme-surface text-[var(--color-text-muted)]' : 'bg-theme-surface text-theme-textSecondary'}`}>
-                                        <span>{phone}</span>
-                                        <button type="button" onClick={() => setGateStep('phone')} className="underline">Alterar</button>
-                                    </div>
-
-                                    <div className="relative">
-                                        <User className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`} />
-                                        <input
-                                            type="text"
-                                            placeholder="Nome completo"
-                                            value={gateName}
-                                            onChange={e => setGateName(e.target.value)}
-                                            required
-                                            className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none transition-colors ${isBeauty ? 'bg-theme-surface border border-theme-border text-theme-text focus:border-theme-border' : 'bg-theme-surface border border-theme-border text-theme-text focus:border-theme-border'}`}
-                                        />
-                                    </div>
-
-                                    {gateError && (
-                                        <div
-                                            ref={gateErrorRef}
-                                            role="alert"
-                                            tabIndex={-1}
-                                            className="text-[var(--color-danger)] text-xs text-center"
-                                        >
-                                            {gateError}
-                                        </div>
-                                    )}
-
-                                    <button
-                                        type="submit"
-                                        disabled={gateSubmitting}
-                                        className={`
-                                            w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-40
-                                            ${isBeauty ? 'bg-theme-surface text-theme-text hover:bg-[var(--color-card-hover)]' : 'bg-theme-accent text-[var(--color-on-accent)] hover:bg-[var(--color-card-hover)]'}
-                                        `}
-                                    >
-                                        {gateSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Criar minha área'}
-                                    </button>
-                                </form>
-                            )}
-                        </div>
-
-                        <p className={`text-center text-xs ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`}>
-                            Quer agendar?{' '}
-                            <Link to={`/book/${slug}`} className={`font-semibold underline ${isBeauty ? 'text-[var(--color-text-muted)]' : 'text-theme-textSecondary'}`}>
-                                Ir para o agendamento
-                            </Link>
-                        </p>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
+    if (isLoading || (businessId && !accessReady)) return <p role="status">Carregando…</p>;
+    if (!business) return <p role="alert">Estabelecimento não encontrado.</p>;
+    const region = (business.region ?? 'BR') as Region;
     return (
-        <div className={`min-h-screen flex flex-col ${isBeauty ? 'bg-theme-bg' : 'bg-theme-bg'}`}>
-            <header className="sticky top-0 z-30 px-4 md:px-8 py-3 border-b border-theme-border bg-theme-bg">
-                <div className="max-w-2xl mx-auto flex items-center justify-between gap-2 min-w-0">
-                    <span className="text-sm font-semibold text-theme-text truncate min-w-0">
-                        {business.business_name}
-                    </span>
-                    <div className="flex items-center gap-3">
-                        <span className={`text-sm font-semibold ${isBeauty ? 'text-theme-text' : 'text-theme-text'}`}>
-                            {formatFirstName(sessionClient.name)}
-                        </span>
-                        <button
-                            onClick={() => logout(business.id)}
-                            title="Sair"
-                            className={`p-1.5 rounded-lg transition-colors text-[var(--color-text-muted)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)]`}
-                        >
-                            <LogOut className="w-4 h-4" />
-                        </button>
-                    </div>
-                </div>
-            </header>
-
-            <main className="flex-1 max-w-2xl mx-auto w-full min-w-0 px-4 md:px-8 py-5 space-y-4 overflow-x-hidden">
-                <div className="relative overflow-hidden min-w-0 rounded-2xl p-4 bg-theme-surface border border-theme-border">
-                    <div className="flex flex-col gap-3 min-w-0">
-                        <div className="min-w-0">
-                            <p className="text-xs font-semibold text-theme-textSecondary truncate">
-                                {business.business_name}
-                            </p>
-                            <h1 className="text-xl font-bold text-theme-text leading-tight break-words">
-                                Olá, {formatFirstName(sessionClient.name)}!
-                            </h1>
-                            <p className="text-xs mt-1 text-theme-textSecondary leading-snug">
-                                {activeTab === 'queue'
-                                    ? 'Acompanhe sua senha por aqui.'
-                                    : activeUpcomingBookings.length > 0
-                                        ? `Você tem ${activeUpcomingBookings.length} agendamento${activeUpcomingBookings.length > 1 ? 's' : ''} próximo${activeUpcomingBookings.length > 1 ? 's' : ''}`
-                                        : 'Nenhum agendamento futuro'}
-                            </p>
-                            {membership && membership.effective_status !== 'cancelled' && (
-                                <button
-                                    type="button"
-                                    onClick={() => setActiveTab('club')}
-                                    className="mt-2 text-left text-xs leading-snug text-theme-textSecondary"
-                                    data-testid="club-hero-chip"
-                                >
-                                    <span className="font-semibold">Clube · {membership.plan_name}</span>
-                                    <span className="block mt-0.5">
-                                        {validityHeadline(
-                                            membership.effective_status,
-                                            membership.current_period_end || membership.next_billing_at
-                                        )}
-                                    </span>
-                                </button>
-                            )}
-                        </div>
-                        {activeTab !== 'queue' && (
-                            <Link
-                                to={`/book/${slug}?agendar=1`}
-                                className={`w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold ${isBeauty ? 'bg-theme-card text-theme-text border border-theme-border' : 'bg-theme-accent text-[var(--color-on-accent)]'}`}
-                            >
-                                <Calendar className="w-3.5 h-3.5" />
-                                Novo agendamento
-                            </Link>
-                        )}
-                    </div>
-                </div>
-
-                <div className="flex gap-1 p-1 rounded-xl overflow-x-auto bg-theme-surface border border-theme-border">
-                    {((queueFirst
-                        ? [
-                            { id: 'queue', label: 'Fila', icon: <Clock className="w-3.5 h-3.5" /> },
-                            { id: 'upcoming', label: 'Próximos', icon: <Calendar className="w-3.5 h-3.5" /> },
-                            { id: 'history', label: 'Histórico', icon: <History className="w-3.5 h-3.5" /> },
-                            { id: 'club', label: 'Clube', icon: <Crown className="w-3.5 h-3.5" /> },
-                            { id: 'profile', label: 'Perfil', icon: <User className="w-3.5 h-3.5" /> },
-                        ]
-                        : [
-                            { id: 'upcoming', label: 'Próximos', icon: <Calendar className="w-3.5 h-3.5" /> },
-                            { id: 'history', label: 'Histórico', icon: <History className="w-3.5 h-3.5" /> },
-                            { id: 'club', label: 'Clube', icon: <Crown className="w-3.5 h-3.5" /> },
-                            { id: 'queue', label: 'Fila', icon: <Clock className="w-3.5 h-3.5" /> },
-                            { id: 'profile', label: 'Perfil', icon: <User className="w-3.5 h-3.5" /> },
-                        ]) as { id: Tab; label: string; icon: React.ReactNode }[]).map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`
-                                shrink-0 flex items-center justify-center gap-1.5 py-2 px-3 min-h-[44px] rounded-lg text-xs font-semibold
-                                ${activeTab === tab.id
-                                    ? 'bg-theme-card text-theme-text shadow-sm'
-                                    : 'text-[var(--color-text-muted)]'
-                                }
-                            `}
-                        >
-                            {tab.icon}
-                            <span className="truncate">{tab.label}</span>
-                            {tab.id === 'upcoming' && activeUpcomingBookings.length > 0 && (
-                                <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-xs font-black ${isBeauty ? 'bg-theme-surface text-theme-text' : 'bg-theme-accent text-[var(--color-on-accent)]'}`}>
-                                    {activeUpcomingBookings.length}
-                                </span>
-                            )}
-                            {tab.id === 'club' && membership && (membership.effective_status === 'pending' || membership.effective_status === 'overdue') && (
-                                <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-warning)]" aria-hidden="true" />
-                            )}
-                        </button>
-                    ))}
-                </div>
-
-                {bookingsLoading ? (
-                    <div className="py-16 flex justify-center">
-                        <Loader2 className={`w-6 h-6 animate-spin ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`} />
-                    </div>
-                ) : (
-                    <>
-                        {activeTab === 'upcoming' && (
-                            <div className="space-y-4 animate-in fade-in duration-200" data-testid="client-upcoming-list">
-                                {pendingUpcomingCount > 0 && (
-                                    <div
-                                        className="flex items-start gap-2 px-3 py-2 rounded-xl border bg-[var(--color-warning-bg)] border-[var(--color-warning-border)] text-[var(--color-warning)]"
-                                        data-testid="client-pending-banner"
-                                    >
-                                        <Clock className="w-4 h-4 shrink-0 mt-0.5" />
-                                        <p className="text-xs leading-snug break-words">
-                                            {pendingAwaitingBanner(businessNoun, pendingUpcomingCount)}
-                                        </p>
-                                    </div>
-                                )}
-                                <div
-                                    className="rounded-xl border border-theme-border bg-theme-surface px-3 py-2.5"
-                                    data-testid="client-cancellation-policy"
-                                >
-                                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-theme-textSecondary mb-1">
-                                        Política de cancelamento
-                                    </p>
-                                    <CancellationPolicyText
-                                        parts={policyParts}
-                                        className="text-xs leading-relaxed text-theme-textSecondary"
-                                        labelClassName="text-theme-text"
-                                    />
-                                </div>
-                                {upcomingBookings.length === 0 ? (
-                                    <EmptyState
-                                        icon={<Calendar className="w-10 h-10" />}
-                                        title="Sem agendamentos futuros"
-                                        description="Que tal marcar um horário agora?"
-                                        cta={{ label: 'Agendar', to: `/book/${slug}?agendar=1` }}
-                                        isBeauty={isBeauty}
-                                    />
-                                ) : (
-                                    upcomingBookings.map(b => (
-                                        <ClientBookingCard
-                                            key={b.id}
-                                            booking={b}
-                                            isBeauty={isBeauty}
-                                            businessPhone={business.phone}
-                                            businessSlug={slug ?? ''}
-                                            clientName={sessionClient.name}
-                                            clientPhone={sessionClient.phone}
-                                            region={region}
-                                            timeZone={businessTimezone}
-                                            onCancelled={handleBookingCancelled}
-                                            allowEdit={business?.allow_client_rescheduling ?? true}
-                                            businessName={business.business_name}
-                                            clubOffered={clubOffered}
-                                            isClubMember={isClubMember}
-                                            onOpenClub={openClubTab}
-                                            cancelCutoffHours={cancelCutoffHours}
-                                            autoConfirmEnabled={autoConfirmEnabled}
-                                        />
-                                    ))
-                                )}
-                            </div>
-                        )}
-
-                        {activeTab === 'history' && (
-                            <div className="space-y-4 animate-in fade-in duration-200" data-testid="client-history-list">
-                                {historyBookings.length === 0 ? (
-                                    <EmptyState
-                                        icon={<History className="w-10 h-10" />}
-                                        title="Histórico vazio"
-                                        description="Seus serviços realizados aparecerão aqui."
-                                        cta={{ label: 'Fazer primeiro agendamento', to: `/book/${slug}?agendar=1` }}
-                                        isBeauty={isBeauty}
-                                    />
-                                ) : (
-                                    <>
-                                        {historySlice.map(b => (
-                                            <ClientBookingCard
-                                                key={b.id}
-                                                booking={b}
-                                                isBeauty={isBeauty}
-                                                businessPhone={business.phone}
-                                                businessSlug={slug ?? ''}
-                                                clientName={sessionClient.name}
-                                                clientPhone={sessionClient.phone}
-                                                region={region}
-                                                timeZone={businessTimezone}
-                                                onCancelled={handleBookingCancelled}
-                                                businessName={business.business_name}
-                                                clubOffered={clubOffered}
-                                                isClubMember={isClubMember}
-                                                onOpenClub={openClubTab}
-                                                cancelCutoffHours={cancelCutoffHours}
-                                                autoConfirmEnabled={autoConfirmEnabled}
-                                            />
-                                        ))}
-                                        {historySlice.length < historyBookings.length && (
-                                            <button
-                                                onClick={() => setHistoryPage(p => p + 1)}
-                                                className={`w-full py-3 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all ${isBeauty ? 'bg-theme-surface text-[var(--color-text-muted)] hover:bg-[var(--color-card-hover)]' : 'bg-theme-surface text-theme-textSecondary hover:bg-[var(--color-card-hover)] border border-theme-border'}`}
-                                            >
-                                                Carregar mais ({historyBookings.length - historySlice.length} restantes)
-                                            </button>
-                                        )}
-                                    </>
-                                )}
-                            </div>
-                        )}
-
-                        {activeTab === 'queue' && (
-                            <ClientQueuePanel
-                                businessId={business.id}
-                                phone={sessionClient.phone}
+        <main className="min-h-screen bg-theme-bg p-6 text-theme-text">
+            <div className="mx-auto max-w-lg space-y-6">
+                <Link to={`/book/${encodeURIComponent(slug)}`} className="text-sm underline">Novo agendamento</Link>
+                <h1 className="text-2xl font-bold">{business.business_name}</h1>
+                {queue ? <ClientQueuePanel businessId={business.id} phone={null} slug={slug} cameFromQr={hasQueueQrVisit(slug)} />
+                    : <>
+                        {linkToken && !validToken ? <p role="alert">Link privado inválido ou expirado. Fale com o estabelecimento.</p> : validToken ? membership.isError || (!membership.isPending && !membership.data)
+                            ? <p role="alert">Link privado inválido ou expirado. Fale com o estabelecimento.</p>
+                            : <ClientMembershipPanel
+                                membership={membership.data ?? null}
                                 slug={slug}
-                                clientName={sessionClient.name}
-                                cameFromQr={hasQueueQrVisit(slug)}
+                                businessId={business.id}
+                                isBeauty={business.user_type === 'beauty'}
+                                region={region}
+                                businessPhone={business.phone ?? null}
+                                businessName={business.business_name}
+                                clientName=""
+                                loading={membership.isPending}
+                                cancelling={cancel.isPending}
+                                onCancel={handleCancel}
                             />
-                        )}
-                        {activeTab === 'club' && (
-                            <div className="animate-in fade-in duration-200 min-w-0">
-                                <p role="note" className="mb-4 text-sm text-theme-textSecondary">Para consultar ou cancelar uma assinatura existente, fale com o estabelecimento. Informar o telefone não libera os dados do plano.</p>
-                                <Link to={`/clube/${encodeURIComponent(slug ?? '')}`} className="text-sm underline">Conhecer planos disponíveis</Link>
-                            </div>
-                        )}
-
-                        {activeTab === 'profile' && (
-                            <div className="animate-in fade-in duration-200">
-                                <div className={`rounded-2xl p-6 space-y-5 ${isBeauty ? 'bg-theme-card border border-theme-border shadow-sm' : 'bg-theme-surface border border-theme-border'}`}>
-                                    <div className="flex items-center justify-between">
-                                        <h2 className={`font-bold text-base ${isBeauty ? 'text-theme-text' : 'text-theme-text'}`}>
-                                            Meus Dados
-                                        </h2>
-                                        {!editingProfile && (
-                                            <button
-                                                onClick={startEdit}
-                                                className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${isBeauty ? 'text-[var(--color-text-muted)] hover:text-theme-text hover:bg-[var(--color-card-hover)]' : 'text-[var(--color-text-muted)] hover:text-theme-text hover:bg-[var(--color-card-hover)]'}`}
-                                            >
-                                                <Edit2 className="w-3.5 h-3.5" />
-                                                Editar
-                                            </button>
-                                        )}
-                                    </div>
-
-                                    {editingProfile ? (
-                                        <div className="space-y-3">
-                                            <div className="relative">
-                                                <User className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`} />
-                                                <input
-                                                    type="text"
-                                                    value={editName}
-                                                    onChange={e => setEditName(e.target.value)}
-                                                    placeholder="Nome"
-                                                    className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none ${isBeauty ? 'bg-theme-surface border border-theme-border text-theme-text' : 'bg-theme-surface border border-theme-border text-theme-text'}`}
-                                                />
-                                            </div>
-                                            <div className="relative">
-                                                <Mail className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`} />
-                                                <input
-                                                    type="email"
-                                                    value={editEmail}
-                                                    onChange={e => setEditEmail(e.target.value)}
-                                                    placeholder="E-mail (opcional)"
-                                                    className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none ${isBeauty ? 'bg-theme-surface border border-theme-border text-theme-text' : 'bg-theme-surface border border-theme-border text-theme-text'}`}
-                                                />
-                                            </div>
-                                            <div className="flex gap-2 pt-1">
-                                                <button
-                                                    onClick={() => setEditingProfile(false)}
-                                                    className={`flex-1 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 ${isBeauty ? 'bg-theme-surface text-[var(--color-text-muted)] hover:bg-[var(--color-card-hover)]' : 'bg-theme-surface text-theme-textSecondary hover:bg-[var(--color-card-hover)]'}`}
-                                                >
-                                                    <X className="w-3.5 h-3.5" /> Cancelar
-                                                </button>
-                                                <button
-                                                    onClick={handleSaveProfile}
-                                                    disabled={profileSaving}
-                                                    className={`flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 disabled:opacity-50 ${isBeauty ? 'bg-theme-surface text-theme-text hover:bg-[var(--color-card-hover)]' : 'bg-theme-accent text-[var(--color-on-accent)] hover:bg-[var(--color-card-hover)]'}`}
-                                                >
-                                                    {profileSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><Check className="w-3.5 h-3.5" /> Salvar</>}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-4">
-                                            <ProfileRow icon={<User className="w-4 h-4" />} label="Nome" value={sessionClient.name} isBeauty={isBeauty} />
-                                            <ProfileRow icon={<Phone className="w-4 h-4" />} label="Telefone" value={sessionClient.phone} isBeauty={isBeauty} />
-                                            {sessionClient.email && <ProfileRow icon={<Mail className="w-4 h-4" />} label="E-mail" value={sessionClient.email} isBeauty={isBeauty} />}
-                                        </div>
-                                    )}
-
-                                    <div className={`pt-4 border-t ${isBeauty ? 'border-theme-border' : 'border-theme-border'}`}>
-                                        <button
-                                            onClick={() => logout(business.id)}
-                                            className={`flex items-center gap-2 text-xs font-medium transition-colors ${isBeauty ? 'text-[var(--color-danger)] hover:text-[var(--color-danger)]' : 'text-[var(--color-danger)] hover:text-[var(--color-danger)]'}`}
-                                        >
-                                            <LogOut className="w-3.5 h-3.5" />
-                                            Sair da minha área
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </>
-                )}
-            </main>
-        </div>
+                            : <>
+                                <p>Para consultar ou cancelar seu plano, abra o link privado guardado neste aparelho. Se perdeu o link, fale com o estabelecimento. Informar o telefone não libera os dados do plano.</p>
+                                <PublicClubFlow slug={slug} businessId={business.id} region={region} themeOverride={business.user_type === 'beauty' ? 'beauty' : 'barber'} embedded />
+                            </>}
+                    </>}
+            </div>
+        </main>
     );
 };
-
-interface EmptyStateProps {
-    icon: React.ReactNode;
-    title: string;
-    description: string;
-    cta?: { label: string; to: string };
-    isBeauty: boolean;
-}
-const EmptyState: React.FC<EmptyStateProps> = ({ icon, title, description, cta, isBeauty }) => (
-    <div className={`py-16 flex flex-col items-center gap-4 rounded-2xl ${isBeauty ? 'bg-theme-card/60 border border-theme-border' : 'bg-theme-surface/60 border border-theme-border'}`}>
-        <div className={isBeauty ? 'text-theme-text' : 'text-theme-text'}>{icon}</div>
-        <div className="text-center">
-            <p className={`font-semibold text-sm ${isBeauty ? 'text-[var(--color-text-muted)]' : 'text-theme-textSecondary'}`}>{title}</p>
-            <p className={`text-xs mt-1 ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`}>{description}</p>
-        </div>
-        {cta && (
-            <Link
-                to={cta.to}
-                className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${isBeauty ? 'bg-theme-surface text-theme-text hover:bg-[var(--color-card-hover)]' : 'bg-theme-accent text-[var(--color-on-accent)] hover:bg-[var(--color-card-hover)]'}`}
-            >
-                {cta.label}
-            </Link>
-        )}
-    </div>
-);
-
-interface ProfileRowProps {
-    icon: React.ReactNode;
-    label: string;
-    value: string;
-    isBeauty: boolean;
-}
-const ProfileRow: React.FC<ProfileRowProps> = ({ icon, label, value, isBeauty }) => (
-    <div className="flex items-center gap-3">
-        <div className={isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}>{icon}</div>
-        <div>
-            <p className={`text-xs uppercase tracking-wider font-medium ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`}>{label}</p>
-            <p className={`text-sm font-semibold ${isBeauty ? 'text-theme-text' : 'text-theme-text'}`}>{value}</p>
-        </div>
-    </div>
-);

@@ -22,7 +22,7 @@ As migrations e seus rollbacks estão nos diretórios oficiais. A correção SEC
 
 ## Problemas que continuam abertos
 
-1. **Clube/Fila e alcance da validação pública.** O caminho de cadastro/agendamento por telefone foi corrigido e testado localmente. Telefone sozinho não recupera histórico ou dados do cliente. Consulta/cancelamento de assinatura e recuperação de fila por telefone foram bloqueados; o portal informa contato com o estabelecimento. Criação e benefícios de clube e outros acessos de fila ainda precisam de revisão específica; não foram certificados como seguros por este patch.
+1. **Alcance da validação pública.** O acompanhamento e saída da fila, criação/leitura/cancelamento do clube e confirmação pendente agora usam tokens privados, com testes locais de autorização e atomicidade; veja [reviews/public-access-followup.md](reviews/public-access-followup.md). Recuperação por telefone continua bloqueada. Benefícios/descontos, todos os demais acessos de staff à fila e gateway Supabase/Realtime não foram certificados por esta revisão.
 2. **Colaborador desativado — alto.** Com o perfil ainda vinculado, uma identidade anterior continua lendo clientes da empresa no fixture, mesmo com active=false. A autorização precisa considerar vínculo ativo em todas as policies/RPCs relevantes. Alterar somente o helper pode deixar caminhos alternativos e causar regressões.
 3. **Equipe e financeiro — prioridade alta de investigação.** As policies ALL das fontes permitem que staff altere comissões/valores no modelo mínimo. A cópia completa do esquema de teste é necessária para conferir triggers, RPCs alternativas e corrigir sem quebrar a conclusão de atendimento.
 

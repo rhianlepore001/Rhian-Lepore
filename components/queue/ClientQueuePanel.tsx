@@ -9,6 +9,7 @@ import {
   clearQueueTicket,
   isActiveQueueStatus,
   readQueueTicket,
+  readQueueToken,
   resolveClientQueueEntry,
 } from '@/services/queue';
 import { fetchPublicProfessionals } from '@/services/publicBooking';
@@ -50,7 +51,7 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
   const firstName = clientName ? formatFirstName(clientName) : '';
 
   const activeQuery = useQuery({
-    queryKey: ['queue', 'client-active', businessId, phone, slug],
+    queryKey: ['queue', 'client-active', businessId, readQueueTicket(businessId)?.token, slug],
     queryFn: () => resolveClientQueueEntry({ businessId, phone, slug }),
     enabled: Boolean(businessId),
     refetchInterval: (query) => {
@@ -64,8 +65,8 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
 
   const entry = activeQuery.data ?? null;
   const isActive = entry ? isActiveQueueStatus(entry.status) : false;
-  const lookupPhone = phone || entry?.client_phone || null;
-  const board = useQueueBoard(isActive ? entry?.id : null, lookupPhone, entry?.status);
+  const token = entry ? readQueueToken(entry.id) : null;
+  const board = useQueueBoard(isActive ? entry?.id : null, token, entry?.status);
 
   useQueueRealtime(businessId, (event) => {
     void queryClient.invalidateQueries({ queryKey: ['queue', 'client-active', businessId] });
@@ -138,7 +139,7 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
           <p className="text-sm text-theme-textSecondary mt-1">
             {cameFromQr
               ? 'Sua senha anterior foi encerrada. Para entrar de novo, escolha o serviço abaixo.'
-              : 'Para entrar na fila, escaneie o QR Code disponível no estabelecimento.'}
+              : 'Para acompanhar uma senha existente, abra o link privado ou use o aparelho em que entrou na fila. Se perdeu o acesso, fale com o estabelecimento.'}
           </p>
         </div>
         {cameFromQr && joinHref && (
@@ -210,11 +211,11 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
   const showPeople = isWaiting && people.length > 1;
 
   const handleLeave = async () => {
-    if (!lookupPhone) return;
+    if (!token) return;
     setLeaving(true);
     setLeaveError('');
     try {
-      const ok = await cancelQueueEntryPublic(entry.id, lookupPhone);
+      const ok = await cancelQueueEntryPublic(entry.id, token);
       if (!ok) {
         setLeaveError('Sua senha já foi chamada ou encerrada. Fale com a equipe no balcão.');
         return;
@@ -230,8 +231,9 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
   };
 
   return (
-    <article className={`rounded-3xl border overflow-hidden shadow-[var(--shadow-card)] ${surfaceClass}`}>
+    <article data-private-booking-link data-html2canvas-ignore className={`rounded-3xl border overflow-hidden shadow-[var(--shadow-card)] ${surfaceClass}`}>
       <div className="p-5 sm:p-6 space-y-5">
+        {token && slug && <Link className="text-sm underline" to={`/minha-area/${encodeURIComponent(slug)}?tab=fila&queue=${encodeURIComponent(entry.id)}&token=${encodeURIComponent(token)}`}>Link privado da minha senha</Link>}
         <div className="space-y-3" aria-live="polite" aria-atomic="true">
           {!isClosed && (
             <div className="flex items-center justify-between gap-3">

@@ -114,3 +114,19 @@ Executados na ordem exigida pelo repositório, com as mesmas variáveis fictíci
 | `npm test -- --run` | exit 0; **246 arquivos / 1.762 testes aprovados**, 254,02 s |
 
 Build manteve aviso de chunks acima de 500 kB e aviso preexistente de importação estática/dinâmica. Nenhum source map encontrado em dist. Não houve mudança de dependências; npm audit desta primeira entrega permanece documentado, sem sugerir que foi repetido nesta rodada. Os 1.762 testes incluem os novos casos de privacidade, diagnóstico, edição e fallback de fila, além das regressões anteriores.
+
+## Revisão de acompanhamento privado — 20/10/2026
+
+Branch `security/hardening-audit`, PR #160 draft. Escopo e limites em `security/reviews/public-access-followup.md`.
+
+- TDD frontend: `test/services/privateQueueMembership.test.ts` falhou nos quatro casos antes das mudanças; os quatro passaram depois. Cobertura adicional de portal anônimo, link em outro aparelho, cancelamento do plano e polling de confirmação sem token/sem canal público.
+- TDD SQL: o branch anterior falha em `BOOKING_EXPIRY_NOT_48H`. Nova migration aplica duas vezes e passa; rollback restaura definições e ACLs equivalentes; reaplicação passa novamente. Testes anteriores de CRM, materialização, Realtime e atomicidade do booking continuam passando.
+- `security/tests/private-booking-cycle.sh --public-access`: aprovado em PostgreSQL 17 descartável, via socket local. Inclui leitura/posição/status/saída da fila, adesão/leitura/cancelamento/rotação do clube, isolamento de tenant, tokens inválidos/ausentes/expirados/de outro registro, legados sem token, telefone imutável, prazo de 48h sem extensão e rollback atômico de fila/pagamento/adesão/cadastro em falha forçada ao persistir hash. pgcrypto no schema `extensions`.
+- `npm run typecheck`: aprovado na revisão final.
+- `npm run lint`: aprovado; sem warnings ESLint e sem nova dívida visual.
+- `npm run build`: aprovado com PWA e postbuild; aviso conhecido de chunk acima de 500 kB.
+- `npm test -- --run`: **1.773 testes, 249 arquivos aprovados** (438,89s). Logs esperados de cenários de erro e mocks não representam falhas da suíte.
+- `git diff --check`: aprovado.
+- `graphify update .`: indisponível, comando não instalado (exit 127).
+
+Nenhuma migração, consulta de dados reais, deploy, merge, envio de mensagem ou pagamento remoto foi executado. Os testes SQL usam esquema mínimo e definições selecionadas de migrations; não certificam catálogo remoto nem os gateways PostgREST/Realtime. O índice de changelog do Supabase retornou 403 da política de rede; a referência de funções, `search_path` e grants foi conferida no repositório oficial de documentação.

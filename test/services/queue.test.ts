@@ -53,6 +53,7 @@ vi.mock('@/lib/supabase', () => ({
 describe('queue service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(supabase.rpc).mockReset();
     sessionStorage.clear();
     localStorage.clear();
     activeQueueData = [];
@@ -95,7 +96,8 @@ describe('queue service', () => {
     await expect(findActiveQueueEntryByPhone('business-001', '11999999999')).resolves.toBeNull();
   });
 
-  it('busca entrada ativa por telefone no mesmo negocio', async () => {
+  it('busca entrada ativa pelo token guardado no mesmo negocio', async () => {
+    storeQueueTicket({ businessId: 'business-001', entryId: 'queue-001', token: 'a'.repeat(64), slug: 'loja' });
     (supabase.rpc as any).mockResolvedValue({
       data: [{
         id: 'queue-001',
@@ -111,13 +113,11 @@ describe('queue service', () => {
     const result = await findActiveQueueEntryByPhone('business-001', '(11) 99999-9999');
 
     expect(result?.id).toBe('queue-001');
-    expect(supabase.rpc).toHaveBeenCalledWith('find_active_queue_entry_by_phone', {
-      p_business_id: 'business-001',
-      p_phone: '(11) 99999-9999',
-    });
+    expect(supabase.rpc).toHaveBeenCalledWith('get_queue_entry_with_token', { p_entry_id: 'queue-001', p_token: 'a'.repeat(64) });
   });
 
-  it('reabre a senha quando o telefone ja esta na fila', async () => {
+  it('reabre a senha somente quando o aparelho tem o token privado', async () => {
+    storeQueueTicket({ businessId: 'business-001', entryId: 'queue-001', token: 'a'.repeat(64), slug: 'loja' });
     (supabase.rpc as any).mockResolvedValue({
       data: [{
         id: 'queue-001',
@@ -146,13 +146,13 @@ describe('queue service', () => {
     expect(sessionStorage.getItem(QUEUE_LAST_SLUG_KEY)).toBe('loja');
     expect(JSON.parse(localStorage.getItem(QUEUE_TICKET_KEY('business-001'))!).entryId).toBe('queue-001');
     expect(insertMock).not.toHaveBeenCalled();
-    expect(supabase.rpc).not.toHaveBeenCalledWith('join_queue_entry', expect.anything());
+    expect(supabase.rpc).not.toHaveBeenCalledWith('join_queue_entry_private', expect.anything());
   });
 
   it('unique violation sem senha localizavel nao promete abrir a senha', async () => {
     (supabase.rpc as any).mockImplementation((fn: string) => {
       if (fn === 'find_active_queue_entry_by_phone') return Promise.resolve({ data: [], error: null });
-      if (fn === 'join_queue_entry') return Promise.resolve({ data: null, error: { message: 'Este telefone ja esta na fila.' } });
+      if (fn === 'join_queue_entry_private') return Promise.resolve({ data: null, error: { message: 'Este telefone ja esta na fila.' } });
       return Promise.resolve({ data: null, error: null });
     });
 
@@ -173,22 +173,10 @@ describe('queue service', () => {
   });
 
   it('cria entrada publica via RPC quando nao ha duplicata', async () => {
-    (supabase.rpc as any)
-      .mockResolvedValueOnce({ data: [], error: null })
-      .mockResolvedValueOnce({ data: { id: 'queue-001', business_id: 'business-001' }, error: null })
-      .mockResolvedValueOnce({
-        data: [{
-          id: 'queue-001',
-          business_id: 'business-001',
-          client_name: 'Joao',
-          client_phone: '11999999999',
-          service_id: 'service-001',
-          professional_id: 'pro-001',
-          status: 'waiting',
-          joined_at: '2026-05-30T10:00:00.000Z',
-        }],
-        error: null,
-      });
+    (supabase.rpc as any).mockResolvedValueOnce({ data: { entry: {
+      id: 'queue-001', business_id: 'business-001', client_name: 'Joao', client_phone: '11999999999',
+      service_id: 'service-001', professional_id: 'pro-001', status: 'waiting', joined_at: new Date().toISOString(),
+    }, management_token: 'a'.repeat(64) }, error: null });
 
     const result = await joinQueue({
       businessId: 'business-001',
@@ -199,7 +187,7 @@ describe('queue service', () => {
       professionalId: 'pro-001',
     });
 
-    expect(supabase.rpc).toHaveBeenCalledWith('join_queue_entry', expect.objectContaining({
+    expect(supabase.rpc).toHaveBeenCalledWith('join_queue_entry_private', expect.objectContaining({
       p_slug: 'loja',
       p_client_name: 'Joao',
       p_service_id: 'service-001',
@@ -212,23 +200,10 @@ describe('queue service', () => {
     expect(sessionStorage.getItem(QUEUE_LAST_SLUG_KEY)).toBe('loja');
   });
 
-  it('grava slug mesmo quando o re-fetch da entrada falha', async () => {
-    (supabase.rpc as any)
-      .mockResolvedValueOnce({ data: [], error: null })
-      .mockResolvedValueOnce({ data: { id: 'queue-009' }, error: null })
-      .mockResolvedValueOnce({ data: [], error: null });
-
-    const result = await joinQueue({
-      businessId: 'business-001',
-      slug: 'loja',
-      clientName: 'Joao',
-      clientPhone: '11999999999',
-      serviceId: 'service-001',
-    });
-
-    expect(result.id).toBe('queue-009');
-    expect(sessionStorage.getItem(QUEUE_LAST_SLUG_KEY)).toBe('loja');
-    expect(JSON.parse(localStorage.getItem(QUEUE_TICKET_KEY('business-001'))!).entryId).toBe('queue-009');
+  it('nao inventa senha sem token quando o retorno da criacao e incompleto', async () => {
+    (supabase.rpc as any).mockResolvedValueOnce({ data: { id: 'queue-009' }, error: null });
+    await expect(joinQueue({ businessId: 'business-001', slug: 'loja', clientName: 'Joao', clientPhone: '11999999999', serviceId: 'service-001' })).rejects.toThrow('Fale com o estabelecimento');
+    expect(localStorage.getItem(QUEUE_TICKET_KEY('business-001'))).toBeNull();
   });
 
   it('recupera a senha persistida quando find_active falha', async () => {
@@ -236,11 +211,12 @@ describe('queue service', () => {
       businessId: 'business-001',
       entryId: 'queue-001',
       phone: '11999999999',
+      token: 'a'.repeat(64),
       slug: 'loja',
     });
 
     (supabase.rpc as any).mockImplementation((name: string) => {
-      if (name === 'get_queue_entry_public') {
+      if (name === 'get_queue_entry_with_token') {
         return Promise.resolve({
           data: [{
             id: 'queue-001',
@@ -263,7 +239,7 @@ describe('queue service', () => {
     });
 
     expect(result?.id).toBe('queue-001');
-    expect(supabase.rpc).toHaveBeenCalledWith('get_queue_entry_public', expect.objectContaining({
+    expect(supabase.rpc).toHaveBeenCalledWith('get_queue_entry_with_token', expect.objectContaining({
       p_entry_id: 'queue-001',
     }));
   });
@@ -273,6 +249,7 @@ describe('queue service', () => {
       businessId: 'business-001',
       entryId: 'queue-001',
       phone: '11999999999',
+      token: 'a'.repeat(64),
       slug: 'loja',
     });
     (supabase.rpc as any).mockResolvedValue({ data: null, error: { message: 'FetchError: network' } });
@@ -289,10 +266,11 @@ describe('queue service', () => {
       businessId: 'business-001',
       entryId: 'queue-001',
       phone: '11999999999',
+      token: 'a'.repeat(64),
       slug: 'loja',
     });
     (supabase.rpc as any).mockImplementation((fn: string) => {
-      if (fn === 'get_queue_entry_public') return Promise.resolve({ data: null, error: { message: 'FetchError: network' } });
+      if (fn === 'get_queue_entry_with_token') return Promise.resolve({ data: null, error: { message: 'FetchError: network' } });
       return Promise.resolve({ data: [], error: null });
     });
 
@@ -308,6 +286,7 @@ describe('queue service', () => {
       businessId: 'business-001',
       entryId: 'queue-old',
       phone: '11999999999',
+      token: 'a'.repeat(64),
       slug: 'loja',
     });
     (supabase.rpc as any).mockResolvedValue({ data: [], error: null });
@@ -325,10 +304,11 @@ describe('queue service', () => {
       businessId: 'business-001',
       entryId: 'queue-done',
       phone: '11999999999',
+      token: 'a'.repeat(64),
       slug: 'loja',
     });
     (supabase.rpc as any).mockImplementation((name: string) => {
-      if (name === 'get_queue_entry_public') {
+      if (name === 'get_queue_entry_with_token') {
         return Promise.resolve({
           data: [{
             id: 'queue-done',
@@ -419,66 +399,22 @@ describe('queue service', () => {
     expect(board.etaMinutes).toBe(30);
   });
 
-  it('cria entrada manual via RPC do tenant autenticado', async () => {
-    (supabase.rpc as any)
-      .mockResolvedValueOnce({ data: [], error: null })
-      .mockResolvedValueOnce({ data: { id: 'queue-002' }, error: null })
-      .mockResolvedValueOnce({
-        data: [{
-          id: 'queue-002',
-          business_id: 'business-001',
-          client_name: 'Maria',
-          client_phone: '11988888888',
-          status: 'waiting',
-          joined_at: '2026-05-30T10:00:00.000Z',
-        }],
-        error: null,
-      });
-
-    await addManualQueueEntry({
-      businessId: 'business-001',
-      clientName: 'Maria',
-      clientPhone: '11988888888',
-      serviceId: 'service-001',
-    });
-
-    expect(supabase.rpc).toHaveBeenCalledWith('add_manual_queue_entry', expect.objectContaining({
-      p_client_name: 'Maria',
-      p_client_phone: '11988888888',
-      p_payment_method: null,
-    }));
+  it('cria entrada manual via RPC do tenant autenticado sem lookup publico por telefone', async () => {
+    (supabase.rpc as any).mockResolvedValueOnce({ data: { id: 'queue-002' }, error: null });
+    const result = await addManualQueueEntry({ businessId: 'business-001', clientName: 'Maria', clientPhone: '11988888888', serviceId: 'service-001' });
+    expect(result.id).toBe('queue-002');
+    expect(supabase.rpc).toHaveBeenCalledTimes(1);
+    expect(supabase.rpc).toHaveBeenCalledWith('add_manual_queue_entry', expect.objectContaining({ p_client_name: 'Maria', p_client_phone: '11988888888', p_payment_method: null }));
     expect(insertMock).not.toHaveBeenCalled();
   });
 
-  it('nao bloqueia entrada manual se a busca de duplicata falhar', async () => {
-    (supabase.rpc as any)
-      .mockResolvedValueOnce({ data: null, error: { message: 'timeout' } })
-      .mockResolvedValueOnce({ data: { id: 'queue-003' }, error: null })
-      .mockResolvedValueOnce({
-        data: [{
-          id: 'queue-003',
-          business_id: 'business-001',
-          client_name: 'Maria',
-          client_phone: '11988888888',
-          status: 'waiting',
-          joined_at: '2026-05-30T10:00:00.000Z',
-        }],
-        error: null,
-      });
-
-    await addManualQueueEntry({
-      businessId: 'business-001',
-      clientName: 'Maria',
-      clientPhone: '11988888888',
-      serviceId: 'service-001',
-    });
-
-    expect(supabase.rpc).toHaveBeenCalledWith('add_manual_queue_entry', expect.objectContaining({
-      p_client_name: 'Maria',
-    }));
+  it('propaga falha da entrada manual sem fabricar um id', async () => {
+    (supabase.rpc as any).mockResolvedValueOnce({ data: null, error: { message: 'timeout' } });
+    await expect(addManualQueueEntry({ businessId: 'business-001', clientName: 'Maria', clientPhone: '11988888888', serviceId: 'service-001' })).rejects.toThrow();
   });
 
-  it('recupera o nome da senha ativa para abrir a Minha Area', async () => {
+  it('recupera o nome da propria senha com token guardado', async () => {
+    storeQueueTicket({ businessId: 'business-001', entryId: 'queue-001', token: 'a'.repeat(64), slug: 'loja' });
     (supabase.rpc as any).mockResolvedValueOnce({
       data: [{
         id: 'queue-001',
@@ -494,25 +430,15 @@ describe('queue service', () => {
     await expect(findNameToOpenPublicArea('business-001', '11939064172')).resolves.toBe('Tales Furtado');
   });
 
-  it('cai no agendamento se nao houver senha na fila', async () => {
-    (supabase.rpc as any)
-      .mockResolvedValueOnce({ data: [], error: null })
-      .mockResolvedValueOnce({ data: [{ customer_name: 'Joana' }], error: null });
-
-    await expect(findNameToOpenPublicArea('business-001', '11900000000')).resolves.toBe('Joana');
-    expect(supabase.rpc).toHaveBeenCalledWith('get_active_booking_by_phone', {
-      p_phone: '11900000000',
-      p_business_id: 'business-001',
-    });
+  it('nao consulta agendamento nem nome por telefone', async () => {
+    await expect(findNameToOpenPublicArea('business-001', '11900000000')).resolves.toBeNull();
+    expect(supabase.rpc).not.toHaveBeenCalled();
   });
 
-  it('nao trata falha de consulta como cliente sem cadastro', async () => {
-    (supabase.rpc as any)
-      .mockResolvedValueOnce({ data: null, error: { message: 'timeout' } })
-      .mockResolvedValueOnce({ data: null, error: { message: 'timeout' } });
-
-    await expect(findNameToOpenPublicArea('business-001', '11900000000'))
-      .rejects.toThrow('Não foi possível verificar sua senha. Tente de novo.');
+  it('propaga falha ao consultar o token privado sem buscar por telefone', async () => {
+    storeQueueTicket({ businessId: 'business-001', entryId: 'queue-001', token: 'a'.repeat(64), slug: 'loja' });
+    (supabase.rpc as any).mockResolvedValueOnce({ data: null, error: { message: 'timeout' } });
+    await expect(findNameToOpenPublicArea('business-001', '11900000000')).rejects.toBeInstanceOf(QueueLookupError);
   });
 
   it('atualiza status somente pela RPC', async () => {

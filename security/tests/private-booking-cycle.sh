@@ -31,6 +31,11 @@ Path(sys.argv[2]).write_text(trigger+'\n'+queue+'\nGRANT EXECUTE ON FUNCTION pub
 SQLPY
 P -f "$TMP/mirror-trigger.sql"
 P -f "$ROOT/supabase/migrations/20260905000001_public_client_membership.sql"
+if [[ "${1:-}" == --public-access ]]; then
+ P -f "$ROOT/security/tests/private-public-access-fixture.sql"
+ python3 "$ROOT/security/tests/private-public-access-fixture.py" "$ROOT" > "$TMP/public-access-functions.sql"
+ P -f "$TMP/public-access-functions.sql"
+fi
 snapshot() { P -At -c "SELECT md5(string_agg(pg_get_functiondef(p.oid)||coalesce((SELECT string_agg(a.grantee::text||':'||a.grantor::text||':'||a.privilege_type||':'||a.is_grantable::text,',' ORDER BY a.grantee,a.grantor,a.privilege_type,a.is_grantable) FROM aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a),''), E'\\n' ORDER BY p.oid::regprocedure::text)) FROM pg_proc p WHERE pronamespace='public'::regnamespace AND prokind='f' AND proname NOT IN ('create_public_booking_private','get_public_booking_with_token','cancel_public_booking_with_token','update_public_booking_with_token')"; }
 BEFORE="$(snapshot)"
 
@@ -53,6 +58,22 @@ P -f "$ROOT/security/attacks/public-client-preservation.sql"
 P -f "$ROOT/supabase/tests/private_booking_access.test.sql"
 P -f "$ROOT/supabase/tests/private_booking_crm_regression.test.sql"
 P -f "$ROOT/supabase/tests/private_booking_atomicity.test.sql"
+if [[ "${1:-}" == --public-access ]]; then
+ ACCESS_MIG="$(find "$ROOT/supabase/migrations" -name '*private_queue_membership_tokens.sql')"
+ ACCESS_TEST="$ROOT/supabase/tests/private_public_access.test.sql"
+ ACCESS_BEFORE="$(snapshot)"
+ if P -f "$ACCESS_TEST" >"$TMP/access-before.log" 2>&1; then echo 'ERROR baseline unexpectedly passes private access tests'; exit 1; fi
+ rg 'BOOKING_EXPIRY_NOT_48H' "$TMP/access-before.log"
+ echo 'PASS TDD: existing branch fails booking 48h regression'
+ P -f "$ACCESS_MIG" -f "$ACCESS_MIG" -f "$ACCESS_TEST" -f "$ROOT/supabase/tests/private_public_access_atomicity.test.sql"
+ P -f "$ROOT/supabase/tests/private_booking_crm_regression.test.sql" -f "$ROOT/supabase/tests/private_booking_atomicity.test.sql"
+ P -f "$ROOT/docs/rollbacks/$(basename "$ACCESS_MIG" .sql).rollback.sql"
+ [[ "$(snapshot)" == "$ACCESS_BEFORE" ]] || { echo 'ERROR public access rollback changed definitions/ACLs'; exit 1; }
+ echo 'PASS public access rollback restores all definitions and ACLs'
+ P -f "$ACCESS_MIG" -f "$ACCESS_TEST" -f "$ROOT/supabase/tests/private_public_access_atomicity.test.sql"
+ P -f "$ROOT/docs/rollbacks/$(basename "$ACCESS_MIG" .sql).rollback.sql"
+ echo 'PASS public access apply/test/revert/reapply/test'
+fi
 P -f "$ROOT/docs/rollbacks/$(basename "$MIG" .sql).rollback.sql"
 [[ "$(snapshot)" == "$BEFORE" ]] || { echo 'ERROR rollback changed original function bodies or ACLs'; exit 1; }
 echo 'PASS rollback restores original function definitions and equivalent ACL grants'

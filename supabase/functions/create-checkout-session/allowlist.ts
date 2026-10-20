@@ -57,13 +57,6 @@ export function isAllowedReturnUrl(url: unknown, allowedOrigins: Set<string>): b
   }
   if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
   if (allowedOrigins.has(parsed.origin)) return true;
-  if (
-    parsed.protocol === "https:" &&
-    parsed.origin.endsWith(".vercel.app") &&
-    parsed.origin.includes("rhian-lepore")
-  ) {
-    return true;
-  }
   return false;
 }
 

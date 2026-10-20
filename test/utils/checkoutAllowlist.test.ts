@@ -43,7 +43,7 @@ describe('checkoutAllowlist (A-06)', () => {
     expect(
       isAllowedReturnUrl(
         'https://rhian-lepore-git-fix-alto-a06-xxx-rhians-projects-df168429.vercel.app/#/',
-        origins,
+        collectAllowedOrigins('https://rhian-lepore-git-fix-alto-a06-xxx-rhians-projects-df168429.vercel.app'),
       ),
     ).toBe(true);
   });

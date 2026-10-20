@@ -5,7 +5,7 @@ import { Resend } from "npm:resend";
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers":
-        "authorization, x-client-info, apikey, content-type",
+        "authorization, x-client-info, apikey, content-type, x-reminder-secret",
 };
 
 interface Booking {
@@ -18,9 +18,35 @@ interface Booking {
     business_theme: string; // Joined from business_settings or metadata
 }
 
+function escapeHtml(value: string): string {
+    return value.replace(/[&<>"']/g, (character) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+    }[character]!));
+}
+
 serve(async (req) => {
     if (req.method === "OPTIONS") {
         return new Response("ok", { headers: corsHeaders });
+    }
+    if (req.method !== "POST") {
+        return new Response(JSON.stringify({ error: "Method not allowed" }), {
+            status: 405,
+            headers: { ...corsHeaders, "Content-Type": "application/json", "Allow": "POST, OPTIONS" },
+        });
+    }
+
+    const jobSecret = Deno.env.get("REMINDER_JOB_SECRET");
+    if (!jobSecret) {
+        return new Response(JSON.stringify({ error: "Reminder job unavailable" }), {
+            status: 503,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+    }
+    if (req.headers.get("x-reminder-secret") !== jobSecret) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+            status: 401,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
     }
 
     try {
@@ -74,9 +100,9 @@ serve(async (req) => {
 
         for (const booking of bookings) {
             const clientEmail = (booking.clients as any)?.email;
-            const clientName = (booking.clients as any)?.name || "Cliente";
-            const serviceName = (booking.services as any)?.name || "Serviço";
-            const businessName = (booking.business_profiles as any)?.business_name || "Barbearia/Salão";
+            const clientName = escapeHtml((booking.clients as any)?.name || "Cliente");
+            const serviceName = escapeHtml((booking.services as any)?.name || "Serviço");
+            const businessName = escapeHtml((booking.business_profiles as any)?.business_name || "Barbearia/Salão");
             const date = new Date(booking.start_time);
             const timeString = date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
@@ -104,8 +130,8 @@ serve(async (req) => {
                 });
 
                 if (error) {
-                    console.error(`Error sending to ${clientEmail}:`, error);
-                    results.push({ id: booking.id, status: 'failed', error });
+                    console.error("Reminder delivery failed", { bookingId: booking.id });
+                    results.push({ id: booking.id, status: 'failed' });
                 } else {
                     // Mark as sent (optional: update database)
                     // await supabaseClient.from('bookings').update({ reminder_sent_at: new Date() }).eq('id', booking.id);
@@ -121,7 +147,8 @@ serve(async (req) => {
         });
 
     } catch (error) {
-        return new Response(JSON.stringify({ error: error.message }), {
+        console.error("Reminder processing failed");
+        return new Response(JSON.stringify({ error: "Unable to process reminders" }), {
             status: 500,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
         });

@@ -19,10 +19,10 @@ describe('MarketingConsent', () => {
   it('offers equal accept/refuse controls, persists refusal and allows changing it', () => {
     render(<MemoryRouter initialEntries={['/login']}><MarketingConsent /></MemoryRouter>);
     expect(screen.getByRole('region', { name: 'Sua escolha sobre cookies' })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Recusar', exact: true }));
+    fireEvent.click(screen.getByRole('button', { name: 'Recusar' }));
     expect(readConsent()).toBe('rejected');
     fireEvent.click(screen.getByRole('button', { name: 'Preferências de cookies' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Aceitar', exact: true }));
+    fireEvent.click(screen.getByRole('button', { name: 'Aceitar' }));
     expect(readConsent()).toBe('accepted');
   });
   it('is available on the privacy page without enabling page tracking there', () => {

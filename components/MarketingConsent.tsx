@@ -20,7 +20,7 @@ export const MarketingConsent: React.FC = () => {
 
   useEffect(() => {
     const timer = window.setInterval(() => {
-      if (readConsent() !== 'accepted') setMetaScope(false);
+      window.dispatchEvent(new Event('storage'));
     }, 60_000);
     return () => window.clearInterval(timer);
   }, []);

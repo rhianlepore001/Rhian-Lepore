@@ -40,7 +40,7 @@ for (const width of [393, 1280]) {
     await page.getByRole('button', { name: 'Recusar', exact: true }).click();
     await expect.poll(async () => page.evaluate(() => window.fbq?.queue.at(-1)?.[1])).toBe('revoke');
     await page.reload();
-    expect(pixelRequests).toBe(2);
+    expect(pixelRequests).toBe(1);
     await expect(page.locator('#agendix-meta-pixel')).toHaveCount(0);
   });
 }

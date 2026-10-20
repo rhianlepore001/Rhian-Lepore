@@ -1,2 +1,4 @@
+project_id = "agendix"
+
 [functions.meta-capi]
 verify_jwt = false

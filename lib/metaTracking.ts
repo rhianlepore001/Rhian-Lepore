@@ -116,12 +116,12 @@ export function setMetaScope(allowed: boolean): void {
     if (readConsent() !== 'accepted') {
       pending.abort();
       pending = new AbortController();
+      clearMetaCookies();
     }
     if (window.fbq) {
       window.fbq.queue = [];
       window.fbq('consent', 'revoke');
     }
-    clearMetaCookies();
   } else if (loaded) {
     window.fbq?.('consent', 'grant');
   }
@@ -142,7 +142,7 @@ export const metaTracker = createMetaTracker({
     if (!url || !key || readConsent() !== 'accepted') return;
     await fetch(url + '/functions/v1/meta-capi', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', apikey: key, Authorization: 'Bearer ' + key },
+      headers: { 'Content-Type': 'application/json', apikey: key },
       body: JSON.stringify(event),
       keepalive: true,
       signal: pending.signal,

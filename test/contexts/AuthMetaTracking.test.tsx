@@ -43,7 +43,8 @@ describe('signup Meta integration', () => {
       resolve({ data: { user: { id: 'new-user', identities: [{ id: 'identity' }] }, session: null }, error: null });
       await request;
     });
-    expect(metaTracker.completeRegistration).toHaveBeenCalledExactlyOnceWith(context, { email: input.email, phone: '351912345678' });
+    expect(metaTracker.completeRegistration).toHaveBeenCalledTimes(1);
+    expect(metaTracker.completeRegistration).toHaveBeenCalledWith(context, { email: input.email, phone: '351912345678' });
   });
 
   it.each([

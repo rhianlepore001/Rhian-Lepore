@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { ClientQueuePanel } from '../components/queue/ClientQueuePanel';
-import { findNameToOpenPublicArea, hasQueueQrVisit } from '../services/queue';
+import { hasQueueQrVisit } from '../services/queue';
 import { supabase } from '../lib/supabase';
 import { usePublicClient } from '../contexts/PublicClientContext';
 import { useBusinessProfileBySlug, useBusinessSettings } from '../hooks/usePublicBooking';
 import { ClientBookingCard, ClientBooking } from '../components/ClientBookingCard';
-import { fetchClientBookingCancellations } from '../services/publicBooking';
-import { pendingAwaitingBanner, splitClientBookings, withCancellationInfo } from '../utils/clientBookings';
+import { PrivateBookingArea } from './PrivateBookingArea';
+import { pendingAwaitingBanner, splitClientBookings } from '../utils/clientBookings';
 import { applyBookingStatusEvent } from '../utils/bookingRealtime';
 import { useBookingStatusLive } from '../hooks/useBookingStatusLive';
 import { usePublicBusinessCopy } from '../hooks/useBusinessCopy';
@@ -46,6 +46,13 @@ type Tab = 'upcoming' | 'history' | 'club' | 'queue' | 'profile';
 const ITEMS_PER_PAGE = 8;
 
 export const ClientArea: React.FC = () => {
+    const [params] = useSearchParams();
+    return params.get('tab') === 'fila' || params.get('tab') === 'clube'
+        ? <PublicClientPortal />
+        : <PrivateBookingArea />;
+};
+
+const PublicClientPortal: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
     const [searchParams] = useSearchParams();
     const {
@@ -108,9 +115,8 @@ export const ClientArea: React.FC = () => {
     const [activeTab, setActiveTab] = useState<Tab>(queueFirst ? 'queue' : 'upcoming');
 
     useEffect(() => {
-        if (searchParams.get('tab') === 'fila') {
-            setActiveTab('queue');
-        }
+        if (searchParams.get('tab') === 'fila') setActiveTab('queue');
+        if (searchParams.get('tab') === 'clube') setActiveTab('club');
     }, [searchParams]);
     const [historyPage, setHistoryPage] = useState(1);
 
@@ -123,7 +129,7 @@ export const ClientArea: React.FC = () => {
     const { showToast } = useToast();
     const { data: membership, isLoading: membershipLoading } = usePublicClientMembership(
         sessionClient?.business_id ?? business?.id ?? null,
-        sessionClient?.phone ?? null
+        null
     );
     const { data: clubPlans } = usePublicMembershipPlans(businessId);
     const clubOffered = (clubPlans?.length ?? 0) > 0;
@@ -173,32 +179,10 @@ export const ClientArea: React.FC = () => {
     }, [business, isBeauty]);
 
     const fetchBookings = useCallback(async (opts?: { silent?: boolean }) => {
-        if (!sessionClient || !business) return;
-        if (!opts?.silent) setBookingsLoading(true);
-        try {
-            const [historyRes, cancelledByBusiness] = await Promise.all([
-                supabase.rpc('get_client_bookings_history_v2', {
-                    p_phone: sessionClient.phone,
-                    p_business_id: business.id,
-                }).then((res) => (
-                    res.error
-                        ? supabase.rpc('get_client_bookings_history', {
-                            p_phone: sessionClient.phone,
-                            p_business_id: business.id,
-                        })
-                        : res
-                )),
-                // Quem cancelou (item 5b). Falha aqui não pode esconder os agendamentos.
-                fetchClientBookingCancellations(sessionClient.phone, business.id).catch(() => ({})),
-            ]);
-            if (historyRes.error) throw historyRes.error;
-            setBookings(withCancellationInfo((historyRes.data as ClientBooking[]) ?? [], cancelledByBusiness));
-        } catch {
-            if (!opts?.silent) setBookings([]);
-        } finally {
-            if (!opts?.silent) setBookingsLoading(false);
-        }
-    }, [sessionClient, business]);
+        void opts;
+        setBookings([]);
+        setBookingsLoading(false);
+    }, []);
 
     useEffect(() => {
         void fetchBookings();
@@ -219,28 +203,7 @@ export const ClientArea: React.FC = () => {
             setGateError('Digite um telefone válido');
             return;
         }
-        setGateSubmitting(true);
-        try {
-            const found = await login(phone, business.id);
-            if (found) return;
-
-            const recoveredName = await findNameToOpenPublicArea(business.id, phone);
-            if (recoveredName) {
-                const recovered = await register({
-                    name: recoveredName,
-                    phone,
-                    photo_url: null,
-                    business_id: business.id,
-                });
-                if (recovered) return;
-            }
-
-            setGateStep('register');
-        } catch (error) {
-            setGateError(error instanceof Error ? error.message : 'Erro ao verificar. Tente novamente.');
-        } finally {
-            setGateSubmitting(false);
-        }
+        setGateStep('register');
     };
 
     const handleRegister = async (e: React.FormEvent) => {
@@ -721,31 +684,8 @@ export const ClientArea: React.FC = () => {
                         )}
                         {activeTab === 'club' && (
                             <div className="animate-in fade-in duration-200 min-w-0">
-                                {membership && membership.effective_status !== 'cancelled' ? (
-                                    <ClientMembershipPanel
-                                        membership={membership}
-                                        slug={slug ?? ''}
-                                        isBeauty={isBeauty}
-                                        region={region}
-                                        businessId={business.id}
-                                        businessPhone={business.phone}
-                                        businessName={business.business_name}
-                                        clientName={sessionClient.name}
-                                        loading={membershipLoading}
-                                        cancelling={cancelMembership.isPending}
-                                        onCancel={handleCancelMembership}
-                                    />
-                                ) : (
-                                    <PublicClubFlow
-                                        slug={slug ?? ''}
-                                        businessId={business.id}
-                                        region={region}
-                                        themeOverride={isBeauty ? 'beauty' : 'barber'}
-                                        embedded
-                                        prefillName={sessionClient.name}
-                                        prefillPhone={sessionClient.phone}
-                                    />
-                                )}
+                                <p role="note" className="mb-4 text-sm text-theme-textSecondary">Para consultar ou cancelar uma assinatura existente, fale com o estabelecimento. Informar o telefone não libera os dados do plano.</p>
+                                <Link to={`/clube/${encodeURIComponent(slug ?? '')}`} className="text-sm underline">Conhecer planos disponíveis</Link>
                             </div>
                         )}
 

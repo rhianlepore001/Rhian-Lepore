@@ -251,6 +251,7 @@ export async function findActiveQueueEntryByPhone(
     p_phone: phone,
   });
 
+  if (error?.code === '42501') return null;
   if (error) throw error;
   const entry = Array.isArray(data) ? data[0] : data;
   return parseQueueRecord(entry);

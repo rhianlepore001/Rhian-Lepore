@@ -20,6 +20,7 @@ Teste focal: `npm test -- --run security/attacks test/utils/checkoutAllowlist.te
 Requer binários PostgreSQL 17 (incluindo uuid-ossp). Configure `PGBIN` para o diretório que contém initdb, pg_ctl e psql. O runner cria um cluster novo em diretório temporário privado, com socket Unix e `listen_addresses=''`; não aceita URL/credenciais de banco. Encerra o servidor ao terminar e não remove dados preexistentes. Arquivos de fixture em `/tmp/agendix-security.*` contêm somente dados fictícios e ficam disponíveis para inspeção nessa instância.
 
 ```sh
+PGBIN=/usr/lib/postgresql/17/bin bash security/tests/private-booking-cycle.sh
 PGBIN=/usr/lib/postgresql/17/bin bash security/tests/local-postgres.sh billing-cycle
 PGBIN=/usr/lib/postgresql/17/bin bash security/tests/local-postgres.sh identity
 PGBIN=/usr/lib/postgresql/17/bin bash security/tests/local-postgres.sh tenant-matrix
@@ -32,7 +33,8 @@ Os SQLs em `attacks/` exigem conexão por socket Unix e marcador `agendix.securi
 - `billing-baseline`: deliberadamente falha antes da correção. `billing-reproduce-before`: comprova o comportamento original. Ambos carregam o estado anterior à migration nova; não são gates de aprovação.
 - `identity`: impede role/company/id, INSERT/UPSERT/DELETE e edição de perfil externo, preservando UPDATE legítimo do dono.
 - `tenant-matrix`: 210 verificações em dez tabelas com expressões de policies extraídas das migrations reais. Esquema mínimo, sem todos os triggers/constraints de negócio. Grants mais amplos no fixture isolam o comportamento RLS. O final reproduz também a permissão excessiva das policies ALL de equipe/financeiro: WARNING não significa controle aprovado.
-- `residual-privacy`: prova **problemas abertos**, exigindo que PII/alteração por telefone e acesso de staff inativo sejam reproduzidos. Exit 0 significa reprodução bem-sucedida do risco, **não segurança aprovada**.
+- `residual-privacy`: reprodução **histórica anterior à correção SEC-02** (não aplica a migration nova). O acesso de staff inativo SEC-03 continua aberto. Exit 0 significa reprodução, **não segurança aprovada**.
+- `private-booking-cycle.sh`: TDD vermelho para leitura por telefone/sobrescrita/token ausente → aplicação duplicada → testes de capacidade/CRM/atomicidade/Realtime → rollback de definições e ACLs equivalentes → falha antiga esperada → reaplicação e testes. Inclui ACLs de três RPCs reais de Clube/Fila; seus corpos funcionais não são exercitados. Guarda somente fixtures em socket local novo.
 
 Os scripts oficiais `scripts/test-sql-*.sh` continuam nos diretórios do projeto. Reproduzem snapshots históricos e precisam ser interpretados separadamente do estado final implantado. Não execute scripts remotos nem a configuração Playwright de produção.
 

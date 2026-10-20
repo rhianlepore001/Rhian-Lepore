@@ -18,19 +18,17 @@ import {
 import { parseDate } from '../utils/date';
 import { TimeGrid } from '../components/TimeGrid';
 import { ClientAuthModal } from '../components/ClientAuthModal';
-import { usePublicClient } from '../contexts/PublicClientContext';
 import { PublicBusinessHeader } from '../components/PublicBusinessHeader';
 import { ChatBubble } from '../components/ChatBubble';
 import { GoogleReviewPrompt } from '../components/GoogleReviewPrompt';
-import { useCancelPublicBooking, useFindActivePublicBooking, useSubmitPublicBooking, useBusinessProfileBySlug, useBusinessSettings, usePublicServices, usePublicCategories, usePublicProfessionals, usePublicGallery, usePublicProducts } from '../hooks/usePublicBooking';
+import { useCancelPublicBooking, useSubmitPublicBooking, useBusinessProfileBySlug, useBusinessSettings, usePublicServices, usePublicCategories, usePublicProfessionals, usePublicGallery, usePublicProducts } from '../hooks/usePublicBooking';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { buildWhatsAppLink, formatCurrency, formatDuration, Region } from '../utils/formatters';
 import { capBookingDuration } from '../utils/serviceDuration';
 import { logger } from '../utils/Logger';
 import { useZonedAvailableSlots } from '../hooks/useZonedAvailableSlots';
 import { mergeFreshPublicBooking } from '../utils/publicBookingFresh';
-import { fetchEditBooking, fetchPublicClientByPhone, fetchClientByPhone, fetchPublicBookingById, fetchFullDates, findNextDateWithSlots, getFirstAvailableProfessional, uploadClientPhoto, upsertPublicClientSession } from '../services/publicBooking';
-import { shouldLandOnClientArea } from '../utils/publicBookingLanding';
+import { fetchEditBooking, fetchPublicBookingById, fetchFullDates, findNextDateWithSlots, getFirstAvailableProfessional } from '../services/publicBooking';
 import { getPublicBookingAwaitingWhatsAppText, getPublicBookingSubmitLabel, getPublicBookingSuccessCopy } from '../utils/publicBookingCopy';
 import { isPublicBookingAutoConfirm } from '../utils/onlineBookingApproval';
 import { resolveCancellationPolicyParts } from '../utils/cancellationPolicyCopy';
@@ -109,9 +107,9 @@ export const PublicBooking: React.FC = () => {
     const proIdParam = searchParams.get('pro');
     const rebookParam = searchParams.get('rebook');
     const editParam = searchParams.get('edit');
+    const linkToken = searchParams.get('token');
 
     const cancelBookingMutation = useCancelPublicBooking();
-    const findActiveBookingMutation = useFindActivePublicBooking();
     const submitBookingMutation = useSubmitPublicBooking();
     const queryClient = useQueryClient();
     const { showToast } = useToast();
@@ -150,8 +148,6 @@ export const PublicBooking: React.FC = () => {
 
     const [customerName, setCustomerName] = useState('');
     const [customerPhone, setCustomerPhone] = useState('');
-    const [customerPhoto, setCustomerPhoto] = useState<File | null>(null);
-    const [existingPhotoUrl, setExistingPhotoUrl] = useState<string | null>(null);
     const [selectedProfessional, setSelectedProfessional] = useState<string | null>(proIdParam || null);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -166,6 +162,7 @@ export const PublicBooking: React.FC = () => {
     const [isDataReady, setIsDataReady] = useState(false);
     const [activeBooking, setActiveBooking] = useState<any>(null);
     const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
+    const [editLinkStatus, setEditLinkStatus] = useState<'loading' | 'valid' | 'invalid'>(editParam ? 'loading' : 'valid');
     const [originalTimeISO, setOriginalTimeISO] = useState<string | null>(null);
     const [editMode, setEditMode] = useState<'time' | 'service' | 'both' | null>(null);
     const galleryRef = React.useRef<HTMLDivElement>(null);
@@ -193,7 +190,6 @@ export const PublicBooking: React.FC = () => {
     const [bookingMode, setBookingMode] = useState<'chat' | 'quick'>('quick');
     const [quickStep, setQuickStep] = useState<'services' | 'professional' | 'datetime' | 'contact' | 'success'>('services');
 
-    const { client, register, login, establishSession, hydrateFromStorage } = usePublicClient();
 
     const isBeauty = business?.user_type === 'beauty';
     const themeOverride: ThemeVariant = isBeauty ? 'beauty' : 'barber';
@@ -212,98 +208,30 @@ export const PublicBooking: React.FC = () => {
         ? 'selection:bg-theme-accent selection:text-[#fff]'
         : 'selection:bg-theme-accent selection:text-[#000]';
 
-    // Sincroniza dados do cliente logado com os campos do formulário
     useEffect(() => {
-        if (client) {
-            setCustomerName(client.name);
-            setCustomerPhone(client.phone);
-        }
-    }, [client]);
-
-    useEffect(() => {
-        if (!businessId) return;
-        hydrateFromStorage(businessId);
-    }, [businessId, hydrateFromStorage]);
-
-    useEffect(() => {
-        if (!slug || !businessId || !client) return;
-        if (client.business_id !== businessId) return;
-        // Acabou de agendar nesta visita: fica na tela de confirmação (que tem o
-        // atalho para a Minha Área). O redirecionamento continua valendo para quem
-        // já chega logado no link.
-        if (step === 'success') return;
-        if (!shouldLandOnClientArea({ isLoggedInForBusiness: true, searchParams })) return;
-        navigate(`/minha-area/${slug}`, { replace: true });
-    }, [slug, businessId, client, searchParams, navigate, step]);
-
-    // Carrega agendamento diretamente pela tabela quando há ?edit= na URL e o cliente está logado
-    useEffect(() => {
-        // Espera o fuso do negócio para converter o horário do agendamento.
-        if (!editParam || !businessId || !businessSettingsFetched) return;
-        const phone = client?.phone || customerPhone;
-        if (!phone) return;
-
-        const fetchEdit = async () => {
-            try {
-                logger.info('Buscando agendamento para edição:', { editParam, phone });
-                const data = await fetchEditBooking(editParam, businessId, phone);
-                if (data) {
-                    logger.info('Agendamento encontrado para edição:', data);
-                    handleEditBooking(data);
-                } else {
-                    logger.warn('Agendamento não encontrado ou não editável:', { editParam });
-                }
-            } catch (err) {
-                logger.error('Exceção ao buscar agendamento para edição:', err);
+        if (!editParam) { setEditLinkStatus('valid'); return; }
+        if (!linkToken || !/^[a-f0-9]{64}$/.test(linkToken)) { setEditLinkStatus('invalid'); return; }
+        if (!businessId || !businessSettingsFetched) return;
+        let cancelled = false;
+        setEditLinkStatus('loading');
+        void fetchEditBooking(editParam, businessId, linkToken).then((booking) => {
+            if (cancelled) return;
+            if (!booking || !['pending', 'confirmed'].includes(booking.status)) {
+                setEditLinkStatus('invalid');
+                return;
             }
-        };
-
-        fetchEdit();
-    }, [editParam, businessId, client?.phone, businessSettingsFetched]);
-
-    // Detecta clientes existentes pelo telefone e busca agendamento ativo (fluxo normal, sem edição)
-    useEffect(() => {
-        const fetchExistingClient = async () => {
-            if (customerPhone.length >= 12 && businessId) {
-                try {
-                    const publicClient = await fetchPublicClientByPhone(customerPhone, businessId);
-                    if (publicClient) {
-                        if (publicClient.name && !customerName) setCustomerName(publicClient.name);
-                        if (publicClient.photo_url) setExistingPhotoUrl(publicClient.photo_url);
-                        return;
-                    }
-
-                    const mainClient = await fetchClientByPhone(customerPhone, businessId);
-                    if (mainClient) {
-                        if (mainClient.name && !customerName) setCustomerName(mainClient.name);
-                        if (mainClient.photo_url) setExistingPhotoUrl(mainClient.photo_url);
-                    }
-
-                    // Fluxo normal (sem edição): busca agendamento ativo pelo telefone
-                    if (!editParam) {
-                        const loadedBooking = await findActiveBookingMutation.mutateAsync({ phone: customerPhone, businessId: businessId! });
-                        if (loadedBooking && ['pending', 'confirmed'].includes(loadedBooking.status)) {
-                            setActiveBooking(loadedBooking);
-                            setStep('success');
-                            setQuickStep('success');
-                        }
-                    }
-                } catch (error) {
-                    logger.error('Erro ao buscar cliente existente', error);
-                }
-            } else if (customerPhone.length < 9) {
-                setExistingPhotoUrl(null);
-            }
-        };
-        fetchExistingClient();
-    }, [customerPhone, businessId, editParam]);
+            handleEditBooking(booking);
+            setEditLinkStatus('valid');
+        }).catch(() => { if (!cancelled) setEditLinkStatus('invalid'); });
+        return () => { cancelled = true; };
+    }, [editParam, businessId, businessSettingsFetched, linkToken]);
 
     const fetchFreshActiveBooking = async (bookingId: string) => {
-        const phone = client?.phone || customerPhone || activeBooking?.customer_phone;
-        if (!businessId || !phone) return;
+        const token = activeBooking?.management_token || linkToken;
+        if (!businessId || !token) return;
 
         try {
-            const booking = await fetchPublicBookingById(bookingId, businessId, phone);
+            const booking = await fetchPublicBookingById(bookingId, businessId, token);
             if (booking) {
                 // Junta (não substitui): a RPC devolve só parte dos campos do pedido.
                 setActiveBooking((prev: any) => mergeFreshPublicBooking(prev, booking));
@@ -325,8 +253,7 @@ export const PublicBooking: React.FC = () => {
                     table: 'public_bookings',
                     filter: `id=eq.${activeBooking.id}`
                 },
-                (payload) => {
-                    logger.info('Booking update received', { payload });
+                () => {
                     fetchFreshActiveBooking(activeBooking.id);
                 }
             )
@@ -405,9 +332,7 @@ export const PublicBooking: React.FC = () => {
                 setIsTyping(true);
                 setTimeout(() => {
                     if (editParam) {
-                        const editWelcome = client
-                            ? `Olá ${client.name.split(' ')[0]}! Você está no modo de edição do seu agendamento na ${business.business_name}.`
-                            : `Olá! Você está no modo de edição do seu agendamento na ${business.business_name}.`;
+                        const editWelcome = `Olá! Você está no modo de edição do seu agendamento na ${business.business_name}.`;
 
                         setMessages([
                             {
@@ -423,9 +348,7 @@ export const PublicBooking: React.FC = () => {
                             }
                         ]);
                     } else {
-                        const welcomeText = client
-                            ? `Olá de volta, ${client.name.split(' ')[0]}! Que bom ter você aqui na ${business.business_name} novamente.`
-                            : `Olá! Seja bem-vindo à ${business.business_name}. Vou te ajudar a agendar em poucos passos.`;
+                        const welcomeText = `Olá! Seja bem-vindo à ${business.business_name}. Vou te ajudar a agendar em poucos passos.`;
 
                         setMessages([
                             {
@@ -448,7 +371,7 @@ export const PublicBooking: React.FC = () => {
             };
             addWelcome();
         }
-    }, [business, isDataReady, client, editParam]);
+    }, [business, isDataReady, editParam]);
 
     // Pre-select services when coming from client area rebook link
     useEffect(() => {
@@ -590,20 +513,20 @@ export const PublicBooking: React.FC = () => {
     };
 
     const handleCancelBooking = async (bookingId: string) => {
-        const phone = customerPhone || client?.phone || '';
-        if (!phone) {
-            showToast('Não foi possível cancelar. Informe o WhatsApp usado no agendamento.', 'error');
+        const token = activeBooking?.management_token || linkToken;
+        if (!token) {
+            showToast('Abra o link privado recebido após agendar.', 'error');
             return;
         }
         try {
-            await cancelBookingMutation.mutateAsync({ bookingId, phone });
+            await cancelBookingMutation.mutateAsync({ bookingId, token });
             setActiveBooking(null);
             setStep('services');
             setQuickStep('services');
             showToast('Agendamento cancelado com sucesso.', 'success');
         } catch (error) {
             logger.error('Error cancelling booking', error);
-            showToast('Não foi possível cancelar o agendamento. Tente de novo ou fale com o salão.', 'error');
+            showToast('Não foi possível cancelar o agendamento. Tente de novo ou fale com o estabelecimento.', 'error');
         }
     };
 
@@ -622,7 +545,7 @@ export const PublicBooking: React.FC = () => {
         setSelectedProfessional(booking.professional_id || 'any');
 
         if (booking.customer_name) setCustomerName(booking.customer_name);
-        const phone = booking.customer_phone || booking.phone || client?.phone || '';
+        const phone = booking.customer_phone || booking.phone || '';
         if (phone) setCustomerPhone(phone);
         // Em modo edição o cliente já aceitou política no agendamento original;
         // re-confirmação seria fricção desnecessária.
@@ -641,72 +564,37 @@ export const PublicBooking: React.FC = () => {
         setStep('edit_options');
     };
 
-    const establishClientSession = async (photoUrl: string | null): Promise<boolean> => {
-        if (!businessId || !customerName || !customerPhone) return false;
-
-        try {
-            const sessionClient = await upsertPublicClientSession({
-                businessId,
-                name: customerName,
-                phone: customerPhone,
-                photoUrl,
-            });
-            establishSession(sessionClient);
-            return true;
-        } catch (upsertError) {
-            logger.warn('upsertPublicClientSession falhou após agendamento, tentando register/login:', upsertError);
-        }
-
-        try {
-            const registered = await register({
-                name: customerName,
-                phone: customerPhone,
-                photo_url: photoUrl,
-                business_id: businessId,
-            });
-            if (registered) return true;
-        } catch (registerError) {
-            logger.warn('register() falhou após agendamento, tentando login:', registerError);
-        }
-
-        try {
-            const loggedIn = await login(customerPhone, businessId);
-            if (loggedIn) return true;
-        } catch (loginError) {
-            logger.warn('login() falhou após agendamento:', loginError);
-        }
-
-        establishSession({
-            id: client?.id ?? crypto.randomUUID(),
-            name: customerName,
-            phone: customerPhone,
-            email: client?.email ?? null,
-            photo_url: photoUrl,
-            business_id: businessId,
-        });
-        return true;
-    };
-
+    const managementToken = activeBooking?.management_token || linkToken;
+    const privateBookingPath = slug && activeBooking?.id && managementToken
+        ? `/minha-area/${encodeURIComponent(slug)}?booking=${encodeURIComponent(activeBooking.id)}&token=${encodeURIComponent(managementToken)}`
+        : null;
+    const privateBookingUrl = privateBookingPath ? `${window.location.origin}/#${privateBookingPath}` : '';
+    const privateLinkPanel = privateBookingUrl ? (
+        <div className="w-full space-y-3 rounded-xl border border-theme-border p-4 text-left" data-testid="private-booking-link" data-private-booking-link>
+            <p className="text-sm text-theme-text">Guarde este link privado para ver, remarcar ou cancelar este horário. Quem tiver o link poderá acessá-lo.</p>
+            <input aria-label="Link privado do agendamento" readOnly value={privateBookingUrl} className="w-full rounded border border-theme-border bg-theme-bg p-2 text-sm text-theme-text" onFocus={(event) => event.target.select()} />
+            <button type="button" className="text-sm font-bold underline text-theme-text" onClick={() => {
+                if (!navigator.clipboard?.writeText) { showToast('Selecione e copie o link acima.', 'info'); return; }
+                void navigator.clipboard.writeText(privateBookingUrl).then(() => showToast('Link copiado.', 'success')).catch(() => showToast('Selecione e copie o link acima.', 'info'));
+            }}>Copiar link privado</button>
+            <p className="text-xs text-theme-textSecondary">Válido por 30 dias a partir da criação ou até 7 dias após o horário, o que ocorrer por último.</p>
+        </div>
+    ) : null;
     const handleOpenClientArea = () => {
-        if (!slug) return;
-        navigate(`/minha-area/${slug}`);
+        if (privateBookingPath) navigate(privateBookingPath);
     };
 
     const handleSubmit = async () => {
+        if (editParam && (editLinkStatus !== 'valid' || editingBookingId !== editParam)) {
+            showToast('Link privado inválido ou expirado.', 'error');
+            return;
+        }
         if (!businessId || !customerName || !customerPhone || !selectedDate || !selectedTime || !acceptedPolicy) {
             showToast('Por favor, preencha todos os campos e aceite a política de cancelamento.', 'warning');
             return;
         }
         setIsSubmitting(true);
         try {
-            let photoUrl = client?.photo_url || null;
-            if (customerPhoto) {
-                try {
-                    photoUrl = await uploadClientPhoto(businessId, customerPhoto);
-                } catch (uploadErr) {
-                    logger.warn('Photo upload failed, continuing without photo', uploadErr);
-                }
-            }
             const year = selectedDate.getFullYear();
             const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
             const day = String(selectedDate.getDate()).padStart(2, '0');
@@ -720,18 +608,6 @@ export const PublicBooking: React.FC = () => {
             // Hora de parede do negócio + offset real daquele dia (horário de
             // verão incluso). Antes: offset fixo -03:00 / +00:00 por região.
             const appointmentTimeISO = zonedDateTimeToIso(dateStr, selectedTime, businessTimezone);
-
-            if (!editingBookingId) {
-                const existingBooking = await findActiveBookingMutation.mutateAsync({ phone: customerPhone, businessId });
-                if (existingBooking && existingBooking.id !== editingBookingId) {
-                    setActiveBooking(existingBooking);
-                    await establishClientSession(photoUrl);
-                    setStep('success');
-                    setQuickStep('success');
-                    setIsSubmitting(false);
-                    return;
-                }
-            }
 
             let finalProfessionalId = selectedProfessional === 'any' ? null : selectedProfessional;
             if (selectedProfessional === 'any') {
@@ -749,13 +625,13 @@ export const PublicBooking: React.FC = () => {
                 totalPrice,
                 durationMinutes: duration,
                 editingBookingId,
+                managementToken: linkToken,
                 originalAppointmentTime: originalTimeISO,
                 productLines: selectedProductLines,
             });
 
             setActiveBooking(booking);
 
-            await establishClientSession(photoUrl);
             setStep('success');
             setQuickStep('success');
         } catch (error: any) {
@@ -792,7 +668,7 @@ export const PublicBooking: React.FC = () => {
             showToast('O estabelecimento ainda não informou um WhatsApp.', 'info');
             return;
         }
-        const name = (customerName || client?.name || '').trim();
+        const name = customerName.trim();
         const msg = name
             ? `Olá! Sou ${name}. Queria alterar meu horário.`
             : 'Olá! Queria alterar meu horário.';
@@ -897,7 +773,7 @@ export const PublicBooking: React.FC = () => {
             case 'services': return selectedServices.length > 0;
             case 'professional': return selectedProfessional !== null;
             case 'datetime': return selectedDate !== null && selectedTime !== null;
-            case 'contact': return (client || (customerName && customerPhone)) && acceptedPolicy;
+            case 'contact': return (customerName && customerPhone) && acceptedPolicy;
             default: return false;
         }
     };
@@ -931,6 +807,15 @@ export const PublicBooking: React.FC = () => {
         );
     }
 
+    if (editParam && (editLinkStatus !== 'valid' || editingBookingId !== editParam)) {
+        return <main className="min-h-screen bg-theme-bg p-6 text-theme-text">
+            {editLinkStatus === 'invalid'
+                ? <p role="alert">Link privado inválido ou expirado. Fale com o estabelecimento.</p>
+                : <p role="status">Verificando link privado…</p>}
+            <Link to={`/book/${encodeURIComponent(slug ?? '')}?new=1`} className="underline">Fazer um novo agendamento</Link>
+        </main>;
+    }
+
     return (
         <div id="booking-root" className={`min-h-screen ${colors.bg} ${colors.text} ${selectionClasses} font-sans relative overflow-x-hidden pb-40 transition-colors duration-700`}>
             {/* Background Texture Overlay */}
@@ -953,7 +838,7 @@ export const PublicBooking: React.FC = () => {
                 totalReviews={business.total_reviews}
                 userType={business.user_type}
                 gallery={gallery}
-                clientSession={client}
+                clientSession={null}
                 businessSlug={slug}
             />
 
@@ -1285,19 +1170,7 @@ export const PublicBooking: React.FC = () => {
 
                             {/* Contact Form */}
                             <div className="space-y-4 md:space-y-5">
-                                {client ? (
-                                    <div className={`p-3.5 rounded-xl flex items-center gap-3 ${colors.surface} ${colors.border} border`}>
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${accent.bgDim} ${accent.text}`}>
-                                            <User className="w-5 h-5" />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className={`font-semibold truncate ${colors.text}`}>{client.name}</p>
-                                            <p className={`text-sm ${colors.textMuted}`}>{client.phone}</p>
-                                        </div>
-                                        <Check className={`w-5 h-5 shrink-0 ${accent.text}`} aria-hidden="true" />
-                                    </div>
-                                ) : (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                                         <div className="space-y-1.5 sm:col-span-2">
                                             <label className={`${colors.textMuted} text-xs font-semibold uppercase tracking-wide block`}>Nome completo</label>
                                             <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)}
@@ -1311,7 +1184,6 @@ export const PublicBooking: React.FC = () => {
                                             <PhoneInput value={customerPhone} onChange={setCustomerPhone} defaultRegion={currencyRegion as 'BR' | 'PT'} />
                                         </div>
                                     </div>
-                                )}
 
                                 <div className="space-y-3">
                                     {inlinePolicy}
@@ -1661,12 +1533,11 @@ export const PublicBooking: React.FC = () => {
                                                                 setLeadTimeAlert(null);
                                                                 setEditWindowClosed(false);
                                                                 setSelectedTime(time);
-                                                                const isLogged = !!client;
                                                                 if (editingBookingId) {
                                                                     setMessages(prev => [...prev, { id: Date.now().toString(), text: `Agendar para dia ${selectedDate.toLocaleDateString('pt-BR')} às ${time}`, isAssistant: false }, { id: (Date.now() + 1).toString(), text: "Quase pronto. Verifique o resumo da edição abaixo.", isAssistant: true, type: 'edit_confirm' }]);
                                                                     setStep('edit_confirm');
                                                                 } else {
-                                                                    setMessages(prev => [...prev, { id: Date.now().toString(), text: `Agendar para dia ${selectedDate.toLocaleDateString('pt-BR')} às ${time}`, isAssistant: false }, { id: (Date.now() + 1).toString(), text: isLogged ? "Estamos quase concluindo! Como você já tem cadastro, verifique os detalhes abaixo e confirme o seu agendamento." : "Estamos quase concluindo! Agora, para confirmar seu agendamento, informe seus dados de contato.", isAssistant: true, type: 'contact' }]);
+                                                                    setMessages(prev => [...prev, { id: Date.now().toString(), text: `Agendar para dia ${selectedDate.toLocaleDateString('pt-BR')} às ${time}`, isAssistant: false }, { id: (Date.now() + 1).toString(), text: "Estamos quase concluindo! Agora, para confirmar seu agendamento, informe seus dados de contato.", isAssistant: true, type: 'contact' }]);
                                                                     setStep('contact');
                                                                 }
                                                             }} availableSlots={availableSlots} emptyMessage={leadEmptyMessage} emptyAction={leadEmptyAction} alertMessage={leadTimeAlert} alertKey={leadTimeAlertKey} forceTheme={themeOverride} />
@@ -1703,6 +1574,7 @@ export const PublicBooking: React.FC = () => {
                                         </div>
                                     </div>
 
+                                    {privateLinkPanel}
                                     <h2 data-testid="public-booking-success-title" data-status={activeBooking.status} className={`${colors.text} font-black tracking-tighter text-[2.6rem] leading-[1.05] min-[400px]:text-5xl md:text-7xl mb-6 break-words`}>
                                         {successCopy.title}
                                     </h2>
@@ -1776,15 +1648,15 @@ export const PublicBooking: React.FC = () => {
                                                         <LayoutDashboard className={`w-5 h-5 ${colors.textSecondary}`} />
                                                     </div>
                                                     <div>
-                                                        <p className={`font-black text-sm uppercase tracking-wider ${colors.text}`}>Minha Área de Cliente</p>
-                                                        <p className={`text-xs mt-0.5 ${colors.textMuted}`}>Acompanhe e gerencie seus agendamentos</p>
+                                                        <p className={`font-black text-sm uppercase tracking-wider ${colors.text}`}>Meu agendamento</p>
+                                                        <p className={`text-xs mt-0.5 ${colors.textMuted}`}>Veja e gerencie este horário</p>
                                                     </div>
                                                 </div>
                                                 <ArrowRight className={`w-5 h-5 transition-transform group-hover:translate-x-1 ${colors.textMuted}`} />
                                             </div>
                                             <div className="flex flex-wrap gap-2 mt-1">
                                                 {[
-                                                    { icon: <Calendar className="w-3 h-3" />, label: 'Histórico' },
+                                                    { icon: <Calendar className="w-3 h-3" />, label: 'Este horário' },
                                                     { icon: <Check className="w-3 h-3" />, label: 'Status em tempo real' },
                                                     { icon: <MessageSquare className="w-3 h-3" />, label: 'Fale conosco' },
                                                 ].map(tag => (
@@ -1847,21 +1719,7 @@ export const PublicBooking: React.FC = () => {
                         </div>
 
                         <div className="relative z-10 space-y-6">
-                            {client ? (
-                                <div className={`p-4 rounded-xl flex items-center gap-4 ${colors.surface} ${colors.border} border`}>
-                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${accent.bgDim} ${accent.text} border ${accent.borderDim}`}>
-                                        <User className="w-6 h-6" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <p className={`font-bold ${colors.text}`}>{client.name}</p>
-                                        <p className={`text-sm ${colors.textMuted}`}>{client.phone}</p>
-                                    </div>
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${accent.bg} ${accentTextOnAccent}`}>
-                                        <Check className="w-4 h-4" />
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-1 gap-4">
+                            <div className="grid grid-cols-1 gap-4">
                                     <div className="space-y-2">
                                         <label className={`${colors.textMuted} ${font.label} text-xs uppercase tracking-widest block font-bold`}>Nome Completo</label>
                                         <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)}
@@ -1873,7 +1731,6 @@ export const PublicBooking: React.FC = () => {
                                         <PhoneInput value={customerPhone} onChange={setCustomerPhone} defaultRegion={currencyRegion as 'BR' | 'PT'} />
                                     </div>
                                 </div>
-                            )}
 
                             {inlinePolicy}
 
@@ -1907,7 +1764,7 @@ export const PublicBooking: React.FC = () => {
                                     </button>
                                 ) : (
                                 <button onClick={handleSubmit}
-                                    disabled={(!client && (!customerName || !customerPhone)) || !acceptedPolicy || isSubmitting}
+                                    disabled={(!customerName || !customerPhone) || !acceptedPolicy || isSubmitting}
                                     className={`w-full py-5 flex items-center justify-center gap-3 transition-all group overflow-hidden relative ${classes.buttonPrimary} disabled:opacity-50 disabled:cursor-not-allowed`}>
                                     {isSubmitting ? (
                                         <Loader2 className="w-6 h-6 animate-spin" />
@@ -1988,6 +1845,7 @@ export const PublicBooking: React.FC = () => {
                         </div>
                     </div>
 
+                    {privateLinkPanel}
                     <h2 data-testid="public-booking-success-title" data-status={activeBooking.status} className={`${colors.text} font-black tracking-tighter text-[2.6rem] leading-[1.05] min-[400px]:text-5xl md:text-7xl mb-6 break-words`}>
                         {successCopy.title}
                     </h2>
@@ -2061,15 +1919,15 @@ export const PublicBooking: React.FC = () => {
                                         <LayoutDashboard className={`w-5 h-5 ${colors.textSecondary}`} />
                                     </div>
                                     <div>
-                                        <p className={`font-black text-sm uppercase tracking-wider ${colors.text}`}>Minha Área de Cliente</p>
-                                        <p className={`text-xs mt-0.5 ${colors.textMuted}`}>Acompanhe e gerencie seus agendamentos</p>
+                                        <p className={`font-black text-sm uppercase tracking-wider ${colors.text}`}>Meu agendamento</p>
+                                        <p className={`text-xs mt-0.5 ${colors.textMuted}`}>Veja e gerencie este horário</p>
                                     </div>
                                 </div>
                                 <ArrowRight className={`w-5 h-5 transition-transform group-hover:translate-x-1 ${colors.textMuted}`} />
                             </div>
                             <div className="flex flex-wrap gap-2 mt-1">
                                 {[
-                                    { icon: <Calendar className="w-3 h-3" />, label: 'Histórico' },
+                                    { icon: <Calendar className="w-3 h-3" />, label: 'Este horário' },
                                     { icon: <Check className="w-3 h-3" />, label: 'Status em tempo real' },
                                     { icon: <MessageSquare className="w-3 h-3" />, label: 'Fale conosco' },
                                 ].map(tag => (

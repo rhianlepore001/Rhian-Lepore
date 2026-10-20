@@ -31,6 +31,7 @@ function renderCard(props: { autoConfirmEnabled?: boolean; booking?: ClientBooki
         businessPhone="11999998888"
         businessSlug="corte-fino"
         clientName="Zé"
+        managementToken="test-private-token"
         clientPhone="11999998888"
         businessName="Barbearia São João"
         region="PT"

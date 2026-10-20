@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
 import { upsertPublicClientSession } from '../services/publicBooking';
 import { PublicClient } from '../types';
 
@@ -77,35 +76,9 @@ export const PublicClientProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }, []);
 
     const login = async (phone: string, businessId: string) => {
-        setLoading(true);
-        try {
-            const { data, error } = await supabase.rpc('get_public_client_by_phone', {
-                p_business_id: businessId,
-                p_phone: phone,
-            });
-
-            if (error) throw error;
-
-            const foundClient = data?.[0];
-            if (foundClient) {
-                const fullClient: PublicClient = {
-                    id: foundClient.id,
-                    name: foundClient.name,
-                    phone: foundClient.phone,
-                    email: foundClient.email ?? null,
-                    photo_url: foundClient.photo_url ?? null,
-                    business_id: foundClient.business_id ?? businessId,
-                };
-                persistClient(fullClient);
-                return fullClient;
-            }
-            return null;
-        } catch (error) {
-            console.error('Error logging in public client:', error);
-            return null;
-        } finally {
-            setLoading(false);
-        }
+        void phone;
+        void businessId;
+        return null;
     };
 
     const register = async (data: Omit<PublicClient, 'id'>) => {

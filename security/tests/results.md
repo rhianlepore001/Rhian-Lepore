@@ -2,7 +2,7 @@
 
 Execução local em 18–20/10/2026, checkout base f371508. Node 24.19.0, npm 11.9.0, PostgreSQL 17.11. CI usa Node 20: compatibilidade nessa versão não foi reexecutada aqui. Nenhum backend de produção, email, OTP ou pagamento foi chamado.
 
-## Revalidação para entrega em PR — 20/10
+## Primeira entrega em PR — 20/10, antes do ajuste SEC-02
 
 Typecheck → lint → build → Vitest repetidos na ordem, todos exit 0; Vitest confirmou novamente 242 arquivos e 1.749 testes, duração 208,73 s. billing-cycle, identity, tenant-matrix e residual-privacy também foram reexecutados; os dois últimos mantêm a distinção entre controles aprovados no modelo e reprodução de riscos abertos. Sintaxe dos scripts shell, links locais, hashes das fontes do inventário e diff foram conferidos. Nenhum arquivo .runtime ou credencial foi incluído no conjunto de 38 arquivos preparado para versionamento.
 
@@ -81,3 +81,36 @@ Também executados com `--rollback`: crit-public-clients-billing, alto-a01-clien
 - Chromium não instalado: Playwright/E2E de navegador não executado. Projetos Playwright de produção e setup remoto não foram usados.
 - Em 19/10, `gh auth status` informou credencial inválida e não houve PR remoto. Em 20/10, o conector GitHub está disponível e a entrega foi autorizada em um PR draft único na branch `security/hardening-audit`; as descrições temáticas permanecem em reviews/.
 - Deno e Supabase local completo ausentes; catálogo efetivo, gateway/JWT, Auth/Storage reais, eventos Stripe e entrega de mensagens não verificados.
+
+## Ajuste SEC-02 do PR #160 — 20/10/2026
+
+Escopo: booking sem OTP, sem leitura/pré-preenchimento por telefone, sem sobrescrever CRM existente, com capacidade privada por pedido. Logs desta rodada em `/workspace/scratch/agendix-sec02/` (artefatos locais, sem dados reais).
+
+### TDD e ciclo SQL desta rodada
+
+- `test/services/privateBookingSecurity.test.ts`: **4/4 falharam inicialmente**, depois passaram. Proíbe lookup, upsert após criar, fallback de tabela/telefone; exige token para ler/cancelar.
+- `test/utils/privateBookingDiagnostics.test.ts`: **2/2 falharam inicialmente**, depois passaram. Token saía na URL enviada ao log/contexto; agora redigido e painel excluído da captura automática.
+- `test/pages/PublicBookingPrivateLink.test.tsx`: **2/2 falharam inicialmente**, depois passaram com página real montada. Link ausente/inválido/expirado bloqueia edição e não vira reserva nova.
+- Fallback de fila em `test/services/queue.test.ts`: **1 falha inicial**, depois 25/25 passaram. Denial 42501 de lookup histórico não quebra criação/uso do ticket guardado.
+- `PGBIN=/workspace/scratch/agendix-audit/tools/pg/usr/lib/postgresql/17/bin bash security/tests/private-booking-cycle.sh`: **exit 0**. Três falhas iniciais esperadas; dupla aplicação; privacy/preservação/capacidade/CRM/atomicidade; rollback com definições iguais e grants equivalentes; risco anterior reproduzido; reaplicação e regressão aprovadas.
+- Token válido/incorreto/ausente/expirado/de outro ID; leitura, edição e cancelamento; cadastro existente só no CRM e em ambas tabelas; dados enviados só no pedido; mirror, aceite manual e auto-confirm preservam **todas as colunas** do CRM no fixture; materialização do atendimento funciona. Falha forçada ao gravar hash reverte pedido, atendimento e CRM novo.
+- Realtime nega anon, authenticated sem tenant e proprietário B; proprietário correto continua lendo. Schema/tabela de hash negados para anon.
+- ACLs de `get_public_client_membership`, `cancel_public_client_membership` e `find_active_queue_entry_by_phone` usam definições reais carregadas no runner. Suas operações funcionais não foram certificadas.
+- Revisão SQL independente: 9,1/10, ciclo + suplemento de ACL passou. Revisão frontend: 9,2/10, **119/119** em 12 arquivos. Notas limitadas ao escopo local, com detalhes em `reviews/sec02.md`.
+
+`graphify update .`: **exit 127**, executável ausente. `bash -n security/tests/private-booking-cycle.sh` e `git diff --check` passaram. O inventário gigante não é mais versionado; MEMORY.md não tem diferença em relação à main. Nenhuma migração remota, merge, deploy, email ou pagamento foi executado.
+
+O comando histórico `local-postgres.sh residual-privacy` continua carregando o estado anterior à correção para reprodução. Não deve ser usado como gate do SEC-02 atualizado nem como prova de que o código corrigido permanece vulnerável.
+
+### Gates finais do ajuste SEC-02
+
+Executados na ordem exigida pelo repositório, com as mesmas variáveis fictícias:
+
+| Comando | Resultado |
+|---|---|
+| `npm run typecheck` | exit 0 |
+| `npm run lint` | exit 0; sem warnings ESLint; design-debt sem violação nova |
+| `VITE_OPENROUTER_API_KEY= VITE_GEMINI_API_KEY= GEMINI_API_KEY= npm run build` | exit 0; postbuild aprovado |
+| `npm test -- --run` | exit 0; **246 arquivos / 1.762 testes aprovados**, 254,02 s |
+
+Build manteve aviso de chunks acima de 500 kB e aviso preexistente de importação estática/dinâmica. Nenhum source map encontrado em dist. Não houve mudança de dependências; npm audit desta primeira entrega permanece documentado, sem sugerir que foi repetido nesta rodada. Os 1.762 testes incluem os novos casos de privacidade, diagnóstico, edição e fallback de fila, além das regressões anteriores.

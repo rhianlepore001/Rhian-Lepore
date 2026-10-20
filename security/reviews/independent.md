@@ -36,4 +36,4 @@ Limites: sem Stripe real, navegador integrado ou configuração implantada. Prev
 
 ## Aprovação geral
 
-Nenhuma correção recebe aprovação de produção por estes pareceres. SEC-02/SEC-03 e permissões amplas do modelo não foram corrigidos nem aprovados. Os 16 itens do checklist do usuário foram considerados quando aplicáveis: HTTP/RPCs/DML/lotes/grants/roles/search_path/erros/fluxos/performance/índices/rollback constam acima e nos testes. Não há equivalente HTTP integrado para afirmar que gateway/PostgREST respeitam todos os métodos; isso permanece pendente.
+Nenhuma correção recebe aprovação de produção por estes pareceres. Na primeira entrega, SEC-02/SEC-03 e permissões amplas do modelo não foram corrigidos nem aprovados. A atualização SEC-02 de 20/10 está registrada separadamente em [sec02.md](sec02.md); SEC-03 continua aberto. Os 16 itens do checklist do usuário foram considerados quando aplicáveis: HTTP/RPCs/DML/lotes/grants/roles/search_path/erros/fluxos/performance/índices/rollback constam acima e nos testes. Não há equivalente HTTP integrado para afirmar que gateway/PostgREST respeitam todos os métodos; isso permanece pendente.

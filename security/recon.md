@@ -114,3 +114,9 @@ São hipóteses/observações até reprodução local, sem afirmar exploração 
 4. Aceite URLs: somente origens exatas configuradas/defaults; preservar produção/localhost e permitir previews explicitamente configurados. Aceite lembrete: rejeitar caller sem segredo de job antes de criar cliente privilegiado ou enviar; fixtures verificam zero efeitos.
 5. Registrar testes iniciais antes das correções. Aplicar apenas correções isoladas comprovadas; mudança de autenticação pública, política comercial, senha, CSP enforce e planos depende de decisão explícita e fica documentada.
 6. Typecheck → lint → build → Vitest; SQL + regressões e ciclo apply/test/rollback/test/reapply/test para migration nova. Revisão independente por agente ao terminar correções, nota e limites em `reviews/`. Documentar comandos, status de cada escopo e propostas de PR sem publicar, commitar, mergear ou fazer deploy.
+
+## Atualização SEC-02 — 20/10/2026
+
+O mapa histórico de RPCs por telefone acima não equivale mais à autorização proposta no branch: `20261020122744_private_booking_access.sql` revoga os acessos legados de cadastro/booking, lookup/cancelamento de assinatura e recuperação de fila por telefone. Novas RPCs de booking aceitam capacidade por pedido, com hash no schema privado `agendix_private`; nenhuma capacidade de booking autoriza consulta de perfil/histórico/clube/fila. O frontend usa `/#/minha-area/<slug>?booking=<id>&token=<segredo>` e `/#/book/<slug>?edit=<id>&token=<segredo>`, sem pré-preenchimento por telefone ou OTP.
+
+Criação/benefícios de Clube e tickets de Fila por UUID continuam fora do fechamento funcional. Limites, ciclo SQL e revisões em [reviews/sec02.md](reviews/sec02.md). Inventário JSON gerado foi retirado do PR, e MEMORY.md foi restaurado ao conteúdo da main.

@@ -27,3 +27,15 @@ Não foi executado Supabase Advisor contra projeto remoto, nem CLI advisors vinc
 Não executados nesta auditoria. Preparar janela coordenada de migration + Edge, segredo de backend exclusivamente no servidor e teste em Stripe test. Confirmar metadata dos customers legados por fonte confiável; email sozinho não autoriza reconciliação. O código falha fechado quando o vínculo não pode ser verificado.
 
 Para reversão em ambiente autorizado: suspender checkout, reverter a Edge e aplicar o rollback correspondente na janela coordenada; testar com dados fictícios antes de reabrir. **O rollback reabre SEC-01**. Não utilizá-lo isoladamente para contornar customer legado ou configuração ausente. Nenhuma decisão de cobrança ou plano foi alterada.
+
+# Migration SEC-02
+
+Migration oficial: [20261020122744_private_booking_access.sql](../../supabase/migrations/20261020122744_private_booking_access.sql), gerada por `supabase migration new private_booking_access`.
+
+Rollback oficial: [20261020122744_private_booking_access.rollback.sql](../../docs/rollbacks/20261020122744_private_booking_access.rollback.sql).
+
+Aditiva, em transação: schema privado, tabela de hash/expiração por booking, snapshots das definições/ACLs anteriores para rollback, quatro RPCs por capacidade e endurecimento das funções/policy existentes. Nenhuma linha de negócio removida, nenhum backfill de token, nenhum GRANT mais amplo para compensar restrições. Índice da PK de booking_id atende autorização; existentes e criação continuam serializados pelo lock do tenant.
+
+Critérios, teste inicial, regressão, impacto, deploy futuro coordenado e rollback em [reviews/sec02.md](../reviews/sec02.md). O runner `PGBIN=... bash security/tests/private-booking-cycle.sh` testa aplicar 2x → testar → reverter → testar definições/permissões e vulnerabilidade original → reaplicar → testar, sem apontar para projeto remoto.
+
+O rollback conserva hashes/dados para reaplicação, revoga endpoints novos e restaura código/permissões/policy originais. **Reabre SEC-02**; não é remediação de produção. Frontend antigo e migration nova são incompatíveis, exigindo janela de manutenção coordenada antes de qualquer publicação autorizada. No estado entregue, nada foi aplicado remotamente.

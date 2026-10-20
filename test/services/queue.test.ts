@@ -90,6 +90,11 @@ describe('queue service', () => {
     expect(isCallingExpired('2026-05-30T10:03:00.000Z', now)).toBe(false);
   });
 
+  it('não recupera dados se o lookup legado por telefone está bloqueado', async () => {
+    vi.mocked(supabase.rpc).mockResolvedValueOnce({ data: null, error: { code: '42501', message: 'permission denied' } } as any);
+    await expect(findActiveQueueEntryByPhone('business-001', '11999999999')).resolves.toBeNull();
+  });
+
   it('busca entrada ativa por telefone no mesmo negocio', async () => {
     (supabase.rpc as any).mockResolvedValue({
       data: [{

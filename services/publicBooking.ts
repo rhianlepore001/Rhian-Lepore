@@ -68,26 +68,7 @@ export async function resolveClientForBookingAcceptance(params: {
     .or(orFilter)
     .maybeSingle();
 
-  if (existingClient) {
-    const { data: publicClient } = await supabase
-      .from('public_clients')
-      .select('photo_url')
-      .eq('phone', params.customerPhone)
-      .eq('business_id', params.businessId)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (publicClient?.photo_url && existingClient.photo_url !== publicClient.photo_url) {
-      await supabase
-        .from('clients')
-        .update({ photo_url: publicClient.photo_url })
-        .eq('id', existingClient.id)
-        .eq('user_id', params.businessId);
-    }
-
-    return existingClient.id;
-  }
+  if (existingClient) return existingClient.id;
 
   const { data: publicClient } = await supabase
     .from('public_clients')
@@ -129,105 +110,44 @@ export async function getActiveBookingByPhone(
   phone: string,
   businessId: string,
 ): Promise<PublicBookingRecord | null> {
-  const { data, error } = await supabase.rpc('get_active_booking_by_phone', {
-    p_phone: phone,
-    p_business_id: businessId,
-  });
-
-  if (error) throw error;
-  return data?.[0] ?? null;
+  void phone;
+  void businessId;
+  return null;
 }
 
 export async function submitPublicBooking(input: SubmitPublicBookingInput): Promise<PublicBookingRecord> {
   const parsed = submitPublicBookingInputSchema.parse(input);
-
-  if (parsed.editingBookingId) {
-    const { data: updatedRows, error: updateError } = await supabase.rpc('update_public_booking_by_client_v2', {
-      p_booking_id: parsed.editingBookingId,
-      p_phone: parsed.customerPhone,
-      p_service_ids: parsed.serviceIds,
-      p_professional_id: parsed.professionalId,
-      p_appointment_time: parsed.appointmentTime,
-      p_original_appointment_time: parsed.originalAppointmentTime,
-      p_customer_name: parsed.customerName,
-      p_customer_phone: parsed.customerPhone,
-      p_total_price: parsed.totalPrice,
-      p_duration_minutes: parsed.durationMinutes,
-      p_product_lines: parsed.productLines ?? [],
-    });
-
-    if (updateError) throw updateError;
-    const updatedBooking = updatedRows?.[0];
-    if (!updatedBooking) {
-      throw new Error('Booking not found or not editable');
-    }
-
-    try {
-      await upsertPublicClientSession({
-        businessId: parsed.businessId,
-        name: parsed.customerName,
-        phone: parsed.customerPhone,
-      });
-    } catch (clientErr) {
-      console.error('Failed to upsert public client after booking edit:', clientErr);
-    }
-
-    return updatedBooking as PublicBookingRecord;
-  }
-
   const rpcArgs = {
-    p_business_id: parsed.businessId,
-    p_customer_name: parsed.customerName,
-    p_customer_phone: parsed.customerPhone,
     p_service_ids: parsed.serviceIds,
     p_professional_id: parsed.professionalId,
     p_appointment_time: parsed.appointmentTime,
+    p_customer_name: parsed.customerName,
+    p_customer_phone: parsed.customerPhone,
     p_total_price: parsed.totalPrice,
     p_duration_minutes: parsed.durationMinutes,
     p_product_lines: parsed.productLines ?? [],
   };
-
-  const { data: rpcRows, error: rpcError } = await supabase.rpc('create_public_booking', rpcArgs);
-  let created = firstRpcRow(rpcRows) as PublicBookingRecord | null;
-
-  if (rpcError) {
-    if (!isMissingRpcError(rpcError)) throw rpcError;
-
-    const { error: insertError } = await supabase
-      .from('public_bookings')
-      .insert({
-        business_id: parsed.businessId,
-        customer_name: parsed.customerName,
-        customer_phone: parsed.customerPhone,
-        service_ids: parsed.serviceIds,
-        professional_id: parsed.professionalId,
-        appointment_time: parsed.appointmentTime,
-        total_price: parsed.totalPrice,
-        status: 'pending',
-        duration_minutes: parsed.durationMinutes,
-        product_lines: parsed.productLines ?? [],
-      });
-
-    if (insertError) throw insertError;
-  }
-
-  try {
-    await upsertPublicClientSession({
-      businessId: parsed.businessId,
-      name: parsed.customerName,
-      phone: parsed.customerPhone,
+  if (parsed.editingBookingId) {
+    if (!parsed.managementToken) throw new Error('booking_not_found');
+    const { data, error } = await supabase.rpc('update_public_booking_with_token', {
+      ...rpcArgs,
+      p_booking_id: parsed.editingBookingId,
+      p_token: parsed.managementToken,
+      p_original_appointment_time: parsed.originalAppointmentTime,
     });
-  } catch (clientErr) {
-    console.error('Failed to upsert public client after booking:', clientErr);
+    if (error) throw error;
+    const booking = firstRpcRow(data) as PublicBookingRecord | null;
+    if (!booking) throw new Error('booking_not_found');
+    return { ...booking, management_token: parsed.managementToken };
   }
-
-  if (!created) {
-    created = await getActiveBookingByPhone(parsed.customerPhone, parsed.businessId);
-  }
-  if (!created) {
-    throw new Error('Booking created but could not be retrieved');
-  }
-  return created;
+  const { data, error } = await supabase.rpc('create_public_booking_private', {
+    ...rpcArgs,
+    p_business_id: parsed.businessId,
+    p_customer_email: parsed.customerEmail ?? null,
+  });
+  if (error) throw error;
+  if (!data?.booking || !data?.management_token) throw new Error('booking_private_link_missing');
+  return { ...data.booking, management_token: data.management_token, management_expires_at: data.management_expires_at };
 }
 
 export async function createAcceptedAppointmentFromBooking(
@@ -309,10 +229,10 @@ export async function rejectPublicBooking(bookingId: string, businessId: string)
   if (updateError) throw updateError;
 }
 
-export async function cancelPublicBooking(bookingId: string, phone: string): Promise<void> {
-  const { data, error } = await supabase.rpc('cancel_public_booking_by_client_v2', {
+export async function cancelPublicBooking(bookingId: string, token: string): Promise<void> {
+  const { data, error } = await supabase.rpc('cancel_public_booking_with_token', {
     p_booking_id: bookingId,
-    p_phone: phone,
+    p_token: token,
   });
   if (error) throw error;
   if (data !== true) {
@@ -344,57 +264,31 @@ export async function fetchClientBookingCancellations(
   return out;
 }
 
-export async function fetchEditBooking(editId: string, businessId: string, phone: string) {
-  const { data, error } = await supabase.rpc('get_booking_by_id_v2', {
-    p_booking_id: editId,
-    p_phone: phone,
-  });
-
-  if (error) throw error;
-  const booking = data?.[0];
-  if (!booking || booking.business_id !== businessId) {
-    return null;
-  }
-  return booking;
+export async function fetchEditBooking(editId: string, businessId: string, token: string) {
+  return fetchPublicBookingById(editId, businessId, token);
 }
 
 export async function fetchPublicClientByPhone(phone: string, businessId: string) {
-  const { data, error } = await supabase.rpc('get_public_client_by_phone', {
-    p_business_id: businessId,
-    p_phone: phone,
-  });
-
-  if (error) throw error;
-  const row = data?.[0];
-  if (!row) return null;
-  return { name: row.name, photo_url: row.photo_url ?? null };
+  void phone;
+  void businessId;
+  return null;
 }
 
 export async function fetchClientByPhone(phone: string, businessId: string) {
-  const { data, error } = await supabase
-    .from('clients')
-    .select('name, photo_url')
-    .eq('phone', phone)
-    .eq('user_id', businessId)
-    .maybeSingle();
-
-  if (error) throw error;
-  return data;
+  void phone;
+  void businessId;
+  return null;
 }
 
-export async function fetchPublicBookingById(
-  bookingId: string,
-  businessId: string,
-  phone: string,
-) {
-  const { data, error } = await supabase.rpc('get_public_booking_by_id', {
+export async function fetchPublicBookingById(bookingId: string, businessId: string, token: string) {
+  if (!token) return null;
+  const { data, error } = await supabase.rpc('get_public_booking_with_token', {
     p_booking_id: bookingId,
-    p_business_id: businessId,
-    p_phone: phone,
+    p_token: token,
   });
-
   if (error) throw error;
-  return data?.[0] ?? null;
+  const booking = data?.[0] ?? null;
+  return booking?.business_id === businessId ? booking : null;
 }
 
 export type AvailableSlotsEmptyReason = 'lead_time' | null;

@@ -23,7 +23,7 @@ BEGIN
   IF observed IS DISTINCT FROM 'Changed by fictional visitor' THEN
     RAISE EXCEPTION 'PUBLIC_CLIENT_WRITE_NOT_REPRODUCED';
   END IF;
-  RAISE WARNING 'CONFIRMED OPEN: visitor reads PII and changes another client using phone suffix, without possession proof';
+  RAISE WARNING 'CONFIRMED HISTORICAL BASELINE (before SEC-02 fix): visitor reads PII and changes another client using phone suffix, without possession proof';
 END $$;
 RESET ROLE;
 

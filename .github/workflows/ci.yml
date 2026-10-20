@@ -29,22 +29,28 @@ jobs:
         run: npm ci
 
       - name: Typecheck
+        if: ${{ !cancelled() }}
         run: npm run typecheck
 
       - name: Lint
+        if: ${{ !cancelled() }}
         run: npm run lint
 
       - name: Build
+        if: ${{ !cancelled() }}
         run: npm run build
 
       - name: Run tests
+        if: ${{ !cancelled() }}
         run: npm test -- --run
 
       - uses: denoland/setup-deno@v2
+        if: ${{ !cancelled() }}
         with:
           deno-version: v2.x
 
       - name: Check Edge Function
+        if: ${{ !cancelled() }}
         run: deno check --config supabase/functions/meta-capi/deno.json supabase/functions/meta-capi/index.ts
 
       - name: Coverage report

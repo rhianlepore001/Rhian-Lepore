@@ -84,9 +84,8 @@ export function createMetaCapiHandler(config: Config): (request: Request) => Pro
       if (!reader) return response(400, 'Invalid payload');
       const chunks: Uint8Array[] = [];
       let size = 0;
-      while (true) {
-        const { done, value: chunk } = await reader.read();
-        if (done) break;
+      for (let part = await reader.read(); !part.done; part = await reader.read()) {
+        const chunk = part.value;
         size += chunk.byteLength;
         if (size > MAX_BYTES) { await reader.cancel(); return response(413, 'Payload too large'); }
         chunks.push(chunk);

@@ -17,7 +17,10 @@ Secrets da Edge Function `meta-capi`:
 | `META_TEST_EVENT_CODE` | Opcional, código temporário da aba Testar eventos |
 
 Sem ID/token/origem permitida a função falha fechada. Nenhum desses secrets usa prefixo `VITE_`.
-A função é pública porque PageView e Lead precedem o login (`verify_jwt = false`).
+A função precisa aceitar chamadas anteriores ao login (`verify_jwt = false`).
+Para servir localmente, consulte `supabase functions serve --help` e use
+`--no-verify-jwt` com um arquivo de secrets local não versionado.
+Nenhuma configuração global `supabase/config.toml` é adicionada por este PR.
 A origem, o consentimento declarado, o corpo, as rotas e os eventos são validados pelo handler.
 Origem e consentimento no payload não constituem autenticação nem prova criptográfica de consentimento.
 
@@ -30,21 +33,29 @@ O código usa Graph API v25.0. Revise a versão no ciclo de manutenção da inte
   Alterações de rota do HashRouter geram novo evento; render duplicado do StrictMode não.
 - Convites com `company` ou `member`, qualquer rota autenticada,
   onboarding e páginas públicas de clientes ficam excluídos.
-- Lead na abertura do cadastro com consentimento; o primeiro submit é uma proteção adicional,
-  sem duplicar o evento da abertura.
-- CompleteRegistration após `supabase.auth.signUp` confirmar um novo usuário,
-  inclusive quando o e-mail precisa de confirmação. Não depende do envio do formulário ou do
-  redirecionamento. Erro, usuário ausente, identidades vazias/e-mail existente e vínculo de
-  colaborador não contam. Se a conta foi criada, uma falha posterior no perfil/onboarding
-  não desfaz esse fato.
+- Lead somente no início do envio do formulário com consentimento, uma vez por visita ao
+  cadastro. Abrir a página não gera Lead.
+- CompleteRegistration somente após o fluxo inteiro retornar sucesso: Auth, criação/garantia
+  de empresa e perfil e configuração de onboarding. Exige `authData.user.identities?.length > 0`.
+  Erro em qualquer etapa, identidade ausente/vazia, e-mail existente e vínculo de colaborador
+  não geram o evento. Não há evento em sucesso parcial.
 - O contexto de rastreamento é capturado antes da chamada Auth para suportar a mudança de
-  sessão durante o cadastro. O consentimento é conferido novamente no envio.
+  sessão durante o cadastro. Consentimento e URL atual são conferidos novamente no envio.
+  Se sair do cadastro enquanto o backend está pendente, o evento tardio é descartado
+  no navegador e na CAPI, mesmo que o usuário retorne depois.
 - O navegador e a CAPI compartilham `event_name` e `event_id` (UUID) para deduplicação.
 - URLs enviadas pela CAPI contêm apenas origem, caminho e rota; sem query de cadastro,
   tokens de convite, senha, nome ou informações do negócio.
 - E-mail normalizado e telefone internacional são convertidos para SHA-256 no servidor.
   IP vem do cabeçalho de encaminhamento do gateway; user agent vem da requisição.
   Nome, senha e dados operacionais não são enviados.
+- `fbq.disablePushState = true` e `fbq.allowDuplicatePageViews = true` são definidos antes
+  do init e da inserção do script. PageViews são explícitos e deduplicados pelo app.
+  O script só é inserido em /login e /register com consentimento. A URL real do documento
+  é validada novamente a cada chamada: queries desconhecidas, tokens, convites e caminhos
+  públicos/privados impedem o envio. Somente `type=barber|beauty` é aceito no cadastro;
+  parâmetros fora do hash também bloqueiam rastreamento. Ao sair, a fila é esvaziada
+  no próprio array, chamadas tardias são descartadas e o elemento script é removido.
 - Autoconfiguração do Pixel é desativada. **Desative também os eventos automáticos e
   regras criadas na ferramenta de configuração de eventos no Gerenciador de Eventos**,
   para manter somente os eventos explícitos desta integração.
@@ -82,18 +93,21 @@ Estes passos são instruções para validação futura; não foram executados em
 2. Em um Supabase local ou de desenvolvimento, configure os secrets acima, incluindo
    `META_TEST_EVENT_CODE`. Para desenvolvimento local, use uma origem como
    `http://localhost:3000` em `META_ALLOWED_ORIGINS`.
-   Sirva a função localmente com a configuração pública de `supabase/config.toml`.
    Antes de usar o CLI instalado, consulte `supabase functions serve --help`.
+   Sirva somente esta função com `--no-verify-jwt` e seus secrets locais.
+   O projeto local pode usar a configuração gerada pelo próprio CLI; este PR não adiciona
+   nem altera configuração global do Supabase.
    O frontend deve apontar para esse mesmo Supabase, com suas chaves públicas locais.
    Não execute deploy para realizar esta revisão.
 3. Inicie o Vite com o mesmo Pixel ID e abra `/#/login` em navegador limpo.
    Antes da escolha e após Recusar, a aba Network não deve mostrar fbevents.js,
    facebook.com/tr nem meta-capi.
 4. Abra Preferências de cookies e aceite. Confirme PageView. Navegue pelo próprio app
-   ao cadastro: confirme novo PageView e um Lead, sem duplicação ao enviar o formulário.
+   ao cadastro: confirme novo PageView e nenhum Lead até iniciar o envio. O primeiro envio
+   gera um Lead; tentativas repetidas na mesma visita não duplicam o evento.
 5. Envie um cadastro inválido ou com e-mail já existente: nenhum CompleteRegistration.
-   Crie uma nova conta de teste com dados de teste: somente após o Auth confirmar o usuário
-   deve aparecer CompleteRegistration. Não use dados pessoais reais.
+   Crie uma nova conta de teste com dados de teste: CompleteRegistration só aparece após
+   Auth, empresa/perfil e onboarding concluírem com sucesso, com identidades não vazias. Não use dados pessoais reais.
 6. Em Test Events, inspecione navegador/servidor. Os pares precisam compartilhar nome
    e ID do evento e aparecer como deduplicados. O código de teste pertence ao corpo CAPI,
    não ao frontend. A ferramenta de teste do navegador/Meta Pixel Helper pode ajudar a
@@ -107,8 +121,9 @@ Não foi feito deploy nem configuração de secrets como parte deste PR.
 
 ## Limites operacionais
 
-Rate limit básico de 30 requisições por IP por minuto, em memória por instância aquecida,
-com limite de 10 mil chaves e expiração. Reinício e outras instâncias têm contadores próprios.
+Rate limit básico de 30 requisições por IP por minuto, em memória **por isolate** aquecido,
+com limite de 10 mil chaves e expiração. Reinícios e outros isolates têm contadores próprios;
+não existe limite global compartilhado entre instâncias.
 O gateway Supabase precisa fornecer um cabeçalho de IP confiável; não exponha o handler
 diretamente sem sanitizar esse cabeçalho. Para tráfego maior, substituir por contador
 compartilhado/gateway antes de escalar.

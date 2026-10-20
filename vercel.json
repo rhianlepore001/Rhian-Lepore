@@ -31,10 +31,5 @@
                 }
             ]
         }
-    ],
-    "git": {
-        "deploymentEnabled": {
-            "feat/meta-pixel": false
-        }
-    }
+    ]
 }

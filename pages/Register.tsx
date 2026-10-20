@@ -190,9 +190,9 @@ export const Register: React.FC = () => {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isInvitedStaff) metaTracker.lead();
     if (submittingRef.current) return;
     submittingRef.current = true;
+    if (!isInvitedStaff) metaTracker.lead();
     setLoading(true);
     setError(null);
     setErrorAction(null);

@@ -43,7 +43,7 @@ for (const width of [393, 1280]) {
     await expect.poll(async () => page.evaluate(() => window.fbq?.queue.filter(args => args[2] === 'Lead').length)).toBe(1);
     await page.getByRole('button', { name: 'Preferências de cookies' }).click();
     await page.getByRole('button', { name: 'Recusar', exact: true }).click();
-    await expect.poll(async () => page.evaluate(() => window.fbq?.queue.at(-1)?.[1])).toBe('revoke');
+    await expect.poll(async () => page.evaluate(() => window.fbq?.queue.length)).toBe(0);
     await page.reload();
     expect(pixelRequests).toBe(1);
     await expect(page.locator('#agendix-meta-pixel')).toHaveCount(0);
@@ -56,4 +56,55 @@ test('never injects Meta on a public booking route', async ({ page }) => {
   await expect(page.locator('#root')).not.toBeEmpty();
   await expect(page.locator('#agendix-meta-pixel')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Preferências de cookies' })).toHaveCount(0);
+});
+
+
+test('keeps private URLs and tokens out of browser and server events after marketing navigation', async ({ page }) => {
+  const browserUrls: string[] = [];
+  const serverEvents: { event_name: string; event_source_url: string }[] = [];
+  await page.route('https://www.facebook.com/tr/**', async route => {
+    browserUrls.push(new URL(route.request().url()).searchParams.get('dl') || '');
+    await route.fulfill({ status: 200, body: '', headers: { 'Access-Control-Allow-Origin': '*' } });
+  });
+  await page.route('https://example.supabase.co/functions/v1/meta-capi', async route => {
+    if (route.request().method() === 'POST') serverEvents.push(route.request().postDataJSON());
+    await route.fulfill({ status: 200, body: '{}', headers: { 'Access-Control-Allow-Origin': '*' } });
+  });
+  await page.route('https://connect.facebook.net/**', route => route.fulfill({
+    contentType: 'application/javascript',
+    body: `
+      const pixel = window.fbq;
+      let consented = true;
+      pixel.callMethod = (...args) => {
+        if (args[0] === 'consent') consented = args[1] === 'grant';
+        if (args[0] === 'trackSingle' && consented) {
+          fetch('https://www.facebook.com/tr/?dl=' + encodeURIComponent(location.href));
+        }
+      };
+      const queued = pixel.queue.splice(0);
+      queued.forEach(args => pixel.callMethod(...args));
+      if (!pixel.disablePushState) {
+        window.addEventListener('hashchange', () => {
+          pixel.callMethod('trackSingle', '123456789', 'PageView');
+        });
+      }
+    `,
+  }));
+  await page.goto('/#/login');
+  await page.getByRole('button', { name: 'Aceitar', exact: true }).click();
+  await expect.poll(() => browserUrls.length).toBe(1);
+  await page.goto('/#/register');
+  await expect(page.getByLabel('Seu nome')).toBeVisible();
+  await expect.poll(() => browserUrls.length).toBe(2);
+  await expect.poll(() => serverEvents.length).toBe(2);
+  for (const url of ['/#/book/private?token=secret', '/#/minha-area/private?token=secret', '/#/register?token=secret']) {
+    await page.goto(url);
+    await page.evaluate(() => window.fbq?.('trackSingle', '123456789', 'PageView', {}, { eventID: 'late' }));
+    await page.waitForLoadState('networkidle');
+    expect(browserUrls).toHaveLength(2);
+    expect(serverEvents).toHaveLength(2);
+    expect(await page.evaluate(() => window.fbq?.queue.length || 0)).toBe(0);
+  }
+  expect(browserUrls.every(url => !/book|private|minha-area|token/.test(url))).toBe(true);
+  expect(serverEvents.every(event => event.event_name === 'PageView')).toBe(true);
 });

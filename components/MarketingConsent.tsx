@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useSyncExternalStore } from 'react';
+import React, { useEffect, useLayoutEffect, useState, useSyncExternalStore } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { isMetaRoute, metaTracker, setMetaScope } from '../lib/metaTracking';
@@ -12,10 +12,9 @@ export const MarketingConsent: React.FC = () => {
   const eligible = !loading && isMetaRoute(pathname, search, isAuthenticated);
   const legal = pathname === '/privacidade' || pathname === '/termos';
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setMetaScope(eligible && consent === 'accepted');
     metaTracker.pageView(pathname, search, isAuthenticated || loading);
-    if (eligible && consent === 'accepted' && pathname === '/register') metaTracker.lead();
   }, [pathname, search, isAuthenticated, loading, consent, eligible]);
 
   useEffect(() => {

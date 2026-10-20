@@ -14,26 +14,33 @@ interface RegistrationContext { id: string; source: string }
 interface TrackerOptions {
   pixelId: string;
   hasConsent: () => boolean;
+  canSend?: (source: string) => boolean;
   pixel: (name: MetaEventName, id: string) => void;
   send: (event: MetaEvent) => Promise<unknown>;
 }
 
 export function isMetaRoute(path: string, search: string, authenticated: boolean): boolean {
-  if (authenticated) return false;
-  if (path === '/login') return true;
-  return path === '/register' && !new URLSearchParams(search).has('company') && !new URLSearchParams(search).has('member');
+  if (authenticated || !['/login', '/register'].includes(path)) return false;
+  const params = new URLSearchParams(search);
+  return Array.from(params).every(([key, value]) =>
+    path === '/register' && key === 'type' && ['barber', 'beauty'].includes(value),
+  ) && params.getAll('type').length <= 1;
 }
 
 export function createMetaTracker(options: TrackerOptions) {
   let eligible = false;
   let source = '';
   let path = '';
+  let search = '';
+  let visit = 0;
   let lastPage = '';
   let leadSent = false;
+  const registrations = new WeakMap<RegistrationContext, number>();
   const completed = new WeakSet<RegistrationContext>();
-  const enabled = () => Boolean(options.pixelId.trim()) && options.hasConsent();
+  const enabled = (eventSource: string) => Boolean(options.pixelId.trim())
+    && options.hasConsent() && (options.canSend?.(eventSource) ?? true);
   const emit = (name: MetaEventName, eventSource: string, id: string = crypto.randomUUID(), identity?: Identity) => {
-    if (!enabled()) return;
+    if (!enabled(eventSource)) return;
     try { options.pixel(name, id); } catch { void 0; }
     try {
       void options.send({
@@ -44,27 +51,36 @@ export function createMetaTracker(options: TrackerOptions) {
     } catch { void 0; }
   };
   return {
-    pageView(nextPath: string, search: string, authenticated: boolean) {
-      if (nextPath !== path) leadSent = false;
+    pageView(nextPath: string, nextSearch: string, authenticated: boolean) {
+      if (nextPath !== path || nextSearch !== search) {
+        visit += 1;
+        leadSent = false;
+      }
       path = nextPath;
+      search = nextSearch;
       eligible = isMetaRoute(path, search, authenticated);
       source = window.location.origin + window.location.pathname + '#' + path;
-      if (!eligible || !enabled()) { lastPage = ''; return; }
+      if (!eligible || !enabled(source)) { lastPage = ''; return; }
       const key = path + search;
       if (lastPage === key) return;
       lastPage = key;
       emit('PageView', source);
     },
     lead() {
-      if (!eligible || path !== '/register' || leadSent || !enabled()) return;
+      if (!eligible || path !== '/register' || leadSent || !enabled(source)) return;
       leadSent = true;
       emit('Lead', source);
     },
     captureRegistration(): RegistrationContext | null {
-      return eligible && path === '/register' && enabled() ? { id: crypto.randomUUID(), source } : null;
+      if (!eligible || path !== '/register' || !enabled(source)) return null;
+      const context = { id: crypto.randomUUID(), source };
+      registrations.set(context, visit);
+      return context;
     },
     completeRegistration(context: RegistrationContext | null, identity: Identity) {
-      if (!context || completed.has(context) || !enabled()) return;
+      if (!context || completed.has(context) || registrations.get(context) !== visit
+        || path !== '/register' || !isMetaRoute(path, search, false)
+        || context.source !== source || !enabled(context.source)) return;
       completed.add(context);
       emit('CompleteRegistration', context.source, context.id, identity);
     },
@@ -78,6 +94,8 @@ interface PixelQueue {
   push: PixelQueue;
   loaded: boolean;
   version: string;
+  disablePushState: boolean;
+  allowDuplicatePageViews: boolean;
 }
 declare global {
   interface Window { fbq?: PixelQueue; _fbq?: PixelQueue }
@@ -86,11 +104,39 @@ declare global {
 const pixelId = (import.meta.env.VITE_META_PIXEL_ID || '').trim();
 let loaded = false;
 let scopeAllowed = false;
+let completingRegistration = false;
 let pending = new AbortController();
 
+function currentMetaSource(): string | null {
+  const { pathname, search, hash, origin } = window.location;
+  if (!['/', '/index.html'].includes(pathname) || search || !hash.startsWith('#/')) return null;
+  const route = hash.slice(1);
+  const separator = route.indexOf('?');
+  const path = separator < 0 ? route : route.slice(0, separator);
+  const query = separator < 0 ? '' : route.slice(separator + 1);
+  if (!isMetaRoute(path, query, false)) return null;
+  return origin + pathname + '#' + path;
+}
+
+function canUsePixel(): boolean {
+  return Boolean(pixelId && currentMetaSource()) && readConsent() === 'accepted'
+    && (scopeAllowed || completingRegistration);
+}
+
+function discardPixelQueue(): void {
+  const queue = window.fbq;
+  if (queue) {
+    queue.queue.length = 0;
+    queue.callMethod?.('consent', 'revoke');
+  }
+  document.getElementById('agendix-meta-pixel')?.remove();
+  if (!queue?.callMethod) loaded = false;
+}
+
 function loadPixel(): void {
-  if (loaded || !pixelId || readConsent() !== 'accepted') return;
+  if (loaded || !canUsePixel()) return;
   const queue = function (...args: unknown[]) {
+    if (!canUsePixel()) return;
     if (queue.callMethod) queue.callMethod(...args);
     else queue.queue.push(args);
   } as PixelQueue;
@@ -98,6 +144,8 @@ function loadPixel(): void {
   queue.push = queue;
   queue.loaded = true;
   queue.version = '2.0';
+  queue.disablePushState = true;
+  queue.allowDuplicatePageViews = true;
   window.fbq = window._fbq = queue;
   queue('consent', 'grant');
   queue('set', 'autoConfig', false, pixelId);
@@ -105,41 +153,57 @@ function loadPixel(): void {
   const script = document.createElement('script');
   script.id = 'agendix-meta-pixel';
   script.async = true;
+  script.referrerPolicy = 'no-referrer';
   script.src = 'https://connect.facebook.net/en_US/fbevents.js';
   document.head.appendChild(script);
   loaded = true;
 }
 
 export function setMetaScope(allowed: boolean): void {
-  scopeAllowed = allowed && readConsent() === 'accepted';
+  const consented = readConsent() === 'accepted';
+  scopeAllowed = allowed && consented && Boolean(currentMetaSource());
   if (!scopeAllowed) {
-    if (readConsent() !== 'accepted') {
+    if (!currentMetaSource() || !consented) {
+      discardPixelQueue();
+    } else {
+      window.fbq?.callMethod?.('consent', 'revoke');
+    }
+    if (!consented) {
       pending.abort();
       pending = new AbortController();
       clearMetaCookies();
-    }
-    if (window.fbq) {
-      window.fbq.queue = [];
-      window.fbq('consent', 'revoke');
     }
   } else if (loaded) {
     window.fbq?.('consent', 'grant');
   }
 }
 
+const guardLocation = () => {
+  if (!currentMetaSource()) setMetaScope(false);
+};
+window.addEventListener('hashchange', guardLocation);
+window.addEventListener('popstate', guardLocation);
+
 export const metaTracker = createMetaTracker({
   pixelId,
   hasConsent: () => readConsent() === 'accepted',
+  canSend: source => currentMetaSource() === source,
   pixel: (name, id) => {
-    loadPixel();
-    window.fbq?.('consent', 'grant');
-    window.fbq?.('trackSingle', pixelId, name, {}, { eventID: id });
-    if (!scopeAllowed) window.fbq?.('consent', 'revoke');
+    if (!currentMetaSource() || (!scopeAllowed && name !== 'CompleteRegistration')) return;
+    completingRegistration = name === 'CompleteRegistration';
+    try {
+      loadPixel();
+      window.fbq?.('consent', 'grant');
+      window.fbq?.('trackSingle', pixelId, name, {}, { eventID: id });
+    } finally {
+      completingRegistration = false;
+      if (!scopeAllowed) window.fbq?.callMethod?.('consent', 'revoke');
+    }
   },
   send: async event => {
     const url = import.meta.env.VITE_SUPABASE_URL;
     const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
-    if (!url || !key || readConsent() !== 'accepted') return;
+    if (!url || !key || readConsent() !== 'accepted' || currentMetaSource() !== event.event_source_url) return;
     await fetch(url + '/functions/v1/meta-capi', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', apikey: key },

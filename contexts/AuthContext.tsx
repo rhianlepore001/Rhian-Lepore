@@ -446,10 +446,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (authError) return { error: authError };
 
       if (authData.user) {
-        if (trackingContext) metaTracker.completeRegistration(trackingContext, {
-          email: data.email,
-          phone: normalizeMetaPhone(data.phone, data.region),
-        });
         const resolvedCompanyId = data.companyId || authData.user.id;
 
         if (isStaffInvite && !authData.session) {
@@ -497,6 +493,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
 
         if (onboardingError) return { error: onboardingError };
+
+        if (trackingContext && (authData.user.identities?.length ?? 0) > 0) {
+          metaTracker.completeRegistration(trackingContext, {
+            email: data.email,
+            phone: normalizeMetaPhone(data.phone, data.region),
+          });
+        }
       }
 
       return { error: null };

@@ -9,10 +9,6 @@
 
 ---
 
-## Meta Pixel e CAPI — 20 Out 2026 (draft, sem deploy)
-
-Branch `feat/meta-pixel`, PR #161. Consentimento de marketing com aceitar/recusar e revisão da escolha; eventos somente na entrada/cadastro de novas contas. Edge Function `meta-capi` proposta no código, sem alteração remota de função/secrets. Guia de Test Events em `docs/meta-pixel.md`; CI captura banner 393px/1280px com stubs. Deploy Git desabilitado especificamente para este branch. Ambiente cloud falhou ao iniciar; validação via GitHub Actions. Grafo não atualizado localmente por indisponibilidade do executor.
-
 ## Finance PR-C — gráfico Entradas e saídas + fuso do mês (4 Out 2026, draft)
 
 Branch `cursor/fin-c-cashflow-chart-e4e7`. Só frontend. SVG próprio (sem recharts na rota Financeiro); semanas no mobile / dias no desktop; intervalo `[start,end)` ISO no fuso do negócio; react-query paralelo; histórico só na aba Histórico. Prints em `/opt/cursor/artifacts/screenshots/fin-c/`.

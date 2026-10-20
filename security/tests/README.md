@@ -38,7 +38,7 @@ Os scripts oficiais `scripts/test-sql-*.sh` continuam nos diretórios do projeto
 
 ## Inventário e catálogo
 
-`python3 security/tests/inventory.py` atualiza `source-inventory.json`. É inventário por regex de declarações históricas, com hashes dos arquivos e linhas; não resolve DO dinâmico, overloads/renames nem estado efetivo de CREATE/DROP. Inclui USING/WITH CHECK e operações/papéis nas declarações de policies.
+`python3 security/tests/inventory.py` gera `source-inventory.json` localmente (excluído do Git). É inventário por regex de declarações históricas, com hashes dos arquivos e linhas; não resolve DO dinâmico, overloads/renames nem estado efetivo de CREATE/DROP. Inclui USING/WITH CHECK e operações/papéis nas declarações de policies.
 
 `catalog.sql` contém apenas consultas de metadados, em transação READ ONLY, para uma cópia **local autorizada e fiel**. Não contém consultas de linhas de clientes. O resultado desse catálogo não foi obtido de produção.
 

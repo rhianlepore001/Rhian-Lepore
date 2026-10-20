@@ -1,13 +1,5 @@
 # MEMORY.md — Estado do Projeto (memória compartilhada)
 
-## Entrega da auditoria para revisão (20 Out 2026)
-
-Versionamento autorizado na branch `security/hardening-audit`, com commit descritivo e PR único em rascunho contra `main`. O escopo inclui relatórios, correções, testes, migration/rollback e preparo isolado do laboratório local. Merge e deploy permanecem proibidos. Ver `security/summary.md` para pendências e limites da validação.
-
-## Auditoria preventiva local (19 Out 2026)
-
-Relatórios em `security/summary.md`, `security/recon.md` e `security/findings.md`; testes e revisões separados por tema. Verificações locais de qualidade e PostgreSQL executadas com dados fictícios. Nenhum commit, push, merge, deploy ou alteração remota realizada. Há pendências de validação integrada e decisões do responsável; consultar o resumo antes de publicar. Não considerar esta auditoria uma certificação de produção.
-
 > Memória de projeto compartilhada entre máquinas/sessões do Claude Code (local + VPS).
 > Mantenha atualizado conforme o trabalho avança. Datas em formato absoluto.
 >

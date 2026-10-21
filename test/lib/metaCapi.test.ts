@@ -6,7 +6,10 @@ const origin = 'https://app.example.com';
 const payload = () => ({
   consent: true, event_name: 'CompleteRegistration', event_id: '8efdc721-ff7c-4c90-9101-e053cde1f649',
   event_time: Math.floor(Date.now() / 1000), event_source_url: origin + '/#/register',
-  user_data: { email: ' PERSON@EXAMPLE.COM ', phone: '+351 912 345 678' },
+  user_data: {
+    email: ' PERSON@EXAMPLE.COM ', phone: '+351 912 345 678',
+    fbp: 'fb.1.1234567890.1234567890', fbc: 'fb.1.1234567890.click_123',
+  },
 });
 const setup = (extra = {}) => {
   const fetcher = vi.fn().mockResolvedValue(new Response(JSON.stringify({ events_received: 1 }), { status: 200 }));
@@ -36,6 +39,8 @@ describe('meta-capi', () => {
     const hash = async (value: string) => Array.from(new Uint8Array(await webcrypto.subtle.digest('SHA-256', new TextEncoder().encode(value)))).map(b => b.toString(16).padStart(2, '0')).join('');
     expect(event.user_data.em).toEqual([await hash('person@example.com')]);
     expect(event.user_data.ph).toEqual([await hash('351912345678')]);
+    expect(event.user_data.fbp).toBe('fb.1.1234567890.1234567890');
+    expect(event.user_data.fbc).toBe('fb.1.1234567890.click_123');
     expect(event.user_data.client_ip_address).toBe('203.0.113.4');
     expect(event.user_data.client_user_agent).toBe('test-agent');
     expect(JSON.stringify(body)).not.toContain('PERSON@');
@@ -43,12 +48,34 @@ describe('meta-capi', () => {
   it.each([
     { consent: false }, { event_name: 'Purchase' }, { event_id: 'bad' },
     { event_source_url: origin + '/#/book/demo' }, { event_source_url: 'https://evil.example/#/register' },
+    { event_source_url: origin + '/?fbclid=private#/register' },
     { event_source_url: origin + '/#/register?email=private@example.com' },
     { event_time: 0 }, { user_data: { email: 'bad' } }, { user_data: { phone: '123' } },
   ])('rejects invalid payload %j without contacting Meta', async patch => {
     const s = setup();
     expect((await s.handler(s.request({ ...payload(), ...patch }))).status).toBe(400);
     expect(s.fetcher).not.toHaveBeenCalled();
+  });
+  it.each([
+    { fbp: 'not-an-fb-cookie' },
+    { fbc: 'fb.1.no-timestamp.click' },
+    { fbp: 'fb.1.123.click'.padEnd(257, 'x') },
+    { unknown: 'value' },
+  ])('rejects malformed or unknown browser identifiers %j', async patch => {
+    const s = setup();
+    const body = payload();
+    Object.assign(body.user_data, patch);
+    expect((await s.handler(s.request(body))).status).toBe(400);
+    expect(s.fetcher).not.toHaveBeenCalled();
+  });
+  it('accepts events without optional browser identifiers', async () => {
+    const s = setup();
+    const body = payload();
+    const { email, phone } = body.user_data;
+    expect((await s.handler(s.request({ ...body, user_data: { email, phone } }))).status).toBe(200);
+    const forwarded = JSON.parse(s.fetcher.mock.calls[0][1].body).data[0].user_data;
+    expect(forwarded).not.toHaveProperty('fbp');
+    expect(forwarded).not.toHaveProperty('fbc');
   });
   it('rejects wrong origins, methods, malformed and oversized JSON', async () => {
     const s = setup();

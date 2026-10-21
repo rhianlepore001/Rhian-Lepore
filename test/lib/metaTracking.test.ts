@@ -70,6 +70,35 @@ describe('Meta tracking', () => {
       }
     }
   });
+  it('includes Meta cookies in server events only after consent', () => {
+    document.cookie = '_fbp=fb.1.1234567890.1234567890; path=/';
+    document.cookie = '_fbc=fb.1.1234567890.click_123; path=/';
+    try {
+      const s = setup();
+      s.tracker.pageView('/login', '', false);
+      expect(s.send).not.toHaveBeenCalled();
+
+      s.accept();
+      s.tracker.pageView('/login', '', false);
+      expect(s.send.mock.calls[0][0].user_data).toMatchObject({
+        fbp: 'fb.1.1234567890.1234567890',
+        fbc: 'fb.1.1234567890.click_123',
+      });
+    } finally {
+      document.cookie = '_fbp=; Max-Age=0; path=/';
+      document.cookie = '_fbc=; Max-Age=0; path=/';
+    }
+  });
+  it('creates fbc from fbclid when the fbc cookie is absent', () => {
+    window.history.replaceState(null, '', '/?fbclid=IwAR_click-123#/login');
+    try {
+      const s = setup(); s.accept();
+      s.tracker.pageView('/login', '', false);
+      expect(s.send.mock.calls[0][0].user_data?.fbc).toMatch(/^fb\.1\.\d+\.IwAR_click-123$/);
+    } finally {
+      window.history.replaceState(null, '', '/');
+    }
+  });
   it('deduplicates StrictMode and uses the same ID for browser and server', () => {
     const s = setup(); s.accept();
     s.tracker.pageView('/login', '', false);

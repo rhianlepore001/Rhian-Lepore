@@ -1,7 +1,7 @@
 import { clearMetaCookies, readConsent } from './marketingConsent';
 
 type MetaEventName = 'PageView' | 'Lead' | 'CompleteRegistration';
-interface Identity { email?: string; phone?: string }
+interface Identity { email?: string; phone?: string; fbp?: string; fbc?: string }
 export interface MetaEvent {
   consent: true;
   event_name: MetaEventName;
@@ -41,12 +41,17 @@ export function createMetaTracker(options: TrackerOptions) {
     && options.hasConsent() && (options.canSend?.(eventSource) ?? true);
   const emit = (name: MetaEventName, eventSource: string, id: string = crypto.randomUUID(), identity?: Identity) => {
     if (!enabled(eventSource)) return;
+    const userData: Identity = { ...identity };
+    const fbp = readMetaCookie('_fbp');
+    const fbc = readMetaCookie('_fbc') || createFbcFromFbclid();
+    if (fbp) userData.fbp = fbp;
+    if (fbc) userData.fbc = fbc;
     try { options.pixel(name, id); } catch { void 0; }
     try {
       void options.send({
         consent: true, event_name: name, event_id: id,
         event_time: Math.floor(Date.now() / 1000), event_source_url: eventSource,
-        ...(identity ? { user_data: identity } : {}),
+        ...(Object.keys(userData).length ? { user_data: userData } : {}),
       }).catch(() => undefined);
     } catch { void 0; }
   };
@@ -102,20 +107,37 @@ declare global {
 }
 
 const pixelId = (import.meta.env.VITE_META_PIXEL_ID || '').trim();
+const META_SEARCH_PARAMS = new Set(['fbclid', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term']);
+const META_COOKIE_VALUE = /^fb\.\d\.\d+\.[A-Za-z0-9_.-]+$/;
 let loaded = false;
 let scopeAllowed = false;
 let completingRegistration = false;
 let pending = new AbortController();
 
-function currentMetaSource(): string | null {
+export function currentMetaSource(): string | null {
   const { pathname, search, hash, origin } = window.location;
-  if (!['/', '/index.html'].includes(pathname) || search || !hash.startsWith('#/')) return null;
+  if (!['/', '/index.html'].includes(pathname) || !hash.startsWith('#/')) return null;
+  if (Array.from(new URLSearchParams(search).keys()).some(key => !META_SEARCH_PARAMS.has(key))) return null;
   const route = hash.slice(1);
   const separator = route.indexOf('?');
   const path = separator < 0 ? route : route.slice(0, separator);
   const query = separator < 0 ? '' : route.slice(separator + 1);
   if (!isMetaRoute(path, query, false)) return null;
   return origin + pathname + '#' + path;
+}
+
+function readMetaCookie(name: '_fbp' | '_fbc'): string | undefined {
+  const prefix = name + '=';
+  const entry = document.cookie.split(';').map(cookie => cookie.trim()).find(cookie => cookie.startsWith(prefix));
+  const value = entry?.slice(prefix.length);
+  return value && value.length <= 256 && META_COOKIE_VALUE.test(value) ? value : undefined;
+}
+
+function createFbcFromFbclid(): string | undefined {
+  const fbclid = new URLSearchParams(window.location.search).get('fbclid');
+  if (!fbclid || !/^[A-Za-z0-9_.-]+$/.test(fbclid)) return undefined;
+  const value = 'fb.1.' + Date.now() + '.' + fbclid;
+  return value.length <= 256 ? value : undefined;
 }
 
 function canUsePixel(): boolean {

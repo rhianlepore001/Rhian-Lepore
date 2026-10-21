@@ -44,18 +44,23 @@ O código usa Graph API v25.0. Revise a versão no ciclo de manutenção da inte
   Se sair do cadastro enquanto o backend está pendente, o evento tardio é descartado
   no navegador e na CAPI, mesmo que o usuário retorne depois.
 - O navegador e a CAPI compartilham `event_name` e `event_id` (UUID) para deduplicação.
-- URLs enviadas pela CAPI contêm apenas origem, caminho e rota; sem query de cadastro,
-  tokens de convite, senha, nome ou informações do negócio.
+- `event_source_url` da CAPI contém apenas origem, caminho e rota permitida, sem query de
+  anúncio ou de cadastro; o contexto capturado pelo tracker segue a mesma URL sanitizada.
 - E-mail normalizado e telefone internacional são convertidos para SHA-256 no servidor.
   IP vem do cabeçalho de encaminhamento do gateway; user agent vem da requisição.
-  Nome, senha e dados operacionais não são enviados.
+  `_fbp` e `_fbc` são enviados sem hash quando os cookies existem após consentimento.
+  Se `_fbc` não existir e a URL tiver `fbclid`, o app gera `fb.1.<timestamp ms>.<fbclid>`.
+  O servidor aceita esses identificadores somente no formato `fb.<n>.<timestamp>.<id>`
+  e com até 256 caracteres. Nome, senha e dados operacionais não são enviados.
 - `fbq.disablePushState = true` e `fbq.allowDuplicatePageViews = true` são definidos antes
   do init e da inserção do script. PageViews são explícitos e deduplicados pelo app.
   O script só é inserido em /login e /register com consentimento. A URL real do documento
   é validada novamente a cada chamada: queries desconhecidas, tokens, convites e caminhos
-  públicos/privados impedem o envio. Somente `type=barber|beauty` é aceito no cadastro;
-  parâmetros fora do hash também bloqueiam rastreamento. Ao sair, a fila é esvaziada
-  no próprio array, chamadas tardias são descartadas e o elemento script é removido.
+  públicos/privados impedem o envio. Somente `type=barber|beauty` é aceito no cadastro.
+  Na query externa ao hash, são permitidos apenas `fbclid`, `utm_source`, `utm_medium`,
+  `utm_campaign`, `utm_content` e `utm_term`; qualquer outro parâmetro bloqueia rastreamento.
+  Ao sair, a fila é esvaziada no próprio array, chamadas tardias são descartadas e o elemento
+  script é removido.
 - Autoconfiguração do Pixel é desativada. **Desative também os eventos automáticos e
   regras criadas na ferramenta de configuração de eventos no Gerenciador de Eventos**,
   para manter somente os eventos explícitos desta integração.

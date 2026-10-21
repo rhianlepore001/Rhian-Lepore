@@ -42,6 +42,26 @@ describe('Meta browser adapter privacy', () => {
     expect(snapshots).toEqual([{ disablePushState: true, allowDuplicatePageViews: true, initialized: true }]);
   });
 
+  it('allows only attribution query parameters and keeps them out of the Pixel source URL', async () => {
+    window.history.replaceState(null, '', '/?fbclid=IwAR_click-123&utm_source=meta&utm_medium=paid&utm_campaign=spring&utm_content=ad1&utm_term=hair#/login');
+    const { currentMetaSource, metaTracker, setMetaScope } = await import('@/lib/metaTracking');
+    expect(currentMetaSource()).toBe(window.location.origin + '/#/login');
+    setMetaScope(true);
+    metaTracker.pageView('/login', '', false);
+    const [, options] = vi.mocked(fetch).mock.calls[0];
+    expect(JSON.parse(String(options?.body)).event_source_url).toBe(window.location.origin + '/#/login');
+  });
+
+  it.each([
+    '/?fbclid=click&token=secret#/login',
+    '/?unknown=value#/register',
+    '/?access_token=secret#/register',
+  ])('rejects non-attribution query parameters in %s', async url => {
+    window.history.replaceState(null, '', url);
+    const { currentMetaSource } = await import('@/lib/metaTracking');
+    expect(currentMetaSource()).toBeNull();
+  });
+
   it.each(['/#/book/private?token=secret', '/#/minha-area/private?token=secret', '/#/agenda', '/#/register?token=secret'])(
     'discards pending events in place and ignores all late events at %s', async url => {
       const { metaTracker, setMetaScope } = await import('@/lib/metaTracking');

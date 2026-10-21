@@ -28,14 +28,55 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint
-        run: npm run lint
-
       - name: Typecheck
+        if: ${{ !cancelled() }}
         run: npm run typecheck
 
+      - name: Lint
+        if: ${{ !cancelled() }}
+        run: npm run lint
+
+      - name: Build
+        if: ${{ !cancelled() }}
+        run: npm run build
+
       - name: Run tests
+        if: ${{ !cancelled() }}
         run: npm test -- --run
+
+      - uses: denoland/setup-deno@v2
+        if: ${{ !cancelled() }}
+        with:
+          deno-version: v2.x
+
+      - name: Check Edge Function
+        if: ${{ !cancelled() }}
+        run: deno check --config supabase/functions/meta-capi/deno.json supabase/functions/meta-capi/index.ts
 
       - name: Coverage report
         run: npm run test:coverage
+
+  meta-banner:
+    name: Meta consent (393px and 1280px)
+    runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: https://example.supabase.co
+      VITE_SUPABASE_ANON_KEY: test-anon-key-for-ci
+      VITE_META_PIXEL_ID: '123456789'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test --config e2e/meta-pixel.config.ts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: meta-banner-393-1280
+          path: |
+            test-results/
+            work/meta-pixel-report/
+          retention-days: 14

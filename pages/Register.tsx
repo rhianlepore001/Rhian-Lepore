@@ -1,3 +1,4 @@
+import { metaTracker } from '../lib/metaTracking';
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
@@ -191,6 +192,7 @@ export const Register: React.FC = () => {
     e.preventDefault();
     if (submittingRef.current) return;
     submittingRef.current = true;
+    if (!isInvitedStaff) metaTracker.lead();
     setLoading(true);
     setError(null);
     setErrorAction(null);

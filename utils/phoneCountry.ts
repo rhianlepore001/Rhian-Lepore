@@ -65,8 +65,7 @@ export function toE164(input: string, country: PhoneCountry): string {
   let digits = input.replace(/\D/g, '');
   const hasExplicitDialCode = input.trim().startsWith('+' + config.dialCode);
   if (hasExplicitDialCode) digits = digits.slice(config.dialCode.length);
-
-  while (digits.startsWith(config.dialCode) && digits.length > config.dialCode.length) {
+  else if (digits.startsWith(config.dialCode) && digits.length > config.nationalLength.max) {
     digits = digits.slice(config.dialCode.length);
   }
 

@@ -9,10 +9,6 @@
 
 ---
 
-## Cadastro, consentimento e Meta CAPI (22 Out 2026, draft)
-
-Branch `fix/signup-phone-cookie-copy-fbp`. Telefone BR/PT agora acompanha a região do cadastro com E.164 e máscara brasileira preservada; banner ganhou o texto de privacidade solicitado; CAPI espera até 1 s por `_fbp` e revalida consentimento. Sem migrations, mudanças de env ou `external_id`. Vitest 1790/1790, lint, typecheck e build passaram. Playwright ficou sem execução por ausência do Chromium no ambiente.
-
 ## Finance PR-C — gráfico Entradas e saídas + fuso do mês (4 Out 2026, draft)
 
 Branch `cursor/fin-c-cashflow-chart-e4e7`. Só frontend. SVG próprio (sem recharts na rota Financeiro); semanas no mobile / dias no desktop; intervalo `[start,end)` ISO no fuso do negócio; react-query paralelo; histórico só na aba Histórico. Prints em `/opt/cursor/artifacts/screenshots/fin-c/`.

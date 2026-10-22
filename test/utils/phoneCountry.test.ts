@@ -16,10 +16,11 @@ describe('phone country helpers', () => {
     expect(isValidPhone('+351912345678', 'PT')).toBe(true);
   });
 
-  it('strips pasted and repeated dial codes', () => {
+  it('strips a single pasted dial code and preserves a Brazilian DDD 55', () => {
     expect(toE164('+351 912 345 678', 'PT')).toBe('+351912345678');
     expect(toE164('5511987654321', 'BR')).toBe('+5511987654321');
-    expect(toE164('+55 55 11 98765 4321', 'BR')).toBe('+5511987654321');
+    expect(toE164('55987654321', 'BR')).toBe('+5555987654321');
+    expect(toE164('+55 55 98765 4321', 'BR')).toBe('+5555987654321');
   });
 
   it('caps input at the national maximum and the E.164 limit', () => {

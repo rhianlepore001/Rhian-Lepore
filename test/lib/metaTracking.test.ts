@@ -183,6 +183,37 @@ describe('Meta tracking', () => {
     }
   });
 
+  it('sends an event authorized on its original route after navigation during the fbp wait', async () => {
+    vi.useFakeTimers();
+    document.cookie = '_fbp=; Max-Age=0; path=/';
+    try {
+      let routeAllowed = true;
+      const pixel = vi.fn();
+      const send = vi.fn().mockResolvedValue(undefined);
+      const tracker = createMetaTracker({
+        pixelId: '123', pixel, send, hasConsent: () => true,
+        canSend: () => routeAllowed,
+      });
+      tracker.pageView('/register', '', false);
+      expect(pixel).toHaveBeenCalledTimes(1);
+      expect(send).not.toHaveBeenCalled();
+
+      routeAllowed = false;
+      await vi.advanceTimersByTimeAsync(1000);
+      await flushSends();
+
+      expect(send).toHaveBeenCalledTimes(1);
+      expect(send.mock.calls[0][0]).toMatchObject({
+        event_name: 'PageView',
+        event_source_url: expect.stringMatching(/#\/register$/),
+      });
+      expect(send.mock.calls[0][0].user_data?.fbp).toBeUndefined();
+    } finally {
+      vi.useRealTimers();
+      document.cookie = '_fbp=; Max-Age=0; path=/';
+    }
+  });
+
   it('sends without fbp after the polling timeout when no cookie appears', async () => {
     vi.useFakeTimers();
     document.cookie = '_fbp=; Max-Age=0; path=/';

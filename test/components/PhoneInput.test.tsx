@@ -20,6 +20,19 @@ function ControlledPhone({ initialRegion = 'PT' }: { initialRegion?: 'BR' | 'PT'
   );
 }
 
+function LateDefaultRegionPhone() {
+  const [defaultRegion, setDefaultRegion] = useState<'BR' | 'PT'>('PT');
+  const [phone, setPhone] = useState('+351912345678');
+  return (
+    <>
+      <PhoneInput value={phone} onChange={setPhone} defaultRegion={defaultRegion} />
+      <button type="button" onClick={() => setDefaultRegion('BR')}>Load BR currency region</button>
+      <output data-testid="phone-value">{phone}</output>
+      <output data-testid="phone-region">{defaultRegion}</output>
+    </>
+  );
+}
+
 describe('PhoneInput', () => {
   it('emits E.164 and formats nine Portuguese digits', async () => {
     render(<ControlledPhone />);
@@ -30,7 +43,7 @@ describe('PhoneInput', () => {
     expect(input).toHaveValue('912 345 678');
   });
 
-  it('re-codes when the new country accepts the national digits and clears when it does not', async () => {
+  it('clears numbers outside the new country length when switching countries', async () => {
     const user = userEvent.setup();
     render(<ControlledPhone initialRegion="BR" />);
     const input = screen.getByLabelText('Selecionar país').parentElement?.querySelector('input');
@@ -44,7 +57,17 @@ describe('PhoneInput', () => {
     await user.click(screen.getByLabelText('Selecionar país'));
     await user.click(screen.getByRole('button', { name: 'Selecionar BR' }));
     expect(screen.getByTestId('phone-region')).toHaveTextContent('BR');
-    expect(screen.getByTestId('phone-value')).toHaveTextContent('+55912345678');
+    expect(screen.getByTestId('phone-value')).toHaveTextContent('');
+  });
+
+  it('keeps the country from an existing prefix when defaultRegion loads later', async () => {
+    const user = userEvent.setup();
+    render(<LateDefaultRegionPhone />);
+    await user.click(screen.getByRole('button', { name: 'Load BR currency region' }));
+    expect(screen.getByTestId('phone-region')).toHaveTextContent('BR');
+    expect(screen.getByTestId('phone-value')).toHaveTextContent('+351912345678');
+    expect(screen.getByRole('textbox')).toHaveValue('912 345 678');
+    expect(screen.getByLabelText('Selecionar país').parentElement).toHaveTextContent('🇵🇹');
   });
 
   it('keeps the existing Brazilian mask', () => {

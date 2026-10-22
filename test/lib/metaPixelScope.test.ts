@@ -84,7 +84,16 @@ describe('Meta browser adapter privacy', () => {
       expect(heldQueue).toHaveLength(0);
       expect(queue.queue).toHaveLength(0);
       expect(calls.mock.calls.filter(args => String(args[0]).startsWith('track'))).toHaveLength(0);
-      expect(fetch).not.toHaveBeenCalled();
+      await vi.waitFor(() => expect(fetch).toHaveBeenCalled(), { timeout: 1500 });
+      const events = vi.mocked(fetch).mock.calls.map(([, options]) => JSON.parse(String(options?.body)));
+      expect(events).toEqual(expect.arrayContaining([
+        expect.objectContaining({
+          event_name: 'PageView',
+          event_source_url: window.location.origin + '/#/register',
+        }),
+      ]));
+      expect(events.every(event => !/book|private|minha-area|token/.test(event.event_source_url))).toBe(true);
+      expect(events.every(event => event.user_data?.fbp === undefined)).toBe(true);
     },
   );
 

@@ -49,7 +49,7 @@ export function createMetaTracker(options: TrackerOptions) {
     void (async () => {
       try {
         const fbp = readMetaCookie('_fbp') || await (options.waitForFbp ?? waitForFbpCookie)();
-        if (signal?.aborted || !enabled(eventSource)) return;
+        if (signal?.aborted || !options.hasConsent()) return;
 
         const userData: Identity = { ...identity };
         const fbc = readMetaCookie('_fbc') || createFbcFromFbclid();
@@ -246,7 +246,7 @@ export const metaTracker = createMetaTracker({
   send: async (event, signal) => {
     const url = import.meta.env.VITE_SUPABASE_URL;
     const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
-    if (!url || !key || readConsent() !== 'accepted' || currentMetaSource() !== event.event_source_url) return;
+    if (!url || !key || readConsent() !== 'accepted') return;
     await fetch(url + '/functions/v1/meta-capi', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', apikey: key },

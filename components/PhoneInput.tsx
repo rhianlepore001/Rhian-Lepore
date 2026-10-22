@@ -41,6 +41,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const previousRegion = useRef<PhoneCountry>(region);
+    const previousDefaultRegion = useRef(defaultRegion);
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -53,14 +54,12 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
     }, []);
 
     useEffect(() => {
-        if (!isControlled) setInternalRegion(defaultRegion);
-    }, [defaultRegion, isControlled]);
-
-    useEffect(() => {
-        if (isControlled || !value) return;
-        const valueCountry = getPhoneCountry(value);
+        if (isControlled) return;
+        const valueCountry = value ? getPhoneCountry(value) : undefined;
         if (valueCountry) setInternalRegion(valueCountry);
-    }, [isControlled, value]);
+        else if (defaultRegion !== previousDefaultRegion.current) setInternalRegion(defaultRegion);
+        previousDefaultRegion.current = defaultRegion;
+    }, [defaultRegion, isControlled, value]);
 
     useEffect(() => {
         const previous = previousRegion.current;
@@ -68,9 +67,11 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
         if (previous === region || !value) return;
 
         const sourceCountry = getPhoneCountry(value) ?? previous;
+        if (sourceCountry === region) return;
         const digits = getNationalDigits(value, sourceCountry);
         const config = PHONE_COUNTRIES[region];
-        if (digits.length > config.nationalLength.max || digits.length + config.dialCode.length > 15) {
+        if (digits.length < config.nationalLength.min || digits.length > config.nationalLength.max
+            || digits.length + config.dialCode.length > 15) {
             onChange('');
             return;
         }

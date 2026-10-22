@@ -16,7 +16,7 @@ for (const width of [393, 1280]) {
     let pixelRequests = 0;
     page.on('request', request => { if (request.url().includes('connect.facebook.net')) pixelRequests += 1; });
     await page.goto('/#/login');
-    const banner = page.getByRole('region', { name: 'Sua escolha sobre cookies' });
+    const banner = page.getByRole('region', { name: 'Cookies e privacidade' });
     await expect(banner).toBeVisible();
     await expect(page.getByRole('button', { name: 'Aceitar', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Recusar', exact: true })).toBeVisible();

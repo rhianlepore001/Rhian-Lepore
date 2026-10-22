@@ -19,7 +19,11 @@ describe('MarketingConsent', () => {
   beforeEach(() => localStorage.clear());
   it('offers equal accept/refuse controls, persists refusal and allows changing it', () => {
     render(<MemoryRouter initialEntries={['/login']}><MarketingConsent /></MemoryRouter>);
-    expect(screen.getByRole('region', { name: 'Sua escolha sobre cookies' })).toBeInTheDocument();
+    const banner = screen.getByRole('region', { name: 'Cookies e privacidade' });
+    expect(banner).toBeInTheDocument();
+    expect(banner).toHaveTextContent('Usamos cookies para o site funcionar e, com a sua permissão, para entender como você chegou até nós e melhorar nossa comunicação. Você pode recusar sem perder nenhuma função.');
+    expect(banner).toHaveTextContent('Altere quando quiser em Preferências de cookies. Política de Privacidade');
+    expect(banner.textContent).not.toMatch(/Meta|API de Conversões|LGPD/);
     fireEvent.click(screen.getByRole('button', { name: 'Recusar' }));
     expect(readConsent()).toBe('rejected');
     fireEvent.click(screen.getByRole('button', { name: 'Preferências de cookies' }));

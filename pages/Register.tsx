@@ -514,7 +514,7 @@ export const Register: React.FC = () => {
 
                   <div>
                     <label htmlFor="reg-phone" className={`${classes.label} block mb-1.5`}>WhatsApp</label>
-                    <PhoneInput value={phone} onChange={setPhone} forceTheme={userType} />
+                    <PhoneInput id="reg-phone" name="phone" value={phone} onChange={setPhone} region={region} onRegionChange={setRegion} forceTheme={userType} />
                   </div>
 
                   <div>

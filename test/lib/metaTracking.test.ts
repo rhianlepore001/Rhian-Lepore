@@ -23,11 +23,17 @@ describe('marketing consent', () => {
 });
 
 describe('Meta tracking', () => {
-  const setup = (pixelId = '123') => {
+  const flushSends = async () => {
+    for (let index = 0; index < 5; index += 1) await Promise.resolve();
+  };
+  const setup = (pixelId = '123', pollFbp = false) => {
     let consent = false;
     const pixel = vi.fn();
     const send = vi.fn().mockResolvedValue(undefined);
-    const tracker = createMetaTracker({ pixelId, pixel, send, hasConsent: () => consent });
+    const tracker = createMetaTracker({
+      pixelId, pixel, send, hasConsent: () => consent,
+      waitForFbp: pollFbp ? undefined : async () => undefined,
+    });
     return { tracker, pixel, send, accept: () => { consent = true; }, reject: () => { consent = false; } };
   };
   it.each(['/book/demo', '/queue/demo', '/pro/demo', '/minha-area/demo', '/clube/demo', '/', '/agenda', '/onboarding-wizard', '/staff-onboarding'])('excludes %s', path => {
@@ -44,9 +50,10 @@ describe('Meta tracking', () => {
   ])('rejects sensitive or unknown query parameters on %s%s', (path, search) => {
     expect(isMetaRoute(path, search, false)).toBe(false);
   });
-  it.each(['/book/private', '/minha-area/private', '/agenda', '/login'])('drops a captured registration after leaving for %s', path => {
+  it.each(['/book/private', '/minha-area/private', '/agenda', '/login'])('drops a captured registration after leaving for %s', async path => {
     const s = setup(); s.accept();
     s.tracker.pageView('/register', '', false);
+    await flushSends();
     const context = s.tracker.captureRegistration();
     s.tracker.pageView(path, '', path === '/agenda');
     s.pixel.mockClear(); s.send.mockClear();
@@ -70,7 +77,7 @@ describe('Meta tracking', () => {
       }
     }
   });
-  it('includes Meta cookies in server events only after consent', () => {
+  it('includes Meta cookies in server events only after consent', async () => {
     document.cookie = '_fbp=fb.1.1234567890.1234567890; path=/';
     document.cookie = '_fbc=fb.1.1234567890.click_123; path=/';
     try {
@@ -80,6 +87,7 @@ describe('Meta tracking', () => {
 
       s.accept();
       s.tracker.pageView('/login', '', false);
+      await flushSends();
       expect(s.send.mock.calls[0][0].user_data).toMatchObject({
         fbp: 'fb.1.1234567890.1234567890',
         fbc: 'fb.1.1234567890.click_123',
@@ -89,45 +97,126 @@ describe('Meta tracking', () => {
       document.cookie = '_fbc=; Max-Age=0; path=/';
     }
   });
-  it('creates fbc from fbclid when the fbc cookie is absent', () => {
+  it('creates fbc from fbclid when the fbc cookie is absent', async () => {
     window.history.replaceState(null, '', '/?fbclid=IwAR_click-123#/login');
     try {
       const s = setup(); s.accept();
       s.tracker.pageView('/login', '', false);
+      await flushSends();
       expect(s.send.mock.calls[0][0].user_data?.fbc).toMatch(/^fb\.1\.\d+\.IwAR_click-123$/);
     } finally {
       window.history.replaceState(null, '', '/');
     }
   });
-  it('deduplicates StrictMode and uses the same ID for browser and server', () => {
+  it('deduplicates StrictMode and uses the same ID for browser and server', async () => {
     const s = setup(); s.accept();
     s.tracker.pageView('/login', '', false);
     s.tracker.pageView('/login', '', false);
     s.tracker.pageView('/register', '?type=beauty', false);
     s.tracker.lead(); s.tracker.lead();
+    await flushSends();
     expect(s.send.mock.calls.map(([event]) => event.event_name)).toEqual(['PageView', 'PageView', 'Lead']);
     const lead = s.send.mock.calls[2][0];
     expect(s.pixel).toHaveBeenCalledWith('Lead', lead.event_id);
     expect(lead.event_source_url).not.toContain('type=');
   });
-  it('stops after refusal and does not replay earlier events on acceptance', () => {
+  it('stops after refusal and does not replay earlier events on acceptance', async () => {
     const s = setup();
     s.tracker.pageView('/register', '', false); s.tracker.lead();
     s.accept(); s.tracker.pageView('/register', '', false); s.tracker.lead();
+    await flushSends();
     const context = s.tracker.captureRegistration();
     s.reject(); s.tracker.completeRegistration(context, { email: 'a@example.com' });
     s.tracker.pageView('/login', '', false);
     expect(s.send.mock.calls.map(([event]) => event.event_name)).toEqual(['PageView', 'Lead']);
   });
-  it('captures consent at submission and completes once after backend success even if auth state changed', () => {
+  it('captures consent at submission and completes once after backend success even if auth state changed', async () => {
     const s = setup(); s.accept();
     s.tracker.pageView('/register', '', false);
     const context = s.tracker.captureRegistration();
     s.tracker.pageView('/register', '', true);
     s.tracker.completeRegistration(context, { email: 'a@example.com', phone: '+351 912 345 678' });
     s.tracker.completeRegistration(context, { email: 'a@example.com' });
+    await flushSends();
     expect(s.send.mock.calls.filter(([event]) => event.event_name === 'CompleteRegistration')).toHaveLength(1);
     expect(s.send.mock.calls.at(-1)[0].event_source_url).toMatch(/#\/register$/);
     expect(s.tracker.captureRegistration()).toBe(null);
+  });
+
+  it('calls the pixel synchronously before sending the same event ID to CAPI', async () => {
+    const s = setup(); s.accept();
+    s.tracker.pageView('/login', '', false);
+    expect(s.pixel).toHaveBeenCalledTimes(1);
+    expect(s.send).not.toHaveBeenCalled();
+    await flushSends();
+    const event = s.send.mock.calls[0][0];
+    expect(s.pixel).toHaveBeenCalledWith('PageView', event.event_id);
+  });
+
+  it('waits for a late fbp and re-reads fbc before sending', async () => {
+    vi.useFakeTimers();
+    document.cookie = '_fbp=; Max-Age=0; path=/';
+    document.cookie = '_fbc=; Max-Age=0; path=/';
+    window.history.replaceState(null, '', '/?fbclid=click-late#/login');
+    try {
+      const s = setup('123', true); s.accept();
+      s.tracker.pageView('/login', '', false);
+      expect(s.pixel).toHaveBeenCalledTimes(1);
+      expect(s.send).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(300);
+      document.cookie = '_fbp=fb.1.1234567890.1234567890; path=/';
+      document.cookie = '_fbc=fb.1.1234567890.cookie_value; path=/';
+      await vi.advanceTimersByTimeAsync(75);
+      await flushSends();
+      const event = s.send.mock.calls[0][0];
+      expect(event.user_data).toMatchObject({
+        fbp: 'fb.1.1234567890.1234567890',
+        fbc: 'fb.1.1234567890.cookie_value',
+      });
+      expect(event.user_data?.fbc).not.toContain('click-late');
+      expect(s.pixel).toHaveBeenCalledWith('PageView', event.event_id);
+    } finally {
+      vi.useRealTimers();
+      document.cookie = '_fbp=; Max-Age=0; path=/';
+      document.cookie = '_fbc=; Max-Age=0; path=/';
+      window.history.replaceState(null, '', '/');
+    }
+  });
+
+  it('sends without fbp after the polling timeout when no cookie appears', async () => {
+    vi.useFakeTimers();
+    document.cookie = '_fbp=; Max-Age=0; path=/';
+    try {
+      const s = setup('123', true); s.accept();
+      s.tracker.pageView('/login', '', false);
+      expect(s.pixel).toHaveBeenCalledTimes(1);
+      await vi.advanceTimersByTimeAsync(999);
+      expect(s.send).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(1);
+      await flushSends();
+      expect(s.send).toHaveBeenCalledTimes(1);
+      expect(s.send.mock.calls[0][0].user_data?.fbp).toBeUndefined();
+    } finally {
+      vi.useRealTimers();
+      document.cookie = '_fbp=; Max-Age=0; path=/';
+    }
+  });
+
+  it('does not send if consent is revoked while waiting for fbp', async () => {
+    vi.useFakeTimers();
+    document.cookie = '_fbp=; Max-Age=0; path=/';
+    try {
+      const s = setup('123', true); s.accept();
+      s.tracker.pageView('/login', '', false);
+      expect(s.pixel).toHaveBeenCalledTimes(1);
+      await vi.advanceTimersByTimeAsync(300);
+      s.reject();
+      await vi.advanceTimersByTimeAsync(700);
+      await flushSends();
+      expect(s.send).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+      document.cookie = '_fbp=; Max-Age=0; path=/';
+    }
   });
 });

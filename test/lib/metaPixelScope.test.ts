@@ -17,6 +17,8 @@ describe('Meta browser adapter privacy', () => {
     delete window.fbq;
     delete window._fbq;
     window.history.replaceState(null, '', '/');
+    document.cookie = '_fbp=; Max-Age=0; path=/';
+    document.cookie = '_fbc=; Max-Age=0; path=/';
     localStorage.clear();
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
@@ -44,10 +46,12 @@ describe('Meta browser adapter privacy', () => {
 
   it('allows only attribution query parameters and keeps them out of the Pixel source URL', async () => {
     window.history.replaceState(null, '', '/?fbclid=IwAR_click-123&utm_source=meta&utm_medium=paid&utm_campaign=spring&utm_content=ad1&utm_term=hair#/login');
+    document.cookie = '_fbp=fb.1.1234567890.1234567890; path=/';
     const { currentMetaSource, metaTracker, setMetaScope } = await import('@/lib/metaTracking');
     expect(currentMetaSource()).toBe(window.location.origin + '/#/login');
     setMetaScope(true);
     metaTracker.pageView('/login', '', false);
+    await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
     const [, options] = vi.mocked(fetch).mock.calls[0];
     expect(JSON.parse(String(options?.body)).event_source_url).toBe(window.location.origin + '/#/login');
   });

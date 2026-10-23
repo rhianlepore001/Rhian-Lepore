@@ -122,6 +122,26 @@ describe('Register page', () => {
     });
   }, 10000);
 
+  it('cadastro em Portugal envia o telefone e a região selecionados', async () => {
+    registerMock.mockResolvedValue({ error: null });
+
+    render(<MemoryRouter><Register /></MemoryRouter>);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Portugal · EUR' }));
+    await userEvent.type(screen.getByLabelText('WhatsApp'), '912345678');
+    await userEvent.type(screen.getByLabelText('Seu nome'), 'Ana');
+    await userEvent.type(screen.getByLabelText('Nome do negócio'), 'Studio Ana');
+    await userEvent.type(screen.getByLabelText('E-mail'), 'ana@example.com');
+    await userEvent.type(screen.getByLabelText('Senha'), 'Password123!');
+    await userEvent.type(screen.getByLabelText('Confirmar senha'), 'Password123!');
+    await userEvent.click(screen.getByRole('button', { name: /finalizar cadastro/i }));
+
+    await waitFor(() => expect(registerMock).toHaveBeenCalledWith(expect.objectContaining({
+      phone: '+351912345678',
+      region: 'PT',
+    })));
+  }, 10000);
+
   it('AC1: toques/submit repetidos durante o envio disparam só 1 cadastro e o botão fica em loading', async () => {
     let resolveRegister: (v: { error: null }) => void = () => {};
     registerMock.mockImplementation(() => new Promise((resolve) => { resolveRegister = resolve; }));

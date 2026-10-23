@@ -16,7 +16,9 @@ interface TrackerOptions {
   hasConsent: () => boolean;
   canSend?: (source: string) => boolean;
   pixel: (name: MetaEventName, id: string) => void;
-  send: (event: MetaEvent) => Promise<unknown>;
+  send: (event: MetaEvent, signal?: AbortSignal) => Promise<unknown>;
+  waitForFbp?: () => Promise<string | undefined>;
+  getAbortSignal?: () => AbortSignal;
 }
 
 export function isMetaRoute(path: string, search: string, authenticated: boolean): boolean {
@@ -41,19 +43,25 @@ export function createMetaTracker(options: TrackerOptions) {
     && options.hasConsent() && (options.canSend?.(eventSource) ?? true);
   const emit = (name: MetaEventName, eventSource: string, id: string = crypto.randomUUID(), identity?: Identity) => {
     if (!enabled(eventSource)) return;
-    const userData: Identity = { ...identity };
-    const fbp = readMetaCookie('_fbp');
-    const fbc = readMetaCookie('_fbc') || createFbcFromFbclid();
-    if (fbp) userData.fbp = fbp;
-    if (fbc) userData.fbc = fbc;
+    const eventTime = Math.floor(Date.now() / 1000);
     try { options.pixel(name, id); } catch { void 0; }
-    try {
-      void options.send({
-        consent: true, event_name: name, event_id: id,
-        event_time: Math.floor(Date.now() / 1000), event_source_url: eventSource,
-        ...(Object.keys(userData).length ? { user_data: userData } : {}),
-      }).catch(() => undefined);
-    } catch { void 0; }
+    const signal = options.getAbortSignal?.();
+    void (async () => {
+      try {
+        const fbp = readMetaCookie('_fbp') || await (options.waitForFbp ?? waitForFbpCookie)();
+        if (signal?.aborted || !options.hasConsent()) return;
+
+        const userData: Identity = { ...identity };
+        const fbc = readMetaCookie('_fbc') || createFbcFromFbclid();
+        if (fbp) userData.fbp = fbp;
+        if (fbc) userData.fbc = fbc;
+        await options.send({
+          consent: true, event_name: name, event_id: id,
+          event_time: eventTime, event_source_url: eventSource,
+          ...(Object.keys(userData).length ? { user_data: userData } : {}),
+        }, signal);
+      } catch { void 0; }
+    })();
   };
   return {
     pageView(nextPath: string, nextSearch: string, authenticated: boolean) {
@@ -133,6 +141,18 @@ function readMetaCookie(name: '_fbp' | '_fbc'): string | undefined {
   return value && value.length <= 256 && META_COOKIE_VALUE.test(value) ? value : undefined;
 }
 
+async function waitForFbpCookie(): Promise<string | undefined> {
+  const timeout = 1000;
+  const interval = 75;
+  const deadline = Date.now() + timeout;
+  let value = readMetaCookie('_fbp');
+  while (!value && Date.now() < deadline) {
+    await new Promise<void>(resolve => window.setTimeout(resolve, Math.min(interval, deadline - Date.now())));
+    value = readMetaCookie('_fbp');
+  }
+  return value;
+}
+
 function createFbcFromFbclid(): string | undefined {
   const fbclid = new URLSearchParams(window.location.search).get('fbclid');
   if (!fbclid || !/^[A-Za-z0-9_.-]+$/.test(fbclid)) return undefined;
@@ -210,6 +230,7 @@ export const metaTracker = createMetaTracker({
   pixelId,
   hasConsent: () => readConsent() === 'accepted',
   canSend: source => currentMetaSource() === source,
+  getAbortSignal: () => pending.signal,
   pixel: (name, id) => {
     if (!currentMetaSource() || (!scopeAllowed && name !== 'CompleteRegistration')) return;
     completingRegistration = name === 'CompleteRegistration';
@@ -222,16 +243,16 @@ export const metaTracker = createMetaTracker({
       if (!scopeAllowed) window.fbq?.callMethod?.('consent', 'revoke');
     }
   },
-  send: async event => {
+  send: async (event, signal) => {
     const url = import.meta.env.VITE_SUPABASE_URL;
     const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
-    if (!url || !key || readConsent() !== 'accepted' || currentMetaSource() !== event.event_source_url) return;
+    if (!url || !key || readConsent() !== 'accepted') return;
     await fetch(url + '/functions/v1/meta-capi', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', apikey: key },
       body: JSON.stringify(event),
       keepalive: true,
-      signal: pending.signal,
+      signal: signal ?? pending.signal,
     });
   },
 });

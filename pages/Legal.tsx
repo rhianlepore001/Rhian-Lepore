@@ -73,6 +73,9 @@ export const Legal: React.FC = () => {
                                 <a href="https://www.facebook.com/privacy/policy/" target="_blank" rel="noopener noreferrer" className="underline">Política de Privacidade</a>.
                             </p>
                             <p className={P_CLASS}>
+                                A Meta Platforms Ireland Ltd. atua como destinatária e operadora desses dados para o Meta Pixel e a API de Conversões.
+                            </p>
+                            <p className={P_CLASS}>
                                 Você pode aceitar ou recusar sem perder acesso ao serviço. A escolha é
                                 salva neste navegador por até 180 dias. Use Preferências de cookies
                                 nesta página para alterar ou retirar seu consentimento, nos termos

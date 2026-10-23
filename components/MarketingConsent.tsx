@@ -54,15 +54,13 @@ export const MarketingConsent: React.FC = () => {
       <div className="flex flex-col gap-5 md:flex-row md:items-center md:gap-8">
         <div className="min-w-0 flex-1">
           <h2 id="cookie-consent-title" className="font-heading text-lg font-bold tracking-tight">
-            Sua escolha sobre cookies
+            Cookies e privacidade
           </h2>
           <p id="cookie-consent-description" className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-            Usamos armazenamento essencial para manter o AgendiX funcionando. Com sua autorização,
-            usamos cookies da Meta e a API de Conversões para medir visitas e cadastros e melhorar
-            nossos anúncios. Você pode recusar e continuar usando o serviço.
+            Usamos cookies para o site funcionar e, com a sua permissão, para entender como você chegou até nós e melhorar nossa comunicação. Você pode recusar sem perder nenhuma função.
           </p>
           <p className="mt-2 text-xs leading-relaxed text-[var(--color-text-muted)]">
-            Conforme a LGPD e o RGPD. Altere sua escolha em Preferências de cookies.{' '}
+            Altere quando quiser em Preferências de cookies.{' '}
             <Link to="/privacidade" className="underline underline-offset-4">Política de Privacidade</Link>
           </p>
         </div>

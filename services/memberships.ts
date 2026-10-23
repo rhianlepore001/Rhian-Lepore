@@ -144,11 +144,18 @@ export interface CreatePublicMembershipInput {
     paymentMethod: 'pix' | 'mbway' | 'in_person';
 }
 
+export const membershipTokenKey = (businessId: string) => `membership_token_${businessId}`;
+
+export function readMembershipToken(businessId: string): string | null {
+    const token = localStorage.getItem(membershipTokenKey(businessId));
+    return token && /^[a-f0-9]{64}$/.test(token) ? token : null;
+}
+
 export async function createPublicMembershipRequest(
     businessId: string,
     input: CreatePublicMembershipInput
 ): Promise<string> {
-    const { data, error } = await supabase.rpc('create_public_membership_request', {
+    const { data, error } = await supabase.rpc('create_client_membership_private', {
         p_business_id: businessId,
         p_client_name: input.clientName,
         p_client_phone: input.clientPhone,
@@ -156,7 +163,9 @@ export async function createPublicMembershipRequest(
         p_payment_method: input.paymentMethod,
     });
     if (error) throw error;
-    return data as string;
+    if (!data?.membership_id || !/^[a-f0-9]{64}$/.test(data?.management_token ?? '')) throw new Error('membership_private_link_missing');
+    localStorage.setItem(membershipTokenKey(businessId), data.management_token);
+    return data.membership_id;
 }
 
 export interface CreatePublicPixPaymentInput {
@@ -227,11 +236,11 @@ function mapPublicClientMembership(row: Record<string, unknown>): PublicClientMe
 
 export async function fetchPublicClientMembership(
     businessId: string,
-    phone: string
+    token: string
 ): Promise<PublicClientMembership | null> {
-    const { data, error } = await supabase.rpc('get_public_client_membership', {
+    const { data, error } = await supabase.rpc('get_client_membership_with_token', {
         p_business_id: businessId,
-        p_phone: phone,
+        p_token: token,
     });
     if (error) throw error;
     const row = Array.isArray(data) ? data[0] : data;
@@ -241,11 +250,11 @@ export async function fetchPublicClientMembership(
 
 export async function cancelPublicClientMembership(
     businessId: string,
-    phone: string
+    token: string
 ): Promise<string> {
-    const { data, error } = await supabase.rpc('cancel_public_client_membership', {
+    const { data, error } = await supabase.rpc('cancel_client_membership_with_token', {
         p_business_id: businessId,
-        p_phone: phone,
+        p_token: token,
     });
     if (error) throw error;
     return data as string;
@@ -625,4 +634,13 @@ export async function fetchMembershipStats(companyId: string): Promise<Membershi
         else if (r.status === 'cancelled') stats.totalCancelled += 1;
     }
     return stats;
+}
+
+export async function issueClientMembershipLink(companyId: string, membershipId: string): Promise<string> {
+    const { data: profile, error: profileError } = await supabase.from('profiles').select('business_slug').eq('id', companyId).single();
+    if (profileError) throw profileError;
+    if (!profile?.business_slug) throw new Error('business_link_missing');
+    const { data: token, error } = await supabase.rpc('issue_client_membership_link', { p_membership_id: membershipId });
+    if (error) throw error;
+    return `${window.location.origin}/#/minha-area/${encodeURIComponent(profile.business_slug)}?tab=clube&token=${encodeURIComponent(token)}`;
 }

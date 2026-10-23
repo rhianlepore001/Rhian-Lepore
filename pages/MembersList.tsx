@@ -15,7 +15,7 @@ import {
 import { MembershipBadge } from '../components/membership/MembershipBadge';
 import { ClubOwnerNav } from '../components/membership/ClubOwnerNav';
 import { PixActions } from '../components/membership/PixActions';
-import { MembershipStatus, MembershipWithPlan } from '../services/memberships';
+import { MembershipStatus, MembershipWithPlan, issueClientMembershipLink } from '../services/memberships';
 import { buildWhatsAppLink, formatCurrency } from '../utils/formatters';
 
 const TABS: { value: MembershipStatus | 'all'; label: string }[] = [
@@ -36,7 +36,7 @@ const STATUS_LABELS: Record<MembershipStatus, { label: string; color: string }> 
 export const MembersList: React.FC = () => {
     const { accent, colors, classes, isBeauty, font } = useBrutalTheme();
     const { showToast } = useToast();
-    const { user, region, businessName } = useAuth();
+    const { user, region, businessName, companyId, role } = useAuth();
 
     const [tab, setTab] = useState<MembershipStatus | 'all'>('all');
     const [search, setSearch] = useState('');
@@ -88,6 +88,17 @@ export const MembersList: React.FC = () => {
             setCancelling(null);
         } catch {
             showToast('Não foi possível cancelar a assinatura. Tente novamente.', 'error');
+        }
+    };
+
+    const handlePrivateLink = async (membershipId: string) => {
+        if (!companyId) return;
+        try {
+            const link = await issueClientMembershipLink(companyId, membershipId);
+            await navigator.clipboard.writeText(link);
+            showToast('Novo link privado copiado. O link anterior foi invalidado. Compartilhe somente com o titular.', 'success');
+        } catch {
+            showToast('Não foi possível copiar o link privado. Tente novamente.', 'error');
         }
     };
 
@@ -208,6 +219,7 @@ export const MembersList: React.FC = () => {
                                     </div>
 
                                     <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                                        {role === 'owner' && <button type="button" onClick={() => { void handlePrivateLink(m.id); }} className="px-3 py-2 rounded-xl border border-theme-border text-xs font-semibold">Copiar novo link privado</button>}
                                         {m.client?.phone && (
                                             <button
                                                 type="button"

@@ -63,6 +63,7 @@ interface ClientBookingCardProps {
     businessSlug: string;
     clientName: string;
     clientPhone: string;
+    managementToken?: string;
     /** Nome do estabelecimento (cadastro). Usado no WhatsApp de "Pedir confirmação". */
     businessName?: string;
     region?: Region;
@@ -134,6 +135,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
     businessSlug,
     clientName,
     clientPhone,
+    managementToken,
     businessName,
     region = 'BR',
     timeZone,
@@ -172,7 +174,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                 : null,
         });
     const talkLabel = talkToBusinessLabel(businessName);
-    const canEditOnline = allowEdit && (
+    const canEditOnline = allowEdit && !!managementToken && (
         (statusKey === 'pending' && !pendingEdit)
         || clientCancelCta({
             status: 'confirmed',
@@ -227,14 +229,14 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
     ) : null;
 
     const handleCancel = async () => {
-        if (!clientPhone) {
-            showToast('Não foi possível cancelar. Entre de novo na Minha Área com o WhatsApp do agendamento.', 'error');
+        if (!managementToken) {
+            showToast('Não foi possível cancelar. Abra o link privado mostrado após agendar.', 'error');
             setShowConfirm(false);
             return;
         }
         setCancelling(true);
         try {
-            await cancelPublicBooking(booking.id, clientPhone);
+            await cancelPublicBooking(booking.id, managementToken);
             onCancelled(booking.id);
             showToast('Agendamento cancelado.', 'success');
         } catch (error) {
@@ -243,7 +245,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                 setWindowClosed(true);
                 showToast(CANCEL_WINDOW_CLOSED_MESSAGE, 'info');
             } else {
-                showToast('Não foi possível cancelar. Tente de novo ou fale com o salão.', 'error');
+                showToast('Não foi possível cancelar. Tente de novo ou fale com o estabelecimento.', 'error');
             }
         } finally {
             setCancelling(false);
@@ -406,7 +408,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                         {canEditOnline && (
                             <button
                                 type="button"
-                                onClick={() => navigate(`/book/${businessSlug}?edit=${booking.id}`)}
+                                onClick={() => navigate(`/book/${businessSlug}?edit=${booking.id}&token=${encodeURIComponent(managementToken ?? '')}`)}
                                 className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl text-xs font-semibold bg-theme-surface text-theme-text border border-theme-border ${cancelCta === 'whatsapp' ? 'col-span-2' : ''}`}
                             >
                                 <Edit3 className="w-3.5 h-3.5 shrink-0" />

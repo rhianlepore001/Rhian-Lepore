@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 import { supabase } from '../lib/supabase';
+import { redactPrivateBookingDiagnostic, redactPrivateBookingTokens } from './privateBookingDiagnostics';
 
 // Níveis de Log
 export type LogLevel = 'info' | 'warning' | 'error' | 'critical';
@@ -35,6 +36,9 @@ class LoggerService {
      * Loga erro (Error) e envia para o backend
      */
     async error(message: string, error?: any, context?: LogContext) {
+        message = redactPrivateBookingTokens(message);
+        error = redactPrivateBookingDiagnostic(error);
+        context = redactPrivateBookingDiagnostic(context);
         // 1. Console local
         console.error(`[ERROR] ${message}`, error || '', context || '');
 
@@ -46,10 +50,10 @@ class LoggerService {
                 p_component_stack: context?.componentStack || null,
                 p_severity: 'error',
                 p_context: {
-                    url: window.location.href,
+                    url: redactPrivateBookingTokens(window.location.href),
                     userAgent: navigator.userAgent,
                     ...context,
-                    rawError: error?.toString()
+                    rawError: error?.message ?? error?.toString()
                 }
             };
 
@@ -70,7 +74,7 @@ class LoggerService {
      * Loga erro crítico (Critical) - sistema inoperante
      */
     async critical(message: string, error?: any, context?: LogContext) {
-        console.error(`[CRITICAL] ${message}`, error || '', context || '');
+        console.error(`[CRITICAL] ${redactPrivateBookingTokens(message)}`, redactPrivateBookingDiagnostic(error) || '', redactPrivateBookingDiagnostic(context) || '');
         await this.error(message, error, { ...context, severity: 'critical' });
     }
 }

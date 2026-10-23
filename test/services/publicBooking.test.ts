@@ -52,30 +52,21 @@ vi.mock('@/lib/supabase', () => ({
 describe('public booking service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(supabase.rpc).mockReset();
     singleMock.mockResolvedValue({
       data: pendingBooking,
       error: null,
     });
   });
 
-  it('busca booking ativo por telefone via RPC', async () => {
-    (supabase.rpc as any).mockResolvedValue({
-      data: [{ id: 'booking-001', status: 'pending' }],
-      error: null,
-    });
-
-    const result = await getActiveBookingByPhone('11999999999', 'business-001');
-
-    expect(result).toEqual({ id: 'booking-001', status: 'pending' });
-    expect(supabase.rpc).toHaveBeenCalledWith('get_active_booking_by_phone', {
-      p_phone: '11999999999',
-      p_business_id: 'business-001',
-    });
+  it('não busca booking por telefone', async () => {
+    expect(await getActiveBookingByPhone('11999999999', 'business-001')).toBeNull();
+    expect(supabase.rpc).not.toHaveBeenCalled();
   });
 
-  it('cria novo public_booking via RPC create_public_booking com status pending', async () => {
+  it('cria novo public_booking via RPC privada com status pending', async () => {
     (supabase.rpc as any)
-      .mockResolvedValueOnce({ data: [pendingBooking], error: null })
+      .mockResolvedValueOnce({ data: { booking: pendingBooking, management_token: 'test-private-token' }, error: null })
       .mockResolvedValueOnce({
         data: [{ id: 'pc-1', name: 'Joao', phone: '11999999999', business_id: 'business-001' }],
         error: null,
@@ -94,7 +85,8 @@ describe('public booking service', () => {
       originalAppointmentTime: null,
     });
 
-    expect(supabase.rpc).toHaveBeenCalledWith('create_public_booking', {
+    expect(supabase.rpc).toHaveBeenCalledWith('create_public_booking_private', {
+      p_customer_email: null,
       p_business_id: 'business-001',
       p_customer_name: 'Joao',
       p_customer_phone: '11999999999',
@@ -155,12 +147,13 @@ describe('public booking service', () => {
       totalPrice: 90,
       durationMinutes: 45,
       editingBookingId: 'booking-001',
+      managementToken: 'test-private-token',
       originalAppointmentTime: '2026-05-30T10:00:00-03:00',
     });
 
-    expect(supabase.rpc).toHaveBeenCalledWith('update_public_booking_by_client_v2', expect.objectContaining({
+    expect(supabase.rpc).toHaveBeenCalledWith('update_public_booking_with_token', expect.objectContaining({
       p_booking_id: 'booking-001',
-      p_phone: '11999999999',
+      p_token: 'test-private-token',
       p_service_ids: ['service-001'],
       p_professional_id: 'pro-001',
       p_appointment_time: '2026-05-31T10:00:00-03:00',
@@ -234,19 +227,9 @@ describe('public booking service', () => {
     expect(updateMock).not.toHaveBeenCalled();
   });
 
-  it('busca cliente publico por telefone via RPC', async () => {
-    (supabase.rpc as any).mockResolvedValue({
-      data: [{ name: 'Joao', photo_url: null }],
-      error: null,
-    });
-
-    const result = await fetchPublicClientByPhone('11999999999', 'business-001');
-
-    expect(result).toEqual({ name: 'Joao', photo_url: null });
-    expect(supabase.rpc).toHaveBeenCalledWith('get_public_client_by_phone', {
-      p_business_id: 'business-001',
-      p_phone: '11999999999',
-    });
+  it('não consulta cadastro público por telefone', async () => {
+    expect(await fetchPublicClientByPhone('11999999999', 'business-001')).toBeNull();
+    expect(supabase.rpc).not.toHaveBeenCalled();
   });
 
   it('confirma pelo tenant e rejeita via RPC autenticada', async () => {
@@ -261,14 +244,14 @@ describe('public booking service', () => {
     });
   });
 
-  it('cancela booking do cliente via RPC com prova de telefone', async () => {
+  it('cancela booking do cliente via RPC com link privado', async () => {
     (supabase.rpc as any).mockResolvedValue({ data: true, error: null });
 
-    await cancelPublicBooking('booking-001', '11999999999');
+    await cancelPublicBooking('booking-001', 'test-private-token');
 
-    expect(supabase.rpc).toHaveBeenCalledWith('cancel_public_booking_by_client_v2', {
+    expect(supabase.rpc).toHaveBeenCalledWith('cancel_public_booking_with_token', {
       p_booking_id: 'booking-001',
-      p_phone: '11999999999',
+      p_token: 'test-private-token',
     });
   });
 
@@ -278,7 +261,7 @@ describe('public booking service', () => {
       error: { message: 'booking_not_cancellable', code: 'P0001' },
     });
 
-    await expect(cancelPublicBooking('booking-001', '11999999999')).rejects.toMatchObject({
+    await expect(cancelPublicBooking('booking-001', 'test-private-token')).rejects.toMatchObject({
       message: 'booking_not_cancellable',
     });
   });

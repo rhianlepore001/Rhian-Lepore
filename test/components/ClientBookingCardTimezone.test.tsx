@@ -31,6 +31,7 @@ function renderCard(props: { region: 'BR' | 'PT'; timeZone?: string }) {
         businessPhone="912345678"
         businessSlug="barbeariasilva"
         clientName="Zé"
+        managementToken="test-private-token"
         clientPhone="912345678"
         region={props.region}
         timeZone={props.timeZone}

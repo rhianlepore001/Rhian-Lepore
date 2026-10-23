@@ -1,3 +1,4 @@
+import { redactPrivateBookingTokens } from '../utils/privateBookingDiagnostics';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export type BugReportType = 'bug' | 'idea' | 'question';
@@ -29,7 +30,7 @@ export function startCapturing(): void {
         const msg = args
           .map(a => (a instanceof Error ? `${a.name}: ${a.message}\n${a.stack ?? ''}` : String(a)))
           .join(' ');
-        consoleErrorBuffer.push(msg);
+        consoleErrorBuffer.push(redactPrivateBookingTokens(msg));
         if (consoleErrorBuffer.length > MAX_CONSOLE_ERRORS) {
           consoleErrorBuffer.shift();
         }
@@ -58,12 +59,12 @@ export function captureContext(): BugContext {
   return {
     route:
       typeof window !== 'undefined'
-        ? window.location.hash || window.location.pathname
+        ? redactPrivateBookingTokens(window.location.hash || window.location.pathname)
         : '',
     pathname: typeof window !== 'undefined' ? window.location.pathname : '',
-    search: typeof window !== 'undefined' ? window.location.search : '',
-    hash: typeof window !== 'undefined' ? window.location.hash : '',
-    url: typeof window !== 'undefined' ? window.location.href : '',
+    search: typeof window !== 'undefined' ? redactPrivateBookingTokens(window.location.search) : '',
+    hash: typeof window !== 'undefined' ? redactPrivateBookingTokens(window.location.hash) : '',
+    url: typeof window !== 'undefined' ? redactPrivateBookingTokens(window.location.href) : '',
     userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
     viewportWidth: typeof window !== 'undefined' ? window.innerWidth : 0,
     viewportHeight: typeof window !== 'undefined' ? window.innerHeight : 0,
@@ -77,7 +78,7 @@ export function captureContext(): BugContext {
 
 /** Chrome do próprio reporter — nunca entra no print. */
 export const BUG_REPORT_CHROME_SELECTOR =
-  '[data-bug-report-dialog], [data-bug-report-chrome]';
+  '[data-bug-report-dialog], [data-bug-report-chrome], [data-private-booking-link]';
 
 export function isBugReportChrome(el: Element): boolean {
   return el.closest(BUG_REPORT_CHROME_SELECTOR) !== null;

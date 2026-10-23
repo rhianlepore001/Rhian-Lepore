@@ -37,16 +37,15 @@ export function sanitizeQueuePhone(phone: string): string {
   return phone.replace(/\D/g, '');
 }
 
-export const QUEUE_PHONE_PROOF_KEY = (entryId: string) => `queue_proof_phone_${entryId}`;
 export const QUEUE_LAST_SLUG_KEY = 'queue_last_business_slug';
 export const QUEUE_TICKET_KEY = (businessId: string) => `queue_ticket_${businessId}`;
-
-const QUEUE_PROOF_PREFIX = 'queue_proof_phone_';
+const QUEUE_TOKEN_KEY = (entryId: string) => `queue_token_${entryId}`;
 
 export interface QueueTicketSession {
   businessId: string;
   entryId: string;
-  phone: string;
+  token?: string;
+  phone?: string;
   slug: string;
 }
 
@@ -70,36 +69,23 @@ export function readQueueBusinessSlug(): string | null {
     ?? readStorage(typeof localStorage === 'undefined' ? undefined : localStorage, QUEUE_LAST_SLUG_KEY);
 }
 
-export function storeQueuePhoneProof(entryId: string, phone: string): void {
-  const value = sanitizeQueuePhone(phone);
-  writeStorage(typeof sessionStorage === 'undefined' ? undefined : sessionStorage, QUEUE_PHONE_PROOF_KEY(entryId), value);
-  writeStorage(typeof localStorage === 'undefined' ? undefined : localStorage, QUEUE_PHONE_PROOF_KEY(entryId), value);
-}
-
-export function readQueuePhoneProof(entryId: string): string | null {
-  return readStorage(typeof localStorage === 'undefined' ? undefined : localStorage, QUEUE_PHONE_PROOF_KEY(entryId))
-    ?? readStorage(typeof sessionStorage === 'undefined' ? undefined : sessionStorage, QUEUE_PHONE_PROOF_KEY(entryId));
+export function readQueueToken(entryId: string): string | null {
+  return readStorage(typeof localStorage === 'undefined' ? undefined : localStorage, QUEUE_TOKEN_KEY(entryId));
 }
 
 export function storeQueueTicket(ticket: QueueTicketSession): void {
-  if (typeof localStorage === 'undefined') return;
-  const payload: QueueTicketSession = {
-    ...ticket,
-    phone: sanitizeQueuePhone(ticket.phone) || ticket.phone,
-  };
+  if (typeof localStorage === 'undefined' || !ticket.token) return;
+  const payload = { businessId: ticket.businessId, entryId: ticket.entryId, token: ticket.token, slug: ticket.slug };
   localStorage.setItem(QUEUE_TICKET_KEY(ticket.businessId), JSON.stringify(payload));
+  localStorage.setItem(QUEUE_TOKEN_KEY(ticket.entryId), ticket.token);
   if (ticket.slug) storeQueueBusinessSlug(ticket.slug);
-  storeQueuePhoneProof(ticket.entryId, ticket.phone);
 }
 
 export function readQueueTicket(businessId: string): QueueTicketSession | null {
   if (typeof localStorage === 'undefined') return null;
-  const raw = localStorage.getItem(QUEUE_TICKET_KEY(businessId));
-  if (!raw) return null;
   try {
-    const parsed = JSON.parse(raw) as QueueTicketSession;
-    if (!parsed?.entryId || !parsed?.phone) return null;
-    return parsed;
+    const parsed = JSON.parse(localStorage.getItem(QUEUE_TICKET_KEY(businessId)) ?? 'null') as QueueTicketSession | null;
+    return parsed?.businessId === businessId && parsed.entryId && /^[a-f0-9]{64}$/.test(parsed.token ?? '') ? parsed : null;
   } catch {
     return null;
   }
@@ -109,28 +95,7 @@ export function clearQueueTicket(businessId: string): void {
   if (typeof localStorage === 'undefined') return;
   const ticket = readQueueTicket(businessId);
   localStorage.removeItem(QUEUE_TICKET_KEY(businessId));
-  if (!ticket) return;
-  localStorage.removeItem(QUEUE_PHONE_PROOF_KEY(ticket.entryId));
-  if (typeof sessionStorage !== 'undefined') {
-    sessionStorage.removeItem(QUEUE_PHONE_PROOF_KEY(ticket.entryId));
-  }
-}
-
-export function listQueuePhoneProofs(): Array<{ entryId: string; phone: string }> {
-  const found = new Map<string, string>();
-  const scan = (storage: Storage | undefined) => {
-    if (!storage) return;
-    for (let index = 0; index < storage.length; index += 1) {
-      const key = storage.key(index);
-      if (!key?.startsWith(QUEUE_PROOF_PREFIX)) continue;
-      const phone = storage.getItem(key);
-      if (!phone) continue;
-      found.set(key.slice(QUEUE_PROOF_PREFIX.length), phone);
-    }
-  };
-  scan(typeof sessionStorage === 'undefined' ? undefined : sessionStorage);
-  scan(typeof localStorage === 'undefined' ? undefined : localStorage);
-  return [...found.entries()].map(([entryId, phone]) => ({ entryId, phone }));
+  if (ticket) localStorage.removeItem(QUEUE_TOKEN_KEY(ticket.entryId));
 }
 
 export function isActiveQueueStatus(status: QueueStatus): boolean {
@@ -239,21 +204,9 @@ export function queueJoinUserMessage(error: unknown, fallback = 'Não foi possí
   return fallback;
 }
 
-export async function findActiveQueueEntryByPhone(
-  businessId: string,
-  phone: string,
-): Promise<QueueRecord | null> {
-  const normalizedPhone = sanitizeQueuePhone(phone);
-  if (!normalizedPhone) return null;
-
-  const { data, error } = await supabase.rpc('find_active_queue_entry_by_phone', {
-    p_business_id: businessId,
-    p_phone: phone,
-  });
-
-  if (error) throw error;
-  const entry = Array.isArray(data) ? data[0] : data;
-  return parseQueueRecord(entry);
+export async function findActiveQueueEntryByPhone(businessId: string, _phone: string): Promise<QueueRecord | null> {
+  const entry = await resolveClientQueueEntry({ businessId, phone: null });
+  return entry && isActiveQueueStatus(entry.status) ? entry : null;
 }
 
 export async function resolveClientQueueEntry(input: {
@@ -262,95 +215,17 @@ export async function resolveClientQueueEntry(input: {
   slug?: string | null;
 }): Promise<QueueRecord | null> {
   const ticket = readQueueTicket(input.businessId);
-  const lookupPhone = input.phone || ticket?.phone || null;
-  const slug = input.slug || ticket?.slug || readQueueBusinessSlug() || '';
-
-  const candidates: Array<{ entryId: string; phone: string }> = [];
-  if (ticket?.entryId && (lookupPhone || ticket.phone)) {
-    candidates.push({ entryId: ticket.entryId, phone: lookupPhone || ticket.phone });
+  if (!ticket?.token) return null;
+  try {
+    const entry = await fetchQueueEntry(ticket.entryId, ticket.token);
+    if (entry.business_id !== input.businessId) return null;
+    if (isActiveQueueStatus(entry.status) || isRecentClosedQueueEntry(entry)) return entry;
+    clearQueueTicket(input.businessId);
+    return null;
+  } catch (error) {
+    if (isQueueEntryNotFound(error)) return null;
+    throw new QueueLookupError('Não foi possível consultar sua senha.', error);
   }
-  for (const proof of listQueuePhoneProofs()) {
-    if (candidates.some((candidate) => candidate.entryId === proof.entryId)) continue;
-    candidates.push(proof);
-  }
-
-  // Senha de hoje já encerrada (concluída / não compareceu): só é devolvida se
-  // não houver nenhuma senha ativa, para o cliente ver o desfecho em vez de "fora da fila".
-  let recentClosed: QueueRecord | null = null;
-  // Falha de rede/RPC não pode virar "você não está na fila": propagamos se nada respondeu.
-  let lastFailure: unknown = null;
-
-  for (const candidate of candidates) {
-    try {
-      const byId = await fetchQueueEntry(candidate.entryId, candidate.phone);
-      if (byId.business_id !== input.businessId) continue;
-      if (!isActiveQueueStatus(byId.status)) {
-        if (isRecentClosedQueueEntry(byId)) {
-          if (!recentClosed || Date.parse(byId.joined_at) > Date.parse(recentClosed.joined_at)) {
-            recentClosed = byId;
-          }
-          continue;
-        }
-        if (ticket?.entryId === byId.id) clearQueueTicket(input.businessId);
-        continue;
-      }
-      storeQueueTicket({
-        businessId: input.businessId,
-        entryId: byId.id,
-        phone: candidate.phone,
-        slug,
-      });
-      return byId;
-    } catch (error) {
-      if (!isQueueEntryNotFound(error)) lastFailure = error;
-    }
-  }
-
-  if (lookupPhone) {
-    try {
-      const active = await findActiveQueueEntryByPhone(input.businessId, lookupPhone);
-      if (active) {
-        storeQueueTicket({
-          businessId: input.businessId,
-          entryId: active.id,
-          phone: lookupPhone,
-          slug,
-        });
-        return active;
-      }
-    } catch (error) {
-      lastFailure = error;
-    }
-  }
-
-  if (recentClosed) return recentClosed;
-  if (lastFailure) {
-    throw new QueueLookupError('Não foi possível consultar sua senha.', lastFailure);
-  }
-  return null;
-}
-
-function rememberJoinedEntry(slug: string, entry: QueueRecord, phone: string): QueueRecord {
-  storeQueueTicket({
-    businessId: entry.business_id,
-    entryId: entry.id,
-    phone,
-    slug,
-  });
-  return entry;
-}
-
-function fallbackJoinedRecord(input: JoinQueueInput, entryId: string): QueueRecord {
-  return {
-    id: entryId,
-    business_id: input.businessId,
-    client_name: input.clientName,
-    client_phone: input.clientPhone,
-    service_id: input.serviceId ?? null,
-    professional_id: input.professionalId ?? null,
-    status: 'waiting',
-    joined_at: new Date().toISOString(),
-  };
 }
 
 export async function joinQueue(input: JoinQueueInput): Promise<QueueRecord> {
@@ -368,19 +243,10 @@ export async function joinQueue(input: JoinQueueInput): Promise<QueueRecord> {
     throw new Error('Este estabelecimento ainda não ativou a fila digital.');
   }
 
-  try {
-    const duplicate = await findActiveQueueEntryByPhone(parsed.businessId, parsed.clientPhone);
-    if (duplicate) {
-      // Não fingimos que a nova escolha (serviço / Pix) foi registrada: quem chama decide
-      // como avisar e abre a senha existente.
-      throw new QueueAlreadyActiveError(rememberJoinedEntry(slug, duplicate, parsed.clientPhone));
-    }
-  } catch (error) {
-    if (error instanceof QueueAlreadyActiveError) throw error;
-    // Dedup é best-effort: a RPC de join ainda valida unicidade.
-  }
+  const existing = await findActiveQueueEntryByPhone(parsed.businessId, parsed.clientPhone);
+  if (existing) throw new QueueAlreadyActiveError(existing);
 
-  const { data, error } = await supabase.rpc('join_queue_entry', {
+  const { data, error } = await supabase.rpc('join_queue_entry_private', {
     p_slug: slug,
     p_client_name: parsed.clientName,
     p_client_phone: parsed.clientPhone,
@@ -392,62 +258,18 @@ export async function joinQueue(input: JoinQueueInput): Promise<QueueRecord> {
     p_mbway_phone: parsed.mbwayPhone ?? null,
   });
 
-  if (error) {
-    if (isAlreadyInQueueError(error)) {
-      try {
-        const existing = await findActiveQueueEntryByPhone(parsed.businessId, parsed.clientPhone);
-        if (existing) throw new QueueAlreadyActiveError(rememberJoinedEntry(slug, existing, parsed.clientPhone));
-      } catch (lookupError) {
-        if (lookupError instanceof QueueAlreadyActiveError) throw lookupError;
-        // segue o erro original abaixo
-      }
-    }
-    throw new Error(queueJoinUserMessage(error));
+  if (error) throw new Error(queueJoinUserMessage(error));
+  const payload = data as { entry?: unknown; management_token?: string } | null;
+  const entry = parseQueueRecord(payload?.entry);
+  if (!entry || !/^[a-f0-9]{64}$/.test(payload?.management_token ?? '')) {
+    throw new Error('Não foi possível confirmar sua senha. Fale com o estabelecimento.');
   }
-
-  storeQueueBusinessSlug(slug);
-
-  try {
-    const created = await findActiveQueueEntryByPhone(parsed.businessId, parsed.clientPhone);
-    if (created) {
-      return rememberJoinedEntry(slug, created, parsed.clientPhone);
-    }
-  } catch {
-    // Recupera pelo payload da RPC.
-  }
-
-  const payload = data && typeof data === 'object' ? data as { id?: string } : null;
-  const joinedId = payload?.id;
-  if (!joinedId) {
-    throw new Error('Não foi possível confirmar sua senha. Fale com a equipe no balcão.');
-  }
-  return rememberJoinedEntry(slug, fallbackJoinedRecord(parsed, joinedId), parsed.clientPhone);
+  storeQueueTicket({ businessId: entry.business_id, entryId: entry.id, token: payload!.management_token, slug });
+  return entry;
 }
 
-export async function findNameToOpenPublicArea(businessId: string, phone: string): Promise<string | null> {
-  let queueFailed = false;
-  try {
-    const queue = await findActiveQueueEntryByPhone(businessId, phone);
-    const queueName = queue?.client_name?.trim();
-    if (queueName) return queueName;
-  } catch {
-    queueFailed = true;
-  }
-
-  const { data, error } = await supabase.rpc('get_active_booking_by_phone', {
-    p_phone: phone,
-    p_business_id: businessId,
-  });
-  if (!error) {
-    const row = Array.isArray(data) ? data[0] : data;
-    const bookingName = (row as { customer_name?: string } | null | undefined)?.customer_name?.trim();
-    if (bookingName) return bookingName;
-  }
-
-  if (queueFailed || error) {
-    throw new Error('Não foi possível verificar sua senha. Tente de novo.');
-  }
-  return null;
+export async function findNameToOpenPublicArea(businessId: string, _phone: string): Promise<string | null> {
+  return (await resolveClientQueueEntry({ businessId, phone: null }))?.client_name ?? null;
 }
 
 export async function addManualQueueEntry(input: ManualQueueInput): Promise<QueueRecord> {
@@ -461,15 +283,6 @@ export async function addManualQueueEntry(input: ManualQueueInput): Promise<Queu
     throw error;
   }
 
-  try {
-    const duplicate = await findActiveQueueEntryByPhone(parsed.businessId, parsed.clientPhone);
-    if (duplicate) {
-      throw new Error(`Este telefone já está na fila (${duplicate.client_name}).`);
-    }
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('já está na fila')) throw error;
-  }
-
   const { data, error } = await supabase.rpc('add_manual_queue_entry', {
     p_client_name: parsed.clientName,
     p_client_phone: parsed.clientPhone,
@@ -481,11 +294,10 @@ export async function addManualQueueEntry(input: ManualQueueInput): Promise<Queu
   if (error) {
     throw new Error(queueJoinUserMessage(error, 'Não foi possível adicionar o cliente à fila. Tente de novo.'));
   }
-  const created = await findActiveQueueEntryByPhone(parsed.businessId, parsed.clientPhone);
-  if (created) return created;
+  if (!(data as { id?: string })?.id) throw new Error('Não foi possível confirmar a senha. Tente novamente.');
 
   return queueEntrySchema.parse({
-    id: (data as { id?: string })?.id ?? 'pending',
+    id: (data as { id: string }).id,
     business_id: parsed.businessId,
     client_name: parsed.clientName,
     client_phone: parsed.clientPhone,
@@ -571,10 +383,10 @@ export function hydrateQueuePublicBoard(raw: unknown): QueuePublicBoard {
   });
 }
 
-export async function fetchQueuePublicBoard(entryId: string, phone: string): Promise<QueuePublicBoard> {
-  const { data, error } = await supabase.rpc('get_queue_public_board', {
+export async function fetchQueuePublicBoard(entryId: string, token: string): Promise<QueuePublicBoard> {
+  const { data, error } = await supabase.rpc('get_queue_board_with_token', {
     p_entry_id: entryId,
-    p_phone: phone,
+    p_token: token,
   });
   if (error) throw error;
   return hydrateQueuePublicBoard(data);
@@ -773,10 +585,10 @@ export interface QueueStatusSnapshot {
   position: number | null;
 }
 
-export async function fetchQueueEntry(entryId: string, phone: string): Promise<QueueRecord> {
-  const { data, error } = await supabase.rpc('get_queue_entry_public', {
+export async function fetchQueueEntry(entryId: string, token: string): Promise<QueueRecord> {
+  const { data, error } = await supabase.rpc('get_queue_entry_with_token', {
     p_entry_id: entryId,
-    p_phone: phone,
+    p_token: token,
   });
 
   if (error) throw error;
@@ -787,10 +599,10 @@ export async function fetchQueueEntry(entryId: string, phone: string): Promise<Q
   return queueEntrySchema.parse(entry);
 }
 
-export async function cancelQueueEntryPublic(entryId: string, phone: string): Promise<boolean> {
-  const { data, error } = await supabase.rpc('cancel_queue_entry_public', {
+export async function cancelQueueEntryPublic(entryId: string, token: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc('cancel_queue_entry_with_token', {
     p_entry_id: entryId,
-    p_phone: phone,
+    p_token: token,
   });
 
   if (error) throw error;
@@ -830,10 +642,10 @@ export async function resolveQueuePosition(entry: QueueRecord): Promise<number |
   return count;
 }
 
-export async function fetchQueueStatusSnapshot(entryId: string, phone: string): Promise<QueueStatusSnapshot> {
-  const entry = await fetchQueueEntry(entryId, phone);
+export async function fetchQueueStatusSnapshot(entryId: string, token: string): Promise<QueueStatusSnapshot> {
+  const entry = await fetchQueueEntry(entryId, token);
   const business = await fetchQueueBusinessProfile(entry.business_id);
-  const position = await resolveQueuePosition(entry);
+  const position = (await fetchQueuePublicBoard(entryId, token)).position ?? null;
 
   return { entry, business, position };
 }

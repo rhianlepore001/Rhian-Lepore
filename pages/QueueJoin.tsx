@@ -16,7 +16,6 @@ import {
   markQueueQrVisit,
   QueueAlreadyActiveError,
   queueJoinUserMessage,
-  storeQueueTicket,
 } from '../services/queue';
 import { isQueueIdentityPhoneValid } from '../utils/queueIdentity';
 import { logger } from '../utils/Logger';
@@ -109,7 +108,8 @@ export const QueueJoin: React.FC = () => {
 
   const openExistingTicket = React.useCallback((entryId: string, entryPhone: string) => {
     if (!business || !slug) return;
-    storeQueueTicket({ businessId: business.id, entryId, phone: entryPhone, slug });
+    void entryId;
+    void entryPhone;
     showToast('Você já está nesta fila. Abrindo sua senha.', 'info');
     navigate(`/minha-area/${slug}?tab=fila`, { replace: true });
   }, [business, navigate, showToast, slug]);

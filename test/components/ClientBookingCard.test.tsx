@@ -41,6 +41,7 @@ function renderCard(onCancelled = vi.fn()) {
         businessPhone="11999998888"
         businessSlug="barbearia-silva"
         clientName="Zé"
+        managementToken="test-private-token"
         clientPhone="11999998888"
         region="PT"
         onCancelled={onCancelled}
@@ -80,10 +81,10 @@ describe('ClientBookingCard', () => {
     await userEvent.click(screen.getByRole('button', { name: /Cancelar/ }));
     await userEvent.click(screen.getByRole('button', { name: /^Confirmar$/ }));
 
-    expect(cancelPublicBooking).toHaveBeenCalledWith('b1', '11999998888');
+    expect(cancelPublicBooking).toHaveBeenCalledWith('b1', 'test-private-token');
     expect(onCancelled).not.toHaveBeenCalled();
     expect(showToast).toHaveBeenCalledWith(
-      'Não foi possível cancelar. Tente de novo ou fale com o salão.',
+      'Não foi possível cancelar. Tente de novo ou fale com o estabelecimento.',
       'error',
     );
   });
@@ -107,7 +108,8 @@ function renderCancelled(extra: Partial<ClientBooking>) {
               businessPhone="11999998888"
               businessSlug="barbearia-silva"
               clientName="Zé"
-              clientPhone="11999998888"
+              managementToken="test-private-token"
+        clientPhone="11999998888"
               region="PT"
               onCancelled={vi.fn()}
             />
@@ -163,6 +165,7 @@ function renderPr1Card(
         businessPhone={businessPhone}
         businessSlug="barbearia-sao-joao"
         clientName="Zé"
+        managementToken="test-private-token"
         clientPhone="11999998888"
         region="PT"
         timeZone="Europe/Lisbon"
@@ -402,7 +405,8 @@ function renderPr4(
               businessPhone="11999998888"
               businessSlug="barbearia-sao-joao"
               clientName="Zé Cliente"
-              clientPhone="11999998888"
+              managementToken="test-private-token"
+        clientPhone="11999998888"
               region="BR"
               timeZone={timeZone}
               clubOffered={clubOffered}
@@ -543,7 +547,8 @@ describe('ClientBookingCard — PR-5 prazo de cancelamento', () => {
           businessPhone="11999998888"
           businessSlug="corte-fino"
           clientName="Zé"
-          clientPhone="11999998888"
+          managementToken="test-private-token"
+        clientPhone="11999998888"
           businessName="Barbearia São João"
           region="PT"
           cancelCutoffHours={2}
@@ -566,7 +571,8 @@ describe('ClientBookingCard — PR-5 prazo de cancelamento', () => {
           businessPhone="11999998888"
           businessSlug="corte-fino"
           clientName="Zé"
-          clientPhone="11999998888"
+          managementToken="test-private-token"
+        clientPhone="11999998888"
           businessName="Barbearia São João"
           region="PT"
           cancelCutoffHours={2}
@@ -593,7 +599,8 @@ describe('ClientBookingCard — PR-5 prazo de cancelamento', () => {
           businessPhone="11999998888"
           businessSlug="corte-fino"
           clientName="Zé"
-          clientPhone="11999998888"
+          managementToken="test-private-token"
+        clientPhone="11999998888"
           businessName="Barbearia São João"
           region="PT"
           cancelCutoffHours={2}
@@ -620,7 +627,8 @@ describe('ClientBookingCard — PR-5 prazo de cancelamento', () => {
           businessPhone="11999998888"
           businessSlug="corte-fino"
           clientName="Zé"
-          clientPhone="11999998888"
+          managementToken="test-private-token"
+        clientPhone="11999998888"
           businessName="Barbearia São João"
           cancelCutoffHours={2}
           onCancelled={vi.fn()}
@@ -659,7 +667,8 @@ describe('ClientBookingCard — PR-6 pedido de alteração', () => {
           businessPhone="11999998888"
           businessSlug="corte-fino"
           clientName="Zé"
-          clientPhone="11999998888"
+          managementToken="test-private-token"
+        clientPhone="11999998888"
           businessName="Barbearia São João"
           region="BR"
           timeZone="America/Sao_Paulo"
@@ -695,7 +704,8 @@ describe('ClientBookingCard — PR-6 pedido de alteração', () => {
           businessPhone="11999998888"
           businessSlug="corte-fino"
           clientName="Zé"
-          clientPhone="11999998888"
+          managementToken="test-private-token"
+        clientPhone="11999998888"
           businessName="Barbearia São João"
           region="BR"
           timeZone="America/Sao_Paulo"
@@ -718,7 +728,8 @@ describe('ClientBookingCard — PR-6 pedido de alteração', () => {
           businessPhone="11999998888"
           businessSlug="corte-fino"
           clientName="Zé"
-          clientPhone="11999998888"
+          managementToken="test-private-token"
+        clientPhone="11999998888"
           businessName="Barbearia São João"
           region="PT"
           cancelCutoffHours={2}

@@ -1,0 +1,27 @@
+{
+  "id": "evt_test_checkout_completed",
+  "object": "event",
+  "api_version": "2023-10-16",
+  "created": 1760000000,
+  "livemode": false,
+  "pending_webhooks": 1,
+  "request": { "id": null, "idempotency_key": null },
+  "type": "checkout.session.completed",
+  "data": {
+    "object": {
+      "id": "cs_test_123",
+      "object": "checkout.session",
+      "mode": "subscription",
+      "status": "complete",
+      "payment_status": "paid",
+      "client_reference_id": "a0000000-0000-4000-8000-0000000000a0",
+      "customer": "cus_TESTOWNERA",
+      "subscription": "sub_TEST123",
+      "metadata": {
+        "supabase_user_id": "a0000000-0000-4000-8000-0000000000a0",
+        "plan_id": "solo",
+        "currency": "BRL"
+      }
+    }
+  }
+}

@@ -1,3 +1,4 @@
+import { useDraftFields } from '../../hooks/useDraftFields';
 import React, { useState } from 'react';
 import { Plus, User } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
@@ -40,6 +41,12 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({
     const [loading, setLoading] = useState(false);
     const { showToast } = useToast();
 
+    const formDraft = useDraftFields('appointment:new-client', {
+        isCreatingClient: [isCreatingClient, setIsCreatingClient],
+        newClientName: [newClientName, setNewClientName],
+        newClientPhone: [newClientPhone, setNewClientPhone]
+    }, { enabled: isCreatingClient });
+
     const handleCreateClient = async () => {
         if (!newClientName || !newClientPhone || !tenantId) return;
         setLoading(true);
@@ -57,6 +64,7 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({
 
             if (error) throw error;
             if (data) {
+                formDraft.clear();
                 onRefreshClients();
                 onClientCreated(data.id);
                 setIsCreatingClient(false);
@@ -134,7 +142,7 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({
                         />
                     </div>
                     <div className="flex gap-3 pt-2">
-                        <Button variant="secondary" onClick={() => setIsCreatingClient(false)} className="flex-1">Cancelar</Button>
+                        <Button variant="secondary" onClick={() => { formDraft.clear(); setIsCreatingClient(false); }} className="flex-1">Cancelar</Button>
                         <Button
                             variant="primary"
                             onClick={handleCreateClient}

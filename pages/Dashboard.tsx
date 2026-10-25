@@ -79,7 +79,7 @@ export const Dashboard: React.FC = () => {
       if (count && count > 0) setUnfinishedCount(count);
     };
     fetchUnfinished();
-  }, [user, unfinishedBannerDismissed, isStaff, companyId]);
+  }, [user?.id, unfinishedBannerDismissed, isStaff, companyId]);
 
   const {
     loading: statsLoading,

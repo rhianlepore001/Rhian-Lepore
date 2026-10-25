@@ -36,7 +36,7 @@ export const StepWelcome: React.FC<StepWelcomeProps> = ({ onNext, onSkip, accent
             setLoading(false);
         };
         loadProfile();
-    }, [user]);
+    }, [user?.id]);
 
     const runAction = async (kind: 'next' | 'skip', action: () => Promise<void> | void) => {
         if (busy) return;

@@ -1,3 +1,4 @@
+import { useDraftFields } from '../hooks/useDraftFields';
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import FocusTrap from 'focus-trap-react';
@@ -44,7 +45,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
     service,
     categories,
     allServices: _allServices,
-    onClose,
+    onClose: closeForm,
     onSave,
     accentColor: _accentColorProp
 }) => {
@@ -75,6 +76,23 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
     const [isCreatingCategory, setIsCreatingCategory] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState('');
     const [localCategories, setLocalCategories] = useState<ServiceCategory[]>(categories);
+
+    const onClose = () => { formDraft.clear(); closeForm(); };
+    const formDraft = useDraftFields(`service:${service?.id ?? 'new'}`, {
+        name: [name, setName],
+        description: [description, setDescription],
+        price: [price, setPrice],
+        duration: [duration, setDuration],
+        customHours: [customHours, setCustomHours],
+        customMinutes: [customMinutes, setCustomMinutes],
+        categoryId: [categoryId, setCategoryId],
+        active: [active, setActive],
+        hadPhoto: [!!imageFile, () => {}],
+        isCreatingCategory: [isCreatingCategory, setIsCreatingCategory],
+        newCategoryName: [newCategoryName, setNewCategoryName]
+    }, { onDiscard: onClose, restore: data => ({ ...data,
+        categoryId: categories.some(c => c.id === data.categoryId) ? data.categoryId : '',
+    }) });
 
     useEffect(() => {
         setLocalCategories(categories);

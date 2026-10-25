@@ -3,6 +3,7 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { ServiceModal } from '../../components/ServiceModal';
 
+vi.mock('../../contexts/AuthContext', () => ({ useAuth: () => ({ user: { id: 'fictional-user' }, companyId: 'fictional-company' }) }));
 vi.mock('../../hooks/useBrutalTheme', () => ({
   useBrutalTheme: () => ({
     isBeauty: false,

@@ -1,3 +1,4 @@
+import { useDraftFields } from '../../hooks/useDraftFields';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
@@ -61,7 +62,7 @@ function defaultEndTime(start?: string): string {
 
 export const AgendaBlockForm: React.FC<AgendaBlockFormProps> = ({
   open,
-  onClose,
+  onClose: closeForm,
   members,
   showProfessionalSelect,
   professionalId,
@@ -100,6 +101,15 @@ export const AgendaBlockForm: React.FC<AgendaBlockFormProps> = ({
     setPinnedStart(null);
     setPinnedEnd(null);
   }, [open, initialDate, initialTime]);
+
+  const onClose = () => { formDraft.clear(); closeForm(); };
+  const formDraft = useDraftFields('agenda:block', {
+    kind: [kind, setKind],
+    startDate: [startDate, setStartDate],
+    endDate: [endDate, setEndDate],
+    startTime: [startTime, setStartTime],
+    endTime: [endTime, setEndTime]
+  }, { onDiscard: onClose, enabled: open, ready: open });
 
   const clearAdjust = () => {
     setAwaitingAdjust(false);

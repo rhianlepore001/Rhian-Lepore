@@ -1,4 +1,5 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+﻿import { useDraftFields } from '../hooks/useDraftFields';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Cake, ChevronRight, MessageCircle, Plus, Search, User, Users } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -93,6 +94,15 @@ export const Clients: React.FC = () => {
   const [photo, setPhoto] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
+  const formDraft = useDraftFields('clients:new', {
+    showModal: [showModal, setShowModal],
+    name: [name, setName],
+    email: [email, setEmail],
+    phone: [phone, setPhone],
+    birthDate: [birthDate, setBirthDate],
+    hadPhoto: [!!photo, () => {}]
+  }, { enabled: showModal });
+
   const fetchClients = async () => {
     setLoading(true);
     setFetchError(false);
@@ -140,6 +150,7 @@ export const Clients: React.FC = () => {
   );
 
   const resetForm = () => {
+    formDraft.clear();
     setName('');
     setEmail('');
     setPhone('');
@@ -266,7 +277,7 @@ export const Clients: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {loading ? (
+        {loading && clients.length === 0 && !showModal ? (
           <>
             <SkeletonCard />
             <SkeletonCard />

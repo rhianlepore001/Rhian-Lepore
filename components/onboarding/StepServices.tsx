@@ -27,7 +27,7 @@ export const StepServices: React.FC<StepServicesProps> = ({ onNext, onBack, acce
 
     useEffect(() => {
         fetchData();
-    }, [user]);
+    }, [user?.id]);
 
     const fetchData = async () => {
         if (!user) return;

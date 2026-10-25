@@ -1,3 +1,4 @@
+import { useDraftFields } from '../../hooks/useDraftFields';
 import React, { useState } from 'react';
 import { Card, Button, ConfirmModal, useToast } from '../../components/ui';
 import { SettingsLayout } from '../../components/SettingsLayout';
@@ -39,6 +40,13 @@ export const ServiceSettings: React.FC = () => {
     const [pendingDeleteServiceId, setPendingDeleteServiceId] = useState<string | null>(null);
     const [inactiveInfoServiceId, setInactiveInfoServiceId] = useState<string | null>(null);
     const { showToast } = useToast();
+
+    const openFormDraft = useDraftFields('service:open', {
+        isServiceModalOpen: [isServiceModalOpen, setIsServiceModalOpen],
+        editingId: [editingService?.id ?? '', id => setEditingService(services.find(item => item.id === id) ?? null)],
+    }, { enabled: isServiceModalOpen, ready: !loading, notify: false,
+        restore: data => ({ ...data, isServiceModalOpen: data.isServiceModalOpen && (!data.editingId || services.some(item => item.id === data.editingId)) }),
+    });
 
     const openCategoryModal = (category: ServiceCategory | null = null) => {
         setEditingCategory(category);
@@ -382,7 +390,7 @@ export const ServiceSettings: React.FC = () => {
                         service={editingService}
                         categories={categories}
                         allServices={services}
-                        onClose={() => setIsServiceModalOpen(false)}
+                        onClose={() => { openFormDraft.clear(); setIsServiceModalOpen(false); }}
                         onSave={() => { void refetch(); }}
                     />
                 )}

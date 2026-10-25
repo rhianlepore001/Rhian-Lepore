@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom';
+import { cleanup } from '@testing-library/react';
 import { vi, afterEach } from 'vitest';
 
 if (!import.meta.env.VITE_SUPABASE_URL) {
@@ -91,5 +92,7 @@ global.IntersectionObserver = class IntersectionObserver {
 
 // Limpar mocks após cada teste
 afterEach(() => {
+    cleanup();
+    sessionStorage.clear();
     vi.clearAllMocks();
 });

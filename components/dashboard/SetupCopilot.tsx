@@ -106,7 +106,7 @@ export const SetupCopilot: React.FC = () => {
         return () => {
             window.removeEventListener('setup-step-completed' as any, checkSetupProgress as any);
         };
-    }, [user, companyId]);
+    }, [user?.id, companyId]);
 
     const steps: SetupStep[] = [
         {

@@ -1,4 +1,6 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+﻿import { discardFormDraft } from '../hooks/useFormDraft';
+import { useDraftFields } from '../hooks/useDraftFields';
+import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import FocusTrap from 'focus-trap-react';
 import { supabase } from '../lib/supabase';
@@ -149,7 +151,9 @@ export const Agenda: React.FC = () => {
     const [clients, setClients] = useState<Client[]>([]);
     const [services, setServices] = useState<Service[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(true);
+    const [initialLoading, setInitialLoading] = useState(true);
+    const [hasLoadedData, setHasLoadedData] = useState(false);
     const [fetchError, setFetchError] = useState<string | null>(null);
     const [selectedDate, setSelectedDate] = useState(getInitialDate(searchParams));
     const agendaDateStr = formatLocalDateString(selectedDate);
@@ -226,6 +230,26 @@ export const Agenda: React.FC = () => {
     const { accent, colors, isBeauty, classes, font, radius, shadow, status } = useBrutalTheme();
     const copy = useBusinessCopy();
     const { showToast } = useToast();
+    const openFormsDraft = useDraftFields('agenda:open-forms', {
+        showNewAppointmentModal: [showNewAppointmentModal, setShowNewAppointmentModal],
+        showBlockForm: [showBlockForm, setShowBlockForm],
+        blockProfessionalId: [blockProfessionalId, setBlockProfessionalId],
+        editingId: [editingAppointment?.id ?? '', id => setEditingAppointment(appointments.find(a => a.id === id) ?? null)],
+        checkoutId: [checkoutAppointment?.id ?? '', id => {
+            const found = appointments.find(a => a.id === id && (a.status === 'Confirmed' || a.status === 'Pending'));
+            setCheckoutAppointment(found ? { ...found,
+                time: formatTimeInTimeZone(found.appointment_time, shopTimeZone),
+                status: found.status === 'Pending' ? 'Pending' : 'Confirmed',
+                professional_id: found.professional_id ?? undefined,
+            } : null);
+        }]
+    }, { enabled: showNewAppointmentModal || showBlockForm || !!editingAppointment || !!checkoutAppointment,
+      ready: hasLoadedData, notify: false,
+      restore: data => ({ ...data,
+        blockProfessionalId: teamMembers.some(m => m.id === data.blockProfessionalId) ? data.blockProfessionalId : '',
+      }),
+    });
+
     const [confirmDialog, setConfirmDialog] = useState<{
         title: string;
         message: string;
@@ -290,7 +314,7 @@ export const Agenda: React.FC = () => {
         if (user && effectiveUserId) {
             fetchData();
         }
-    }, [user, selectedDate, effectiveUserId]);
+    }, [user?.id, selectedDate, effectiveUserId]);
 
     // State for viewing appointment details
     const [showingDetailsAppointment, setShowingDetailsAppointment] = useState<Appointment | null>(null);
@@ -306,7 +330,7 @@ export const Agenda: React.FC = () => {
             handledFocusAppointmentRef.current = null;
             return;
         }
-        if (loading || handledFocusAppointmentRef.current === focusAppointmentId) return;
+        if (refreshing || handledFocusAppointmentRef.current === focusAppointmentId) return;
         const found = appointments.find((apt) => apt.id === focusAppointmentId);
         if (!found) return;
         handledFocusAppointmentRef.current = focusAppointmentId;
@@ -319,13 +343,13 @@ export const Agenda: React.FC = () => {
             time: formatTimeInTimeZone(found.appointment_time, shopTimeZone),
         });
         setShowingDetailsAppointment(found);
-    }, [focusAppointmentId, appointments, loading, focusCreated, shopTimeZone]);
+    }, [focusAppointmentId, appointments, refreshing, focusCreated, shopTimeZone]);
 
     useEffect(() => {
         if (isOverdueFilter) {
             fetchOverdueAppointments();
         }
-    }, [user, isOverdueFilter]);
+    }, [user?.id, isOverdueFilter]);
 
     // Effect to fetch history appointments when historyMonth changes and modal is open
     useEffect(() => {
@@ -366,7 +390,7 @@ export const Agenda: React.FC = () => {
             price: apt.price,
             appointment_time: apt.appointment_time
         }));
-    }, [user]);
+    }, [user?.id]);
 
 
     // Price Calculation & Sync Effect
@@ -448,7 +472,7 @@ export const Agenda: React.FC = () => {
     }, [searchParams, clients, services, canOpenBlockFromPlus, isStaff, teamMemberId, selectedProfessionalIds, teamMembers]);
 
     const fetchData = async (dateOverride?: Date) => {
-        setLoading(true);
+        setRefreshing(true);
         setFetchError(null);
         try {
             await Promise.all([
@@ -461,11 +485,13 @@ export const Agenda: React.FC = () => {
                 fetchBusinessProfile(),
                 fetchCheckoutData()
             ]);
+            setHasLoadedData(true);
         } catch (error) {
             logger.error('Error fetching agenda data', error);
             setFetchError(formatUserFacingError(mapError(error, 'Não foi possível carregar a agenda.')));
         } finally {
-            setLoading(false);
+            setRefreshing(false);
+            setInitialLoading(false);
         }
     };
 
@@ -1058,6 +1084,7 @@ export const Agenda: React.FC = () => {
                 showToast('Agendamento criado com sucesso!', 'success');
             }
 
+            openFormsDraft.clear();
             setShowNewAppointmentModal(false);
             const newDate = new Date(selectedAppointmentDate);
             const userTimezoneOffset = newDate.getTimezoneOffset() * 60000;
@@ -1179,6 +1206,8 @@ export const Agenda: React.FC = () => {
                 showToast(message, 'error');
                 return;
             }
+            openFormsDraft.clear();
+            discardFormDraft(companyId, user?.id, 'agenda:block');
             setShowBlockForm(false);
             setBlockConflicts(undefined);
             setBlockFormError(null);
@@ -1325,7 +1354,8 @@ export const Agenda: React.FC = () => {
         return { hasDiscount: false, basePrice: apt.basePrice, discountAmount: 0, discountPercentage: 0, isCustomPriceHigher: false };
     };
 
-    if (loading) {
+    const formOpen = showNewAppointmentModal || !!editingAppointment || !!checkoutAppointment || showBlockForm;
+    if (initialLoading && !formOpen) {
         return (
             <div className={`flex items-center justify-center h-screen ${colors.bg}`} role="status" aria-busy="true">
                 <div className="flex flex-col items-center gap-3">
@@ -1336,7 +1366,7 @@ export const Agenda: React.FC = () => {
         );
     }
 
-    if (fetchError) {
+    if (fetchError && !hasLoadedData && !formOpen) {
         return (
             <div className={`${colors.bg} min-h-screen flex items-center justify-center px-4`}>
                 <ErrorState
@@ -1349,7 +1379,7 @@ export const Agenda: React.FC = () => {
     }
 
     return (
-        <div className="flex flex-col gap-3 min-w-0 w-full">
+        <div className="flex flex-col gap-3 min-w-0 w-full" aria-busy={refreshing}>
             <div className="shrink-0 pt-1">
                 <PageHeader
                     title="Agenda"
@@ -1942,6 +1972,8 @@ export const Agenda: React.FC = () => {
             <AgendaBlockForm
                 open={showBlockForm}
                 onClose={() => {
+                    openFormsDraft.clear();
+                    discardFormDraft(companyId, user?.id, 'agenda:block');
                     setShowBlockForm(false);
                     setBlockConflicts(undefined);
                     setBlockFormError(null);
@@ -1981,11 +2013,13 @@ export const Agenda: React.FC = () => {
             {showNewAppointmentModal && (
                 <AppointmentWizard
                     onClose={() => {
+                        openFormsDraft.clear();
                         setShowNewAppointmentModal(false);
                         setWizardPrefill(null);
                     }}
                     onSuccess={async (date, created) => {
                         const newDateStr = formatLocalDateString(date);
+                        openFormsDraft.clear();
                         setShowNewAppointmentModal(false);
                         setWizardPrefill(null);
                         const nextDate = new Date(date);
@@ -2033,7 +2067,7 @@ export const Agenda: React.FC = () => {
                     teamMembers={teamMembers}
                     services={services}
                     clients={clients}
-                    onClose={() => setEditingAppointment(null)}
+                    onClose={() => { openFormsDraft.clear(); setEditingAppointment(null); }}
                     onSave={fetchData}
                     onReschedule={() => {
                         const apt = editingAppointment;
@@ -2079,8 +2113,9 @@ export const Agenda: React.FC = () => {
                 appointment={checkoutAppointment}
                 teamMembers={checkoutTeamMembers}
                 financialSettings={financialSettings}
-                onClose={() => setCheckoutAppointment(null)}
+                onClose={() => { openFormsDraft.clear(); setCheckoutAppointment(null); }}
                 onConfirm={() => {
+                    openFormsDraft.clear();
                     setCheckoutAppointment(null);
                     fetchData();
                 }}

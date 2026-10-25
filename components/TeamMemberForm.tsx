@@ -1,3 +1,4 @@
+import { useDraftFields } from '../hooks/useDraftFields';
 import React, { useEffect, useState, useRef } from 'react';
 import { Upload, User, Check, Link as LinkIcon, CheckCircle2, Share2, Copy, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -54,7 +55,7 @@ type FormStep = 'form' | 'invite';
 
 export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     initialData,
-    onClose,
+    onClose: closeForm,
     onSave,
     isOwnerForm = false,
     onDelete,
@@ -120,6 +121,22 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
             })
             .catch(() => setScheduleReady(true));
     }, [showSchedule, initialData?.id]);
+
+    const onClose = () => { formDraft.clear(); closeForm(); };
+    const formDraft = useDraftFields(`team-member:${initialData?.id ?? 'new'}`, {
+        name: [name, setName],
+        role: [role, setRole],
+        bio: [bio, setBio],
+        isOwner: [isOwner, setIsOwner],
+        active: [active, setActive],
+        specialties: [specialties, setSpecialties],
+        cpf: [cpf, setCpf],
+        hadPhoto: [!!photoFile, () => {}],
+        commissionRate: [commissionRate, setCommissionRate],
+        useBusinessDefault: [useBusinessDefault, setUseBusinessDefault],
+        scheduleDraft: [scheduleDraft, setScheduleDraft],
+        scheduleFromIso: [scheduleFromIso, setScheduleFromIso]
+    }, { onDiscard: onClose, ready: !showSchedule || scheduleReady, enabled: step === 'form' });
 
     const inviteMemberId = createdMemberId || (initialData?.staff_user_id ? null : initialData?.id) || null;
     const { inviteLink, copied: copiedInviteLink, copy: copyInviteLink, share: shareInviteLink } = useCopyInviteLink({
@@ -258,6 +275,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                 }
 
                 window.dispatchEvent(new CustomEvent('setup-step-completed', { detail: { stepId: 'team' } }));
+                formDraft.clear();
                 onSave();
 
                 if (!isOwner && !initialData.staff_user_id) {
@@ -275,6 +293,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                 if (insertError) throw insertError;
 
                 window.dispatchEvent(new CustomEvent('setup-step-completed', { detail: { stepId: 'team' } }));
+                formDraft.clear();
                 onSave();
 
                 if (!isOwner && inserted?.id) {

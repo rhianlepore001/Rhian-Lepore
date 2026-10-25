@@ -1,6 +1,6 @@
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, within, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 const mutateAsync = vi.fn();
@@ -162,5 +162,37 @@ describe('AppointmentWizard: retorno do agendamento criado', () => {
     const [when, created] = onSuccess.mock.calls[0];
     expect([when.getDate(), when.getHours(), when.getMinutes()]).toEqual([28, 18, 30]);
     expect(created).toEqual({ id: 'apt-123', professionalId: 'pro-ana' });
+  });
+});
+
+
+describe('AppointmentWizard: persistent review', () => {
+  it('restores price, discount and notes without replacing manual values; closing clears nested client draft', async () => {
+    const prefix = 'agendix:draft:v1:company-1:staff-user:';
+    sessionStorage.setItem(`${prefix}appointment:wizard`, JSON.stringify({ v: 1, savedAt: Date.now(), data: {
+      step: 4, selectedClientId: 'cli-bruno', selectedServiceIds: ['s-corte'], selectedProId: 'pro-bob',
+      selectedDate: '2026-09-28', selectedTime: '10:00', customPrice: '72.50', discount: '10', notes: 'Nota fictícia',
+    } }));
+    sessionStorage.setItem(`${prefix}appointment:new-client`, '{}');
+    render(<AppointmentWizard {...props} />);
+    await waitFor(() => expect(screen.getByLabelText('Preço final')).toHaveValue(72.5));
+    expect(screen.getByLabelText('Desconto (%)')).toHaveValue(10);
+    expect(screen.getByLabelText('Observações internas')).toHaveValue('Nota fictícia');
+    await userEvent.click(screen.getByRole('button', { name: /^Fechar$/ }));
+    expect(sessionStorage.getItem(`${prefix}appointment:wizard`)).toBeNull();
+    expect(sessionStorage.getItem(`${prefix}appointment:new-client`)).toBeNull();
+  });
+
+  it('drops removed client, service and professional IDs when restoring', async () => {
+    sessionStorage.setItem('agendix:draft:v1:company-1:staff-user:appointment:wizard', JSON.stringify({ v: 1, savedAt: Date.now(), data: {
+      step: 1, selectedClientId: 'removed-client', selectedServiceIds: ['removed-service'], selectedProId: 'removed-professional',
+    } }));
+    render(<AppointmentWizard {...props} />);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Continuar' })).toBeDisabled());
+    act(() => window.dispatchEvent(new Event('pagehide')));
+    const data = JSON.parse(sessionStorage.getItem('agendix:draft:v1:company-1:staff-user:appointment:wizard')!).data;
+    expect(data.selectedClientId).toBe('');
+    expect(data.selectedServiceIds).toEqual([]);
+    expect(data.selectedProId).toBe('');
   });
 });

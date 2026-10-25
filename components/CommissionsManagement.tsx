@@ -95,11 +95,11 @@ export const CommissionsManagement: React.FC<CommissionsManagementProps> = ({ ac
     useEffect(() => {
         fetchSettlementDay();
         loadPayouts(null);
-    }, [user]);
+    }, [user?.id]);
 
     useEffect(() => {
         if (activeTab === 'paid') fetchPaidCommissions();
-    }, [activeTab, user]);
+    }, [activeTab, user?.id]);
 
     const fetchSettlementDay = async () => {
         if (!user) return;

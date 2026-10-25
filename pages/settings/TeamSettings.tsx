@@ -17,6 +17,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { TeamMemberCard } from '../../components/TeamMemberCard';
 import { SettingsSectionHeader } from '../../components/settings/SettingsSectionHeader';
 import { TeamMemberForm } from '../../components/TeamMemberForm';
+import { StaffClientPermissionSection } from '../../components/settings/StaffClientPermissionSection';
 import { StaffAppointmentPermissionSection } from '../../components/settings/StaffAppointmentPermissionSection';
 import { TeamMemberBlocksSection } from '../../components/agenda/TeamMemberBlocksSection';
 import { AgendaBlockForm } from '../../components/agenda/AgendaBlockForm';
@@ -528,6 +529,7 @@ export const TeamSettings: React.FC = () => {
                 </section>
 
                 <StaffAppointmentPermissionSection />
+                <StaffClientPermissionSection />
 
                 <ConfirmModal
                     open={!!pendingDeleteId}

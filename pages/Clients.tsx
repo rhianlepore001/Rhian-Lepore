@@ -75,7 +75,8 @@ function ClientStatusChips({ client }: { client: EnrichedClient }) {
 }
 
 export const Clients: React.FC = () => {
-  const { user, region, companyId } = useAuth();
+  const { user, region, companyId, role } = useAuth();
+  const isStaff = role === 'staff';
   const { showToast } = useToast();
   const { colors, accent, radius } = useBrutalTheme();
   const effectiveUserId = companyId ?? user?.id;
@@ -107,21 +108,24 @@ export const Clients: React.FC = () => {
     setLoading(true);
     setFetchError(false);
     try {
-      if (effectiveUserId) {
+      if (!effectiveUserId) return;
+      if (!isStaff) {
         await syncPublicClientsToCrm(effectiveUserId);
       }
 
+      const columns: string = isStaff ? 'id, user_id, name, phone, email, photo_url, birth_date, total_visits, last_visit' : '*';
       const { data, error } = await supabase
         .from('clients')
-        .select('*')
+        .select(columns)
         .eq('user_id', effectiveUserId)
         .neq('is_active', false)
-        .order('name', { ascending: true });
+        .order('name', { ascending: true })
+        .overrideTypes<ClientRecord[], { merge: false }>();
 
       if (error) throw error;
 
-      const rows = (data || []) as ClientRecord[];
-      const stats = await fetchClientAppointmentStats(
+      const rows = data || [];
+      const stats = isStaff ? [] : await fetchClientAppointmentStats(
         effectiveUserId || '',
         rows.map((c) => c.id),
       );
@@ -224,7 +228,7 @@ export const Clients: React.FC = () => {
     <div className="space-y-5 relative pb-28">
       <PageHeader
         title="Clientes"
-        action={
+        action={!isStaff &&
           <Button variant="primary" icon={<Plus />} onClick={() => setShowModal(true)}>
             Adicionar cliente
           </Button>
@@ -255,7 +259,7 @@ export const Clients: React.FC = () => {
           role="tablist"
           aria-label="Filtrar clientes"
         >
-          {FILTERS.map((type) => (
+          {FILTERS.filter((type) => !isStaff || type === 'Todos').map((type) => (
             <button
               key={type}
               type="button"
@@ -302,7 +306,7 @@ export const Clients: React.FC = () => {
                   : 'Seus clientes aparecem aqui. Cadastre o primeiro ou espere o agendamento online.'
               }
               action={
-                filterType === 'Todos' && !searchTerm ? (
+                !isStaff && filterType === 'Todos' && !searchTerm ? (
                   <Button variant="primary" size="md" icon={<Plus />} onClick={() => setShowModal(true)}>
                     Adicionar cliente
                   </Button>
@@ -341,7 +345,7 @@ export const Clients: React.FC = () => {
                         <h3 className={`text-base font-heading ${colors.text} truncate group-hover:text-theme-accent transition-colors`}>
                           {client.name}
                         </h3>
-                        <ClientStatusChips client={client} />
+                        {!isStaff && <ClientStatusChips client={client} />}
                       </div>
 
                       <p className={`text-sm ${colors.textSecondary} font-mono flex items-center gap-2 mb-2`}>
@@ -366,11 +370,11 @@ export const Clients: React.FC = () => {
                       </p>
 
                       <div className={`flex items-center justify-between gap-2 text-xs font-mono ${colors.textMuted}`}>
-                        <span>
+                        {!isStaff && <span>
                           {totalVisits} visita{totalVisits !== 1 ? 's' : ''}
                           <span className="mx-1.5 opacity-40">·</span>
                           {lastLabel === 'Nunca' ? 'Ainda não veio' : `Última: ${lastLabel}`}
-                        </span>
+                        </span>}
                         <span className="inline-flex items-center gap-2 shrink-0">
                           {client.birthdaySoon && (
                             <span
@@ -397,7 +401,7 @@ export const Clients: React.FC = () => {
       </div>
 
       <Modal
-        open={showModal}
+        open={!isStaff && showModal}
         onClose={() => {
           setShowModal(false);
           resetForm();

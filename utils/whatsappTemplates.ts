@@ -75,12 +75,12 @@ export const WHATSAPP_TEMPLATES: Record<WhatsAppTemplateKey, TemplatePair> = {
     barber: 'Oi, {primeiro_nome}! Você sempre cuida do seu {servico} com a gente em *{estabelecimento}* e sua última visita foi incrível, mas notamos que já faz {dias_ausente} dias que não nos vemos. Por isso, separei alguns horários exclusivos para você renovar esse estilo esta semana. Vamos agendar?',
   },
   rebooking: {
-    beauty: 'Oi {primeiro_nome}! Faz um tempo que não nos vemos. Que tal agendar um horário esta semana? ✨',
-    barber: 'Oi {primeiro_nome}! Faz um tempo que não nos vemos. Que tal agendar um horário esta semana? ✂️',
+    beauty: 'Oi {primeiro_nome}! Faz um tempo que não nos vemos. Que tal agendar um horário esta semana?',
+    barber: 'Oi {primeiro_nome}! Faz um tempo que não nos vemos. Que tal agendar um horário esta semana?',
   },
   queue_joined: {
-    beauty: 'Olá, {primeiro_nome}! Você entrou na fila de *{estabelecimento}*.\nAcompanhe sua senha neste link:\n{link_fila}\n\nSe for a primeira vez, informe o mesmo WhatsApp usado no balcão e veja a posição na fila.',
-    barber: 'Olá, {primeiro_nome}! Você entrou na fila de *{estabelecimento}*.\nAcompanhe sua senha neste link:\n{link_fila}\n\nSe for a primeira vez, informe o mesmo WhatsApp usado no balcão e veja a posição na fila.',
+    beauty: 'Olá, {primeiro_nome}! Você entrou na fila da {estabelecimento}.\nAcompanhe sua senha neste link:\n{link_fila}\n\nSe for a primeira vez, informe o mesmo WhatsApp usado no balcão e veja a posição na fila.',
+    barber: 'Olá, {primeiro_nome}! Você entrou na fila da {estabelecimento}.\nAcompanhe sua senha neste link:\n{link_fila}\n\nSe for a primeira vez, informe o mesmo WhatsApp usado no balcão e veja a posição na fila.',
   },
   membership_contact: {
     beauty: 'Olá {primeiro_nome}! Tudo bem? Aqui é de *{estabelecimento}*. Sobre seu plano "{plano}"...',

@@ -91,7 +91,7 @@ export function StandaloneWizardPointer() {
     
     window.addEventListener('setup-step-completed' as any, handler as any);
     return () => window.removeEventListener('setup-step-completed' as any, handler as any);
-  }, [activeStep, endGuide, user, isGuideActive]);
+  }, [activeStep, endGuide, user?.id, isGuideActive]);
 
   return ReactDOM.createPortal(
     <>

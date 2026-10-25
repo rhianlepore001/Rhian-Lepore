@@ -28,7 +28,7 @@ export const BusinessGalleryManager: React.FC<BusinessGalleryManagerProps> = () 
 
     useEffect(() => {
         if (user) fetchGallery();
-    }, [user]);
+    }, [user?.id]);
 
     const fetchGallery = async () => {
         try {

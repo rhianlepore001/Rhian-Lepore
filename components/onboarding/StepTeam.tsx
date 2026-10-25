@@ -21,7 +21,7 @@ export const StepTeam: React.FC<StepTeamProps> = ({ onNext, onBack, accentColor 
 
     useEffect(() => {
         fetchMembers();
-    }, [user]);
+    }, [user?.id]);
 
     const fetchMembers = async () => {
         if (!user) return;

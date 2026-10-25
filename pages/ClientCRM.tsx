@@ -1,4 +1,5 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+﻿import { useDraftFields } from '../hooks/useDraftFields';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -65,6 +66,14 @@ export const ClientCRM: React.FC = () => {
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isVip, setIsVip] = useState(false);
+
+  const formDraft = useDraftFields(`client:edit:${id}`, {
+    showEditModal: [showEditModal, setShowEditModal],
+    editName: [editName, setEditName],
+    editPhone: [editPhone, setEditPhone],
+    editEmail: [editEmail, setEditEmail],
+    editBirthDate: [editBirthDate, setEditBirthDate]
+  }, { enabled: showEditModal, ready: !!client });
 
   useEffect(() => {
     const fetchClient = async () => {
@@ -192,6 +201,7 @@ export const ClientCRM: React.FC = () => {
         birthdaySoon: isBirthdaySoon(birthDate, BIRTHDAY_WINDOW_DAYS),
         daysToBirthday: daysUntilBirthday(birthDate),
       });
+      formDraft.clear();
       showToast('Cliente atualizado.', 'success');
       setShowEditModal(false);
     } catch (error) {
@@ -456,7 +466,7 @@ export const ClientCRM: React.FC = () => {
         </div>
       </Card>
 
-      <Modal open={showEditModal} onClose={() => setShowEditModal(false)} title="Editar cliente" size="md">
+      <Modal open={showEditModal} onClose={() => { formDraft.clear(); setShowEditModal(false); }} title="Editar cliente" size="md">
         <form onSubmit={handleUpdateClient} className="space-y-4">
           <div>
             <label className={`block mb-1 ${classes.label}`} htmlFor="crm-edit-name">

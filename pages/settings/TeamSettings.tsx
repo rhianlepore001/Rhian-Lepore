@@ -1,3 +1,5 @@
+import { discardFormDraft } from '../../hooks/useFormDraft';
+import { useDraftFields } from '../../hooks/useDraftFields';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Button, ConfirmModal, useToast } from '../../components/ui';
@@ -54,7 +56,7 @@ import {
 } from '../../services/commissionSchedule';
 
 export const TeamSettings: React.FC = () => {
-    const { companyId, region } = useAuth();
+    const { companyId, region, user } = useAuth();
     const { remainder } = useBusinessCopy();
     const { accent, colors, classes } = useBrutalTheme();
     const queryClient = useQueryClient();
@@ -115,6 +117,14 @@ export const TeamSettings: React.FC = () => {
         commission_rate: m.commission_rate ?? m.commission_percent ?? 0,
     }));
 
+    const openFormDraft = useDraftFields('team:open', {
+        isModalOpen: [isModalOpen, setIsModalOpen],
+        blockFormMemberId: [blockFormMemberId ?? '', id => setBlockFormMemberId(members.some(m => m.id === id) ? id : null)],
+        editingId: [editingMember?.id ?? '', id => setEditingMember(members.find(item => item.id === id) ?? null)],
+    }, { enabled: isModalOpen || !!blockFormMemberId, ready: !loading, notify: false,
+        restore: data => ({ ...data, isModalOpen: data.isModalOpen && (!data.editingId || members.some(item => item.id === data.editingId)) }),
+    });
+
     const handleDelete = (id: string) => {
         const member = cardMembers.find((item) => item.id === id);
         if (member?.is_owner) {
@@ -148,6 +158,7 @@ export const TeamSettings: React.FC = () => {
 
     const goToAgenda = (path: string) => {
         setOpenAppointments(null);
+        openFormDraft.clear();
         setIsModalOpen(false);
         setEditingMember(null);
         navigate(path);
@@ -159,6 +170,7 @@ export const TeamSettings: React.FC = () => {
         try {
             await deleteMemberMutation.mutateAsync(memberId);
             showToast('Profissional excluído.', 'success');
+            openFormDraft.clear();
             setIsModalOpen(false);
             setEditingMember(null);
         } catch (error) {
@@ -208,6 +220,8 @@ export const TeamSettings: React.FC = () => {
                 showToast(result.message ?? messageForAgendaBlockResultCode(result.code), 'error');
                 return;
             }
+            openFormDraft.clear();
+            discardFormDraft(companyId, user?.id, 'agenda:block');
             setBlockFormMemberId(null);
             setBlockConflicts(undefined);
             showToast('Agenda bloqueada.', 'success');
@@ -553,6 +567,7 @@ export const TeamSettings: React.FC = () => {
                 <AgendaBlockForm
                     open={!!blockFormMemberId}
                     onClose={() => {
+                        openFormDraft.clear();
                         setBlockFormMemberId(null);
                         setBlockConflicts(undefined);
                     }}
@@ -569,7 +584,7 @@ export const TeamSettings: React.FC = () => {
                 {isModalOpen && (
                     <TeamMemberForm
                         initialData={editingMember}
-                        onClose={() => setIsModalOpen(false)}
+                        onClose={() => { openFormDraft.clear(); setIsModalOpen(false); }}
                         onDelete={handleDelete}
                         blocksSlot={editingMember?.id ? (
                             <TeamMemberBlocksSection
@@ -585,6 +600,7 @@ export const TeamSettings: React.FC = () => {
                             />
                         ) : undefined}
                         onSave={() => {
+                            openFormDraft.clear();
                             queryClient.invalidateQueries({ queryKey: ['team', companyId, 'members'] });
                             void fetchCommissionSchedules()
                                 .then((payload) => {

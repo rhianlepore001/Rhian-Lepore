@@ -39,7 +39,8 @@ import { cancelAppointment, deleteAppointmentWithFinance, fetchPendingPublicBook
 import { usePendingPublicBookingsLive } from '../hooks/usePendingPublicBookingsLive';
 import { mergePendingPublicBooking } from '../utils/bookingRealtime';
 
-import { buildWhatsAppLink, formatCurrency, formatPhone } from '../utils/formatters';
+import { formatCurrency, formatPhone } from '../utils/formatters';
+import { buildWhatsAppLink, renderWhatsAppTemplate } from '../utils/whatsappTemplates';
 import { formatDateForInput, formatLocalDateString, combineDateAndTime } from '../utils/date';
 import { buildAgendaDayWindow } from '../utils/agendaDayWindow';
 import { resolveBusinessTimezone, formatTimeInTimeZone, getDateStringInTimeZone, dateStringToLocalDate } from '../utils/businessTimezone';
@@ -1035,13 +1036,13 @@ export const Agenda: React.FC = () => {
                 const formattedTime = dateTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
                 const formattedPrice = finalPrice.toFixed(2).replace('.', ',');
 
-                const message = `Agendamento confirmado! ✨
-Data: ${formattedDate}
-Horário: ${formattedTime}
-Serviço: ${serviceNames}
-Valor: ${currencySymbol} ${formattedPrice}
-
-Obrigada pela confiança! Te espero no ${businessName}.`;
+                const message = renderWhatsAppTemplate('booking_confirmed', isBeauty ? 'beauty' : 'barber', {
+                    data: formattedDate,
+                    hora: formattedTime,
+                    servico: serviceNames,
+                    valor: `${currencySymbol} ${formattedPrice}`,
+                    estabelecimento: businessName,
+                });
 
                 setConfirmDialog({
                     title: 'Agendamento criado',

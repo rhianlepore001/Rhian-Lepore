@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useAIOSDiagnostic } from './useAIOSDiagnostic';
 import { formatCurrency } from '../utils/formatters';
-import { generateReactivationMessage, getWhatsAppUrl } from '../utils/aiosCopywriter';
+import { generateReactivationMessage } from '../utils/aiosCopywriter';
+import { buildWhatsAppLink } from '../utils/whatsappTemplates';
 
 export interface SmartNotification {
     id: string;
@@ -142,7 +143,7 @@ export function useSmartNotifications() {
 
             await logCampaignActivity(notification.client.id, 'SmartNotification', 'whatsapp_reactivation');
 
-            const url = getWhatsAppUrl(notification.client.phone, message);
+            const url = buildWhatsAppLink(notification.client.phone, region === 'PT' ? 'PT' : 'BR', message);
             window.open(url, '_blank');
 
             // Auto-dismiss after sending

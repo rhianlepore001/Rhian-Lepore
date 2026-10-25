@@ -17,7 +17,7 @@ import {
   isZonedSlotInPast,
   zonedDateTimeToDate,
 } from '../../utils/businessTimezone';
-import { buildWhatsAppLink } from '../../utils/formatters';
+import { buildWhatsAppLink } from '../../utils/whatsappTemplates';
 import { mapError } from '../../utils/mapError';
 import { slotOverlapsOccupying, type OccupyingAppointment } from '../../utils/agendaBlockRange';
 import { fetchRescheduleOccupancy } from '../../utils/rescheduleOccupancy';

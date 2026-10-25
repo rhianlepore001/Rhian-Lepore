@@ -1,3 +1,5 @@
+import { renderWhatsAppTemplate, type WhatsAppTheme } from './whatsappTemplates';
+
 export function buildQueueTrackingPath(slug: string): string {
   const trimmed = slug.trim();
   if (!trimmed) return '';
@@ -15,14 +17,12 @@ export function buildQueueTrackingMessage(input: {
   clientName: string;
   businessName: string;
   url: string;
+  theme?: WhatsAppTheme;
 }): string {
-  const firstName = input.clientName.trim().split(/\s+/).filter(Boolean)[0] || 'Olá';
-  const house = input.businessName.trim() || 'o estabelecimento';
-  return [
-    `Olá, ${firstName}! Você entrou na fila da ${house}.`,
-    'Acompanhe sua senha neste link:',
-    input.url,
-    '',
-    'Se for a primeira vez, informe o mesmo WhatsApp usado no balcão e veja a posição na fila.',
-  ].join('\n');
+  const firstName = input.clientName.trim().split(/\s+/).filter(Boolean)[0] || '';
+  return renderWhatsAppTemplate('queue_joined', input.theme ?? 'barber', {
+    primeiro_nome: firstName,
+    estabelecimento: input.businessName.trim() || 'o estabelecimento',
+    link_fila: input.url,
+  });
 }

@@ -1,6 +1,6 @@
 import { useAuth } from '../contexts/AuthContext';
+import { buildWhatsAppLink } from '../utils/whatsappTemplates';
 import {
-    buildWhatsAppLink,
     formatCurrency,
     formatPhone,
     getCurrencySymbol,

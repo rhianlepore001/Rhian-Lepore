@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -32,6 +32,9 @@ import {
   isNewClient,
 } from '../services/crm';
 
+import { useStaffClientPermission } from '../hooks/useStaffClientPermission';
+import { isStaffClientEditForbiddenError, STAFF_CLIENT_EDIT_FORBIDDEN_MESSAGE } from '../utils/staffClientPermission';
+
 const HISTORY_PAGE = 10;
 
 interface AppointmentHistoryItem {
@@ -45,6 +48,7 @@ interface AppointmentHistoryItem {
 export const ClientCRM: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user, region, companyId } = useAuth();
+  const { isStaff, canEdit } = useStaffClientPermission();
   const tenantId = companyId ?? user?.id;
   const { accent, isBeauty, classes, colors, radius, status } = useBrutalTheme();
   const { showToast } = useToast();
@@ -70,17 +74,21 @@ export const ClientCRM: React.FC = () => {
     const fetchClient = async () => {
       if (!id || !user || !tenantId) return;
       try {
-        const { data, error } = await supabase
-          .rpc('get_client_profile', { p_client_id: id })
-          .single();
+        const { data, error } = isStaff
+          ? await supabase.from('clients')
+            .select('id, name, phone, email, birth_date, notes, photo_url, last_visit, total_visits')
+            .eq('id', id).eq('user_id', tenantId).single()
+          : await supabase.rpc('get_client_profile', { p_client_id: id }).single();
 
         if (error) throw error;
         if (!data) return;
 
-        const { client: clientData, ltv, appointments_history } = data as any;
+        const { client: clientData, ltv, appointments_history } = isStaff
+          ? { client: data, ltv: 0, appointments_history: [] } as any
+          : data as any;
         const appointmentsData: AppointmentHistoryItem[] = appointments_history || [];
-        const totalVisits = appointmentsData.length;
-        const lastVisitAt = appointmentsData[0]?.appointment_time || null;
+        const totalVisits = isStaff ? (clientData.total_visits || 0) : appointmentsData.length;
+        const lastVisitAt = isStaff ? clientData.last_visit : appointmentsData[0]?.appointment_time || null;
         const firstVisitAt = appointmentsData[appointmentsData.length - 1]?.appointment_time || null;
 
         setNotes(clientData.notes || '');
@@ -101,6 +109,8 @@ export const ClientCRM: React.FC = () => {
           birthdaySoon: isBirthdaySoon(clientData.birth_date, BIRTHDAY_WINDOW_DAYS),
           daysToBirthday: daysUntilBirthday(clientData.birth_date),
         });
+
+        if (isStaff) return;
 
         // VIP: comparar LTV deste cliente com top 10 do tenant
         const { data: aptRows } = await supabase
@@ -128,7 +138,7 @@ export const ClientCRM: React.FC = () => {
     };
 
     void fetchClient();
-  }, [id, user, tenantId]);
+  }, [id, user, tenantId, isStaff]);
 
   const visibleHistory = useMemo(() => {
     const history: AppointmentHistoryItem[] = client?.appointmentsHistory || [];
@@ -136,21 +146,24 @@ export const ClientCRM: React.FC = () => {
   }, [client, showAllHistory]);
 
   const handleSaveNotes = async () => {
-    if (!client?.id || !tenantId) return;
+    if (!client?.id || !tenantId || !canEdit) return;
     setSavingNotes(true);
     try {
-      const { error } = await supabase
+      const { data: updated, error } = await supabase
         .from('clients')
         .update({ notes })
         .eq('id', client.id)
-        .eq('user_id', tenantId);
+        .eq('user_id', tenantId)
+        .select('id')
+        .maybeSingle();
 
       if (error) throw error;
+      if (!updated) throw { code: '42501' };
       setClient({ ...client, notes });
       showToast('Observação salva.', 'success');
     } catch (error) {
       console.error('Error saving notes:', error);
-      showToast('Não foi possível salvar a observação.', 'error');
+      showToast(isStaffClientEditForbiddenError(error) ? STAFF_CLIENT_EDIT_FORBIDDEN_MESSAGE : 'Não foi possível salvar a observação.', 'error');
     } finally {
       setSavingNotes(false);
     }
@@ -166,11 +179,11 @@ export const ClientCRM: React.FC = () => {
 
   const handleUpdateClient = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!client?.id || !tenantId) return;
+    if (!client?.id || !tenantId || !canEdit) return;
     setUpdating(true);
     try {
       const birthDate = editBirthDate.trim() || null;
-      const { error } = await supabase
+      const { data: updated, error } = await supabase
         .from('clients')
         .update({
           name: editName,
@@ -179,9 +192,12 @@ export const ClientCRM: React.FC = () => {
           birth_date: birthDate,
         })
         .eq('id', client.id)
-        .eq('user_id', tenantId);
+        .eq('user_id', tenantId)
+        .select('id')
+        .maybeSingle();
 
       if (error) throw error;
+      if (!updated) throw { code: '42501' };
 
       setClient({
         ...client,
@@ -196,14 +212,14 @@ export const ClientCRM: React.FC = () => {
       setShowEditModal(false);
     } catch (error) {
       console.error('Error updating client:', error);
-      showToast('Não foi possível atualizar o cliente.', 'error');
+      showToast(isStaffClientEditForbiddenError(error) ? STAFF_CLIENT_EDIT_FORBIDDEN_MESSAGE : 'Não foi possível atualizar o cliente.', 'error');
     } finally {
       setUpdating(false);
     }
   };
 
   const confirmDeleteClient = async () => {
-    if (!client?.id || !tenantId) return;
+    if (isStaff || !client?.id || !tenantId || !canEdit) return;
     setDeleting(true);
     try {
       const { error } = await supabase
@@ -338,15 +354,15 @@ export const ClientCRM: React.FC = () => {
           >
             <MessageCircle className="w-4 h-4" />
           </Button>
-          <Button
+          {canEdit && <Button
             variant="ghost"
             size="sm"
             onClick={() => setShowEditModal(true)}
             aria-label="Editar cliente"
           >
             <Edit2 className="w-4 h-4" />
-          </Button>
-          <Button
+          </Button>}
+          {!isStaff && <Button
             variant="ghost"
             size="sm"
             className="border-[var(--color-danger-border)] text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)]"
@@ -355,10 +371,10 @@ export const ClientCRM: React.FC = () => {
             aria-label="Desativar cliente"
           >
             <Trash2 className="w-4 h-4" />
-          </Button>
+          </Button>}
         </div>
 
-        <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-4">
+        <div className={`grid ${isStaff ? 'grid-cols-2' : 'grid-cols-3'} gap-2 sm:gap-3 mt-4`}>
           <div className={`${colors.surface} p-3 border ${colors.border} ${radius.input} min-w-0`}>
             <p className={`text-xs ${colors.textSecondary} uppercase tracking-wide`}>Última visita</p>
             <p className={`text-sm sm:text-base font-bold ${colors.text} mt-0.5 leading-tight break-words`}>
@@ -369,16 +385,16 @@ export const ClientCRM: React.FC = () => {
             <p className={`text-xs ${colors.textSecondary} uppercase tracking-wide`}>Visitas</p>
             <p className={`text-sm sm:text-base font-bold ${colors.text} mt-0.5`}>{client.totalVisits}</p>
           </div>
-          <div className={`${colors.surface} p-3 border ${colors.border} ${radius.input} min-w-0`}>
+          {!isStaff && <div className={`${colors.surface} p-3 border ${colors.border} ${radius.input} min-w-0`}>
             <p className={`text-xs ${colors.textSecondary} uppercase tracking-wide`}>Total gasto</p>
             <p className={`text-sm sm:text-base font-bold ${accent.text} mt-0.5 tabular-nums leading-tight break-words`}>
               {formatCurrency(client.ltv || 0, region)}
             </p>
-          </div>
+          </div>}
         </div>
       </Card>
 
-      <Card title={isBeauty ? 'Histórico de visitas' : 'Histórico de cortes'}>
+      {!isStaff && <Card title={isBeauty ? 'Histórico de visitas' : 'Histórico de cortes'}>
         {!client.appointmentsHistory?.length ? (
           <EmptyState
             bordered
@@ -439,24 +455,25 @@ export const ClientCRM: React.FC = () => {
             )}
           </div>
         )}
-      </Card>
+      </Card>}
 
       <Card title="Observações">
         <textarea
           className={`w-full h-32 ${colors.inputBg} border ${colors.inputBorder} p-4 ${colors.text} font-mono text-sm focus:outline-none focus:border-[var(--color-input-focus)] resize-none ${radius.input}`}
+          readOnly={!canEdit}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Preferências, alergias, observações do atendimento..."
           aria-label="Observações do cliente"
         />
-        <div className="flex justify-end mt-2">
+        {canEdit && <div className="flex justify-end mt-2">
           <Button variant="secondary" size="sm" onClick={handleSaveNotes} disabled={savingNotes}>
             {savingNotes ? 'Salvando...' : 'Salvar observação'}
           </Button>
-        </div>
+        </div>}
       </Card>
 
-      <Modal open={showEditModal} onClose={() => setShowEditModal(false)} title="Editar cliente" size="md">
+      <Modal open={canEdit && showEditModal} onClose={() => setShowEditModal(false)} title="Editar cliente" size="md">
         <form onSubmit={handleUpdateClient} className="space-y-4">
           <div>
             <label className={`block mb-1 ${classes.label}`} htmlFor="crm-edit-name">
@@ -518,7 +535,7 @@ export const ClientCRM: React.FC = () => {
       </Modal>
 
       <ConfirmModal
-        open={showDeleteConfirm}
+        open={!isStaff && showDeleteConfirm}
         onCancel={() => setShowDeleteConfirm(false)}
         onConfirm={() => void confirmDeleteClient()}
         title="Desativar cliente?"

@@ -121,7 +121,7 @@ export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose })
   const menuItems: MenuItem[] = [
     { name: 'Início', icon: LayoutDashboard, path: '/' },
     { name: 'Agenda', icon: Clock, path: '/agenda' },
-    { name: 'Clientes', icon: Users, path: '/clientes', ownerOnly: true },
+    { name: 'Clientes', icon: Users, path: '/clientes', ownerOnly: false },
     { name: 'Equipe', icon: UserCog, path: '/configuracoes/equipe', ownerOnly: true },
     { name: 'Serviços', icon: Scissors, path: '/configuracoes/servicos', ownerOnly: true },
     { name: 'Financeiro', icon: DollarSign, path: '/financeiro', ownerOnly: true },

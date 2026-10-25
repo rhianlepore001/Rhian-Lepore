@@ -5,6 +5,7 @@ import {
   updateBusinessSettings,
   updateBusinessTimezone,
   updateStaffAppointmentEditScope,
+  updateStaffCanEditClients,
   updateStaffAgendaBlockScope,
   fetchProfileFields,
   updateProfileFields,
@@ -50,6 +51,20 @@ export function useUpdateBusinessTimezone() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings', companyId, 'business'] });
       queryClient.invalidateQueries({ queryKey: ['public-booking', 'settings', companyId] });
+    },
+  });
+}
+
+export function useUpdateStaffCanEditClients() {
+  const { companyId, role } = useAuth();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (enabled: boolean) => {
+      if (role !== 'owner' || !companyId) throw new Error('owner_required');
+      return updateStaffCanEditClients(companyId, enabled);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['settings', companyId, 'business'] });
     },
   });
 }

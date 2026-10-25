@@ -79,6 +79,17 @@ export async function updateBusinessTimezone(
   return 'saved';
 }
 
+export async function updateStaffCanEditClients(companyId: string, enabled: boolean): Promise<'saved' | 'unsupported'> {
+  if (!companyId || typeof enabled !== 'boolean') throw new Error('invalid_staff_can_edit_clients');
+  const { error } = await supabase.from('business_settings')
+    .upsert({ user_id: companyId, staff_can_edit_clients: enabled }, { onConflict: 'user_id' });
+  if (error) {
+    if (isMissingNamedColumn(error, 'staff_can_edit_clients')) return 'unsupported';
+    throw error;
+  }
+  return 'saved';
+}
+
 export type StaffAppointmentEditScopeSaveResult = 'saved' | 'unsupported';
 
 /** Erro de coluna inexistente para a permissão da equipe (migration ainda não aplicada). */

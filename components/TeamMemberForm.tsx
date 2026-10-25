@@ -130,7 +130,6 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
         isOwner: [isOwner, setIsOwner],
         active: [active, setActive],
         specialties: [specialties, setSpecialties],
-        cpf: [cpf, setCpf],
         hadPhoto: [!!photoFile, () => {}],
         commissionRate: [commissionRate, setCommissionRate],
         useBusinessDefault: [useBusinessDefault, setUseBusinessDefault],

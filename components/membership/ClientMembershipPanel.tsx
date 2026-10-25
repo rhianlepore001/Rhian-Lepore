@@ -8,7 +8,8 @@ import { MbwayDisplay } from './MbwayDisplay';
 import { usePublicPixConfig } from '../../hooks/useMemberships';
 import { useBrutalTheme, ThemeVariant } from '../../hooks/useBrutalTheme';
 import { ConfirmModal } from '../ui';
-import { buildWhatsAppLink, formatCurrency, Region } from '../../utils/formatters';
+import { formatCurrency, Region } from '../../utils/formatters';
+import { buildWhatsAppLink, renderWhatsAppTemplate } from '../../utils/whatsappTemplates';
 import {
   periodProgressPercent,
   validityHeadline,
@@ -90,10 +91,15 @@ export const ClientMembershipPanel: React.FC<ClientMembershipPanelProps> = ({
   const headline = validityHeadline(statusKey, periodEnd);
   const progress = periodProgressPercent(membership.current_period_start, periodEnd);
   const canCancel = ['active', 'pending', 'overdue'].includes(statusKey);
-  const whatsappMessage =
-    statusKey === 'overdue'
-      ? `Olá, aqui é ${clientName.split(' ')[0]}. Minha assinatura do plano "${membership.plan_name}" venceu. Como faço para renovar?`
-      : `Olá, aqui é ${clientName.split(' ')[0]}. Queria falar sobre minha solicitação do plano "${membership.plan_name}" no ${businessName}.`;
+  const whatsappMessage = renderWhatsAppTemplate(
+    statusKey === 'overdue' ? 'membership_overdue' : 'membership_pending',
+    isBeauty ? 'beauty' : 'barber',
+    {
+      primeiro_nome: clientName.trim().split(/\s+/).filter(Boolean)[0] || '',
+      plano: membership.plan_name,
+      estabelecimento: businessName,
+    },
+  );
 
   const statusClass =
     statusKey === 'active'

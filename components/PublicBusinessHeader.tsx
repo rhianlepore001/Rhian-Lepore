@@ -3,6 +3,7 @@ import { Instagram, Phone, MapPin, Star, Scissors, Sparkles, ChevronLeft, Chevro
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { useTheme } from '../contexts/ThemeContext';
 import { getBusinessCopy, resolveBusinessTheme } from '../utils/businessCopy';
+import { buildWhatsAppLink, type WhatsAppRegion } from '../utils/whatsappTemplates';
 
 interface PublicBusinessHeaderProps {
     businessName: string;
@@ -10,6 +11,7 @@ interface PublicBusinessHeaderProps {
     coverPhotoUrl?: string | null;
     instagramHandle?: string | null;
     phone?: string;
+    region?: WhatsAppRegion;
     address?: string | null;
     googleRating?: number;
     totalReviews?: number;
@@ -25,6 +27,7 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
     coverPhotoUrl,
     instagramHandle,
     phone,
+    region = 'BR',
     address,
     googleRating,
     totalReviews,
@@ -40,9 +43,7 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
     const { mode, toggleMode } = useTheme();
 
     // Links externos
-    const whatsappLink = phone
-        ? `https://wa.me/${phone.replace(/\D/g, '')}`
-        : null;
+    const whatsappLink = phone ? buildWhatsAppLink(phone, region) : null;
     const instagramLink = instagramHandle
         ? `https://instagram.com/${instagramHandle.replace('@', '')}`
         : null;

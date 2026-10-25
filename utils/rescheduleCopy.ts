@@ -1,5 +1,6 @@
 import { getBusinessCopy, type BusinessTheme } from './businessCopy';
 import { formatTimeInTimeZone } from './businessTimezone';
+import { renderWhatsAppTemplate } from './whatsappTemplates';
 
 export const RESCHEDULE_SUCCESS_TOAST = 'Horário remarcado.';
 export const RESCHEDULE_GENERIC_ERROR = 'Não foi possível remarcar. Tente novamente.';
@@ -88,33 +89,23 @@ export function buildRescheduleWhatsAppMessage(input: RescheduleWhatsAppInput): 
   const copy = getBusinessCopy(input.theme);
   const establishment = (input.businessName || '').trim() || copy.establishmentFallback;
   const client = (input.clientName || '').trim();
-  const greeting = client
-    ? (input.theme === 'beauty' ? `Olá, ${client}! ✨` : `Fala, ${client}! 🔁`)
-    : 'Olá!';
   const old = new Date(input.oldTimeIso);
   const next = new Date(input.newTimeIso);
   const oldDate = padPtDate(old, input.timeZone);
   const oldTime = formatTimeInTimeZone(old, input.timeZone);
   const newDate = padPtDate(next, input.timeZone);
   const newTime = formatTimeInTimeZone(next, input.timeZone);
-  const withPro = input.professionalName?.trim() ? ` com ${input.professionalName.trim()}` : '';
-  const agora = `Agora: *${newDate}* às *${newTime}*${withPro}.`;
+  const greeting = client
+    ? (input.theme === 'beauty' ? `Olá, ${client}! ✨` : `Fala, ${client}! 🔁`)
+    : 'Olá!';
 
-  if (input.theme === 'beauty') {
-    return [
-      greeting,
-      `Seu horário no *${establishment}* foi remarcado.`,
-      `Antes: ${oldDate} às ${oldTime}`,
-      agora,
-      'Se precisar de outro horário, é só responder. 💖',
-    ].join('\n');
-  }
-
-  return [
-    greeting,
-    `Seu horário na *${establishment}* foi remarcado.`,
-    `Antes: ${oldDate} às ${oldTime}`,
-    agora,
-    'Qualquer dúvida é só responder aqui. Até lá! ✂️',
-  ].join('\n');
+  return renderWhatsAppTemplate('reschedule', input.theme, {
+    cliente: greeting,
+    estabelecimento: establishment,
+    data_anterior: oldDate,
+    hora_anterior: oldTime,
+    data: newDate,
+    hora: newTime,
+    profissional: input.professionalName?.trim() ? ` com ${input.professionalName.trim()}` : '',
+  });
 }

@@ -16,7 +16,8 @@ import { MembershipBadge } from '../components/membership/MembershipBadge';
 import { ClubOwnerNav } from '../components/membership/ClubOwnerNav';
 import { PixActions } from '../components/membership/PixActions';
 import { MembershipStatus, MembershipWithPlan } from '../services/memberships';
-import { buildWhatsAppLink, formatCurrency } from '../utils/formatters';
+import { formatCurrency } from '../utils/formatters';
+import { buildWhatsAppLink, renderWhatsAppTemplate } from '../utils/whatsappTemplates';
 
 const TABS: { value: MembershipStatus | 'all'; label: string }[] = [
     { value: 'all', label: 'Todos' },
@@ -94,7 +95,11 @@ export const MembersList: React.FC = () => {
     const handleWhatsApp = (m: MembershipWithPlan) => {
         const phone = m.client?.phone || '';
         if (!phone.replace(/\D/g, '')) return;
-        const message = `Olá ${m.client?.name?.split(' ')[0]}! Tudo bem? Aqui é ${businessName ? `da ${businessName}` : 'do seu clube de assinatura'}. Sobre seu plano "${m.plan?.name}"...`;
+        const message = renderWhatsAppTemplate('membership_contact', isBeauty ? 'beauty' : 'barber', {
+            primeiro_nome: m.client?.name?.trim().split(/\s+/).filter(Boolean)[0] || '',
+            estabelecimento: businessName || 'seu clube de assinatura',
+            plano: m.plan?.name || '',
+        });
         window.open(buildWhatsAppLink(phone, region, message), '_blank');
     };
 

@@ -26,7 +26,7 @@ describe('T-V12 buildRescheduleWhatsAppMessage', () => {
     });
     expect(text).toBe(
       'Fala, Aline! 🔁\n'
-      + 'Seu horário na *Barbearia Bob* foi remarcado.\n'
+      + 'Seu horário em *Barbearia Bob* foi remarcado.\n'
       + 'Antes: 23/08/2026 às 06:00\n'
       + 'Agora: *24/08/2026* às *10:30* com Bob.\n'
       + 'Qualquer dúvida é só responder aqui. Até lá! ✂️',
@@ -45,7 +45,7 @@ describe('T-V12 buildRescheduleWhatsAppMessage', () => {
     });
     expect(text).toBe(
       'Olá, Aline! ✨\n'
-      + 'Seu horário no *Salão* foi remarcado.\n'
+      + 'Seu horário em *Salão* foi remarcado.\n'
       + 'Antes: 23/08/2026 às 06:00\n'
       + 'Agora: *24/08/2026* às *10:30* com Bruna.\n'
       + 'Se precisar de outro horário, é só responder. 💖',

@@ -24,7 +24,8 @@ import { ChatBubble } from '../components/ChatBubble';
 import { GoogleReviewPrompt } from '../components/GoogleReviewPrompt';
 import { useCancelPublicBooking, useFindActivePublicBooking, useSubmitPublicBooking, useBusinessProfileBySlug, useBusinessSettings, usePublicServices, usePublicCategories, usePublicProfessionals, usePublicGallery, usePublicProducts } from '../hooks/usePublicBooking';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
-import { buildWhatsAppLink, formatCurrency, formatDuration, Region } from '../utils/formatters';
+import { formatCurrency, formatDuration, Region } from '../utils/formatters';
+import { buildWhatsAppLink, renderWhatsAppTemplate } from '../utils/whatsappTemplates';
 import { capBookingDuration } from '../utils/serviceDuration';
 import { logger } from '../utils/Logger';
 import { useZonedAvailableSlots } from '../hooks/useZonedAvailableSlots';
@@ -793,9 +794,9 @@ export const PublicBooking: React.FC = () => {
             return;
         }
         const name = (customerName || client?.name || '').trim();
-        const msg = name
-            ? `Olá! Sou ${name}. Queria alterar meu horário.`
-            : 'Olá! Queria alterar meu horário.';
+        const msg = renderWhatsAppTemplate('client_change', isBeauty ? 'beauty' : 'barber', {
+            cliente: name ? `Sou ${name}. ` : '',
+        });
         window.open(buildWhatsAppLink(business.phone, currencyRegion, msg), '_blank', 'noopener,noreferrer');
     };
 
@@ -858,6 +859,7 @@ export const PublicBooking: React.FC = () => {
     const successTime = bookedAt ? formatTimeInTimeZone(bookedAt, businessTimezone) : selectedTime;
     const successWhatsAppText = getPublicBookingAwaitingWhatsAppText({
         confirmed: activeBooking?.status === 'confirmed',
+        theme: isBeauty ? 'beauty' : 'barber',
         businessName: business?.business_name || '',
         dateLabel: bookedAt
             ? bookedAt.toLocaleDateString('pt-BR', { timeZone: businessTimezone })
@@ -948,6 +950,7 @@ export const PublicBooking: React.FC = () => {
                 coverPhotoUrl={business.cover_photo_url}
                 instagramHandle={business.instagram_handle}
                 phone={business.phone}
+                region={currencyRegion}
                 address={business.address_street}
                 googleRating={business.google_rating}
                 totalReviews={business.total_reviews}

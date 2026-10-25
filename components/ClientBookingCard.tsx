@@ -4,7 +4,8 @@ import {
     Calendar, Clock, User, MessageSquare,
     Edit3, X, CheckCircle, AlertCircle, Loader2, Crown
 } from 'lucide-react';
-import { formatCurrency, buildWhatsAppLink, Region } from '../utils/formatters';
+import { formatCurrency, Region } from '../utils/formatters';
+import { buildWhatsAppLink, renderWhatsAppTemplate } from '../utils/whatsappTemplates';
 import { cancelPublicBooking } from '../services/publicBooking';
 import { useToast } from './ui/Toast';
 import { logger } from '../utils/Logger';
@@ -257,7 +258,11 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
 
     const handleWhatsApp = () => {
         if (!businessPhone) return;
-        const msg = `Olá! Sou ${clientName} e tenho uma dúvida sobre meu agendamento de ${dateInSentence} às ${formattedTime}.`;
+        const msg = renderWhatsAppTemplate('client_question', isBeauty ? 'beauty' : 'barber', {
+            cliente: clientName,
+            data: dateInSentence,
+            hora: formattedTime,
+        });
         window.open(buildWhatsAppLink(businessPhone, region, msg), '_blank', 'noopener,noreferrer');
     };
 
@@ -266,7 +271,11 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
             showToast('O estabelecimento ainda não informou um WhatsApp.', 'info');
             return;
         }
-        const msg = `Olá! Sou ${clientName}. Queria cancelar meu horário de ${dateInSentence} às ${formattedTime}.`;
+        const msg = renderWhatsAppTemplate('client_cancel', isBeauty ? 'beauty' : 'barber', {
+            cliente: clientName,
+            data: dateInSentence,
+            hora: formattedTime,
+        });
         window.open(buildWhatsAppLink(businessPhone, region, msg), '_blank', 'noopener,noreferrer');
     };
 
@@ -278,6 +287,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
             professionalName: booking.professional_name,
             dateLabel: dateInSentence,
             timeLabel: formattedTime,
+            theme: isBeauty ? 'beauty' : 'barber',
         });
         window.open(buildWhatsAppLink(businessPhone, region, msg), '_blank', 'noopener,noreferrer');
     };

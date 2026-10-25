@@ -21,7 +21,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useToast } from '../components/ui/Toast';
 import { formatPhone, formatCurrency } from '../utils/formatters';
-import { getWhatsAppUrl } from '../utils/aiosCopywriter';
+import { buildWhatsAppLink } from '../utils/whatsappTemplates';
 import {
   BIRTHDAY_WINDOW_DAYS,
   daysUntilBirthday,
@@ -161,7 +161,7 @@ export const ClientCRM: React.FC = () => {
       showToast('Cliente sem telefone cadastrado.', 'info');
       return;
     }
-    window.open(getWhatsAppUrl(client.phone, ''), '_blank');
+    window.open(buildWhatsAppLink(client.phone, region === 'PT' ? 'PT' : 'BR'), '_blank');
   };
 
   const handleUpdateClient = async (e: React.FormEvent) => {

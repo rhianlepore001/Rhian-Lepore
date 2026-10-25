@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { WizardProps } from './appointment/types';
 import { formatCurrency } from '../utils/formatters';
+import { buildWhatsAppLink, renderWhatsAppTemplate } from '../utils/whatsappTemplates';
 import type { Region } from '../utils/formatters';
 import { ServiceSearchBar } from './appointment/ServiceSearchBar';
 import { CategoryFilter } from './appointment/CategoryFilter';
@@ -249,20 +250,16 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
             if (sendWhatsapp) {
                 const client = clients.find(c => c.id === selectedClientId);
                 if (client?.phone) {
-                    const waPhone = client.phone.replace(/\D/g, '');
                     const formattedDate = dateTime.toLocaleDateString('pt-BR');
                     const formattedTime = dateTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                    const message = renderWhatsAppTemplate('wizard_confirm', isBeauty ? 'beauty' : 'barber', {
+                        cliente: client.name,
+                        estabelecimento: businessName || establishmentFallback,
+                        data: formattedDate,
+                        hora: formattedTime,
+                    });
 
-                    const message = isBeauty
-                        ? `Olá ${client.name}! ✨\n` +
-                        `Passando para confirmar seu horário no *${businessName || 'nossa Estética'}*. Tudo certo para **${formattedDate} às ${formattedTime}**?\n\n` +
-                        `Te aguardamos com muito carinho! 💖`
-                        : `Fala, ${client.name}! ✂️\n` +
-                        `Seu horário está garantido aqui na *${businessName || establishmentFallback}*.\n` +
-                        `Nos vemos dia **${formattedDate} às ${formattedTime}**.\n\n` +
-                        `Te aguardamos para dar aquele talento! 🚀`;
-
-                    window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`, '_blank');
+                    window.open(buildWhatsAppLink(client.phone, currencyRegion, message), '_blank');
                 }
             }
 

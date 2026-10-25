@@ -9,7 +9,8 @@ import { ensureClientFromQueue, listActiveClientsForPicker } from '@/services/cr
 import { addManualQueueEntry, queueJoinUserMessage } from '@/services/queue';
 import type { QueueMode } from '@/types/queue';
 import type { ServiceItem } from '@/types/serviceSettings';
-import { buildWhatsAppLink, formatCurrency, formatPhone, type Region } from '@/utils/formatters';
+import { formatCurrency, formatPhone, type Region } from '@/utils/formatters';
+import { buildWhatsAppLink } from '@/utils/whatsappTemplates';
 import {
   buildQueueTrackingMessage,
   buildQueueTrackingUrl,
@@ -74,7 +75,7 @@ export const QueueManualAddSheet: React.FC<QueueManualAddSheetProps> = ({
   onAdded,
 }) => {
   const { showToast } = useToast();
-  const { classes } = useBrutalTheme();
+  const { classes, isBeauty } = useBrutalTheme();
   const [step, setStep] = useState<SheetStep>('form');
   const [source, setSource] = useState<ClientSource>('list');
   const [selectedClientId, setSelectedClientId] = useState('');
@@ -105,6 +106,7 @@ export const QueueManualAddSheet: React.FC<QueueManualAddSheetProps> = ({
       clientName: addedName,
       businessName: businessName || 'nossa casa',
       url: trackingUrl,
+      theme: isBeauty ? 'beauty' : 'barber',
     })
     : '';
 

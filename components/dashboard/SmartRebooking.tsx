@@ -4,6 +4,7 @@ import { useSmartRebooking, RebookingSuggestion } from '../../hooks/useSmartRebo
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme, type BrutalThemeTokens } from '../../hooks/useBrutalTheme';
 import { formatCurrency } from '../../utils/formatters';
+import { buildWhatsAppLink, renderWhatsAppTemplate } from '../../utils/whatsappTemplates';
 import { InfoButton } from '../HelpButtons';
 
 interface SmartRebookingProps {
@@ -46,7 +47,7 @@ function getCadenceLabel(days: number): string {
 export const SmartRebooking: React.FC<SmartRebookingProps> = ({ limit = 5 }) => {
     const { suggestions, loading } = useSmartRebooking();
     const { region } = useAuth();
-    const { colors, accent, radius, status } = useBrutalTheme();
+    const { colors, accent, radius, status, isBeauty } = useBrutalTheme();
     const [expanded, setExpanded] = useState(true);
 
     const currencyRegion = region === 'PT' ? 'PT' : 'BR';
@@ -93,7 +94,9 @@ export const SmartRebooking: React.FC<SmartRebookingProps> = ({ limit = 5 }) => 
                 <div className="px-5 pb-5 space-y-2">
                     {visible.map((suggestion) => {
                         const config = getUrgencyConfig(suggestion.urgency, status);
-                        const waPhone = suggestion.clientPhone.replace(/\D/g, '');
+                        const message = renderWhatsAppTemplate('rebooking', isBeauty ? 'beauty' : 'barber', {
+                            primeiro_nome: suggestion.clientName.trim().split(/\s+/).filter(Boolean)[0] || '',
+                        });
 
                         return (
                             <div
@@ -119,11 +122,9 @@ export const SmartRebooking: React.FC<SmartRebookingProps> = ({ limit = 5 }) => 
                                 </div>
 
                                 {/* WhatsApp Button */}
-                                {waPhone && (
+                                {suggestion.clientPhone.replace(/\D/g, '') && (
                                     <a
-                                        href={`https://wa.me/${waPhone}?text=${encodeURIComponent(
-                                            `Oi ${suggestion.clientName.split(' ')[0]}! Faz um tempo que não nos vemos. Que tal agendar um horário esta semana?`
-                                        )}`}
+                                        href={buildWhatsAppLink(suggestion.clientPhone, currencyRegion, message)}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className={`flex-shrink-0 p-2 ${radius.button} ${status.successBg} ${status.success} border ${status.successBorder} hover:brightness-110 transition-all`}

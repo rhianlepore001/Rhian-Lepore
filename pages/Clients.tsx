@@ -19,6 +19,7 @@ import {
 } from '../components/ui';
 import { useToast } from '../components/ui/Toast';
 import { formatPhone } from '../utils/formatters';
+import { buildWhatsAppLink } from '../utils/whatsappTemplates';
 import {
   createClient,
   enrichClients,
@@ -342,7 +343,7 @@ export const Clients: React.FC = () => {
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              window.open(`https://wa.me/${client.phone!.replace(/\D/g, '')}`, '_blank');
+                              window.open(buildWhatsAppLink(client.phone!, region === 'PT' ? 'PT' : 'BR'), '_blank');
                             }}
                             className="p-1 rounded-full hover:bg-[var(--color-success-bg)] transition-colors text-[var(--color-success)] min-h-[44px] min-w-[44px] inline-flex items-center justify-center -my-2"
                             title="WhatsApp"

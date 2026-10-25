@@ -1,5 +1,6 @@
 import { formatTimeInTimeZone } from './businessTimezone';
 import { getBusinessRemainderNoun } from './businessCopy';
+import { renderWhatsAppTemplate, type WhatsAppTheme } from './whatsappTemplates';
 
 /**
  * "da barbearia" / "do salão" / "do estúdio" / "do negócio" a partir do tipo do
@@ -96,18 +97,22 @@ export function getPublicBookingAwaitingWhatsAppText(input: {
   timeLabel: string;
   serviceLabel?: string;
   professionalName?: string | null;
+  theme?: WhatsAppTheme;
   /** true = agendamento já confirmado: a mensagem não pede confirmação. */
   confirmed?: boolean;
 }): string {
-  const businessName = input.businessName.trim();
-  const greeting = businessName ? `Olá, ${businessName}!` : 'Olá!';
-  const serviceLabel = (input.serviceLabel ?? '').trim() || 'serviço';
-  const professional = (input.professionalName ?? '').trim();
-  const withProfessional = professional
-    ? ` com ${professional}`
-    : ' com qualquer profissional';
-  const base = `${greeting} Fiz um agendamento online para ${serviceLabel}${withProfessional} em ${input.dateLabel} às ${input.timeLabel}.`;
-  return input.confirmed ? base : `${base} Pode confirmar, por favor?`;
+  return renderWhatsAppTemplate(
+    'client_request_confirm',
+    input.theme ?? 'barber',
+    {
+      estabelecimento: input.businessName,
+      servico: input.serviceLabel?.trim() || 'serviço',
+      profissional: input.professionalName?.trim() || 'qualquer profissional',
+      data: input.dateLabel,
+      hora: input.timeLabel,
+    },
+    input.confirmed ? 'confirmed' : undefined,
+  );
 }
 
 export function getOwnerAcceptWhatsAppText(input: {
@@ -124,27 +129,13 @@ export function getOwnerAcceptWhatsAppText(input: {
   const dateObj = new Date(input.appointmentTime);
   const formattedDate = dateObj.toLocaleDateString('pt-BR', { timeZone: input.timeZone });
   const formattedTime = formatTimeInTimeZone(dateObj, input.timeZone);
-  const establishment = input.businessName.trim();
-
-  if (input.isBeauty) {
-    return (
-      `Olá ${input.customerName}! Tudo bem? ✨\n` +
-      `Sua reserva na *${establishment || 'Estética'}* está confirmada!\n` +
-      `📅 *${formattedDate}* às *${formattedTime}*\n` +
-      `💼 *Serviço*: ${input.serviceNames}\n` +
-      `💰 *Valor*: ${input.currencySymbol} ${input.priceLabel}\n` +
-      `📍  Local: estamos te esperando!\n\n` +
-      `Estamos preparando tudo para te receber com a melhor experiência. Até logo! 💖`
-    );
-  }
-
-  return (
-    `Fala, ${input.customerName}! Seu horário está garantido! 🛡️ \n` +
-    `Marque na sua agenda:\n` +
-    `🗓️  *${formattedDate}* às *${formattedTime}*\n` +
-    `✂️  *Serviço*: ${input.serviceNames}\n` +
-    `💰 *Valor*: ${input.currencySymbol} ${input.priceLabel}\n` +
-    `📍  Onde: *${establishment || input.establishmentFallback}*.\n\n` +
-    `Prepare-se para o trato! Nos vemos em breve. 👋`
-  );
+  const establishment = input.businessName.trim() || input.establishmentFallback;
+  return renderWhatsAppTemplate('booking_accepted', input.isBeauty ? 'beauty' : 'barber', {
+    cliente: input.customerName,
+    estabelecimento: establishment,
+    data: formattedDate,
+    hora: formattedTime,
+    servico: input.serviceNames,
+    valor: `${input.currencySymbol} ${input.priceLabel}`,
+  });
 }

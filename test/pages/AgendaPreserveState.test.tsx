@@ -9,6 +9,10 @@ vi.mock('../../contexts/AuthContext', () => ({ useAuth: () => ({ user: { id: 'fi
 vi.mock('../../components/ui/Toast', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 vi.mock('../../hooks/useSettings', () => ({ useBusinessSettings: () => ({ data: { timezone: 'America/Sao_Paulo' } }) }));
 vi.mock('../../hooks/useAgendaBlocks', () => ({ useAgendaBlocks: () => ({ data: [] }), useCreateAgendaBlock: () => ({}), useDeleteAgendaBlock: () => ({}) }));
+vi.mock('../../hooks/useWhatsAppTemplates', async () => {
+  const { renderWhatsAppTemplate } = await import('../../utils/whatsappTemplates');
+  return { useWhatsAppTemplates: () => ({ templates: {}, isEnabled: () => true, render: (key: any, theme: any, vars: any, variant?: any) => renderWhatsAppTemplate(key, theme, vars, variant) }) };
+});
 vi.mock('../../hooks/useAppTour', () => ({ useAppTour: vi.fn() }));
 vi.mock('../../hooks/usePendingPublicBookingsLive', () => ({ usePendingPublicBookingsLive: vi.fn() }));
 vi.mock('../../hooks/useStaffAppointmentPermission', () => ({ useStaffAppointmentPermission: () => ({ lockProfessionalToSelf: false }) }));

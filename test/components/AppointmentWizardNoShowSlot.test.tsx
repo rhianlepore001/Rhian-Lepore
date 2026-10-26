@@ -1,3 +1,8 @@
+vi.mock('../../hooks/useWhatsAppTemplates', async () => {
+  const { renderWhatsAppTemplate } = await import('../../utils/whatsappTemplates');
+  return { useWhatsAppTemplates: () => ({ templates: {}, isEnabled: () => true, render: renderWhatsAppTemplate }) };
+});
+
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';

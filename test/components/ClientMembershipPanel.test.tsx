@@ -1,3 +1,8 @@
+vi.mock('../../hooks/useWhatsAppTemplates', async () => {
+  const { renderWhatsAppTemplate } = await import('../../utils/whatsappTemplates');
+  return { useWhatsAppTemplates: () => ({ templates: {}, isEnabled: () => true, render: renderWhatsAppTemplate }) };
+});
+
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
@@ -42,12 +47,12 @@ function renderPanel(membership: PublicClientMembership | null) {
     <MemoryRouter>
       <ClientMembershipPanel
         membership={membership}
-        slug="barbearia-silva"
+        slug="negocio-exemplo"
         isBeauty={false}
         region="BR"
-        businessPhone="11988887777"
-        businessName="Barbearia Silva"
-        clientName="João Silva"
+        businessPhone="00000000000"
+        businessName="Negócio Exemplo"
+        clientName="Cliente Exemplo"
       />
     </MemoryRouter>
   );
@@ -61,7 +66,7 @@ describe('ClientMembershipPanel', () => {
     expect(screen.getByTestId('club-usage').textContent).toMatch(/1 de 4 usos/);
     expect(screen.getByRole('link', { name: /Agendar com o plano/i })).toHaveAttribute(
       'href',
-      '/book/barbearia-silva'
+      '/book/negocio-exemplo'
     );
   });
 
@@ -70,7 +75,7 @@ describe('ClientMembershipPanel', () => {
     expect(screen.getByTestId('club-panel-empty')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Ver planos do clube/i })).toHaveAttribute(
       'href',
-      '/clube/barbearia-silva'
+      '/clube/negocio-exemplo'
     );
   });
 

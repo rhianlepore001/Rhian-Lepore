@@ -17,18 +17,18 @@ describe('T-V12 buildRescheduleWhatsAppMessage', () => {
   it('barbearia: copy R-13, datas no fuso da loja, nome do negócio', () => {
     const text = buildRescheduleWhatsAppMessage({
       theme: 'barber',
-      clientName: 'Aline',
-      businessName: 'Barbearia Bob',
+      clientName: 'Cliente Exemplo',
+      businessName: 'Negócio Exemplo',
       oldTimeIso: OLD,
       newTimeIso: NEXT,
       timeZone: LISBON,
-      professionalName: 'Bob',
+      professionalName: 'Profissional Exemplo',
     });
     expect(text).toBe(
-      'Fala, Aline! 🔁\n'
-      + 'Seu horário em *Barbearia Bob* foi remarcado.\n'
+      'Fala, Cliente Exemplo! 🔁\n'
+      + 'Seu horário em *Negócio Exemplo* foi remarcado.\n'
       + 'Antes: 23/08/2026 às 06:00\n'
-      + 'Agora: *24/08/2026* às *10:30* com Bob.\n'
+      + 'Agora: *24/08/2026* às *10:30* com Profissional Exemplo.\n'
       + 'Qualquer dúvida é só responder aqui. Até lá! ✂️',
     );
   });
@@ -36,18 +36,18 @@ describe('T-V12 buildRescheduleWhatsAppMessage', () => {
   it('estética: copy R-13 e substituto Salão quando falta o nome', () => {
     const text = buildRescheduleWhatsAppMessage({
       theme: 'beauty',
-      clientName: 'Aline',
+      clientName: 'Cliente Exemplo',
       businessName: '',
       oldTimeIso: OLD,
       newTimeIso: NEXT,
       timeZone: LISBON,
-      professionalName: 'Bruna',
+      professionalName: 'Outra Profissional',
     });
     expect(text).toBe(
-      'Olá, Aline! ✨\n'
+      'Olá, Cliente Exemplo! ✨\n'
       + 'Seu horário em *Salão* foi remarcado.\n'
       + 'Antes: 23/08/2026 às 06:00\n'
-      + 'Agora: *24/08/2026* às *10:30* com Bruna.\n'
+      + 'Agora: *24/08/2026* às *10:30* com Outra Profissional.\n'
       + 'Se precisar de outro horário, é só responder. 💖',
     );
   });
@@ -55,12 +55,12 @@ describe('T-V12 buildRescheduleWhatsAppMessage', () => {
   it('barbearia sem nome de negócio usa substituto Barbearia', () => {
     const text = buildRescheduleWhatsAppMessage({
       theme: 'barber',
-      clientName: 'Aline',
+      clientName: 'Cliente Exemplo',
       businessName: null,
       oldTimeIso: OLD,
       newTimeIso: NEXT,
       timeZone: LISBON,
-      professionalName: 'Bob',
+      professionalName: 'Profissional Exemplo',
     });
     expect(text).toContain('*Barbearia*');
     expect(text).not.toContain('(nome do estabelecimento)');
@@ -69,8 +69,8 @@ describe('T-V12 buildRescheduleWhatsAppMessage', () => {
   it('sem profissional omite o trecho "com …"', () => {
     const text = buildRescheduleWhatsAppMessage({
       theme: 'barber',
-      clientName: 'Aline',
-      businessName: 'Bob',
+      clientName: 'Cliente Exemplo',
+      businessName: 'Profissional Exemplo',
       oldTimeIso: OLD,
       newTimeIso: NEXT,
       timeZone: LISBON,
@@ -80,16 +80,16 @@ describe('T-V12 buildRescheduleWhatsAppMessage', () => {
     expect(text).not.toContain(' com ');
   });
 
-  it('sem nome do cliente usa Olá! (não Fala, olá!)', () => {
+  it('sem nome do cliente mantém a saudação no template', () => {
     const barber = buildRescheduleWhatsAppMessage({
       theme: 'barber',
       clientName: '',
-      businessName: 'Bob',
+      businessName: 'Profissional Exemplo',
       oldTimeIso: OLD,
       newTimeIso: NEXT,
       timeZone: LISBON,
     });
-    expect(barber.startsWith('Olá!')).toBe(true);
+    expect(barber.startsWith('Fala! 🔁')).toBe(true);
     expect(barber).not.toContain('Fala, olá');
     const beauty = buildRescheduleWhatsAppMessage({
       theme: 'beauty',
@@ -109,21 +109,21 @@ describe('copy de remarcação (R-06, R-14, R-16)', () => {
     expect(formatRescheduleCurrentLine({
       timeIso: OLD,
       timeZone: LISBON,
-      professionalName: 'Bob',
-    })).toBe('Atual: Domingo 23/08/2026 às 06:00 com Bob');
+      professionalName: 'Profissional Exemplo',
+    })).toBe('Atual: Domingo 23/08/2026 às 06:00 com Profissional Exemplo');
   });
 
   it('histórico Remarcado por', () => {
     expect(formatRescheduleHistoryLine({
-      actorName: 'Bob',
+      actorName: 'Profissional Exemplo',
       createdAtIso: NEXT,
       oldTimeIso: OLD,
       timeZone: LISBON,
-    })).toBe('Remarcado por Bob em 24/08/2026 (antes: 23/08/2026 às 06:00)');
+    })).toBe('Remarcado por Profissional Exemplo em 24/08/2026 (antes: 23/08/2026 às 06:00)');
   });
 
   it('de-para', () => {
-    expect(formatRescheduleInstant(OLD, LISBON, 'Bob')).toBe('Domingo 23/08/2026 às 06:00 com Bob');
+    expect(formatRescheduleInstant(OLD, LISBON, 'Profissional Exemplo')).toBe('Domingo 23/08/2026 às 06:00 com Profissional Exemplo');
   });
 
   it('conflito R-06', () => {

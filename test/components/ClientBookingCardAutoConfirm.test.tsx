@@ -1,3 +1,8 @@
+vi.mock('../../hooks/useWhatsAppTemplates', async () => {
+  const { renderWhatsAppTemplate } = await import('../../utils/whatsappTemplates');
+  return { useWhatsAppTemplates: () => ({ templates: {}, isEnabled: () => true, render: renderWhatsAppTemplate }) };
+});
+
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';

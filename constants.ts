@@ -1,6 +1,6 @@
 
 import { Appointment, Client, FinanceRecord } from './types';
-import { LucideIcon, Bell, LayoutDashboard, Calendar, Users, UserCog, Settings, DollarSign, Package, CreditCard, Clock, Shield, Trash2, ClipboardList, ShieldAlert, TrendingUp, Crown, Scissors } from 'lucide-react';
+import { LucideIcon, MessageCircle, Bell, LayoutDashboard, Calendar, Users, UserCog, Settings, DollarSign, Package, CreditCard, Clock, Shield, Trash2, ClipboardList, ShieldAlert, TrendingUp, Crown, Scissors } from 'lucide-react';
 
 /** Duração padrão do período de teste do produto AgendiX (não o clube de assinatura dos clientes). */
 export const TRIAL_DAYS = 20;
@@ -53,6 +53,7 @@ export interface SettingsItem {
 
 export const SETTINGS_ITEMS: SettingsItem[] = [
   { label: 'Geral', path: '/configuracoes/geral', icon: Settings, group: 'Negócio' },
+  { label: 'Mensagens do WhatsApp', path: '/configuracoes/whatsapp', icon: MessageCircle, group: 'Negócio' },
   { label: 'Agendamento', path: '/configuracoes/agendamento', icon: Calendar, group: 'Negócio' },
   { label: 'Equipe e Comissões', path: '/configuracoes/equipe', icon: Users, group: 'Negócio' },
   { label: 'Serviços', path: '/configuracoes/servicos', icon: Scissors, group: 'Negócio' },
@@ -69,6 +70,7 @@ export const SETTINGS_ITEMS: SettingsItem[] = [
 export const OWNER_SETTINGS_CARD_LABELS = [
   'Geral',
   'Agendamento',
+  'Mensagens do WhatsApp',
   'Equipe e Comissões',
   'Clube',
   'Plano AgendiX',

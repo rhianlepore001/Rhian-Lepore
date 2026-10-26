@@ -8,27 +8,27 @@ import {
 } from '@/utils/whatsappTemplates';
 
 const templateVars: WhatsAppTemplateVars = {
-  cliente: 'Camila Nogueira',
-  primeiro_nome: 'Camila',
+  cliente: 'Cliente Exemplo',
+  primeiro_nome: 'Cliente',
   data: '26/10/2026',
   hora: '14:30',
   servico: 'Corte e finalização',
-  profissional: 'Rafa Lima',
-  estabelecimento: 'Studio Aurora',
+  profissional: 'Profissional Exemplo',
+  estabelecimento: 'Negócio Exemplo',
   valor: 'R$ 50,00',
   data_anterior: '25/10/2026',
   hora_anterior: '13:00',
   dias_ausente: 45,
-  link_fila: 'https://agendixstudio.com/#/minha-area/studio?tab=fila',
+  link_fila: 'https://example.test/#/minha-area/studio?tab=fila',
   plano: 'Mensal Essencial',
 };
 
 describe('renderTemplate', () => {
   it('substitui somente as variáveis da whitelist', () => {
     expect(renderTemplate('Olá {cliente}, saldo {valor}.', {
-      cliente: 'Ana',
+      cliente: 'Cliente',
       valor: 'R$ 10',
-    }, ['cliente'])).toBe('Olá Ana, saldo {valor}.');
+    }, ['cliente'])).toBe('Olá Cliente, saldo {valor}.');
   });
 
   it('substitui valor ausente por vazio e remove espaços duplicados', () => {
@@ -40,8 +40,8 @@ describe('renderTemplate', () => {
 
   it('remove controles e quebras de linha de nomes', () => {
     expect(renderTemplate('Olá {cliente}.', {
-      cliente: 'Ana\r\nSilva\u0000',
-    }, ['cliente'])).toBe('Olá Ana Silva.');
+      cliente: 'Cliente\r\nExemplo\u0000',
+    }, ['cliente'])).toBe('Olá Cliente Exemplo.');
   });
 
   it('trunca nomes em 80 caracteres', () => {
@@ -53,17 +53,17 @@ describe('renderTemplate', () => {
 
 describe('buildWhatsAppLink', () => {
   it('adiciona DDI brasileiro a número nacional e codifica a mensagem', () => {
-    expect(buildWhatsAppLink('(11) 98765-4321', 'BR', 'Oi & olá'))
-      .toBe('https://wa.me/5511987654321?text=Oi%20%26%20ol%C3%A1');
+    expect(buildWhatsAppLink('(00) 00000-0000', 'BR', 'Oi & olá'))
+      .toBe('https://wa.me/5500000000000?text=Oi%20%26%20ol%C3%A1');
   });
 
   it('adiciona DDI português e não duplica o DDI já salvo', () => {
-    expect(buildWhatsAppLink('912 345 678', 'PT')).toBe('https://wa.me/351912345678');
-    expect(buildWhatsAppLink('+351 912 345 678', 'PT')).toBe('https://wa.me/351912345678');
+    expect(buildWhatsAppLink('000 000 000', 'PT')).toBe('https://wa.me/351000000000');
+    expect(buildWhatsAppLink('+351 000 000 000', 'PT')).toBe('https://wa.me/351000000000');
   });
 
   it('não duplica o DDI brasileiro já salvo', () => {
-    expect(buildWhatsAppLink('+55 11 98765-4321', 'BR')).toBe('https://wa.me/5511987654321');
+    expect(buildWhatsAppLink('+55 00 00000-0000', 'BR')).toBe('https://wa.me/5500000000000');
   });
 });
 
@@ -73,10 +73,8 @@ describe('templates de WhatsApp por tema', () => {
       (['barber', 'beauty'] as const).map((theme) => {
         const vars = { ...templateVars };
         if (key === 'reschedule') {
-          vars.cliente = theme === 'beauty' ? 'Olá, Camila! ✨' : 'Fala, Camila! 🔁';
-          vars.profissional = 'com Rafa Lima';
+          vars.profissional = 'com Profissional Exemplo';
         }
-        if (key === 'client_change') vars.cliente = 'Sou Camila.';
         return [theme, renderWhatsAppTemplate(key, theme, vars)];
       }),
     )]));

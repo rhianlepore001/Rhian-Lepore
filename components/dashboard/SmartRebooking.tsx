@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
+import { useWhatsAppTemplates } from '../../hooks/useWhatsAppTemplates';
 import { RefreshCw, MessageCircle, ChevronRight, User } from 'lucide-react';
 import { useSmartRebooking, RebookingSuggestion } from '../../hooks/useSmartRebooking';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme, type BrutalThemeTokens } from '../../hooks/useBrutalTheme';
 import { formatCurrency } from '../../utils/formatters';
-import { buildWhatsAppLink, renderWhatsAppTemplate } from '../../utils/whatsappTemplates';
+import { buildWhatsAppLink } from '../../utils/whatsappTemplates';
 import { InfoButton } from '../HelpButtons';
 
 interface SmartRebookingProps {
@@ -47,6 +48,7 @@ function getCadenceLabel(days: number): string {
 export const SmartRebooking: React.FC<SmartRebookingProps> = ({ limit = 5 }) => {
     const { suggestions, loading } = useSmartRebooking();
     const { region } = useAuth();
+    const whatsapp = useWhatsAppTemplates();
     const { colors, accent, radius, status, isBeauty } = useBrutalTheme();
     const [expanded, setExpanded] = useState(true);
 
@@ -94,7 +96,7 @@ export const SmartRebooking: React.FC<SmartRebookingProps> = ({ limit = 5 }) => 
                 <div className="px-5 pb-5 space-y-2">
                     {visible.map((suggestion) => {
                         const config = getUrgencyConfig(suggestion.urgency, status);
-                        const message = renderWhatsAppTemplate('rebooking', isBeauty ? 'beauty' : 'barber', {
+                        const message = whatsapp.render('rebooking', isBeauty ? 'beauty' : 'barber', {
                             primeiro_nome: suggestion.clientName.trim().split(/\s+/).filter(Boolean)[0] || '',
                         });
 

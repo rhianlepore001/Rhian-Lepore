@@ -1,3 +1,8 @@
+vi.mock('../../hooks/useWhatsAppTemplates', async () => {
+  const { renderWhatsAppTemplate } = await import('../../utils/whatsappTemplates');
+  return { useWhatsAppTemplates: () => ({ templates: {}, isEnabled: () => true, render: renderWhatsAppTemplate }) };
+});
+
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -8,18 +13,17 @@ import { useToast } from '../../components/ui/Toast';
 vi.mock('../../services/publicBooking', () => ({ cancelPublicBooking: vi.fn() }));
 vi.mock('../../components/ui/Toast', () => ({ useToast: vi.fn() }));
 
-// Agendamento real (Barbearia Bob, PT): 08/09/2026 14:13Z = 15:13 em Lisboa
 const booking: ClientBooking = {
   id: 'b1',
-  appointment_time: '2026-09-08T14:13:00+00:00',
+  appointment_time: '2000-07-15T12:00:00+00:00',
   status: 'confirmed',
   service_ids: ['s1'],
-  service_names: ['Corte'],
+  service_names: ['Serviço Exemplo'],
   professional_id: 'p1',
-  professional_name: 'Mario',
+  professional_name: 'Profissional Exemplo',
   total_price: 50,
   duration_minutes: 30,
-  created_at: '2026-09-01T00:00:00.000Z',
+  created_at: '2000-07-01T00:00:00.000Z',
 };
 
 function renderCard(props: { region: 'BR' | 'PT'; timeZone?: string }) {
@@ -28,10 +32,10 @@ function renderCard(props: { region: 'BR' | 'PT'; timeZone?: string }) {
       <ClientBookingCard
         booking={booking}
         isBeauty={false}
-        businessPhone="912345678"
-        businessSlug="barbeariasilva"
-        clientName="Zé"
-        clientPhone="912345678"
+        businessPhone="000000000"
+        businessSlug="negocio-exemplo"
+        clientName="Cliente Exemplo"
+        clientPhone="000000000"
         region={props.region}
         timeZone={props.timeZone}
         onCancelled={vi.fn()}
@@ -50,17 +54,17 @@ describe('ClientBookingCard — horário no fuso do negócio', () => {
   });
 
   it.each(['America/Sao_Paulo', 'Europe/London', 'UTC', 'Asia/Tokyo'])(
-    'negócio PT mostra 15:13 (hora de Lisboa) com navegador em %s',
+    'negócio PT mostra 13:00 (hora de Lisboa) com navegador em %s',
     (tz) => {
       process.env.TZ = tz;
       renderCard({ region: 'PT' });
-      expect(screen.getByText(/15:13/)).toBeInTheDocument();
+      expect(screen.getByText(/13:00/)).toBeInTheDocument();
     },
   );
 
-  it('fuso configurado vence a região (Manaus: 10:13)', () => {
+  it('fuso configurado vence a região (Manaus: 08:00)', () => {
     process.env.TZ = 'Europe/Lisbon';
     renderCard({ region: 'BR', timeZone: 'America/Manaus' });
-    expect(screen.getByText(/10:13/)).toBeInTheDocument();
+    expect(screen.getByText(/08:00/)).toBeInTheDocument();
   });
 });

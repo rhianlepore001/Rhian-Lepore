@@ -21,6 +21,7 @@ interface AppointmentReviewProps {
     isBeauty: boolean;
     accentColor: string;
     sendWhatsapp: boolean;
+    whatsappEnabled?: boolean;
     setSendWhatsapp: (v: boolean) => void;
     customPrice: string;
     setCustomPrice: (v: string) => void;
@@ -51,6 +52,7 @@ export const AppointmentReview: React.FC<AppointmentReviewProps> = ({
     customServicePrice,
     currencyRegion,
     sendWhatsapp,
+    whatsappEnabled = true,
     setSendWhatsapp,
     customPrice,
     setCustomPrice,
@@ -148,7 +150,7 @@ export const AppointmentReview: React.FC<AppointmentReviewProps> = ({
             </div>
 
             {/* WhatsApp: opção discreta, por último */}
-            <div data-testid="review-whatsapp" className="mt-4 flex items-center justify-between gap-3 px-1 py-1">
+            {whatsappEnabled && <div data-testid="review-whatsapp" className="mt-4 flex items-center justify-between gap-3 px-1 py-1">
                 <span className="flex items-center gap-2 min-w-0 text-sm text-theme-textSecondary">
                     <MessageCircle className={`w-4 h-4 shrink-0 ${sendWhatsapp ? 'text-[var(--color-success)]' : 'text-[var(--color-text-muted)]'}`} aria-hidden="true" />
                     <span className="truncate">Enviar confirmação no WhatsApp</span>
@@ -160,7 +162,7 @@ export const AppointmentReview: React.FC<AppointmentReviewProps> = ({
                     onChange={setSendWhatsapp}
                     ariaLabel="Enviar confirmação no WhatsApp"
                 />
-            </div>
+            </div>}
         </div>
     );
 };

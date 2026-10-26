@@ -1,6 +1,7 @@
 ﻿import { discardFormDraft } from '../hooks/useFormDraft';
 import { useDraftFields } from '../hooks/useDraftFields';
 import React, { useState, useEffect, useCallback } from 'react';
+import { useWhatsAppTemplates } from '../hooks/useWhatsAppTemplates';
 import { createPortal } from 'react-dom';
 import FocusTrap from 'focus-trap-react';
 import { supabase } from '../lib/supabase';
@@ -42,7 +43,7 @@ import { usePendingPublicBookingsLive } from '../hooks/usePendingPublicBookingsL
 import { mergePendingPublicBooking } from '../utils/bookingRealtime';
 
 import { formatCurrency, formatPhone } from '../utils/formatters';
-import { buildWhatsAppLink, renderWhatsAppTemplate } from '../utils/whatsappTemplates';
+import { buildWhatsAppLink } from '../utils/whatsappTemplates';
 import { formatDateForInput, formatLocalDateString, combineDateAndTime } from '../utils/date';
 import { buildAgendaDayWindow } from '../utils/agendaDayWindow';
 import { resolveBusinessTimezone, formatTimeInTimeZone, getDateStringInTimeZone, dateStringToLocalDate } from '../utils/businessTimezone';
@@ -134,6 +135,7 @@ const getInitialDate = (searchParams: URLSearchParams): Date => {
 
 export const Agenda: React.FC = () => {
     const { user, region, role, companyId, teamMemberId } = useAuth();
+    const whatsapp = useWhatsAppTemplates();
     const isStaff = role === 'staff';
     const staffPermission = useStaffAppointmentPermission();
     // Horário de funcionamento + fuso do negócio (dono e colaborador leem via RLS "company read").
@@ -861,11 +863,12 @@ export const Agenda: React.FC = () => {
                 priceLabel: formattedPrice,
                 currencySymbol,
                 establishmentFallback: copy.establishmentFallback,
+                template: whatsapp.templates.booking_accepted,
             });
 
             fetchData();
 
-            if (phone) {
+            if (phone && whatsapp.isEnabled('booking_accepted')) {
                 setConfirmDialog({
                     title: 'Agendamento aceito',
                     message: 'Deseja enviar a confirmação para o cliente via WhatsApp?',
@@ -1056,13 +1059,13 @@ export const Agenda: React.FC = () => {
 
             // Prompt for WhatsApp confirmation
             const client = clients.find(c => c.id === selectedClient);
-            if (client?.phone) {
+            if (client?.phone && whatsapp.isEnabled('booking_confirmed')) {
                 const clientPhone = client.phone;
                 const formattedDate = dateTime.toLocaleDateString('pt-BR');
                 const formattedTime = dateTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
                 const formattedPrice = finalPrice.toFixed(2).replace('.', ',');
 
-                const message = renderWhatsAppTemplate('booking_confirmed', isBeauty ? 'beauty' : 'barber', {
+                const message = whatsapp.render('booking_confirmed', isBeauty ? 'beauty' : 'barber', {
                     data: formattedDate,
                     hora: formattedTime,
                     servico: serviceNames,

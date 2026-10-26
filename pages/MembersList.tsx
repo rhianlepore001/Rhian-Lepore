@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useWhatsAppTemplates } from '../hooks/useWhatsAppTemplates';
 import { Users, Check, X, MessageCircle, Search, Crown, Calendar, ChevronRight, Zap } from 'lucide-react';
 import { Card, Modal, Button, ConfirmModal, PageHeader } from '../components/ui';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
@@ -17,7 +18,7 @@ import { ClubOwnerNav } from '../components/membership/ClubOwnerNav';
 import { PixActions } from '../components/membership/PixActions';
 import { MembershipStatus, MembershipWithPlan } from '../services/memberships';
 import { formatCurrency } from '../utils/formatters';
-import { buildWhatsAppLink, renderWhatsAppTemplate } from '../utils/whatsappTemplates';
+import { buildWhatsAppLink } from '../utils/whatsappTemplates';
 
 const TABS: { value: MembershipStatus | 'all'; label: string }[] = [
     { value: 'all', label: 'Todos' },
@@ -35,6 +36,7 @@ const STATUS_LABELS: Record<MembershipStatus, { label: string; color: string }> 
 };
 
 export const MembersList: React.FC = () => {
+    const whatsapp = useWhatsAppTemplates();
     const { accent, colors, classes, isBeauty, font } = useBrutalTheme();
     const { showToast } = useToast();
     const { user, region, businessName } = useAuth();
@@ -95,7 +97,7 @@ export const MembersList: React.FC = () => {
     const handleWhatsApp = (m: MembershipWithPlan) => {
         const phone = m.client?.phone || '';
         if (!phone.replace(/\D/g, '')) return;
-        const message = renderWhatsAppTemplate('membership_contact', isBeauty ? 'beauty' : 'barber', {
+        const message = whatsapp.render('membership_contact', isBeauty ? 'beauty' : 'barber', {
             primeiro_nome: m.client?.name?.trim().split(/\s+/).filter(Boolean)[0] || '',
             estabelecimento: businessName || 'seu clube de assinatura',
             plano: m.plan?.name || '',

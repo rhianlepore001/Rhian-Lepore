@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useWhatsAppTemplates } from './useWhatsAppTemplates';
 import { useAuth } from '../contexts/AuthContext';
 import { useAIOSDiagnostic } from './useAIOSDiagnostic';
 import { formatCurrency } from '../utils/formatters';
@@ -54,6 +55,7 @@ function persistDismiss(id: string) {
 
 export function useSmartNotifications() {
     const { userType, businessName, role, region } = useAuth();
+    const whatsapp = useWhatsAppTemplates();
     const { diagnostic, loading, logCampaignActivity, refetch } = useAIOSDiagnostic();
     const localeRegion = region === 'PT' ? 'PT' : 'BR';
     const [notifications, setNotifications] = useState<SmartNotification[]>([]);
@@ -133,6 +135,7 @@ export function useSmartNotifications() {
 
         try {
             const message = generateReactivationMessage({
+                template: whatsapp.templates.reactivation,
                 name: notification.client.name,
                 businessName: businessName || 'nosso estabelecimento',
                 userType: userType || 'barber',
@@ -154,7 +157,7 @@ export function useSmartNotifications() {
         } finally {
             setSendingId(null);
         }
-    }, [businessName, userType, sendingId, logCampaignActivity, dismiss, refetch]);
+    }, [businessName, userType, region, sendingId, logCampaignActivity, dismiss, refetch, whatsapp.templates]);
 
     const activeNotifications = notifications.filter(n => !n.dismissed);
     const hasNotifications = activeNotifications.length > 0;

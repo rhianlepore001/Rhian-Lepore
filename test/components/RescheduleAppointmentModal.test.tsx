@@ -1,3 +1,10 @@
+import type { WhatsAppTemplateKey, WhatsAppTemplateOverride, WhatsAppTemplateVars, WhatsAppTheme, TemplateVariant } from '../../utils/whatsappTemplates';
+const messageOverrides = vi.hoisted(() => ({} as Partial<Record<WhatsAppTemplateKey, WhatsAppTemplateOverride>>));
+vi.mock('../../hooks/useWhatsAppTemplates', async () => {
+  const { renderWhatsAppTemplate } = await import('../../utils/whatsappTemplates');
+  return { useWhatsAppTemplates: () => ({ templates: messageOverrides, isEnabled: (key: WhatsAppTemplateKey) => messageOverrides[key]?.enabled !== false, render: (key: WhatsAppTemplateKey, theme: WhatsAppTheme, vars: WhatsAppTemplateVars, variant?: TemplateVariant) => renderWhatsAppTemplate(key, theme, vars, variant, messageOverrides[key]) }) };
+});
+
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
@@ -10,7 +17,7 @@ vi.mock('../../lib/supabase', () => ({
   supabase: { rpc: (...args: unknown[]) => rpc(...args) },
 }));
 vi.mock('../../contexts/AuthContext', () => ({
-  useAuth: () => ({ user: { id: 'owner-1' }, companyId: 'owner-1', region: 'PT', businessName: 'Barbearia Bob' }),
+  useAuth: () => ({ user: { id: 'owner-1' }, companyId: 'owner-1', region: 'PT', businessName: 'Negócio Exemplo' }),
 }));
 vi.mock('../../hooks/useBrutalTheme', () => ({
   useBrutalTheme: () => ({
@@ -67,18 +74,18 @@ import { RESCHEDULE_OCCUPANCY_ERROR } from '../../utils/rescheduleCopy';
 
 const appointment = {
   id: 'apt-1',
-  clientName: 'Aline Lima',
-  clientPhone: '+351619923489',
+  clientName: 'Cliente Exemplo',
+  clientPhone: '000000000',
   professional_id: 'pro-1',
-  appointment_time: '2026-08-23T05:00:00.000Z',
+  appointment_time: '2000-08-23T05:00:00.000Z',
   duration_minutes: 30,
   status: 'Confirmed',
-  service: 'Corte Masculino',
+  service: 'Serviço Exemplo',
 };
 
 const teamMembers = [
-  { id: 'pro-1', name: 'Bob' },
-  { id: 'pro-2', name: 'Bruna' },
+  { id: 'pro-1', name: 'Profissional Exemplo' },
+  { id: 'pro-2', name: 'Outra Profissional' },
 ];
 
 const renderModal = (props: Partial<React.ComponentProps<typeof RescheduleAppointmentModal>> = {}) => render(
@@ -96,16 +103,36 @@ const renderModal = (props: Partial<React.ComponentProps<typeof RescheduleAppoin
 
 describe('RescheduleAppointmentModal', () => {
   beforeEach(() => {
+    delete messageOverrides.reschedule;
     vi.clearAllMocks();
     vi.mocked(fetchRescheduleOccupancy).mockResolvedValue([]);
     rpc.mockResolvedValue({ data: { success: true }, error: null });
     vi.stubGlobal('open', open);
   });
 
+  it('envia o texto salvo com nome puro do cliente', async () => {
+    messageOverrides.reschedule = { message_key: 'reschedule', enabled: true, body: 'Oi {cliente}, remarcamos para {hora}.' };
+    renderModal();
+    fireEvent.click(screen.getByText('slot-10:30'));
+    fireEvent.click(screen.getByTestId('reschedule-confirm'));
+    await waitFor(() => expect(open).toHaveBeenCalled());
+    expect(new URL(String(open.mock.calls[0][0])).searchParams.get('text')).toBe('Oi Cliente Exemplo, remarcamos para 10:30.');
+  });
+
+  it('desligada não mostra caixa de aviso nem abre WhatsApp', async () => {
+    messageOverrides.reschedule = { message_key: 'reschedule', enabled: false, body: 'Não enviar' };
+    renderModal();
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText('slot-10:30'));
+    fireEvent.click(screen.getByTestId('reschedule-confirm'));
+    await waitFor(() => expect(showToast).toHaveBeenCalledWith('Horário remarcado.', 'success'));
+    expect(open).not.toHaveBeenCalled();
+  });
+
   it('mostra Atual e desabilita confirmar sem mudança (R-09)', () => {
     renderModal();
     expect(screen.getByText('Remarcar horário')).toBeInTheDocument();
-    expect(screen.getByTestId('reschedule-current').textContent).toMatch(/Atual:.*23\/08\/2026 às 06:00 com Bob/);
+    expect(screen.getByTestId('reschedule-current').textContent).toMatch(/Atual:.*23\/08\/2000 às 06:00 com Profissional Exemplo/);
     expect(screen.getByTestId('reschedule-confirm')).toBeDisabled();
   });
 
@@ -156,7 +183,7 @@ describe('RescheduleAppointmentModal', () => {
   });
 
   it('mostra erro inline acima de confirmar, limpa no retry e some no sucesso', async () => {
-    const busy = 'Esse horário já está ocupado na agenda de Bob. Escolha outro.';
+    const busy = 'Esse horário já está ocupado na agenda de Profissional Exemplo. Escolha outro.';
     rpc
       .mockResolvedValueOnce({ data: null, error: { message: busy, hint: 'reschedule_slot_busy' } })
       .mockResolvedValueOnce({ data: { success: true }, error: null });

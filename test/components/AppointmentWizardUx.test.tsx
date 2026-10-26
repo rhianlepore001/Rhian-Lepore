@@ -1,3 +1,10 @@
+import type { WhatsAppTemplateKey, WhatsAppTemplateOverride, WhatsAppTemplateVars, WhatsAppTheme, TemplateVariant } from '../../utils/whatsappTemplates';
+const messageOverrides = vi.hoisted(() => ({} as Partial<Record<WhatsAppTemplateKey, WhatsAppTemplateOverride>>));
+vi.mock('../../hooks/useWhatsAppTemplates', async () => {
+  const { renderWhatsAppTemplate } = await import('../../utils/whatsappTemplates');
+  return { useWhatsAppTemplates: () => ({ templates: messageOverrides, isEnabled: (key: WhatsAppTemplateKey) => messageOverrides[key]?.enabled !== false, render: (key: WhatsAppTemplateKey, theme: WhatsAppTheme, vars: WhatsAppTemplateVars, variant?: TemplateVariant) => renderWhatsAppTemplate(key, theme, vars, variant, messageOverrides[key]) }) };
+});
+
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, within, waitFor, act } from '@testing-library/react';
@@ -57,9 +64,25 @@ const next = () => userEvent.click(screen.getByRole('button', { name: 'Continuar
 
 describe('AppointmentWizard: títulos, passo Horário e passo Confirmar', () => {
   beforeEach(() => {
+    delete messageOverrides.wizard_confirm;
     mutateAsync.mockReset();
     onSuccess.mockReset();
     mutateAsync.mockResolvedValue({ success: true, booking_id: 'new-apt' });
+  });
+
+  it.each([true, false])('mensagem salva: ativa=%s controla caixa e envio', async enabled => {
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    messageOverrides.wizard_confirm = { message_key: 'wizard_confirm', enabled, body: 'Oi {cliente}, até {hora}!' };
+    render(<AppointmentWizard {...props} clients={[{ id: 'cli-bruno', name: 'Bruno', phone: '11987654321' }]} initialDate={new Date(2026, 8, 28)} initialProfessionalId="pro-bob" initialTime="10:00" slotContext="Horário disponível" />);
+    await userEvent.click(screen.getByRole('button', { name: 'cliente Bruno' }));
+    await next();
+    await userEvent.click(screen.getByText('Corte Social'));
+    await next();
+    expect(screen.queryByTestId('review-whatsapp') !== null).toBe(enabled);
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar Atendimento' }));
+    if (enabled) expect(new URL(String(open.mock.calls[0][0])).searchParams.get('text')).toBe('Oi Bruno, até 10:00!');
+    else expect(open).not.toHaveBeenCalled();
+    open.mockRestore();
   });
 
   it('títulos são instruções curtas e consistentes em todos os passos', async () => {

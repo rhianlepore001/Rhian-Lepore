@@ -72,6 +72,19 @@ function firstName(fullName: string): string {
   return fullName.trim().split(/\s+/)[0] || fullName;
 }
 
+/** Card compacto (celular): "Joana Alves" → "Joana A." */
+export function compactClientName(fullName: string): string {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length < 2) return parts[0] ?? fullName;
+  return `${parts[0]} ${parts[parts.length - 1][0].toUpperCase()}.`;
+}
+
+/** Serviço abreviado (celular): 1ª palavra, cortada em 6 letras + "." se longa. */
+export function compactServiceName(service: string): string {
+  const first = service.trim().split(/\s+/)[0] ?? service;
+  return first.length > 7 ? `${first.slice(0, 6)}.` : first;
+}
+
 function initials(fullName: string): string {
   return fullName
     .split(/\s+/)
@@ -129,7 +142,7 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
   onSelectBlock,
   blockCaption = () => 'Bloqueado',
 }) => {
-  const { colors, accent } = useBrutalTheme();
+  const { colors, accent, density } = useBrutalTheme();
   const offHours = new Set(offHoursSlots);
   // Com o rótulo de fechamento, a última linha mantém a borda (o rótulo fica abaixo dela).
   const lastRowBorder = endLabel ? '' : 'last:border-b-0';
@@ -149,8 +162,11 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
   const addableMembers = allMembers.filter((m) => !selectedProfessionalIds.includes(m.id));
   const showAddColumn = isFiltered && addableMembers.length > 0;
   // Cabeçalho compacto (Todos + profissionais), fixo abaixo da barra do app ao rolar a página.
+  // Celular: 4 colunas cabem em ~390px (gutter 36px + 4×~86px); com mais de 4, scroll lateral a 86px.
   const headerCell = 'h-[3.25rem]';
-  const memberColumnWidth = `shrink-0 min-w-[152px] md:min-w-[176px] flex-1 border-l ${colors.divider}`;
+  const memberColumnWidth = `shrink-0 min-w-[86px] basis-0 md:basis-auto md:min-w-[176px] flex-1 border-l ${colors.divider}`;
+  const gutterWidth = 'w-9 md:w-12';
+  const slotHeight = 'h-10 md:h-14';
   const headerViewportRef = useRef<HTMLDivElement>(null);
   const syncHeaderScroll = (e: React.UIEvent<HTMLDivElement>) => {
     if (headerViewportRef.current) headerViewportRef.current.scrollLeft = e.currentTarget.scrollLeft;
@@ -172,15 +188,35 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
   }, [showAddColumn]);
 
   return (
-    <div className={`rounded-2xl border overflow-clip min-w-0 w-full ${colors.border} ${colors.surface}`}>
+    <div
+      data-testid="agenda-grid-root"
+      className={`rounded-2xl border overflow-clip min-w-0 ${density?.agendaGridInsetX ?? ''} ${colors.border} ${colors.surface}`}
+    >
       {/* Cabeçalho fixo: fora do scroller horizontal (senão o sticky vertical não pega);
           o scroll lateral da grade é espelhado no viewport do cabeçalho. Fundo sólido. */}
       <div
         ref={addWrapRef}
         data-testid="agenda-grid-header"
-        className={`sticky top-[calc(var(--header-top,0px)+3.5rem)] md:top-[calc(var(--header-top,0px)+5rem)] z-30 flex border-b ${colors.divider} ${colors.card}`}
+        className={`sticky top-[calc(var(--header-top,0px)+3.5rem)] md:top-[calc(var(--header-top,0px)+5rem)] z-30 border-b ${colors.divider} ${colors.card}`}
       >
-        <div className={`w-12 shrink-0 ${headerCell}`}>
+        {showAddColumn && (
+          <div className="md:hidden flex justify-end px-1 pt-1">
+            <button
+              type="button"
+              data-testid="agenda-filter-add-mobile"
+              aria-expanded={addOpen}
+              aria-haspopup="listbox"
+              title="Adicionar colaborador"
+              onClick={() => setAddOpen((o) => !o)}
+              className={`min-h-[40px] px-3 inline-flex items-center gap-1 rounded-xl border ${colors.border} ${colors.card} text-xs font-bold ${colors.textSecondary}`}
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Mais
+            </button>
+          </div>
+        )}
+        <div className="flex">
+        <div className={`${gutterWidth} shrink-0 ${headerCell}`}>
           <button
                 type="button"
                 onClick={onSelectAll}
@@ -199,7 +235,7 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                   <Users className="w-3 h-3" />
                 </span>
                 <span
-                  className={`text-xs font-bold uppercase leading-none ${
+                  className={`sr-only md:not-sr-only text-xs font-bold uppercase leading-none ${
                     isAllSelected ? accent.text : colors.textMuted
                   }`}
                 >
@@ -225,13 +261,13 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                     aria-pressed={isMemberSelected}
                     data-testid={`agenda-filter-${member.id}`}
                     title={member.name}
-                    className="w-full h-full flex flex-col items-center justify-center gap-0.5 px-2"
+                    className="w-full h-full flex flex-col items-center justify-center gap-0.5 px-1 md:px-2"
                   >
                     {member.photo_url ? (
                       <img
                         src={member.photo_url}
                         alt=""
-                        className={`w-7 h-7 rounded-full object-cover border-2 transition-all ${
+                        className={`w-[22px] h-[22px] md:w-7 md:h-7 rounded-full object-cover border-2 transition-all ${
                           isMemberSelected
                             ? `${accent.border} shadow-[var(--shadow-card-accent)]`
                             : colors.border
@@ -239,7 +275,7 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                       />
                     ) : (
                       <span
-                        className={`w-7 h-7 rounded-full flex items-center justify-center border-2 text-xs font-bold transition-all ${
+                        className={`w-[22px] h-[22px] md:w-7 md:h-7 rounded-full flex items-center justify-center border-2 text-xs font-bold transition-all ${
                           isMemberSelected
                             ? `${accent.bg} border-transparent text-[var(--color-on-accent)] shadow-[var(--shadow-card-accent)]`
                             : `${colors.card} ${colors.border} ${colors.text}`
@@ -249,7 +285,7 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                       </span>
                     )}
                     <span
-                      className={`text-xs font-bold uppercase tracking-wide truncate leading-none max-w-full px-0.5 ${
+                      className={`text-xs font-bold uppercase md:tracking-wide truncate leading-none max-w-full px-0.5 ${
                         isMemberSelected ? accent.text : colors.textMuted
                       }`}
                     >
@@ -260,7 +296,7 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
               );
             })}
             {showAddColumn && (
-              <div className={`shrink-0 w-[4.5rem] border-l ${colors.divider} ${headerCell}`}>
+              <div className={`hidden md:block shrink-0 w-[4.5rem] border-l ${colors.divider} ${headerCell}`}>
                 <button
                   type="button"
                   data-testid="agenda-filter-add"
@@ -280,6 +316,7 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
               </div>
             )}
           </div>
+        </div>
         </div>
               {addOpen && (
                 <ul
@@ -310,11 +347,11 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
         onScroll={syncHeaderScroll}
         className={`overflow-x-auto max-w-full scrollbar-hide ${colors.surface}`}
       >
-        <div className="inline-flex min-w-full [--agenda-slot-h:3rem] md:[--agenda-slot-h:3.5rem]">
+        <div className="inline-flex min-w-full [--agenda-slot-h:2.5rem] md:[--agenda-slot-h:3.5rem]">
           {/* Gutter de horário */}
           <div
             data-agenda-gutter="true"
-            className={`sticky left-0 z-20 w-12 shrink-0 flex flex-col ${colors.card}`}
+            className={`sticky left-0 z-20 ${gutterWidth} shrink-0 flex flex-col ${colors.card}`}
           >
             {timeSlots.map((time, idx) => {
               // Primeira linha sempre rotulada (grade pode começar às 07:30 por um encaixe).
@@ -322,10 +359,10 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
               return (
                 <div
                   key={time}
-                  className={`h-12 md:h-14 flex items-start justify-center pt-1.5 border-b ${colors.divider} ${lastRowBorder}`}
+                  className={`${slotHeight} flex items-start justify-center pt-1 md:pt-1.5 border-b ${colors.divider} ${lastRowBorder}`}
                 >
                   {isHour && (
-                    <span className={`text-xs font-bold tabular-nums leading-none ${offHours.has(time) ? colors.textMuted : colors.text}`}>{time}</span>
+                    <span className={`text-xs tracking-tight md:tracking-normal font-bold tabular-nums leading-none ${offHours.has(time) ? colors.textMuted : colors.text}`}>{time}</span>
                   )}
                 </div>
               );
@@ -392,7 +429,7 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                         key={time}
                         data-agenda-slot={time}
                         data-off-hours={isOffHours ? 'true' : undefined}
-                        className={`relative h-12 md:h-14 w-full border-b ${colors.divider} ${lastRowBorder} ${isOffHours ? 'agenda-slot-off-hours' : ''}`}
+                        className={`relative ${slotHeight} w-full border-b ${colors.divider} ${lastRowBorder} ${isOffHours ? 'agenda-slot-off-hours' : ''}`}
                       >
                         {!occupied && (
                           <AgendaEmptySlotCell
@@ -464,11 +501,14 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                           top: `calc(var(--agenda-slot-h) * ${startIdx} + 2px)`,
                           height: `calc(var(--agenda-slot-h) * ${span} - 4px)`,
                         }}
-                        className={`agenda-event-chip absolute ${layout} ${apt.id === highlightAppointmentId ? 'agenda-card-highlight' : ''} overflow-hidden text-left rounded-md border ${cardTokens} px-1.5 py-1 min-h-0 flex flex-col justify-center gap-0.5 transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-accent`}
+                        className={`agenda-event-chip absolute ${layout} ${apt.id === highlightAppointmentId ? 'agenda-card-highlight' : ''} overflow-hidden text-left rounded-md border ${cardTokens} px-1 py-0.5 md:px-1.5 md:py-1 min-h-0 flex flex-col justify-center gap-0.5 transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-accent`}
                       >
                         <div className="flex items-start justify-between gap-1 min-w-0">
-                          <h4 className={`text-xs font-bold truncate leading-tight ${colors.text}`}>{apt.clientName}</h4>
-                          <div className="flex items-center gap-0.5 flex-shrink-0">
+                          <h4 className={`text-xs font-bold truncate leading-tight ${colors.text}`}>
+                            <span className="md:hidden" data-testid="agenda-card-client-compact">{compactClientName(apt.clientName)}</span>
+                            <span className="hidden md:inline">{apt.clientName}</span>
+                          </h4>
+                          <div className="hidden md:flex items-center gap-0.5 flex-shrink-0">
                             {apt.edited_at && (
                               <Edit2 className={`w-2.5 h-2.5 ${colors.textMuted}`} aria-label="Editado" />
                             )}
@@ -483,9 +523,10 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                         </div>
                         <div className="flex items-center justify-between gap-1 min-w-0">
                           <span className={`text-xs truncate leading-tight ${isUnassigned ? 'text-[var(--color-danger)]' : colors.textMuted}`}>
-                            {apt.service}
+                            <span className="md:hidden" data-testid="agenda-card-service-compact">{compactServiceName(apt.service)}</span>
+                            <span className="hidden md:inline">{apt.service}</span>
                           </span>
-                          <span className={`text-xs font-mono font-medium flex-shrink-0 leading-tight ${colors.text}`}>
+                          <span className={`hidden md:inline text-xs font-mono font-medium flex-shrink-0 leading-tight ${colors.text}`}>
                             {formatCurrency(apt.price, currencyRegion)}
                           </span>
                         </div>
@@ -504,12 +545,12 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
           {showAddColumn && (
             <div
               data-testid="agenda-col-add"
-              className={`shrink-0 w-[4.5rem] flex flex-col border-l ${colors.divider}`}
+              className={`hidden md:flex shrink-0 w-[4.5rem] flex-col border-l ${colors.divider}`}
             >
               {timeSlots.map((time) => (
                 <div
                   key={time}
-                  className={`h-12 md:h-14 border-b ${colors.divider} ${lastRowBorder} ${colors.surface}`}
+                  className={`${slotHeight} border-b ${colors.divider} ${lastRowBorder} ${colors.surface}`}
                   aria-hidden
                 />
               ))}

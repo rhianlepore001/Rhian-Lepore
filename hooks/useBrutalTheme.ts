@@ -25,6 +25,8 @@ export interface DensityTokens {
   pagePadding: string;
   /** Margens negativas espelhando o padding X de pagePadding (full-bleed). */
   pageBleedX: string;
+  /** Agenda no celular: encosta a grade a 4px da borda (desfaz o padding X da página até 4px). */
+  agendaGridInsetX: string;
   cardPadding: string;
   sectionGap: string;
   inlineGap: string;
@@ -231,6 +233,7 @@ const DENSITY_MAP: Record<ThemeVariant, DensityTokens> = {
   barber: {
     pagePadding: 'p-3 md:p-6',
     pageBleedX: '-mx-3 md:-mx-6',
+    agendaGridInsetX: '-mx-2 md:mx-0',
     cardPadding: 'p-4 md:p-5',
     sectionGap: 'space-y-4 md:space-y-5',
     inlineGap: 'gap-2 md:gap-3',
@@ -242,6 +245,7 @@ const DENSITY_MAP: Record<ThemeVariant, DensityTokens> = {
   beauty: {
     pagePadding: 'p-4 md:p-8',
     pageBleedX: '-mx-4 md:-mx-8',
+    agendaGridInsetX: '-mx-3 md:mx-0',
     cardPadding: 'p-5 md:p-8',
     sectionGap: 'space-y-6 md:space-y-8',
     inlineGap: 'gap-3 md:gap-4',

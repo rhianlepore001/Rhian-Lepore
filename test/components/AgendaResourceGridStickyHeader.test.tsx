@@ -68,14 +68,13 @@ describe('AgendaResourceGrid: cabeçalho dos profissionais fixo', () => {
     expect(viewport.scrollLeft).toBe(140);
   });
 
-  it('cards compactos: cabeçalho de 3.25rem, avatar 7×7', () => {
+  it('cards compactos: cabeçalho de 3.25rem, avatar 22px no celular, 7×7 a partir de md', () => {
     setup();
     const header = screen.getByTestId('agenda-grid-header');
     expect(header.innerHTML).toContain('h-[3.25rem]');
     expect(header.innerHTML).not.toContain('h-[4.25rem]');
     const avatar = screen.getByTestId('agenda-filter-m1').querySelector('span') as HTMLElement;
-    expect(avatar.className).toMatch(/(^|\s)w-7(\s|$)/);
-    expect(avatar.className).toMatch(/(^|\s)h-7(\s|$)/);
+    expect(avatar.className).toMatch(/(^|\s)w-\[22px\] h-\[22px\] md:w-7 md:h-7(\s|$)/);
   });
 
   it('toques continuam: Todos, profissional e slot', async () => {
@@ -93,7 +92,7 @@ describe('AgendaResourceGrid: cabeçalho dos profissionais fixo', () => {
     for (const m of members) {
       const head = screen.getByTestId(`agenda-head-${m.id}`);
       const col = screen.getByTestId(`agenda-col-${m.id}`);
-      for (const cls of ['shrink-0', 'min-w-[152px]', 'md:min-w-[176px]', 'flex-1', 'border-l']) {
+      for (const cls of ['shrink-0', 'min-w-[86px]', 'md:min-w-[176px]', 'flex-1', 'border-l']) {
         expect(head.className).toContain(cls);
         expect(col.className).toContain(cls);
       }

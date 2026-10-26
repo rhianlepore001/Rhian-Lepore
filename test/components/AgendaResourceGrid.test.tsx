@@ -110,10 +110,11 @@ describe('AgendaResourceGrid', () => {
   it('estreita o gutter de Todos/horários e dá respiro nas colunas', () => {
     setup();
     const gutter = document.querySelector('[data-agenda-gutter="true"]') as HTMLElement;
-    expect(gutter.className).toMatch(/(^|\s)w-12(\s|$)/);
+    expect(gutter.className).toMatch(/(^|\s)w-9(\s|$)/);
+    expect(gutter.className).toMatch(/(^|\s)md:w-12(\s|$)/);
     expect(gutter.className).not.toMatch(/(^|\s)w-16(\s|$)/);
     expect(screen.getByTestId('agenda-filter-all').className).toMatch(/px-0\.5/);
-    expect(screen.getByTestId('agenda-filter-m1').className).toMatch(/(^|\s)px-2(\s|$)/);
+    expect(screen.getByTestId('agenda-filter-m1').className).toMatch(/(^|\s)px-1 md:px-2(\s|$)/);
   });
 
   it('não usa snap CSS no scroller da grade', () => {
@@ -137,7 +138,7 @@ describe('AgendaResourceGrid', () => {
     const slots = document.querySelectorAll('[data-agenda-slot]');
     expect(slots.length).toBeGreaterThan(0);
     slots.forEach((slot) => {
-      expect(slot.className).toMatch(/(^|\s)h-12(\s|$)/);
+      expect(slot.className).toMatch(/(^|\s)h-10 md:h-14(\s|$)/);
       expect(slot.className).not.toMatch(/min-h-12/);
       expect(slot.className).not.toMatch(/min-h-14/);
     });

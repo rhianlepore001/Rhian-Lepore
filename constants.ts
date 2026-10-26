@@ -33,7 +33,7 @@ export const NAVIGATION_ITEMS = [
   { name: 'Início', icon: LayoutDashboard, path: '/', ownerOnly: false, group: 'Operação' },
   { name: 'Agenda', icon: Calendar, path: '/agenda', ownerOnly: false, group: 'Operação' },
   { name: 'Fila Digital', icon: Clock, path: '/fila', ownerOnly: false, group: 'Operação' },
-  { name: 'Clientes', icon: Users, path: '/clientes', ownerOnly: true, group: 'Operação' },
+  { name: 'Clientes', icon: Users, path: '/clientes', ownerOnly: false, group: 'Operação' },
   { name: 'Equipe', icon: UserCog, path: '/configuracoes/equipe', ownerOnly: true, group: 'Operação' },
   { name: 'Serviços', icon: Scissors, path: '/configuracoes/servicos', ownerOnly: true, group: 'Operação' },
   { name: 'Produtos', icon: Package, path: '/produtos', ownerOnly: false, group: 'Operação' },

@@ -38,6 +38,7 @@ export function reloadOnceForNewVersion(
   } catch {
     return false; // sem como marcar → não arrisca loop
   }
+  window.dispatchEvent(new Event('agendix:before-reload'));
   reload();
   return true;
 }

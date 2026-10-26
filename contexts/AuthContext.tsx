@@ -1,5 +1,6 @@
 import { metaTracker, normalizeMetaPhone } from '../lib/metaTracking';
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { clearAllFormDrafts } from '../hooks/useFormDraft';
 import { supabase } from '../lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import { parseDate } from '../utils/date';
@@ -52,6 +53,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const currentUserIdRef = useRef<string | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [userType, setUserType] = useState<UserType>('barber');
   const [region, setRegion] = useState<Region>('BR');
@@ -95,6 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
 
+      if (currentUserIdRef.current !== userId) return;
       if (profile) {
         // Para staff, userType será definido a partir do perfil do owner (evita flicker de tema)
         const isStaffAccount = profile.role === 'staff';
@@ -119,6 +122,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .eq('id', profile.company_id)
             .single();
 
+          if (currentUserIdRef.current !== userId) return;
           if (ownerProfile) {
             setSubscriptionStatus((ownerProfile.subscription_status as any) || 'trial');
             setTrialEndsAt(ownerProfile.trial_ends_at || null);
@@ -141,11 +145,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .eq('user_id', profile.company_id)
             .maybeSingle();
 
+          if (currentUserIdRef.current !== userId) return;
           let resolvedMemberId = teamMember?.id || null;
           if (!resolvedMemberId) {
             const { data: relinked } = await supabase.rpc('relink_staff_if_unbound');
             resolvedMemberId = relinked || null;
           }
+          if (currentUserIdRef.current !== userId) return;
           setTeamMemberId(resolvedMemberId);
         } else {
           const { data: onboardingProgress, error: onboardingError } = await supabase
@@ -154,6 +160,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .eq('company_id', profile.company_id || userId)
             .single();
 
+          if (currentUserIdRef.current !== userId) return;
           if (onboardingError && onboardingError.code !== 'PGRST116') {
             console.error('Error fetching onboarding progress:', onboardingError);
           }
@@ -170,9 +177,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    let handledAuthEvent = false;
+    let initializedUserId: string | null | undefined;
     const initSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
+        if (handledAuthEvent) return;
+        initializedUserId = session?.user.id ?? null;
+        currentUserIdRef.current = session?.user.id ?? null;
         setSession(session);
         if (session?.user?.id) {
           // Boot frio: sem isso, isDev fica false até um evento de auth
@@ -185,7 +197,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (error) {
         console.error('Error initializing session:', error);
       } finally {
-        setLoading(false);
+        if (initializedUserId === currentUserIdRef.current || !handledAuthEvent) setLoading(false);
       }
     };
 
@@ -194,7 +206,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
+      handledAuthEvent = true;
+      const nextUserId = session?.user.id ?? null;
+      const sameUser = nextUserId === currentUserIdRef.current;
+      currentUserIdRef.current = nextUserId;
       setSession(session);
+      if (event === 'SIGNED_OUT') clearAllFormDrafts();
+      if (sameUser && session && event !== 'USER_UPDATED' && event !== 'PASSWORD_RECOVERY') return;
 
       if (event === 'PASSWORD_RECOVERY') {
         setLoading(false);
@@ -202,11 +220,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (session?.user?.id) {
+        if (!sameUser) setLoading(true);
         setIsDev(resolveIsDev(session.user.email));
         // supabase-js segura um lock neste callback; queries no mesmo tick travam o signUp.
         setTimeout(() => {
+          if (currentUserIdRef.current !== session.user.id) return;
           fetchProfileData(session.user.id).then(() => {
-            setLoading(false);
+            if (currentUserIdRef.current === session.user.id) setLoading(false);
           });
         }, 0);
       } else {
@@ -251,6 +271,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
+    clearAllFormDrafts();
+    currentUserIdRef.current = null;
     await supabase.auth.signOut();
     applyPublicAuthTheme();
     setSession(null);
@@ -519,9 +541,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const activeUserType = (isDev && devUserType) ? devUserType : userType;
 
+  const stableUserRef = useRef<User | null>(null);
+  if (stableUserRef.current?.id !== session?.user?.id) stableUserRef.current = session?.user ?? null;
+  const user = stableUserRef.current;
+
   const value = React.useMemo(() => ({
     isAuthenticated: !!session,
-    user: session?.user ?? null,
+    user,
     userType: activeUserType,
     region,
     businessName,
@@ -552,6 +578,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     register
   }), [
     session,
+    user,
     activeUserType,
     region,
     businessName,

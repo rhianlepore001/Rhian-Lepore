@@ -1,3 +1,5 @@
+﻿import { discardFormDraft } from '../hooks/useFormDraft';
+import { useDraftFields } from '../hooks/useDraftFields';
 import React, { useState, useEffect, useRef } from 'react';
 import { useWhatsAppTemplates } from '../hooks/useWhatsAppTemplates';
 import { supabase } from '../lib/supabase';
@@ -39,7 +41,7 @@ import {
 
 
 export const AppointmentWizard: React.FC<WizardProps> = ({
-    onClose,
+    onClose: closeForm,
     onSuccess,
     initialDate = new Date(),
     initialProfessionalId = '',
@@ -84,13 +86,14 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     const [autoAssigningPro, setAutoAssigningPro] = useState(false);
     const [selectedProductLines, setSelectedProductLines] = useState<ProductLineSelection[]>([]);
 
+    const onClose = () => { formDraft.clear(); discardFormDraft(companyId, user?.id, 'appointment:new-client'); closeForm(); };
     // Cada passo começa do topo (antes herdava a rolagem do passo anterior)
     const contentRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
         if (contentRef.current) contentRef.current.scrollTop = 0;
     }, [step]);
 
-    const { data: catalogProducts = [] } = useProducts({
+    const { data: catalogProducts = [], isLoading: productsLoading } = useProducts({
         companyId: companyId ?? user?.id ?? '',
         includeInactive: false,
     });
@@ -120,20 +123,41 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     const selectedServicesDetails = services.filter(s => selectedServiceIds.includes(s.id));
     const basePrice = selectedServicesDetails.reduce((sum, s) => sum + s.price, 0);
 
-    // Initialize custom price with base price when entering step 4
+    const formDraft = useDraftFields('appointment:wizard', {
+        step: [step, setStep],
+        selectedClientId: [selectedClientId, setSelectedClientId],
+        selectedServiceIds: [selectedServiceIds, setSelectedServiceIds],
+        selectedProId: [selectedProId, setSelectedProId],
+        selectedTime: [selectedTime, setSelectedTime],
+        selectedDate: [formatLocalDateString(selectedDate), value => { const d = new Date(`${value}T12:00:00`); if (!Number.isNaN(d.getTime())) setSelectedDate(d); }],
+        customPrice: [customPrice, setCustomPrice],
+        discount: [discount, setDiscount],
+        notes: [notes, setNotes],
+        sendWhatsapp: [sendWhatsapp, setSendWhatsapp],
+        activeCategory: [activeCategory, setActiveCategory],
+        searchQuery: [searchQuery, setSearchQuery],
+        isCustomService: [isCustomService, setIsCustomService],
+        customServiceName: [customServiceName, setCustomServiceName],
+        customServicePrice: [customServicePrice, setCustomServicePrice],
+        selectedProductLines: [selectedProductLines, setSelectedProductLines]
+    }, { onDiscard: onClose, ready: !productsLoading, restore: data => ({ ...data,
+        step: [1, 2, 3, 4].includes(data.step) ? data.step : 1,
+        selectedClientId: clients.some(c => c.id === data.selectedClientId) ? data.selectedClientId : '',
+        selectedServiceIds: data.selectedServiceIds?.filter(id => services.some(s => s.id === id)) ?? [],
+        selectedProId: teamMembers.some(m => m.id === data.selectedProId) ? data.selectedProId : '',
+        selectedProductLines: data.selectedProductLines?.filter(line => line && catalogProducts.some(p => p.id === line.productId)) ?? [],
+    }) });
+
+    const pricingInitialized = useRef(false);
     useEffect(() => {
-        // Recalculate price whenever entering step 4 or underlying values change
-        if (step === 4) {
-            // Assuming customServicePrice is only relevant if selected?
-            // The original logic just added it. If isCustomService is true?
-            // Re-checking original logic: it parses customServicePrice regardless? 
-            // Logic was: const extraPrice = parseFloat(customServicePrice || '0');
-            // But usually only if enabled. I'll stick to original behavior but adding a check might be better.
-            // Let's assume if customServicePrice has value, it's added.
-            const extraPrice = isCustomService ? parseFloat(customServicePrice || '0') : 0;
-            setCustomPrice((basePrice + extraPrice).toFixed(2));
+        if (!formDraft.hydrated) return;
+        if (!pricingInitialized.current) {
+            pricingInitialized.current = true;
+            if (formDraft.restored) return;
         }
-    }, [step, basePrice, customServicePrice, isCustomService]);
+        const extraPrice = isCustomService ? parseFloat(customServicePrice || '0') : 0;
+        setCustomPrice((basePrice + extraPrice).toFixed(2));
+    }, [formDraft.hydrated, basePrice, customServicePrice, isCustomService]);
 
     // Auto-select professional when entering schedule step (parity: 1 pro or RPC)
     useEffect(() => {
@@ -282,6 +306,8 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
             // onSuccess do pai fecha o modal e refetcha a grade — NÃO chamar onClose
             // em seguida (ele fazia navigate(pathname) e apagava ?date= / estado).
             // id + profissional: a agenda vai até o card criado e o destaca
+            formDraft.clear();
+            discardFormDraft(companyId, user?.id, 'appointment:new-client');
             onSuccess(dateTime, { id: appointmentId, professionalId: selectedProId });
         } catch (error) {
             logger.error('Erro ao criar agendamento:', error);
@@ -366,7 +392,7 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                             );
                         })()}
                     </div>
-                    <button onClick={onClose} className={`p-2 hover:bg-[var(--color-card-hover)] rounded-full transition-colors ${colors.text}`}>
+                    <button aria-label="Fechar" onClick={onClose} className={`p-2 hover:bg-[var(--color-card-hover)] rounded-full transition-colors ${colors.text}`}>
                         <X className="w-6 h-6" />
                     </button>
                     <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--color-accent-border)]" aria-hidden="true" />

@@ -4,6 +4,8 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AgendaBlockForm } from '../../components/agenda/AgendaBlockForm';
 
+vi.mock('../../components/ui/Toast', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
+vi.mock('../../contexts/AuthContext', () => ({ useAuth: () => ({ user: { id: 'fictional-user' }, companyId: 'fictional-company' }) }));
 vi.mock('../../hooks/useBrutalTheme', () => ({
   useBrutalTheme: () => ({
     colors: { text: '', textMuted: '', textSecondary: '', border: '', card: '' },

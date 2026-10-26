@@ -178,6 +178,14 @@ const OwnerRouteGuard = ({ children }: { children: React.ReactElement }) => {
   return children;
 };
 
+const ClientsRouteGuard = ({ children }: { children: React.ReactElement }) => {
+  const { loading, isAuthenticated, role } = useAuth();
+  if (loading) return <LoadingFull />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (role !== 'owner' && role !== 'staff') return <Navigate to="/" replace />;
+  return children;
+};
+
 const AppRoutes: React.FC = () => {
   // Retorno do e-mail de redefinição de senha: capturado em lib/supabase.ts
   // (captureRecoveryCallback) antes do client ler a URL.
@@ -248,8 +256,8 @@ const AppRoutes: React.FC = () => {
           <Route path="/agenda" element={<Agenda />} />
           <Route path="/fila" element={<QueueManagement />} />
           <Route path="/fila/historico" element={<QueueHistory />} />
-          <Route path="/clientes" element={<OwnerRouteGuard><Clients /></OwnerRouteGuard>} />
-          <Route path="/clientes/:id" element={<OwnerRouteGuard><ClientCRM /></OwnerRouteGuard>} />
+          <Route path="/clientes" element={<ClientsRouteGuard><Clients /></ClientsRouteGuard>} />
+          <Route path="/clientes/:id" element={<ClientsRouteGuard><ClientCRM /></ClientsRouteGuard>} />
           <Route path="/produtos" element={<Products />} />
           <Route path="/financeiro" element={<Finance />} />
           <Route path="/financeiro/performance" element={<PerformanceAccessGuard><OwnerRouteGuard><Suspense fallback={<PerformancePageSkeleton />}><StaffPerformance /></Suspense></OwnerRouteGuard></PerformanceAccessGuard>} />

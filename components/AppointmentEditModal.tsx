@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useDraftFields } from '../hooks/useDraftFields';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import FocusTrap from 'focus-trap-react';
 import { X, Loader2, Tag, Lock } from 'lucide-react';
@@ -76,7 +77,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     teamMembers,
     services,
     clients,
-    onClose,
+    onClose: closeForm,
     onSave,
     accentColor,
     currencySymbol,
@@ -91,7 +92,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     const [loading, setLoading] = useState(false);
     const [productLines, setProductLines] = useState<ProductLineSelection[]>([]);
     const tenantId = companyId ?? user?.id ?? '';
-    const { data: catalogProducts = [] } = useProducts({
+    const { data: catalogProducts = [], isLoading: productsLoading } = useProducts({
         companyId: tenantId,
         includeInactive: false,
     });
@@ -103,7 +104,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
         (async () => {
             try {
                 const lines = await listAppointmentProductLines(tenantId, appointment.id);
-                if (!cancelled) {
+                if (!cancelled && !formDraft.restored) {
                     setProductLines(lines.map(l => ({
                         productId: l.product_id,
                         quantity: l.quantity,
@@ -192,8 +193,32 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     const [finalPriceInput, setFinalPriceInput] = useState(appointment.price.toFixed(2));
     const [discountPercentage, setDiscountPercentage] = useState(initialDiscountPercentage);
 
+    const onClose = () => { formDraft.clear(); closeForm(); };
+    const formDraft = useDraftFields(`appointment:edit:${appointment.id}`, {
+        selectedClient: [selectedClient, setSelectedClient],
+        selectedServices: [selectedServices, setSelectedServices],
+        notes: [notes, setNotes],
+        isCustomService: [isCustomService, setIsCustomService],
+        customServiceName: [customServiceName, setCustomServiceName],
+        priceBeforeDiscount: [priceBeforeDiscount, setPriceBeforeDiscount],
+        finalPriceInput: [finalPriceInput, setFinalPriceInput],
+        discountPercentage: [discountPercentage, setDiscountPercentage],
+        productLines: [productLines, setProductLines]
+    }, { onDiscard: onClose, ready: !productsLoading, restore: data => ({ ...data,
+        selectedClient: clients.some(c => c.id === data.selectedClient) ? data.selectedClient : '',
+        selectedServices: data.selectedServices?.filter(id => services.some(s => s.id === id)) ?? [],
+        productLines: data.productLines?.filter(line => line && catalogProducts.some(p => p.id === line.productId)) ?? [],
+    }) });
+
+    const pricingInitialized = useRef(false);
+
     // 1. Update Base Price and Reference Price when services change
     useEffect(() => {
+        if (!formDraft.hydrated) return;
+        if (!pricingInitialized.current) {
+            pricingInitialized.current = true;
+            if (formDraft.restored) return;
+        }
         const currentServices = services.filter(s => selectedServices.includes(s.id));
         const currentBasePrice = currentServices.reduce((sum, s) => sum + s.price, 0);
 
@@ -206,7 +231,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
             setFinalPriceInput(calculatedFinalPrice.toFixed(2));
         }
 
-    }, [selectedServices, services, isCustomService]);
+    }, [formDraft.hydrated, selectedServices, services, isCustomService]);
 
     // 2. Recalculate Price when Discount changes
     const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {

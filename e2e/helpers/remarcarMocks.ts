@@ -76,9 +76,10 @@ const HOURS = {
  */
 export async function installRemarcarMocks(
   page: Page,
-  opts: { role: RemarcarRole; scope?: StaffScope } = { role: 'owner' },
+  opts: { role: RemarcarRole; scope?: StaffScope; projectRef?: string } = { role: 'owner' },
 ): Promise<RemarcarMockHandle> {
   const role = opts.role;
+  const projectRef = opts.projectRef ?? PROJECT_REF;
   const scope = opts.scope ?? 'none';
   const userId = role === 'owner' ? OWNER_ID : STAFF_ID;
   const staffIsOwn = role === 'staff' && scope === 'own';
@@ -124,7 +125,7 @@ export async function installRemarcarMocks(
       localStorage.setItem(clientKey, JSON.stringify(clientValue));
     },
     {
-      authKey: `sb-${PROJECT_REF}-auth-token`,
+      authKey: `sb-${projectRef}-auth-token`,
       sessionValue: session,
       clientKey: `rhian_public_client_${OWNER_ID}`,
       clientValue: {
@@ -136,7 +137,7 @@ export async function installRemarcarMocks(
     },
   );
 
-  await page.route(`**/${PROJECT_REF}.supabase.co/**`, async (route) => {
+  await page.route(`**/${projectRef}.supabase.co/**`, async (route) => {
     const req = route.request();
     const url = new URL(req.url());
     const pathname = url.pathname;

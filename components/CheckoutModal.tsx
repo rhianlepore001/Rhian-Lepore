@@ -1,3 +1,4 @@
+import { useDraftFields } from '../hooks/useDraftFields';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Button, useToast } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
@@ -100,7 +101,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   appointment,
   teamMembers,
   financialSettings,
-  onClose,
+  onClose: closeForm,
   onConfirm,
 }) => {
   const { companyId, region } = useAuth();
@@ -117,6 +118,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [errors, setErrors] = useState<{ paymentMethod?: string; receivedBy?: string }>({});
   const [cart, setCart] = useState<CartLine[]>([]);
   const [selectedProductId, setSelectedProductId] = useState('');
+  const initializedFor = useRef<string | null>(null);
+  const priceEdited = useRef(false);
 
   const { data: products = [] } = useProducts({
     companyId: companyId ?? '',
@@ -143,18 +146,26 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   });
 
   useEffect(() => {
-    if (appointment) {
+    if (!appointment) {
+      initializedFor.current = null;
+      return;
+    }
+    const firstLoad = initializedFor.current !== appointment.id;
+    initializedFor.current = appointment.id;
+    if (firstLoad) priceEdited.current = false;
+    if (formDraft.restored) return;
+    if (firstLoad) {
       setPaymentMethod('');
       setReceivedBy('');
       setMachineFeePercent('');
-      // Sprint D+1: Se assinante, parte coberta já é 0. Adicionais (fora do plano) ainda são cobrados.
-      const subscriptionCents = discount.hasActiveSubscription ? discount.coveredCents : 0;
-      const remainingCents = Math.round((appointment.price ?? 0) * 100) - subscriptionCents;
-      const remainingReais = Math.max(0, remainingCents / 100);
-      setFinalPrice(remainingReais);
       setErrors({});
       setSelectedProductId('');
       reset();
+    }
+    if (!priceEdited.current) {
+      const subscriptionCents = discount.hasActiveSubscription ? discount.coveredCents : 0;
+      const remainingCents = Math.round((appointment.price ?? 0) * 100) - subscriptionCents;
+      setFinalPrice(Math.max(0, remainingCents / 100));
     }
   }, [appointment?.id, reset, discount.hasActiveSubscription, discount.coveredCents]);
 
@@ -164,7 +175,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       setCart(prev => (prev.length === 0 ? prev : []));
       return;
     }
-    if (!pendingLinesFetched) return;
+    if (!pendingLinesFetched || formDraft.restored) return;
     if (cartSeededFor.current === appointment.id) return;
     cartSeededFor.current = appointment.id;
     setCart(
@@ -175,14 +186,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     );
   }, [appointment?.id, pendingLines, pendingLinesFetched]);
 
-  useEffect(() => {
-    const defaultFeePercent = getMachineFeePercent(paymentMethod, financialSettings);
-    if (defaultFeePercent > 0) {
-      setMachineFeePercent(String(defaultFeePercent));
-    } else if (!['debit', 'credit'].includes(paymentMethod)) {
-      setMachineFeePercent('');
-    }
-  }, [paymentMethod, financialSettings]);
 
   const showMachineFee = ['debit', 'credit'].includes(paymentMethod);
   const feePercent = parseFloat(machineFeePercent) || 0;
@@ -238,6 +241,19 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     const product = getProductById(line.productId);
     return sum + (product ? product.sale_price * line.quantity : 0);
   }, 0);
+
+  const onClose = () => { formDraft.clear(); closeForm(); };
+  const formDraft = useDraftFields(`appointment:checkout:${appointment?.id ?? 'closed'}`, {
+    paymentMethod: [paymentMethod, setPaymentMethod],
+    receivedBy: [receivedBy, setReceivedBy],
+    machineFeePercent: [machineFeePercent, setMachineFeePercent],
+    finalPrice: [finalPrice, setFinalPrice],
+    cart: [cart, setCart]
+  }, { onDiscard: onClose, enabled: !!appointment, ready: !!appointment && pendingLinesFetched,
+    restore: data => ({ ...data,
+      receivedBy: data.receivedBy === 'owner' || teamMembers.some(m => m.id === data.receivedBy) ? data.receivedBy : '',
+      cart: data.cart?.filter(line => products.some(p => p.id === line.productId)) ?? [],
+    }) });
 
   const handleConfirm = async () => {
     const newErrors: { paymentMethod?: string; receivedBy?: string } = {};
@@ -295,6 +311,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         machineFeeAmount: feeAmount,
       });
 
+      formDraft.clear();
       onConfirm();
     } catch (err: unknown) {
       const userMessage = resolveCheckoutErrorMessage(err);
@@ -470,7 +487,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             step="0.01"
             min="0"
             value={finalPrice}
-            onChange={(event) => setFinalPrice(parseFloat(event.target.value) || 0)}
+            onChange={(event) => { priceEdited.current = true; setFinalPrice(parseFloat(event.target.value) || 0); }}
             className={`w-full ${colors.inputBg} ${colors.inputBorder} border rounded-xl px-3 py-2.5 ${colors.text} focus:outline-none focus:border-[var(--color-input-focus)]`}
           />
         </div>
@@ -500,6 +517,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     checked={paymentMethod === value}
                     onChange={() => {
                       setPaymentMethod(value);
+                      const defaultFee = getMachineFeePercent(value, financialSettings);
+                      setMachineFeePercent(defaultFee > 0 ? String(defaultFee) : '');
                       setErrors((prev) => ({ ...prev, paymentMethod: undefined }));
                     }}
                     className="sr-only"

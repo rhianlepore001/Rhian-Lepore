@@ -34,7 +34,13 @@ export type WhatsAppVariable =
 
 export type WhatsAppTemplateVars = Partial<Record<WhatsAppVariable, string | number | null | undefined>>;
 type TemplatePair = Record<WhatsAppTheme, string>;
-type TemplateVariant = 'confirmed' | 'vip';
+export type TemplateVariant = 'confirmed' | 'vip';
+export interface WhatsAppTemplateOverride {
+  message_key: WhatsAppTemplateKey;
+  enabled: boolean;
+  body: string | null;
+}
+export type WhatsAppTemplateOverrides = Partial<Record<WhatsAppTemplateKey, WhatsAppTemplateOverride>>;
 
 export const WHATSAPP_TEMPLATE_KEYS: readonly WhatsAppTemplateKey[] = [
   'booking_accepted',
@@ -67,8 +73,8 @@ export const WHATSAPP_TEMPLATES: Record<WhatsAppTemplateKey, TemplatePair> = {
     barber: 'Fala, {cliente}! ✂️\nSeu horário está garantido em *{estabelecimento}*.\nNos vemos dia *{data}* às *{hora}*.\n\nTe aguardamos para dar aquele talento! 🚀',
   },
   reschedule: {
-    beauty: '{cliente}\nSeu horário em *{estabelecimento}* foi remarcado.\nAntes: {data_anterior} às {hora_anterior}\nAgora: *{data}* às *{hora}* {profissional}.\nSe precisar de outro horário, é só responder. 💖',
-    barber: '{cliente}\nSeu horário em *{estabelecimento}* foi remarcado.\nAntes: {data_anterior} às {hora_anterior}\nAgora: *{data}* às *{hora}* {profissional}.\nQualquer dúvida é só responder aqui. Até lá! ✂️',
+    beauty: 'Olá, {cliente}! ✨\nSeu horário em *{estabelecimento}* foi remarcado.\nAntes: {data_anterior} às {hora_anterior}\nAgora: *{data}* às *{hora}* {profissional}.\nSe precisar de outro horário, é só responder. 💖',
+    barber: 'Fala, {cliente}! 🔁\nSeu horário em *{estabelecimento}* foi remarcado.\nAntes: {data_anterior} às {hora_anterior}\nAgora: *{data}* às *{hora}* {profissional}.\nQualquer dúvida é só responder aqui. Até lá! ✂️',
   },
   reactivation: {
     beauty: 'Oi, {primeiro_nome}! Você sempre cuida do seu {servico} com a gente em *{estabelecimento}* e sua última visita foi incrível, mas notamos que já faz {dias_ausente} dias que não nos vemos. Por isso, separei alguns horários exclusivos para você renovar esse estilo esta semana. Vamos agendar?',
@@ -79,8 +85,8 @@ export const WHATSAPP_TEMPLATES: Record<WhatsAppTemplateKey, TemplatePair> = {
     barber: 'Oi {primeiro_nome}! Faz um tempo que não nos vemos. Que tal agendar um horário esta semana?',
   },
   queue_joined: {
-    beauty: 'Olá, {primeiro_nome}! Você entrou na fila da {estabelecimento}.\nAcompanhe sua senha neste link:\n{link_fila}\n\nSe for a primeira vez, informe o mesmo WhatsApp usado no balcão e veja a posição na fila.',
-    barber: 'Olá, {primeiro_nome}! Você entrou na fila da {estabelecimento}.\nAcompanhe sua senha neste link:\n{link_fila}\n\nSe for a primeira vez, informe o mesmo WhatsApp usado no balcão e veja a posição na fila.',
+    beauty: 'Olá, {primeiro_nome}! Você entrou na fila de *{estabelecimento}*.\nAcompanhe sua senha neste link:\n{link_fila}\n\nSe for a primeira vez, informe o mesmo WhatsApp usado no balcão e veja a posição na fila.',
+    barber: 'Olá, {primeiro_nome}! Você entrou na fila de *{estabelecimento}*.\nAcompanhe sua senha neste link:\n{link_fila}\n\nSe for a primeira vez, informe o mesmo WhatsApp usado no balcão e veja a posição na fila.',
   },
   membership_contact: {
     beauty: 'Olá {primeiro_nome}! Tudo bem? Aqui é de *{estabelecimento}*. Sobre seu plano "{plano}"...',
@@ -91,8 +97,8 @@ export const WHATSAPP_TEMPLATES: Record<WhatsAppTemplateKey, TemplatePair> = {
     barber: 'Olá, {estabelecimento}! Fiz um agendamento online para {servico} com {profissional} em {data} às {hora}. Pode confirmar, por favor?',
   },
   client_change: {
-    beauty: 'Olá! {cliente} Queria alterar meu horário.',
-    barber: 'Olá! {cliente} Queria alterar meu horário.',
+    beauty: 'Olá! Sou {cliente}. Queria alterar meu horário.',
+    barber: 'Olá! Sou {cliente}. Queria alterar meu horário.',
   },
   client_question: {
     beauty: 'Olá! Sou {cliente} e tenho uma dúvida sobre meu agendamento de {data} às {hora}.',
@@ -127,7 +133,7 @@ const TEMPLATE_VARIANTS: Partial<Record<WhatsAppTemplateKey, Partial<Record<Temp
   },
 };
 
-const TEMPLATE_ALLOWED_KEYS: Record<WhatsAppTemplateKey, readonly WhatsAppVariable[]> = {
+export const TEMPLATE_ALLOWED_KEYS: Record<WhatsAppTemplateKey, readonly WhatsAppVariable[]> = {
   booking_accepted: ['cliente', 'data', 'hora', 'servico', 'valor', 'estabelecimento'],
   booking_confirmed: ['data', 'hora', 'servico', 'valor', 'estabelecimento'],
   wizard_confirm: ['cliente', 'data', 'hora', 'estabelecimento'],
@@ -145,7 +151,7 @@ const TEMPLATE_ALLOWED_KEYS: Record<WhatsAppTemplateKey, readonly WhatsAppVariab
 };
 
 const NAME_VARIABLES = new Set<WhatsAppVariable>([
-  'cliente', 'primeiro_nome', 'servico', 'profissional', 'estabelecimento', 'plano',
+  'cliente', 'primeiro_nome', 'profissional',
 ]);
 
 function cleanVariable(value: WhatsAppTemplateVars[WhatsAppVariable], key: WhatsAppVariable): string {
@@ -154,6 +160,7 @@ function cleanVariable(value: WhatsAppTemplateVars[WhatsAppVariable], key: Whats
     return codePoint <= 0x1f || (codePoint >= 0x7f && codePoint <= 0x9f) ? ' ' : character;
   }).join('').replace(/\s+/g, ' ').trim();
   if (NAME_VARIABLES.has(key)) cleaned = Array.from(cleaned).slice(0, 80).join('');
+  if (key === 'servico') cleaned = Array.from(cleaned).slice(0, 300).join('');
   return cleaned;
 }
 
@@ -173,7 +180,7 @@ export function renderTemplate(
     .replace(/,([!?])/g, '$1')
     .replace(/[ \t]+$/gm, '')
     .replace(/[ \t]*\n[ \t]*/g, '\n')
-    .replace(/\n{3,}/g, '\n\n')
+    .replace(/\n{4,}/g, '\n\n\n')
     .trim();
 }
 
@@ -182,8 +189,10 @@ export function renderWhatsAppTemplate(
   theme: WhatsAppTheme,
   vars: WhatsAppTemplateVars,
   variant?: TemplateVariant,
+  override?: WhatsAppTemplateOverride,
 ): string {
-  const body = (variant && TEMPLATE_VARIANTS[key]?.[variant]?.[theme]) || WHATSAPP_TEMPLATES[key][theme];
+  if (override?.enabled === false) return '';
+  const body = override?.body ?? ((variant && TEMPLATE_VARIANTS[key]?.[variant]?.[theme]) || WHATSAPP_TEMPLATES[key][theme]);
   return renderTemplate(body, vars, TEMPLATE_ALLOWED_KEYS[key]);
 }
 
@@ -196,6 +205,6 @@ export function buildWhatsAppLink(phone: string, region: WhatsAppRegion = 'BR', 
     digits = digits.slice(ddi.length);
   }
 
-  const text = message === undefined ? '' : `?text=${encodeURIComponent(message)}`;
+  const text = message ? `?text=${encodeURIComponent(message)}` : '';
   return `https://wa.me/${ddi}${digits}${text}`;
 }

@@ -1,3 +1,10 @@
+import type { WhatsAppTemplateKey, WhatsAppTemplateOverride, WhatsAppTemplateVars, WhatsAppTheme, TemplateVariant } from '../../utils/whatsappTemplates';
+const messageOverrides = vi.hoisted(() => ({} as Partial<Record<WhatsAppTemplateKey, WhatsAppTemplateOverride>>));
+vi.mock('../../hooks/useWhatsAppTemplates', async () => {
+  const { renderWhatsAppTemplate } = await import('../../utils/whatsappTemplates');
+  return { useWhatsAppTemplates: () => ({ templates: messageOverrides, isEnabled: (key: WhatsAppTemplateKey) => messageOverrides[key]?.enabled !== false, render: (key: WhatsAppTemplateKey, theme: WhatsAppTheme, vars: WhatsAppTemplateVars, variant?: TemplateVariant) => renderWhatsAppTemplate(key, theme, vars, variant, messageOverrides[key]) }) };
+});
+
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
@@ -51,8 +58,23 @@ function renderCard(onCancelled = vi.fn()) {
 
 describe('ClientBookingCard', () => {
   beforeEach(() => {
+    delete messageOverrides.client_request_confirm;
     vi.clearAllMocks();
     (useToast as ReturnType<typeof vi.fn>).mockReturnValue({ showToast });
+  });
+
+  it('envia o texto salvo na confirmação e abre sem texto quando desativada', () => {
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    messageOverrides.client_request_confirm = { message_key: 'client_request_confirm', enabled: true, body: 'Meu serviço é {servico}.' };
+    const rendered = renderCard();
+    fireEvent.click(screen.getByRole('button', { name: /Pedir confirmação/ }));
+    expect(new URL(String(open.mock.calls[0][0])).searchParams.get('text')).toBe('Meu serviço é Corte Teste Automatizado.');
+    messageOverrides.client_request_confirm.enabled = false;
+    rendered.unmount();
+    renderCard();
+    fireEvent.click(screen.getByRole('button', { name: /Pedir confirmação/ }));
+    expect(String(open.mock.calls[1][0])).not.toContain('?text=');
+    open.mockRestore();
   });
 
   it('mantém ações dentro da grade sem cortar o botão Editar', () => {

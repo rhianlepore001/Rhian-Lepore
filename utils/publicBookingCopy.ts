@@ -1,6 +1,6 @@
 import { formatTimeInTimeZone } from './businessTimezone';
 import { getBusinessRemainderNoun } from './businessCopy';
-import { renderWhatsAppTemplate, type WhatsAppTheme } from './whatsappTemplates';
+import { renderWhatsAppTemplate, type WhatsAppTheme, type WhatsAppTemplateOverride } from './whatsappTemplates';
 
 /**
  * "da barbearia" / "do salão" / "do estúdio" / "do negócio" a partir do tipo do
@@ -100,6 +100,7 @@ export function getPublicBookingAwaitingWhatsAppText(input: {
   theme?: WhatsAppTheme;
   /** true = agendamento já confirmado: a mensagem não pede confirmação. */
   confirmed?: boolean;
+  template?: WhatsAppTemplateOverride;
 }): string {
   return renderWhatsAppTemplate(
     'client_request_confirm',
@@ -112,6 +113,7 @@ export function getPublicBookingAwaitingWhatsAppText(input: {
       hora: input.timeLabel,
     },
     input.confirmed ? 'confirmed' : undefined,
+    input.template,
   );
 }
 
@@ -125,6 +127,7 @@ export function getOwnerAcceptWhatsAppText(input: {
   priceLabel: string;
   currencySymbol: string;
   establishmentFallback: string;
+  template?: WhatsAppTemplateOverride;
 }): string {
   const dateObj = new Date(input.appointmentTime);
   const formattedDate = dateObj.toLocaleDateString('pt-BR', { timeZone: input.timeZone });
@@ -137,5 +140,5 @@ export function getOwnerAcceptWhatsAppText(input: {
     hora: formattedTime,
     servico: input.serviceNames,
     valor: `${input.currencySymbol} ${input.priceLabel}`,
-  });
+  }, undefined, input.template);
 }

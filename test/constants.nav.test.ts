@@ -61,6 +61,7 @@ describe('Ajustes do colaborador (conta staff nova)', () => {
     const ownerLabels = settingsItemsForRole('owner').map((item) => item.label);
     expect(ownerLabels).toEqual([
       'Geral',
+      'Mensagens do WhatsApp',
       'Agendamento',
       'Equipe e Comissões',
       'Serviços',

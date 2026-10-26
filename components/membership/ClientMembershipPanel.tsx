@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useWhatsAppTemplates } from '../../hooks/useWhatsAppTemplates';
 import { Link } from 'react-router-dom';
 import { Calendar, Crown, MessageCircle, X } from 'lucide-react';
 import { PublicClientMembership } from '../../services/memberships';
@@ -9,7 +10,7 @@ import { usePublicPixConfig } from '../../hooks/useMemberships';
 import { useBrutalTheme, ThemeVariant } from '../../hooks/useBrutalTheme';
 import { ConfirmModal } from '../ui';
 import { formatCurrency, Region } from '../../utils/formatters';
-import { buildWhatsAppLink, renderWhatsAppTemplate } from '../../utils/whatsappTemplates';
+import { buildWhatsAppLink } from '../../utils/whatsappTemplates';
 import {
   periodProgressPercent,
   validityHeadline,
@@ -50,6 +51,7 @@ export const ClientMembershipPanel: React.FC<ClientMembershipPanelProps> = ({
   onCancel,
 }) => {
   const theme: ThemeVariant = isBeauty ? 'beauty' : 'barber';
+  const whatsapp = useWhatsAppTemplates(slug);
   const { colors, accent, font, radius, status } = useBrutalTheme({ override: theme });
   const [confirmCancel, setConfirmCancel] = useState(false);
   const { data: payConfig } = usePublicPixConfig(businessId ?? null);
@@ -91,7 +93,7 @@ export const ClientMembershipPanel: React.FC<ClientMembershipPanelProps> = ({
   const headline = validityHeadline(statusKey, periodEnd);
   const progress = periodProgressPercent(membership.current_period_start, periodEnd);
   const canCancel = ['active', 'pending', 'overdue'].includes(statusKey);
-  const whatsappMessage = renderWhatsAppTemplate(
+  const whatsappMessage = whatsapp.render(
     statusKey === 'overdue' ? 'membership_overdue' : 'membership_pending',
     isBeauty ? 'beauty' : 'barber',
     {

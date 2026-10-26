@@ -1,4 +1,5 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useWhatsAppTemplates } from '../hooks/useWhatsAppTemplates';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
@@ -11,7 +12,7 @@ import {
 } from 'lucide-react';
 import { WizardProps } from './appointment/types';
 import { formatCurrency } from '../utils/formatters';
-import { buildWhatsAppLink, renderWhatsAppTemplate } from '../utils/whatsappTemplates';
+import { buildWhatsAppLink } from '../utils/whatsappTemplates';
 import type { Region } from '../utils/formatters';
 import { ServiceSearchBar } from './appointment/ServiceSearchBar';
 import { CategoryFilter } from './appointment/CategoryFilter';
@@ -53,6 +54,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     shopTimeZone,
 }) => {
     const { user, region, businessName, companyId } = useAuth();
+    const whatsapp = useWhatsAppTemplates();
     const { isBeauty, accent, colors } = useBrutalTheme();
     const { establishmentFallback } = useBusinessCopy();
     const createAppointment = useCreateAppointment();
@@ -247,12 +249,12 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
             }
 
             // WhatsApp Notification
-            if (sendWhatsapp) {
+            if (sendWhatsapp && whatsapp.isEnabled('wizard_confirm')) {
                 const client = clients.find(c => c.id === selectedClientId);
                 if (client?.phone) {
                     const formattedDate = dateTime.toLocaleDateString('pt-BR');
                     const formattedTime = dateTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                    const message = renderWhatsAppTemplate('wizard_confirm', isBeauty ? 'beauty' : 'barber', {
+                    const message = whatsapp.render('wizard_confirm', isBeauty ? 'beauty' : 'barber', {
                         cliente: client.name,
                         estabelecimento: businessName || establishmentFallback,
                         data: formattedDate,
@@ -491,6 +493,7 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                             currencyRegion={currencyRegion}
                             isBeauty={isBeauty}
                             accentColor={accent.text}
+                            whatsappEnabled={whatsapp.isEnabled('wizard_confirm')}
                             sendWhatsapp={sendWhatsapp}
                             setSendWhatsapp={setSendWhatsapp}
                             customPrice={customPrice}

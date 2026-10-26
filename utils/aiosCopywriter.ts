@@ -3,6 +3,7 @@ import {
   renderWhatsAppTemplate,
   type WhatsAppRegion,
   type WhatsAppTheme,
+  type WhatsAppTemplateOverride,
 } from './whatsappTemplates';
 
 export interface ClientContext {
@@ -12,6 +13,7 @@ export interface ClientContext {
   businessName?: string;
   lastService?: string;
   ltv?: number;
+  template?: WhatsAppTemplateOverride;
 }
 
 export const generateReactivationMessage = (context: ClientContext): string => {
@@ -23,7 +25,7 @@ export const generateReactivationMessage = (context: ClientContext): string => {
     dias_ausente: context.daysMissing,
     estabelecimento: context.businessName?.trim() || 'nossa unidade',
     servico: context.lastService?.trim() || 'visual',
-  }, variant);
+  }, variant, context.template);
 };
 
 export const getWhatsAppUrl = (

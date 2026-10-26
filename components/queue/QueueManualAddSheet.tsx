@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useWhatsAppTemplates } from '../../hooks/useWhatsAppTemplates';
 import { useQuery } from '@tanstack/react-query';
 import { Check, Copy, MessageCircle } from 'lucide-react';
 import { SearchableSelect } from '@/components/SearchableSelect';
@@ -75,6 +76,7 @@ export const QueueManualAddSheet: React.FC<QueueManualAddSheetProps> = ({
   onAdded,
 }) => {
   const { showToast } = useToast();
+  const whatsapp = useWhatsAppTemplates();
   const { classes, isBeauty } = useBrutalTheme();
   const [step, setStep] = useState<SheetStep>('form');
   const [source, setSource] = useState<ClientSource>('list');
@@ -103,6 +105,7 @@ export const QueueManualAddSheet: React.FC<QueueManualAddSheetProps> = ({
   const trackingUrl = slug ? buildQueueTrackingUrl(slug) : '';
   const trackingMessage = trackingUrl
     ? buildQueueTrackingMessage({
+      template: whatsapp.templates.queue_joined,
       clientName: addedName,
       businessName: businessName || 'nossa casa',
       url: trackingUrl,
@@ -209,7 +212,7 @@ export const QueueManualAddSheet: React.FC<QueueManualAddSheetProps> = ({
     window.setTimeout(() => setCopied(false), 2000);
   };
 
-  const whatsappHref = trackingMessage && addedPhone
+  const whatsappHref = trackingUrl && addedPhone
     ? buildWhatsAppLink(addedPhone, region, trackingMessage)
     : '';
 

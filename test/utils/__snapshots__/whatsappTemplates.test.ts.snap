@@ -3,16 +3,16 @@
 exports[`templates de WhatsApp por tema > mantém snapshot de todas as chaves nos temas barber e beauty 1`] = `
 {
   "booking_accepted": {
-    "barber": "Fala, Camila Nogueira! Seu horário está garantido! 🛡️
+    "barber": "Fala, Cliente Exemplo! Seu horário está garantido! 🛡️
 Marque na sua agenda:
 🗓️ *26/10/2026* às *14:30*
 ✂️ *Serviço*: Corte e finalização
 💰 *Valor*: R$ 50,00
-📍 Onde: *Studio Aurora*.
+📍 Onde: *Negócio Exemplo*.
 
 Prepare-se para o trato! Nos vemos em breve. 👋",
-    "beauty": "Olá Camila Nogueira! Tudo bem? ✨
-Sua reserva em *Studio Aurora* está confirmada!
+    "beauty": "Olá Cliente Exemplo! Tudo bem? ✨
+Sua reserva em *Negócio Exemplo* está confirmada!
 📅 *26/10/2026* às *14:30*
 💼 *Serviço*: Corte e finalização
 💰 *Valor*: R$ 50,00
@@ -27,83 +27,83 @@ Horário: 14:30
 Serviço: Corte e finalização
 Valor: R$ 50,00
 
-Agradecemos a confiança! Te espero em *Studio Aurora*.",
+Agradecemos a confiança! Te espero em *Negócio Exemplo*.",
     "beauty": "Agendamento confirmado! ✨
 Data: 26/10/2026
 Horário: 14:30
 Serviço: Corte e finalização
 Valor: R$ 50,00
 
-Agradecemos a confiança! Te espero em *Studio Aurora*.",
+Agradecemos a confiança! Te espero em *Negócio Exemplo*.",
   },
   "client_cancel": {
-    "barber": "Olá! Sou Camila Nogueira. Queria cancelar meu horário de 26/10/2026 às 14:30.",
-    "beauty": "Olá! Sou Camila Nogueira. Queria cancelar meu horário de 26/10/2026 às 14:30.",
+    "barber": "Olá! Sou Cliente Exemplo. Queria cancelar meu horário de 26/10/2026 às 14:30.",
+    "beauty": "Olá! Sou Cliente Exemplo. Queria cancelar meu horário de 26/10/2026 às 14:30.",
   },
   "client_change": {
-    "barber": "Olá! Sou Camila. Queria alterar meu horário.",
-    "beauty": "Olá! Sou Camila. Queria alterar meu horário.",
+    "barber": "Olá! Sou Cliente Exemplo. Queria alterar meu horário.",
+    "beauty": "Olá! Sou Cliente Exemplo. Queria alterar meu horário.",
   },
   "client_question": {
-    "barber": "Olá! Sou Camila Nogueira e tenho uma dúvida sobre meu agendamento de 26/10/2026 às 14:30.",
-    "beauty": "Olá! Sou Camila Nogueira e tenho uma dúvida sobre meu agendamento de 26/10/2026 às 14:30.",
+    "barber": "Olá! Sou Cliente Exemplo e tenho uma dúvida sobre meu agendamento de 26/10/2026 às 14:30.",
+    "beauty": "Olá! Sou Cliente Exemplo e tenho uma dúvida sobre meu agendamento de 26/10/2026 às 14:30.",
   },
   "client_request_confirm": {
-    "barber": "Olá, Studio Aurora! Fiz um agendamento online para Corte e finalização com Rafa Lima em 26/10/2026 às 14:30. Pode confirmar, por favor?",
-    "beauty": "Olá, Studio Aurora! Fiz um agendamento online para Corte e finalização com Rafa Lima em 26/10/2026 às 14:30. Pode confirmar, por favor?",
+    "barber": "Olá, Negócio Exemplo! Fiz um agendamento online para Corte e finalização com Profissional Exemplo em 26/10/2026 às 14:30. Pode confirmar, por favor?",
+    "beauty": "Olá, Negócio Exemplo! Fiz um agendamento online para Corte e finalização com Profissional Exemplo em 26/10/2026 às 14:30. Pode confirmar, por favor?",
   },
   "membership_contact": {
-    "barber": "Olá Camila! Tudo bem? Aqui é de *Studio Aurora*. Sobre seu plano "Mensal Essencial"...",
-    "beauty": "Olá Camila! Tudo bem? Aqui é de *Studio Aurora*. Sobre seu plano "Mensal Essencial"...",
+    "barber": "Olá Cliente! Tudo bem? Aqui é de *Negócio Exemplo*. Sobre seu plano "Mensal Essencial"...",
+    "beauty": "Olá Cliente! Tudo bem? Aqui é de *Negócio Exemplo*. Sobre seu plano "Mensal Essencial"...",
   },
   "membership_overdue": {
-    "barber": "Olá, aqui é Camila. Minha assinatura do plano "Mensal Essencial" venceu. Como faço para renovar?",
-    "beauty": "Olá, aqui é Camila. Minha assinatura do plano "Mensal Essencial" venceu. Como faço para renovar?",
+    "barber": "Olá, aqui é Cliente. Minha assinatura do plano "Mensal Essencial" venceu. Como faço para renovar?",
+    "beauty": "Olá, aqui é Cliente. Minha assinatura do plano "Mensal Essencial" venceu. Como faço para renovar?",
   },
   "membership_pending": {
-    "barber": "Olá, aqui é Camila. Queria falar sobre minha solicitação do plano "Mensal Essencial" em *Studio Aurora*.",
-    "beauty": "Olá, aqui é Camila. Queria falar sobre minha solicitação do plano "Mensal Essencial" em *Studio Aurora*.",
+    "barber": "Olá, aqui é Cliente. Queria falar sobre minha solicitação do plano "Mensal Essencial" em *Negócio Exemplo*.",
+    "beauty": "Olá, aqui é Cliente. Queria falar sobre minha solicitação do plano "Mensal Essencial" em *Negócio Exemplo*.",
   },
   "queue_joined": {
-    "barber": "Olá, Camila! Você entrou na fila da Studio Aurora.
+    "barber": "Olá, Cliente! Você entrou na fila de *Negócio Exemplo*.
 Acompanhe sua senha neste link:
-https://agendixstudio.com/#/minha-area/studio?tab=fila
+https://example.test/#/minha-area/studio?tab=fila
 
 Se for a primeira vez, informe o mesmo WhatsApp usado no balcão e veja a posição na fila.",
-    "beauty": "Olá, Camila! Você entrou na fila da Studio Aurora.
+    "beauty": "Olá, Cliente! Você entrou na fila de *Negócio Exemplo*.
 Acompanhe sua senha neste link:
-https://agendixstudio.com/#/minha-area/studio?tab=fila
+https://example.test/#/minha-area/studio?tab=fila
 
 Se for a primeira vez, informe o mesmo WhatsApp usado no balcão e veja a posição na fila.",
   },
   "reactivation": {
-    "barber": "Oi, Camila! Você sempre cuida do seu Corte e finalização com a gente em *Studio Aurora* e sua última visita foi incrível, mas notamos que já faz 45 dias que não nos vemos. Por isso, separei alguns horários exclusivos para você renovar esse estilo esta semana. Vamos agendar?",
-    "beauty": "Oi, Camila! Você sempre cuida do seu Corte e finalização com a gente em *Studio Aurora* e sua última visita foi incrível, mas notamos que já faz 45 dias que não nos vemos. Por isso, separei alguns horários exclusivos para você renovar esse estilo esta semana. Vamos agendar?",
+    "barber": "Oi, Cliente! Você sempre cuida do seu Corte e finalização com a gente em *Negócio Exemplo* e sua última visita foi incrível, mas notamos que já faz 45 dias que não nos vemos. Por isso, separei alguns horários exclusivos para você renovar esse estilo esta semana. Vamos agendar?",
+    "beauty": "Oi, Cliente! Você sempre cuida do seu Corte e finalização com a gente em *Negócio Exemplo* e sua última visita foi incrível, mas notamos que já faz 45 dias que não nos vemos. Por isso, separei alguns horários exclusivos para você renovar esse estilo esta semana. Vamos agendar?",
   },
   "rebooking": {
-    "barber": "Oi Camila! Faz um tempo que não nos vemos. Que tal agendar um horário esta semana?",
-    "beauty": "Oi Camila! Faz um tempo que não nos vemos. Que tal agendar um horário esta semana?",
+    "barber": "Oi Cliente! Faz um tempo que não nos vemos. Que tal agendar um horário esta semana?",
+    "beauty": "Oi Cliente! Faz um tempo que não nos vemos. Que tal agendar um horário esta semana?",
   },
   "reschedule": {
-    "barber": "Fala, Camila! 🔁
-Seu horário em *Studio Aurora* foi remarcado.
+    "barber": "Fala, Cliente Exemplo! 🔁
+Seu horário em *Negócio Exemplo* foi remarcado.
 Antes: 25/10/2026 às 13:00
-Agora: *26/10/2026* às *14:30* com Rafa Lima.
+Agora: *26/10/2026* às *14:30* com Profissional Exemplo.
 Qualquer dúvida é só responder aqui. Até lá! ✂️",
-    "beauty": "Olá, Camila! ✨
-Seu horário em *Studio Aurora* foi remarcado.
+    "beauty": "Olá, Cliente Exemplo! ✨
+Seu horário em *Negócio Exemplo* foi remarcado.
 Antes: 25/10/2026 às 13:00
-Agora: *26/10/2026* às *14:30* com Rafa Lima.
+Agora: *26/10/2026* às *14:30* com Profissional Exemplo.
 Se precisar de outro horário, é só responder. 💖",
   },
   "wizard_confirm": {
-    "barber": "Fala, Camila Nogueira! ✂️
-Seu horário está garantido em *Studio Aurora*.
+    "barber": "Fala, Cliente Exemplo! ✂️
+Seu horário está garantido em *Negócio Exemplo*.
 Nos vemos dia *26/10/2026* às *14:30*.
 
 Te aguardamos para dar aquele talento! 🚀",
-    "beauty": "Olá Camila Nogueira! ✨
-Passando para confirmar seu horário em *Studio Aurora*. Tudo certo para *26/10/2026 às 14:30*?
+    "beauty": "Olá Cliente Exemplo! ✨
+Passando para confirmar seu horário em *Negócio Exemplo*. Tudo certo para *26/10/2026 às 14:30*?
 
 Te aguardamos com muito carinho! 💖",
   },

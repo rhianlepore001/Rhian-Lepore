@@ -123,6 +123,8 @@ e2e/screenshots/
 
 # Screenshots & Relatorios temporarios
 screenshots*/
+!docs/whatsapp-messages/screenshots/
+!docs/whatsapp-messages/screenshots/*.png
 auto-*.png
 relatorio/
 impeccable/

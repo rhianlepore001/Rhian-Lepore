@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
+import { useWhatsAppTemplates } from '../hooks/useWhatsAppTemplates';
 import { useNavigate } from 'react-router-dom';
 import {
     Calendar, Clock, User, MessageSquare,
     Edit3, X, CheckCircle, AlertCircle, Loader2, Crown
 } from 'lucide-react';
 import { formatCurrency, Region } from '../utils/formatters';
-import { buildWhatsAppLink, renderWhatsAppTemplate } from '../utils/whatsappTemplates';
+import { buildWhatsAppLink } from '../utils/whatsappTemplates';
 import { cancelPublicBooking } from '../services/publicBooking';
 import { useToast } from './ui/Toast';
 import { logger } from '../utils/Logger';
@@ -147,6 +148,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
     autoConfirmEnabled = false,
 }) => {
     const navigate = useNavigate();
+    const whatsapp = useWhatsAppTemplates(businessSlug);
     const { showToast } = useToast();
     const [cancelling, setCancelling] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
@@ -258,7 +260,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
 
     const handleWhatsApp = () => {
         if (!businessPhone) return;
-        const msg = renderWhatsAppTemplate('client_question', isBeauty ? 'beauty' : 'barber', {
+        const msg = whatsapp.render('client_question', isBeauty ? 'beauty' : 'barber', {
             cliente: clientName,
             data: dateInSentence,
             hora: formattedTime,
@@ -271,7 +273,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
             showToast('O estabelecimento ainda não informou um WhatsApp.', 'info');
             return;
         }
-        const msg = renderWhatsAppTemplate('client_cancel', isBeauty ? 'beauty' : 'barber', {
+        const msg = whatsapp.render('client_cancel', isBeauty ? 'beauty' : 'barber', {
             cliente: clientName,
             data: dateInSentence,
             hora: formattedTime,
@@ -282,6 +284,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
     const handleConfirmWhatsApp = () => {
         if (!businessPhone) return;
         const msg = getPublicBookingAwaitingWhatsAppText({
+            template: whatsapp.templates.client_request_confirm,
             businessName: businessName ?? '',
             serviceLabel: booking.service_names.filter(Boolean).join(', '),
             professionalName: booking.professional_name,

@@ -1,6 +1,6 @@
 import { getBusinessCopy, type BusinessTheme } from './businessCopy';
 import { formatTimeInTimeZone } from './businessTimezone';
-import { renderWhatsAppTemplate } from './whatsappTemplates';
+import { renderWhatsAppTemplate, type WhatsAppTemplateOverride } from './whatsappTemplates';
 
 export const RESCHEDULE_SUCCESS_TOAST = 'Horário remarcado.';
 export const RESCHEDULE_GENERIC_ERROR = 'Não foi possível remarcar. Tente novamente.';
@@ -83,6 +83,7 @@ export interface RescheduleWhatsAppInput {
   newTimeIso: string;
   timeZone: string;
   professionalName?: string | null;
+  template?: WhatsAppTemplateOverride;
 }
 
 export function buildRescheduleWhatsAppMessage(input: RescheduleWhatsAppInput): string {
@@ -95,17 +96,14 @@ export function buildRescheduleWhatsAppMessage(input: RescheduleWhatsAppInput): 
   const oldTime = formatTimeInTimeZone(old, input.timeZone);
   const newDate = padPtDate(next, input.timeZone);
   const newTime = formatTimeInTimeZone(next, input.timeZone);
-  const greeting = client
-    ? (input.theme === 'beauty' ? `Olá, ${client}! ✨` : `Fala, ${client}! 🔁`)
-    : 'Olá!';
 
   return renderWhatsAppTemplate('reschedule', input.theme, {
-    cliente: greeting,
+    cliente: client,
     estabelecimento: establishment,
     data_anterior: oldDate,
     hora_anterior: oldTime,
     data: newDate,
     hora: newTime,
     profissional: input.professionalName?.trim() ? ` com ${input.professionalName.trim()}` : '',
-  });
+  }, undefined, input.template);
 }

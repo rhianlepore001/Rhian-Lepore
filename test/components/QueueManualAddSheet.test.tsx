@@ -8,9 +8,10 @@ import { ToastProvider } from '@/components/ui';
 import { ensureClientFromQueue, listActiveClientsForPicker } from '@/services/crm';
 import { addManualQueueEntry } from '@/services/queue';
 import type { ServiceItem } from '@/types/serviceSettings';
+import type { WhatsAppTemplateOverride } from '@/utils/whatsappTemplates';
 
 vi.mock('@/contexts/AuthContext', () => ({
-  useAuth: () => ({ userType: 'barber', region: 'BR' }),
+  useAuth: () => ({ userType: 'barber', region: 'BR', companyId: 'biz-001', role: 'owner' }),
 }));
 
 vi.mock('@/services/crm', () => ({
@@ -37,8 +38,9 @@ const services: ServiceItem[] = [
   },
 ];
 
-function renderSheet() {
+function renderSheet(template?: WhatsAppTemplateOverride) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  if (template) client.setQueryData(['whatsapp-templates', 'tenant', 'biz-001'], [template]);
   const onAdded = vi.fn();
   const onClose = vi.fn();
   render(
@@ -47,8 +49,8 @@ function renderSheet() {
         <QueueManualAddSheet
           open
           companyId="biz-001"
-          slug="barbearia-qa"
-          businessName="Barbearia QA"
+          slug="negocio-exemplo"
+          businessName="Negócio Exemplo"
           region="BR"
           mode="shared"
           services={services}
@@ -66,22 +68,35 @@ describe('QueueManualAddSheet', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     Object.defineProperty(window, 'location', {
-      value: { origin: 'https://agendixstudio.com' },
+      value: { origin: 'https://example.test' },
       writable: true,
     });
     (listActiveClientsForPicker as ReturnType<typeof vi.fn>).mockResolvedValue([
-      { id: 'c-1', name: 'Tales Furtado', phone: '11939064172' },
+      { id: 'c-1', name: 'Cliente Exemplo', phone: '00000000000' },
       { id: 'c-2', name: 'Sem Telefone', phone: null },
     ]);
     (addManualQueueEntry as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'q-1',
       business_id: 'biz-001',
-      client_name: 'Tales Furtado',
-      client_phone: '11939064172',
+      client_name: 'Cliente Exemplo',
+      client_phone: '00000000000',
       status: 'waiting',
       joined_at: '2026-09-11T10:00:00.000Z',
     });
     (ensureClientFromQueue as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+  });
+
+  it.each([true, false])('fila usa texto salvo e mantém botão sem texto se desativada: ativa=%s', async enabled => {
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    renderSheet({ message_key: 'queue_joined', enabled, body: 'Oi {primeiro_nome}, entre na fila de *{estabelecimento}*.' });
+    await userEvent.click(await screen.findByText('Buscar por nome ou telefone'));
+    await userEvent.click(screen.getByText('Cliente Exemplo'));
+    await userEvent.selectOptions(screen.getByLabelText('Serviço'), 'svc-corte');
+    await userEvent.click(screen.getByRole('button', { name: 'Adicionar à fila' }));
+    await userEvent.click(await screen.findByTestId('queue-tracking-whatsapp'));
+    const url = new URL(String(open.mock.calls[0][0]));
+    expect(url.searchParams.get('text')).toBe(enabled ? 'Oi Cliente, entre na fila de *Negócio Exemplo*.' : null);
+    open.mockRestore();
   });
 
   it('adiciona cliente da lista e mostra o link da senha', async () => {
@@ -91,23 +106,23 @@ describe('QueueManualAddSheet', () => {
     await waitFor(() => expect(listActiveClientsForPicker).toHaveBeenCalledWith('biz-001'));
     await waitFor(() => expect(screen.getByText('Buscar por nome ou telefone')).toBeInTheDocument());
     await user.click(screen.getByText('Buscar por nome ou telefone'));
-    await user.click(screen.getByText('Tales Furtado'));
+    await user.click(screen.getByText('Cliente Exemplo'));
     await user.selectOptions(screen.getByLabelText('Serviço'), 'svc-corte');
     expect(screen.queryByLabelText('Forma de pagamento')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Adicionar à fila' }));
 
     await waitFor(() => expect(addManualQueueEntry).toHaveBeenCalledWith(expect.objectContaining({
-      clientName: 'Tales Furtado',
-      clientPhone: '11939064172',
+      clientName: 'Cliente Exemplo',
+      clientPhone: '00000000000',
       serviceId: 'svc-corte',
     })));
     expect((addManualQueueEntry as ReturnType<typeof vi.fn>).mock.calls[0][0]).not.toHaveProperty('paymentMethod');
     expect(ensureClientFromQueue).not.toHaveBeenCalled();
     expect(onAdded).toHaveBeenCalled();
     const success = await screen.findByTestId('queue-manual-success');
-    expect(within(success).getByText('Tales Furtado entrou na fila.')).toBeInTheDocument();
+    expect(within(success).getByText('Cliente Exemplo entrou na fila.')).toBeInTheDocument();
     expect(screen.getByTestId('queue-tracking-url')).toHaveValue(
-      'https://agendixstudio.com/#/minha-area/barbearia-qa?tab=fila',
+      'https://example.test/#/minha-area/negocio-exemplo?tab=fila',
     );
     expect(screen.getByRole('button', { name: 'Enviar no WhatsApp' })).toBeInTheDocument();
     expect(screen.getByText(/informa o mesmo WhatsApp e vê a posição na fila/)).toBeInTheDocument();
@@ -119,7 +134,7 @@ describe('QueueManualAddSheet', () => {
 
     await user.click(screen.getByTestId('queue-source-walkin'));
     await user.type(screen.getByLabelText('Nome'), 'Maria Nova');
-    await user.type(screen.getByPlaceholderText('(99) 99999-9999'), '11988887777');
+    await user.type(screen.getByPlaceholderText('(99) 99999-9999'), '00000000001');
     await user.selectOptions(screen.getByLabelText('Serviço'), 'svc-corte');
     await user.click(screen.getByRole('button', { name: 'Adicionar à fila' }));
 

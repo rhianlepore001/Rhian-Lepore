@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useWhatsAppTemplates } from '../../hooks/useWhatsAppTemplates';
 import { ArrowRight, CalendarClock } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
@@ -82,6 +83,7 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
   now,
 }) => {
   const { user, businessName, companyId } = useAuth();
+  const whatsapp = useWhatsAppTemplates();
   const { region: currencyRegion } = useTenantLocale();
   const { colors, isBeauty } = useBrutalTheme();
   const { showToast } = useToast();
@@ -177,8 +179,9 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
 
       setFormError(null);
       showToast(RESCHEDULE_SUCCESS_TOAST, 'success');
-      if (notifyWhatsApp && hasPhone) {
+      if (notifyWhatsApp && hasPhone && whatsapp.isEnabled('reschedule')) {
         const message = buildRescheduleWhatsAppMessage({
+          template: whatsapp.templates.reschedule,
           theme: isBeauty ? 'beauty' : 'barber',
           clientName: appointment.clientName,
           businessName,
@@ -255,7 +258,7 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
       footer={(
         <div className={`flex flex-col w-full ${formError ? 'gap-2' : 'gap-3'}`}>
           <div className="md:hidden">{formError ? null : summaryBlock}</div>
-          {hasPhone && (
+          {hasPhone && whatsapp.isEnabled('reschedule') && (
             <label className="flex items-start gap-2.5 text-sm cursor-pointer">
               <input
                 type="checkbox"

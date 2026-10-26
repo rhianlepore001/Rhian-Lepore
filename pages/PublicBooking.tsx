@@ -1,4 +1,5 @@
-﻿import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useWhatsAppTemplates } from '../hooks/useWhatsAppTemplates';
 import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
@@ -25,7 +26,7 @@ import { GoogleReviewPrompt } from '../components/GoogleReviewPrompt';
 import { useCancelPublicBooking, useFindActivePublicBooking, useSubmitPublicBooking, useBusinessProfileBySlug, useBusinessSettings, usePublicServices, usePublicCategories, usePublicProfessionals, usePublicGallery, usePublicProducts } from '../hooks/usePublicBooking';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { formatCurrency, formatDuration, Region } from '../utils/formatters';
-import { buildWhatsAppLink, renderWhatsAppTemplate } from '../utils/whatsappTemplates';
+import { buildWhatsAppLink } from '../utils/whatsappTemplates';
 import { capBookingDuration } from '../utils/serviceDuration';
 import { logger } from '../utils/Logger';
 import { useZonedAvailableSlots } from '../hooks/useZonedAvailableSlots';
@@ -105,6 +106,7 @@ interface BusinessProfile {
 
 export const PublicBooking: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
+    const whatsapp = useWhatsAppTemplates(slug ?? '');
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const proIdParam = searchParams.get('pro');
@@ -794,8 +796,8 @@ export const PublicBooking: React.FC = () => {
             return;
         }
         const name = (customerName || client?.name || '').trim();
-        const msg = renderWhatsAppTemplate('client_change', isBeauty ? 'beauty' : 'barber', {
-            cliente: name ? `Sou ${name}. ` : '',
+        const msg = whatsapp.render('client_change', isBeauty ? 'beauty' : 'barber', {
+            cliente: name,
         });
         window.open(buildWhatsAppLink(business.phone, currencyRegion, msg), '_blank', 'noopener,noreferrer');
     };
@@ -858,6 +860,7 @@ export const PublicBooking: React.FC = () => {
         : selectedDate?.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' });
     const successTime = bookedAt ? formatTimeInTimeZone(bookedAt, businessTimezone) : selectedTime;
     const successWhatsAppText = getPublicBookingAwaitingWhatsAppText({
+        template: whatsapp.templates.client_request_confirm,
         confirmed: activeBooking?.status === 'confirmed',
         theme: isBeauty ? 'beauty' : 'barber',
         businessName: business?.business_name || '',

@@ -1,4 +1,4 @@
-import { renderWhatsAppTemplate, type WhatsAppTheme } from './whatsappTemplates';
+import { renderWhatsAppTemplate, type WhatsAppTheme, type WhatsAppTemplateOverride } from './whatsappTemplates';
 
 export function buildQueueTrackingPath(slug: string): string {
   const trimmed = slug.trim();
@@ -18,11 +18,12 @@ export function buildQueueTrackingMessage(input: {
   businessName: string;
   url: string;
   theme?: WhatsAppTheme;
+  template?: WhatsAppTemplateOverride;
 }): string {
   const firstName = input.clientName.trim().split(/\s+/).filter(Boolean)[0] || '';
   return renderWhatsAppTemplate('queue_joined', input.theme ?? 'barber', {
     primeiro_nome: firstName,
     estabelecimento: input.businessName.trim() || 'o estabelecimento',
     link_fila: input.url,
-  });
+  }, undefined, input.template);
 }

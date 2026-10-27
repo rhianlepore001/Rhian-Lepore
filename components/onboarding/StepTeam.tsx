@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { invalidateAgendaStaticData } from '@/lib/agendaStaticInvalidation';
 import { Plus, Users } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
@@ -126,6 +127,7 @@ export const StepTeam: React.FC<StepTeamProps> = ({ onNext, onBack, accentColor 
                     onSave={fetchMembers}
                     onDelete={async (id) => {
                         await supabase.from('team_members').delete().eq('id', id);
+                        void invalidateAgendaStaticData(user?.id, 'team');
                         setIsModalOpen(false);
                         setEditingMember(null);
                         fetchMembers();

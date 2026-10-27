@@ -1,7 +1,7 @@
 import { attendeeLabel } from '../utils/appointmentAttendees';
 import { discardFormDraft } from '../hooks/useFormDraft';
 import { useDraftFields } from '../hooks/useDraftFields';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useWhatsAppTemplates } from '../hooks/useWhatsAppTemplates';
 import { createPortal } from 'react-dom';
 import FocusTrap from 'focus-trap-react';
@@ -49,6 +49,7 @@ import { formatDateForInput, formatLocalDateString, combineDateAndTime } from '.
 import { buildAgendaDayWindow } from '../utils/agendaDayWindow';
 import { resolveBusinessTimezone, formatTimeInTimeZone, getDateStringInTimeZone, dateStringToLocalDate } from '../utils/businessTimezone';
 import { useBusinessSettings } from '../hooks/useSettings';
+import { useAgendaStaticData } from '../hooks/useAgendaStaticData';
 import {
     useAgendaBlocks,
     useCreateAgendaBlock,
@@ -150,16 +151,35 @@ export const Agenda: React.FC = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     useAppTour(); // Instancia para detectar continuação do tour
-    const [appointments, setAppointments] = useState<Appointment[]>([]);
+    // Dados fixos (não dependem do dia): React Query, cache por empresa (~5 min).
+    const staticData = useAgendaStaticData(effectiveUserId);
+    const teamMembers = useMemo<TeamMember[]>(() => staticData.team.data ?? [], [staticData.team.data]);
+    const clients = useMemo<Client[]>(() => staticData.clients.data ?? [], [staticData.clients.data]);
+    const allServices = staticData.services.data;
+    const services = useMemo<Service[]>(
+        () => filterBookableServices((allServices ?? []).filter(s => s.active === true) as Service[]),
+        [allServices],
+    );
+    const categories = useMemo<Category[]>(() => staticData.categories.data ?? [], [staticData.categories.data]);
+    const servicePriceMap = useMemo(
+        () => new Map((allServices ?? []).map(s => [s.name, s.price])),
+        [allServices],
+    );
+    // Dados do dia (agendamentos): buscados a cada troca de dia.
+    const [dayAppointments, setDayAppointments] = useState<Omit<Appointment, 'basePrice'>[]>([]);
+    const appointments = useMemo<Appointment[]>(
+        () => dayAppointments.map(apt => ({ ...apt, basePrice: servicePriceMap.get(apt.service) || apt.price }) as Appointment),
+        [dayAppointments, servicePriceMap],
+    );
     const [publicBookings, setPublicBookings] = useState<any[]>([]);
-    const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-    const [clients, setClients] = useState<Client[]>([]);
-    const [services, setServices] = useState<Service[]>([]);
-    const [categories, setCategories] = useState<Category[]>([]);
     const [refreshing, setRefreshing] = useState(true);
-    const [initialLoading, setInitialLoading] = useState(true);
-    const [hasLoadedData, setHasLoadedData] = useState(false);
-    const [fetchError, setFetchError] = useState<string | null>(null);
+    const [dayLoaded, setDayLoaded] = useState(false);
+    const initialLoading = !dayLoaded || staticData.isLoading;
+    const hasLoadedData = dayLoaded && !staticData.isLoading;
+    const [dayFetchError, setFetchError] = useState<string | null>(null);
+    const fetchError = dayFetchError
+        ?? (staticData.error ? formatUserFacingError(mapError(staticData.error, 'Não foi possível carregar a agenda.')) : null);
+    const dayRequestRef = useRef(0);
     const [selectedDate, setSelectedDate] = useState(getInitialDate(searchParams));
     const agendaDateStr = formatLocalDateString(selectedDate);
     const { data: agendaBlocks = [] } = useAgendaBlocks(agendaDateStr);
@@ -198,9 +218,10 @@ export const Agenda: React.FC = () => {
     const { highlightId, focusCreated } = useFocusCreatedAppointment(appointments);
     const [overdueAppointments, setOverdueAppointments] = useState<Appointment[]>([]);
     const [isOverdueLoading, setIsOverdueLoading] = useState(false);
-    const [businessName, setBusinessName] = useState(''); // NEW STATE FOR BUSINESS NAME
-    const [businessSlug, setBusinessSlug] = useState<string | null>(null);
-    const [publicBookingEnabled, setPublicBookingEnabled] = useState(true);
+    const businessProfile = staticData.profile.data;
+    const businessName = businessProfile ? (businessProfile.business_name || 'Seu Estabelecimento') : '';
+    const businessSlug = businessProfile?.business_slug || null;
+    const publicBookingEnabled = businessProfile?.public_booking_enabled ?? true;
 
     // State for editing
     const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
@@ -213,12 +234,17 @@ export const Agenda: React.FC = () => {
 
     // State for checkout (Fase 3)
     const [checkoutAppointment, setCheckoutAppointment] = useState<import('../types').Appointment | null>(null);
-    const [checkoutTeamMembers, setCheckoutTeamMembers] = useState<Array<{ id: string; name: string; active: boolean }>>([]);
-    const [financialSettings, setFinancialSettings] = useState<{
-        machine_fee_enabled: boolean;
-        debit_fee_percent: number;
-        credit_fee_percent: number;
-    } | null>(null);
+    // "Recebido por" no checkout: mesma equipe ativa da grade (sem nova requisição).
+    const checkoutTeamMembers = useMemo(
+        () => teamMembers.map(m => ({ id: m.id, name: m.name, active: true })),
+        [teamMembers],
+    );
+    // Taxas da maquininha: vêm de useBusinessSettings (business_settings, já em cache).
+    const financialSettings = useMemo(() => businessSettings ? {
+        machine_fee_enabled: businessSettings.machine_fee_enabled ?? false,
+        debit_fee_percent: businessSettings.debit_fee_percent ?? 0,
+        credit_fee_percent: businessSettings.credit_fee_percent ?? 0,
+    } : null, [businessSettings]);
 
     // Form state (for new appointment modal)
     const [selectedClient, setSelectedClient] = useState('');
@@ -267,19 +293,11 @@ export const Agenda: React.FC = () => {
 
     const isOverdueFilter = searchParams.get('filter') === 'overdue';
 
-    // Atualiza selectedDate se o parâmetro de URL mudar
+    // Atualiza selectedDate se o parâmetro de URL mudar. Compara por valor (dia)
+    // para não recriar o objeto Date e disparar uma segunda busca ao abrir.
     useEffect(() => {
-        setSelectedDate(getInitialDate(searchParams));
-    }, [searchParams]);
-
-    useEffect(() => {
-        const dateParam = searchParams.get('date');
-        if (dateParam) {
-            const newDate = new Date(dateParam);
-            const userTimezoneOffset = newDate.getTimezoneOffset() * 60000;
-            const adjustedDate = new Date(newDate.getTime() + userTimezoneOffset);
-            setSelectedDate(adjustedDate);
-        }
+        const next = getInitialDate(searchParams);
+        setSelectedDate(prev => formatLocalDateString(prev) === formatLocalDateString(next) ? prev : next);
     }, [searchParams]);
 
     usePendingPublicBookingsLive(
@@ -315,11 +333,19 @@ export const Agenda: React.FC = () => {
         };
     }, [focusBookingId, publicBookings, selectedDate, shopTimeZone, navigate]);
 
+    // Dados do dia: só agendamentos (bloqueios vêm de useAgendaBlocks, chave por dia).
     useEffect(() => {
         if (user && effectiveUserId) {
-            fetchData();
+            void fetchDayData();
         }
-    }, [user?.id, selectedDate, effectiveUserId]);
+    }, [user?.id, agendaDateStr, effectiveUserId]);
+
+    // Solicitações públicas pendentes não dependem do dia: uma vez + realtime.
+    useEffect(() => {
+        if (user && effectiveUserId) {
+            void fetchPublicBookings().catch(error => logger.error('Error fetching public bookings', error));
+        }
+    }, [user?.id, effectiveUserId]);
 
     // State for viewing appointment details
     const [showingDetailsAppointment, setShowingDetailsAppointment] = useState<Appointment | null>(null);
@@ -478,80 +504,47 @@ export const Agenda: React.FC = () => {
         }
     }, [searchParams, clients, services, canOpenBlockFromPlus, isStaff, teamMemberId, selectedProfessionalIds, teamMembers]);
 
-    const fetchData = async (dateOverride?: Date) => {
+    /** Busca os dados do dia (agendamentos). Ignora respostas de dias anteriores. */
+    const fetchDayData = async (dateOverride?: Date, withPublicBookings = false) => {
+        const requestId = ++dayRequestRef.current;
         setRefreshing(true);
         setFetchError(null);
         try {
             await Promise.all([
-                fetchTeamMembers(),
-                fetchAppointments(dateOverride),
-                fetchPublicBookings(),
-                fetchClients(),
-                fetchServices(),
-                fetchCategories(),
-                fetchBusinessProfile(),
-                fetchCheckoutData()
+                fetchAppointments(dateOverride, requestId),
+                withPublicBookings ? fetchPublicBookings() : Promise.resolve(),
             ]);
-            setHasLoadedData(true);
+            if (requestId === dayRequestRef.current) setDayLoaded(true);
         } catch (error) {
             logger.error('Error fetching agenda data', error);
-            setFetchError(formatUserFacingError(mapError(error, 'Não foi possível carregar a agenda.')));
+            if (requestId === dayRequestRef.current) {
+                // Não deixa os agendamentos de outro dia visíveis após falha.
+                setDayAppointments([]);
+                setFetchError(formatUserFacingError(mapError(error, 'Não foi possível carregar a agenda.')));
+            }
         } finally {
-            setRefreshing(false);
-            setInitialLoading(false);
+            if (requestId === dayRequestRef.current) setRefreshing(false);
         }
     };
 
-    const fetchCheckoutData = async () => {
-        if (!user) return;
-        // Buscar team members para o dropdown "Recebido por" no CheckoutModal
-        const { data: membersData } = await supabase
-            .from('team_members')
-            .select('id, name, active')
-            .eq('user_id', companyId || user.id)
-            .eq('active', true)
-            .order('name');
-        setCheckoutTeamMembers(membersData || []);
+    /** Após criar/editar/cancelar/aceitar: atualiza o dia e as solicitações pendentes. */
+    const fetchData = (dateOverride?: Date) => fetchDayData(dateOverride, true);
 
-        // Buscar configurações financeiras para pré-preencher taxa
-        const { data: finSettings } = await supabase
-            .from('business_settings')
-            .select('machine_fee_enabled, debit_fee_percent, credit_fee_percent')
-            .eq('user_id', companyId || user.id)
-            .maybeSingle();
-        setFinancialSettings(finSettings);
+    const retryFetch = () => {
+        void staticData.refetchAll();
+        void fetchData();
     };
 
-    const fetchTeamMembers = async () => {
-        if (!user) return;
-        const { data } = await supabase
-            .from('team_members')
-            .select('id, name, photo_url, staff_user_id')
-            .eq('user_id', effectiveUserId)
-            .eq('active', true)
-            .order('name');
-        if (data) setTeamMembers(data);
-    };
-
-    const fetchAppointments = async (dateOverride?: Date) => {
+    const fetchAppointments = async (dateOverride?: Date, requestId?: number) => {
         if (!user) return;
         const day = dateOverride ?? selectedDate;
         const startOfDay = new Date(day);
         startOfDay.setHours(0, 0, 0, 0);
         const endOfDay = new Date(day);
         endOfDay.setHours(23, 59, 59, 999);
-        const now = new Date();
 
-        // 1. Fetch all services to map names to prices later
-        const { data: allServices } = await supabase
-            .from('services')
-            .select('name, price')
-            .eq('user_id', effectiveUserId);
-
-        const servicePriceMap = new Map(allServices?.map(s => [s.name, s.price]));
-
-        // 2. Fetch appointments for the selected day (Confirmed status)
-        const { data } = await supabase
+        // Agendamentos do dia (o preço base vem do cache de serviços, sem busca em série)
+        const { data, error } = await supabase
             .from('appointments')
             .select('*, clients(name, id, phone)')
             .eq('user_id', effectiveUserId)
@@ -561,30 +554,27 @@ export const Agenda: React.FC = () => {
             .in('status', ['Confirmed', 'Pending', 'Completed', 'Cancelled', 'NoShow']) // Agenda v2: todos os status visíveis na grade com cores
             .order('appointment_time');
 
+        if (error) throw error;
+        if (requestId !== undefined && requestId !== dayRequestRef.current) return;
         if (data) {
-            setAppointments(data.map((apt: any) => {
-                // Use the price from the service table as the base price
-                const basePrice = servicePriceMap.get(apt.service) || apt.price;
-                return {
-                    id: apt.id,
-                    client_id: apt.client_id,
-                    clientName: apt.clients?.name || 'Cliente Desconhecido',
-                    dependent_id: apt.dependent_id,
-                    attendee_name: apt.attendee_name,
-                    clientPhone: apt.clients?.phone || '',
-                    service: apt.service,
-                    appointment_time: apt.appointment_time,
-                    price: apt.price,
-                    status: apt.status,
-                    professional_id: apt.professional_id,
-                    basePrice: basePrice,
-                    notes: apt.notes,
-                    payment_method: apt.payment_method,
-                    duration_minutes: apt.duration_minutes,
-                    edited_at: apt.edited_at,
-                    public_booking_id: apt.public_booking_id ?? null,
-                };
-            }));
+            setDayAppointments(data.map((apt: any) => ({
+                id: apt.id,
+                client_id: apt.client_id,
+                clientName: apt.clients?.name || 'Cliente Desconhecido',
+                dependent_id: apt.dependent_id,
+                attendee_name: apt.attendee_name,
+                clientPhone: apt.clients?.phone || '',
+                service: apt.service,
+                appointment_time: apt.appointment_time,
+                price: apt.price,
+                status: apt.status,
+                professional_id: apt.professional_id,
+                notes: apt.notes,
+                payment_method: apt.payment_method,
+                duration_minutes: apt.duration_minutes,
+                edited_at: apt.edited_at,
+                public_booking_id: apt.public_booking_id ?? null,
+            })));
         }
     };
 
@@ -638,51 +628,6 @@ export const Agenda: React.FC = () => {
         if (!user || !effectiveUserId) return;
         const data = await fetchPendingPublicBookings(effectiveUserId);
         setPublicBookings(data ?? []);
-    };
-
-    const fetchClients = async () => {
-        if (!user) return;
-        const { data } = await supabase
-            .from('clients')
-            .select('id, name, phone') // Adicionando phone para subtext
-            .eq('user_id', effectiveUserId)
-            .order('name');
-        if (data) setClients(data as Client[]);
-    };
-
-    const fetchServices = async () => {
-        if (!user) return;
-        const { data } = await supabase
-            .from('services')
-            .select('id, name, price, duration_minutes, category_id, description, active') // Adicionando details para wizard
-            .eq('user_id', effectiveUserId)
-            .eq('active', true)
-            .order('name');
-        if (data) setServices(filterBookableServices(data as Service[]));
-    };
-
-    const fetchCategories = async () => {
-        if (!user) return;
-        const { data } = await supabase
-            .from('service_categories')
-            .select('id, name')
-            .eq('user_id', effectiveUserId)
-            .order('name');
-        if (data) setCategories(data);
-    };
-
-    const fetchBusinessProfile = async () => {
-        if (!user) return;
-        const { data } = await supabase
-            .from('profiles')
-            .select('business_name, business_slug, public_booking_enabled')
-            .eq('id', effectiveUserId)
-            .single();
-        if (data) {
-            setBusinessName(data.business_name || 'Seu Estabelecimento');
-            setBusinessSlug(data.business_slug || null);
-            setPublicBookingEnabled(data.public_booking_enabled ?? true);
-        }
     };
 
     const fetchHistoryAppointments = async () => {
@@ -823,6 +768,7 @@ export const Agenda: React.FC = () => {
 
                     if (clientError) throw clientError;
                     clientId = newClient.id;
+                    void staticData.invalidateClients();
                 }
 
                 const { data: serviceDetails } = await supabase
@@ -1386,7 +1332,7 @@ export const Agenda: React.FC = () => {
                 <ErrorState
                     title="Não foi possível carregar a agenda"
                     message={fetchError}
-                    onRetry={() => { void fetchData(); }}
+                    onRetry={retryFetch}
                 />
             </div>
         );
@@ -2068,7 +2014,7 @@ export const Agenda: React.FC = () => {
                     services={services}
                     categories={categories}
                     clients={clients}
-                    onRefreshClients={fetchClients}
+                    onRefreshClients={() => { void staticData.invalidateClients(); }}
                     businessHours={businessSettings?.business_hours ?? null}
                     shopTimeZone={shopTimeZone}
                 />

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { invalidateAgendaStaticData } from '@/lib/agendaStaticInvalidation';
 import { supabase } from '@/lib/supabase';
 import {
   teamMemberSchema,
@@ -56,6 +57,7 @@ export async function createTeamMember(
     .single();
 
   if (error) throw error;
+  void invalidateAgendaStaticData(companyId, 'team');
   return teamMemberSchema.parse(data);
 }
 
@@ -75,6 +77,7 @@ export async function updateTeamMember(
     .single();
 
   if (error) throw error;
+  void invalidateAgendaStaticData(companyId, 'team');
   return teamMemberSchema.parse(data);
 }
 
@@ -102,6 +105,7 @@ export async function deleteTeamMember(
     }
     throw error;
   }
+  void invalidateAgendaStaticData(companyId, 'team');
 }
 
 /**

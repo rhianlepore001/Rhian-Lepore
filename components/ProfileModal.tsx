@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { invalidateAgendaStaticData } from '@/lib/agendaStaticInvalidation';
 import { supabase } from '../lib/supabase';
 import { Modal } from './ui/Modal';
 import { useToast } from './ui/Toast';
@@ -87,6 +88,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                 return;
             }
 
+            void invalidateAgendaStaticData(user?.id, 'profile');
             // Sync with team_members for the owner
             const { error: teamError } = await supabase
                 .from('team_members')
@@ -97,6 +99,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                 .eq('user_id', user?.id)
                 .eq('is_owner', true);
 
+            void invalidateAgendaStaticData(user?.id, 'team');
             if (teamError) {
                 console.error("Error syncing team member profile:", teamError);
                 showToast('Perfil salvo parcialmente. A sincronização com a equipe falhou.', 'warning');

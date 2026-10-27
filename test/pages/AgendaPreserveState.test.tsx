@@ -1,6 +1,7 @@
 import React from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Agenda } from '../../pages/Agenda';
@@ -42,7 +43,9 @@ describe('Agenda preserves mounted wizard during refetch', () => {
       return query;
     });
     vi.mocked(supabase.rpc).mockResolvedValue({ data: [], error: null } as any);
-    render(<MemoryRouter initialEntries={['/agenda?date=2026-12-15']}><Driver /><Agenda /></MemoryRouter>);
+    // A Agenda usa React Query para os dados fixos (clientes, serviços, equipe).
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={['/agenda?date=2026-12-15']}><Driver /><Agenda /></MemoryRouter></QueryClientProvider>);
     await waitFor(() => expect(screen.queryByText('Carregando agenda...')).not.toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: 'Novo Agendamento' }));
     const choice = screen.queryByTestId('agenda-choice-new-appointment');

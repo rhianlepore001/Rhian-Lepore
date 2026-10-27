@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { invalidateAgendaStaticData } from '@/lib/agendaStaticInvalidation';
 import { supabase } from '@/lib/supabase';
 
 export const dependentInputSchema = z.object({
@@ -33,6 +34,7 @@ export async function createDependent(companyId: string, clientId: string, input
     nickname: parsed.nickname || null, notes: parsed.notes || null, source: 'manual',
   }).select('*').single();
   if (error) throw error;
+  void invalidateAgendaStaticData(companyId, 'dependents');
   return data;
 }
 
@@ -42,5 +44,6 @@ export async function updateDependent(companyId: string, clientId: string, id: s
     ...parsed, nickname: parsed.nickname || null, notes: parsed.notes || null,
   }).eq('user_id', companyId).eq('client_id', clientId).eq('id', id).select('*').single();
   if (error) throw error;
+  void invalidateAgendaStaticData(companyId, 'dependents');
   return data;
 }

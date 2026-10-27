@@ -261,7 +261,7 @@ export const ScheduleSelection: React.FC<ScheduleSelectionProps> = ({
                                     `}
                                 >
                                     {member.photo_url ? (
-                                        <img src={member.photo_url} className="w-8 h-8 shrink-0 rounded-full object-cover border border-[var(--color-divider)]" alt="" />
+                                        <img src={member.photo_url} loading="lazy" decoding="async" width={32} height={32} className="w-8 h-8 shrink-0 rounded-full object-cover border border-[var(--color-divider)]" alt="" />
                                     ) : (
                                         <span
                                             aria-hidden="true"

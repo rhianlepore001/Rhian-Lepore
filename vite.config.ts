@@ -17,7 +17,11 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+        includeAssets: ['icons/favicon-32x32.png', 'icons/apple-touch-icon.png'],
+        workbox: {
+          // Só o shell (JS/CSS/HTML) + ícones leves; os PNGs grandes antigos em /public ficam fora do precache.
+          globPatterns: ['**/*.{js,css,html}', 'icons/*.png', 'img/logo-*.webp'],
+        },
         manifest: {
           name: 'Beauty OS',
           short_name: 'BeautyOS',
@@ -25,12 +29,12 @@ export default defineConfig(({ mode }) => {
           theme_color: '#1F1B2E',
           icons: [
             {
-              src: 'pwa-192x192.png',
+              src: 'icons/pwa-192x192.png',
               sizes: '192x192',
               type: 'image/png'
             },
             {
-              src: 'pwa-512x512.png',
+              src: 'icons/pwa-512x512.png',
               sizes: '512x512',
               type: 'image/png'
             }

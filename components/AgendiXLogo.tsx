@@ -26,7 +26,7 @@ export const AgendiXLogo: React.FC<AgendiXLogoProps> = ({
             return (
                 <div className={className}>
                     <img
-                        src="/logo-agendix-app.png"
+                        src="/img/logo-agendix-app-512.webp"
                         alt="AgendiX"
                         style={{
                             height,
@@ -45,7 +45,7 @@ export const AgendiXLogo: React.FC<AgendiXLogoProps> = ({
         return (
             <div className={`flex items-center gap-2.5 ${className}`}>
                 <img
-                    src="/logo-agendix-icon.png"
+                    src="/img/logo-agendix-icon-256.webp"
                     alt=""
                     aria-hidden="true"
                     style={{
@@ -71,7 +71,7 @@ export const AgendiXLogo: React.FC<AgendiXLogoProps> = ({
     return (
         <div className={className}>
             <img
-                src="/logo-agendix-icon.png"
+                src="/img/logo-agendix-icon-256.webp"
                 alt="AgendiX"
                 style={{
                     width: numSize,

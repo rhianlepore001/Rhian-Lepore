@@ -55,7 +55,7 @@ export const StaffOnboarding: React.FC = () => {
         {/* Branding */}
         <div className="flex items-center justify-center gap-2.5 mb-8">
           <img
-            src="/logo-agendix-icon.png"
+            src="/img/logo-agendix-icon-256.webp"
             alt=""
             className="w-6 h-6 opacity-90"
             draggable={false}

@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { invalidateAgendaStaticData } from '@/lib/agendaStaticInvalidation';
 import {
   createCategoryInputSchema,
   saveServiceInputSchema,
@@ -46,6 +47,7 @@ export async function createServiceCategory(input: CreateCategoryInput): Promise
     .single();
 
   if (error) throw error;
+  void invalidateAgendaStaticData(parsed.companyId, 'categories');
   return serviceCategorySchema.parse(data);
 }
 
@@ -60,6 +62,7 @@ export async function updateServiceCategory(input: UpdateCategoryInput): Promise
     .single();
 
   if (error) throw error;
+  void invalidateAgendaStaticData(parsed.companyId, 'categories');
   return serviceCategorySchema.parse(data);
 }
 
@@ -71,6 +74,7 @@ export async function deleteServiceCategory(companyId: string, categoryId: strin
     .eq('user_id', companyId);
 
   if (error) throw error;
+  void invalidateAgendaStaticData(companyId, 'categories', 'services');
 }
 
 export async function deleteService(companyId: string, serviceId: string): Promise<void> {
@@ -81,6 +85,7 @@ export async function deleteService(companyId: string, serviceId: string): Promi
     .eq('user_id', companyId);
 
   if (error) throw error;
+  void invalidateAgendaStaticData(companyId, 'services');
 }
 
 
@@ -136,6 +141,7 @@ export async function saveService(input: SaveServiceInput): Promise<string> {
   // Upsells: UI removida. NÃO apagar/reescrever service_upsells no save
   // (evita wipe acidental de dados legados). setServiceActive também não toca upsells.
 
+  void invalidateAgendaStaticData(parsed.companyId, 'services');
   return serviceId!;
 }
 
@@ -151,4 +157,5 @@ export async function setServiceActive(
     .eq('id', serviceId)
     .eq('user_id', companyId);
   if (error) throw error;
+  void invalidateAgendaStaticData(companyId, 'services');
 }

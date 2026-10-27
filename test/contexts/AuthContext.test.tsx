@@ -4,6 +4,7 @@ import React from 'react';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { TRIAL_DAYS } from '@/constants';
+import { queryClient } from '@/lib/queryClient';
 
 // Helper para envolver hooks com o provider
 const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -613,12 +614,14 @@ describe('AuthContext', () => {
 
         expect(result.current.userType).toBe('beauty');
 
+        queryClient.setQueryData(['clients', 'user-123', 'agenda-options'], [{ id: 'c1' }]);
         // 2. Executar logout
         await act(async () => {
             await result.current.logout();
         });
 
         expect(supabase.auth.signOut).toHaveBeenCalled();
+        expect(queryClient.getQueryData(['clients', 'user-123', 'agenda-options'])).toBeUndefined();
         expect(result.current.isAuthenticated).toBe(false);
         expect(result.current.userType).toBe('barber'); // Reset
         expect(result.current.region).toBe('BR'); // Reset

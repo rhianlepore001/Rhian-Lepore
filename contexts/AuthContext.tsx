@@ -1,4 +1,5 @@
 import { metaTracker, normalizeMetaPhone } from '../lib/metaTracking';
+import { queryClient } from '@/lib/queryClient';
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { clearAllFormDrafts } from '../hooks/useFormDraft';
 import { supabase } from '../lib/supabase';
@@ -210,6 +211,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const nextUserId = session?.user.id ?? null;
       const sameUser = nextUserId === currentUserIdRef.current;
       currentUserIdRef.current = nextUserId;
+      if (!sameUser || event === 'SIGNED_OUT') queryClient.clear();
       setSession(session);
       if (event === 'SIGNED_OUT') clearAllFormDrafts();
       if (sameUser && session && event !== 'USER_UPDATED' && event !== 'PASSWORD_RECOVERY') return;
@@ -274,6 +276,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     clearAllFormDrafts();
     currentUserIdRef.current = null;
     await supabase.auth.signOut();
+    // Cache de outra sessão (Agenda, CRM...) não pode vazar para o próximo login.
+    queryClient.clear();
     applyPublicAuthTheme();
     setSession(null);
     setUserType('barber');

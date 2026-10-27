@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { invalidateAgendaStaticData } from '@/lib/agendaStaticInvalidation';
 import { Plus, Package, ArrowRight, ArrowLeft, Lightbulb } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
@@ -41,6 +42,7 @@ export const StepServices: React.FC<StepServicesProps> = ({ onNext, onBack, acce
                 name: 'Geral',
                 display_order: 0
             }).select();
+            void invalidateAgendaStaticData(user.id, 'categories');
             setCategories(newCat || []);
         } else {
             setCategories(cats);

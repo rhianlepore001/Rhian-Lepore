@@ -1,6 +1,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
+import { agendaStaticKeys } from '@/lib/agendaStaticKeys';
+import { invalidateAgendaStaticData } from '@/lib/agendaStaticInvalidation';
 
 /**
  * Dados "fixos" da Agenda (não mudam ao trocar de dia): equipe, clientes,
@@ -13,13 +15,7 @@ import { supabase } from '@/lib/supabase';
  */
 export const AGENDA_STATIC_STALE_TIME = 5 * 60 * 1000;
 
-export const agendaStaticKeys = {
-  team: (companyId: string) => ['team', companyId, 'members', 'agenda'] as const,
-  services: (companyId: string) => ['serviceSettings', companyId, 'services', 'agenda'] as const,
-  categories: (companyId: string) => ['serviceSettings', companyId, 'categories', 'agenda'] as const,
-  clients: (companyId: string) => ['clients', companyId, 'agenda-options'] as const,
-  profile: (companyId: string) => ['agenda', companyId, 'business-profile'] as const,
-};
+export { agendaStaticKeys };
 
 export interface AgendaTeamMember {
   id: string;
@@ -113,11 +109,14 @@ export function useAgendaStaticData(companyId: string | null | undefined) {
 
   const queryClient = useQueryClient();
   const invalidateClients = useCallback(
-    () => queryClient.invalidateQueries({ queryKey: agendaStaticKeys.clients(id) }),
-    [queryClient, id],
+    () => invalidateAgendaStaticData(id, 'clients'),
+    [id],
   );
   const invalidateServices = useCallback(
-    () => queryClient.invalidateQueries({ queryKey: ['serviceSettings', id] }),
+    () => Promise.all([
+      invalidateAgendaStaticData(id, 'services', 'categories'),
+      queryClient.invalidateQueries({ queryKey: ['serviceSettings', id] }),
+    ]).then(() => undefined),
     [queryClient, id],
   );
   const refetchAll = useCallback(

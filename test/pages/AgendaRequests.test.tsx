@@ -5,6 +5,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Agenda } from '../../pages/Agenda';
+import { queryClient as appQueryClient } from '../../lib/queryClient';
+import { invalidateAgendaStaticData } from '../../lib/agendaStaticInvalidation';
 
 vi.mock('../../contexts/AuthContext', () => ({ useAuth: () => ({ user: { id: 'fictional-owner' }, companyId: 'fictional-company', region: 'BR', role: 'owner', userType: 'barber' }) }));
 vi.mock('../../components/ui/Toast', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
@@ -89,8 +91,8 @@ describe('Agenda: requisições na montagem e na troca de dia', () => {
   });
 
   it('cadastrar cliente pela Agenda invalida só a lista de clientes; concluir o wizard recarrega o dia', async () => {
-    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    render(<QueryClientProvider client={client}><MemoryRouter initialEntries={['/agenda?date=2026-12-15']}><Agenda /></MemoryRouter></QueryClientProvider>);
+    appQueryClient.clear();
+    render(<QueryClientProvider client={appQueryClient}><MemoryRouter initialEntries={['/agenda?date=2026-12-15']}><Agenda /></MemoryRouter></QueryClientProvider>);
     await waitFor(() => expect(screen.queryByText('Carregando agenda...')).not.toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: 'Novo Agendamento' }));
     const choice = screen.queryByTestId('agenda-choice-new-appointment');
@@ -106,5 +108,25 @@ describe('Agenda: requisições na montagem e na troca de dia', () => {
     await wizardProps.current.onSuccess(new Date(2026, 11, 15, 10, 0), { id: 'apt-1', professionalId: 'pro-fictional' });
     await waitFor(() => expect(count('appointments')).toBeGreaterThan(mid.appointments));
     expect(count('services')).toBe(mid.services);
+  });
+
+  it('mudanças feitas em outras telas (CRM, serviços, categorias, equipe) recarregam a Agenda aberta', async () => {
+    appQueryClient.clear();
+    render(<QueryClientProvider client={appQueryClient}><MemoryRouter initialEntries={['/agenda?date=2026-12-15']}><Agenda /></MemoryRouter></QueryClientProvider>);
+    await waitFor(() => expect(screen.queryByText('Carregando agenda...')).not.toBeInTheDocument());
+    const cases: Array<[Parameters<typeof invalidateAgendaStaticData>[1], string]> = [
+      ['clients', 'clients'], ['dependents', 'clients'], ['services', 'services'],
+      ['categories', 'service_categories'], ['team', 'team_members'],
+    ];
+    for (const [entity, table] of cases) {
+      const before = snapshot();
+      await invalidateAgendaStaticData('fictional-company', entity);
+      await waitFor(() => expect(count(table)).toBe(before[table as keyof typeof before] + 1));
+      expect(count('appointments')).toBe(before.appointments);
+    }
+    // Outra empresa não afeta esta Agenda.
+    const before = snapshot();
+    await invalidateAgendaStaticData('other-company', 'clients');
+    expect(count('clients')).toBe(before.clients);
   });
 });

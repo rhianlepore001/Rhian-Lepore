@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { invalidateAgendaStaticData } from '@/lib/agendaStaticInvalidation';
 import {
   createClientInputSchema,
   type AppointmentStatRow,
@@ -295,6 +296,7 @@ export async function createClient(input: CreateClientInput): Promise<void> {
     });
 
   if (error) throw error;
+  void invalidateAgendaStaticData(parsed.companyId, 'clients');
 }
 
 export async function syncPublicClientsToCrm(companyId: string): Promise<number> {
@@ -341,6 +343,7 @@ export async function syncPublicClientsToCrm(companyId: string): Promise<number>
 
   const { error } = await supabase.from('clients').insert(newClients);
   if (error) throw error;
+  void invalidateAgendaStaticData(companyId, 'clients');
   return newClients.length;
 }
 

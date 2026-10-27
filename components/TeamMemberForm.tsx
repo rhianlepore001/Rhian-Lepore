@@ -1,4 +1,5 @@
 import { useDraftFields } from '../hooks/useDraftFields';
+import { invalidateAgendaStaticData } from '@/lib/agendaStaticInvalidation';
 import React, { useEffect, useState, useRef } from 'react';
 import { Upload, User, Check, Link as LinkIcon, CheckCircle2, Share2, Copy, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -244,6 +245,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                     .eq('id', initialData.id)
                     .eq('user_id', user.id);
                 if (updateError) throw updateError;
+                void invalidateAgendaStaticData(user.id, 'team');
 
                 if (rateChanged) {
                     // Mesma regra de antes: comissões ainda não pagas passam a usar a nova %.
@@ -290,6 +292,7 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                     .select('id')
                     .single();
                 if (insertError) throw insertError;
+                void invalidateAgendaStaticData(user.id, 'team');
 
                 window.dispatchEvent(new CustomEvent('setup-step-completed', { detail: { stepId: 'team' } }));
                 formDraft.clear();

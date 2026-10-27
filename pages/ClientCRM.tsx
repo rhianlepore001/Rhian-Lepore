@@ -1,4 +1,5 @@
 import { useDraftFields } from '../hooks/useDraftFields';
+import { invalidateAgendaStaticData } from '@/lib/agendaStaticInvalidation';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -177,6 +178,7 @@ export const ClientCRM: React.FC = () => {
 
       if (error) throw error;
       if (!updated) throw { code: '42501' };
+      void invalidateAgendaStaticData(tenantId, 'clients');
       setClient({ ...client, notes });
       showToast('Observação salva.', 'success');
     } catch (error) {
@@ -216,6 +218,7 @@ export const ClientCRM: React.FC = () => {
 
       if (error) throw error;
       if (!updated) throw { code: '42501' };
+      void invalidateAgendaStaticData(tenantId, 'clients');
 
       setClient({
         ...client,
@@ -248,6 +251,7 @@ export const ClientCRM: React.FC = () => {
         .eq('user_id', tenantId);
 
       if (error) throw error;
+      void invalidateAgendaStaticData(tenantId, 'clients');
       showToast('Cliente desativado.', 'success');
       navigate('/clientes');
     } catch (error) {

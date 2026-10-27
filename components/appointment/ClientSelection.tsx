@@ -1,4 +1,5 @@
 import { useDraftFields } from '../../hooks/useDraftFields';
+import { invalidateAgendaStaticData } from '@/lib/agendaStaticInvalidation';
 import React, { useState } from 'react';
 import { Plus, User } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
@@ -63,6 +64,7 @@ export const ClientSelection: React.FC<ClientSelectionProps> = ({
                 .single();
 
             if (error) throw error;
+            void invalidateAgendaStaticData(tenantId, 'clients');
             if (data) {
                 formDraft.clear();
                 onRefreshClients();

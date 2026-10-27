@@ -768,6 +768,7 @@ export const Agenda: React.FC = () => {
 
                     if (clientError) throw clientError;
                     clientId = newClient.id;
+                    void staticData.invalidateClients();
                 }
 
                 const { data: serviceDetails } = await supabase

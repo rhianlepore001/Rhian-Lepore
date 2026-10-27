@@ -88,7 +88,7 @@ describe('edição de mensagens', () => {
       `${theme}: usa texto salvo, padrão com null e link sem texto ao desligar %s`,
       (key) => {
         const variable = TEMPLATE_ALLOWED_KEYS[key][0];
-        const vars = whatsAppPreviewVars('Negócio Exemplo', 'BR');
+        const vars = { ...whatsAppPreviewVars('Negócio Exemplo', 'BR'), para_quem: '' };
         const custom = {
           message_key: key,
           enabled: true,

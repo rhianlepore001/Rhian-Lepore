@@ -16,6 +16,7 @@ import {
     resolveBusinessTimezone,
 } from '../utils/businessTimezone';
 
+import { AttendeePicker } from './appointment/AttendeePicker';
 import { SearchableSelect } from './SearchableSelect';
 import { useProducts } from '@/hooks/useCatalog';
 import { listAppointmentProductLines, setAppointmentProductLines } from '@/services/catalog';
@@ -28,6 +29,8 @@ interface Appointment {
     id: string;
     client_id: string;
     clientName: string;
+    dependent_id?: string | null;
+    attendee_name?: string | null;
     service: string;
     appointment_time: string;
     price: number;
@@ -180,6 +183,9 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
 
     // State for form fields
     const [selectedClient, setSelectedClient] = useState(appointment.client_id || '');
+    const [dependentId, setDependentId] = useState(appointment.dependent_id || '');
+    const [attendeeName, setAttendeeName] = useState(appointment.attendee_name || '');
+    const [attendeeChanged, setAttendeeChanged] = useState(false);
     const [selectedServices, setSelectedServices] = useState<string[]>(initialServiceIds);
     const [notes, setNotes] = useState(appointment.notes || '');
 
@@ -197,6 +203,9 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
     const formDraft = useDraftFields(`appointment:edit:${appointment.id}`, {
         selectedClient: [selectedClient, setSelectedClient],
         selectedServices: [selectedServices, setSelectedServices],
+        dependentId: [dependentId, setDependentId],
+        attendeeName: [attendeeName, setAttendeeName],
+        attendeeChanged: [attendeeChanged, setAttendeeChanged],
         notes: [notes, setNotes],
         isCustomService: [isCustomService, setIsCustomService],
         customServiceName: [customServiceName, setCustomServiceName],
@@ -287,6 +296,7 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                 .from('appointments')
                 .update({
                     client_id: selectedClient,
+                    ...(attendeeChanged ? { dependent_id: dependentId || null, attendee_name: null } : {}),
                     service: finalServiceString,
                     price: finalPriceValue,
                     notes: notes,
@@ -354,12 +364,13 @@ export const AppointmentEditModal: React.FC<AppointmentEditModalProps> = ({
                 </div>
 
                 <div className="p-6 space-y-4">
+                    <AttendeePicker companyId={tenantId} clientId={selectedClient} clientName={clients.find(client => client.id === selectedClient)?.name || appointment.clientName} value={dependentId} snapshot={attendeeName} onChange={(id, name) => { setDependentId(id); setAttendeeName(name); setAttendeeChanged(true); }} />
                     <div>
                         <label className={labelStyles} htmlFor="appt-client">Cliente</label>
                         <select
                             id="appt-client"
                             value={selectedClient}
-                            onChange={(e) => setSelectedClient(e.target.value)}
+                            onChange={(e) => { setSelectedClient(e.target.value); setDependentId(''); setAttendeeName(''); setAttendeeChanged(true); }}
                             className={inputStyles}
                             disabled={loading}
                         >

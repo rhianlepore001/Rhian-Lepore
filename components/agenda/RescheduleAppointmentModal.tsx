@@ -40,6 +40,8 @@ import type { BusinessHours } from '../../types/settings';
 export interface RescheduleAppointment {
   id: string;
   clientName: string;
+  attendee_name?: string | null;
+  dependent_id?: string | null;
   clientPhone?: string | null;
   professional_id: string | null;
   appointment_time: string;
@@ -184,6 +186,8 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
           template: whatsapp.templates.reschedule,
           theme: isBeauty ? 'beauty' : 'barber',
           clientName: appointment.clientName,
+          attendeeName: appointment.attendee_name,
+          dependentId: appointment.dependent_id,
           businessName,
           oldTimeIso: appointment.appointment_time,
           newTimeIso: selectedInstant.toISOString(),

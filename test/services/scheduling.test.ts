@@ -156,3 +156,22 @@ describe('scheduling service', () => {
     expect(rows).toEqual([{ id: 'pb-1', business_id: 'company-001', status: 'pending' }]);
   });
 });
+
+
+describe('agendamento interno de dependentes', () => {
+  it('usa RPC atômica com titular e serviços separados por pessoa', async () => {
+    vi.mocked(supabase.rpc).mockResolvedValue({ data: { success: true }, error: null } as never);
+    await createAppointment({ companyId: 'tenant-a', clientId: 'holder-a', professionalId: 'pro-a', customerName: 'Titular Fictício', appointmentTime: new Date('2026-11-01T10:00Z'), serviceIds: ['service-a'], totalPrice: 30, durationMinutes: 20, status: 'Confirmed', attendees: [
+      { dependentId: 'dependent-a', serviceIds: ['service-a'], totalPrice: 30 },
+      { dependentId: 'dependent-b', serviceIds: ['service-b'], totalPrice: 50 },
+    ] });
+    expect(supabase.rpc).toHaveBeenCalledWith('create_internal_attendee_bookings', {
+      p_business_id: 'tenant-a', p_client_id: 'holder-a', p_professional_id: 'pro-a',
+      p_appointment_time: '2026-11-01T10:00:00.000Z', p_notes: null,
+      p_attendees: [
+        { dependent_id: 'dependent-a', service_ids: ['service-a'], total_price: 30, custom_service_name: null },
+        { dependent_id: 'dependent-b', service_ids: ['service-b'], total_price: 50, custom_service_name: null },
+      ],
+    });
+  });
+});

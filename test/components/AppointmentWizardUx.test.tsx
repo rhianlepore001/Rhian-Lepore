@@ -23,6 +23,10 @@ vi.mock('../../hooks/useBrutalTheme', () => ({
 }));
 vi.mock('../../hooks/useBusinessCopy', () => ({ useBusinessCopy: () => ({ establishmentFallback: 'barbearia' }) }));
 vi.mock('../../hooks/useScheduling', () => ({ useCreateAppointment: () => ({ mutateAsync }) }));
+vi.mock('../../hooks/useClientDependents', () => ({ useClientDependents: () => ({ dependents: [
+  { id: 'dep-a', name: 'Dependente Fictício A', nickname: null },
+  { id: 'dep-b', name: 'Dependente Fictício B', nickname: null },
+], loading: false, error: '', reload: vi.fn() }) }));
 vi.mock('../../hooks/useAgendaBlocks', () => ({ useAgendaBlocks: () => ({ data: [] }) }));
 vi.mock('../../services/publicBooking', () => ({ getFirstAvailableProfessional: vi.fn() }));
 vi.mock('../../components/ui', () => ({ useToast: () => ({ showToast }) }));
@@ -217,5 +221,44 @@ describe('AppointmentWizard: persistent review', () => {
     expect(data.selectedClientId).toBe('');
     expect(data.selectedServiceIds).toEqual([]);
     expect(data.selectedProId).toBe('');
+  });
+});
+
+
+describe('AppointmentWizard: dependentes e sequência', () => {
+  beforeEach(() => {
+    mutateAsync.mockReset();
+    mutateAsync.mockResolvedValue({ success: true, booking_id: 'new-apt' });
+  });
+  it('agenda somente o dependente e mantém o clientId do titular', async () => {
+    render(<AppointmentWizard {...props} initialDate={new Date(2026, 10, 1)} initialProfessionalId="pro-bob" initialTime="10:00" slotContext="Horário disponível" />);
+    await userEvent.click(screen.getByRole('button', { name: 'cliente Bruno' }));
+    await next();
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Para quem?' }), 'dep-a');
+    await userEvent.click(screen.getByText('Corte Social'));
+    await next();
+    expect(screen.getByText('Responsável: Bruno')).toBeInTheDocument();
+    expect(screen.getByText(/Atendido\(a\): Dependente Fictício A/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar Atendimento' }));
+    expect(mutateAsync).toHaveBeenCalledWith(expect.objectContaining({ clientId: 'cli-bruno', dependentId: 'dep-a', customerName: 'Bruno' }));
+  });
+  it('envia serviços por pessoa e mostra total e horários consecutivos', async () => {
+    render(<AppointmentWizard {...props} initialDate={new Date(2026, 10, 1)} initialProfessionalId="pro-bob" initialTime="10:00" slotContext="Horário disponível" />);
+    await userEvent.click(screen.getByRole('button', { name: 'cliente Bruno' }));
+    await next();
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Para quem?' }), 'dep-a');
+    await userEvent.click(screen.getByText('Corte Social'));
+    await userEvent.click(screen.getByRole('button', { name: 'Adicionar pessoa em sequência' }));
+    expect(screen.getByRole('button', { name: 'Continuar' })).toBeDisabled();
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Para quem? Pessoa 2' }), 'dep-b');
+    await userEvent.click(screen.getByRole('checkbox', { name: /Corte Social/ }));
+    await next();
+    expect(screen.getByText(/Dependente Fictício B · Corte Social · 10:30/)).toBeInTheDocument();
+    expect(screen.getByTestId('wizard-footer-total')).toHaveTextContent(/80,00/);
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar Atendimento' }));
+    expect(mutateAsync).toHaveBeenCalledWith(expect.objectContaining({ clientId: 'cli-bruno', attendees: [
+      { dependentId: 'dep-a', serviceIds: ['s-corte'], totalPrice: 40 },
+      { dependentId: 'dep-b', serviceIds: ['s-corte'], totalPrice: 40 },
+    ] }));
   });
 });

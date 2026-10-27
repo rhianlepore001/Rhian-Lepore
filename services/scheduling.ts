@@ -1,3 +1,4 @@
+import { attendeeLabel } from '@/utils/appointmentAttendees';
 import { supabase } from '@/lib/supabase';
 import { isMissingRpcError } from '@/utils/supabaseRpc';
 import {
@@ -25,6 +26,8 @@ import { filterBookableServices } from '@/utils/filterBookableServices';
 interface AppointmentRow {
   id: string;
   client_id: string;
+  dependent_id?: string | null;
+  attendee_name?: string | null;
   service: string;
   appointment_time: string;
   price: number;
@@ -55,6 +58,8 @@ export function mapToAgendaAppointment(
   return {
     id: apt.id,
     client_id: apt.client_id,
+    dependent_id: apt.dependent_id,
+    attendee_name: apt.attendee_name,
     clientName: apt.clients?.name || 'Cliente Desconhecido',
     clientPhone: apt.clients?.phone || '',
     service: apt.service,
@@ -109,6 +114,21 @@ export async function completeAppointment(input: CheckoutInput): Promise<void> {
 
 export async function createAppointment(input: CreateAppointmentInput): Promise<unknown> {
   const parsed = createAppointmentInputSchema.parse(input);
+
+  if (parsed.attendees || parsed.dependentId) {
+    if (!parsed.clientId) throw new Error('Selecione o titular.');
+    const attendees = parsed.attendees ?? [{ dependentId: parsed.dependentId, serviceIds: parsed.serviceIds, totalPrice: parsed.totalPrice, customServiceName: parsed.customServiceName }];
+    const { data, error } = await supabase.rpc('create_internal_attendee_bookings', {
+      p_business_id: parsed.companyId,
+      p_client_id: parsed.clientId,
+      p_professional_id: parsed.professionalId,
+      p_appointment_time: parsed.appointmentTime.toISOString(),
+      p_attendees: attendees.map(person => ({ dependent_id: person.dependentId || null, service_ids: person.serviceIds, total_price: person.totalPrice, custom_service_name: person.customServiceName || null })),
+      p_notes: parsed.notes ?? null,
+    });
+    if (error) throw error;
+    return data;
+  }
 
   const { data, error } = await supabase.rpc('create_secure_booking', {
     p_business_id: parsed.companyId,
@@ -287,7 +307,7 @@ export async function fetchFutureAppointmentsForModal(
 
   return (data ?? []).map((apt: AppointmentRow) => ({
     id: apt.id,
-    clientName: apt.clients?.name || 'Cliente Desconhecido',
+    clientName: attendeeLabel({ ...apt, clientName: apt.clients?.name || 'Cliente Desconhecido' }),
     service: apt.service,
     time: new Date(apt.appointment_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     date: new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),

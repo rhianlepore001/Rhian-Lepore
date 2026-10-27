@@ -1,3 +1,4 @@
+vi.mock('../../hooks/useClientDependents', () => ({ useClientDependents: () => ({ dependents: [], loading: false, error: '', reload: vi.fn() }) }));
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
@@ -96,6 +97,16 @@ describe('AppointmentEditModal — colaborador editando', () => {
     expect(eqCalls).toContainEqual(['user_id', 'company-owner-1']);
     expect(eqCalls).not.toContainEqual(['user_id', 'staff-user-1']);
     expect(showToast).toHaveBeenCalledWith('Agendamento atualizado com sucesso!', 'success');
+  });
+
+  it('trocar de titular limpa o dependente e solicita novo snapshot sem mudar o tenant', async () => {
+    renderModal({ appointment: { ...appointment, dependent_id: 'dep-a', attendee_name: 'Dependente Fictício' }, clients: [...clients, { id: 'client-2', name: 'Outro Titular Fictício' }] });
+    fireEvent.change(screen.getByLabelText('Cliente'), { target: { value: 'client-2' } });
+    expect(screen.getByRole('combobox', { name: 'Para quem?' })).toHaveValue('');
+    fireEvent.click(screen.getByText('Salvar'));
+    await waitFor(() => expect(onSave).toHaveBeenCalled());
+    expect(updatePayloads[0]).toMatchObject({ client_id: 'client-2', dependent_id: null, attendee_name: null });
+    expect(eqCalls).toContainEqual(['user_id', 'company-owner-1']);
   });
 
   it('0 linhas atualizadas não é mais "sucesso" silencioso', async () => {

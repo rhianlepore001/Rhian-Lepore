@@ -364,6 +364,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       }
     >
       <div className="space-y-5">
+        <div className="text-sm text-theme-text"><p>Atendido(a): {appointment?.attendee_name || appointment?.clientName}</p><p>Responsável pela cobrança: {appointment?.clientName}</p></div>
         {discount.hasActiveSubscription && discount.plan && (
           <div
             data-testid="membership-banner"

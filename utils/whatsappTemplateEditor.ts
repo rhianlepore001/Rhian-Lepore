@@ -144,6 +144,8 @@ export function whatsAppPreviewVars(
 ): WhatsAppTemplateVars {
   return {
     cliente: 'Cliente Exemplo',
+    atendido: 'Dependente Exemplo',
+    para_quem: ' para Dependente Exemplo',
     primeiro_nome: 'Cliente',
     profissional: key === 'reschedule' ? 'com Profissional Exemplo' : 'Profissional Exemplo',
     servico: 'Atendimento personalizado, cuidado complementar',

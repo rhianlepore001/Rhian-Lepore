@@ -18,6 +18,8 @@ export type WhatsAppTemplateKey =
   | 'membership_pending';
 
 export type WhatsAppVariable =
+  | 'atendido'
+  | 'para_quem'
   | 'cliente'
   | 'primeiro_nome'
   | 'data'
@@ -65,12 +67,12 @@ export const WHATSAPP_TEMPLATES: Record<WhatsAppTemplateKey, TemplatePair> = {
     barber: 'Fala, {cliente}! Seu horário está garantido! 🛡️\nMarque na sua agenda:\n🗓️ *{data}* às *{hora}*\n✂️ *Serviço*: {servico}\n💰 *Valor*: {valor}\n📍 Onde: *{estabelecimento}*.\n\nPrepare-se para o trato! Nos vemos em breve. 👋',
   },
   booking_confirmed: {
-    beauty: 'Agendamento confirmado! ✨\nData: {data}\nHorário: {hora}\nServiço: {servico}\nValor: {valor}\n\nAgradecemos a confiança! Te espero em *{estabelecimento}*.',
-    barber: 'Agendamento confirmado! ✨\nData: {data}\nHorário: {hora}\nServiço: {servico}\nValor: {valor}\n\nAgradecemos a confiança! Te espero em *{estabelecimento}*.',
+    beauty: 'Agendamento confirmado {para_quem}! ✨\nData: {data}\nHorário: {hora}\nServiço: {servico}\nValor: {valor}\n\nAgradecemos a confiança! Te espero em *{estabelecimento}*.',
+    barber: 'Agendamento confirmado {para_quem}! ✨\nData: {data}\nHorário: {hora}\nServiço: {servico}\nValor: {valor}\n\nAgradecemos a confiança! Te espero em *{estabelecimento}*.',
   },
   wizard_confirm: {
-    beauty: 'Olá {cliente}! ✨\nPassando para confirmar seu horário em *{estabelecimento}*. Tudo certo para *{data} às {hora}*?\n\nTe aguardamos com muito carinho! 💖',
-    barber: 'Fala, {cliente}! ✂️\nSeu horário está garantido em *{estabelecimento}*.\nNos vemos dia *{data}* às *{hora}*.\n\nTe aguardamos para dar aquele talento! 🚀',
+    beauty: 'Olá {cliente}! ✨\nPassando para confirmar seu horário {para_quem} em *{estabelecimento}*. Tudo certo para *{data} às {hora}*?\n\nTe aguardamos com muito carinho! 💖',
+    barber: 'Fala, {cliente}! ✂️\nSeu horário {para_quem} está garantido em *{estabelecimento}*.\nNos vemos dia *{data}* às *{hora}*.\n\nTe aguardamos para dar aquele talento! 🚀',
   },
   reschedule: {
     beauty: 'Olá, {cliente}! ✨\nSeu horário em *{estabelecimento}* foi remarcado.\nAntes: {data_anterior} às {hora_anterior}\nAgora: *{data}* às *{hora}* {profissional}.\nSe precisar de outro horário, é só responder. 💖',
@@ -134,10 +136,10 @@ const TEMPLATE_VARIANTS: Partial<Record<WhatsAppTemplateKey, Partial<Record<Temp
 };
 
 export const TEMPLATE_ALLOWED_KEYS: Record<WhatsAppTemplateKey, readonly WhatsAppVariable[]> = {
-  booking_accepted: ['cliente', 'data', 'hora', 'servico', 'valor', 'estabelecimento'],
-  booking_confirmed: ['data', 'hora', 'servico', 'valor', 'estabelecimento'],
-  wizard_confirm: ['cliente', 'data', 'hora', 'estabelecimento'],
-  reschedule: ['cliente', 'data_anterior', 'hora_anterior', 'data', 'hora', 'profissional', 'estabelecimento'],
+  booking_accepted: ['cliente', 'data', 'hora', 'servico', 'valor', 'estabelecimento', 'atendido', 'para_quem'],
+  booking_confirmed: ['data', 'hora', 'servico', 'valor', 'estabelecimento', 'atendido', 'para_quem'],
+  wizard_confirm: ['cliente', 'data', 'hora', 'estabelecimento', 'atendido', 'para_quem'],
+  reschedule: ['cliente', 'data_anterior', 'hora_anterior', 'data', 'hora', 'profissional', 'estabelecimento', 'atendido', 'para_quem'],
   reactivation: ['primeiro_nome', 'servico', 'dias_ausente', 'estabelecimento'],
   rebooking: ['primeiro_nome'],
   queue_joined: ['primeiro_nome', 'estabelecimento', 'link_fila'],
@@ -151,7 +153,7 @@ export const TEMPLATE_ALLOWED_KEYS: Record<WhatsAppTemplateKey, readonly WhatsAp
 };
 
 const NAME_VARIABLES = new Set<WhatsAppVariable>([
-  'cliente', 'primeiro_nome', 'profissional',
+  'cliente', 'primeiro_nome', 'profissional', 'atendido',
 ]);
 
 function cleanVariable(value: WhatsAppTemplateVars[WhatsAppVariable], key: WhatsAppVariable): string {
@@ -160,6 +162,7 @@ function cleanVariable(value: WhatsAppTemplateVars[WhatsAppVariable], key: Whats
     return codePoint <= 0x1f || (codePoint >= 0x7f && codePoint <= 0x9f) ? ' ' : character;
   }).join('').replace(/\s+/g, ' ').trim();
   if (NAME_VARIABLES.has(key)) cleaned = Array.from(cleaned).slice(0, 80).join('');
+  if (key === 'para_quem') cleaned = Array.from(cleaned).slice(0, 1000).join('');
   if (key === 'servico') cleaned = Array.from(cleaned).slice(0, 300).join('');
   return cleaned;
 }
@@ -193,7 +196,11 @@ export function renderWhatsAppTemplate(
 ): string {
   if (override?.enabled === false) return '';
   const body = override?.body ?? ((variant && TEMPLATE_VARIANTS[key]?.[variant]?.[theme]) || WHATSAPP_TEMPLATES[key][theme]);
-  return renderTemplate(body, vars, TEMPLATE_ALLOWED_KEYS[key]);
+  const rendered = renderTemplate(body, vars, TEMPLATE_ALLOWED_KEYS[key]);
+  const forWhom = cleanVariable(vars.para_quem, 'para_quem');
+  return forWhom && TEMPLATE_ALLOWED_KEYS[key].includes('para_quem') && !/\{(?:atendido|para_quem)\}/.test(body)
+    ? `${rendered}\nAtendimento ${forWhom}.`
+    : rendered;
 }
 
 export function buildWhatsAppLink(phone: string, region: WhatsAppRegion = 'BR', message?: string): string {

@@ -89,3 +89,13 @@ describe('templates de WhatsApp por tema', () => {
       .toContain('Você é especial pra gente.');
   });
 });
+
+describe('variáveis de atendido', () => {
+  it('informa o dependente ao titular mesmo com mensagem personalizada antiga', () => {
+    const message = renderWhatsAppTemplate('wizard_confirm', 'beauty', { cliente: 'Titular Fictício', atendido: 'Dependente Fictício', para_quem: ' para Dependente Fictício' }, undefined, { message_key: 'wizard_confirm', enabled: true, body: 'Olá {cliente}!' });
+    expect(message).toBe('Olá Titular Fictício!\nAtendimento para Dependente Fictício.');
+  });
+  it('substitui ambas as variáveis sem duplicar a informação', () => {
+    expect(renderWhatsAppTemplate('wizard_confirm', 'beauty', { atendido: 'Dependente Fictício', para_quem: ' para Dependente Fictício' }, undefined, { message_key: 'wizard_confirm', enabled: true, body: 'Atendido: {atendido}. Reserva {para_quem}.' })).toBe('Atendido: Dependente Fictício. Reserva para Dependente Fictício.');
+  });
+});

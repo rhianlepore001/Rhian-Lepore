@@ -6,7 +6,7 @@
 
 A migration `20261027083640_client_dependents_internal_booking.sql` acrescenta a tabela, índices, policies, colunas de atendimento, trigger de snapshot e a RPC autenticada `create_internal_attendee_bookings`. Nenhuma função, policy, coluna ou dado existente é substituído. `public_bookings`, fila e RPCs públicas ficam para os próximos PRs. O modelo permite `source = 'agendamento_online'` e várias linhas por titular, prontas para a materialização do PR 2.
 
-Chaves estrangeiras compostas impedem associar dependente a titular/tenant diferente, inclusive via código privilegiado. RLS: dono tem CRUD no seu tenant; staff tem SELECT/INSERT no seu tenant. A tabela não tem policy pública e revoga privilégios de `PUBLIC`/`anon`. Os grants preexistentes de `clients` e `appointments` ficam fora deste PR, conforme a recomendação de hardening separado do plano.
+Chaves estrangeiras compostas impedem associar dependente a titular/tenant diferente, inclusive via código privilegiado. RLS: dono tem CRUD no seu tenant; staff tem SELECT/INSERT no seu tenant e UPDATE (editar e arquivar) apenas quando a chave do gestor "equipe pode editar clientes" (`business_settings.staff_can_edit_clients`, função `staff_can_edit_clients`, PR #165) está ligada. DELETE físico continua só do dono. No CRM, o botão Editar (que dá acesso a Remover) segue a mesma regra via `useStaffClientPermission`. A tabela não tem policy pública e revoga privilégios de `PUBLIC`/`anon`. Os grants preexistentes de `clients` e `appointments` ficam fora deste PR, conforme a recomendação de hardening separado do plano.
 
 O CRM permite nome, apelido e observações. Remover arquiva o registro (`is_active=false`), preservando a referência e o histórico. Um DELETE físico também preserva o snapshot e mantém `client_id`. Nomes ativos são únicos por titular após `lower(btrim(name))`; acentos continuam distintos, conforme o índice proposto. Merge de grafias não faz parte deste PR.
 
@@ -36,7 +36,7 @@ Pontos que o PR 2 precisa revalidar explicitamente: o corpo atual apenas exige a
 
 - `npx vitest run test/services/clientDependents.test.ts test/utils/appointmentAttendees.test.ts`: RED antes dos módulos; GREEN após a implementação.
 - `scripts/test-sql-client-dependents.sh --red`: confirma falha antes da migration.
-- `scripts/test-sql-client-dependents.sh`: Postgres descartável, helpers de agenda carregados das migrations existentes, usuários e dados fictícios. Testa dono, staff, outro tenant, anon, limites, FKs, snapshots, sequência e conflito/bloqueio tardio. Aplica rollback e compara as definições de todas as funções preexistentes.
+- `scripts/test-sql-client-dependents.sh`: Postgres descartável, helpers de agenda carregados das migrations existentes, usuários e dados fictícios. Testa dono, staff com a chave ligada e desligada, outro tenant, anon, limites, FKs, snapshots, sequência e conflito/bloqueio tardio. Aplica rollback e compara as definições de todas as funções preexistentes.
 - `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium npx playwright test --config e2e/client-dependents.config.ts`: backend totalmente simulado, sem gravar dados em produção.
 - Gates aprovados: `npm run typecheck`, `npm run lint`, `npm run build`, `npm test -- --run` (263 arquivos / 1.940 testes). SQL: 41 checks em PostgreSQL 17.11 descartável. Navegador: cinco testes aprovados, com dados fictícios.
 

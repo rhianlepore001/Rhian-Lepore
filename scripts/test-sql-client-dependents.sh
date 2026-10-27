@@ -21,6 +21,8 @@ P -f "$ROOT/supabase/tests/agenda_blocks_queue_settle.harness.sql"
 P -f "$ROOT/supabase/migrations/20261003090000_agenda_blocks_allow_queue_completed.sql"
 P -f "$ROOT/supabase/tests/agenda_blocks_followup.harness.sql"
 P -f "$ROOT/supabase/migrations/20261003120000_agenda_blocks_acceptance_followup.sql"
+# Chave do gestor do PR #165 (já em main): coluna e função staff_can_edit_clients
+P -f "$ROOT/supabase/migrations/20261025160000_staff_can_edit_clients.sql"
 P -f "$ROOT/supabase/tests/client_dependents.harness.sql"
 if [ "${1:-}" = '--red' ]; then
   if P -f "$ROOT/supabase/tests/client_dependents.test.sql" > "$TMP/red.log" 2>&1; then

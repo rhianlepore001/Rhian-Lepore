@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { Card, Button } from '@/components/ui';
 import { useClientDependents } from '@/hooks/useClientDependents';
+import { useStaffClientPermission } from '@/hooks/useStaffClientPermission';
 import { createDependent, updateDependent, type ClientDependent } from '@/services/clientDependents';
 
-export function ClientDependentsSection({ companyId, clientId, canManage }: { companyId: string; clientId: string; canManage: boolean }) {
+// Editar e arquivar seguem a chave do gestor "equipe pode editar clientes" (#165); cadastrar é livre para dono e equipe.
+export function ClientDependentsSection({ companyId, clientId }: { companyId: string; clientId: string }) {
+  const { canEdit: canManage } = useStaffClientPermission();
   const { dependents, loading, error, reload } = useClientDependents(companyId, clientId);
   const [editing, setEditing] = useState<ClientDependent | null>(null);
   const [open, setOpen] = useState(false);

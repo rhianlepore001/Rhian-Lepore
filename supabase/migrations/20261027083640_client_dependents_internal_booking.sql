@@ -30,6 +30,13 @@ CREATE POLICY "Staff read company dependents" ON public.client_dependents FOR SE
   USING (user_id = (SELECT public.get_auth_company_id()) AND (SELECT public.get_auth_role()) = 'staff');
 CREATE POLICY "Staff insert company dependents" ON public.client_dependents FOR INSERT TO authenticated
   WITH CHECK (user_id = (SELECT public.get_auth_company_id()) AND (SELECT public.get_auth_role()) = 'staff');
+-- Editar e arquivar (is_active=false) seguem a chave do gestor "equipe pode editar clientes" (#165).
+-- DELETE continua só do dono.
+CREATE POLICY "Staff update company dependents" ON public.client_dependents FOR UPDATE TO authenticated
+  USING (user_id = (SELECT public.get_auth_company_id()) AND (SELECT public.get_auth_role()) = 'staff'
+    AND (SELECT public.staff_can_edit_clients(public.get_auth_company_id())))
+  WITH CHECK (user_id = (SELECT public.get_auth_company_id()) AND (SELECT public.get_auth_role()) = 'staff'
+    AND (SELECT public.staff_can_edit_clients(public.get_auth_company_id())));
 
 ALTER TABLE public.appointments
   ADD COLUMN dependent_id uuid,

@@ -413,7 +413,7 @@ export const ClientCRM: React.FC = () => {
         </div>
       </Card>
 
-      <ClientDependentsSection companyId={tenantId || ''} clientId={client.id} canManage={!isStaff} />
+      <ClientDependentsSection companyId={tenantId || ''} clientId={client.id} />
 
       {!isStaff && <Card title={isBeauty ? 'Histórico de visitas' : 'Histórico de cortes'}>
         {!client.appointmentsHistory?.length ? (

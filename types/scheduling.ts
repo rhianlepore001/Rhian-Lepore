@@ -31,6 +31,13 @@ export const checkoutInputSchema = z.object({
   machineFeeAmount: moneyAmountSchema,
 });
 
+export const internalAttendeeInputSchema = z.object({
+  dependentId: z.string().nullish(),
+  serviceIds: z.array(z.string().min(1)),
+  totalPrice: moneyAmountSchema,
+  customServiceName: z.string().trim().nullish(),
+});
+
 export const createAppointmentInputSchema = z.object({
   companyId: uuidSchema.or(z.string().min(1)),
   professionalId: uuidSchema.or(z.string().min(1)),
@@ -46,6 +53,9 @@ export const createAppointmentInputSchema = z.object({
   notes: z.string().trim().nullish(),
   customServiceName: z.string().trim().nullish(),
   paymentMethod: checkoutPaymentMethodSchema.nullish(),
+  dependentId: z.string().nullish(),
+  attendeeName: z.string().nullish(),
+  attendees: z.array(internalAttendeeInputSchema).min(1).max(10).optional(),
 });
 
 export const agendaStaffFilterSchema = z.object({
@@ -58,6 +68,8 @@ export const agendaAppointmentViewSchema = z.object({
   id: z.string().min(1),
   client_id: z.string(),
   clientName: z.string(),
+  dependent_id: z.string().nullish(),
+  attendee_name: z.string().nullish(),
   clientPhone: z.string().optional(),
   service: z.string(),
   appointment_time: z.string(),
@@ -73,6 +85,8 @@ export interface AgendaAppointmentView {
   id: string;
   client_id: string;
   clientName: string;
+  dependent_id?: string | null;
+  attendee_name?: string | null;
   clientPhone?: string;
   service: string;
   appointment_time: string;

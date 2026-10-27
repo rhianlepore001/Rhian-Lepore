@@ -1,4 +1,5 @@
-﻿import { discardFormDraft } from '../hooks/useFormDraft';
+import { attendeeLabel } from '../utils/appointmentAttendees';
+import { discardFormDraft } from '../hooks/useFormDraft';
 import { useDraftFields } from '../hooks/useDraftFields';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useWhatsAppTemplates } from '../hooks/useWhatsAppTemplates';
@@ -76,6 +77,8 @@ interface Appointment {
     id: string;
     client_id: string;
     clientName: string;
+    dependent_id?: string | null;
+    attendee_name?: string | null;
     service: string;
     appointment_time: string;
     price: number;
@@ -383,7 +386,9 @@ export const Agenda: React.FC = () => {
         // Formatar dados igual ao AllAppointmentsModal espera
         return data.map((apt: any) => ({
             id: apt.id,
-            clientName: apt.clients?.name || 'Cliente Desconhecido',
+            clientName: attendeeLabel({ ...apt, clientName: apt.clients?.name || 'Cliente Desconhecido' }),
+            dependent_id: apt.dependent_id,
+            attendee_name: apt.attendee_name,
             service: apt.service,
             time: new Date(apt.appointment_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             date: new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
@@ -564,6 +569,8 @@ export const Agenda: React.FC = () => {
                     id: apt.id,
                     client_id: apt.client_id,
                     clientName: apt.clients?.name || 'Cliente Desconhecido',
+                    dependent_id: apt.dependent_id,
+                    attendee_name: apt.attendee_name,
                     clientPhone: apt.clients?.phone || '',
                     service: apt.service,
                     appointment_time: apt.appointment_time,
@@ -610,6 +617,8 @@ export const Agenda: React.FC = () => {
                     id: apt.id,
                     client_id: apt.client_id,
                     clientName: apt.clients?.name || 'Cliente Desconhecido',
+                    dependent_id: apt.dependent_id,
+                    attendee_name: apt.attendee_name,
                     clientPhone: apt.clients?.phone || '',
                     service: apt.service,
                     appointment_time: apt.appointment_time,
@@ -706,6 +715,8 @@ export const Agenda: React.FC = () => {
                     id: apt.id,
                     client_id: apt.client_id,
                     clientName: apt.clients?.name || 'Cliente Desconhecido',
+                    dependent_id: apt.dependent_id,
+                    attendee_name: apt.attendee_name,
                     service: apt.service,
                     appointment_time: apt.appointment_time,
                     price: apt.price,
@@ -1464,7 +1475,7 @@ export const Agenda: React.FC = () => {
                                             return (
                                                 <div key={apt.id} className={`${colors.card} ${colors.border} p-4 rounded-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3`}>
                                                     <div className="min-w-0">
-                                                        <p className={`${colors.text} font-bold text-sm truncate`}>{apt.clientName}</p>
+                                                        <p className={`${colors.text} font-bold text-sm truncate`}>{attendeeLabel(apt)}</p>
                                                         <p className={`${colors.textSecondary} text-xs truncate`}>{apt.service}</p>
                                                         <p className={`${colors.textMuted} text-xs`}>
                                                             {new Date(apt.appointment_time).toLocaleDateString('pt-BR')} às {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
@@ -1665,7 +1676,7 @@ export const Agenda: React.FC = () => {
                                 </div>
                                 <div>
                                     <p className={`text-xs font-mono uppercase tracking-widest ${colors.textMuted} mb-0.5`}>Cliente</p>
-                                    <h4 className={`text-lg font-bold ${colors.text} leading-tight`}>{detailsApt.clientName}</h4>
+                                    <h4 className={`text-lg font-bold ${colors.text} leading-tight`}>{attendeeLabel(detailsApt)}</h4>
                                     {detailsApt.clientPhone && (
                                         <div className="flex items-center gap-1 mt-1">
                                             <Phone className={`w-3 h-3 ${colors.textMuted}`} />
@@ -1898,7 +1909,7 @@ export const Agenda: React.FC = () => {
                                                             {new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} às {new Date(apt.appointment_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                                         </span>
                                                     </div>
-                                                    <p className={`${colors.text} font-bold text-base mb-1`}>{apt.clientName}</p>
+                                                    <p className={`${colors.text} font-bold text-base mb-1`}>{attendeeLabel(apt)}</p>
                                                     <p className={`${colors.textSecondary} text-sm mb-1`}>{apt.service}</p>
                                                     {professional && (
                                                         <p className={`${colors.textMuted} text-xs`}>

@@ -1,3 +1,4 @@
+import { attendeeLabel } from '@/utils/appointmentAttendees';
 import React, { useEffect, useRef, useState } from 'react';
 import { Check, AlertTriangle, Clock, Ban, X, Edit2, MessageCircle, Users, Plus } from 'lucide-react';
 import { AgendaEmptySlotCell } from './AgendaEmptySlotCell';
@@ -17,6 +18,8 @@ const VISUAL_STATUS_ICON: Record<VisualStatus, React.ComponentType<{ className?:
 export interface AgendaGridAppointment {
   id: string;
   clientName: string;
+  dependent_id?: string | null;
+  attendee_name?: string | null;
   service: string;
   appointment_time: string;
   price: number;
@@ -493,7 +496,7 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                         data-highlight={apt.id === highlightAppointmentId ? 'true' : undefined}
                         type="button"
                         onClick={() => onSelectAppointment(apt)}
-                        aria-label={`${apt.clientName} — ${apt.service} às ${time}`}
+                        aria-label={`${attendeeLabel(apt)} — ${apt.service} às ${time}`}
                         data-agenda-span={span}
                         data-frees-slot={freesSlot ? 'true' : undefined}
                         data-shares-slot={sharesWithOther ? 'true' : undefined}
@@ -505,8 +508,9 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                       >
                         <div className="flex items-start justify-between gap-1 min-w-0">
                           <h4 className={`text-xs font-bold truncate leading-tight ${colors.text}`}>
-                            <span className="md:hidden" data-testid="agenda-card-client-compact">{compactClientName(apt.clientName)}</span>
-                            <span className="hidden md:inline">{apt.clientName}</span>
+                            <span className="md:hidden" data-testid="agenda-card-client-compact">{compactClientName(apt.attendee_name || apt.clientName)}</span>
+                            <span className="hidden md:inline">{attendeeLabel(apt)}</span>
+                            {apt.attendee_name && (apt.dependent_id || apt.attendee_name !== apt.clientName) && <span className="md:hidden block text-xs">{apt.dependent_id ? 'dep. de' : 'responsável:'} {apt.clientName}</span>}
                           </h4>
                           <div className="hidden md:flex items-center gap-0.5 flex-shrink-0">
                             {apt.edited_at && (

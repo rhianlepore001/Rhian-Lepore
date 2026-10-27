@@ -26,6 +26,8 @@ export interface HairRecord {
 export interface Appointment {
   id: string;
   clientName: string;
+  dependent_id?: string | null;
+  attendee_name?: string | null;
   client_id?: string;
   clientPhone?: string;
   service: string;

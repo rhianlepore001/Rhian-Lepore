@@ -101,3 +101,11 @@ describe('compactClientName / compactServiceName', () => {
     expect(compactServiceName('Corte feminino')).toBe('Corte');
   });
 });
+
+
+it('mostra pessoa atendida no card compacto e mantém o responsável visível', () => {
+  setup({ appointments: [{ id: 'dep-apt', professional_id: 'c', clientName: 'Titular Fictício', dependent_id: 'dep-a', attendee_name: 'Dependente Fictício', service: 'Serviço Fictício', appointment_time: '2026-10-26T13:30:00', duration_minutes: 30, price: 40, status: 'Confirmed' }] });
+  expect(screen.getByTestId('agenda-card-client-compact')).toHaveTextContent('Dependente F.');
+  expect(screen.getByText('dep. de Titular Fictício')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /Dependente Fictício \(dep. de Titular Fictício\)/ })).toBeInTheDocument();
+});

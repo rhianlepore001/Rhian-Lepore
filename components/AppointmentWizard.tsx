@@ -1,4 +1,4 @@
-﻿import { discardFormDraft } from '../hooks/useFormDraft';
+import { discardFormDraft } from '../hooks/useFormDraft';
 import { useDraftFields } from '../hooks/useDraftFields';
 import React, { useState, useEffect, useRef } from 'react';
 import { useWhatsAppTemplates } from '../hooks/useWhatsAppTemplates';
@@ -12,6 +12,8 @@ import { mapError, formatUserFacingError } from '../utils/mapError';
 import {
     X, ChevronLeft, Loader2, Check
 } from 'lucide-react';
+import { AttendeePicker } from './appointment/AttendeePicker';
+import { buildAttendeeSequence, type AttendeeSelection } from '@/utils/appointmentAttendees';
 import { WizardProps } from './appointment/types';
 import { formatCurrency } from '../utils/formatters';
 import { buildWhatsAppLink } from '../utils/whatsappTemplates';
@@ -73,6 +75,9 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
 
     // Data State — profissional/horário podem vir pré-preenchidos da grade
     const [selectedClientId, setSelectedClientId] = useState<string>('');
+    const [dependentId, setDependentId] = useState('');
+    const [attendeeName, setAttendeeName] = useState('');
+    const [extraAttendees, setExtraAttendees] = useState<(AttendeeSelection & { key: string })[]>([]);
     const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
     const [selectedProId, setSelectedProId] = useState<string>(initialProfessionalId);
     const [selectedDate, setSelectedDate] = useState<Date>(initialDate);
@@ -127,6 +132,9 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
         step: [step, setStep],
         selectedClientId: [selectedClientId, setSelectedClientId],
         selectedServiceIds: [selectedServiceIds, setSelectedServiceIds],
+        dependentId: [dependentId, setDependentId],
+        attendeeName: [attendeeName, setAttendeeName],
+        extraAttendees: [extraAttendees, setExtraAttendees],
         selectedProId: [selectedProId, setSelectedProId],
         selectedTime: [selectedTime, setSelectedTime],
         selectedDate: [formatLocalDateString(selectedDate), value => { const d = new Date(`${value}T12:00:00`); if (!Number.isNaN(d.getTime())) setSelectedDate(d); }],
@@ -179,7 +187,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
             try {
                 const duration = capBookingDuration(services
                     .filter(s => selectedServiceIds.includes(s.id))
-                    .reduce((sum, s) => sum + (s.duration_minutes || 30), 0));
+                    .reduce((sum, s) => sum + (s.duration_minutes || 30), 0) || 30) + extraAttendees.reduce((total, person) => total + services.filter(service => person.serviceIds.includes(service.id)).reduce((sum, service) => sum + (service.duration_minutes || 30), 0), 0);
                 // Mesmo instante que o handleSubmit grava (data/hora locais do
                 // dispositivo da equipe). Antes: data em UTC + offset fixo por
                 // região, que em PT no verão checava 1h depois do horário real.
@@ -208,15 +216,24 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
         user?.id,
         selectedDate,
         selectedServiceIds,
+        extraAttendees,
         services,
     ]);
 
+    const extraDuration = extraAttendees.reduce((total, person) => total + services.filter(service => person.serviceIds.includes(service.id)).reduce((sum, service) => sum + (service.duration_minutes || 30), 0), 0);
+    const extraPrice = extraAttendees.reduce((total, person) => total + services.filter(service => person.serviceIds.includes(service.id)).reduce((sum, service) => sum + service.price, 0), 0);
     const finalPrice = parseFloat(customPrice || '0') * (1 - (parseFloat(discount || '0') / 100));
-    const durationMinutes = capBookingDuration(selectedServicesDetails.reduce((sum, s) => sum + (s.duration_minutes || 30), 0) || 30);
+    const firstDuration = capBookingDuration(selectedServicesDetails.reduce((sum, s) => sum + (s.duration_minutes || 30), 0) || 30);
+    const durationMinutes = firstDuration + extraDuration;
     const { data: agendaBlocks = [] } = useAgendaBlocks(formatLocalDateString(selectedDate));
 
     const handleSubmit = async () => {
         if (!selectedClientId || !selectedDate || !selectedTime || !selectedProId) return;
+        const personIds = [dependentId || 'self', ...extraAttendees.map(person => person.dependentId || 'self')];
+        if (new Set(personIds).size !== personIds.length || extraAttendees.some(person => !person.serviceIds.length) || (extraAttendees.length > 0 && isCustomService) || durationMinutes > 1440) {
+            showToast('Escolha uma pessoa diferente e os serviços de cada atendimento. Serviços personalizados devem ser agendados separadamente.', 'warning');
+            return;
+        }
         setLoading(true);
 
         try {
@@ -240,7 +257,12 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                 appointmentTime: dateTime,
                 serviceIds: selectedServiceIds,
                 totalPrice: finalPrice || 0,
-                durationMinutes: duration || 30,
+                durationMinutes: firstDuration || 30,
+                ...(dependentId ? { dependentId, attendeeName } : {}),
+                ...(extraAttendees.length ? { attendees: [
+                    { dependentId: dependentId || null, serviceIds: selectedServiceIds, totalPrice: finalPrice || 0 },
+                    ...buildAttendeeSequence(dateTime, extraAttendees, services).map(person => ({ dependentId: person.dependentId, serviceIds: person.serviceIds, totalPrice: person.totalPrice })),
+                ] } : {}),
                 status: 'Confirmed',
                 clientId: selectedClientId,
                 notes: notes || null,
@@ -280,12 +302,16 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                     const formattedTime = dateTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
                     const message = whatsapp.render('wizard_confirm', isBeauty ? 'beauty' : 'barber', {
                         cliente: client.name,
+                        atendido: attendeeName || client.name,
+                        para_quem: dependentId || extraAttendees.length ? ` para ${[attendeeName || client.name, ...extraAttendees.map(person => person.name || client.name)].join(', ')}` : '',
                         estabelecimento: businessName || establishmentFallback,
                         data: formattedDate,
                         hora: formattedTime,
                     });
 
-                    window.open(buildWhatsAppLink(client.phone, currencyRegion, message), '_blank');
+                    const attendedNames = [attendeeName || client.name, ...extraAttendees.map(person => person.name || client.name)].join(', ');
+                    const contactMessage = (dependentId || extraAttendees.length) && !message.includes(attendedNames) ? `${message}\nAtendimento para: ${attendedNames}.` : message;
+                    window.open(buildWhatsAppLink(client.phone, currencyRegion, contactMessage), '_blank');
                 }
             }
 
@@ -406,10 +432,10 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                         <ClientSelection
                             clients={clients}
                             selectedClientId={selectedClientId}
-                            setSelectedClientId={setSelectedClientId}
+                            setSelectedClientId={id => { setSelectedClientId(id); setDependentId(''); setAttendeeName(''); setExtraAttendees([]); }}
                             onRefreshClients={onRefreshClients}
                             onClientCreated={(id) => {
-                                setSelectedClientId(id);
+                                setSelectedClientId(id); setDependentId(''); setAttendeeName(''); setExtraAttendees([]);
                                 setStep(2);
                             }}
                             isBeauty={isBeauty}
@@ -421,6 +447,7 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                     {/* STEP 2: SERVICES */}
                     {step === 2 && (
                         <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                            <AttendeePicker companyId={companyId ?? user?.id ?? ''} clientId={selectedClientId} clientName={clients.find(client => client.id === selectedClientId)?.name || 'Titular'} value={dependentId} snapshot={attendeeName} onChange={(id, name) => { setDependentId(id); setAttendeeName(name); }} />
                             <StepHeading
                                 title="Selecione os serviços"
                                 aside={
@@ -477,6 +504,15 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                         </div>
                     )}
 
+                    {step === 2 && <div className="space-y-4 mt-4">
+                        {extraAttendees.map((person, index) => <div key={person.key} className="p-3 border border-[var(--color-divider)] rounded-lg">
+                            <AttendeePicker companyId={companyId ?? user?.id ?? ''} clientId={selectedClientId} clientName={clients.find(client => client.id === selectedClientId)?.name || 'Titular'} value={person.dependentId || ''} snapshot={person.name} label={`Para quem? Pessoa ${index + 2}`} onChange={(id, name) => setExtraAttendees(rows => rows.map(row => row.key === person.key ? { ...row, dependentId: id || null, name } : row))} />
+                            <fieldset className="space-y-2 text-theme-text"><legend className="text-sm font-bold">Serviços desta pessoa</legend>{services.map(service => <label key={service.id} className="flex items-center gap-2 min-h-[44px] text-sm"><input type="checkbox" checked={person.serviceIds.includes(service.id)} onChange={event => setExtraAttendees(rows => rows.map(row => row.key === person.key ? { ...row, serviceIds: event.target.checked ? [...row.serviceIds, service.id] : row.serviceIds.filter(id => id !== service.id) } : row))} />{service.name} · {formatCurrency(service.price, currencyRegion)}</label>)}</fieldset>
+                            <Button size="sm" variant="ghost" onClick={() => setExtraAttendees(rows => rows.filter(row => row.key !== person.key))}>Remover pessoa</Button>
+                        </div>)}
+                        {!isCustomService && extraAttendees.length < 9 && <Button variant="ghost" onClick={() => setExtraAttendees(rows => [...rows, { key: crypto.randomUUID(), dependentId: null, name: clients.find(client => client.id === selectedClientId)?.name || 'Titular', serviceIds: [] }])}>Adicionar pessoa em sequência</Button>}
+                    </div>}
+
                     {/* STEP 3: SCHEDULE */}
                     {step === 3 && (
                         <ScheduleSelection
@@ -501,6 +537,11 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                         />
                     )}
 
+                    {step === 4 && <div className="mb-4 text-theme-text text-sm space-y-2">
+                        <p className="font-bold">Responsável: {clients.find(client => client.id === selectedClientId)?.name}</p>
+                        <p>Atendido(a): {attendeeName || clients.find(client => client.id === selectedClientId)?.name} · {selectedServicesDetails.map(service => service.name).join(', ') || customServiceName} · {selectedTime}</p>
+                        {extraAttendees.length > 0 && buildAttendeeSequence(new Date(combineDateAndTime(formatLocalDateString(selectedDate), selectedTime).getTime() + firstDuration * 60_000), extraAttendees.filter(person => person.serviceIds.length), services).map(person => <p key={person.dependentId || 'self'}>{person.name} · {services.filter(service => person.serviceIds.includes(service.id)).map(service => service.name).join(', ')} · {person.appointmentTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} · {formatCurrency(person.totalPrice, currencyRegion)}</p>)}
+                    </div>}
                     {/* STEP 4: REVIEW */}
                     {step === 4 && (
                         <AppointmentReview
@@ -545,7 +586,7 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                         <div data-testid="wizard-footer-total" className="flex items-baseline justify-between gap-3 pb-3 mb-3 border-b border-[var(--color-divider)]">
                             <span className={`text-sm ${colors.textSecondary}`}>Total a receber</span>
                             <span className="text-xl font-bold font-mono text-theme-accent tabular-nums whitespace-nowrap">
-                                {formatCurrency(finalPrice || 0, currencyRegion)}
+                                {formatCurrency((finalPrice || 0) + extraPrice, currencyRegion)}
                             </span>
                         </div>
                     )}
@@ -567,7 +608,7 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                                 onClick={() => setStep(prev => (prev === 2 && skipSchedule ? 4 : prev + 1) as any)}
                                 disabled={
                                     (step === 1 && !selectedClientId) ||
-                                    (step === 2 && selectedServiceIds.length === 0 && !(isCustomService && customServiceName.trim())) ||
+                                    (step === 2 && (selectedServiceIds.length === 0 && !(isCustomService && customServiceName.trim()) || extraAttendees.some(person => !person.serviceIds.length) || new Set([dependentId || 'self', ...extraAttendees.map(person => person.dependentId || 'self')]).size !== 1 + extraAttendees.length || (isCustomService && extraAttendees.length > 0))) ||
                                     (step === 3 && (!selectedTime || (!selectedProId && autoAssigningPro) || (!selectedProId && teamMembers.length === 0)))
                                 }
                                 className="px-8"

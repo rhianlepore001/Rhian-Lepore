@@ -78,6 +78,8 @@ export function formatRescheduleHistoryLine(input: {
 export interface RescheduleWhatsAppInput {
   theme: BusinessTheme;
   clientName: string;
+  attendeeName?: string | null;
+  dependentId?: string | null;
   businessName?: string | null;
   oldTimeIso: string;
   newTimeIso: string;
@@ -99,6 +101,8 @@ export function buildRescheduleWhatsAppMessage(input: RescheduleWhatsAppInput): 
 
   return renderWhatsAppTemplate('reschedule', input.theme, {
     cliente: client,
+    atendido: input.attendeeName || client,
+    para_quem: input.attendeeName && (input.dependentId || input.attendeeName !== client) ? ` para ${input.attendeeName}` : '',
     estabelecimento: establishment,
     data_anterior: oldDate,
     hora_anterior: oldTime,

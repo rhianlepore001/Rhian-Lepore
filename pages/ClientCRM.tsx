@@ -1,4 +1,4 @@
-﻿import { useDraftFields } from '../hooks/useDraftFields';
+import { useDraftFields } from '../hooks/useDraftFields';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Card, Button, Modal, ConfirmModal } from '../components/ui';
 import { EmptyState } from '../components/ui/EmptyState';
+import { ClientDependentsSection } from '../components/ClientDependentsSection';
 import { PhoneInput } from '../components/PhoneInput';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -44,6 +45,7 @@ interface AppointmentHistoryItem {
   appointment_time: string;
   price: number;
   professional_name?: string;
+  attendee_name?: string | null;
 }
 
 export const ClientCRM: React.FC = () => {
@@ -96,6 +98,13 @@ export const ClientCRM: React.FC = () => {
           ? { client: data, ltv: 0, appointments_history: [] } as any
           : data as any;
         const appointmentsData: AppointmentHistoryItem[] = appointments_history || [];
+        if (!isStaff && appointmentsData.length) {
+          const { data: attendedRows, error: attendedError } = await supabase.from('appointments')
+            .select('id, attendee_name').eq('user_id', tenantId).eq('client_id', id).eq('status', 'Completed');
+          if (attendedError) throw attendedError;
+          const attendedNames = new Map((attendedRows || []).map(row => [row.id, row.attendee_name]));
+          appointmentsData.forEach(row => { row.attendee_name = attendedNames.get(row.id); });
+        }
         const totalVisits = isStaff ? (clientData.total_visits || 0) : appointmentsData.length;
         const lastVisitAt = isStaff ? clientData.last_visit : appointmentsData[0]?.appointment_time || null;
         const firstVisitAt = appointmentsData[appointmentsData.length - 1]?.appointment_time || null;
@@ -404,6 +413,8 @@ export const ClientCRM: React.FC = () => {
         </div>
       </Card>
 
+      <ClientDependentsSection companyId={tenantId || ''} clientId={client.id} canManage={!isStaff} />
+
       {!isStaff && <Card title={isBeauty ? 'Histórico de visitas' : 'Histórico de cortes'}>
         {!client.appointmentsHistory?.length ? (
           <EmptyState
@@ -430,7 +441,7 @@ export const ClientCRM: React.FC = () => {
                     )}
                   </div>
                   <p className={`text-xs font-mono ${colors.textSecondary}`}>
-                    {new Date(apt.appointment_time).toLocaleDateString('pt-BR')}
+                    Atendido(a): {apt.attendee_name || client.name} · {new Date(apt.appointment_time).toLocaleDateString('pt-BR')}
                     {apt.professional_name ? ` · ${apt.professional_name}` : ''}
                   </p>
                 </div>

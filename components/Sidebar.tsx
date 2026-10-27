@@ -83,7 +83,7 @@ export const Sidebar: React.FC = () => {
             <div className={`absolute -inset-2 ${accent.bgDim} blur-xl rounded-full opacity-60`} />
             <div className="relative flex items-center gap-2.5">
               <img
-                src={isLight ? "/logo-agendix-light.png" : "/logo-agendix-icon.png"}
+                src={isLight ? "/img/logo-agendix-light-256.webp" : "/img/logo-agendix-icon-256.webp"}
                 alt="AgendiX Logo"
                 style={{ height: 32, width: 'auto', objectFit: 'contain', display: 'block' }}
               />
@@ -108,7 +108,7 @@ export const Sidebar: React.FC = () => {
             <div className={`absolute -inset-3 ${accent.bgDim} blur-xl rounded-full opacity-50 group-hover:opacity-100 transition-opacity duration-500`} />
             <div className="relative flex items-center gap-3">
               <img
-                src={isLight ? "/logo-agendix-light.png" : "/logo-agendix-icon.png"}
+                src={isLight ? "/img/logo-agendix-light-256.webp" : "/img/logo-agendix-icon-256.webp"}
                 alt="AgendiX Logo"
                 style={{ height: 40, width: 'auto', objectFit: 'contain', display: 'block' }}
               />

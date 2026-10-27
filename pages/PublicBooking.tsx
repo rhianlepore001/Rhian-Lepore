@@ -1102,7 +1102,7 @@ export const PublicBooking: React.FC = () => {
                                             `}>
                                             <div className="h-36 sm:h-44 md:h-48 relative overflow-hidden bg-[var(--color-card)]">
                                                 {service.image_url ? (
-                                                    <img src={service.image_url} alt={service.name} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.03]" />
+                                                    <img src={service.image_url} alt={service.name} loading="lazy" decoding="async" width={400} height={300} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.03]" />
                                                 ) : (
                                                     <div className={`w-full h-full flex items-center justify-center ${colors.surface}`}>
                                                         <Sparkles className={`w-12 h-12 opacity-10 ${accent.text}`} />
@@ -1215,7 +1215,7 @@ export const PublicBooking: React.FC = () => {
                                         className={`p-6 flex flex-col items-center gap-3 transition-all duration-300 animate-reveal-fragment rounded-2xl ${selectedProfessional === pro.id ? `${accent.bg} ${accentTextOnAccent} scale-105 ${shadow.glow}` : `${colors.card} ${colors.border} border ${shadow.card} hover:border-[var(--color-accent-border)]`}`}>
                                         <div className={`w-16 h-16 overflow-hidden border-2 rounded-full ${colors.surface} ${colors.border}`}>
                                             {pro.photo_url ? (
-                                                <img src={pro.photo_url} alt={pro.name} className="w-full h-full object-cover" />
+                                                <img src={pro.photo_url} alt={pro.name} loading="lazy" decoding="async" width={96} height={96} className="w-full h-full object-cover" />
                                             ) : (
                                                 <div className={`w-full h-full flex items-center justify-center ${colors.surface} ${colors.text}`}>{pro.name.charAt(0)}</div>
                                             )}
@@ -1561,7 +1561,7 @@ export const PublicBooking: React.FC = () => {
                                                                         }`}>
                                                                     <div className="h-36 sm:h-44 md:h-48 relative overflow-hidden bg-[var(--color-card)]">
                                                                         {service.image_url ? (
-                                                                            <img src={service.image_url} alt={service.name} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.03]" />
+                                                                            <img src={service.image_url} alt={service.name} loading="lazy" decoding="async" width={400} height={300} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.03]" />
                                                                         ) : (
                                                                             <div className={`w-full h-full flex items-center justify-center ${colors.surface}`}>
                                                                                 <Sparkles className={`w-12 h-12 opacity-10 ${accent.text}`} />
@@ -1640,7 +1640,7 @@ export const PublicBooking: React.FC = () => {
                                                                 className={`p-6 flex flex-col items-center gap-3 transition-all duration-300 animate-reveal-fragment rounded-2xl ${colors.card} ${colors.border} border ${shadow.card} hover:border-[var(--color-accent-border)]`}>
                                                                 <div className={`w-16 h-16 overflow-hidden border-2 rounded-full ${colors.surface} ${colors.border}`}>
                                                                     {pro.photo_url ? (
-                                                                        <img src={pro.photo_url} alt={pro.name} className="w-full h-full object-cover" />
+                                                                        <img src={pro.photo_url} alt={pro.name} loading="lazy" decoding="async" width={96} height={96} className="w-full h-full object-cover" />
                                                                     ) : (
                                                                         <div className={`w-full h-full flex items-center justify-center ${colors.surface} ${colors.text}`}>{pro.name.charAt(0)}</div>
                                                                     )}

@@ -107,9 +107,16 @@ export const Login: React.FC = () => {
                         className="group relative h-72 md:h-96 rounded-2xl md:rounded-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]"
                     >
                         <div className="absolute inset-0 overflow-hidden rounded-2xl md:rounded-3xl">
-                            <div
-                                className="absolute -inset-[2px] bg-[var(--color-bg)] bg-cover bg-center opacity-60 group-hover:opacity-80 transition-all duration-700 ease-out scale-110 group-hover:scale-100"
-                                style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800&q=80)' }}
+                            <img
+                                src="/img/barbearia-800.webp"
+                                alt=""
+                                aria-hidden="true"
+                                width={800}
+                                height={533}
+                                decoding="async"
+                                fetchPriority="high"
+                                className="absolute -inset-[2px] bg-[var(--color-bg)] object-cover object-center opacity-60 group-hover:opacity-80 transition-all duration-700 ease-out scale-110 group-hover:scale-100"
+                                style={{ width: 'calc(100% + 4px)', height: 'calc(100% + 4px)', maxWidth: 'none' }}
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/30" />
                             <div className="absolute inset-0 bg-theme-accent/0 group-hover:bg-theme-accent/[0.03] transition-colors duration-500" />
@@ -148,10 +155,20 @@ export const Login: React.FC = () => {
                             className="group relative h-72 md:h-96 w-full rounded-2xl md:rounded-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]"
                         >
                             <div className="absolute inset-0 overflow-hidden rounded-2xl md:rounded-3xl">
-                                <div
-                                    className="absolute -inset-[2px] bg-[var(--color-bg)] bg-cover bg-center opacity-60 group-hover:opacity-80 transition-all duration-700 ease-out scale-110 group-hover:scale-100"
-                                    style={{ backgroundImage: 'url("/mulher-studio.png")' }}
-                                />
+                                <picture>
+                                    <source srcSet="/img/mulher-studio-800.avif" type="image/avif" />
+                                    <img
+                                        src="/img/mulher-studio-800.webp"
+                                        alt=""
+                                        aria-hidden="true"
+                                        width={800}
+                                        height={800}
+                                        decoding="async"
+                                        fetchPriority="high"
+                                        className="absolute -inset-[2px] bg-[var(--color-bg)] object-cover object-center opacity-60 group-hover:opacity-80 transition-all duration-700 ease-out scale-110 group-hover:scale-100"
+                                        style={{ width: 'calc(100% + 4px)', height: 'calc(100% + 4px)', maxWidth: 'none' }}
+                                    />
+                                </picture>
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/30" />
                                 <div className="absolute inset-0 bg-theme-accent/0 group-hover:bg-theme-accent/[0.03] transition-colors duration-500" />
                             </div>

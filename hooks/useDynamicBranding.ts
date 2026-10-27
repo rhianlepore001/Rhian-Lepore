@@ -19,8 +19,8 @@ const BRANDING_CONFIG: Record<UserType, BrandingConfig> = {
         themeColorDark: '#121212',
         themeColorLight: '#F5F1E8',
         manifestPath: '/manifest-barber.webmanifest',
-        faviconPath: '/logo-agendix-icon.png',
-        appleTouchIcon: '/logo-agendix-icon.png',
+        faviconPath: '/icons/favicon-icon-32x32.png',
+        appleTouchIcon: '/icons/apple-touch-icon-mark.png',
         ogImage: '/logo-agendix-icon.png',
         description: 'AgendiX: O sistema que faz seu negócio crescer. Fluxo automático e gestão inteligente.'
     },
@@ -29,8 +29,8 @@ const BRANDING_CONFIG: Record<UserType, BrandingConfig> = {
         themeColorDark: '#1F1B2E',
         themeColorLight: '#F7F5FF',
         manifestPath: '/manifest-beauty.webmanifest',
-        faviconPath: '/logo-agendix-icon.png',
-        appleTouchIcon: '/logo-agendix-icon.png',
+        faviconPath: '/icons/favicon-icon-32x32.png',
+        appleTouchIcon: '/icons/apple-touch-icon-mark.png',
         ogImage: '/logo-agendix-icon.png',
         description: 'AgendiX: O sistema que faz seu negócio crescer. Fluxo automático e gestão inteligente.'
     }

@@ -67,6 +67,7 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
                 {coverPhotoUrl ? (
                     <img
                         src={coverPhotoUrl}
+                        decoding="async"
                         alt={businessName}
                         className="w-full h-full object-cover scale-105 transition-transform duration-[8000ms] hover:scale-100"
                     />
@@ -249,6 +250,10 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
                                 style={{ scrollSnapAlign: 'start' }}>
                                 <img
                                     src={item.image_url}
+                                    loading="lazy"
+                                    decoding="async"
+                                    width={400}
+                                    height={400}
                                     alt="Portfólio"
                                     className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700"
                                 />

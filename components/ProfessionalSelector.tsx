@@ -86,6 +86,10 @@ export const ProfessionalSelector: React.FC<ProfessionalSelectorProps> = ({
                                     {professional.photo_url ? (
                                         <img
                                             src={professional.photo_url}
+                                            loading="lazy"
+                                            decoding="async"
+                                            width={96}
+                                            height={96}
                                             alt={professional.full_name}
                                             className="w-full h-full object-cover"
                                         />
@@ -136,6 +140,9 @@ export const ProfessionalSelector: React.FC<ProfessionalSelectorProps> = ({
                                     {selected.photo_url ? (
                                         <img
                                             src={selected.photo_url}
+                                            decoding="async"
+                                            width={48}
+                                            height={48}
                                             alt={selected.full_name}
                                             className="w-full h-full object-cover"
                                         />

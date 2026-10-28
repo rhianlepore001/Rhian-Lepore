@@ -12,11 +12,14 @@ interface Config {
 const EVENT_NAMES = new Set(['PageView', 'Lead', 'CompleteRegistration']);
 const MAX_BYTES = 8192;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+// Mesmas rotas públicas do frontend (lib/metaTracking.ts). Lead/CompleteRegistration só em #/register.
+const PAGEVIEW_HASHES = ['#/login', '#/register', '#/termos', '#/privacidade'];
+const EXTERNAL_ID = /^[\w.:-]{1,128}$/;
 const META_BROWSER_ID = /^fb\.\d\.\d+\.[A-Za-z0-9_.-]+$/;
 
 function validPayload(value: unknown, origin: string, now: number): value is {
   consent: true; event_name: string; event_id: string; event_time: number;
-  event_source_url: string; user_data?: { email?: string; phone?: string; fbp?: string; fbc?: string };
+  event_source_url: string; user_data?: { email?: string; phone?: string; external_id?: string; fbp?: string; fbc?: string };
 } {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const v = value as Record<string, unknown>;
@@ -28,15 +31,16 @@ function validPayload(value: unknown, origin: string, now: number): value is {
   try {
     const source = new URL(v.event_source_url);
     if (source.origin !== origin || source.username || source.password || source.search) return false;
-    if (!['#/login', '#/register'].includes(source.hash)) return false;
+    if (!PAGEVIEW_HASHES.includes(source.hash)) return false;
     if (v.event_name !== 'PageView' && source.hash !== '#/register') return false;
   } catch { return false; }
   if (v.user_data !== undefined) {
     if (!v.user_data || typeof v.user_data !== 'object' || Array.isArray(v.user_data)) return false;
     const user = v.user_data as Record<string, unknown>;
-    if (Object.keys(user).some(key => !['email', 'phone', 'fbp', 'fbc'].includes(key))) return false;
+    if (Object.keys(user).some(key => !['email', 'phone', 'external_id', 'fbp', 'fbc'].includes(key))) return false;
     if (user.email !== undefined && (typeof user.email !== 'string' || user.email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email.trim()))) return false;
     if (user.phone !== undefined && (typeof user.phone !== 'string' || user.phone.length > 32 || !/^\+?[\d\s().-]+$/.test(user.phone) || !/^\d{8,15}$/.test(user.phone.replace(/\D/g, '')))) return false;
+    if (user.external_id !== undefined && (typeof user.external_id !== 'string' || !EXTERNAL_ID.test(user.external_id))) return false;
     for (const key of ['fbp', 'fbc'] as const) {
       const identifier = user[key];
       if (identifier !== undefined && (typeof identifier !== 'string' || identifier.length > 256 || !META_BROWSER_ID.test(identifier))) return false;
@@ -108,6 +112,7 @@ export function createMetaCapiHandler(config: Config): (request: Request) => Pro
       const userData = {
         ...(email ? { em: [await hash(email)] } : {}),
         ...(phone ? { ph: [await hash(phone)] } : {}),
+        ...(value.user_data?.external_id ? { external_id: [await hash(value.user_data.external_id.toLowerCase())] } : {}),
         ...(value.user_data?.fbp ? { fbp: value.user_data.fbp } : {}),
         ...(value.user_data?.fbc ? { fbc: value.user_data.fbc } : {}),
         ...(ip ? { client_ip_address: ip } : {}),

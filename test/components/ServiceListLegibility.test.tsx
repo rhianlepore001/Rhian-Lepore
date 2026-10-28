@@ -63,4 +63,13 @@ describe('ServiceList: nome legível e categorias honestas', () => {
     expect(screen.getByText(LONG)).toBeInTheDocument();
     expect(screen.queryByText('Corte Social')).not.toBeInTheDocument();
   });
+  it('pesquisa sem diferenciar acentos ou maiúsculas e respeita a categoria', () => {
+    const { rerender } = render(<ServiceList {...base} searchQuery="pigmentacao" />);
+    expect(screen.getByText(LONG)).toBeInTheDocument();
+    expect(screen.queryByText('Corte Social')).not.toBeInTheDocument();
+    rerender(<ServiceList {...base} searchQuery="CORTE" activeCategory="c-cortes" />);
+    expect(screen.getByText('Corte Social')).toBeInTheDocument();
+    expect(screen.queryByText(LONG)).not.toBeInTheDocument();
+  });
+
 });

@@ -1,3 +1,4 @@
+import { matchesServiceSearch } from '../utils/serviceSearch';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useWhatsAppTemplates } from '../hooks/useWhatsAppTemplates';
 import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
@@ -998,6 +999,8 @@ export const PublicBooking: React.FC = () => {
                                 <p className={`${colors.textMuted} text-sm`}>Selecione um ou mais serviços para seu atendimento.</p>
                             </div>
 
+                            <input type="search" aria-label="Buscar serviço" placeholder="Buscar serviço..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className={classes.input} />
+
                             {/* Category Filters */}
                             {(categories.length > 0 || publicProducts.length > 0) && (
                                 <div className={`p-1.5 ${colors.card} ${colors.border} border rounded-2xl backdrop-blur-xl`}>
@@ -1085,7 +1088,7 @@ export const PublicBooking: React.FC = () => {
                                     const matchesCategory = activeCategory === 'all'
                                         || (activeCategory === 'no-category' && !s.category_id)
                                         || s.category_id === activeCategory;
-                                    const matchesSearch = !searchQuery || s.name.toLowerCase().includes(searchQuery.toLowerCase());
+                                    const matchesSearch = matchesServiceSearch(s, searchQuery);
                                     return matchesCategory && matchesSearch;
                                 }).map((service, sIdx) => {
                                     const isSelected = selectedServices.includes(service.id);
@@ -1502,6 +1505,7 @@ export const PublicBooking: React.FC = () => {
 
                                             {msg.type === 'services' && step === 'services' && (
                                                 <div className="w-full space-y-8 md:space-y-12">
+                                                    <input type="search" aria-label="Buscar serviço" placeholder="Buscar serviço..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className={classes.input} />
                                                     <div className="animate-reveal-fragment duration-700">
                                                         <div className={`p-1.5 ${colors.card} ${colors.border} border rounded-2xl backdrop-blur-xl`}>
                                                             <div className="w-full flex gap-2 overflow-x-auto pb-2 pt-1 px-1 scrollbar-thin">
@@ -1548,7 +1552,7 @@ export const PublicBooking: React.FC = () => {
                                                             const matchesCategory = activeCategory === 'all'
                                                                 || (activeCategory === 'no-category' && !s.category_id)
                                                                 || s.category_id === activeCategory;
-                                                            const matchesSearch = !searchQuery || s.name.toLowerCase().includes(searchQuery.toLowerCase());
+                                                            const matchesSearch = matchesServiceSearch(s, searchQuery);
                                                             return matchesCategory && matchesSearch;
                                                         }).map((service, sIdx) => {
                                                             const isSelected = selectedServices.includes(service.id);

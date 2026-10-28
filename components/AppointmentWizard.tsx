@@ -1,3 +1,4 @@
+import { matchesServiceSearch } from '../utils/serviceSearch';
 import { discardFormDraft } from '../hooks/useFormDraft';
 import { useDraftFields } from '../hooks/useDraftFields';
 import React, { useState, useEffect, useRef } from 'react';
@@ -453,7 +454,7 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                                 aside={
                                     <span className={`${colors.textMuted} text-xs font-mono`}>
                                         {(() => {
-                                            const n = services.filter(s => activeCategory === 'all' || s.category_id === activeCategory).length;
+                                            const n = services.filter(s => (activeCategory === 'all' || s.category_id === activeCategory) && matchesServiceSearch(s, searchQuery)).length;
                                             return `${n} ${n === 1 ? 'opção' : 'opções'}`;
                                         })()}
                                     </span>

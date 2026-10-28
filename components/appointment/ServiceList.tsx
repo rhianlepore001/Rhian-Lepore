@@ -2,6 +2,7 @@ import React from 'react';
 import { Check, Clock, Sparkles } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
 import { Service } from './types';
+import { matchesServiceSearch } from '../../utils/serviceSearch';
 
 interface ServiceListProps {
     services: Service[];
@@ -57,10 +58,7 @@ export const ServiceList: React.FC<ServiceListProps> = ({
         .filter(service => {
             // Category filter
             const matchesCategory = activeCategory === 'all' || service.category_id === activeCategory;
-            // Search filter
-            const matchesSearch = !searchQuery ||
-                service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (service.description && service.description.toLowerCase().includes(searchQuery.toLowerCase()));
+            const matchesSearch = matchesServiceSearch(service, searchQuery);
             return matchesCategory && matchesSearch;
         })
         .reduce((acc, service) => {

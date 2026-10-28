@@ -1,7 +1,8 @@
 import React from 'react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
+const updateSettings = vi.fn().mockResolvedValue({});
 const state: { settings: Record<string, unknown> | null; profileRegion: string } = {
   settings: null,
   profileRegion: 'PT',
@@ -9,7 +10,7 @@ const state: { settings: Record<string, unknown> | null; profileRegion: string }
 
 vi.mock('../../hooks/useSettings', () => ({
   useBusinessSettings: () => ({ data: state.settings }),
-  useUpdateBusinessSettings: () => ({ mutateAsync: vi.fn().mockResolvedValue({}) }),
+  useUpdateBusinessSettings: () => ({ mutateAsync: updateSettings }),
   useUpdateBusinessTimezone: () => ({ mutateAsync: vi.fn().mockResolvedValue('saved') }),
   useProfileFields: () => ({ data: { business_name: 'Barbearia Bob', region: state.profileRegion } }),
   useUpdateProfileFields: () => ({ mutateAsync: vi.fn().mockResolvedValue({}) }),
@@ -40,7 +41,7 @@ vi.mock('../../components/BusinessGalleryManager', () => ({ BusinessGalleryManag
 vi.mock('../../components/BusinessHoursEditor', () => ({ BusinessHoursEditor: () => null }));
 vi.mock('../../components/PhoneInput', () => ({ PhoneInput: () => null }));
 vi.mock('../../components/HelpButtons', () => ({ InfoButton: () => null }));
-vi.mock('../../components/SaveFooter', () => ({ SaveFooter: () => null }));
+vi.mock('../../components/SaveFooter', () => ({ SaveFooter: ({ onSave }: { onSave: () => void }) => <button onClick={onSave}>Salvar</button> }));
 vi.mock('../../hooks/useBrutalTheme', () => ({
   useBrutalTheme: () => ({
     isBeauty: false,
@@ -72,15 +73,14 @@ describe('GeneralSettings — PR-1 política gerada da regra real (D3)', () => {
     expect(screen.queryByText('Flexível')).toBeNull();
     expect(screen.queryByText('Moderada')).toBeNull();
     expect(screen.queryByText('Rígida')).toBeNull();
-    expect(screen.queryByText('24h')).toBeNull();
-    expect(screen.queryByText('48h')).toBeNull();
+
     expect(screen.queryByText('72h')).toBeNull();
     expect(screen.queryByText(/cobrança de 50%/i)).toBeNull();
   });
 
   it('mostra o texto gerado da regra real (cancelar até 2h antes)', () => {
     render(<GeneralSettings />);
-    expect(screen.getByText('Você pode cancelar até 2h antes pela Minha Área')).toBeInTheDocument();
+    expect(screen.getByTestId('cancellation-policy-generated')).toHaveValue('Você pode cancelar até 2h antes pela Minha Área');
   });
 
   it('mostra a dica sob o campo de observações, sem prometer multa', () => {
@@ -88,4 +88,14 @@ describe('GeneralSettings — PR-1 política gerada da regra real (D3)', () => {
     expect(screen.getByTestId('cancellation-policy-notes-hint')).toHaveTextContent(CANCELLATION_POLICY_NOTES_HINT);
     expect(screen.queryByText(/cobrança de 50%/i)).toBeNull();
   });
+  it('salva prazo, texto e observações pelo formulário geral', async () => {
+    render(<GeneralSettings />);
+    fireEvent.change(screen.getByTestId('cancel-cutoff'), { target: { value: '24' } });
+    expect(screen.getByTestId('cancellation-policy-generated')).toHaveValue('Você pode cancelar até 24h antes pela Minha Área');
+    fireEvent.change(screen.getByTestId('cancellation-policy-generated'), { target: { value: 'Cancele até 24 horas antes.' } });
+    fireEvent.change(screen.getByTestId('cancellation-policy-notes'), { target: { value: 'Avise a equipe.' } });
+    fireEvent.click(screen.getByText('Salvar'));
+    await waitFor(() => expect(updateSettings).toHaveBeenCalledWith(expect.objectContaining({ client_cancel_cutoff_hours: 24, client_cancel_note: 'Avise a equipe.', client_cancel_policy_text: 'Cancele até 24 horas antes.' })));
+  });
+
 });

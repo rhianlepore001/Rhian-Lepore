@@ -9,7 +9,7 @@ vi.mock('@/lib/metaTracking', async importOriginal => {
   const actual = await importOriginal<typeof import('@/lib/metaTracking')>();
   return {
     ...actual,
-    metaTracker: { captureRegistration: vi.fn(), completeRegistration: vi.fn() },
+    metaTracker: { captureRegistration: vi.fn(), lead: vi.fn(), completeRegistration: vi.fn() },
   };
 });
 const wrapper = ({ children }: { children: React.ReactNode }) => <AuthProvider>{children}</AuthProvider>;
@@ -17,7 +17,7 @@ const input = {
   email: 'person@example.com', password: 'Password123!', fullName: 'Person',
   businessName: 'Business', userType: 'barber' as const, region: 'PT' as const, phone: '912 345 678',
 };
-const context = { id: 'event-id', source: 'https://app.example/#/register' };
+const context = { id: 'event-id', leadId: 'lead-id', source: 'https://app.example/#/register' };
 const newUser = { id: 'new-user', identities: [{ id: 'identity' }] };
 const deferred = () => {
   let resolve: (value: unknown) => void = () => undefined;
@@ -51,11 +51,15 @@ describe('signup Meta integration', () => {
     const hook = await mount();
     let request: ReturnType<typeof hook.result.current.register>;
     act(() => { request = hook.result.current.register(input); });
+    expect(metaTracker.lead).not.toHaveBeenCalled();
     expect(metaTracker.completeRegistration).not.toHaveBeenCalled();
     await act(async () => {
       auth.resolve({ data: { user: newUser, session: { user: newUser } }, error: null });
     });
     expect(supabase.rpc).toHaveBeenCalledWith('ensure_owner_profile');
+    // Lead dispara assim que a conta existe no servidor; CompleteRegistration só no fim.
+    expect(metaTracker.lead).toHaveBeenCalledTimes(1);
+    expect(metaTracker.lead).toHaveBeenCalledWith(context, { email: input.email, phone: '351912345678', external_id: 'new-user' });
     expect(metaTracker.completeRegistration).not.toHaveBeenCalled();
     await act(async () => { profile.resolve({ data: { status: 'created' }, error: null }); });
     expect(supabase.rpc).toHaveBeenCalledWith('upsert_onboarding_progress', expect.any(Object));
@@ -65,7 +69,7 @@ describe('signup Meta integration', () => {
       expect(await request).toEqual({ error: null });
     });
     expect(metaTracker.completeRegistration).toHaveBeenCalledTimes(1);
-    expect(metaTracker.completeRegistration).toHaveBeenCalledWith(context, { email: input.email, phone: '351912345678' });
+    expect(metaTracker.completeRegistration).toHaveBeenCalledWith(context, { email: input.email, phone: '351912345678', external_id: 'new-user' });
   });
 
   it.each([
@@ -83,6 +87,8 @@ describe('signup Meta integration', () => {
       expect((await hook.result.current.register(input)).error).toBeTruthy();
     });
     expect(metaTracker.completeRegistration).not.toHaveBeenCalled();
+    // A conta foi criada: o Lead já foi contado, mesmo com falha posterior.
+    expect(metaTracker.lead).toHaveBeenCalledTimes(1);
   });
 
   it('does not complete if a later backend step throws', async () => {
@@ -117,6 +123,7 @@ describe('signup Meta integration', () => {
     vi.mocked(supabase.auth.signUp).mockResolvedValue(result as never);
     const hook = await mount();
     await act(async () => { await hook.result.current.register(input); });
+    expect(metaTracker.lead).not.toHaveBeenCalled();
     expect(metaTracker.completeRegistration).not.toHaveBeenCalled();
   });
 
@@ -129,6 +136,7 @@ describe('signup Meta integration', () => {
       await hook.result.current.register({ ...input, companyId: 'owner', teamMemberId: 'member' });
     });
     expect(metaTracker.captureRegistration).not.toHaveBeenCalled();
+    expect(metaTracker.lead).not.toHaveBeenCalled();
     expect(metaTracker.completeRegistration).not.toHaveBeenCalled();
   });
 });

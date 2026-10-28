@@ -491,6 +491,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return { error: null };
         }
 
+        // Conta de dono criada no servidor (identidade nova): Lead, uma vez, sem esperar o
+        // restante do fluxo. E-mail já existente volta com identities vazio e não conta.
+        const metaIdentity = {
+          email: data.email,
+          phone: normalizeMetaPhone(data.phone, data.region),
+          external_id: authData.user.id,
+        };
+        if (trackingContext && (authData.user.identities?.length ?? 0) > 0) {
+          metaTracker.lead(trackingContext, metaIdentity);
+        }
+
         // Perfil de dono: criado pelo banco (trigger handle_new_user no signUp e, se faltar,
         // ensure_owner_profile — idempotente, só para o próprio usuário). O cliente não tem
         // INSERT em profiles (42501): o upsert direto deixava a conta órfã.
@@ -521,10 +532,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (onboardingError) return { error: onboardingError };
 
         if (trackingContext && (authData.user.identities?.length ?? 0) > 0) {
-          metaTracker.completeRegistration(trackingContext, {
-            email: data.email,
-            phone: normalizeMetaPhone(data.phone, data.region),
-          });
+          metaTracker.completeRegistration(trackingContext, metaIdentity);
         }
       }
 

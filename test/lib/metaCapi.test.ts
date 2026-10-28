@@ -7,7 +7,7 @@ const payload = () => ({
   consent: true, event_name: 'CompleteRegistration', event_id: '8efdc721-ff7c-4c90-9101-e053cde1f649',
   event_time: Math.floor(Date.now() / 1000), event_source_url: origin + '/#/register',
   user_data: {
-    email: ' PERSON@EXAMPLE.COM ', phone: '+351 912 345 678',
+    email: ' PERSON@EXAMPLE.COM ', phone: '+351 912 345 678', external_id: '7f6f1c52-1d7a-4f29-9a0e-0d3b0f5f9a11',
     fbp: 'fb.1.1234567890.1234567890', fbc: 'fb.1.1234567890.click_123',
   },
 });
@@ -39,6 +39,9 @@ describe('meta-capi', () => {
     const hash = async (value: string) => Array.from(new Uint8Array(await webcrypto.subtle.digest('SHA-256', new TextEncoder().encode(value)))).map(b => b.toString(16).padStart(2, '0')).join('');
     expect(event.user_data.em).toEqual([await hash('person@example.com')]);
     expect(event.user_data.ph).toEqual([await hash('351912345678')]);
+    expect(event.user_data.external_id).toEqual([await hash('7f6f1c52-1d7a-4f29-9a0e-0d3b0f5f9a11')]);
+    expect(JSON.stringify(body)).not.toContain('7f6f1c52');
+    expect(event.event_source_url).toBe(origin + '/#/register');
     expect(event.user_data.fbp).toBe('fb.1.1234567890.1234567890');
     expect(event.user_data.fbc).toBe('fb.1.1234567890.click_123');
     expect(event.user_data.client_ip_address).toBe('203.0.113.4');
@@ -50,11 +53,20 @@ describe('meta-capi', () => {
     { event_source_url: origin + '/#/book/demo' }, { event_source_url: 'https://evil.example/#/register' },
     { event_source_url: origin + '/?fbclid=private#/register' },
     { event_source_url: origin + '/#/register?email=private@example.com' },
-    { event_time: 0 }, { user_data: { email: 'bad' } }, { user_data: { phone: '123' } },
+    { event_name: 'Lead', event_source_url: origin + '/#/termos' },
+    { event_time: 0 }, { user_data: { email: 'bad' } }, { user_data: { external_id: 'has space' } },
+    { user_data: { external_id: 'x'.repeat(129) } }, { user_data: { external_id: 42 } }, { user_data: { phone: '123' } },
   ])('rejects invalid payload %j without contacting Meta', async patch => {
     const s = setup();
     expect((await s.handler(s.request({ ...payload(), ...patch }))).status).toBe(400);
     expect(s.fetcher).not.toHaveBeenCalled();
+  });
+  it.each(['#/login', '#/termos', '#/privacidade'])('accepts a PageView from public route %s only without query', async hash => {
+    const s = setup();
+    const ok = { ...payload(), event_name: 'PageView', event_source_url: origin + '/' + hash };
+    expect((await s.handler(s.request(ok))).status).toBe(200);
+    const bad = { ...ok, event_source_url: origin + '/' + hash + '?utm_id=1' };
+    expect((await s.handler(s.request(bad))).status).toBe(400);
   });
   it.each([
     { fbp: 'not-an-fb-cookie' },

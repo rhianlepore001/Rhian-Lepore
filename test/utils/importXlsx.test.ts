@@ -18,6 +18,12 @@ describe('leitura de planilha XLSX', () => {
     expect(sheets.map(sheet => sheet.name)).toEqual(['Clientes', 'Servicos']);
     expect(sheets[1].rows[0].values).toEqual(['Serviço fictício']);
   });
+  it('lê um arquivo Excel com abas de clientes e serviços', async () => {
+    const bytes = readFileSync(resolve('test/fixtures/import/planilha-ficticia-real.xlsx'));
+    const sheets = await readImportXlsx(bytes);
+    expect(sheets.map(sheet => sheet.name)).toEqual(['Clientes', 'Serviços']);
+    expect(sheets[1].rows[1].values).toEqual(['Serviço fictício', '85.5', '90']);
+  });
   it('recusa fórmulas para não importar um resultado sem revisão', async () => {
     const bytes = readFileSync(resolve('test/fixtures/import/formula-ficticia.xlsx'));
     await expect(readImportXlsx(bytes)).rejects.toThrow(/fórmulas/);

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowRight, Check, Clock, Loader2, Plus, Search, Send, User, Users, X } from 'lucide-react';
 import { CalendarPicker } from '../CalendarPicker';
 import { TimeGrid } from '../TimeGrid';
@@ -250,6 +250,11 @@ export const PublicGroupBooking: React.FC<Props> = ({
   const dateLabel = selectedDate?.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' }) ?? '';
   const initials = (name: string) => (name || '?').trim().split(/\s+/).slice(0, 2).map(part => part[0]?.toUpperCase() ?? '').join('');
 
+  const successRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (step === 'success') successRef.current?.scrollIntoView?.({ block: 'start' });
+  }, [step]);
+
   if (step === 'success') {
     const first = booked[0];
     const copy = getPublicBookingSuccessCopy({ isBeauty, userType, status: first?.status });
@@ -261,7 +266,7 @@ export const PublicGroupBooking: React.FC<Props> = ({
     });
     const total = booked.reduce((sum, row) => sum + Number(row.total_price ?? 0), 0);
     return (
-      <div data-testid="group-booking-success" className="max-w-xl mx-auto py-10 px-4 animate-reveal-fragment relative z-10">
+      <div ref={successRef} data-testid="group-booking-success" className="max-w-xl mx-auto py-10 px-4 scroll-mt-24 animate-reveal-fragment relative z-10">
         <div className="text-center mb-8">
           <div className={`w-20 h-20 mx-auto mb-5 flex items-center justify-center rounded-full ${accent.bg} ${accentTextOnAccent} ${shadow.elevated}`}>
             <Check className="w-10 h-10 stroke-[3]" />

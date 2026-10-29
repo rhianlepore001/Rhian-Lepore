@@ -466,6 +466,11 @@ export const PublicBooking: React.FC = () => {
     }, [rebookParam, services]);
 
     const chatEndRef = React.useRef<HTMLDivElement>(null);
+    const successRef = React.useRef<HTMLDivElement>(null);
+    const showingSuccess = step === 'success' && Boolean(activeBooking);
+    useEffect(() => {
+        if (showingSuccess) successRef.current?.scrollIntoView?.({ block: 'start' });
+    }, [showingSuccess]);
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, isTyping]);
@@ -1721,7 +1726,7 @@ export const PublicBooking: React.FC = () => {
                             )}
 
                             {step === 'success' && activeBooking && (
-                                <div className="max-w-xl mx-auto text-center py-20 animate-reveal-fragment">
+                                <div ref={successRef} className="max-w-xl mx-auto text-center py-20 scroll-mt-24 animate-reveal-fragment">
                                     <div className="relative inline-block mb-10">
                                         <div className={`w-32 h-32 md:w-36 md:h-36 flex items-center justify-center border-4 animate-scale-check ${accent.bg} ${accentTextOnAccent} rounded-full ${shadow.elevated}`}>
                                             {isBookingCancelled ? <X className="w-16 h-16 md:w-20 md:h-20 stroke-[4]" /> : <Check className="w-16 h-16 md:w-20 md:h-20 stroke-[4]" />}

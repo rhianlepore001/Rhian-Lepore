@@ -186,6 +186,12 @@ for (const theme of ['beauty', 'barber'] as const) {
       { attendee_name: 'Caio Fictício', professional_id: PRO_B, service_ids: [SERVICE_B] },
     ]);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await expect.poll(async () => {
+      const title = await page.getByTestId('group-booking-success-title').boundingBox();
+      const pill = await page.locator('a[href*="minha-area"]').first().boundingBox();
+      if (!title) return false;
+      return title.y >= 0 && (!pill || title.y >= pill.y + pill.height);
+    }).toBe(true);
     await shot(page, `online-${theme}-4-sucesso`);
   });
 }

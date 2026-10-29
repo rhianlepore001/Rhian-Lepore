@@ -10,9 +10,10 @@ interface SaveFooterProps {
 
 export const SaveFooter: React.FC<SaveFooterProps> = ({
     onSave,
-    saveStatus,
+    saveStatus: reportedStatus,
     hasChanges,
 }) => {
+    const saveStatus = reportedStatus === 'saved' && hasChanges ? 'idle' : reportedStatus;
     const { accent, classes } = useBrutalTheme();
 
     const getDesktopIcon = () => {

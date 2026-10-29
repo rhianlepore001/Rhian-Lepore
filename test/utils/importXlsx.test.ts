@@ -12,6 +12,12 @@ describe('leitura de planilha XLSX', () => {
       { line: 2, values: ['Ana Fictícia', '11987654321', '', '85.5'] },
     ] }]);
   });
+  it('mantém cada aba disponível para revisão', async () => {
+    const bytes = readFileSync(resolve('test/fixtures/import/duas-abas-ficticias.xlsx'));
+    const sheets = await readImportXlsx(bytes);
+    expect(sheets.map(sheet => sheet.name)).toEqual(['Clientes', 'Servicos']);
+    expect(sheets[1].rows[0].values).toEqual(['Serviço fictício']);
+  });
   it('recusa fórmulas para não importar um resultado sem revisão', async () => {
     const bytes = readFileSync(resolve('test/fixtures/import/formula-ficticia.xlsx'));
     await expect(readImportXlsx(bytes)).rejects.toThrow(/fórmulas/);

@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { ServiceModal } from '../../components/ServiceModal';
 
 vi.mock('../../contexts/AuthContext', () => ({ useAuth: () => ({ user: { id: 'fictional-user' }, companyId: 'fictional-company' }) }));
@@ -98,5 +98,40 @@ describe('ServiceModal', () => {
     expect(title).toBeInTheDocument();
     const header = title.parentElement;
     expect(header?.className ?? '').not.toMatch(/sticky/);
+  });
+
+  it('Esc fecha o modal de serviço', () => {
+    const onClose = vi.fn();
+    render(
+      <ServiceModal
+        companyId="co-1"
+        categories={[{ id: 'cat-1', name: 'Geral', display_order: 0, user_id: 'co-1' }]}
+        allServices={[]}
+        onClose={onClose}
+        onSave={vi.fn()}
+      />,
+    );
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('outras teclas não fecham o modal e Esc não fecha depois de desmontar', () => {
+    const onClose = vi.fn();
+    const { unmount } = render(
+      <ServiceModal
+        companyId="co-1"
+        categories={[{ id: 'cat-1', name: 'Geral', display_order: 0, user_id: 'co-1' }]}
+        allServices={[]}
+        onClose={onClose}
+        onSave={vi.fn()}
+      />,
+    );
+
+    fireEvent.keyDown(document, { key: 'Enter' });
+    expect(onClose).not.toHaveBeenCalled();
+    unmount();
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(onClose).not.toHaveBeenCalled();
   });
 });

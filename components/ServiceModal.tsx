@@ -98,6 +98,16 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
         setLocalCategories(categories);
     }, [categories]);
 
+    const closeRef = useRef(onClose);
+    closeRef.current = onClose;
+    useEffect(() => {
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') closeRef.current();
+        };
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, []);
+
     useEffect(() => {
         document.body.style.overflow = 'hidden';
         return () => {
@@ -205,7 +215,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
     return createPortal(
         <div className={`fixed inset-0 ${classes.modalOverlay} flex items-center justify-center p-4 backdrop-blur-sm`} style={{ zIndex: 'var(--z-modal)' }}>
             <div className="absolute inset-0" onClick={onClose} />
-            <FocusTrap active={true}>
+            <FocusTrap active={true} focusTrapOptions={{ escapeDeactivates: false, allowOutsideClick: true }}>
                 <div
                     className={`relative w-full max-w-2xl max-h-[90vh] ${classes.modalContainer} transform transition-all duration-300 z-10 modal-enter flex flex-col`}
                     role="dialog"

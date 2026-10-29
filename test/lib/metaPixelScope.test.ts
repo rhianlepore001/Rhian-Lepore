@@ -58,12 +58,42 @@ describe('Meta browser adapter privacy', () => {
 
   it.each([
     '/?fbclid=click&token=secret#/login',
-    '/?unknown=value#/register',
     '/?access_token=secret#/register',
-  ])('rejects non-attribution query parameters in %s', async url => {
+    '/?fluxo=nova-senha&code=pkce#/login',
+    '/?token_hash=abc&type=recovery#/login',
+    '/#/login?email=person@example.com',
+    '/#/login#access_token=secret&type=recovery',
+    '/#/register?type=beauty&refresh_token=secret',
+  ])('rejects sensitive parameters in %s', async url => {
     window.history.replaceState(null, '', url);
     const { currentMetaSource } = await import('@/lib/metaTracking');
     expect(currentMetaSource()).toBeNull();
+  });
+
+  it.each([
+    ['/?unknown=value#/register', '/#/register'],
+    ['/?utm_id=1&ad_id=2&campaign_id=3&adset_id=4&placement=Feed&site_source_name=fb&ref=x&gclid=g&fbclid=IwAR1#/login', '/#/login'],
+    ['/#/register?type=beauty&utm_id=1', '/#/register'],
+    ['/#/termos', '/#/termos'],
+    ['/?fbclid=abc#/privacidade', '/#/privacidade'],
+  ])('accepts harmless unknown parameters in %s and strips them from the source URL', async (url, expected) => {
+    window.history.replaceState(null, '', url);
+    const { currentMetaSource } = await import('@/lib/metaTracking');
+    expect(currentMetaSource()).toBe(window.location.origin + expected);
+  });
+
+  it('sends PageView through the adapter on each public hash route with a sanitized URL', async () => {
+    window.history.replaceState(null, '', '/?utm_id=1&ad_id=2&fbclid=IwAR_x#/login');
+    document.cookie = '_fbp=fb.1.1234567890.1234567890; path=/';
+    const { metaTracker, setMetaScope } = await import('@/lib/metaTracking');
+    setMetaScope(true);
+    metaTracker.pageView('/login', '', false);
+    window.history.replaceState(null, '', '/?utm_id=1&ad_id=2&fbclid=IwAR_x#/termos');
+    setMetaScope(true);
+    metaTracker.pageView('/termos', '', false);
+    await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+    const urls = vi.mocked(fetch).mock.calls.map(([, options]) => JSON.parse(String(options?.body)).event_source_url);
+    expect(urls).toEqual([window.location.origin + '/#/login', window.location.origin + '/#/termos']);
   });
 
   it.each(['/#/book/private?token=secret', '/#/minha-area/private?token=secret', '/#/agenda', '/#/register?token=secret'])(
@@ -103,8 +133,8 @@ describe('Meta browser adapter privacy', () => {
       const { metaTracker, setMetaScope } = await import('@/lib/metaTracking');
       setMetaScope(true);
       metaTracker.pageView('/register', '', false);
-      metaTracker.lead();
       const context = metaTracker.captureRegistration();
+      metaTracker.lead(context, { email: 'person@example.com' });
       metaTracker.completeRegistration(context, { email: 'person@example.com' });
       expect(document.getElementById('agendix-meta-pixel')).toBeNull();
       expect(fetch).not.toHaveBeenCalled();

@@ -28,37 +28,53 @@ O código usa Graph API v25.0. Revise a versão no ciclo de manutenção da inte
 
 ## Comportamento
 
-- A landing/entrada existente neste repositório é `/#/login`; não há outra landing separada.
-- PageView somente em `/#/login` e cadastro de nova conta `/#/register`.
-  Alterações de rota do HashRouter geram novo evento; render duplicado do StrictMode não.
-- Convites com `company` ou `member`, qualquer rota autenticada,
-  onboarding e páginas públicas de clientes ficam excluídos.
-- Lead somente no início do envio do formulário com consentimento, uma vez por visita ao
-  cadastro. Abrir a página não gera Lead.
+- A landing/entrada existente neste repositório é `/#/login` (`/` redireciona para ela);
+  não há outra landing separada.
+- PageView nas rotas públicas de aquisição: `/#/login`, `/#/register`, `/#/termos` e
+  `/#/privacidade`, uma vez por troca de rota do HashRouter (mudança só de query na mesma
+  rota e render duplicado do StrictMode não repetem). Só sem sessão e com consentimento.
+- Ficam de fora, de propósito: rotas autenticadas do app (URLs com ids de clientes/agenda),
+  onboarding, `/update-password` (tokens), `/forgot-password`, convites com `company` ou
+  `member` e páginas públicas dos clientes dos salões (`/book`, `/queue`, `/pro`,
+  `/minha-area`, `/clube`), que carregam slugs/ids de terceiros.
+- Lead somente depois que o servidor cria a conta de dono (`signUp` sem erro e com
+  `identities` não vazio), uma vez por visita. Abrir a página, enviar o formulário ou
+  falhar na validação/Auth não geram Lead. E-mail já existente e convites de colaborador
+  não geram Lead.
 - CompleteRegistration somente após o fluxo inteiro retornar sucesso: Auth, criação/garantia
   de empresa e perfil e configuração de onboarding. Exige `authData.user.identities?.length > 0`.
   Erro em qualquer etapa, identidade ausente/vazia, e-mail existente e vínculo de colaborador
-  não geram o evento. Não há evento em sucesso parcial.
+  não geram o evento. Lead e CompleteRegistration são eventos distintos, com `event_id`
+  próprios, e cada um conta uma vez por cadastro; escolha só um deles como evento de
+  otimização na campanha.
 - O contexto de rastreamento é capturado antes da chamada Auth para suportar a mudança de
   sessão durante o cadastro. Consentimento e URL atual são conferidos novamente no envio.
   Se sair do cadastro enquanto o backend está pendente, o evento tardio é descartado
   no navegador e na CAPI, mesmo que o usuário retorne depois.
 - O navegador e a CAPI compartilham `event_name` e `event_id` (UUID) para deduplicação.
 - `event_source_url` da CAPI contém apenas origem, caminho e rota permitida, sem query de
-  anúncio ou de cadastro; o contexto capturado pelo tracker segue a mesma URL sanitizada.
-- E-mail normalizado e telefone internacional são convertidos para SHA-256 no servidor.
+  anúncio, de cadastro ou do hash; o contexto capturado pelo tracker segue a mesma URL sanitizada.
+- E-mail normalizado, telefone internacional e `external_id` (id do usuário, conhecido só em
+  Lead/CompleteRegistration) são convertidos para SHA-256 no servidor.
   IP vem do cabeçalho de encaminhamento do gateway; user agent vem da requisição.
   `_fbp` e `_fbc` são enviados sem hash quando os cookies existem após consentimento.
-  Se `_fbc` não existir e a URL tiver `fbclid`, o app gera `fb.1.<timestamp ms>.<fbclid>`.
+  Se `_fbc` não existir e a URL tiver `fbclid`, o app gera `fb.1.<timestamp ms>.<fbclid>`
+  e grava o cookie `_fbc` (90 dias, `SameSite=Lax`) para manter o mesmo valor nos eventos
+  seguintes. Nenhum cookie é gravado sem consentimento.
   O servidor aceita esses identificadores somente no formato `fb.<n>.<timestamp>.<id>`
   e com até 256 caracteres. Nome, senha e dados operacionais não são enviados.
 - `fbq.disablePushState = true` e `fbq.allowDuplicatePageViews = true` são definidos antes
   do init e da inserção do script. PageViews são explícitos e deduplicados pelo app.
-  O script só é inserido em /login e /register com consentimento. A URL real do documento
-  é validada novamente a cada chamada: queries desconhecidas, tokens, convites e caminhos
-  públicos/privados impedem o envio. Somente `type=barber|beauty` é aceito no cadastro.
-  Na query externa ao hash, são permitidos apenas `fbclid`, `utm_source`, `utm_medium`,
-  `utm_campaign`, `utm_content` e `utm_term`; qualquer outro parâmetro bloqueia rastreamento.
+  O script só é inserido nas rotas públicas acima, com consentimento. O Pixel envia a URL
+  inteira do documento (`dl`), por isso a URL real é validada novamente a cada chamada.
+  Parâmetros de query desconhecidos (`utm_id`, `ad_id`, `campaign_id`, `adset_id`,
+  `placement`, `site_source_name`, `ref`, `gclid`...) **não** bloqueiam o rastreamento.
+  Bloqueiam: nomes sensíveis (`token`, `access_token`, `refresh_token`, `token_hash`, `code`,
+  `state`, `password`, `senha`, `email`, `phone`, `cpf`, `session`, `key`, `error*`, `fluxo`,
+  `company`, `member`, `invite`, `next`, `redirect*`...), `type` diferente de `barber|beauty`
+  (ex.: `type=recovery`), valores que parecem e-mail, JWT, caminho interno (`/...`, `#`) ou
+  maiores que 200 caracteres, e um segundo `#` no hash (`#/x#access_token=...`).
+  A mesma regra vale para a query externa ao hash e para a query dentro do hash.
   Ao sair, a fila é esvaziada no próprio array, chamadas tardias são descartadas e o elemento
   script é removido.
 - Autoconfiguração do Pixel é desativada. **Desative também os eventos automáticos e
@@ -108,8 +124,10 @@ Estes passos são instruções para validação futura; não foram executados em
    Antes da escolha e após Recusar, a aba Network não deve mostrar fbevents.js,
    facebook.com/tr nem meta-capi.
 4. Abra Preferências de cookies e aceite. Confirme PageView. Navegue pelo próprio app
-   ao cadastro: confirme novo PageView e nenhum Lead até iniciar o envio. O primeiro envio
-   gera um Lead; tentativas repetidas na mesma visita não duplicam o evento.
+   ao cadastro, aos Termos e à Privacidade: um PageView por troca de rota e nenhum Lead.
+   Teste também `/?utm_id=1&ad_id=2&fbclid=teste#/login`: o PageView deve sair normalmente.
+   Enviar o formulário com erro de validação não gera Lead; o Lead só sai quando a conta de
+   teste é criada, uma vez por visita.
 5. Envie um cadastro inválido ou com e-mail já existente: nenhum CompleteRegistration.
    Crie uma nova conta de teste com dados de teste: CompleteRegistration só aparece após
    Auth, empresa/perfil e onboarding concluírem com sucesso, com identidades não vazias. Não use dados pessoais reais.
@@ -117,12 +135,17 @@ Estes passos são instruções para validação futura; não foram executados em
    e ID do evento e aparecer como deduplicados. O código de teste pertence ao corpo CAPI,
    não ao frontend. A ferramenta de teste do navegador/Meta Pixel Helper pode ajudar a
    inspecionar a origem Browser.
-7. Entre no painel e abra páginas `/#/book/...` e demais páginas de clientes:
+7. Entre no painel (nenhum PageView dentro do app autenticado) e abra páginas `/#/book/...` e demais páginas de clientes:
    nenhum evento adicional. Volte à Política de Privacidade, recuse e repita o fluxo:
    nenhum novo envio. Recarregue para conferir a persistência.
 8. Remova `META_TEST_EVENT_CODE` ao concluir a validação do ambiente de teste.
 
 Não foi feito deploy nem configuração de secrets como parte deste PR.
+
+Ordem de publicação: faça o deploy da Edge Function `meta-capi` **antes** de publicar o
+frontend. O frontend novo envia `external_id` e PageView em `#/termos`/`#/privacidade`, que a
+versão antiga da função rejeita com 400 (o Pixel do navegador continuaria funcionando, mas a
+CAPI perderia esses eventos).
 
 ## Limites operacionais
 

@@ -1,7 +1,7 @@
 import { clearMetaCookies, readConsent } from './marketingConsent';
 
 type MetaEventName = 'PageView' | 'Lead' | 'CompleteRegistration';
-interface Identity { email?: string; phone?: string; fbp?: string; fbc?: string }
+interface Identity { email?: string; phone?: string; external_id?: string; fbp?: string; fbc?: string }
 export interface MetaEvent {
   consent: true;
   event_name: MetaEventName;
@@ -10,7 +10,7 @@ export interface MetaEvent {
   event_source_url: string;
   user_data?: Identity;
 }
-interface RegistrationContext { id: string; source: string }
+interface RegistrationContext { id: string; leadId: string; source: string }
 interface TrackerOptions {
   pixelId: string;
   hasConsent: () => boolean;
@@ -21,12 +21,55 @@ interface TrackerOptions {
   getAbortSignal?: () => AbortSignal;
 }
 
-export function isMetaRoute(path: string, search: string, authenticated: boolean): boolean {
-  if (authenticated || !['/login', '/register'].includes(path)) return false;
+// Rotas públicas de aquisição. "/" redireciona para /login (a landing é o login) e rotas
+// públicas de clientes dos salões (/book, /queue, /pro, /minha-area, /clube) ficam de fora:
+// carregam slugs/ids de terceiros. Rotas autenticadas e /update-password também.
+export const META_PUBLIC_PATHS = ['/login', '/register', '/termos', '/privacidade'] as const;
+
+// O Pixel envia a URL inteira do documento (dl=location.href), então parâmetros que
+// carreguem credenciais, convites ou dados pessoais nunca podem estar na URL ao rastrear.
+// Parâmetros desconhecidos (utm_id, ad_id, gclid, placement, ref...) são permitidos,
+// desde que nome e valor não indiquem dado sensível.
+const SENSITIVE_KEY_EXACT = new Set([
+  'code', 'state', 'nonce', 'sig', 'signature', 'fluxo', 'error', 'company', 'member',
+  'invite', 'convite', 'next', 'redirect', 'redirect_to', 'return_to', 'returnurl',
+]);
+const SENSITIVE_KEY_SEGMENTS = new Set([
+  'token', 'tokens', 'password', 'passwd', 'senha', 'secret', 'email', 'mail', 'phone',
+  'telefone', 'cpf', 'cnpj', 'jwt', 'otp', 'session', 'auth', 'apikey', 'key', 'error',
+]);
+const JWT_LIKE = /^eyJ[\w-]+\.[\w-]+\./;
+
+function isSensitiveParam(key: string, value: string): boolean {
+  const name = key.toLowerCase();
+  if (SENSITIVE_KEY_EXACT.has(name)) return true;
+  if (name.split(/[^a-z0-9]+/).some(part => SENSITIVE_KEY_SEGMENTS.has(part))) return true;
+  if (name === 'type') return !['barber', 'beauty'].includes(value);
+  if (name === 'fbclid') return value.length > 256 || !/^[A-Za-z0-9_.-]+$/.test(value);
+  // Valores que parecem e-mail, JWT, caminho interno do app ou blob grande.
+  return value.includes('@') || JWT_LIKE.test(value) || value.startsWith('/')
+    || value.includes('#') || value.length > 200;
+}
+
+/** true quando nenhum parâmetro da query (com ou sem "?") parece sensível. */
+export function areMetaParamsSafe(search: string): boolean {
+  if (!search) return true;
   const params = new URLSearchParams(search);
-  return Array.from(params).every(([key, value]) =>
-    path === '/register' && key === 'type' && ['barber', 'beauty'].includes(value),
-  ) && params.getAll('type').length <= 1;
+  const entries = Array.from(params);
+  if (params.getAll('type').length > 1) return false;
+  return entries.every(([key, value]) => !isSensitiveParam(key, value));
+}
+
+export function isMetaRoute(path: string, search: string, authenticated: boolean): boolean {
+  if (authenticated || !(META_PUBLIC_PATHS as readonly string[]).includes(path)) return false;
+  return areMetaParamsSafe(search);
+}
+
+/** Cria o valor do cookie _fbc (fb.<subdomainIndex>.<criação em ms>.<fbclid>). */
+export function buildFbc(fbclid: string | null | undefined, now: number = Date.now()): string | undefined {
+  if (!fbclid || !/^[A-Za-z0-9_.-]+$/.test(fbclid)) return undefined;
+  const value = 'fb.1.' + now + '.' + fbclid;
+  return value.length <= 256 ? value : undefined;
 }
 
 export function createMetaTracker(options: TrackerOptions) {
@@ -39,6 +82,7 @@ export function createMetaTracker(options: TrackerOptions) {
   let leadSent = false;
   const registrations = new WeakMap<RegistrationContext, number>();
   const completed = new WeakSet<RegistrationContext>();
+  const led = new WeakSet<RegistrationContext>();
   const enabled = (eventSource: string) => Boolean(options.pixelId.trim())
     && options.hasConsent() && (options.canSend?.(eventSource) ?? true);
   const emit = (name: MetaEventName, eventSource: string, id: string = crypto.randomUUID(), identity?: Identity) => {
@@ -52,7 +96,7 @@ export function createMetaTracker(options: TrackerOptions) {
         if (signal?.aborted || !options.hasConsent()) return;
 
         const userData: Identity = { ...identity };
-        const fbc = readMetaCookie('_fbc') || createFbcFromFbclid();
+        const fbc = readMetaCookie('_fbc') || persistFbc(createFbcFromFbclid());
         if (fbp) userData.fbp = fbp;
         if (fbc) userData.fbc = fbc;
         await options.send({
@@ -63,6 +107,10 @@ export function createMetaTracker(options: TrackerOptions) {
       } catch { void 0; }
     })();
   };
+  const isContextValid = (context: RegistrationContext | null): boolean =>
+    Boolean(context) && registrations.get(context!) === visit
+    && path === '/register' && isMetaRoute(path, search, false)
+    && context!.source === source && enabled(context!.source);
   return {
     pageView(nextPath: string, nextSearch: string, authenticated: boolean) {
       if (nextPath !== path || nextSearch !== search) {
@@ -74,28 +122,28 @@ export function createMetaTracker(options: TrackerOptions) {
       eligible = isMetaRoute(path, search, authenticated);
       source = window.location.origin + window.location.pathname + '#' + path;
       if (!eligible || !enabled(source)) { lastPage = ''; return; }
-      const key = path + search;
-      if (lastPage === key) return;
-      lastPage = key;
+      // Um PageView por troca de rota (path); mudança só de query na mesma rota não repete.
+      if (lastPage === path) return;
+      lastPage = path;
       emit('PageView', source);
-    },
-    lead() {
-      if (!eligible || path !== '/register' || leadSent || !enabled(source)) return;
-      leadSent = true;
-      emit('Lead', source);
     },
     captureRegistration(): RegistrationContext | null {
       if (!eligible || path !== '/register' || !enabled(source)) return null;
-      const context = { id: crypto.randomUUID(), source };
+      const context = { id: crypto.randomUUID(), leadId: crypto.randomUUID(), source };
       registrations.set(context, visit);
       return context;
     },
+    // Lead: conta criada no servidor (signUp com identidade nova). Uma vez por visita.
+    lead(context: RegistrationContext | null, identity?: Identity) {
+      if (!isContextValid(context) || leadSent || led.has(context!)) return;
+      leadSent = true;
+      led.add(context!);
+      emit('Lead', context!.source, context!.leadId, identity);
+    },
     completeRegistration(context: RegistrationContext | null, identity: Identity) {
-      if (!context || completed.has(context) || registrations.get(context) !== visit
-        || path !== '/register' || !isMetaRoute(path, search, false)
-        || context.source !== source || !enabled(context.source)) return;
-      completed.add(context);
-      emit('CompleteRegistration', context.source, context.id, identity);
+      if (!isContextValid(context) || completed.has(context!)) return;
+      completed.add(context!);
+      emit('CompleteRegistration', context!.source, context!.id, identity);
     },
   };
 }
@@ -115,7 +163,6 @@ declare global {
 }
 
 const pixelId = (import.meta.env.VITE_META_PIXEL_ID || '').trim();
-const META_SEARCH_PARAMS = new Set(['fbclid', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term']);
 const META_COOKIE_VALUE = /^fb\.\d\.\d+\.[A-Za-z0-9_.-]+$/;
 let loaded = false;
 let scopeAllowed = false;
@@ -125,12 +172,16 @@ let pending = new AbortController();
 export function currentMetaSource(): string | null {
   const { pathname, search, hash, origin } = window.location;
   if (!['/', '/index.html'].includes(pathname) || !hash.startsWith('#/')) return null;
-  if (Array.from(new URLSearchParams(search).keys()).some(key => !META_SEARCH_PARAMS.has(key))) return null;
+  // Query externa (anúncios): parâmetros desconhecidos são aceitos, sensíveis não.
+  if (!areMetaParamsSafe(search)) return null;
   const route = hash.slice(1);
+  // Um segundo "#" indica fragmento de auth (ex.: #/x#access_token=...): nunca rastrear.
+  if (route.includes('#')) return null;
   const separator = route.indexOf('?');
   const path = separator < 0 ? route : route.slice(0, separator);
   const query = separator < 0 ? '' : route.slice(separator + 1);
   if (!isMetaRoute(path, query, false)) return null;
+  // Sem query/hash-query: event_source_url e o contexto capturado são sempre sanitizados.
   return origin + pathname + '#' + path;
 }
 
@@ -154,10 +205,18 @@ async function waitForFbpCookie(): Promise<string | undefined> {
 }
 
 function createFbcFromFbclid(): string | undefined {
-  const fbclid = new URLSearchParams(window.location.search).get('fbclid');
-  if (!fbclid || !/^[A-Za-z0-9_.-]+$/.test(fbclid)) return undefined;
-  const value = 'fb.1.' + Date.now() + '.' + fbclid;
-  return value.length <= 256 ? value : undefined;
+  return buildFbc(new URLSearchParams(window.location.search).get('fbclid'));
+}
+
+// Persiste o _fbc construído (90 dias, como o Pixel) para manter o mesmo timestamp nos
+// próximos eventos. Só é chamado depois de conferir o consentimento.
+function persistFbc(value: string | undefined): string | undefined {
+  if (!value || !META_COOKIE_VALUE.test(value) || readConsent() !== 'accepted') return value;
+  try {
+    document.cookie = '_fbc=' + value + '; Max-Age=' + 90 * 24 * 60 * 60 + '; path=/; SameSite=Lax'
+      + (window.location.protocol === 'https:' ? '; Secure' : '');
+  } catch { void 0; }
+  return value;
 }
 
 function canUsePixel(): boolean {

@@ -40,7 +40,9 @@ for (const width of [393, 1280]) {
       form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
       form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     });
-    await expect.poll(async () => page.evaluate(() => window.fbq?.queue.filter(args => args[2] === 'Lead').length)).toBe(1);
+    // Lead só depois da conta criada no servidor (nunca no envio do formulário).
+    await page.waitForTimeout(300);
+    expect(await page.evaluate(() => window.fbq?.queue.filter(args => args[2] === 'Lead').length)).toBe(0);
     await page.getByRole('button', { name: 'Preferências de cookies' }).click();
     await page.getByRole('button', { name: 'Recusar', exact: true }).click();
     await expect.poll(async () => page.evaluate(() => window.fbq?.queue.length)).toBe(0);

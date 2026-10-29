@@ -176,4 +176,25 @@ describe('PublicGroupBooking', () => {
     expect(screen.queryByText(/WhatsApp/i)).toBeNull();
     expect(screen.getByLabelText(/Nome da pessoa 2/)).toBeInTheDocument();
   });
+  it('monta o WhatsApp do pedido com cada pessoa, serviço e profissional escolhido', async () => {
+    const user = userEvent.setup();
+    mutateAsync.mockResolvedValue([
+      { id: 'r1', status: 'pending', appointment_time: '2026-12-15T13:00:00.000Z', professional_id: 'pro-ana', service_ids: ['svc-corte'], total_price: 50, attendee_name: 'Marina Teste' },
+      { id: 'r2', status: 'pending', appointment_time: '2026-12-15T13:00:00.000Z', professional_id: 'pro-bia', service_ids: ['svc-cor', 'svc-barba'], total_price: 150, attendee_name: 'Caio Teste' },
+    ]);
+    const buildWhatsAppHref = vi.fn((_input: any) => 'https://wa.me/5511999990000?text=teste');
+    renderGroup({ buildWhatsAppHref, autoConfirm: false });
+    await fillPeople(user);
+    await pickDateAndTime(user, '10:00');
+    await user.click(screen.getByTestId('group-next'));
+    await user.click(screen.getByTestId('group-submit'));
+    await screen.findByTestId('group-booking-success');
+
+    const input = buildWhatsAppHref.mock.calls.at(-1)![0];
+    expect(input.confirmed).toBe(false);
+    expect(input.people).toEqual([
+      { name: 'Marina Teste', serviceLabel: 'Corte', professionalName: 'Ana Souza', timeLabel: '10:00' },
+      { name: 'Caio Teste', serviceLabel: 'Coloração + Barba', professionalName: 'Bia Lima', timeLabel: '10:00' },
+    ]);
+  });
 });

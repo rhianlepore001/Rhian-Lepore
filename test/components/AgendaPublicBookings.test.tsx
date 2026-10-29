@@ -184,4 +184,42 @@ describe('AgendaPublicBookings', () => {
     );
     expect(screen.getByTestId('agenda-public-booking-pb1')).toHaveAttribute('data-highlighted', 'true');
   });
+  describe('pedido em grupo', () => {
+    const groupRows = [
+      { ...booking, id: 'g1', customer_name: 'Mariana Exemplo', attendee_name: 'Mariana Exemplo', group_id: 'grp-1', group_position: 0, notes: null },
+      { ...booking, id: 'g2', customer_name: 'Mariana Exemplo', attendee_name: 'Ana Exemplo', group_id: 'grp-1', group_position: 1, notes: null },
+      { ...booking, id: 'g3', customer_name: 'Mariana Exemplo', attendee_name: 'Bia Exemplo', group_id: 'grp-1', group_position: 2, notes: null },
+    ];
+
+    it('mostra o nome de cada pessoa e mantém a responsável', () => {
+      render(
+        <AgendaPublicBookings
+          bookings={groupRows}
+          teamMembers={members}
+          services={services}
+          currencyRegion="BR"
+          onAccept={vi.fn()}
+          onReject={vi.fn()}
+        />,
+      );
+      expect(screen.getByText('Mariana Exemplo')).toBeInTheDocument();
+      expect(screen.getByText('Ana Exemplo (responsável: Mariana Exemplo)')).toBeInTheDocument();
+      expect(screen.getByText('Bia Exemplo (responsável: Mariana Exemplo)')).toBeInTheDocument();
+      expect(screen.getAllByText(/Mariana Exemplo/)).toHaveLength(3);
+    });
+
+    it('pedido sem pessoa informada continua mostrando o nome de quem pediu', () => {
+      render(
+        <AgendaPublicBookings
+          bookings={[{ ...booking, attendee_name: null }]}
+          teamMembers={members}
+          services={services}
+          currencyRegion="BR"
+          onAccept={vi.fn()}
+          onReject={vi.fn()}
+        />,
+      );
+      expect(screen.getByText('Maria Silva')).toBeInTheDocument();
+    });
+  });
 });

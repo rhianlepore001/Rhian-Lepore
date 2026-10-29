@@ -36,7 +36,7 @@ export type WhatsAppVariable =
 
 export type WhatsAppTemplateVars = Partial<Record<WhatsAppVariable, string | number | null | undefined>>;
 type TemplatePair = Record<WhatsAppTheme, string>;
-export type TemplateVariant = 'confirmed' | 'vip';
+export type TemplateVariant = 'confirmed' | 'vip' | 'group' | 'group_confirmed';
 export interface WhatsAppTemplateOverride {
   message_key: WhatsAppTemplateKey;
   enabled: boolean;
@@ -125,6 +125,15 @@ const TEMPLATE_VARIANTS: Partial<Record<WhatsAppTemplateKey, Partial<Record<Temp
     confirmed: {
       beauty: 'Olá, {estabelecimento}! Fiz um agendamento online para {servico} com {profissional} em {data} às {hora}.',
       barber: 'Olá, {estabelecimento}! Fiz um agendamento online para {servico} com {profissional} em {data} às {hora}.',
+    },
+    // Pedido para mais de uma pessoa: {servico} traz a lista com cada pessoa, serviço e profissional.
+    group: {
+      beauty: 'Olá, {estabelecimento}! Fiz um agendamento online em {data} às {hora} para {servico}\nPode confirmar, por favor?',
+      barber: 'Olá, {estabelecimento}! Fiz um agendamento online em {data} às {hora} para {servico}\nPode confirmar, por favor?',
+    },
+    group_confirmed: {
+      beauty: 'Olá, {estabelecimento}! Fiz um agendamento online em {data} às {hora} para {servico}',
+      barber: 'Olá, {estabelecimento}! Fiz um agendamento online em {data} às {hora} para {servico}',
     },
   },
   reactivation: {

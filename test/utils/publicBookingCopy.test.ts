@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   getPublicBookingAwaitingWhatsAppText,
+  getPublicGroupBookingWhatsAppText,
+  getOwnerAcceptWhatsAppText,
   getPublicBookingSubmitLabel,
   getPublicBookingSuccessCopy,
 } from '@/utils/publicBookingCopy';
@@ -169,5 +171,95 @@ describe('publicBookingCopy — confirmação automática', () => {
       confirmed: true,
     });
     expect(text).toBe('Olá, Corte Fino! Fiz um agendamento online para Corte tesoura com Mario em 18/09/2026 às 10:00.');
+  });
+  describe('WhatsApp de agendamento em grupo', () => {
+    const people = [
+      { name: 'Mariana Exemplo', serviceLabel: 'Corte Feminino', professionalName: 'Carla Exemplo' },
+      { name: 'Ana Exemplo', serviceLabel: 'Manicure', professionalName: 'Juliana Exemplo' },
+      { name: 'Bia Exemplo', serviceLabel: 'Escova + Hidratação', professionalName: 'Renata Exemplo' },
+    ];
+    const base = { businessName: 'Studio Exemplo', dateLabel: '03/11/2026', timeLabel: '10:00', people };
+
+    it('lista cada pessoa com o serviço e o profissional escolhido', () => {
+      const text = getPublicGroupBookingWhatsAppText({ ...base, theme: 'beauty' });
+      expect(text).toBe([
+        'Olá, Studio Exemplo! Fiz um agendamento online em 03/11/2026 às 10:00 para 3 pessoas:',
+        '• Mariana Exemplo: Corte Feminino com Carla Exemplo',
+        '• Ana Exemplo: Manicure com Juliana Exemplo',
+        '• Bia Exemplo: Escova + Hidratação com Renata Exemplo',
+        '',
+        'Pode confirmar, por favor?',
+      ].join('\n'));
+      expect(text).not.toMatch(/qualquer profissional/i);
+    });
+
+    it('não pede confirmação quando o agendamento já está confirmado', () => {
+      const text = getPublicGroupBookingWhatsAppText({ ...base, theme: 'barber', confirmed: true });
+      expect(text).toContain('• Ana Exemplo: Manicure com Juliana Exemplo');
+      expect(text).not.toMatch(/confirmar/i);
+    });
+
+    it('mostra o horário de quem começa depois do primeiro (mesmo profissional em sequência)', () => {
+      const text = getPublicGroupBookingWhatsAppText({
+        ...base,
+        people: [people[0], { ...people[1], professionalName: 'Carla Exemplo', timeLabel: '10:30' }],
+      });
+      expect(text).toContain('para 2 pessoas:');
+      expect(text).toContain('• Ana Exemplo: Manicure com Carla Exemplo (10:30)');
+      expect(text).not.toContain('(10:00)');
+    });
+
+    it('não inventa profissional quando ele não é conhecido', () => {
+      const text = getPublicGroupBookingWhatsAppText({ ...base, people: [{ ...people[0], professionalName: null }, people[1]] });
+      expect(text).toContain('• Mariana Exemplo: Corte Feminino\n');
+      expect(text).not.toMatch(/qualquer profissional/i);
+    });
+
+    it('mantém todas as pessoas mesmo com muitos serviços', () => {
+      const many = Array.from({ length: 5 }, (_, i) => ({
+        name: `Pessoa Exemplo ${i + 1}`,
+        serviceLabel: 'Corte Feminino + Escova + Hidratação + Manicure + Pedicure',
+        professionalName: 'Profissional Exemplo Com Nome Bem Longo',
+      }));
+      const text = getPublicGroupBookingWhatsAppText({ ...base, people: many });
+      many.forEach(person => expect(text).toContain(`• ${person.name}: ${person.serviceLabel} com ${person.professionalName}`));
+    });
+
+    it('respeita o texto personalizado pelo dono, sem repetir o profissional', () => {
+      const text = getPublicGroupBookingWhatsAppText({
+        ...base,
+        template: { message_key: 'client_request_confirm', enabled: true, body: 'Oi, {estabelecimento}! Agendei {servico} com {profissional} em {data} às {hora}.' },
+      });
+      expect(text).toBe('Oi, Studio Exemplo! Agendei 3 pessoas: Mariana Exemplo (Corte Feminino com Carla Exemplo); Ana Exemplo (Manicure com Juliana Exemplo); Bia Exemplo (Escova + Hidratação com Renata Exemplo) em 03/11/2026 às 10:00.');
+    });
+
+    it('devolve vazio quando o dono desativou essa mensagem', () => {
+      expect(getPublicGroupBookingWhatsAppText({ ...base, template: { message_key: 'client_request_confirm', enabled: false, body: null } })).toBe('');
+    });
+  });
+
+  describe('WhatsApp do aceite para quem foi atendido', () => {
+    const input = {
+      isBeauty: true,
+      customerName: 'Mariana Exemplo',
+      businessName: 'Studio Exemplo',
+      appointmentTime: '2026-11-03T10:00:00.000Z',
+      timeZone: 'Europe/Lisbon',
+      serviceNames: 'Manicure',
+      priceLabel: '40,00',
+      currencySymbol: 'R$',
+      establishmentFallback: 'o estabelecimento',
+    };
+
+    it('diz para quem é o atendimento quando a pessoa é diferente do responsável', () => {
+      const text = getOwnerAcceptWhatsAppText({ ...input, attendeeName: 'Ana Exemplo' });
+      expect(text).toContain('Olá Mariana Exemplo!');
+      expect(text).toMatch(/Atendimento para Ana Exemplo\.$/);
+    });
+
+    it('não muda nada quando a pessoa é a própria responsável', () => {
+      expect(getOwnerAcceptWhatsAppText({ ...input, attendeeName: 'Mariana Exemplo' })).toBe(getOwnerAcceptWhatsAppText(input));
+      expect(getOwnerAcceptWhatsAppText({ ...input, attendeeName: null })).toBe(getOwnerAcceptWhatsAppText(input));
+    });
   });
 });

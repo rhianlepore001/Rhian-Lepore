@@ -49,3 +49,17 @@ export async function discardImportBatch(companyId: string, batchId: string): Pr
   const { error } = await supabase.from('import_batches').delete().eq('company_id', companyId).eq('id', batchId).in('status', ['preparing', 'review']);
   if (error) throw new Error('Não foi possível remover os dados preparados. Tente novamente.');
 }
+
+export type SavedImportMapping = Record<string, string[]>;
+
+export async function saveImportMapping(companyId: string, source: ImportSource, kind: ImportKind, mapping: SavedImportMapping): Promise<void> {
+  if (!companyId || !Object.keys(mapping).length || Object.keys(mapping).length > 30
+    || Object.entries(mapping).some(([field, columns]) => !field || field.length > 100 || !Array.isArray(columns)
+      || columns.length > 20 || columns.some(column => typeof column !== 'string' || !column.trim() || column.length > 255))) {
+    throw new Error('Confira as informações antes de salvar.');
+  }
+  const { error } = await supabase.from('import_column_mappings').upsert({
+    company_id: companyId, source, kind, mapping, updated_at: new Date().toISOString(),
+  }, { onConflict: 'company_id,source,kind' });
+  if (error) throw new Error('Não foi possível salvar as escolhas. Tente novamente.');
+}

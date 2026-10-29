@@ -52,3 +52,19 @@ describe('limpeza da preparação', () => {
     expect(state.from).not.toHaveBeenCalled();
   });
 });
+
+describe('mapeamento salvo', () => {
+  it('salva os campos escolhidos por empresa, origem e tipo', async () => {
+    const upsert = vi.fn().mockResolvedValue({ error: null });
+    state.from.mockReturnValue({ upsert });
+    const { saveImportMapping } = await import('../../services/importStaging');
+    await saveImportMapping('empresa-ficticia', 'fresha', 'client', { name: ['Nome'], phone: ['Celular', 'Telefone'] });
+    expect(state.from).toHaveBeenCalledWith('import_column_mappings');
+    expect(upsert).toHaveBeenCalledWith(expect.objectContaining({ company_id: 'empresa-ficticia', source: 'fresha', kind: 'client', mapping: { name: ['Nome'], phone: ['Celular', 'Telefone'] } }), { onConflict: 'company_id,source,kind' });
+  });
+  it('rejeita mapeamento sem empresa', async () => {
+    const { saveImportMapping } = await import('../../services/importStaging');
+    await expect(saveImportMapping('', 'fresha', 'client', { name: ['Nome'] })).rejects.toThrow();
+    expect(state.from).not.toHaveBeenCalled();
+  });
+});

@@ -17,6 +17,7 @@ import {
   getActiveBookingByPhone,
   getFirstAvailableProfessional,
   submitPublicBooking,
+  submitPublicGroupBooking,
   uploadClientPhoto,
 } from '@/services/publicBooking';
 
@@ -24,6 +25,13 @@ export function useSubmitPublicBooking() {
   return useMutation({
     mutationKey: ['public-booking', 'submit'],
     mutationFn: submitPublicBooking,
+  });
+}
+
+export function useSubmitPublicGroupBooking() {
+  return useMutation({
+    mutationKey: ['public-booking', 'submit-group'],
+    mutationFn: submitPublicGroupBooking,
   });
 }
 

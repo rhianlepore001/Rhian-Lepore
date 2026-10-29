@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useBusinessSettings, useUpdateBusinessSettings } from '../../hooks/useSettings';
 import { BusinessHoursEditor } from '../BusinessHoursEditor';
 import { useToast } from '../ui/Toast';
 import { logger } from '../../utils/Logger';
@@ -25,6 +26,9 @@ export const StepBusinessHours: React.FC<StepBusinessHoursProps> = ({ onNext, on
     const { user } = useAuth();
     const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
+    const { data: settings } = useBusinessSettings();
+    const updateSettings = useUpdateBusinessSettings();
+    const touched = useRef(false);
     const [businessHours, setBusinessHours] = useState<any>({
         mon: defaultHours,
         tue: defaultHours,
@@ -35,6 +39,17 @@ export const StepBusinessHours: React.FC<StepBusinessHoursProps> = ({ onNext, on
         sun: { isOpen: false, blocks: [] },
     });
 
+    useEffect(() => {
+        const saved = settings?.business_hours;
+        if (touched.current || !saved || Object.keys(saved).length === 0) return;
+        setBusinessHours(saved);
+    }, [settings]);
+
+    const handleChange = (next: any) => {
+        touched.current = true;
+        setBusinessHours(next);
+    };
+
     const handleSubmit = async () => {
         if (!user) return;
         setLoading(true);
@@ -42,12 +57,9 @@ export const StepBusinessHours: React.FC<StepBusinessHoursProps> = ({ onNext, on
         try {
             logger.info('Saving business hours', { businessHours });
 
-            const { error: settingsError } = await supabase.from('business_settings').upsert({
-                user_id: user.id,
-                business_hours: businessHours
-            }, { onConflict: 'user_id' });
-
-            if (settingsError) {
+            try {
+                await updateSettings.mutateAsync({ business_hours: businessHours });
+            } catch (settingsError) {
                 logger.error('Error saving business hours', settingsError);
                 showToast('Erro ao salvar horários. Por favor, tente novamente.', 'error');
                 setLoading(false);
@@ -78,7 +90,7 @@ export const StepBusinessHours: React.FC<StepBusinessHoursProps> = ({ onNext, on
         <div className="space-y-6">
             <BusinessHoursEditor
                 hours={businessHours}
-                onChange={setBusinessHours}
+                onChange={handleChange}
             />
 
             <div className="flex gap-4 pt-4">

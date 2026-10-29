@@ -68,3 +68,16 @@ describe('mapeamento salvo', () => {
     expect(state.from).not.toHaveBeenCalled();
   });
 });
+
+it('consulta o mapeamento apenas na empresa, origem e tipo atuais', async () => {
+  const maybeSingle = vi.fn().mockResolvedValue({ data: { mapping: { phone: ['Celular'] } }, error: null });
+  const eqKind = vi.fn().mockReturnValue({ maybeSingle });
+  const eqSource = vi.fn().mockReturnValue({ eq: eqKind });
+  const eqCompany = vi.fn().mockReturnValue({ eq: eqSource });
+  state.from.mockReturnValue({ select: vi.fn().mockReturnValue({ eq: eqCompany }) });
+  const { loadImportMapping } = await import('../../services/importStaging');
+  expect(await loadImportMapping('empresa-ficticia', 'fresha', 'client')).toEqual({ phone: ['Celular'] });
+  expect(eqCompany).toHaveBeenCalledWith('company_id', 'empresa-ficticia');
+  expect(eqSource).toHaveBeenCalledWith('source', 'fresha');
+  expect(eqKind).toHaveBeenCalledWith('kind', 'client');
+});

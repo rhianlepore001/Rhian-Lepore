@@ -63,3 +63,17 @@ export async function saveImportMapping(companyId: string, source: ImportSource,
   }, { onConflict: 'company_id,source,kind' });
   if (error) throw new Error('Não foi possível salvar as escolhas. Tente novamente.');
 }
+
+export async function loadImportMapping(companyId: string, source: ImportSource, kind: ImportKind): Promise<SavedImportMapping | null> {
+  if (!companyId) throw new Error('Não foi possível identificar a empresa.');
+  const { data, error } = await supabase.from('import_column_mappings').select('mapping')
+    .eq('company_id', companyId).eq('source', source).eq('kind', kind).maybeSingle();
+  if (error) throw new Error('Não foi possível carregar as escolhas. Tente novamente.');
+  if (!data) return null;
+  const mapping: unknown = data.mapping;
+  if (!mapping || typeof mapping !== 'object' || Array.isArray(mapping)
+    || Object.values(mapping).some(columns => !Array.isArray(columns) || columns.some(column => typeof column !== 'string'))) {
+    throw new Error('Não foi possível carregar as escolhas. Tente novamente.');
+  }
+  return mapping as SavedImportMapping;
+}

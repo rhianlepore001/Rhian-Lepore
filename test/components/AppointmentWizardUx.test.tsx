@@ -248,17 +248,63 @@ describe('AppointmentWizard: dependentes e sequência', () => {
     await next();
     await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Para quem?' }), 'dep-a');
     await userEvent.click(screen.getByText('Corte Social'));
-    await userEvent.click(screen.getByRole('button', { name: 'Adicionar pessoa em sequência' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Adicionar outra pessoa' }));
     expect(screen.getByRole('button', { name: 'Continuar' })).toBeDisabled();
-    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Para quem? Pessoa 2' }), 'dep-b');
-    await userEvent.click(screen.getByRole('checkbox', { name: /Corte Social/ }));
+    const card = within(screen.getByTestId('extra-attendee-card'));
+    await userEvent.selectOptions(card.getByRole('combobox', { name: 'Para quem?' }), 'dep-b');
+    await userEvent.click(card.getByText('Corte Social'));
     await next();
-    expect(screen.getByText(/Dependente Fictício B · Corte Social · 10:30/)).toBeInTheDocument();
+    const rows = screen.getAllByTestId('group-review-person');
+    expect(rows).toHaveLength(2);
+    expect(rows[1]).toHaveTextContent(/Dependente Fictício B/);
+    expect(rows[1]).toHaveTextContent(/Corte Social/);
+    expect(rows[1]).toHaveTextContent(/10:30/);
     expect(screen.getByTestId('wizard-footer-total')).toHaveTextContent(/80,00/);
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar Atendimento' }));
     expect(mutateAsync).toHaveBeenCalledWith(expect.objectContaining({ clientId: 'cli-bruno', attendees: [
       { dependentId: 'dep-a', serviceIds: ['s-corte'], totalPrice: 40 },
       { dependentId: 'dep-b', serviceIds: ['s-corte'], totalPrice: 40 },
     ] }));
+  });
+  it('cada pessoa escolhe serviços como o titular e pode ter outro profissional, ao mesmo tempo', async () => {
+    render(<AppointmentWizard {...props} initialDate={new Date(2026, 10, 1)} initialProfessionalId="pro-bob" initialTime="10:00" slotContext="Horário disponível" />);
+    await userEvent.click(screen.getByRole('button', { name: 'cliente Bruno' }));
+    await next();
+    await userEvent.click(screen.getByText('Corte Social'));
+    await userEvent.click(screen.getByRole('button', { name: 'Adicionar outra pessoa' }));
+    const card = within(screen.getByTestId('extra-attendee-card'));
+    expect(card.getByRole('textbox', { name: 'Buscar serviço' })).toBeInTheDocument();
+    expect(card.getByRole('group', { name: 'Filtrar por categoria' })).toBeInTheDocument();
+    expect(card.queryByText('Serviço avulso')).not.toBeInTheDocument();
+    await userEvent.selectOptions(card.getByRole('combobox', { name: 'Para quem?' }), 'dep-b');
+    await userEvent.click(card.getByText('Corte Social'));
+    await userEvent.selectOptions(card.getByTestId('extra-attendee-professional'), 'pro-ana');
+    await next();
+    const rows = screen.getAllByTestId('group-review-person');
+    expect(rows[0]).toHaveTextContent(/Bob/);
+    expect(rows[0]).toHaveTextContent(/10:00/);
+    expect(rows[1]).toHaveTextContent(/Ana/);
+    expect(rows[1]).toHaveTextContent(/10:00/);
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar Atendimento' }));
+    expect(mutateAsync).toHaveBeenCalledWith(expect.objectContaining({ professionalId: 'pro-bob', attendees: [
+      { dependentId: null, serviceIds: ['s-corte'], totalPrice: 40 },
+      { dependentId: 'dep-b', serviceIds: ['s-corte'], totalPrice: 40, professionalId: 'pro-ana' },
+    ] }));
+  });
+  it('conflito de um profissional mostra o aviso e não confirma nada', async () => {
+    mutateAsync.mockResolvedValue({ success: false, code: 'sequence_slot_unavailable', message: 'O horário com Ana já está ocupado. Escolha outro horário ou outro profissional.' });
+    render(<AppointmentWizard {...props} initialDate={new Date(2026, 10, 1)} initialProfessionalId="pro-bob" initialTime="10:00" slotContext="Horário disponível" />);
+    await userEvent.click(screen.getByRole('button', { name: 'cliente Bruno' }));
+    await next();
+    await userEvent.click(screen.getByText('Corte Social'));
+    await userEvent.click(screen.getByRole('button', { name: 'Adicionar outra pessoa' }));
+    const card = within(screen.getByTestId('extra-attendee-card'));
+    await userEvent.selectOptions(card.getByRole('combobox', { name: 'Para quem?' }), 'dep-b');
+    await userEvent.click(card.getByText('Corte Social'));
+    await userEvent.selectOptions(card.getByTestId('extra-attendee-professional'), 'pro-ana');
+    await next();
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar Atendimento' }));
+    await waitFor(() => expect(showToast).toHaveBeenCalledWith('O horário com Ana já está ocupado. Escolha outro horário ou outro profissional.', 'warning'));
+    expect(onSuccess).not.toHaveBeenCalled();
   });
 });

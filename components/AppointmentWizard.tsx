@@ -14,6 +14,8 @@ import {
     X, ChevronLeft, Loader2, Check
 } from 'lucide-react';
 import { AttendeePicker } from './appointment/AttendeePicker';
+import { ExtraAttendeeCard } from './appointment/ExtraAttendeeCard';
+import { GroupReview, type GroupReviewRow } from './appointment/GroupReview';
 import { buildAttendeeSequence, type AttendeeSelection } from '@/utils/appointmentAttendees';
 import { WizardProps } from './appointment/types';
 import { formatCurrency } from '../utils/formatters';
@@ -168,6 +170,19 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
         setCustomPrice((basePrice + extraPrice).toFixed(2));
     }, [formDraft.hydrated, basePrice, customServicePrice, isCustomService]);
 
+    const serviceMinutes = (ids: string[]) => services.filter(service => ids.includes(service.id)).reduce((sum, service) => sum + (service.duration_minutes || 30), 0);
+    const extraPrice = extraAttendees.reduce((total, person) => total + services.filter(service => person.serviceIds.includes(service.id)).reduce((sum, service) => sum + service.price, 0), 0);
+    const finalPrice = parseFloat(customPrice || '0') * (1 - (parseFloat(discount || '0') / 100));
+    const firstDuration = capBookingDuration(selectedServicesDetails.reduce((sum, s) => sum + (s.duration_minutes || 30), 0) || 30);
+    const sameProfessionalExtraDuration = extraAttendees
+        .filter(person => !person.professionalId || person.professionalId === selectedProId)
+        .reduce((total, person) => total + serviceMinutes(person.serviceIds), 0);
+    const durationMinutes = firstDuration + sameProfessionalExtraDuration;
+    const professionalNameOf = (id: string) => {
+        const member = teamMembers.find(item => item.id === id);
+        return member?.name || member?.full_name || 'Profissional';
+    };
+
     // Auto-select professional when entering schedule step (parity: 1 pro or RPC)
     useEffect(() => {
         if (step !== 3 || selectedProId) return;
@@ -186,9 +201,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
 
         (async () => {
             try {
-                const duration = capBookingDuration(services
-                    .filter(s => selectedServiceIds.includes(s.id))
-                    .reduce((sum, s) => sum + (s.duration_minutes || 30), 0) || 30) + extraAttendees.reduce((total, person) => total + services.filter(service => person.serviceIds.includes(service.id)).reduce((sum, service) => sum + (service.duration_minutes || 30), 0), 0);
+                const duration = durationMinutes;
                 // Mesmo instante que o handleSubmit grava (data/hora locais do
                 // dispositivo da equipe). Antes: data em UTC + offset fixo por
                 // região, que em PT no verão checava 1h depois do horário real.
@@ -216,16 +229,9 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
         companyId,
         user?.id,
         selectedDate,
-        selectedServiceIds,
-        extraAttendees,
-        services,
+        durationMinutes,
     ]);
 
-    const extraDuration = extraAttendees.reduce((total, person) => total + services.filter(service => person.serviceIds.includes(service.id)).reduce((sum, service) => sum + (service.duration_minutes || 30), 0), 0);
-    const extraPrice = extraAttendees.reduce((total, person) => total + services.filter(service => person.serviceIds.includes(service.id)).reduce((sum, service) => sum + service.price, 0), 0);
-    const finalPrice = parseFloat(customPrice || '0') * (1 - (parseFloat(discount || '0') / 100));
-    const firstDuration = capBookingDuration(selectedServicesDetails.reduce((sum, s) => sum + (s.duration_minutes || 30), 0) || 30);
-    const durationMinutes = firstDuration + extraDuration;
     const { data: agendaBlocks = [] } = useAgendaBlocks(formatLocalDateString(selectedDate));
 
     const handleSubmit = async () => {
@@ -262,7 +268,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
                 ...(dependentId ? { dependentId, attendeeName } : {}),
                 ...(extraAttendees.length ? { attendees: [
                     { dependentId: dependentId || null, serviceIds: selectedServiceIds, totalPrice: finalPrice || 0 },
-                    ...buildAttendeeSequence(dateTime, extraAttendees, services).map(person => ({ dependentId: person.dependentId, serviceIds: person.serviceIds, totalPrice: person.totalPrice })),
+                    ...buildAttendeeSequence(dateTime, extraAttendees, services).map(person => ({ dependentId: person.dependentId, serviceIds: person.serviceIds, totalPrice: person.totalPrice, ...(person.professionalId ? { professionalId: person.professionalId } : {}) })),
                 ] } : {}),
                 status: 'Confirmed',
                 clientId: selectedClientId,
@@ -350,6 +356,25 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
             setLoading(false);
         }
     };
+
+    const groupReviewRows: GroupReviewRow[] = (() => {
+        if (step !== 4 || extraAttendees.length === 0 || !selectedTime) return [];
+        const start = combineDateAndTime(formatLocalDateString(selectedDate), selectedTime);
+        const holderName = clients.find(client => client.id === selectedClientId)?.name || 'Titular';
+        const timeOf = (date: Date) => date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        const sequence = buildAttendeeSequence(start, [
+            { dependentId: dependentId || null, name: attendeeName || holderName, serviceIds: selectedServiceIds, professionalId: selectedProId },
+            ...extraAttendees.filter(person => person.serviceIds.length).map(person => ({ ...person, professionalId: person.professionalId || selectedProId })),
+        ], services);
+        return sequence.map((person, index) => ({
+            key: `${index}-${person.dependentId || 'self'}`,
+            name: person.name || holderName,
+            services: services.filter(service => person.serviceIds.includes(service.id)).map(service => service.name).join(', '),
+            professional: professionalNameOf(person.professionalId || selectedProId),
+            time: timeOf(person.appointmentTime),
+            price: index === 0 ? finalPrice || 0 : person.totalPrice,
+        }));
+    })();
 
     return (
         <Modal
@@ -505,13 +530,27 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                         </div>
                     )}
 
-                    {step === 2 && <div className="space-y-4 mt-4">
-                        {extraAttendees.map((person, index) => <div key={person.key} className="p-3 border border-[var(--color-divider)] rounded-lg">
-                            <AttendeePicker companyId={companyId ?? user?.id ?? ''} clientId={selectedClientId} clientName={clients.find(client => client.id === selectedClientId)?.name || 'Titular'} value={person.dependentId || ''} snapshot={person.name} label={`Para quem? Pessoa ${index + 2}`} onChange={(id, name) => setExtraAttendees(rows => rows.map(row => row.key === person.key ? { ...row, dependentId: id || null, name } : row))} />
-                            <fieldset className="space-y-2 text-theme-text"><legend className="text-sm font-bold">Serviços desta pessoa</legend>{services.map(service => <label key={service.id} className="flex items-center gap-2 min-h-[44px] text-sm"><input type="checkbox" checked={person.serviceIds.includes(service.id)} onChange={event => setExtraAttendees(rows => rows.map(row => row.key === person.key ? { ...row, serviceIds: event.target.checked ? [...row.serviceIds, service.id] : row.serviceIds.filter(id => id !== service.id) } : row))} />{service.name} · {formatCurrency(service.price, currencyRegion)}</label>)}</fieldset>
-                            <Button size="sm" variant="ghost" onClick={() => setExtraAttendees(rows => rows.filter(row => row.key !== person.key))}>Remover pessoa</Button>
-                        </div>)}
-                        {!isCustomService && extraAttendees.length < 9 && <Button variant="ghost" onClick={() => setExtraAttendees(rows => [...rows, { key: crypto.randomUUID(), dependentId: null, name: clients.find(client => client.id === selectedClientId)?.name || 'Titular', serviceIds: [] }])}>Adicionar pessoa em sequência</Button>}
+                    {step === 2 && <div className="space-y-4 mt-6">
+                        {extraAttendees.map((person, index) => (
+                            <ExtraAttendeeCard
+                                key={person.key}
+                                index={index}
+                                person={person}
+                                companyId={companyId ?? user?.id ?? ''}
+                                clientId={selectedClientId}
+                                clientName={clients.find(client => client.id === selectedClientId)?.name || 'Titular'}
+                                services={services}
+                                categories={categories}
+                                teamMembers={teamMembers}
+                                holderProfessionalName={selectedProId ? professionalNameOf(selectedProId) : undefined}
+                                isBeauty={isBeauty}
+                                accentColor={accent.text}
+                                currencyRegion={currencyRegion}
+                                onChange={patch => setExtraAttendees(rows => rows.map(row => row.key === person.key ? { ...row, ...patch } : row))}
+                                onRemove={() => setExtraAttendees(rows => rows.filter(row => row.key !== person.key))}
+                            />
+                        ))}
+                        {!isCustomService && extraAttendees.length < 9 && <Button variant="ghost" onClick={() => setExtraAttendees(rows => [...rows, { key: crypto.randomUUID(), dependentId: null, name: clients.find(client => client.id === selectedClientId)?.name || 'Titular', serviceIds: [] }])}>{extraAttendees.length ? 'Adicionar mais uma pessoa' : 'Adicionar outra pessoa'}</Button>}
                     </div>}
 
                     {/* STEP 3: SCHEDULE */}
@@ -540,9 +579,9 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
 
                     {step === 4 && <div className="mb-4 text-theme-text text-sm space-y-2">
                         <p className="font-bold">Responsável: {clients.find(client => client.id === selectedClientId)?.name}</p>
-                        <p>Atendido(a): {attendeeName || clients.find(client => client.id === selectedClientId)?.name} · {selectedServicesDetails.map(service => service.name).join(', ') || customServiceName} · {selectedTime}</p>
-                        {extraAttendees.length > 0 && buildAttendeeSequence(new Date(combineDateAndTime(formatLocalDateString(selectedDate), selectedTime).getTime() + firstDuration * 60_000), extraAttendees.filter(person => person.serviceIds.length), services).map(person => <p key={person.dependentId || 'self'}>{person.name} · {services.filter(service => person.serviceIds.includes(service.id)).map(service => service.name).join(', ')} · {person.appointmentTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} · {formatCurrency(person.totalPrice, currencyRegion)}</p>)}
+                        {extraAttendees.length === 0 && <p>Atendido(a): {attendeeName || clients.find(client => client.id === selectedClientId)?.name} · {selectedServicesDetails.map(service => service.name).join(', ') || customServiceName} · {selectedTime}</p>}
                     </div>}
+                    {step === 4 && extraAttendees.length > 0 && <GroupReview rows={groupReviewRows} currencyRegion={currencyRegion} accentColor={accent.text} />}
                     {/* STEP 4: REVIEW */}
                     {step === 4 && (
                         <AppointmentReview

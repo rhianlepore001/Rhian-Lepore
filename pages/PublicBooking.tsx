@@ -53,6 +53,7 @@ import {
     leadTimeViolationMessageMinutes,
 } from '../utils/bookingLeadTime';
 import { Checkbox, ConfirmModal, Button, useToast } from '@/components/ui';
+import { PublicGroupBooking } from '@/components/booking/PublicGroupBooking';
 import { PublicBookingMemberships } from '@/components/membership/PublicBookingMemberships';
 import FocusTrap from 'focus-trap-react';
 
@@ -196,6 +197,8 @@ export const PublicBooking: React.FC = () => {
     // Mantido estado interno para compatibilidade com componentes legados, mas sempre 'quick'.
     const [bookingMode, setBookingMode] = useState<'chat' | 'quick'>('quick');
     const [quickStep, setQuickStep] = useState<'services' | 'professional' | 'datetime' | 'contact' | 'success'>('services');
+    const [groupMode, setGroupMode] = useState(false);
+    const [groupBooked, setGroupBooked] = useState(false);
 
     const { client, register, login, establishSession, hydrateFromStorage } = usePublicClient();
 
@@ -235,10 +238,10 @@ export const PublicBooking: React.FC = () => {
         // Acabou de agendar nesta visita: fica na tela de confirmação (que tem o
         // atalho para a Minha Área). O redirecionamento continua valendo para quem
         // já chega logado no link.
-        if (step === 'success') return;
+        if (step === 'success' || groupBooked) return;
         if (!shouldLandOnClientArea({ isLoggedInForBusiness: true, searchParams })) return;
         navigate(`/minha-area/${slug}`, { replace: true });
-    }, [slug, businessId, client, searchParams, navigate, step]);
+    }, [slug, businessId, client, searchParams, navigate, step, groupBooked]);
 
     // Carrega agendamento diretamente pela tabela quando há ?edit= na URL e o cliente está logado
     useEffect(() => {
@@ -965,7 +968,7 @@ export const PublicBooking: React.FC = () => {
             />
 
             {/* QUICK DIRECT FLOW */}
-            {bookingMode === 'quick' && quickStep !== 'success' && (
+            {bookingMode === 'quick' && quickStep !== 'success' && !groupMode && (
                 <div className="container mx-auto px-3 md:px-6 max-w-4xl lg:max-w-5xl relative z-10 pt-4 md:pt-8 pb-40">
                     {/* Quick Stepper */}
                     <div className={`sticky top-0 z-[60] w-full border-b ${colors.divider} ${colors.bg}/95 backdrop-blur-md mb-6 md:mb-8`}>
@@ -998,6 +1001,24 @@ export const PublicBooking: React.FC = () => {
                                 <h2 className={`text-2xl md:text-3xl font-black tracking-tight mb-2 ${colors.text}`}>Escolha seus serviços</h2>
                                 <p className={`${colors.textMuted} text-sm`}>Selecione um ou mais serviços para seu atendimento.</p>
                             </div>
+
+                            {!editingBookingId && professionals.length > 0 && services.length > 0 && (
+                                <button
+                                    type="button"
+                                    data-testid="group-booking-entry"
+                                    onClick={() => setGroupMode(true)}
+                                    className={`w-full min-h-14 flex items-center gap-3 px-4 py-3 rounded-2xl border text-left ${colors.card} ${colors.border} ${shadow.card}`}
+                                >
+                                    <span className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${accent.bgDim} ${accent.text}`}>
+                                        <Users className="w-5 h-5" />
+                                    </span>
+                                    <span className="flex-1 min-w-0">
+                                        <span className={`block font-bold ${colors.text}`}>Agendar para mais de uma pessoa</span>
+                                        <span className={`block text-xs ${colors.textMuted}`}>Cada pessoa escolhe seus serviços e o profissional.</span>
+                                    </span>
+                                    <ArrowRight className={`w-5 h-5 shrink-0 ${colors.textMuted}`} />
+                                </button>
+                            )}
 
                             <input type="search" aria-label="Buscar serviço" placeholder="Buscar serviço..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className={classes.input} />
 
@@ -1356,7 +1377,7 @@ export const PublicBooking: React.FC = () => {
             )}
 
             {/* Quick Flow Bottom Navigation — uma CTA por passo (no confirm = submit) */}
-            {bookingMode === 'quick' && quickStep !== 'success' && (
+            {bookingMode === 'quick' && quickStep !== 'success' && !groupMode && (
                 <div className="fixed bottom-0 left-0 right-0 w-full" style={{ zIndex: 'var(--z-modal)' }}>
                     <div
                         className={`${colors.bg}/95 backdrop-blur-xl border-t ${colors.divider} px-4 pt-3`}
@@ -2100,6 +2121,46 @@ export const PublicBooking: React.FC = () => {
                         <GoogleReviewPrompt businessName={business.business_name} isBeauty={isBeauty} googlePlaceId={businessSettings?.google_place_id} />
                     </div>
                 </div>
+            )}
+
+            {groupMode && businessId && (
+                <PublicGroupBooking
+                    businessId={businessId}
+                    userType={business?.user_type}
+                    isBeauty={isBeauty}
+                    currencyRegion={currencyRegion}
+                    timezone={businessTimezone}
+                    services={services as any}
+                    categories={categories as any}
+                    professionals={professionals}
+                    isLoggedIn={Boolean(client)}
+                    customerName={customerName}
+                    setCustomerName={setCustomerName}
+                    customerPhone={customerPhone}
+                    setCustomerPhone={setCustomerPhone}
+                    acceptedPolicy={acceptedPolicy}
+                    setAcceptedPolicy={setAcceptedPolicy}
+                    inlinePolicy={inlinePolicy}
+                    onOpenPolicy={() => setShowPolicyModal(true)}
+                    autoConfirm={autoConfirm}
+                    onBooked={() => { setGroupBooked(true); return establishClientSession(client?.photo_url ?? null); }}
+                    onOpenClientArea={handleOpenClientArea}
+                    onExit={() => setGroupMode(false)}
+                    buildWhatsAppHref={({ confirmed, dateLabel, timeLabel, serviceLabel }) => {
+                        if (!business?.phone) return null;
+                        const text = getPublicBookingAwaitingWhatsAppText({
+                            template: whatsapp.templates.client_request_confirm,
+                            confirmed,
+                            theme: isBeauty ? 'beauty' : 'barber',
+                            businessName: business.business_name || '',
+                            dateLabel,
+                            timeLabel,
+                            serviceLabel,
+                            professionalName: null,
+                        });
+                        return buildWhatsAppLink(business.phone, currencyRegion, text);
+                    }}
+                />
             )}
 
             {/* Policy Modal */}

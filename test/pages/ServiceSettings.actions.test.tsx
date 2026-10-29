@@ -110,6 +110,16 @@ describe('ServiceSettings actions', () => {
     expect(screen.getByRole('button', { name: /Desativar serviço Corte/i })).toBeVisible();
   });
 
+  it('mantém o preço do serviço em uma linha só (sem quebrar "R$" do valor)', () => {
+    render(<ServiceSettings />);
+
+    const price = screen.getByTestId('service-price-svc-1');
+    expect(price.textContent).toMatch(/R\$\s?50,00/);
+    expect(price.className).toMatch(/whitespace-nowrap/);
+    const duration = screen.getByTestId('service-duration-svc-1');
+    expect(duration.className).toMatch(/whitespace-nowrap/);
+  });
+
   it('exibe botão de renomear categoria', () => {
     render(<ServiceSettings />);
     expect(screen.getByTestId('category-rename-cat-1')).toBeVisible();

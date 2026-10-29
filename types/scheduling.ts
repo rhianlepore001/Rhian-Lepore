@@ -36,6 +36,7 @@ export const internalAttendeeInputSchema = z.object({
   serviceIds: z.array(z.string().min(1)),
   totalPrice: moneyAmountSchema,
   customServiceName: z.string().trim().nullish(),
+  professionalId: z.string().nullish(),
 });
 
 export const createAppointmentInputSchema = z.object({

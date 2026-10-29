@@ -118,12 +118,19 @@ export async function createAppointment(input: CreateAppointmentInput): Promise<
   if (parsed.attendees || parsed.dependentId) {
     if (!parsed.clientId) throw new Error('Selecione o titular.');
     const attendees = parsed.attendees ?? [{ dependentId: parsed.dependentId, serviceIds: parsed.serviceIds, totalPrice: parsed.totalPrice, customServiceName: parsed.customServiceName }];
-    const { data, error } = await supabase.rpc('create_internal_attendee_bookings', {
+    const perProfessional = attendees.some(person => person.professionalId && person.professionalId !== parsed.professionalId);
+    const { data, error } = await supabase.rpc(perProfessional ? 'create_internal_attendee_bookings_v2' : 'create_internal_attendee_bookings', {
       p_business_id: parsed.companyId,
       p_client_id: parsed.clientId,
       p_professional_id: parsed.professionalId,
       p_appointment_time: parsed.appointmentTime.toISOString(),
-      p_attendees: attendees.map(person => ({ dependent_id: person.dependentId || null, service_ids: person.serviceIds, total_price: person.totalPrice, custom_service_name: person.customServiceName || null })),
+      p_attendees: attendees.map(person => ({
+        dependent_id: person.dependentId || null,
+        service_ids: person.serviceIds,
+        total_price: person.totalPrice,
+        custom_service_name: person.customServiceName || null,
+        ...(perProfessional ? { professional_id: person.professionalId || parsed.professionalId } : {}),
+      })),
       p_notes: parsed.notes ?? null,
     });
     if (error) throw error;

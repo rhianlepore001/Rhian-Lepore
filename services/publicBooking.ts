@@ -6,11 +6,14 @@ import { isMissingRpcError } from '@/utils/supabaseRpc';
 import {
   createAcceptedAppointmentInputSchema,
   submitPublicBookingInputSchema,
+  submitPublicGroupBookingInputSchema,
   type CreateAcceptedAppointmentInput,
   type PublicBookingRecord,
   type SubmitPublicBookingInput,
+  type SubmitPublicGroupBookingInput,
 } from '@/types/publicBooking';
 import { filterBookableServices } from '@/utils/filterBookableServices';
+import { isPricedService } from '@/utils/groupBooking';
 import { addDaysToDateString } from '@/utils/businessTimezone';
 
 function firstRpcRow<T>(data: T[] | T | null | undefined): T | null {
@@ -228,6 +231,35 @@ export async function submitPublicBooking(input: SubmitPublicBookingInput): Prom
     throw new Error('Booking created but could not be retrieved');
   }
   return created;
+}
+
+export async function submitPublicGroupBooking(input: SubmitPublicGroupBookingInput): Promise<PublicBookingRecord[]> {
+  const parsed = submitPublicGroupBookingInputSchema.parse(input);
+  const { data, error } = await supabase.rpc('create_public_group_booking', {
+    p_business_id: parsed.businessId,
+    p_customer_name: parsed.customerName,
+    p_customer_phone: parsed.customerPhone,
+    p_appointment_time: parsed.appointmentTime,
+    p_people: parsed.people.map(person => ({
+      ...(person.attendeeName ? { attendee_name: person.attendeeName } : {}),
+      professional_id: person.professionalId,
+      service_ids: person.serviceIds,
+    })),
+  });
+  if (error) throw error;
+  const rows = (data ?? []) as PublicBookingRecord[];
+  if (rows.length !== parsed.people.length) throw new Error('Group booking returned an unexpected result');
+
+  try {
+    await upsertPublicClientSession({
+      businessId: parsed.businessId,
+      name: parsed.customerName,
+      phone: parsed.customerPhone,
+    });
+  } catch (clientErr) {
+    console.error('Failed to upsert public client after group booking:', clientErr);
+  }
+  return rows;
 }
 
 export async function createAcceptedAppointmentFromBooking(
@@ -516,7 +548,7 @@ export async function fetchPublicServices(businessId: string) {
     active?: boolean | null;
   }>;
   // Defesa em profundidade: RPC já filtra active=true; reforçamos no cliente.
-  return filterBookableServices(rows);
+  return filterBookableServices(rows).filter(isPricedService);
 }
 
 export async function fetchPublicCategories(businessId: string) {

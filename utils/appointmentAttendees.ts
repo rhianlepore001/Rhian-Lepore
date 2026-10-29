@@ -2,6 +2,7 @@ export interface AttendeeSelection {
   dependentId: string | null;
   name: string;
   serviceIds: string[];
+  professionalId?: string;
 }
 
 export function buildAttendeeSequence(
@@ -9,14 +10,16 @@ export function buildAttendeeSequence(
   attendees: AttendeeSelection[],
   services: { id: string; price: number; duration_minutes?: number }[],
 ) {
-  let time = start.getTime();
+  const cursors = new Map<string, number>();
   return attendees.map(attendee => {
     const selected = attendee.serviceIds.map(id => services.find(service => service.id === id));
     if (!selected.length || selected.some(service => !service)) throw new Error('Selecione os serviços de cada pessoa.');
     const durationMinutes = selected.reduce((sum, service) => sum + (service?.duration_minutes || 30), 0);
     const totalPrice = selected.reduce((sum, service) => sum + (service?.price || 0), 0);
+    const cursorKey = attendee.professionalId ?? '';
+    const time = cursors.get(cursorKey) ?? start.getTime();
     const appointmentTime = new Date(time);
-    time += durationMinutes * 60_000;
+    cursors.set(cursorKey, time + durationMinutes * 60_000);
     return { ...attendee, appointmentTime, durationMinutes, totalPrice };
   });
 }

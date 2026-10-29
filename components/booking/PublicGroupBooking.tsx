@@ -23,7 +23,7 @@ import {
   summarizeGroup,
   validateGroupPeople,
 } from '../../utils/groupBooking';
-import { getPublicBookingSuccessCopy } from '../../utils/publicBookingCopy';
+import { getPublicBookingSuccessCopy, type PublicGroupWhatsAppPerson } from '../../utils/publicBookingCopy';
 import {
   DEFAULT_BOOKING_LEAD_TIME_MINUTES,
   isLeadTimeViolationError,
@@ -83,7 +83,12 @@ interface Props {
   onBooked: () => Promise<unknown>;
   onOpenClientArea: () => void;
   onExit: () => void;
-  buildWhatsAppHref: (input: { confirmed: boolean; dateLabel: string; timeLabel: string; serviceLabel: string }) => string | null;
+  buildWhatsAppHref: (input: {
+    confirmed: boolean;
+    dateLabel: string;
+    timeLabel: string;
+    people: PublicGroupWhatsAppPerson[];
+  }) => string | null;
   maxPeople?: number;
 }
 
@@ -262,7 +267,12 @@ export const PublicGroupBooking: React.FC<Props> = ({
       confirmed: first?.status === 'confirmed',
       dateLabel: first ? new Date(first.appointment_time).toLocaleDateString('pt-BR', { timeZone: timezone }) : '',
       timeLabel: first ? formatTimeInTimeZone(first.appointment_time, timezone) : '',
-      serviceLabel: booked.map(row => `${row.attendee_name || customerName}: ${serviceNames(row.service_ids)}`).join('; '),
+      people: booked.map(row => ({
+        name: row.attendee_name || customerName,
+        serviceLabel: serviceNames(row.service_ids),
+        professionalName: professionals.find(item => item.id === row.professional_id)?.name ?? null,
+        timeLabel: formatTimeInTimeZone(row.appointment_time, timezone),
+      })),
     });
     const total = booked.reduce((sum, row) => sum + Number(row.total_price ?? 0), 0);
     return (

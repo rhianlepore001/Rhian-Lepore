@@ -1,6 +1,7 @@
 import React from 'react';
 import { AlertTriangle, Check, X } from 'lucide-react';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
+import { attendeeLabel } from '../../utils/appointmentAttendees';
 import { formatCurrency, formatPhone, type Region } from '../../utils/formatters';
 import {
   formatAgendaAlteracao,
@@ -13,6 +14,9 @@ export interface AgendaPublicBookingItem {
   id: string;
   customer_name: string;
   customer_phone: string;
+  /** Pessoa atendida neste pedido (pedido em grupo). `customer_name` segue sendo quem fez o pedido. */
+  attendee_name?: string | null;
+  group_id?: string | null;
   appointment_time: string;
   total_price: number;
   professional_id?: string | null;
@@ -171,7 +175,7 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
               )}
 
               <p className={`${colors.text} font-bold text-sm leading-snug break-words mt-1.5`}>
-                {booking.customer_name}
+                {attendeeLabel({ clientName: booking.customer_name, attendee_name: booking.attendee_name })}
               </p>
               <p className={`${colors.textSecondary} text-xs font-mono break-all`}>
                 {formatPhone(booking.customer_phone, currencyRegion)}

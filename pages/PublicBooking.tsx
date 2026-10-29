@@ -34,7 +34,7 @@ import { useZonedAvailableSlots } from '../hooks/useZonedAvailableSlots';
 import { mergeFreshPublicBooking } from '../utils/publicBookingFresh';
 import { fetchEditBooking, fetchPublicClientByPhone, fetchClientByPhone, fetchPublicBookingById, fetchFullDates, findNextDateWithSlots, getFirstAvailableProfessional, uploadClientPhoto, upsertPublicClientSession } from '../services/publicBooking';
 import { shouldLandOnClientArea } from '../utils/publicBookingLanding';
-import { getPublicBookingAwaitingWhatsAppText, getPublicBookingSubmitLabel, getPublicBookingSuccessCopy } from '../utils/publicBookingCopy';
+import { getPublicBookingAwaitingWhatsAppText, getPublicGroupBookingWhatsAppText, getPublicBookingSubmitLabel, getPublicBookingSuccessCopy } from '../utils/publicBookingCopy';
 import { isPublicBookingAutoConfirm } from '../utils/onlineBookingApproval';
 import { resolveCancellationPolicyParts } from '../utils/cancellationPolicyCopy';
 import { CancellationPolicyText } from '../components/CancellationPolicyText';
@@ -2151,17 +2151,16 @@ export const PublicBooking: React.FC = () => {
                     onBooked={() => { setGroupBooked(true); return establishClientSession(client?.photo_url ?? null); }}
                     onOpenClientArea={handleOpenClientArea}
                     onExit={() => setGroupMode(false)}
-                    buildWhatsAppHref={({ confirmed, dateLabel, timeLabel, serviceLabel }) => {
+                    buildWhatsAppHref={({ confirmed, dateLabel, timeLabel, people }) => {
                         if (!business?.phone) return null;
-                        const text = getPublicBookingAwaitingWhatsAppText({
+                        const text = getPublicGroupBookingWhatsAppText({
                             template: whatsapp.templates.client_request_confirm,
                             confirmed,
                             theme: isBeauty ? 'beauty' : 'barber',
                             businessName: business.business_name || '',
                             dateLabel,
                             timeLabel,
-                            serviceLabel,
-                            professionalName: null,
+                            people,
                         });
                         return buildWhatsAppLink(business.phone, currencyRegion, text);
                     }}

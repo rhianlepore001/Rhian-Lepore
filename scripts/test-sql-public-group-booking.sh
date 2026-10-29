@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Testa as migrations de agendamento em grupo num Postgres local descartável.
 #   scripts/test-sql-public-group-booking.sh --red       # sem as migrations o teste FALHA
+#   scripts/test-sql-public-group-booking.sh --red-notify # com as migrations do grupo, SEM a dos avisos: só os checks "11" falham
 #   scripts/test-sql-public-group-booking.sh             # migrations 2x -> teste passa -> rollback restaura o estado anterior
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -16,6 +17,7 @@ if [ -n "${PG_SHAREDIR:-}" ]; then INIT_ARGS=(-L "$PG_SHAREDIR"); fi
 MIGS=(
   "20261029120000_internal_attendee_bookings_per_professional"
   "20261029121000_public_group_bookings"
+  "20261029150000_group_booking_notification_names"
 )
 export PGOPTIONS="-c client_min_messages=warning"
 
@@ -70,6 +72,14 @@ if [ "${1:-}" = "--red" ]; then
   fi
   grep -E "FAIL|falharam" "$TMP/red.log" | head -60
   echo "RED: contrato ausente antes das migrations (esperado)"
+  exit 0
+fi
+
+if [ "${1:-}" = "--red-notify" ]; then
+  for m in "${MIGS[@]:0:${#MIGS[@]}-1}"; do P -f "$ROOT/supabase/migrations/$m.sql"; done
+  P -f "$ROOT/supabase/tests/public_group_booking.test.sql" > "$TMP/red.log" 2>&1 && { echo "ERRO: os checks de avisos passaram sem a migration"; exit 1; }
+  grep -E "FAIL|falharam" "$TMP/red.log" | head -60
+  echo "RED: avisos ainda mostram só o responsável antes da migration de nomes (esperado)"
   exit 0
 fi
 

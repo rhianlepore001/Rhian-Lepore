@@ -338,6 +338,67 @@ BEGIN
     (to_regprocedure('public.create_public_booking(text,text,text,uuid[],uuid,timestamptz,numeric,integer,jsonb)') IS NOT NULL)::text, 'true');
 END $$;
 
+-- 11. Avisos do dono mostram quem será atendido, com o responsável ----------------------------
+DO $$
+DECLARE
+  rec public.public_bookings%ROWTYPE;
+  biz_a constant text := 'ab000000-0000-0000-0000-0000000000a0';
+  biz_b constant text := 'ab000000-0000-0000-0000-0000000000b0';
+BEGIN
+  PERFORM pg_temp.check('11 pedido pendente: cada pessoa aparece com o responsável',
+    (SELECT string_agg(split_part(n.message, ', ', 1), ' | ' ORDER BY pb.group_position)
+       FROM public.public_bookings pb
+       JOIN public.notifications n ON n.booking_id = pb.id AND n.user_id = biz_a
+      WHERE pb.business_id = biz_a AND pb.appointment_time = pg_temp.slot(10, 10)),
+    'Novo pedido: Titular Um | Novo pedido: Dependente Um (responsável: Titular Um)');
+  PERFORM pg_temp.check('11 pedido pendente: mantém serviço e horário no aviso',
+    (SELECT (n.message LIKE 'Novo pedido: Dependente Um (responsável: Titular Um), Serviço Dois, %')::text
+       FROM public.public_bookings pb JOIN public.notifications n ON n.booking_id = pb.id AND n.user_id = biz_a
+      WHERE pb.business_id = biz_a AND pb.attendee_name = 'Dependente Um'), 'true');
+  PERFORM pg_temp.check('11 pedido pendente: sequência com o mesmo profissional',
+    (SELECT (n.message LIKE 'Novo pedido: Dependente Dois (responsável: Titular Dois), Serviço Dois, %')::text
+       FROM public.public_bookings pb JOIN public.notifications n ON n.booking_id = pb.id AND n.user_id = biz_a
+      WHERE pb.business_id = biz_a AND pb.attendee_name = 'Dependente Dois'), 'true');
+  PERFORM pg_temp.check('11 título do aviso continua o mesmo',
+    (SELECT string_agg(DISTINCT n.title, ',') FROM public.notifications n WHERE n.user_id = biz_a AND n.booking_id IS NOT NULL), 'Novo pedido');
+  PERFORM pg_temp.check('11 confirmado na hora: pessoa atendida e responsável',
+    (SELECT (n.message LIKE 'Novo agendamento online: Dependente Três (responsável: Titular Três), Serviço Dois, % — já está na agenda.')::text
+       FROM public.public_bookings pb JOIN public.notifications n ON n.booking_id = pb.id AND n.user_id = biz_b
+      WHERE pb.business_id = biz_b AND pb.attendee_name = 'Dependente Três' AND pb.appointment_time = pg_temp.slot(10, 10)), 'true');
+  PERFORM pg_temp.check('11 confirmado na hora: titular continua só com o próprio nome',
+    (SELECT (n.message LIKE 'Novo agendamento online: Titular Três, Serviço Um, % — já está na agenda.')::text
+       FROM public.public_bookings pb JOIN public.notifications n ON n.booking_id = pb.id AND n.user_id = biz_b
+      WHERE pb.business_id = biz_b AND pb.attendee_name IS NULL AND pb.appointment_time = pg_temp.slot(10, 10)), 'true');
+
+  -- pedido de alteração de uma pessoa do grupo
+  SELECT * INTO rec FROM public.public_bookings WHERE business_id = biz_a AND attendee_name = 'Dependente Um';
+  PERFORM public.notify_booking_recipients(rec, 'edit', rec.appointment_time - interval '1 day', ARRAY[rec.professional_id]);
+  PERFORM pg_temp.check('11 pedido de alteração cita a pessoa e o responsável',
+    (SELECT (n.message LIKE 'Pedido de alteração: Dependente Um (responsável: Titular Um), de % para %')::text
+       FROM public.notifications n WHERE n.booking_id = rec.id AND n.user_id = biz_a AND n.event_key = 'edit:' || rec.id::text), 'true');
+
+  -- nome igual ao do responsável não repete
+  rec.attendee_name := rec.customer_name;
+  PERFORM public.notify_booking_recipients(rec, 'edit', rec.appointment_time - interval '1 day', ARRAY[rec.professional_id]);
+  PERFORM pg_temp.check('11 mesmo nome do responsável não é repetido',
+    (SELECT (n.message LIKE 'Pedido de alteração: Titular Um, de % para %')::text
+       FROM public.notifications n WHERE n.booking_id = rec.id AND n.user_id = biz_a AND n.event_key = 'edit:' || rec.id::text), 'true');
+
+  -- nome em branco também não gera "(responsável: ...)"
+  rec.attendee_name := '   ';
+  PERFORM public.notify_booking_recipients(rec, 'edit', rec.appointment_time - interval '1 day', ARRAY[rec.professional_id]);
+  PERFORM pg_temp.check('11 nome em branco usa só o responsável',
+    (SELECT (n.message LIKE 'Pedido de alteração: Titular Um, de % para %')::text
+       FROM public.notifications n WHERE n.booking_id = rec.id AND n.user_id = biz_a AND n.event_key = 'edit:' || rec.id::text), 'true');
+
+  PERFORM pg_temp.check('11 permissões da função de avisos continuam restritas',
+    has_function_privilege('anon', 'public.notify_booking_recipients(public.public_bookings,text,timestamptz,uuid[])', 'EXECUTE')::text || '/' ||
+    has_function_privilege('authenticated', 'public.notify_booking_recipients(public.public_bookings,text,timestamptz,uuid[])', 'EXECUTE')::text || '/' ||
+    has_function_privilege('service_role', 'public.notify_booking_recipients(public.public_bookings,text,timestamptz,uuid[])', 'EXECUTE')::text,
+    'false/false/true');
+EXCEPTION WHEN OTHERS THEN PERFORM pg_temp.scenario_error('11 avisos', SQLERRM);
+END $$;
+
 -- Resultado ----------------------------------------------------------------------------------------
 DO $$
 DECLARE r record; n_fail int; n_total int;

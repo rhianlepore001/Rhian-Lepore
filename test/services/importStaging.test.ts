@@ -95,6 +95,36 @@ describe('confirmação e desfazer', () => {
   });
 });
 
+describe('desfazer em partes', () => {
+  it('repete o pedido até acabar, reiniciando só na primeira chamada', async () => {
+    const rpc = vi.fn()
+      .mockResolvedValueOnce({ data: { undone: 200, preserved: 1, remaining: 150 }, error: null })
+      .mockResolvedValueOnce({ data: { undone: 150, preserved: 2, remaining: 0 }, error: null });
+    const client = (await import('../../lib/supabase')).supabase as unknown as { rpc: typeof rpc };
+    client.rpc = rpc;
+    const { undoImportBatch } = await import('../../services/importStaging');
+    expect(await undoImportBatch('lote-ficticio')).toEqual({ undone: 350, preserved: 2 });
+    expect(rpc).toHaveBeenNthCalledWith(1, 'undo_import_batch', { p_batch_id: 'lote-ficticio', p_restart: true });
+    expect(rpc).toHaveBeenNthCalledWith(2, 'undo_import_batch', { p_batch_id: 'lote-ficticio', p_restart: false });
+  });
+  it('para com mensagem clara quando uma parte falha', async () => {
+    const rpc = vi.fn().mockResolvedValueOnce({ data: { undone: 200, preserved: 0, remaining: 5 }, error: null }).mockResolvedValueOnce({ data: null, error: new Error('x') });
+    const client = (await import('../../lib/supabase')).supabase as unknown as { rpc: typeof rpc };
+    client.rpc = rpc;
+    const { undoImportBatch } = await import('../../services/importStaging');
+    await expect(undoImportBatch('lote-ficticio')).rejects.toThrow(/Não foi possível desfazer/);
+  });
+  it('limpa dados antigos sem interromper a tela quando falha', async () => {
+    const rpc = vi.fn().mockResolvedValueOnce({ data: { rows_cleared: 1 }, error: null }).mockResolvedValueOnce({ data: null, error: new Error('x') });
+    const client = (await import('../../lib/supabase')).supabase as unknown as { rpc: typeof rpc };
+    client.rpc = rpc;
+    const { purgeExpiredImportData } = await import('../../services/importStaging');
+    await expect(purgeExpiredImportData()).resolves.toBeUndefined();
+    await expect(purgeExpiredImportData()).resolves.toBeUndefined();
+    expect(rpc).toHaveBeenCalledWith('purge_expired_import_data');
+  });
+});
+
 it('solicita a remoção explícita das pendências do lote', async () => {
   const rpc = vi.fn().mockResolvedValue({ data: 2, error: null });
   const client = (await import('../../lib/supabase')).supabase as unknown as { rpc: typeof rpc };

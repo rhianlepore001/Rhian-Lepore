@@ -46,7 +46,7 @@ export function normalizePhone(value: string, country: 'BR' | 'PT'): string | nu
 }
 
 export function normalizePrice(value: string): number | null {
-  const raw = value.trim().replace(/^R\$\s*/, '').replace(/\s*€$/, '');
+  const raw = value.replace(/[\u00a0\u202f]/g, ' ').trim().replace(/^R\$\s*/i, '').replace(/^€\s*/, '').replace(/\s*€$/, '').trim();
   if (!raw) return null;
   let normalized: string;
   if (/^\d{1,3}(\.\d{3})+,\d{1,2}$/.test(raw)) normalized = raw.replace(/\./g, '').replace(',', '.');
@@ -67,22 +67,11 @@ export function normalizeDuration(value: string): number | null {
 }
 
 export function normalizeDate(value: string): string | null {
-  const br = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value.trim());
+  const br = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(value.trim());
   const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
   if (!br && !iso) return null;
   const year = Number(br ? br[3] : iso![1]), month = Number(br ? br[2] : iso![2]), day = Number(br ? br[1] : iso![3]);
   const date = new Date(Date.UTC(year, month - 1, day));
   if (year < 1900 || date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) return null;
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-}
-
-interface Candidate { id: string; name: string; phones: string[] }
-export function findDuplicateCandidates(row: Omit<Candidate, 'id'>, existing: Candidate[]): { id: string; reason: 'phone' | 'name' }[] {
-  const name = key(row.name);
-  const phones = new Set(row.phones.filter(Boolean));
-  return existing.flatMap<{ id: string; reason: 'phone' | 'name' }>(candidate => {
-    if (candidate.phones.some(phone => phones.has(phone))) return [{ id: candidate.id, reason: 'phone' as const }];
-    if (name && key(candidate.name) === name) return [{ id: candidate.id, reason: 'name' as const }];
-    return [];
-  });
 }

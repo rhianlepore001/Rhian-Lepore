@@ -39,14 +39,21 @@ export function inferImportColumns(headers: string[], source: ImportSource, kind
   return result;
 }
 
+/** Escopo curto (até 64 caracteres) que separa os códigos de arquivos e abas diferentes. */
+export function sourceScope(fileIdentity: string): string {
+  const cut = fileIdentity.lastIndexOf(':');
+  if (cut < 0) return fileIdentity.slice(0, 64);
+  return `${fileIdentity.slice(0, cut).slice(0, 48)}:${fileIdentity.slice(cut + 1).slice(0, 12)}`;
+}
+
 export function prepareImportRows(headers: string[], records: CsvRecord[], mapping: ImportColumns, kind: ImportKind, region: 'BR' | 'PT', fileIdentity: string): PreparedImportRow[] {
   return records.map(record => {
     const get = (field: ImportField) => (mapping[field] || []).map(index => (record.values[index] || '').trim()).filter(Boolean);
     const name = get('name').join(' '), sourceId = get('source_id')[0] || `${fileIdentity}:${record.line}`;
-    const normalized: Record<string, unknown> = { name, source_id: sourceId };
+    const normalized: Record<string, unknown> = { name, source_id: sourceId, source_scope: sourceScope(fileIdentity) };
     const issues: string[] = [];
     if (!name || name.length > 200) issues.push('Confira o nome.');
-    if (sourceId.length > 255) issues.push('Confira a identificação do registro.');
+    if (sourceId.length > 255) issues.push('Confira o código desta linha.');
     if (kind === 'client') {
       const phones = get('phone').flatMap(value => value.split(/[;,/|]+/).map(part => part.trim()).filter(Boolean));
       const parsed = phones.map(phone => normalizePhone(phone, region));
@@ -54,11 +61,11 @@ export function prepareImportRows(headers: string[], records: CsvRecord[], mappi
       normalized.phones = parsed.filter((phone): phone is string => phone !== null);
       const email = get('email')[0] || '';
       if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) issues.push('Confira o e-mail.');
-      normalized.email = email;
+      normalized.email = email || null;
       const birth = get('birth_date')[0] || '';
       if (birth && !normalizeDate(birth)) issues.push('Confira a data de nascimento.');
       normalized.birth_date = birth ? normalizeDate(birth) || birth : null;
-      normalized.notes = get('notes').join('\n');
+      normalized.notes = get('notes').join('\n') || null;
     } else {
       const originalPrice = get('price')[0] || '', originalDuration = get('duration')[0] || '';
       const price = normalizePrice(originalPrice), duration = normalizeDuration(originalDuration);

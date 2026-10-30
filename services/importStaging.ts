@@ -111,9 +111,22 @@ export async function commitImportBatch(batchId: string): Promise<ImportReport> 
 
 export async function undoImportBatch(batchId: string): Promise<ImportUndoReport> {
   if (!batchId) throw new Error('Não foi possível identificar a importação.');
-  const { data, error } = await supabase.rpc('undo_import_batch', { p_batch_id: batchId });
-  if (error || !data) throw new Error('Não foi possível desfazer a importação. Tente novamente.');
-  return data as ImportUndoReport;
+  let undone = 0, preserved = 0;
+  // O desfazer é feito em partes para não travar com importações grandes.
+  for (let attempt = 0; attempt < 200; attempt += 1) {
+    const { data, error } = await supabase.rpc('undo_import_batch', { p_batch_id: batchId, p_restart: attempt === 0 });
+    if (error || !data) throw new Error('Não foi possível desfazer a importação. Tente novamente.');
+    const part = data as { undone?: number; preserved?: number; remaining?: number };
+    undone += Number(part.undone || 0);
+    preserved = Number(part.preserved || 0);
+    if (!Number(part.remaining || 0)) return { undone, preserved };
+  }
+  throw new Error('Não foi possível desfazer a importação. Tente novamente.');
+}
+
+/** Remove dados de importações antigas. Nunca interrompe a tela se falhar. */
+export async function purgeExpiredImportData(): Promise<void> {
+  try { await supabase.rpc('purge_expired_import_data'); } catch { /* limpeza opcional */ }
 }
 
 export async function loadImportCandidates(companyId: string, kind: ImportKind): Promise<ImportCandidate[]> {

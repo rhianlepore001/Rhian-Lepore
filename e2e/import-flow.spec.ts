@@ -14,7 +14,7 @@ test('revisa, importa e desfaz clientes em um arquivo fictício Trinks no celula
   await page.getByLabel('Escolher arquivos').setInputFiles({ name:'trinks-clientes.csv', mimeType:'text/csv', buffer:Buffer.from('Nome;Celular;E-mail\nAna Fictícia;11987654321;ana@example.test') });
   await page.getByRole('button', { name:'Analisar arquivos' }).click();
   await page.getByRole('button', { name:'Preparar revisão' }).click();
-  await expect(page.getByText(/1 registro pronto/)).toBeVisible();
+  await expect(page.getByText(/1 linha pronta/)).toBeVisible();
   expect(await page.evaluate(() => (window as unknown as { importTestCount: () => number }).importTestCount())).toBe(0);
   await page.getByRole('button', { name:'Confirmar importação' }).click();
   await expect(page.getByText(/1 importado/)).toBeVisible();
@@ -31,7 +31,7 @@ test('revisa e importa serviços em um arquivo fictício Fresha', async ({ page 
   await page.getByRole('button', { name:'Analisar arquivos' }).click();
   await expect(page.getByLabel('Tipo de dados')).toHaveValue('service');
   await page.getByRole('button', { name:'Preparar revisão' }).click();
-  await expect(page.getByText(/1 registro pronto/)).toBeVisible();
+  await expect(page.getByText(/1 linha pronta/)).toBeVisible();
   await page.getByRole('button', { name:'Confirmar importação' }).click();
   await expect(page.getByText(/1 importado/)).toBeVisible();
 });
@@ -42,7 +42,7 @@ test('pede decisão para telefone existente antes de vincular', async ({ page })
   await page.getByLabel('Escolher arquivos').setInputFiles({ name:'trinks-duplicado.csv', mimeType:'text/csv', buffer:Buffer.from('Nome;Celular\nNome Diferente Fictício;11999998888') });
   await page.getByRole('button', { name:'Analisar arquivos' }).click();
   await page.getByRole('button', { name:'Preparar revisão' }).click();
-  await expect(page.getByText(/1 precisam de atenção/)).toBeVisible();
+  await expect(page.getByText(/1 precisa de atenção/)).toBeVisible();
   await page.getByRole('button', { name:'Confirmar importação' }).click();
   await expect(page.getByText(/1 pendente/)).toBeVisible();
   expect(await page.evaluate(() => (window as unknown as { importTestCount: () => number }).importTestCount())).toBe(0);

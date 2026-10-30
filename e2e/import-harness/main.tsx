@@ -45,6 +45,7 @@ const api: Api = {
   loadImportSourceData: async () => [],
   clearImportSourceData: async () => 0,
   loadImportBatches: async () => [],
+  purgeExpiredImportData: async () => {},
   clearImportPending: async id => {
     const batch = batches.get(id)!; let count = 0;
     for (const row of batch.rows) if (row.outcome === 'pending' || row.outcome === 'error') { row.outcome = 'ignored'; row.raw_data = {}; row.normalized_data = null; count++; }

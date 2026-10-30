@@ -30,8 +30,8 @@ test('importa CSV, XLSX e VCF no Supabase local, revisa duplicados e desfaz o lo
   ]);
   await page.getByRole('button', { name:'Analisar arquivos' }).click();
   await page.getByRole('button', { name:'Preparar revisão' }).click();
-  await expect(page.getByText(/4 registros prontos/)).toBeVisible();
-  await expect(page.getByText(/1 precisam de atenção/)).toBeVisible();
+  await expect(page.getByText(/4 linhas prontas/)).toBeVisible();
+  await expect(page.getByText(/1 precisa de atenção/)).toBeVisible();
   const before = await db.from('clients').select('name').eq('user_id', company);
   expect(before.error).toBeNull();
   expect(before.data!.map(row => row.name)).toEqual(['Cliente Existente Fictício']);

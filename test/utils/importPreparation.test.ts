@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { autoMapColumns, findDuplicateCandidates, normalizeDate, normalizeDuration, normalizePhone, normalizePrice } from '../../utils/importPreparation';
+import { autoMapColumns, normalizeDate, normalizeDuration, normalizePhone, normalizePrice } from '../../utils/importPreparation';
 
 describe('preparação de dados para importação', () => {
   it('reconhece apelidos e mantém ambiguidades para revisão', () => {
@@ -35,14 +35,24 @@ describe('preparação de dados para importação', () => {
     expect(normalizeDate('')).toBeNull();
   });
 
-  it('sugere possíveis duplicados sem escolher, inclusive por nome', () => {
-    const existing = [
-      { id: 'a', name: 'Ana Exemplo', phones: ['+5511987654321'] },
-      { id: 'b', name: 'Ana Exemplo', phones: [] },
-      { id: 'c', name: 'Outro Nome', phones: ['+5511987654321'] },
-    ];
-    expect(findDuplicateCandidates({ name: 'ana exemplo', phones: ['+5511987654321'] }, existing)).toEqual([
-      { id: 'a', reason: 'phone' }, { id: 'b', reason: 'name' }, { id: 'c', reason: 'phone' },
-    ]);
+  it('aceita dia e mês com um dígito e mantém a dúvida nos casos ambíguos', () => {
+    expect(normalizeDate('5/3/1990')).toBe('1990-03-05');
+    expect(normalizeDate('05/3/1990')).toBe('1990-03-05');
+    expect(normalizeDate(' 5/03/1990 ')).toBe('1990-03-05');
+    expect(normalizeDate('5/3/90')).toBeNull();
+    expect(normalizeDate('0/3/1990')).toBeNull();
+    expect(normalizeDate('31/4/1990')).toBeNull();
+  });
+
+  it('aceita preços com símbolo, com ou sem espaço, e recusa o que é ambíguo', () => {
+    expect(normalizePrice('R$ 12')).toBe(12);
+    expect(normalizePrice('R$12')).toBe(12);
+    expect(normalizePrice('r$ 12,5')).toBe(12.5);
+    expect(normalizePrice('R$\u00a012,00')).toBe(12);
+    expect(normalizePrice('12 €')).toBe(12);
+    expect(normalizePrice('€ 12,50')).toBe(12.5);
+    expect(normalizePrice('R$ 1.200')).toBeNull();
+    expect(normalizePrice('R$ 1,200.50')).toBeNull();
+    expect(normalizePrice('R$')).toBeNull();
   });
 });

@@ -26,4 +26,24 @@ describe('preparo de arquivos fictícios', () => {
     expect(row.normalized.birth_date).toBe('31/02/2000');
     expect(row.line).toBe(4);
   });
+  it('separa os vínculos por arquivo e aba com um escopo curto e estável', () => {
+    const headers = ['Nome', 'ID'];
+    const mapping = inferImportColumns(headers, 'spreadsheet', 'client');
+    const hash = 'a'.repeat(64);
+    const [first] = prepareImportRows(headers, [{ line: 2, values: ['Ana Fictícia', '7'] }], mapping, 'client', 'BR', `${hash}:0`);
+    const [again] = prepareImportRows(headers, [{ line: 2, values: ['Ana Fictícia', '7'] }], mapping, 'client', 'BR', `${hash}:0`);
+    const [other] = prepareImportRows(headers, [{ line: 2, values: ['Ana Fictícia', '7'] }], mapping, 'client', 'BR', `${'b'.repeat(64)}:0`);
+    const [sheet] = prepareImportRows(headers, [{ line: 2, values: ['Ana Fictícia', '7'] }], mapping, 'client', 'BR', `${hash}:1`);
+    expect(String(first.normalized.source_scope).length).toBeLessThanOrEqual(64);
+    expect(first.normalized.source_id).toBe('7');
+    expect(again.normalized.source_scope).toBe(first.normalized.source_scope);
+    expect(other.normalized.source_scope).not.toBe(first.normalized.source_scope);
+    expect(sheet.normalized.source_scope).not.toBe(first.normalized.source_scope);
+  });
+  it('guarda e-mail e observações vazios como vazio, não como texto', () => {
+    const headers = ['Nome', 'E-mail', 'Observações'];
+    const [row] = prepareImportRows(headers, [{ line: 2, values: ['Ana Fictícia', '', ''] }], inferImportColumns(headers, 'spreadsheet', 'client'), 'client', 'BR', 'x:0');
+    expect(row.normalized.email).toBeNull();
+    expect(row.normalized.notes).toBeNull();
+  });
 });

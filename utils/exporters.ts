@@ -12,7 +12,12 @@ export interface ExportOptions<T> {
 
 function escapeCsv(value: unknown): string {
     if (value === null || value === undefined) return '';
-    const str = String(value);
+    let str = String(value);
+    // Textos que começam com = + - @ (ou tabulação) podem ser lidos como fórmula pelo Excel.
+    // Números de verdade e valores numéricos em texto, como -12,50, não são alterados.
+    if (typeof value === 'string' && /^[=+\-@\t\r]/.test(str) && !/^-\d+([.,]\d+)?$/.test(str)) {
+        str = `'${str}`;
+    }
     if (str.includes(',') || str.includes('"') || str.includes('\n')) {
         return `"${str.replace(/"/g, '""')}"`;
     }

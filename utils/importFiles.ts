@@ -32,6 +32,17 @@ export function vcardSheet(cards: VcardRecord[]): { headers: string[]; rows: Csv
   return { headers, rows, originals: cards };
 }
 
+/** Lê texto em UTF-8 e, se o arquivo vier de um programa antigo, no padrão do Windows (1252). */
+export function decodeImportText(bytes: ArrayBuffer | ArrayBufferView): { text: string; legacy: boolean } {
+  try {
+    return { text: new TextDecoder('utf-8', { fatal: true }).decode(bytes), legacy: false };
+  } catch {
+    return { text: new TextDecoder('windows-1252').decode(bytes), legacy: true };
+  }
+}
+
+const LEGACY_WARNING = 'Este arquivo parece ter sido salvo por um programa mais antigo. Confira se os acentos aparecem corretamente.';
+
 export async function readImportFiles(files: File[]): Promise<ImportSheet[]> {
   if (!files.length || files.length > 10 || files.some(file => file.size > 5 * 1024 * 1024) || files.reduce((sum, file) => sum + file.size, 0) > 20 * 1024 * 1024) {
     throw new Error('Escolha até 10 arquivos de até 5 MB cada, com total de até 20 MB.');
@@ -43,9 +54,9 @@ export async function readImportFiles(files: File[]): Promise<ImportSheet[]> {
     const hash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))).map(value => value.toString(16).padStart(2, '0')).join('');
     const name = file.name.toLowerCase();
     if (name.endsWith('.vcf')) {
-      const input = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
-      const parsed = vcardSheet(readVcards(input));
-      sheets.push({ ...parsed, name: file.name, identity: `${hash}:0`, warnings: [], isContacts: true });
+      const decoded = decodeImportText(bytes);
+      const parsed = vcardSheet(readVcards(decoded.text));
+      sheets.push({ ...parsed, name: file.name, identity: `${hash}:0`, warnings: decoded.legacy ? [LEGACY_WARNING] : [], isContacts: true });
       count += parsed.rows.length;
     } else if (name.endsWith('.xlsx')) {
       const parsed = await readImportXlsx(new Uint8Array(bytes));
@@ -55,12 +66,13 @@ export async function readImportFiles(files: File[]): Promise<ImportSheet[]> {
         count += Math.max(0, sheet.rows.length - 1);
       });
     } else if (name.endsWith('.csv')) {
-      const records = readImportCsv(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
-      if (records.length) sheets.push({ name: file.name, identity: `${hash}:0`, headers: records[0].values, rows: records.slice(1), warnings: [], isContacts: false });
+      const decoded = decodeImportText(bytes);
+      const records = readImportCsv(decoded.text);
+      if (records.length) sheets.push({ name: file.name, identity: `${hash}:0`, headers: records[0].values, rows: records.slice(1), warnings: decoded.legacy ? [LEGACY_WARNING] : [], isContacts: false });
       count += Math.max(0, records.length - 1);
     } else throw new Error('Escolha arquivos CSV, XLSX ou VCF.');
-    if (count > 10000) throw new Error('Os arquivos podem ter até 10.000 registros ao todo.');
+    if (count > 10000) throw new Error('Os arquivos podem ter até 10.000 linhas ao todo.');
   }
-  if (!count) throw new Error('Os arquivos não contêm registros para analisar.');
+  if (!count) throw new Error('Os arquivos não contêm linhas para analisar.');
   return sheets;
 }

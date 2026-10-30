@@ -104,19 +104,21 @@ SELECT public.commit_import_batch('50000000-0000-0000-0000-000000000206');
 SELECT public.assert_import((SELECT outcome='ignored' FROM public.import_staging_rows WHERE batch_id='50000000-0000-0000-0000-000000000206'),'stable source IDs keep using the bare ID');
 
 -- Duplicidade: telefone completo com DDD, nomes sem acento e mensagem clara.
-INSERT INTO public.clients(user_id,name,phone) VALUES ('00000000-0000-0000-0000-0000000000a0','Existente Telefone Fictício','(11) 99999-7777'),('00000000-0000-0000-0000-0000000000a0','Existente Outro DDD Fictício','(11) 98888-6666'),('00000000-0000-0000-0000-0000000000a0','José Existente Acento Fictício',NULL);
+INSERT INTO public.clients(user_id,name,phone) VALUES ('00000000-0000-0000-0000-0000000000a0','Existente Telefone Fictício','(11) 99999-7777'),('00000000-0000-0000-0000-0000000000a0','Existente Outro DDD Fictício','(11) 98888-6666'),('00000000-0000-0000-0000-0000000000a0','José Existente Acento Fictício',NULL),('00000000-0000-0000-0000-0000000000a0','Existente Portugal Fictício','912 345 678');
 SELECT public.t_stage('50000000-0000-0000-0000-000000000301','avec','client', ARRAY[
   '{"name":"Nome Novo Telefone Fictício","phones":["+5511999997777"],"source_id":"d1"}',
   '{"name":"Nome Novo Outro DDD Fictício","phones":["+5521988886666"],"source_id":"d2"}',
   '{"name":"jose existente acento ficticio","source_id":"d3"}',
   '{"name":"Repetido Um Fictício","phones":["+5511977771111"],"source_id":"d4"}',
   '{"name":"Repetido Dois Fictício","phones":["+5511977771111"],"source_id":"d5"}',
-  '{"name":"Sem Contato Fictício","source_id":"d6"}']::jsonb[]);
+  '{"name":"Sem Contato Fictício","source_id":"d6"}',
+  '{"name":"Nome Novo Portugal Fictício","phones":["+351912345678"],"source_id":"d7"}']::jsonb[]);
 SELECT public.commit_import_batch('50000000-0000-0000-0000-000000000301');
 SELECT public.assert_import((SELECT outcome='pending' FROM public.import_staging_rows WHERE batch_id='50000000-0000-0000-0000-000000000301' AND row_number=1),'formatted existing phone is detected');
 SELECT public.assert_import((SELECT outcome='imported' FROM public.import_staging_rows WHERE batch_id='50000000-0000-0000-0000-000000000301' AND row_number=2),'same last digits but another area code is not a duplicate');
 SELECT public.assert_import((SELECT outcome='pending' FROM public.import_staging_rows WHERE batch_id='50000000-0000-0000-0000-000000000301' AND row_number=3),'accent-insensitive name match on the server');
 SELECT public.assert_import((SELECT outcome='imported' FROM public.import_staging_rows WHERE batch_id='50000000-0000-0000-0000-000000000301' AND row_number=4) AND (SELECT outcome='pending' FROM public.import_staging_rows WHERE batch_id='50000000-0000-0000-0000-000000000301' AND row_number=5),'repeated phone in the same file needs review');
+SELECT public.assert_import((SELECT outcome='pending' FROM public.import_staging_rows WHERE batch_id='50000000-0000-0000-0000-000000000301' AND row_number=7),'existing phone without the Portugal country code is detected');
 SELECT public.assert_import((SELECT email IS NULL AND notes IS NULL FROM public.clients WHERE name='Sem Contato Fictício'),'empty email and notes stored as NULL');
 UPDATE public.import_staging_rows SET normalized_data=normalized_data || '{"decision":"create"}' WHERE batch_id='50000000-0000-0000-0000-000000000301' AND row_number IN (1,5);
 SELECT public.commit_import_batch('50000000-0000-0000-0000-000000000301');

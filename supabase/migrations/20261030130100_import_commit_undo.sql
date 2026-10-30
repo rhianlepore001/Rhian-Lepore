@@ -327,11 +327,13 @@ BEGIN
         IF v_input ? 'phones' AND jsonb_typeof(v_input->'phones') <> 'array' THEN RAISE EXCEPTION 'invalid_phones'; END IF;
         IF EXISTS (SELECT 1 FROM jsonb_array_elements_text(COALESCE(v_input->'phones','[]'::jsonb)) p WHERE p !~ '^\+[1-9][0-9]{7,14}$') THEN RAISE EXCEPTION 'invalid_phone'; END IF;
         IF v_email<>'' AND v_email !~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$' THEN RAISE EXCEPTION 'invalid_email'; END IF;
-        -- Telefone: números completos, com DDD; aceita o cadastro com ou sem o 55 do Brasil. Usa o índice idx_clients_user_phone_digits.
+        -- Telefone: números completos, com DDD; aceita o cadastro com ou sem o 55 do Brasil ou o 351 de Portugal. Usa o índice idx_clients_user_phone_digits.
         SELECT COALESCE(array_agg(DISTINCT d), '{}') INTO v_digits FROM (
           SELECT public.normalize_phone_digits(p) AS d FROM jsonb_array_elements_text(COALESCE(v_input->'phones','[]'::jsonb)) p
           UNION SELECT substr(public.normalize_phone_digits(p), 3) FROM jsonb_array_elements_text(COALESCE(v_input->'phones','[]'::jsonb)) p
-            WHERE public.normalize_phone_digits(p) ~ '^55[0-9]{10,11}$') s WHERE d <> '';
+            WHERE public.normalize_phone_digits(p) ~ '^55[0-9]{10,11}$'
+          UNION SELECT substr(public.normalize_phone_digits(p), 4) FROM jsonb_array_elements_text(COALESCE(v_input->'phones','[]'::jsonb)) p
+            WHERE public.normalize_phone_digits(p) ~ '^351[0-9]{9}$') s WHERE d <> '';
         v_phone_duplicate := cardinality(v_digits) > 0 AND (
           EXISTS (SELECT 1 FROM public.clients c WHERE c.user_id=v_company AND public.normalize_phone_digits(c.phone) = ANY(v_digits))
           OR EXISTS (SELECT 1 FROM public.clients c CROSS JOIN LATERAL jsonb_array_elements_text(c.additional_phones) extra(phone)

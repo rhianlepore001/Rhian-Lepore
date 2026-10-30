@@ -1,6 +1,6 @@
 import type { CsvRecord } from './importCsv';
 
-export interface SpreadsheetSheet { name: string; rows: CsvRecord[] }
+export interface SpreadsheetSheet { name: string; rows: CsvRecord[]; warnings?: string[]; formulas?: Record<string, string>; mergedRanges?: string[]; cellSources?: Record<string, { raw: string; type: string; style: string; formula?: string }> }
 const MAX_ARCHIVE = 5 * 1024 * 1024;
 const MAX_EXPANDED = 20 * 1024 * 1024;
 const MAX_ENTRIES = 200;
@@ -123,6 +123,15 @@ export async function readImportXlsx(bytes: Uint8Array): Promise<SpreadsheetShee
     if (!id || !target || target.includes('..') || target.includes('\\')) return fail();
     relations.set(id, target.startsWith('/') ? target.slice(1) : `xl/${target}`);
   }
+  const formats = new Map<number, string>();
+  const styles = zip.has('xl/styles.xml') ? parseXml(zip.get('xl/styles.xml')) : null;
+  if (styles) for (const format of elements(styles, 'numFmt')) {
+    const id = Number(format.getAttribute('numFmtId'));
+    if (Number.isInteger(id)) formats.set(id, format.getAttribute('formatCode') || '');
+  }
+  const xfs = styles ? elements(styles, 'cellXfs')[0] : undefined;
+  const styleFormats = xfs ? Array.from(xfs.children).map(xf => Number(xf.getAttribute('numFmtId') || 0)) : [];
+  const date1904 = ['1', 'true'].includes(elements(workbook, 'workbookPr')[0]?.getAttribute('date1904') || '');
   const result: SpreadsheetSheet[] = [];
   let totalRows = 0;
   for (const sheet of elements(workbook, 'sheet')) {
@@ -130,8 +139,13 @@ export async function readImportXlsx(bytes: Uint8Array): Promise<SpreadsheetShee
     const id = sheet.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id');
     if (!name || !id || !relations.has(id)) return fail();
     const document = parseXml(zip.get(relations.get(id)!));
-    if (elements(document, 'mergeCell').length || elements(document, 'f').length) throw new Error('A planilha contém células mescladas ou fórmulas. Salve uma cópia apenas com valores antes de continuar.');
+    const warnings: string[] = [];
+    if (elements(document, 'mergeCell').length) warnings.push('A planilha contém células mescladas; confira as informações apresentadas.');
+    if (elements(document, 'f').length) warnings.push('A planilha contém fórmulas; confira os valores apresentados.');
     const rows: CsvRecord[] = [];
+    const formulas: Record<string, string> = {};
+    const cellSources: Record<string, { raw: string; type: string; style: string; formula?: string }> = {};
+    const mergedRanges = elements(document, 'mergeCell').map(cell => cell.getAttribute('ref') || '').filter(Boolean);
     let previousLine = 0;
     for (const row of elements(document, 'row')) {
       const line = Number(row.getAttribute('r'));
@@ -147,17 +161,39 @@ export async function readImportXlsx(bytes: Uint8Array): Promise<SpreadsheetShee
         while (values.length < column) values.push('');
         const type = cell.getAttribute('t');
         const raw = elements(cell, 'v')[0]?.textContent ?? '';
+        if (cell.hasAttribute('s') || elements(cell, 'f').length) cellSources[reference] = { raw, type:type || '', style:cell.getAttribute('s') || '', ...(elements(cell, 'f').length ? { formula:elements(cell, 'f')[0].outerHTML } : {}) };
         if (type === 'e') return fail();
+        if (elements(cell, 'f').length) formulas[reference] = elements(cell, 'f')[0].textContent || '';
+        if (elements(cell, 'f').length && !elements(cell, 'v')[0]?.textContent) throw new Error('Uma fórmula não possui valor salvo. Abra a planilha, atualize os valores e salve antes de continuar.');
         if (type === 's') {
           if (!/^\d+$/.test(raw) || Number(raw) >= shared.length) return fail();
           values.push(shared[Number(raw)]);
         } else if (type === 'inlineStr') values.push(elements(cell, 't').map(part => part.textContent || '').join(''));
-        else values.push(raw);
+        else {
+          const styleIndex = Number(cell.getAttribute('s') || 0);
+          const numberFormat = styleFormats[styleIndex] || 0;
+          const custom = (formats.get(numberFormat) || '').toLowerCase().replace(/"[^"]*"/g, '').replace(/\\./g, '');
+          const isDate = (numberFormat >= 14 && numberFormat <= 17) || numberFormat === 22 || (numberFormat >= 27 && numberFormat <= 36) || (numberFormat >= 50 && numberFormat <= 58) || (numberFormat >= 164 && /[yd]/.test(custom));
+          const isTime = (numberFormat >= 18 && numberFormat <= 21) || (numberFormat >= 45 && numberFormat <= 47) || (numberFormat >= 164 && /[hs]/.test(custom) && !isDate);
+          const numeric = Number(raw);
+          if (raw && (isDate || isTime) && (!Number.isFinite(numeric) || numeric < 0)) return fail();
+          if (raw && isDate) {
+            const days = Math.floor(numeric);
+            if ((!date1904 && days === 60) || days > 2958465) return fail();
+            const epoch = date1904 ? Date.UTC(1904, 0, 1) : days < 60 ? Date.UTC(1899, 11, 31) : Date.UTC(1899, 11, 30);
+            values.push(new Date(epoch + days * 86400000).toISOString().slice(0, 10));
+            if (numeric !== days && !warnings.includes('Algumas datas incluem horário; confira as informações apresentadas.')) warnings.push('Algumas datas incluem horário; confira as informações apresentadas.');
+          } else if (raw && isTime) {
+            const minutes = Math.round(numeric * 1440);
+            if (Math.abs(numeric * 1440 - minutes) > 0.00001) throw new Error('Uma duração inclui segundos. Confira a planilha antes de continuar.');
+            values.push(`${minutes} min`);
+          } else values.push(raw);
+        }
       }
       rows.push({ line, values });
       if (++totalRows > 10000) throw new Error('A planilha contém linhas demais.');
     }
-    result.push({ name, rows });
+    result.push({ name, rows, ...(warnings.length ? { warnings } : {}), ...(Object.keys(formulas).length ? { formulas } : {}), ...(mergedRanges.length ? { mergedRanges } : {}), ...(Object.keys(cellSources).length ? { cellSources } : {}) });
   }
   if (!result.length) return fail();
   return result;

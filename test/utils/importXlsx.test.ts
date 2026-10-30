@@ -24,9 +24,18 @@ describe('leitura de planilha XLSX', () => {
     expect(sheets.map(sheet => sheet.name)).toEqual(['Clientes', 'Serviços']);
     expect(sheets[1].rows[1].values).toEqual(['Serviço fictício', '85.5', '90']);
   });
-  it('recusa fórmulas para não importar um resultado sem revisão', async () => {
+  it('apresenta o valor salvo de fórmulas e solicita revisão', async () => {
     const bytes = readFileSync(resolve('test/fixtures/import/formula-ficticia.xlsx'));
-    await expect(readImportXlsx(bytes)).rejects.toThrow(/fórmulas/);
+    const sheets = await readImportXlsx(bytes);
+    expect(sheets[0].rows[1].values[3]).toBe('3');
+    expect(sheets[0].formulas?.D2).toBe('SUM(1,2)');
+    expect(sheets[0].warnings).toContain('A planilha contém fórmulas; confira os valores apresentados.');
+  });
+  it('interpreta datas e durações formatadas no Excel', async () => {
+    const bytes = readFileSync(resolve('test/fixtures/import/datas-ficticias.xlsx'));
+    const sheets = await readImportXlsx(bytes);
+    expect(sheets[0].rows[1].values).toEqual(['Cliente fictício','1991-05-04','90 min']);
+    expect(sheets[0].cellSources?.B2.raw).toBe('33362');
   });
   it('recusa arquivos inválidos e maiores que o limite', async () => {
     await expect(readImportXlsx(new Uint8Array([0, 1, 2]))).rejects.toThrow();

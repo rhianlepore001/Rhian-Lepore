@@ -1,6 +1,6 @@
 
 import { Appointment, Client, FinanceRecord } from './types';
-import { LucideIcon, MessageCircle, Bell, LayoutDashboard, Calendar, Users, UserCog, Settings, DollarSign, Package, CreditCard, Clock, Shield, Trash2, ClipboardList, ShieldAlert, TrendingUp, Crown, Scissors } from 'lucide-react';
+import { LucideIcon, MessageCircle, Bell, LayoutDashboard, Calendar, Users, UserCog, Settings, DollarSign, Package, CreditCard, Clock, Shield, Trash2, ClipboardList, ShieldAlert, TrendingUp, Crown, Scissors, FileInput } from 'lucide-react';
 
 /** Duração padrão do período de teste do produto AgendiX (não o clube de assinatura dos clientes). */
 export const TRIAL_DAYS = 20;
@@ -57,6 +57,7 @@ export const SETTINGS_ITEMS: SettingsItem[] = [
   { label: 'Agendamento', path: '/configuracoes/agendamento', icon: Calendar, group: 'Negócio' },
   { label: 'Equipe e Comissões', path: '/configuracoes/equipe', icon: Users, group: 'Negócio' },
   { label: 'Serviços', path: '/configuracoes/servicos', icon: Scissors, group: 'Negócio' },
+  { label: 'Trazer meus dados', path: '/configuracoes/importar', icon: FileInput, group: 'Negócio' },
   { label: 'Clube', path: '/configuracoes/clube', icon: Crown, group: 'Negócio' },
   { label: 'Plano AgendiX', path: '/configuracoes/assinatura', icon: CreditCard, group: 'Financeiro' },
   { label: 'Notificações', path: '/configuracoes/notificacoes', icon: Bell, group: 'Conta' },
@@ -72,6 +73,7 @@ export const OWNER_SETTINGS_CARD_LABELS = [
   'Agendamento',
   'Mensagens do WhatsApp',
   'Equipe e Comissões',
+  'Trazer meus dados',
   'Clube',
   'Plano AgendiX',
   'Notificações',

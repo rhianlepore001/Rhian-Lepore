@@ -19,6 +19,7 @@ import { Card, Button, Modal, ConfirmModal } from '../components/ui';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ClientDependentsSection } from '../components/ClientDependentsSection';
 import { PhoneInput } from '../components/PhoneInput';
+import { fetchClientAdditionalPhones } from '../services/clientAdditionalPhones';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
@@ -61,6 +62,8 @@ export const ClientCRM: React.FC = () => {
   const [client, setClient] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState('');
+  const [additionalPhones, setAdditionalPhones] = useState<string[]>([]);
+  const [additionalPhonesError, setAdditionalPhonesError] = useState(false);
   const [savingNotes, setSavingNotes] = useState(false);
   const [showAllHistory, setShowAllHistory] = useState(false);
 
@@ -105,6 +108,13 @@ export const ClientCRM: React.FC = () => {
           if (attendedError) throw attendedError;
           const attendedNames = new Map((attendedRows || []).map(row => [row.id, row.attendee_name]));
           appointmentsData.forEach(row => { row.attendee_name = attendedNames.get(row.id); });
+        }
+        try {
+          setAdditionalPhones(await fetchClientAdditionalPhones(tenantId, id));
+          setAdditionalPhonesError(false);
+        } catch {
+          setAdditionalPhones([]);
+          setAdditionalPhonesError(true);
         }
         const totalVisits = isStaff ? (clientData.total_visits || 0) : appointmentsData.length;
         const lastVisitAt = isStaff ? clientData.last_visit : appointmentsData[0]?.appointment_time || null;
@@ -339,6 +349,8 @@ export const ClientCRM: React.FC = () => {
                   {client.phone ? formatPhone(client.phone, region as 'BR' | 'PT') : 'Sem telefone'}
                 </span>
               </p>
+              {additionalPhones.map((phone, index) => <p key={`${phone}-${index}`} className="flex items-center gap-2 min-w-0"><Phone className="w-3.5 h-3.5 shrink-0" aria-hidden="true" /><span className="truncate">{phone}</span></p>)}
+              {additionalPhonesError && <p>Não foi possível carregar os telefones adicionais.</p>}
               {client.email ? (
                 <p className="flex items-center gap-2 min-w-0">
                   <Mail className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />

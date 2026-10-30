@@ -1,0 +1,13 @@
+ALTER TABLE public.clients ALTER COLUMN id SET DEFAULT gen_random_uuid();
+ALTER TABLE public.clients ADD CONSTRAINT clients_user_id_phone_unique UNIQUE (user_id, phone);
+ALTER TABLE public.services ALTER COLUMN id SET DEFAULT gen_random_uuid();
+ALTER TABLE public.services ADD COLUMN category_id uuid, ADD COLUMN price numeric NOT NULL DEFAULT 0, ADD COLUMN duration_minutes integer NOT NULL DEFAULT 30, ADD COLUMN active boolean DEFAULT true;
+CREATE TABLE public.service_categories (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id text NOT NULL, name text NOT NULL, display_order integer DEFAULT 0);
+ALTER TABLE public.services ADD CONSTRAINT services_category_fk FOREIGN KEY (category_id) REFERENCES public.service_categories(id);
+ALTER TABLE public.service_categories ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "owner categories" ON public.service_categories FOR ALL TO authenticated USING (user_id=auth.uid()::text) WITH CHECK (user_id=auth.uid()::text);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.service_categories TO authenticated;
+CREATE TABLE public.appointments (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id text, client_id uuid REFERENCES public.clients(id) ON DELETE CASCADE);
+ALTER TABLE public.appointments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "owner appointments" ON public.appointments FOR ALL TO authenticated USING (user_id=auth.uid()::text) WITH CHECK (user_id=auth.uid()::text);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.appointments TO authenticated;

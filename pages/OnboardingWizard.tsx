@@ -10,6 +10,9 @@ import { StepTeam } from '../components/onboarding/StepTeam';
 import { StepBusinessHours } from '../components/onboarding/StepBusinessHours';
 import { StepMonthlyGoal } from '../components/onboarding/StepMonthlyGoal';
 import { StepSuccess } from '../components/onboarding/StepSuccess';
+import { Modal, Button } from '../components/ui';
+
+const ImportDataWizard = React.lazy(() => import('../components/ImportDataWizard').then(module => ({ default: module.ImportDataWizard })));
 
 const TOTAL_STEPS = 6; // 5 etapas + tela de sucesso (welcome, services, team, hours, goal, success)
 
@@ -20,7 +23,9 @@ export const OnboardingWizard: React.FC = () => {
 
     const accentColor = isBeauty ? 'beauty-neon' : 'accent-gold';
 
-    const { loading: authLoading, tutorialCompleted, markTutorialCompleted } = useAuth();
+    const { loading: authLoading, tutorialCompleted, markTutorialCompleted, user, companyId, region, role } = useAuth();
+    const [showImport, setShowImport] = useState(false);
+    const [importGeneration, setImportGeneration] = useState(0);
     const syncAttempted = useRef(false);
     const [syncError, setSyncError] = useState<string | null>(null);
 
@@ -91,6 +96,7 @@ export const OnboardingWizard: React.FC = () => {
             description: 'Cadastre pelo menos um serviço com preço para ativar seu financeiro.',
             component: (
                 <StepServices
+                    key={importGeneration}
                     onNext={() => goToStep(3 as OnboardingStep)}
                     onBack={() => goToStep(1 as OnboardingStep)}
                     accentColor={accentColor}
@@ -148,6 +154,8 @@ export const OnboardingWizard: React.FC = () => {
             description={currentStepData.description}
         >
             {currentStepData.component}
+            {(step === 1 || step === 2) && role === 'owner' && user && companyId && <div className="mt-5"><Button variant="secondary" onClick={() => setShowImport(true)}>Trazer meus dados de outro aplicativo</Button></div>}
+            {user && companyId && <Modal open={showImport} onClose={() => {}} preventClose showCloseButton={false} title="Trazer meus dados" size="xl"><React.Suspense fallback={<p>Carregando...</p>}><ImportDataWizard companyId={companyId} userId={user.id} region={region} onClose={() => { setShowImport(false); setImportGeneration(value => value + 1); }} /></React.Suspense></Modal>}
         </OnboardingLayout>
     );
 };

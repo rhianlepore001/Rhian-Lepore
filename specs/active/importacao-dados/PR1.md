@@ -1,25 +1,10 @@
-# Importação de dados — PR 1 (em construção)
+# Importação de dados — PR 1
 
-O PR 1 deve permitir que o responsável traga clientes e serviços de outros aplicativos, revise dúvidas, importe e desfaça o lote com segurança. Agendamentos, histórico, profissionais e calendários pertencem ao PR 2.
+O fluxo traz clientes e serviços no onboarding e em Ajustes, com origem, orientações, arquivos, mapeamento, revisão, prévia, confirmação, relatório e desfazer por lote. Agendamentos, histórico, profissionais e calendários pertencem ao PR 2.
 
-## Base implementada
-
-- Leitura de CSV mantém colunas, linhas vazias e posição da linha original.
-- Leitura inicial de XLSX preserva abas e posição das células; arquivos com fórmulas ou células mescladas são recusados explicitamente. Datas de planilha, formatos avançados e compatibilidade entre navegadores ainda precisam de validação.
-- Leitura inicial de VCF preserva propriedades e múltiplos telefones. Dados codificados em base64 ou quoted-printable são recusados explicitamente e ainda precisam de suporte.
-- Mapeamento por apelidos distingue colunas desconhecidas e escolhas ambíguas.
-- Normalização inicial de telefone BR/PT, data, preço e duração; identificação de possíveis duplicados sem vinculação automática. As regras de telefone ainda requerem validação mais completa.
-- A migração aditiva `20261029074503_import_staging.sql` cria tabelas de lotes, linhas de preparação, vínculos de origem e mapeamentos, com RLS para o dono da empresa e rollback documentado. Nenhuma migração foi aplicada em produção.
-- Preparação em lotes de até 100 linhas por solicitação, com indicação explícita quando a preparação é parcial e descarte por empresa; ainda não há interface nem confirmação de importação.
-- Orientações iniciais por origem, incluindo mensagens prontas para solicitar dados ao suporte. Não há presets de colunas validados por aplicativo.
-- Testes isolados das políticas de preparação e rollback em PostgreSQL, com empresas fictícias. O harness reproduz funções de autenticação; não comprova o estado de nenhum banco remoto.
-
-## Pendente antes de concluir o PR 1
-
-- Fluxo completo no onboarding e em Ajustes; instruções por origem, arquivos múltiplos, integração dos leitores e presets por aplicativo.
-- VCF completo, múltiplos telefones na ficha, IDs externos e armazenamento sem perda de colunas.
-- Revisão de conflitos, uso dos vínculos de origem no fluxo, idempotência de gravação, execução em lotes e registro do resultado de cada linha.
-- Relatório, download de pendências, limpeza dos dados temporários e desfazer seguro que preserve alterações posteriores.
-- Garantias de ausência de envios e de consentimento automático, testes de desfazer e teste e2e com arquivos fictícios Trinks e Fresha.
-
-Nenhuma interface de importação ou gravação foi ativada enquanto essas garantias não estiverem implementadas. A base isolada não constitui uma importação utilizável.
+- CSV, XLSX e VCF aceitam vários arquivos; o leitor XLSX percorre abas e preserva dados originais, fórmulas com valor armazenado e células mescladas para consulta. O leitor VCF preserva propriedades e telefones adicionais, com suporte a codificações comuns. Formatos inválidos ou recursos que não podem ser interpretados com segurança são recusados explicitamente; fórmulas sem resultado armazenado e planilhas criptografadas não são avaliadas.
+- Os apelidos incluem presets para Trinks, Fresha, AppBarber, Booksy e Avec; escolhas de mapeamento podem ser salvas por empresa, origem e tipo. O usuário confirma dúvidas e possíveis duplicados, sem mesclagem automática.
+- As migrações aditivas `20261029074503_import_staging.sql` e `20261030090723_import_commit_undo.sql` fornecem preparação, vínculos de origem, confirmação em lotes, histórico e desfazer; seus rollbacks estão em `supabase/rollbacks/`. RLS restringe o acesso à empresa e ao responsável. Nenhuma migração foi aplicada em produção.
+- O relatório identifica cada linha, preserva pendências e permite baixá-las. Campos originais ficam disponíveis ao responsável para download e remoção explícita; os arquivos enviados não são armazenados. O desfazer protege registros alterados e registros com referências posteriores.
+- A importação não envia mensagens nem atribui consentimento de marketing. Há limites de tamanho e linhas, gravação em blocos e recuperação pelo histórico após interrupções.
+- Testes de políticas, execução e rollback usam PostgreSQL isolado com empresas fictícias. O teste ponta a ponta usa navegador e uma API simulada; não comprova a configuração de um banco remoto nem a fidelidade de todas as exportações dos fornecedores.

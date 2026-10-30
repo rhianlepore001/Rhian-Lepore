@@ -16,7 +16,7 @@ CREATE TABLE public.import_staging_rows (
   company_id text NOT NULL,
   batch_id uuid NOT NULL,
   row_number integer NOT NULL CHECK (row_number BETWEEN 1 AND 1000000),
-  raw_data jsonb NOT NULL CHECK (jsonb_typeof(raw_data) = 'object' AND pg_column_size(raw_data) <= 65536),
+  raw_data jsonb NOT NULL CHECK (jsonb_typeof(raw_data) = 'object' AND pg_column_size(raw_data) <= 1048576),
   normalized_data jsonb CHECK (normalized_data IS NULL OR (jsonb_typeof(normalized_data) = 'object' AND pg_column_size(normalized_data) <= 65536)),
   outcome text NOT NULL DEFAULT 'pending' CHECK (outcome IN ('pending', 'imported', 'updated', 'ignored', 'error')),
   reason text CHECK (char_length(reason) <= 1000),

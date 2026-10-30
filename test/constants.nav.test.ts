@@ -65,6 +65,7 @@ describe('Ajustes do colaborador (conta staff nova)', () => {
       'Agendamento',
       'Equipe e Comissões',
       'Serviços',
+      'Trazer meus dados',
       'Clube',
       'Plano AgendiX',
       'Notificações',

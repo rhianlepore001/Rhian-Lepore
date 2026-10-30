@@ -305,7 +305,7 @@ export const ServiceSettings: React.FC = () => {
                                                             )}
                                                         </div>
                                                         <p className={`text-sm font-mono ${colors.textMuted}`}>
-                                                            {formatServiceDuration(service.duration_minutes)} • <span className={accent.text}>{formatCurrency(service.price, region)}</span>
+                                                            <span data-testid={`service-duration-${service.id}`} className="whitespace-nowrap">{formatServiceDuration(service.duration_minutes)}</span> • <span data-testid={`service-price-${service.id}`} className={`${accent.text} whitespace-nowrap`}>{formatCurrency(service.price, region)}</span>
                                                         </p>
                                                     </div>
 

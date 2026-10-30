@@ -174,4 +174,33 @@ describe('agendamento interno de dependentes', () => {
       ],
     });
   });
+
+  it('usa a versão por profissional só quando alguma pessoa tem outro profissional', async () => {
+    vi.mocked(supabase.rpc).mockClear();
+    vi.mocked(supabase.rpc).mockResolvedValue({ data: { success: true }, error: null } as never);
+    await createAppointment({ companyId: 'tenant-a', clientId: 'holder-a', professionalId: 'pro-a', customerName: 'Titular Fictício', appointmentTime: new Date('2026-11-01T10:00Z'), serviceIds: ['service-a'], totalPrice: 30, durationMinutes: 20, status: 'Confirmed', attendees: [
+      { dependentId: null, serviceIds: ['service-a'], totalPrice: 30, professionalId: 'pro-a' },
+      { dependentId: 'dependent-b', serviceIds: ['service-b'], totalPrice: 50, professionalId: 'pro-b' },
+    ] });
+    expect(supabase.rpc).toHaveBeenCalledTimes(1);
+    expect(supabase.rpc).toHaveBeenCalledWith('create_internal_attendee_bookings_v2', {
+      p_business_id: 'tenant-a', p_client_id: 'holder-a', p_professional_id: 'pro-a',
+      p_appointment_time: '2026-11-01T10:00:00.000Z', p_notes: null,
+      p_attendees: [
+        { dependent_id: null, service_ids: ['service-a'], total_price: 30, custom_service_name: null, professional_id: 'pro-a' },
+        { dependent_id: 'dependent-b', service_ids: ['service-b'], total_price: 50, custom_service_name: null, professional_id: 'pro-b' },
+      ],
+    });
+  });
+
+  it('mantém a versão anterior quando todos são atendidos pelo mesmo profissional', async () => {
+    vi.mocked(supabase.rpc).mockClear();
+    vi.mocked(supabase.rpc).mockResolvedValue({ data: { success: true }, error: null } as never);
+    await createAppointment({ companyId: 'tenant-a', clientId: 'holder-a', professionalId: 'pro-a', customerName: 'Titular Fictício', appointmentTime: new Date('2026-11-01T10:00Z'), serviceIds: ['service-a'], totalPrice: 30, durationMinutes: 20, status: 'Confirmed', attendees: [
+      { dependentId: null, serviceIds: ['service-a'], totalPrice: 30, professionalId: 'pro-a' },
+      { dependentId: 'dependent-b', serviceIds: ['service-b'], totalPrice: 50, professionalId: 'pro-a' },
+    ] });
+    expect(vi.mocked(supabase.rpc).mock.calls[0][0]).toBe('create_internal_attendee_bookings');
+    expect(vi.mocked(supabase.rpc).mock.calls[0][1]).toMatchObject({ p_attendees: [{ dependent_id: null }, { dependent_id: 'dependent-b' }] });
+  });
 });

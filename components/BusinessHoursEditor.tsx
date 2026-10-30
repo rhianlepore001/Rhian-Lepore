@@ -2,6 +2,7 @@ import React from 'react';
 import { Copy, Plus, X } from 'lucide-react';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { SettingsSwitch } from './SettingsSwitch';
+import { TimeSelect24 } from './TimeSelect24';
 
 interface TimeBlock {
     start: string;
@@ -34,7 +35,7 @@ export const BusinessHoursEditor: React.FC<BusinessHoursEditorProps> = ({
     hours,
     onChange,
 }) => {
-    const { accent, colors, classes } = useBrutalTheme();
+    const { colors } = useBrutalTheme();
 
     const getDay = (dayKey: string): DayHours => {
         return hours[dayKey] || { isOpen: false, blocks: [] };
@@ -193,25 +194,17 @@ export const BusinessHoursEditor: React.FC<BusinessHoursEditorProps> = ({
                             {isOpen && (
                                 <div className="px-3 pb-3 md:px-4 md:pb-4 space-y-2">
                                     {dayData.blocks.map((block, blockIndex) => (
-                                        <div key={blockIndex} className="flex items-center gap-2">
-                                            <input
-                                                type="time"
+                                        <div key={blockIndex} className="flex min-w-0 items-center gap-2">
+                                            <TimeSelect24
                                                 value={block.start}
-                                                onChange={(e) => updateBlock(day.key, blockIndex, 'start', e.target.value)}
-                                                className={`
-                                                    flex-1 p-2.5 text-sm rounded-lg outline-none transition-all
-                                                    ${classes.input}
-                                                `}
+                                                onChange={(v) => updateBlock(day.key, blockIndex, 'start', v)}
+                                                ariaLabel={`${day.label}, bloco ${blockIndex + 1}, início`}
                                             />
-                                            <span className={colors.textMuted}>até</span>
-                                            <input
-                                                type="time"
+                                            <span className={`${colors.textMuted} shrink-0 text-sm`}>até</span>
+                                            <TimeSelect24
                                                 value={block.end}
-                                                onChange={(e) => updateBlock(day.key, blockIndex, 'end', e.target.value)}
-                                                className={`
-                                                    flex-1 p-2.5 text-sm rounded-lg outline-none transition-all
-                                                    ${classes.input}
-                                                `}
+                                                onChange={(v) => updateBlock(day.key, blockIndex, 'end', v)}
+                                                ariaLabel={`${day.label}, bloco ${blockIndex + 1}, fim`}
                                             />
 
                                             {dayData.blocks.length > 1 && (

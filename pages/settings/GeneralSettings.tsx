@@ -25,12 +25,16 @@ import {
 } from '../../utils/businessTimezone';
 import {
     CANCELLATION_POLICY_NOTES_HINT,
+    MAX_CLIENT_CANCEL_POLICY_TEXT_LENGTH,
     cancellationPolicyNotesForDisplay,
     generatedCancellationPolicyText,
     normalizeCustomCancellationPolicyText,
 } from '../../utils/cancellationPolicyCopy';
 import {
     DEFAULT_CLIENT_CANCEL_CUTOFF_HOURS,
+    CLIENT_CANCEL_CUTOFF_PRESETS,
+    cancelCutoffPresetLabel,
+    clampClientCancelCutoffHours,
     MAX_CLIENT_CANCEL_NOTE_LENGTH,
 } from '../../utils/clientCancelCutoff';
 
@@ -50,6 +54,8 @@ export const GeneralSettings: React.FC = () => {
     const [coverPreview, setCoverPreview] = useState<string | null>(null);
 
     const [cancellationPolicy, setCancellationPolicy] = useState('');
+    const [cancelCutoffHours, setCancelCutoffHours] = useState(DEFAULT_CLIENT_CANCEL_CUTOFF_HOURS);
+    const [cancelPolicyText, setCancelPolicyText] = useState<string | null>(null);
 
     const [businessHours, setBusinessHours] = useState<Record<string, { isOpen: boolean; blocks: { start: string; end: string }[] }>>({
         mon: { isOpen: true, blocks: [{ start: '09:00', end: '18:00' }] },
@@ -90,6 +96,8 @@ export const GeneralSettings: React.FC = () => {
         instagram: string;
         dailyGoal: string;
         cancellationPolicy: string;
+        cancelCutoffHours: number;
+        cancelPolicyText: string | null;
         businessHours: typeof businessHours;
         selectedRegion: Region;
     } | null>(null);
@@ -109,6 +117,8 @@ export const GeneralSettings: React.FC = () => {
 
     React.useEffect(() => {
         if (settings) {
+            setCancelCutoffHours(clampClientCancelCutoffHours(settings.client_cancel_cutoff_hours ?? DEFAULT_CLIENT_CANCEL_CUTOFF_HOURS));
+            setCancelPolicyText(normalizeCustomCancellationPolicyText(settings.client_cancel_policy_text));
             setCancellationPolicy(cancellationPolicyNotesForDisplay(
                 settings.client_cancel_note,
                 settings.cancellation_policy,
@@ -149,6 +159,8 @@ export const GeneralSettings: React.FC = () => {
                 instagram,
                 dailyGoal,
                 cancellationPolicy,
+                cancelCutoffHours,
+                cancelPolicyText,
                 businessHours,
                 selectedRegion,
             };
@@ -162,13 +174,15 @@ export const GeneralSettings: React.FC = () => {
             instagram !== initial.instagram ||
             dailyGoal !== initial.dailyGoal ||
             cancellationPolicy !== initial.cancellationPolicy ||
+            cancelCutoffHours !== initial.cancelCutoffHours ||
+            cancelPolicyText !== initial.cancelPolicyText ||
             JSON.stringify(businessHours) !== JSON.stringify(initial.businessHours) ||
             selectedRegion !== initial.selectedRegion ||
             timezoneDirty ||
             logoFile !== null ||
             coverFile !== null;
         setHasChanges(dirty);
-    }, [businessName, phone, address, instagram, dailyGoal, logoFile, coverFile, cancellationPolicy, businessHours, selectedRegion, timezoneDirty, loading]);
+    }, [businessName, phone, address, instagram, dailyGoal, logoFile, coverFile, cancellationPolicy, cancelCutoffHours, cancelPolicyText, businessHours, selectedRegion, timezoneDirty, loading]);
 
     const handleLogoChange = (file: File) => {
         if (file.size > 10 * 1024 * 1024) {
@@ -232,6 +246,8 @@ export const GeneralSettings: React.FC = () => {
                     ? ''
                     : cancellationPolicy.trim().slice(0, MAX_CLIENT_CANCEL_NOTE_LENGTH),
                 business_hours: businessHours as any,
+                client_cancel_cutoff_hours: cancelCutoffHours,
+                client_cancel_policy_text: normalizeCustomCancellationPolicyText(cancelPolicyText),
             });
 
             // Fuso: salvo à parte para tolerar a coluna ainda inexistente.
@@ -258,6 +274,7 @@ export const GeneralSettings: React.FC = () => {
 
             if (authError) throw authError;
 
+            setCancelPolicyText(normalizeCustomCancellationPolicyText(cancelPolicyText));
             setSaveStatus('saved');
             setHasChanges(false);
             initialValuesRef.current = {
@@ -267,6 +284,8 @@ export const GeneralSettings: React.FC = () => {
                 instagram,
                 dailyGoal,
                 cancellationPolicy,
+                cancelCutoffHours,
+                cancelPolicyText: normalizeCustomCancellationPolicyText(cancelPolicyText),
                 businessHours,
                 selectedRegion,
             };
@@ -483,21 +502,14 @@ export const GeneralSettings: React.FC = () => {
 
                 <div data-testid="cancellation-policy-section">
                 <SettingsSection title="Política de Cancelamento">
-                    <div
-                        className="rounded-2xl border border-theme-border bg-theme-surface px-4 py-3.5 space-y-1.5"
-                        data-testid="cancellation-policy-generated"
-                    >
-                        <p className={`${colors.textMuted} text-xs font-semibold uppercase tracking-[0.14em]`}>
-                            O que o cliente lê
-                        </p>
-                        <p className={`${colors.text} text-sm leading-relaxed`}>
-                            {normalizeCustomCancellationPolicyText(settings?.client_cancel_policy_text)
-                                ?? generatedCancellationPolicyText(
-                                    settings?.client_cancel_cutoff_hours ?? DEFAULT_CLIENT_CANCEL_CUTOFF_HOURS,
-                                    businessName || profile?.business_name,
-                                )}
-                        </p>
-                    </div>
+                    <label className={classes.label} htmlFor="cancel-cutoff">Cliente pode cancelar até</label>
+                    <select id="cancel-cutoff" data-testid="cancel-cutoff" value={cancelCutoffHours} onChange={e => setCancelCutoffHours(Number(e.target.value))} className={classes.input}>
+                        {CLIENT_CANCEL_CUTOFF_PRESETS.map(hours => <option key={hours} value={hours}>{cancelCutoffPresetLabel(hours)}</option>)}
+                    </select>
+                    <label className={`${classes.label} mt-4 block`} htmlFor="cancel-policy-text">O que o cliente lê</label>
+                    <textarea id="cancel-policy-text" data-testid="cancellation-policy-generated" value={cancelPolicyText ?? generatedCancellationPolicyText(cancelCutoffHours, businessName || profile?.business_name)} maxLength={MAX_CLIENT_CANCEL_POLICY_TEXT_LENGTH} onChange={e => setCancelPolicyText(e.target.value)} rows={3} className={classes.input} />
+                    <button type="button" onClick={() => setCancelPolicyText(null)} className={`mt-2 text-sm underline ${accent.text}`}>Restaurar texto padrão</button>
+                    <p className={`${colors.textMuted} text-xs mt-2`}>Se alterar o prazo, confira se o texto personalizado corresponde à regra escolhida.</p>
                     <label className={`${classes.label} mt-4 block`} htmlFor="cancellation-policy-notes">
                         Observações (opcional)
                     </label>

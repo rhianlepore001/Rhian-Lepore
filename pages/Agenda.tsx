@@ -813,6 +813,7 @@ export const Agenda: React.FC = () => {
             const message = getOwnerAcceptWhatsAppText({
                 isBeauty,
                 customerName: booking.customer_name,
+                attendeeName: booking.attendee_name,
                 businessName: businessName,
                 appointmentTime: booking.appointment_time,
                 timeZone: shopTimeZone,

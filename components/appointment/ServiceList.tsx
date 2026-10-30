@@ -2,6 +2,7 @@ import React from 'react';
 import { Check, Clock, Sparkles } from 'lucide-react';
 import { formatCurrency } from '../../utils/formatters';
 import { Service } from './types';
+import { matchesServiceSearch } from '../../utils/serviceSearch';
 
 interface ServiceListProps {
     services: Service[];
@@ -20,6 +21,7 @@ interface ServiceListProps {
     customServicePrice: string;
     setCustomServicePrice: (v: string) => void;
     currencySymbol: string;
+    allowCustomService?: boolean;
 }
 
 export const ServiceList: React.FC<ServiceListProps> = ({
@@ -37,7 +39,8 @@ export const ServiceList: React.FC<ServiceListProps> = ({
     setCustomServiceName,
     customServicePrice,
     setCustomServicePrice,
-    currencySymbol
+    currencySymbol,
+    allowCustomService = true
 }) => {
     // Nome de categoria desconhecido NUNCA vira um "Serviços" genérico repetido
     // (era o que o colaborador via quando não conseguia ler as categorias).
@@ -57,10 +60,7 @@ export const ServiceList: React.FC<ServiceListProps> = ({
         .filter(service => {
             // Category filter
             const matchesCategory = activeCategory === 'all' || service.category_id === activeCategory;
-            // Search filter
-            const matchesSearch = !searchQuery ||
-                service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (service.description && service.description.toLowerCase().includes(searchQuery.toLowerCase()));
+            const matchesSearch = matchesServiceSearch(service, searchQuery);
             return matchesCategory && matchesSearch;
         })
         .reduce((acc, service) => {
@@ -185,7 +185,7 @@ export const ServiceList: React.FC<ServiceListProps> = ({
 
     // ADD CUSTOM SERVICE BOX AT THE BOTTOM
     // Updated: Always show custom service option regardless of category filter
-    result.push(
+    if (allowCustomService) result.push(
         <div key="custom-service-item" className="pt-2 space-y-2.5">
             <h3 className="text-xs font-mono uppercase tracking-widest pl-3 border-l-2 text-theme-textSecondary border-[var(--color-divider)]">
                 Serviço avulso

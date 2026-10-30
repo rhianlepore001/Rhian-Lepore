@@ -28,6 +28,9 @@ export const publicBookingSchema = z.object({
   duration_minutes: z.number().int().positive().nullish(),
   is_edit: z.boolean().nullish(),
   product_lines: z.array(publicBookingProductLineSchema).nullish(),
+  group_id: z.string().nullish(),
+  group_position: z.number().int().nullish(),
+  attendee_name: z.string().nullish(),
 });
 
 export const submitPublicBookingInputSchema = z.object({
@@ -42,6 +45,18 @@ export const submitPublicBookingInputSchema = z.object({
   editingBookingId: z.string().min(1).nullish(),
   originalAppointmentTime: z.string().nullish(),
   productLines: z.array(publicBookingProductLineSchema).optional().default([]),
+});
+
+export const submitPublicGroupBookingInputSchema = z.object({
+  businessId: z.string().min(1),
+  customerName: z.string().trim().min(1),
+  customerPhone: z.string().trim().min(1),
+  appointmentTime: z.string().min(1),
+  people: z.array(z.object({
+    attendeeName: z.string().trim().min(1).max(80).nullable(),
+    professionalId: z.string().min(1),
+    serviceIds: z.array(z.string().min(1)).min(1).max(10),
+  })).min(2).max(5),
 });
 
 export const createAcceptedAppointmentInputSchema = z.object({
@@ -60,4 +75,5 @@ export const createAcceptedAppointmentInputSchema = z.object({
 export type PublicBookingStatus = z.infer<typeof publicBookingStatusSchema>;
 export type PublicBookingRecord = z.infer<typeof publicBookingSchema>;
 export type SubmitPublicBookingInput = z.input<typeof submitPublicBookingInputSchema>;
+export type SubmitPublicGroupBookingInput = z.input<typeof submitPublicGroupBookingInputSchema>;
 export type CreateAcceptedAppointmentInput = z.input<typeof createAcceptedAppointmentInputSchema>;

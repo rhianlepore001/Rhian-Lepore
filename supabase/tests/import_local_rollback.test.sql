@@ -3,7 +3,7 @@ BEGIN
   IF EXISTS (
     SELECT 1 FROM pg_class WHERE relnamespace='public'::regnamespace
       AND relname IN ('import_batches','import_staging_rows','import_column_mappings','import_source_links',
-                      'import_created_records','import_created_categories','import_clients_tenant_id_idx','import_services_tenant_id_idx')
+                      'import_created_records','import_created_categories','import_services_tenant_id_idx')
   ) THEN RAISE EXCEPTION 'Os objetos da importação não foram removidos.'; END IF;
   IF EXISTS (
     SELECT 1 FROM information_schema.columns WHERE table_schema='public'

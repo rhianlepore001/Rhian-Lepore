@@ -11,8 +11,8 @@ trap cleanup EXIT
 PSQL=("$PGBIN/psql" -h "$TMP" -p "$PORT" -U postgres -d postgres -v ON_ERROR_STOP=1 -q)
 "${PSQL[@]}" -f "$ROOT/supabase/tests/staff_edit_clients.harness.sql"
 "${PSQL[@]}" -f "$ROOT/supabase/tests/import_staging_services.harness.sql"
-"${PSQL[@]}" -f "$ROOT/supabase/migrations/20261029074503_import_staging.sql"
+"${PSQL[@]}" -f "$ROOT/supabase/migrations/20261030130000_import_staging.sql"
 "${PSQL[@]}" -f "$ROOT/supabase/tests/import_staging.test.sql"
-"${PSQL[@]}" -f "$ROOT/supabase/rollbacks/20261029074503_import_staging.rollback.sql"
-count=$("${PSQL[@]}" -Atc "SELECT count(*) FROM pg_class WHERE relnamespace='public'::regnamespace AND relname IN ('import_batches','import_staging_rows','import_column_mappings','import_source_links','import_clients_tenant_id_idx','import_services_tenant_id_idx')")
+"${PSQL[@]}" -f "$ROOT/docs/rollbacks/20261030130000_import_staging.rollback.sql"
+count=$("${PSQL[@]}" -Atc "SELECT count(*) FROM pg_class WHERE relnamespace='public'::regnamespace AND relname IN ('import_batches','import_staging_rows','import_column_mappings','import_source_links','import_services_tenant_id_idx')")
 [ "$count" = 0 ]

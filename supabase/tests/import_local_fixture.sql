@@ -5,6 +5,9 @@ CREATE TABLE public.clients (
   created_at timestamptz DEFAULT now(), updated_at timestamptz DEFAULT now(),
   UNIQUE(user_id, phone)
 );
+CREATE UNIQUE INDEX clients_tenant_id_dependent_fk ON public.clients(user_id, id);
+CREATE FUNCTION public.normalize_phone_digits(p_phone text) RETURNS text LANGUAGE plpgsql IMMUTABLE AS $$ BEGIN RETURN regexp_replace(COALESCE(p_phone, ''), '\D', '', 'g'); END; $$;
+CREATE INDEX idx_clients_user_phone_digits ON public.clients(user_id, public.normalize_phone_digits(phone));
 CREATE TABLE public.service_categories (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id text NOT NULL, name text NOT NULL,
   display_order integer DEFAULT 0
@@ -16,7 +19,8 @@ CREATE TABLE public.services (
 );
 CREATE TABLE public.appointments (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id text NOT NULL,
-  client_id uuid REFERENCES public.clients(id) ON DELETE CASCADE
+  client_id uuid REFERENCES public.clients(id) ON DELETE CASCADE,
+  service text
 );
 CREATE FUNCTION public.get_auth_company_id() RETURNS text LANGUAGE sql STABLE SECURITY DEFINER SET search_path = ''
   AS $$ SELECT COALESCE(NULLIF(btrim(company_id), ''), id) FROM public.profiles WHERE id = auth.uid()::text $$;

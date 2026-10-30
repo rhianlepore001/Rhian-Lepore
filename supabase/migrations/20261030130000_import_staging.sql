@@ -1,6 +1,7 @@
 BEGIN;
+SET LOCAL lock_timeout = '5s';
 
-CREATE TABLE public.import_batches (
+CREATE TABLE IF NOT EXISTS public.import_batches (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id text NOT NULL,
   created_by uuid NOT NULL,
@@ -11,7 +12,7 @@ CREATE TABLE public.import_batches (
   UNIQUE (company_id, id)
 );
 
-CREATE TABLE public.import_staging_rows (
+CREATE TABLE IF NOT EXISTS public.import_staging_rows (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id text NOT NULL,
   batch_id uuid NOT NULL,
@@ -23,9 +24,9 @@ CREATE TABLE public.import_staging_rows (
   FOREIGN KEY (company_id, batch_id) REFERENCES public.import_batches(company_id, id) ON DELETE CASCADE,
   UNIQUE (batch_id, row_number)
 );
-CREATE INDEX import_staging_company_batch_idx ON public.import_staging_rows(company_id, batch_id);
+CREATE INDEX IF NOT EXISTS import_staging_company_batch_idx ON public.import_staging_rows(company_id, batch_id);
 
-CREATE TABLE public.import_column_mappings (
+CREATE TABLE IF NOT EXISTS public.import_column_mappings (
   company_id text NOT NULL,
   source text NOT NULL CHECK (source IN ('trinks', 'fresha', 'appbarber', 'booksy', 'avec', 'spreadsheet', 'contacts')),
   kind text NOT NULL CHECK (kind IN ('client', 'service')),
@@ -34,9 +35,9 @@ CREATE TABLE public.import_column_mappings (
   PRIMARY KEY (company_id, source, kind)
 );
 
-CREATE UNIQUE INDEX import_clients_tenant_id_idx ON public.clients(user_id, id);
-CREATE UNIQUE INDEX import_services_tenant_id_idx ON public.services(user_id, id);
-CREATE TABLE public.import_source_links (
+-- clients(user_id, id) já é único em produção (clients_tenant_id_dependent_fk); o vínculo reaproveita esse índice.
+CREATE UNIQUE INDEX IF NOT EXISTS import_services_tenant_id_idx ON public.services(user_id, id);
+CREATE TABLE IF NOT EXISTS public.import_source_links (
   company_id text NOT NULL,
   source text NOT NULL CHECK (source IN ('trinks', 'fresha', 'appbarber', 'booksy', 'avec', 'spreadsheet', 'contacts')),
   kind text NOT NULL CHECK (kind IN ('client', 'service')),
@@ -49,8 +50,8 @@ CREATE TABLE public.import_source_links (
   FOREIGN KEY (company_id, client_id) REFERENCES public.clients(user_id, id) ON DELETE CASCADE,
   FOREIGN KEY (company_id, service_id) REFERENCES public.services(user_id, id) ON DELETE CASCADE
 );
-CREATE INDEX import_source_links_client_idx ON public.import_source_links(company_id, client_id) WHERE client_id IS NOT NULL;
-CREATE INDEX import_source_links_service_idx ON public.import_source_links(company_id, service_id) WHERE service_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS import_source_links_client_idx ON public.import_source_links(company_id, client_id) WHERE client_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS import_source_links_service_idx ON public.import_source_links(company_id, service_id) WHERE service_id IS NOT NULL;
 
 ALTER TABLE public.import_source_links ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.import_batches ENABLE ROW LEVEL SECURITY;
@@ -60,15 +61,19 @@ REVOKE ALL ON public.import_batches, public.import_staging_rows, public.import_c
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.import_batches, public.import_staging_rows, public.import_column_mappings, public.import_source_links TO authenticated;
 GRANT ALL ON public.import_batches, public.import_staging_rows, public.import_column_mappings, public.import_source_links TO service_role;
 
+DROP POLICY IF EXISTS "Import batches owner" ON public.import_batches;
 CREATE POLICY "Import batches owner" ON public.import_batches FOR ALL TO authenticated
   USING (company_id = (SELECT public.get_auth_company_id()) AND (SELECT public.get_auth_role()) = 'owner')
   WITH CHECK (company_id = (SELECT public.get_auth_company_id()) AND (SELECT public.get_auth_role()) = 'owner' AND created_by = (SELECT auth.uid()));
+DROP POLICY IF EXISTS "Import staging owner" ON public.import_staging_rows;
 CREATE POLICY "Import staging owner" ON public.import_staging_rows FOR ALL TO authenticated
   USING (company_id = (SELECT public.get_auth_company_id()) AND (SELECT public.get_auth_role()) = 'owner')
   WITH CHECK (company_id = (SELECT public.get_auth_company_id()) AND (SELECT public.get_auth_role()) = 'owner');
+DROP POLICY IF EXISTS "Import source links owner" ON public.import_source_links;
 CREATE POLICY "Import source links owner" ON public.import_source_links FOR ALL TO authenticated
   USING (company_id = (SELECT public.get_auth_company_id()) AND (SELECT public.get_auth_role()) = 'owner')
   WITH CHECK (company_id = (SELECT public.get_auth_company_id()) AND (SELECT public.get_auth_role()) = 'owner');
+DROP POLICY IF EXISTS "Import mappings owner" ON public.import_column_mappings;
 CREATE POLICY "Import mappings owner" ON public.import_column_mappings FOR ALL TO authenticated
   USING (company_id = (SELECT public.get_auth_company_id()) AND (SELECT public.get_auth_role()) = 'owner')
   WITH CHECK (company_id = (SELECT public.get_auth_company_id()) AND (SELECT public.get_auth_role()) = 'owner');

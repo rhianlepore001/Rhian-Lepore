@@ -1,8 +1,16 @@
+-- Rollback de 20261030130100_import_commit_undo.sql
+-- Execute ANTES o rollback de 20261030130200_import_retention_limits.sql. Faça o backup indicado no .md antes de executar.
 BEGIN;
+SET LOCAL lock_timeout = '5s';
 DROP FUNCTION IF EXISTS public.commit_import_batch(uuid);
+DROP FUNCTION IF EXISTS public.undo_import_batch(uuid, boolean);
 DROP FUNCTION IF EXISTS public.undo_import_batch(uuid);
 DROP FUNCTION IF EXISTS public.clear_import_pending(uuid);
 DROP FUNCTION IF EXISTS public.clear_import_source_data(uuid);
+DROP FUNCTION IF EXISTS public.purge_expired_import_data();
+DROP FUNCTION IF EXISTS public.import_purge_all();
+DROP FUNCTION IF EXISTS public.import_purge_company(text, uuid);
+DROP FUNCTION IF EXISTS public.import_find_references(text, text, uuid[], text[], text[], text);
 DROP TABLE IF EXISTS public.import_created_records;
 DROP TABLE IF EXISTS public.import_created_categories;
 DROP TRIGGER IF EXISTS guard_import_batches ON public.import_batches;
@@ -12,6 +20,11 @@ DROP TRIGGER IF EXISTS import_revision_clients ON public.clients;
 DROP TRIGGER IF EXISTS import_revision_services ON public.services;
 DROP TRIGGER IF EXISTS import_revision_categories ON public.service_categories;
 DROP FUNCTION IF EXISTS public.bump_import_revision();
+DROP INDEX IF EXISTS public.idx_clients_user_name_folded;
+DROP INDEX IF EXISTS public.idx_clients_user_email_lower;
+DROP INDEX IF EXISTS public.idx_clients_user_extra_phones;
+DROP INDEX IF EXISTS public.idx_services_user_name_folded;
+DROP FUNCTION IF EXISTS public.import_fold_text(text);
 ALTER TABLE public.import_staging_rows DROP COLUMN IF EXISTS display_name;
 ALTER TABLE public.import_batches DROP COLUMN IF EXISTS file_name;
 ALTER TABLE public.import_batches DROP COLUMN IF EXISTS expected_rows;

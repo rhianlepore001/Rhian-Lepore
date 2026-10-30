@@ -42,6 +42,11 @@ describe('Meta browser adapter privacy', () => {
     setMetaScope(true);
     metaTracker.pageView('/register', '', false);
     expect(snapshots).toEqual([{ disablePushState: true, allowDuplicatePageViews: true, initialized: true }]);
+    await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(1), { timeout: 2000 });
+    const [, options] = vi.mocked(fetch).mock.calls[0];
+    expect(JSON.parse(String(options?.body))).toEqual(expect.objectContaining({
+      event_name: 'PageView', event_source_url: window.location.origin + '/#/register',
+    }));
   });
 
   it('allows only attribution query parameters and keeps them out of the Pixel source URL', async () => {

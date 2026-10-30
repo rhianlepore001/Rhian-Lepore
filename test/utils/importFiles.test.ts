@@ -26,7 +26,7 @@ describe('leitura de texto de arquivos antigos', () => {
   });
   it('importa um CSV antigo e avisa para conferir os acentos', async () => {
     const bytes = Uint8Array.from([...new TextEncoder().encode('Nome,Celular\n'), 0x4a, 0x6f, 0x73, 0xe9, ...new TextEncoder().encode(' Fictício,11987654321')]);
-    const file = { name: 'antigo.csv', size: bytes.byteLength, arrayBuffer: async () => bytes.buffer } as unknown as File;
+    const file = { name: 'antigo.csv', size: bytes.byteLength, arrayBuffer: async () => Buffer.from(bytes) as unknown as ArrayBuffer } as unknown as File;
     const [sheet] = await readImportFiles([file]);
     expect(sheet.rows[0].values[0]).toMatch(/^José/);
     expect(sheet.warnings.join(' ')).toMatch(/acentos/);

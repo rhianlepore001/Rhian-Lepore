@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { inferImportColumns, prepareImportRows } from '../../utils/importRows';
+import { dropEmptyImportRows, inferImportColumns, prepareImportRows } from '../../utils/importRows';
 
 describe('preparo de arquivos fictícios', () => {
   it('reconhece colunas Trinks e mantém múltiplos telefones e dados extras', () => {
@@ -45,5 +45,38 @@ describe('preparo de arquivos fictícios', () => {
     const [row] = prepareImportRows(headers, [{ line: 2, values: ['Ana Fictícia', '', ''] }], inferImportColumns(headers, 'spreadsheet', 'client'), 'client', 'BR', 'x:0');
     expect(row.normalized.email).toBeNull();
     expect(row.normalized.notes).toBeNull();
+  });
+  it('reconhece cabeçalhos reais do Booksy: celular e sobrenome juntos ao nome', () => {
+    const headers = ['Name', 'Surname', 'Cell phone', 'Email', 'Birthday', 'Notes'];
+    const mapping = inferImportColumns(headers, 'booksy', 'client');
+    expect(mapping).toEqual(expect.objectContaining({ name: [0, 1], phone: [2], email: [3], birth_date: [4], notes: [5] }));
+    const [row] = prepareImportRows(headers, [{ line: 2, values: ['Priscila', 'Pinto Batista', '5585969845238', 'p@example.test', '1992-10-21', 'PIX'] }], mapping, 'client', 'BR', 'booksy');
+    expect(row.normalized).toEqual(expect.objectContaining({ name: 'Priscila Pinto Batista', phones: ['+5585969845238'] }));
+    expect(row.issues).toEqual([]);
+  });
+  it('junta Nome e Sobrenome de qualquer origem, sem mexer em quem já tem nome completo', () => {
+    expect(inferImportColumns(['Nome', 'Sobrenome', 'Telefone'], 'trinks', 'client').name).toEqual([0, 1]);
+    expect(inferImportColumns(['Nome completo', 'Sobrenome'], 'trinks', 'client').name).toEqual([0]);
+  });
+  it('reconhece Fresha: celular e notas do cliente, data com traços', () => {
+    const headers = ['First name', 'Last name', 'Email', 'Mobile phone', 'Birthday', 'Client notes'];
+    const mapping = inferImportColumns(headers, 'fresha', 'client');
+    expect(mapping).toEqual(expect.objectContaining({ name: [0, 1], phone: [3], notes: [5] }));
+    const [row] = prepareImportRows(headers, [{ line: 2, values: ['Ana', 'Souza', 'a@example.test', '11987654321', '04-05-1991', 'Nota'] }], mapping, 'client', 'BR', 'fresha');
+    expect(row.normalized).toEqual(expect.objectContaining({ birth_date: '1991-05-04', notes: 'Nota' }));
+    expect(row.issues).toEqual([]);
+  });
+  it('reconhece serviço com cabeçalhos entre parênteses (Avec) e duração em horas:minutos', () => {
+    const headers = ['SERVIÇO', 'GRUPO', 'TEMPO (MIN)', 'PREÇO (R$)'];
+    const mapping = inferImportColumns(headers, 'avec', 'service');
+    expect(mapping).toEqual({ name: [0], category: [1], duration: [2], price: [3] });
+    const [row] = prepareImportRows(headers, [{ line: 2, values: ['Corte', 'Cabelo', '45', '65,00'] }], mapping, 'service', 'BR', 'avec');
+    expect(row.normalized).toEqual(expect.objectContaining({ price: 65, duration: 45, category: 'Cabelo' }));
+    expect(row.issues).toEqual([]);
+  });
+  it('ignora linhas totalmente vazias e mantém o número original das demais', () => {
+    const records = [{ line: 2, values: ['Ana', '1'] }, { line: 3, values: ['', ' '] }, { line: 4, values: ['Bia', '2'] }, { line: 5, values: [] }];
+    expect(dropEmptyImportRows(records).map(record => record.line)).toEqual([2, 4]);
+    expect(dropEmptyImportRows([{ line: 2, values: ['', '123'] }])).toHaveLength(1);
   });
 });

@@ -55,4 +55,14 @@ describe('preparação de dados para importação', () => {
     expect(normalizePrice('R$ 1,200.50')).toBeNull();
     expect(normalizePrice('R$')).toBeNull();
   });
+  it('aceita duração em horas:minutos e data com traços ou pontos', () => {
+    expect(normalizeDuration('00:30')).toBe(30);
+    expect(normalizeDuration('1:30')).toBe(90);
+    expect(normalizeDuration('01:30:00')).toBe(90);
+    expect(normalizeDuration('00:75')).toBeNull();
+    expect(normalizeDuration('00:00')).toBeNull();
+    expect(normalizeDate('04-05-1991')).toBe('1991-05-04');
+    expect(normalizeDate('4.5.1991')).toBe('1991-05-04');
+    expect(normalizeDate('31-02-2000')).toBeNull();
+  });
 });

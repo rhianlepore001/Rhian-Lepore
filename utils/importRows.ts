@@ -9,25 +9,39 @@ export interface PreparedImportRow { line: number; raw: Record<string, unknown>;
 
 const aliases: Record<ImportField, string[]> = {
   name: ['nome', 'nomecompleto', 'cliente', 'nomedocliente', 'servico', 'nomedoservico', 'name', 'clientname', 'servicename'],
-  phone: ['telefone', 'celular', 'whatsapp', 'telemovel', 'telefonecelular', 'telefonefixo', 'phone', 'mobile', 'mobilenumber', 'phonenumber'],
+  phone: ['telefone', 'celular', 'whatsapp', 'telemovel', 'telefonecelular', 'telefonefixo', 'phone', 'mobile', 'mobilenumber', 'phonenumber', 'cellphone', 'mobilephone', 'fone', 'tel'],
   email: ['email', 'correioeletronico', 'emailaddress'],
   birth_date: ['nascimento', 'datadenascimento', 'aniversario', 'birthday', 'dateofbirth', 'birthdate'],
-  notes: ['observacao', 'observacoes', 'notas', 'notes'],
+  notes: ['observacao', 'observacoes', 'notas', 'notes', 'clientnotes', 'obs', 'anotacoes'],
   source_id: ['id', 'idexterno', 'idcliente', 'codigocliente', 'codigodoservico', 'idservico', 'clientid', 'serviceid'],
-  category: ['categoria', 'categoriadoservico', 'category', 'servicecategory'],
+  category: ['categoria', 'categoriadoservico', 'category', 'servicecategory', 'grupo', 'grupodoservico'],
   price: ['preco', 'valor', 'price', 'serviceprice'],
-  duration: ['duracao', 'duracaominutos', 'duration', 'durationminutes'],
+  duration: ['duracao', 'duracaominutos', 'duration', 'durationminutes', 'tempo', 'tempodoservico', 'duracaoemminutos'],
 };
 
 function key(value: string): string {
   return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
+/** Chaves possíveis de um cabeçalho: completa e sem o trecho entre parênteses, como "Preço (R$)" ou "Tempo (min)". */
+function keys(value: string): string[] {
+  const full = key(value), short = key(value.replace(/\([^)]*\)/g, ''));
+  return short && short !== full ? [full, short] : [full];
+}
+
+const firstNameKeys = ['nome', 'name', 'firstname', 'primeironome', 'givenname'];
+const lastNameKeys = ['sobrenome', 'surname', 'lastname', 'familyname', 'ultimonome'];
+
+/** Ignora linhas em que todas as células estão vazias (linhas em branco no meio ou no fim da planilha). */
+export function dropEmptyImportRows(records: CsvRecord[]): CsvRecord[] {
+  return records.filter(record => record.values.some(value => (value || '').trim() !== ''));
+}
+
 export function inferImportColumns(headers: string[], source: ImportSource, kind: ImportKind): ImportColumns {
   const fields: ImportField[] = kind === 'client' ? ['name','phone','email','birth_date','notes','source_id'] : ['name','category','price','duration','source_id'];
   const result: ImportColumns = {};
   for (const field of fields) {
-    const matches = headers.flatMap((header, index) => (aliases[field].includes(key(header)) || (field === 'phone' && /^(telefone|celular|telemovel|phone|mobile)[0-9]+$/.test(key(header)))) ? [index] : []);
+    const matches = headers.flatMap((header, index) => (keys(header).some(candidate => aliases[field].includes(candidate)) || (field === 'phone' && /^(telefone|celular|telemovel|phone|mobile)[0-9]+$/.test(key(header)))) ? [index] : []);
     if (field === 'phone' && matches.length) result[field] = matches;
     else if (matches.length === 1) result[field] = matches;
   }
@@ -35,6 +49,9 @@ export function inferImportColumns(headers: string[], source: ImportSource, kind
     const first = headers.findIndex(header => key(header) === 'firstname');
     const last = headers.findIndex(header => key(header) === 'lastname');
     if (first >= 0) result.name = last >= 0 ? [first, last] : [first];
+  } else if (kind === 'client' && result.name?.length === 1 && firstNameKeys.includes(key(headers[result.name[0]]))) {
+    const lastColumns = headers.flatMap((header, index) => lastNameKeys.includes(key(header)) ? [index] : []);
+    if (lastColumns.length === 1) result.name = [result.name[0], lastColumns[0]];
   }
   return result;
 }

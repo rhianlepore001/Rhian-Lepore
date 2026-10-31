@@ -5,7 +5,7 @@ import * as importApi from '../services/importStaging';
 import type { ImportCandidate, ImportCategory, ImportReport, ImportSource, StoredImportBatch, StoredImportRow } from '../services/importStaging';
 import { IMPORT_SOURCES, getImportSource } from '../utils/importSources';
 import { readImportFiles, type ImportSheet } from '../utils/importFiles';
-import { inferImportColumns, prepareImportRows, type ImportColumns, type ImportField } from '../utils/importRows';
+import { dropEmptyImportRows, inferImportColumns, prepareImportRows, type ImportColumns, type ImportField } from '../utils/importRows';
 import { normalizeDate, normalizeDuration, normalizePhone, normalizePrice, type ImportKind } from '../utils/importPreparation';
 import { escapeCsv } from '../utils/exporters';
 import { findImportMatches, foldImportName, repeatedPhoneRows } from '../utils/importDuplicates';
@@ -126,7 +126,7 @@ export function ImportDataWizard({ companyId, userId, region, api = importApi, o
         if (!doc.mapping.name?.length || (doc.kind === 'service' && (!doc.mapping.price?.length || !doc.mapping.duration?.length))) throw new Error('Escolha as colunas obrigatórias em cada arquivo.');
         const candidates = await api.loadImportCandidates(companyId, doc.kind);
         const categories = doc.kind === 'service' ? await api.loadImportCategories(companyId) : [];
-        const prepared = prepareImportRows(doc.sheet.headers, doc.sheet.rows, doc.mapping, doc.kind, region, doc.sheet.identity);
+        const prepared = prepareImportRows(doc.sheet.headers, doc.sheet.originals ? doc.sheet.rows : dropEmptyImportRows(doc.sheet.rows), doc.mapping, doc.kind, region, doc.sheet.identity);
         const repeated = doc.kind === 'client' ? repeatedPhoneRows(prepared.map((row, index) => ({ id: String(index), phones: row.normalized.phones }))) : new Set<string>();
         const rows = prepared.map((row, index) => ({
           rowNumber: row.line, raw: { ...row.raw, arquivo: doc.sheet.name, ...(doc.sheet.originals ? { propriedades: doc.sheet.originals[index] } : {}), ...(doc.sheet.formulas ? { formulas: Object.fromEntries(Object.entries(doc.sheet.formulas).filter(([cell]) => Number(cell.match(/[0-9]+$/)?.[0]) === row.line)) } : {}), ...(doc.sheet.cellSources ? { celulas_originais: Object.fromEntries(Object.entries(doc.sheet.cellSources).filter(([cell]) => Number(cell.match(/[0-9]+$/)?.[0]) === row.line)) } : {}), ...(doc.sheet.mergedRanges && index === 0 ? { celulas_mescladas: doc.sheet.mergedRanges } : {}) },
@@ -277,7 +277,7 @@ export function ImportDataWizard({ companyId, userId, region, api = importApi, o
         <h3 className="font-semibold break-words">{doc.sheet.name}</h3>
         {doc.sheet.warnings.map(warning => <p key={warning}>{warning}</p>)}
         <label className="block">Tipo de dados<select className={inputClass} value={doc.kind} disabled={doc.sheet.isContacts} onChange={event => { const kind = event.target.value as ImportKind; setDocuments(current => current.map((item, i) => i === index ? { ...item, kind, mapping:inferImportColumns(item.sheet.headers, source, kind) } : item)); }}><option value="client">Clientes</option><option value="service">Serviços</option></select></label>
-        <p className={`text-sm ${colors.textMuted}`}>{plural(doc.sheet.rows.length, 'linha', 'linhas')}. Colunas não usadas serão preservadas junto aos dados de origem.</p>
+        <p className={`text-sm ${colors.textMuted}`}>{plural((doc.sheet.originals ? doc.sheet.rows : dropEmptyImportRows(doc.sheet.rows)).length, 'linha', 'linhas')}. Colunas não usadas serão preservadas junto aos dados de origem.</p>
         <details open={!doc.mapping.name?.length || (doc.kind === 'service' && (!doc.mapping.price?.length || !doc.mapping.duration?.length))}><summary className="cursor-pointer font-semibold">Conferir as colunas</summary><div className="grid gap-3 sm:grid-cols-2 mt-3">{FIELDS[doc.kind].map(field => <label key={field.key} className="block text-sm">{field.label}{field.key === 'phone' ? <select className={inputClass} multiple value={(doc.mapping.phone || []).map(String)} onChange={event => changeMapping(index, 'phone', Array.from(event.target.selectedOptions, option => Number(option.value)))}>{doc.sheet.headers.map((header, column) => <option key={column} value={column}>{header || `Coluna ${column + 1}`}</option>)}</select> : <select className={inputClass} value={doc.mapping[field.key]?.[0] ?? ''} onChange={event => changeMapping(index, field.key, event.target.value === '' ? [] : [Number(event.target.value)])}><option value="">Não informado</option>{doc.sheet.headers.map((header, column) => <option key={column} value={column}>{header || `Coluna ${column + 1}`}</option>)}</select>}</label>)}</div></details>
       </section>)}
       <div className="flex flex-wrap gap-2"><Button variant="secondary" onClick={() => setPhase('files')}>Voltar</Button><Button loading={busy} onClick={() => void prepare()}>Preparar revisão</Button></div>

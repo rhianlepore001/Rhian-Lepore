@@ -297,6 +297,57 @@ describe('AuthContext', () => {
         expect(result.current.role).toBe('owner');
     });
 
+    describe('origem do cadastro', () => {
+        const mockUser = { id: 'owner-attr', email: 'o@example.com', identities: [{ id: 'i1' }] };
+        const regData = { email: 'o@example.com', password: 'Password123!', fullName: 'O', businessName: 'B', userType: 'barber' as const, region: 'BR' as const, phone: '11999999999' };
+        const setup = (attrRpc: () => Promise<any>) => {
+            localStorage.setItem('agendix:signup-attribution:v1', JSON.stringify({ v: 1, capturedAt: Date.now(), utm_source: 'instagram', landing_path: '/register' }));
+            (supabase.auth.getSession as any).mockResolvedValue({ data: { session: null }, error: null });
+            (supabase.auth.signUp as any).mockResolvedValue({ data: { user: mockUser, session: { user: mockUser } }, error: null });
+            (supabase.from as any).mockImplementation(() => ({
+                select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(),
+                single: vi.fn().mockResolvedValue({ data: null, error: null }),
+            }));
+            (supabase.rpc as any).mockImplementation((fn: string) => {
+                if (fn === 'save_signup_attribution') return attrRpc();
+                return Promise.resolve(fn === 'ensure_owner_profile' ? { data: { status: 'exists', role: 'owner' }, error: null } : { data: null, error: null });
+            });
+        };
+        beforeEach(() => localStorage.removeItem('agendix:signup-attribution:v1'));
+
+        it('dono: salva a origem depois do perfil criado e o cadastro segue normalmente', async () => {
+            setup(() => Promise.resolve({ data: 'saved', error: null }));
+            const { result } = renderHook(() => useAuth(), { wrapper });
+            let r: any;
+            await act(async () => { r = await result.current.register(regData); });
+            expect(r.error).toBeNull();
+            const calls = (supabase.rpc as any).mock.calls.map((c: any[]) => c[0]);
+            expect(calls.indexOf('save_signup_attribution')).toBeGreaterThan(calls.indexOf('ensure_owner_profile'));
+            expect(supabase.rpc).toHaveBeenCalledWith('save_signup_attribution', expect.objectContaining({ p_utm_source: 'instagram', p_landing_path: '/register' }));
+            expect(localStorage.getItem('agendix:signup-attribution:v1')).toBeNull();
+        });
+
+        it('falha ao salvar a origem (erro ou rede) não impede o cadastro', async () => {
+            for (const attr of [() => Promise.resolve({ data: null, error: { message: 'x' } }), () => Promise.reject(new Error('rede'))]) {
+                vi.clearAllMocks();
+                setup(attr);
+                const { result } = renderHook(() => useAuth(), { wrapper });
+                let r: any;
+                await act(async () => { r = await result.current.register(regData); });
+                expect(r.error).toBeNull();
+                expect(supabase.rpc).toHaveBeenCalledWith('upsert_onboarding_progress', expect.anything());
+            }
+        });
+
+        it('convite de equipe: não grava origem', async () => {
+            setup(() => Promise.resolve({ data: 'saved', error: null }));
+            (supabase.rpc as any).mockImplementation((fn: string) => Promise.resolve(fn === 'claim_team_invite' ? { data: 'company-1', error: null } : { data: null, error: null }));
+            const { result } = renderHook(() => useAuth(), { wrapper });
+            await act(async () => { await result.current.register({ ...regData, companyId: 'company-1', teamMemberId: 'tm-1', birthDate: '1990-01-01' }); });
+            expect(supabase.rpc).not.toHaveBeenCalledWith('save_signup_attribution', expect.anything());
+        });
+    });
+
     it('cadastro de dono: erro da ensure_owner_profile volta para a tela (sem seguir para o onboarding)', async () => {
         const mockUser = { id: 'owner-err', email: 'o@example.com', identities: [{ id: 'i1' }] };
         (supabase.auth.getSession as any).mockResolvedValue({ data: { session: null }, error: null });

@@ -83,6 +83,19 @@ export const Legal: React.FC = () => {
                                 os cookies Meta acessíveis neste domínio; não desfaz envios anteriores.
                             </p>
                         </section>
+                        <section className={SECTION_CLASS}>
+                            <h2 className={H2_CLASS}>6. Como você chegou até nós</h2>
+                            <p className={P_CLASS}>
+                                Para entender quais divulgações trazem clientes, guardamos neste navegador, na sua
+                                primeira visita, o endereço do site ou anúncio de onde você veio, a página em que entrou
+                                e as informações de campanha do link. Quando você cria sua conta,
+                                gravamos essas informações junto com o tipo de navegador, uma única vez, e apagamos a cópia
+                                deste navegador. Usamos apenas para medir nossos próprios resultados, com base no nosso
+                                interesse legítimo, e não compartilhamos com terceiros. Essas informações são apagadas
+                                quando sua conta é excluída. O identificador de clique da Meta só é gravado se você
+                                tiver aceitado os cookies de marketing. Você pode pedir acesso ou exclusão pelo e-mail de suporte.
+                            </p>
+                        </section>
                     </div>
                 ) : (
                     <div className="space-y-8">

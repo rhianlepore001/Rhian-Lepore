@@ -1,3 +1,4 @@
+import { saveSignupAttribution } from '../lib/signupAttribution';
 import { metaTracker, normalizeMetaPhone } from '../lib/metaTracking';
 import { queryClient } from '@/lib/queryClient';
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
@@ -534,6 +535,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (status === 'skipped_staff') {
             return { error: { code: 'owner_profile_skipped', message: 'Não foi possível concluir o cadastro deste e-mail como dono.' } };
           }
+          // Origem do cadastro (UTMs, site de origem...). Melhor esforço: nunca bloqueia o cadastro.
+          await saveSignupAttribution(supabase);
         }
 
         setCompanyId(resolvedCompanyId);

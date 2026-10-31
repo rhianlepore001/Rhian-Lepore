@@ -7,6 +7,7 @@ import './styles/tailwind.css';
 import App from './App';
 import { initAutoBugCapture } from './lib/autoBugCapture';
 import { queryClient } from './lib/queryClient';
+import { captureFirstTouch } from './lib/signupAttribution';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -19,6 +20,9 @@ const root = ReactDOM.createRoot(rootElement);
 
 // Captura automática de erros de runtime → bug_reports (anti-spam embutido).
 initAutoBugCapture();
+
+// Origem do cadastro: guarda de onde a pessoa veio na primeira visita (não altera a URL nem o consentimento).
+captureFirstTouch();
 
 root.render(
   <React.StrictMode>

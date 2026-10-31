@@ -497,58 +497,95 @@ describe('AuthContext', () => {
         expect(result.current.teamMemberId).toBe('pre-cadastrado-uuid');
     });
 
-    it('marks owner onboarding as completed in onboarding_progress', async () => {
+    // Monta um supabase.from() de dono já concluindo o onboarding. profileRows = linhas devolvidas pelo UPDATE do perfil.
+    const mountOwnerCompleting = async (opts: {
+        profileRows: Array<unknown[]>; // uma resposta por chamada de UPDATE em profiles
+        businessSettingsError?: { message: string } | null;
+        ensureError?: { message: string } | null;
+    }) => {
         const mockUser = { id: 'owner-complete', email: 'owner@example.com' };
-        const mockSession = { user: mockUser };
         const upsertOnboarding = vi.fn().mockResolvedValue({ data: null, error: null });
-        const updateProfile = vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+        const profileUpdates: unknown[] = [];
+        let call = 0;
+        const updateProfile = vi.fn().mockImplementation((payload: unknown) => {
+            profileUpdates.push(payload);
+            return {
+                eq: vi.fn().mockReturnValue({
+                    select: vi.fn().mockImplementation(() => {
+                        const rows = opts.profileRows[Math.min(call++, opts.profileRows.length - 1)];
+                        return Promise.resolve({ data: rows, error: null });
+                    }),
+                }),
+            };
         });
-
-        (supabase.auth.getSession as any).mockResolvedValue({ data: { session: mockSession }, error: null });
+        const bsEq = vi.fn().mockResolvedValue({ data: null, error: opts.businessSettingsError ?? null });
+        const updateBusinessSettings = vi.fn().mockReturnValue({ eq: bsEq });
+        (supabase.rpc as any).mockImplementation((fn: string) => {
+            if (fn === 'ensure_owner_profile') return Promise.resolve({ data: { status: 'created' }, error: opts.ensureError ?? null });
+            return Promise.resolve({ data: null, error: null });
+        });
+        (supabase.auth.getSession as any).mockResolvedValue({ data: { session: { user: mockUser } }, error: null });
         (supabase.from as any).mockImplementation((table: string) => ({
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
-            update: table === 'profiles'
-                ? updateProfile
-                : vi.fn().mockReturnThis(),
-            upsert: table === 'onboarding_progress'
-                ? upsertOnboarding
-                : vi.fn().mockResolvedValue({ data: null, error: null }),
+            update: table === 'profiles' ? updateProfile : table === 'business_settings' ? updateBusinessSettings : vi.fn().mockReturnThis(),
+            upsert: table === 'onboarding_progress' ? upsertOnboarding : vi.fn().mockResolvedValue({ data: null, error: null }),
             single: vi.fn().mockResolvedValue({
                 data: table === 'profiles'
-                    ? {
-                        id: mockUser.id,
-                        role: 'owner',
-                        company_id: mockUser.id,
-                        user_type: 'barber',
-                        region: 'BR',
-                        tutorial_completed: false,
-                    }
+                    ? { id: mockUser.id, role: 'owner', company_id: mockUser.id, user_type: 'barber', region: 'BR', tutorial_completed: false }
                     : { is_completed: false },
                 error: null,
             }),
         }));
+        const hook = renderHook(() => useAuth(), { wrapper });
+        await waitFor(() => expect(hook.result.current.loading).toBe(false));
+        return { ...hook, mockUser, upsertOnboarding, updateProfile, updateBusinessSettings, bsEq, profileUpdates };
+    };
 
-        const { result } = renderHook(() => useAuth(), { wrapper });
+    it('marks owner onboarding as completed in onboarding_progress (e grava o perfil e o sinalizador legado)', async () => {
+        const t = await mountOwnerCompleting({ profileRows: [[{ id: 'owner-complete' }]] });
+        let res: any;
+        await act(async () => { res = await t.result.current.markTutorialCompleted(); });
 
-        await waitFor(() => expect(result.current.loading).toBe(false));
-
-        await act(async () => {
-            await result.current.markTutorialCompleted();
-        });
-
-        expect(upsertOnboarding).toHaveBeenCalledWith(
-            expect.objectContaining({
-                company_id: mockUser.id,
-                current_step: 5,
-                completed_steps: [1, 2, 3, 4, 5],
-                is_completed: true,
-            }),
+        expect(res.error).toBeNull();
+        expect(t.upsertOnboarding).toHaveBeenCalledWith(
+            expect.objectContaining({ company_id: t.mockUser.id, current_step: 5, completed_steps: [1, 2, 3, 4, 5], is_completed: true }),
             { onConflict: 'company_id' }
         );
-        expect(updateProfile).toHaveBeenCalledWith({ tutorial_completed: true });
-        expect(result.current.tutorialCompleted).toBe(true);
+        expect(t.updateProfile).toHaveBeenCalledWith({ tutorial_completed: true });
+        // business_settings.onboarding_completed passa a ser gravado ao concluir (antes ficava false para todos)
+        expect(t.updateBusinessSettings).toHaveBeenCalledWith({ onboarding_completed: true, onboarding_step: 5 });
+        expect(t.bsEq).toHaveBeenCalledWith('user_id', t.mockUser.id);
+        expect(t.result.current.tutorialCompleted).toBe(true);
+    });
+
+    it('perfil ausente (0 linhas no UPDATE): recria via ensure_owner_profile e grava de novo, em vez de "concluir" sem salvar', async () => {
+        const t = await mountOwnerCompleting({ profileRows: [[], [{ id: 'owner-complete' }]] });
+        let res: any;
+        await act(async () => { res = await t.result.current.markTutorialCompleted(); });
+
+        expect(supabase.rpc).toHaveBeenCalledWith('ensure_owner_profile');
+        expect(t.profileUpdates).toHaveLength(2);
+        expect(res.error).toBeNull();
+        expect(t.result.current.tutorialCompleted).toBe(true);
+    });
+
+    it('perfil continua ausente após ensure_owner_profile: devolve erro e NÃO marca como concluído (sem falso positivo)', async () => {
+        const t = await mountOwnerCompleting({ profileRows: [[]] });
+        let res: any;
+        await act(async () => { res = await t.result.current.markTutorialCompleted(); });
+
+        expect(res.error).toBeTruthy();
+        expect(t.result.current.tutorialCompleted).toBe(false);
+    });
+
+    it('falha ao gravar o sinalizador legado de business_settings não impede concluir o onboarding', async () => {
+        const t = await mountOwnerCompleting({ profileRows: [[{ id: 'owner-complete' }]], businessSettingsError: { message: 'boom' } });
+        let res: any;
+        await act(async () => { res = await t.result.current.markTutorialCompleted(); });
+
+        expect(res.error).toBeNull();
+        expect(t.result.current.tutorialCompleted).toBe(true);
     });
 
     it('hydrates companyId immediately after owner register', async () => {

@@ -28,11 +28,13 @@ interface TimeSelect24Props {
 }
 
 export const TimeSelect24: React.FC<TimeSelect24Props> = ({ value, onChange, ariaLabel, disabled }) => {
-    const { classes, colors } = useBrutalTheme();
+    const { classes, colors, isDark } = useBrutalTheme();
     const { hour, minute } = parseTime24(value);
     const minutes = buildMinuteOptions(minute);
 
-    const selectClass = `min-w-0 flex-1 !px-2 !py-2.5 text-sm text-center tabular-nums ${classes.input}`;
+    // !px-1: em telas de 390-412px cada seletor tem ~45px e o padding antigo cortava os dígitos ("09" virava "0S").
+    // color-scheme: o seletor nativo do iPhone/Safari desenhava fundo branco com texto claro (ilegível).
+    const selectClass = `min-w-0 flex-1 !px-1 !py-2.5 text-sm text-center tabular-nums appearance-none ${isDark ? '[color-scheme:dark]' : '[color-scheme:light]'} ${classes.input}`;
 
     return (
         <div className="flex min-w-0 flex-1 items-center gap-1">

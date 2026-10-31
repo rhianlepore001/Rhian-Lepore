@@ -27,6 +27,9 @@ export const OnboardingWizard: React.FC = () => {
     const [showImport, setShowImport] = useState(false);
     const [importGeneration, setImportGeneration] = useState(0);
     const syncAttempted = useRef(false);
+    // Navega no máximo uma vez por montagem: o AuthContext recria funções a cada render e,
+    // sem isso, qualquer re-render repetia navigate(replace) → "replaceState() more than 100 times" no Safari.
+    const navigated = useRef(false);
     const [syncError, setSyncError] = useState<string | null>(null);
 
     // Sai do wizard só quando o AuthContext (que o guard de rota usa) também diz "concluído".
@@ -36,6 +39,8 @@ export const OnboardingWizard: React.FC = () => {
     useEffect(() => {
         if (authLoading || !completed) return;
         if (tutorialCompleted) {
+            if (navigated.current) return;
+            navigated.current = true;
             navigate('/', { replace: true });
             return;
         }

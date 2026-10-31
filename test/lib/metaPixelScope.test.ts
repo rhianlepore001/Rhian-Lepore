@@ -26,6 +26,7 @@ describe('Meta browser adapter privacy', () => {
   });
 
   it('disables automatic history tracking before inserting the script or initializing the pixel', async () => {
+    document.cookie = '_fbp=fb.1.1234567890.1234567890; path=/';
     const snapshots: unknown[] = [];
     const append = document.head.appendChild.bind(document.head);
     vi.spyOn(document.head, 'appendChild').mockImplementation(node => {
@@ -42,6 +43,11 @@ describe('Meta browser adapter privacy', () => {
     setMetaScope(true);
     metaTracker.pageView('/register', '', false);
     expect(snapshots).toEqual([{ disablePushState: true, allowDuplicatePageViews: true, initialized: true }]);
+    await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+    const [, options] = vi.mocked(fetch).mock.calls[0];
+    expect(JSON.parse(String(options?.body))).toEqual(expect.objectContaining({
+      event_name: 'PageView', event_source_url: window.location.origin + '/#/register',
+    }));
   });
 
   it('allows only attribution query parameters and keeps them out of the Pixel source URL', async () => {

@@ -1,0 +1,96 @@
+BEGIN;
+CREATE FUNCTION public.assert_import(ok boolean, message text) RETURNS void LANGUAGE plpgsql AS $$ BEGIN IF NOT COALESCE(ok,false) THEN RAISE EXCEPTION '%', message; END IF; END $$;
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-0000000000a0',true);
+INSERT INTO public.import_batches(id,company_id,created_by,source,kind,expected_rows) VALUES ('40000000-0000-0000-0000-000000000011','00000000-0000-0000-0000-0000000000a0','00000000-0000-0000-0000-0000000000a0','trinks','client',2);
+INSERT INTO public.import_staging_rows(company_id,batch_id,row_number,raw_data,normalized_data) VALUES
+ ('00000000-0000-0000-0000-0000000000a0','40000000-0000-0000-0000-000000000011',2,'{"nome":"Pessoa fictícia"}','{"name":"Pessoa fictícia","phones":["+5511987654321","+551133334444"],"email":"pessoa@example.test","source_id":"id-ficticio"}'),
+ ('00000000-0000-0000-0000-0000000000a0','40000000-0000-0000-0000-000000000011',3,'{"nome":"Cliente fictício A"}','{"name":"Cliente fictício A","source_id":"duplicado-ficticio"}');
+SELECT public.commit_import_batch('40000000-0000-0000-0000-000000000011');
+SELECT public.assert_import((SELECT count(*)=1 FROM public.import_staging_rows WHERE batch_id='40000000-0000-0000-0000-000000000011' AND outcome='imported'),'one imported');
+SELECT public.assert_import((SELECT count(*)=1 FROM public.import_staging_rows WHERE batch_id='40000000-0000-0000-0000-000000000011' AND outcome='pending'),'duplicate pending');
+SELECT public.assert_import((SELECT additional_phones='["+551133334444"]'::jsonb FROM public.clients WHERE name='Pessoa fictícia'),'extra phone preserved');
+SELECT public.assert_import((SELECT source_data->>'nome'='Pessoa fictícia' FROM public.import_created_records WHERE batch_id='40000000-0000-0000-0000-000000000011' AND was_created),'source data preserved for owner');
+SELECT public.clear_import_source_data('40000000-0000-0000-0000-000000000011');
+SELECT public.assert_import((SELECT source_data='{}'::jsonb FROM public.import_created_records WHERE batch_id='40000000-0000-0000-0000-000000000011' AND was_created),'source data cleared explicitly');
+SELECT public.assert_import((SELECT raw_data='{}'::jsonb FROM public.import_staging_rows WHERE batch_id='40000000-0000-0000-0000-000000000011' AND outcome='imported'),'completed raw data removed');
+DO $$ BEGIN
+  BEGIN DELETE FROM public.import_batches WHERE id='40000000-0000-0000-0000-000000000011'; RAISE EXCEPTION 'completed batch deleted'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  BEGIN UPDATE public.import_batches SET status='preparing' WHERE id='40000000-0000-0000-0000-000000000011'; RAISE EXCEPTION 'completed batch reopened'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  BEGIN DELETE FROM public.import_staging_rows WHERE batch_id='40000000-0000-0000-0000-000000000011' AND outcome='imported'; RAISE EXCEPTION 'history deleted'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+END $$;
+SELECT public.commit_import_batch('40000000-0000-0000-0000-000000000011');
+SELECT public.assert_import((SELECT count(*)=1 FROM public.clients WHERE name='Pessoa fictícia'),'repeat does not duplicate');
+SELECT public.clear_import_pending('40000000-0000-0000-0000-000000000011');
+SELECT public.assert_import((SELECT outcome='ignored' AND raw_data='{}'::jsonb AND normalized_data IS NULL FROM public.import_staging_rows WHERE batch_id='40000000-0000-0000-0000-000000000011' AND row_number=3),'explicit pending cleanup');
+UPDATE public.clients SET name='Pessoa fictícia editada' WHERE name='Pessoa fictícia';
+UPDATE public.clients SET name='Pessoa fictícia' WHERE name='Pessoa fictícia editada';
+SELECT public.undo_import_batch('40000000-0000-0000-0000-000000000011');
+SELECT public.assert_import((SELECT count(*)=1 FROM public.clients WHERE name='Pessoa fictícia'),'edited client preserved');
+INSERT INTO public.import_batches(id,company_id,created_by,source,kind,expected_rows) VALUES ('40000000-0000-0000-0000-000000000014','00000000-0000-0000-0000-0000000000a0','00000000-0000-0000-0000-0000000000a0','trinks','client',1);
+INSERT INTO public.import_staging_rows(company_id,batch_id,row_number,raw_data,normalized_data) VALUES ('00000000-0000-0000-0000-0000000000a0','40000000-0000-0000-0000-000000000014',2,'{"nome":"Pessoa fictícia"}','{"name":"Pessoa fictícia","source_id":"id-ficticio"}');
+SELECT public.commit_import_batch('40000000-0000-0000-0000-000000000014');
+SELECT public.assert_import((SELECT outcome='ignored' FROM public.import_staging_rows WHERE batch_id='40000000-0000-0000-0000-000000000014'),'source ID makes reimport idempotent');
+INSERT INTO public.import_batches(id,company_id,created_by,source,kind,expected_rows) VALUES ('40000000-0000-0000-0000-000000000015','00000000-0000-0000-0000-0000000000a0','00000000-0000-0000-0000-0000000000a0','trinks','client',1);
+INSERT INTO public.import_staging_rows(company_id,batch_id,row_number,raw_data,normalized_data) VALUES ('00000000-0000-0000-0000-0000000000a0','40000000-0000-0000-0000-000000000015',2,'{"nome":"Cliente fictício A"}','{"name":"Cliente fictício A","source_id":"vinculo-ficticio","decision":"link","target_id":"30000000-0000-0000-0000-000000000001"}');
+SELECT public.commit_import_batch('40000000-0000-0000-0000-000000000015');
+SELECT public.undo_import_batch('40000000-0000-0000-0000-000000000015');
+SELECT public.assert_import((SELECT count(*)=1 FROM public.clients WHERE id='30000000-0000-0000-0000-000000000001'),'linked existing client preserved');
+INSERT INTO public.import_batches(id,company_id,created_by,source,kind,expected_rows) VALUES ('40000000-0000-0000-0000-000000000012','00000000-0000-0000-0000-0000000000a0','00000000-0000-0000-0000-0000000000a0','fresha','client',1);
+INSERT INTO public.import_staging_rows(company_id,batch_id,row_number,raw_data,normalized_data) VALUES ('00000000-0000-0000-0000-0000000000a0','40000000-0000-0000-0000-000000000012',2,'{"nome":"Sem uso fictício"}','{"name":"Sem uso fictício","source_id":"sem-uso"}');
+SELECT public.commit_import_batch('40000000-0000-0000-0000-000000000012');
+SELECT public.undo_import_batch('40000000-0000-0000-0000-000000000012');
+SELECT public.assert_import((SELECT count(*)=0 FROM public.clients WHERE name='Sem uso fictício'),'untouched client removed');
+INSERT INTO public.import_batches(id,company_id,created_by,source,kind,expected_rows) VALUES ('40000000-0000-0000-0000-000000000013','00000000-0000-0000-0000-0000000000a0','00000000-0000-0000-0000-0000000000a0','fresha','client',1);
+INSERT INTO public.import_staging_rows(company_id,batch_id,row_number,raw_data,normalized_data) VALUES ('00000000-0000-0000-0000-0000000000a0','40000000-0000-0000-0000-000000000013',2,'{"nome":"Com atendimento fictício"}','{"name":"Com atendimento fictício","source_id":"com-uso"}');
+SELECT public.commit_import_batch('40000000-0000-0000-0000-000000000013');
+INSERT INTO public.appointments(user_id,client_id) SELECT '00000000-0000-0000-0000-0000000000a0',id FROM public.clients WHERE name='Com atendimento fictício';
+SELECT public.undo_import_batch('40000000-0000-0000-0000-000000000013');
+SELECT public.assert_import((SELECT count(*)=1 FROM public.clients WHERE name='Com atendimento fictício'),'client with appointment preserved');
+SELECT public.assert_import((SELECT count(*)=1 FROM public.appointments),'appointment preserved');
+INSERT INTO public.import_batches(id,company_id,created_by,source,kind,expected_rows) VALUES ('40000000-0000-0000-0000-000000000016','00000000-0000-0000-0000-0000000000a0','00000000-0000-0000-0000-0000000000a0','fresha','service',1);
+INSERT INTO public.import_staging_rows(company_id,batch_id,row_number,raw_data,normalized_data) VALUES ('00000000-0000-0000-0000-0000000000a0','40000000-0000-0000-0000-000000000016',2,'{"nome":"Tratamento fictício"}','{"name":"Tratamento fictício","source_id":"servico-16","price":"85.50","duration":"90","category":"Categoria fictícia"}');
+SELECT public.commit_import_batch('40000000-0000-0000-0000-000000000016');
+SELECT public.assert_import((SELECT price=85.50 AND duration_minutes=90 FROM public.services WHERE name='Tratamento fictício'),'service created');
+SELECT public.assert_import((SELECT count(*)=1 FROM public.service_categories WHERE name='Categoria fictícia'),'category created');
+SELECT public.undo_import_batch('40000000-0000-0000-0000-000000000016');
+SELECT public.assert_import((SELECT count(*)=0 FROM public.service_categories WHERE name='Categoria fictícia'),'unused category removed');
+SELECT public.assert_import((SELECT count(*)=0 FROM public.services WHERE name='Tratamento fictício'),'untouched service removed');
+INSERT INTO public.clients(id,user_id,name,phone) VALUES ('30000000-0000-0000-0000-000000000099','00000000-0000-0000-0000-0000000000a0','Outra pessoa fictícia','11999998888');
+INSERT INTO public.import_batches(id,company_id,created_by,source,kind,expected_rows) VALUES ('40000000-0000-0000-0000-000000000018','00000000-0000-0000-0000-0000000000a0','00000000-0000-0000-0000-0000000000a0','avec','client',1);
+INSERT INTO public.import_staging_rows(company_id,batch_id,row_number,raw_data,normalized_data) VALUES ('00000000-0000-0000-0000-0000000000a0','40000000-0000-0000-0000-000000000018',2,'{}','{"name":"Nome diferente fictício","phones":["+5511999998888"],"source_id":"telefone-18"}');
+SELECT public.commit_import_batch('40000000-0000-0000-0000-000000000018');
+SELECT public.assert_import((SELECT outcome='pending' FROM public.import_staging_rows WHERE batch_id='40000000-0000-0000-0000-000000000018'),'phone match requires review');
+INSERT INTO public.import_batches(id,company_id,created_by,source,kind,expected_rows) VALUES ('40000000-0000-0000-0000-000000000019','00000000-0000-0000-0000-0000000000a0','00000000-0000-0000-0000-0000000000a0','avec','client',1);
+INSERT INTO public.import_staging_rows(company_id,batch_id,row_number,raw_data,normalized_data) VALUES ('00000000-0000-0000-0000-0000000000a0','40000000-0000-0000-0000-000000000019',2,'{}','{"name":"","source_id":"","decision":"skip"}');
+SELECT public.commit_import_batch('40000000-0000-0000-0000-000000000019');
+SELECT public.assert_import((SELECT outcome='ignored' FROM public.import_staging_rows WHERE batch_id='40000000-0000-0000-0000-000000000019'),'invalid row can be explicitly ignored');
+INSERT INTO public.import_batches(id,company_id,created_by,source,kind,expected_rows) VALUES ('40000000-0000-0000-0000-000000000017','00000000-0000-0000-0000-0000000000a0','00000000-0000-0000-0000-0000000000a0','appbarber','client',101);
+INSERT INTO public.import_staging_rows(company_id,batch_id,row_number,raw_data,normalized_data)
+SELECT '00000000-0000-0000-0000-0000000000a0','40000000-0000-0000-0000-000000000017', n, '{}'::jsonb, jsonb_build_object('name','Pessoa fictícia lote '||n,'source_id','registro-'||n) FROM generate_series(1,101) n;
+SELECT public.assert_import((public.commit_import_batch('40000000-0000-0000-0000-000000000017')->>'remaining')::int=1,'bounded batch processing');
+DO $$ BEGIN
+  BEGIN DELETE FROM public.import_batches WHERE id='40000000-0000-0000-0000-000000000017'; RAISE EXCEPTION 'partially processed history deleted'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+END $$;
+SELECT public.assert_import((public.commit_import_batch('40000000-0000-0000-0000-000000000017')->>'imported')::int=101,'all rows processed');
+INSERT INTO public.import_batches(id,company_id,created_by,source,kind,expected_rows) VALUES ('40000000-0000-0000-0000-000000000020','00000000-0000-0000-0000-0000000000a0','00000000-0000-0000-0000-0000000000a0','avec','client',2);
+INSERT INTO public.import_staging_rows(company_id,batch_id,row_number,raw_data,normalized_data) VALUES ('00000000-0000-0000-0000-0000000000a0','40000000-0000-0000-0000-000000000020',1,'{}','{"name":"Registro parcial fictício","source_id":"parcial"}');
+DO $$ BEGIN
+  BEGIN PERFORM public.commit_import_batch('40000000-0000-0000-0000-000000000020'); RAISE EXCEPTION 'partial batch accepted'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
+END $$;
+SELECT public.assert_import((SELECT count(*)=0 FROM public.clients WHERE name='Registro parcial fictício'),'partial batch never imported');
+INSERT INTO public.import_batches(id,company_id,created_by,source,kind,expected_rows) VALUES ('40000000-0000-0000-0000-000000000021','00000000-0000-0000-0000-0000000000a0','00000000-0000-0000-0000-0000000000a0','avec','client',1);
+INSERT INTO public.import_staging_rows(company_id,batch_id,row_number,raw_data,normalized_data,reason) VALUES ('00000000-0000-0000-0000-0000000000a0','40000000-0000-0000-0000-000000000021',1,'{"nome":"pendente"}','{}','Confira o nome.');
+SELECT public.commit_import_batch('40000000-0000-0000-0000-000000000021');
+SELECT public.undo_import_batch('40000000-0000-0000-0000-000000000021');
+SELECT public.assert_import(public.clear_import_pending('40000000-0000-0000-0000-000000000021')=1,'pending data can be explicitly cleared after undo');
+SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-0000000000a1',true);
+SELECT public.assert_import((SELECT count(*)=0 FROM public.import_created_records),'source data hidden from staff');
+DO $$ BEGIN
+  BEGIN PERFORM public.commit_import_batch('40000000-0000-0000-0000-000000000011'); RAISE EXCEPTION 'staff allowed'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+END $$;
+SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-0000000000b0',true);
+DO $$ BEGIN
+  BEGIN PERFORM public.commit_import_batch('40000000-0000-0000-0000-000000000011'); RAISE EXCEPTION 'cross company allowed'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+END $$;
+ROLLBACK;

@@ -32,4 +32,20 @@ describe('escapeCsv', () => {
         expect(escapeCsv('Não')).toBe('Não');
         expect(escapeCsv('São Paulo')).toBe('São Paulo');
     });
+
+    it('neutraliza textos que o Excel poderia executar como fórmula', () => {
+        expect(escapeCsv('=SOMA(A1:A2)')).toBe("'=SOMA(A1:A2)");
+        expect(escapeCsv('+55 11 99999-0000')).toBe("'+55 11 99999-0000");
+        expect(escapeCsv('-cmd')).toBe("'-cmd");
+        expect(escapeCsv('@usuario')).toBe("'@usuario");
+        expect(escapeCsv('\tabc')).toBe("'\tabc");
+        expect(escapeCsv('=1,2')).toBe('"\'=1,2"');
+    });
+
+    it('não altera números nem textos que apenas parecem números', () => {
+        expect(escapeCsv(-12.5)).toBe('-12.5');
+        expect(escapeCsv('-12,50')).toBe('"-12,50"');
+        expect(escapeCsv('-12.50')).toBe('-12.50');
+        expect(escapeCsv('a=b')).toBe('a=b');
+    });
 });

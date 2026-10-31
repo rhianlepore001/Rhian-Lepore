@@ -1,0 +1,41 @@
+ALTER TABLE public.clients ALTER COLUMN id SET DEFAULT gen_random_uuid();
+ALTER TABLE public.clients ADD CONSTRAINT clients_user_id_phone_unique UNIQUE (user_id, phone);
+-- Objetos que já existem em produção (migrações anteriores) e que a importação usa.
+ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS notes text, ADD COLUMN IF NOT EXISTS birth_date date, ADD COLUMN IF NOT EXISTS source text DEFAULT 'manual';
+CREATE FUNCTION public.normalize_phone_digits(p_phone text) RETURNS text LANGUAGE plpgsql IMMUTABLE AS $$ BEGIN RETURN regexp_replace(COALESCE(p_phone, ''), '\D', '', 'g'); END; $$;
+CREATE INDEX idx_clients_user_phone_digits ON public.clients(user_id, public.normalize_phone_digits(phone));
+CREATE INDEX idx_clients_user_id ON public.clients(user_id);
+ALTER TABLE public.services ALTER COLUMN id SET DEFAULT gen_random_uuid();
+ALTER TABLE public.services ADD COLUMN category_id uuid, ADD COLUMN price numeric NOT NULL DEFAULT 0, ADD COLUMN duration_minutes integer NOT NULL DEFAULT 30, ADD COLUMN active boolean DEFAULT true;
+CREATE TABLE public.service_categories (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id text NOT NULL, name text NOT NULL, display_order integer DEFAULT 0);
+ALTER TABLE public.services ADD CONSTRAINT services_category_fk FOREIGN KEY (category_id) REFERENCES public.service_categories(id);
+ALTER TABLE public.service_categories ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "owner categories" ON public.service_categories FOR ALL TO authenticated USING (user_id=auth.uid()::text) WITH CHECK (user_id=auth.uid()::text);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.service_categories TO authenticated;
+CREATE TABLE public.appointments (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id text, client_id uuid REFERENCES public.clients(id) ON DELETE CASCADE, service text);
+CREATE INDEX idx_appointments_client_id ON public.appointments(client_id);
+CREATE INDEX idx_appointments_user_id ON public.appointments(user_id);
+ALTER TABLE public.appointments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "owner appointments" ON public.appointments FOR ALL TO authenticated USING (user_id=auth.uid()::text) WITH CHECK (user_id=auth.uid()::text);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.appointments TO authenticated;
+
+-- Tabelas de produção que apontam para clientes ou serviços (colunas e índices conforme o catálogo de produção).
+CREATE TABLE public.membership_plans (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id text NOT NULL, name text NOT NULL DEFAULT 'Plano fictício', service_ids uuid[] NOT NULL DEFAULT '{}');
+CREATE INDEX idx_membership_plans_user_id ON public.membership_plans(user_id);
+CREATE TABLE public.client_memberships (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id text NOT NULL, client_id uuid NOT NULL, plan_id uuid REFERENCES public.membership_plans(id), status text NOT NULL DEFAULT 'active');
+CREATE INDEX idx_client_memberships_client ON public.client_memberships(user_id, client_id);
+CREATE TABLE public.public_bookings (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), business_id text NOT NULL, customer_phone text, service_ids uuid[] NOT NULL DEFAULT '{}', original_service_ids uuid[]);
+CREATE INDEX idx_public_bookings_business_id ON public.public_bookings(business_id);
+CREATE TABLE public.finance_records (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id text NOT NULL, client_name text, service_name text);
+CREATE INDEX idx_finance_records_user_id ON public.finance_records(user_id);
+CREATE TABLE public.client_dependents (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id text NOT NULL, client_id uuid NOT NULL, name text NOT NULL DEFAULT 'Dependente fictício', FOREIGN KEY (user_id, client_id) REFERENCES public.clients(user_id, id) ON DELETE CASCADE);
+CREATE TABLE public.client_semantic_memory (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), client_id uuid NOT NULL REFERENCES public.clients(id) ON DELETE CASCADE);
+CREATE TABLE public.hair_records (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id text NOT NULL, client_id uuid NOT NULL REFERENCES public.clients(id) ON DELETE CASCADE, service text);
+CREATE INDEX idx_hair_records_client_id ON public.hair_records(client_id);
+CREATE TABLE public.product_sales (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), company_id uuid NOT NULL, client_id uuid REFERENCES public.clients(id) ON DELETE SET NULL);
+CREATE TABLE public.queue_entries (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), business_id text NOT NULL, client_id uuid REFERENCES public.clients(id) ON DELETE SET NULL, service_id uuid REFERENCES public.services(id) ON DELETE SET NULL, client_name varchar);
+CREATE INDEX idx_queue_business_status ON public.queue_entries(business_id);
+CREATE TABLE public.service_upsells (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id text NOT NULL, parent_service_id uuid NOT NULL REFERENCES public.services(id) ON DELETE CASCADE, upsell_service_id uuid NOT NULL REFERENCES public.services(id) ON DELETE CASCADE);
+CREATE INDEX idx_service_upsells_parent ON public.service_upsells(parent_service_id);
+CREATE INDEX idx_service_upsells_upsell ON public.service_upsells(upsell_service_id);
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;

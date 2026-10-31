@@ -29,6 +29,7 @@ const Legal = React.lazy(() => import('./pages/Legal').then(module => ({ default
 const Agenda = React.lazy(() => import('./pages/Agenda').then(module => ({ default: module.Agenda })));
 const Clients = React.lazy(() => import('./pages/Clients').then(module => ({ default: module.Clients })));
 const PublicBooking = React.lazy(() => import('./pages/PublicBooking').then(module => ({ default: module.PublicBooking })));
+const ImportDataSettings = React.lazy(() => import('./pages/settings/ImportDataSettings').then(module => ({ default: module.ImportDataSettings })));
 const GeneralSettings = React.lazy(() => import('./pages/settings/GeneralSettings').then(module => ({ default: module.GeneralSettings })));
 const WhatsAppMessagesSettings = React.lazy(() => import('./pages/settings/WhatsAppMessagesSettings').then(module => ({ default: module.WhatsAppMessagesSettings })));
 const PublicBookingSettings = React.lazy(() => import('./pages/settings/PublicBookingSettings').then(module => ({ default: module.PublicBookingSettings })));
@@ -267,6 +268,7 @@ const AppRoutes: React.FC = () => {
 
           {/* Settings Routes */}
           <Route path="/configuracoes" element={<OwnerRouteGuard><Navigate to="/configuracoes/geral" replace /></OwnerRouteGuard>} />
+          <Route path="/configuracoes/importar" element={<OwnerRouteGuard><ImportDataSettings /></OwnerRouteGuard>} />
           <Route path="/configuracoes/geral" element={<OwnerRouteGuard><GeneralSettings /></OwnerRouteGuard>} />
           <Route path="/configuracoes/whatsapp" element={<OwnerRouteGuard><WhatsAppMessagesSettings /></OwnerRouteGuard>} />
           <Route path="/configuracoes/agendamento" element={<OwnerRouteGuard><PublicBookingSettings /></OwnerRouteGuard>} />

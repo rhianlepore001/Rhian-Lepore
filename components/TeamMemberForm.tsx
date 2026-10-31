@@ -449,9 +449,9 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                                 id="isOwner"
                                 checked={isOwner}
                                 onChange={e => setIsOwner(e.target.checked)}
-                                className={`rounded ${colors.inputBg} ${colors.inputBorder} border focus:ring-0 ${accent.text}`}
+                                className={`h-5 w-5 rounded ${colors.inputBg} ${colors.inputBorder} border focus:ring-0 ${accent.text}`}
                             />
-                            <label htmlFor="isOwner" className={`text-sm cursor-pointer ${colors.text}`}>
+                            <label htmlFor="isOwner" className={`flex min-h-11 flex-1 items-center text-sm cursor-pointer ${colors.text}`}>
                                 É o Dono
                             </label>
                         </div>
@@ -462,9 +462,9 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                                 id="active"
                                 checked={active}
                                 onChange={e => setActive(e.target.checked)}
-                                className={`rounded ${colors.inputBg} ${colors.inputBorder} border focus:ring-0 ${accent.text}`}
+                                className={`h-5 w-5 rounded ${colors.inputBg} ${colors.inputBorder} border focus:ring-0 ${accent.text}`}
                             />
-                            <label htmlFor="active" className={`text-sm cursor-pointer ${colors.text}`}>
+                            <label htmlFor="active" className={`flex min-h-11 flex-1 items-center text-sm cursor-pointer ${colors.text}`}>
                                 Ativo
                             </label>
                         </div>

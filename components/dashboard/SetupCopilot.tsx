@@ -331,7 +331,8 @@ export const SetupCopilot: React.FC = () => {
                                         localStorage.setItem(getActivationSeenKey(), 'true');
                                     }
                                 }}
-                                className={`ml-2 p-1.5 rounded-full flex-shrink-0 ${colors.surfaceHover} ${colors.textSecondary} hover:text-theme-text transition-colors`}
+                                aria-label="Fechar o guia de primeiros passos"
+                                className={`ml-2 inline-flex min-h-11 min-w-11 items-center justify-center rounded-full flex-shrink-0 ${colors.surfaceHover} ${colors.textSecondary} hover:text-theme-text transition-colors`}
                                 title="Fechar"
                             >
                                 <X className="w-4 h-4" />

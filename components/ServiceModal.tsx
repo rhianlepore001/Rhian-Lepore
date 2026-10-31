@@ -257,7 +257,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                                             key={i}
                                             type="button"
                                             onClick={() => handleApplySuggestion(s)}
-                                            className={`whitespace-nowrap px-3 py-1.5 text-xs text-[var(--color-text)] transition-all flex items-center gap-2 rounded-xl ${isBeauty
+                                            className={`min-h-11 whitespace-nowrap px-3 py-1.5 text-xs text-[var(--color-text)] transition-all flex items-center gap-2 rounded-xl ${isBeauty
                                                 ? `${colors.card} ${accent.border} hover:bg-theme-accent`
                                                 : `${colors.card} ${colors.border} hover:bg-[var(--color-card-hover)]`
                                                 }`}
@@ -305,7 +305,7 @@ export const ServiceModal: React.FC<ServiceModalProps> = ({
                                         <div className="flex items-center justify-between mb-1">
                                             <label className={`${classes.label} block`} htmlFor="service-category">Categoria</label>
                                             {!isCreatingCategory && (
-                                                <button type="button" onClick={() => setIsCreatingCategory(true)} className={`${accent.text} hover:bg-[var(--color-accent-dim)] text-xs font-bold flex items-center gap-1 transition-colors`}>
+                                                <button type="button" onClick={() => setIsCreatingCategory(true)} className={`${accent.text} hover:bg-[var(--color-accent-dim)] text-xs font-bold flex min-h-11 items-center gap-1 px-2 transition-colors`}>
                                                     <Plus className="w-3 h-3" /> Nova Categoria
                                                 </button>
                                             )}

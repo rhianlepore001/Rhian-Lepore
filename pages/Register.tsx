@@ -398,7 +398,7 @@ export const Register: React.FC = () => {
                     placeholder="••••••••"
                     forceTheme={userType}
                     iconRight={
-                        <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label={showConfirmPassword ? 'Ocultar confirmação' : 'Mostrar confirmação'} className={`pointer-events-auto ${colors.textMuted} hover:text-theme-text transition-colors`}>
+                        <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label={showConfirmPassword ? 'Ocultar confirmação' : 'Mostrar confirmação'} className={`pointer-events-auto min-h-[44px] min-w-[44px] inline-flex items-center justify-center ${colors.textMuted} hover:text-theme-text transition-colors`}>
                             {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
                     }
@@ -412,7 +412,7 @@ export const Register: React.FC = () => {
 
                 <p className="text-center pt-5 border-t border-[var(--color-border)] font-mono text-xs text-[var(--color-text-muted)] uppercase tracking-wider">
                   Já tem conta?{' '}
-                  <Link to="/login" className={`font-bold transition-colors ${accent.text}/70 hover:text-theme-accent`}>
+                  <Link to="/login" className={`inline-flex min-h-[44px] items-center px-1 font-bold transition-colors ${accent.text}/70 hover:text-theme-accent`}>
                     Fazer login
                   </Link>
                 </p>
@@ -576,7 +576,7 @@ export const Register: React.FC = () => {
                   placeholder="••••••••"
                   forceTheme={userType}
                   iconRight={
-                      <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label={showConfirmPassword ? 'Ocultar confirmação' : 'Mostrar confirmação'} className={`pointer-events-auto ${colors.textMuted} hover:text-theme-text transition-colors`}>
+                      <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label={showConfirmPassword ? 'Ocultar confirmação' : 'Mostrar confirmação'} className={`pointer-events-auto min-h-[44px] min-w-[44px] inline-flex items-center justify-center ${colors.textMuted} hover:text-theme-text transition-colors`}>
                           {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
                   }
@@ -590,14 +590,14 @@ export const Register: React.FC = () => {
 
                 <p className="text-center font-mono text-xs text-[var(--color-text-muted)] uppercase tracking-widest">
                   Ao se cadastrar, você concorda com os{' '}
-                  <Link to="/termos" className="underline hover:text-[var(--color-text-secondary)] transition-colors">Termos</Link>
+                  <Link to="/termos" className="inline-flex min-h-[44px] items-center px-1 underline hover:text-[var(--color-text-secondary)] transition-colors">Termos</Link>
                   {' '}e{' '}
-                  <Link to="/privacidade" className="underline hover:text-[var(--color-text-secondary)] transition-colors">Privacidade</Link>
+                  <Link to="/privacidade" className="inline-flex min-h-[44px] items-center px-1 underline hover:text-[var(--color-text-secondary)] transition-colors">Privacidade</Link>
                 </p>
 
                 <p className="text-center border-t border-[var(--color-border)] pt-5 font-mono text-xs text-[var(--color-text-muted)] uppercase tracking-wider">
                   Já tem conta?{' '}
-                  <Link to="/login" className={`font-bold transition-colors ${accent.text}/70 hover:text-theme-accent`}>
+                  <Link to="/login" className={`inline-flex min-h-[44px] items-center px-1 font-bold transition-colors ${accent.text}/70 hover:text-theme-accent`}>
                     Fazer login
                   </Link>
                 </p>

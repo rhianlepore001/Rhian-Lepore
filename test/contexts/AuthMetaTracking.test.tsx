@@ -59,7 +59,7 @@ describe('signup Meta integration', () => {
     expect(supabase.rpc).toHaveBeenCalledWith('ensure_owner_profile');
     // Lead dispara assim que a conta existe no servidor; CompleteRegistration só no fim.
     expect(metaTracker.lead).toHaveBeenCalledTimes(1);
-    expect(metaTracker.lead).toHaveBeenCalledWith(context, { email: input.email, phone: '351912345678', external_id: 'new-user' });
+    expect(metaTracker.lead).toHaveBeenCalledWith(context, { email: input.email, phone: '351912345678', external_id: 'new-user', first_name: 'Person', country: 'pt' });
     expect(metaTracker.completeRegistration).not.toHaveBeenCalled();
     await act(async () => { profile.resolve({ data: { status: 'created' }, error: null }); });
     expect(supabase.rpc).toHaveBeenCalledWith('upsert_onboarding_progress', expect.any(Object));
@@ -69,7 +69,7 @@ describe('signup Meta integration', () => {
       expect(await request).toEqual({ error: null });
     });
     expect(metaTracker.completeRegistration).toHaveBeenCalledTimes(1);
-    expect(metaTracker.completeRegistration).toHaveBeenCalledWith(context, { email: input.email, phone: '351912345678', external_id: 'new-user' });
+    expect(metaTracker.completeRegistration).toHaveBeenCalledWith(context, { email: input.email, phone: '351912345678', external_id: 'new-user', first_name: 'Person', country: 'pt' });
   });
 
   it.each([

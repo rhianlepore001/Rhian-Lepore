@@ -10,6 +10,7 @@ import { applyPublicAuthTheme } from '../utils/publicAuthTheme';
 import { normalizeRegion } from '../utils/formatters';
 import { isEmailTakenError } from '../utils/mapError';
 import { classifySignupError, signupError } from '../utils/signupErrors';
+import { splitFullName } from '../lib/metaMatching';
 
 export type UserType = 'barber' | 'beauty';
 export type Region = 'BR' | 'PT';
@@ -519,6 +520,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: data.email,
           phone: normalizeMetaPhone(data.phone, data.region),
           external_id: authData.user.id,
+          ...splitFullName(data.fullName),
+          country: data.region.toLowerCase(),
         };
         if (trackingContext && (authData.user.identities?.length ?? 0) > 0) {
           metaTracker.lead(trackingContext, metaIdentity);

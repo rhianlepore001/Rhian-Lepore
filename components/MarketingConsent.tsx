@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { isMetaRoute, metaTracker, setMetaScope } from '../lib/metaTracking';
 import { readConsent, saveConsent, subscribeConsent, type ConsentChoice } from '../lib/marketingConsent';
+import { useMetaRegistrationStart } from '../hooks/useMetaEngagement';
 
 export const MarketingConsent: React.FC = () => {
   const { pathname, search } = useLocation();
@@ -16,6 +17,8 @@ export const MarketingConsent: React.FC = () => {
     setMetaScope(eligible && consent === 'accepted');
     metaTracker.pageView(pathname, search, isAuthenticated || loading);
   }, [pathname, search, isAuthenticated, loading, consent, eligible]);
+
+  useMetaRegistrationStart(pathname);
 
   useEffect(() => {
     const timer = window.setInterval(() => {

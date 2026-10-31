@@ -34,7 +34,7 @@ O código usa Graph API v25.0. Revise a versão no ciclo de manutenção da inte
   `/#/privacidade`, uma vez por troca de rota do HashRouter (mudança só de query na mesma
   rota e render duplicado do StrictMode não repetem). Só sem sessão e com consentimento.
 - Ficam de fora, de propósito: rotas autenticadas do app (URLs com ids de clientes/agenda),
-  onboarding, `/update-password` (tokens), `/forgot-password`, convites com `company` ou
+  `/update-password` (tokens), `/forgot-password`, convites com `company` ou
   `member` e páginas públicas dos clientes dos salões (`/book`, `/queue`, `/pro`,
   `/minha-area`, `/clube`), que carregam slugs/ids de terceiros.
 - Lead somente depois que o servidor cria a conta de dono (`signUp` sem erro e com
@@ -77,6 +77,52 @@ O código usa Graph API v25.0. Revise a versão no ciclo de manutenção da inte
   A mesma regra vale para a query externa ao hash e para a query dentro do hash.
   Ao sair, a fila é esvaziada no próprio array, chamadas tardias são descartadas e o elemento
   script é removido.
+## Eventos de remarketing
+
+Tudo abaixo exige consentimento, usa o mesmo `event_id` (UUID v4) no navegador e na CAPI
+e dispara no máximo uma vez por visita (aba), exceto onde indicado. Os disparos são passivos:
+não alteram telas, formulários, navegação nem o banco.
+
+| Página | Evento | Tipo | Parâmetros |
+| --- | --- | --- | --- |
+| `/#/login` (landing) | `PageView` | padrão | |
+| `/#/login` | `ViewContent` | padrão | `content_category` = nicho escolhido (`barber`/`beauty`...), `content_name=landing` |
+| `/#/login` | `Scroll75` | custom | 75% da página (só se a página rola) |
+| `/#/login` | `TimeOnPage30s` | custom | 30 s com a aba visível |
+| `/#/login` | `CTAClick` | custom | `cta_id` = `free_trial_gateway` ou `free_trial_login` (um por `cta_id`) |
+| `/#/register` | `PageView` | padrão | |
+| `/#/register` | `StartRegistration` | custom | primeiro foco/digitação feito por pessoa em campo do formulário |
+| `/#/register` | `Lead`, `CompleteRegistration` | padrão | já existiam; agora também enviam nome/sobrenome/país |
+| `/#/termos`, `/#/privacidade` | `PageView` | padrão | |
+| `/#/onboarding-wizard` (logado, dono) | `OnboardingStep` | custom | `step` 1..6, `total_steps` |
+
+- `StartTrial` não existe: o teste grátis começa no cadastro, já marcado por `CompleteRegistration`
+  (evento de otimização recomendado). `OnboardingStep` mede ativação.
+- `InitiateCheckout` não é usado (não há checkout no cadastro).
+- Não há páginas separadas de home/preços no `main`; para incluir uma nova página de marketing,
+  adicione a rota em `META_PUBLIC_PATHS` (`lib/metaTracking.ts`) e em `EVENT_ROUTES` da Edge Function.
+- `OnboardingStep` usa o mesmo escopo transitório de `CompleteRegistration`: com consentimento,
+  carrega o Pixel, envia e revoga o consentimento em seguida. Nenhum outro evento sai de rotas
+  autenticadas.
+- `custom_data` só aceita tokens `[a-z][a-z0-9_-]{0,31}` e inteiros 1..20; qualquer outra coisa é
+  ignorada no navegador e rejeitada (400) na CAPI.
+
+### Advanced Matching
+
+`em`, `ph`, `fn`, `ln`, `ct`, `country` e `external_id` são normalizados conforme as regras da Meta
+e enviados em SHA-256: na CAPI (hash no servidor, `user_data` recebido do navegador apenas por HTTPS
+para a nossa função) e no `fbq('init')` (hash no navegador, `lib/sha256.ts`, só junto de um evento com
+consentimento). Só `Lead`, `CompleteRegistration` e `OnboardingStep` carregam esses dados
+(PageView e eventos de landing, não). Cidade (`ct`) e data de nascimento não são coletadas hoje; `ct` é
+suportado pela cadeia mas só será enviado se o cadastro passar a coletar a cidade.
+`first_name`/`last_name` vêm de `full_name` (primeira e última palavra).
+
+### Ordem de publicação
+
+1. Publicar (deploy) a Edge Function `meta-capi` **antes** do frontend. A versão antiga rejeita com 400
+   os novos eventos e o `user_data` estendido de Lead/CompleteRegistration (eventos CAPI perdidos).
+2. Publicar o frontend.
+
 - Autoconfiguração do Pixel é desativada. **Desative também os eventos automáticos e
   regras criadas na ferramenta de configuração de eventos no Gerenciador de Eventos**,
   para manter somente os eventos explícitos desta integração.

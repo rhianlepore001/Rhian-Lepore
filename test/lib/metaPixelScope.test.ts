@@ -20,6 +20,7 @@ describe('Meta browser adapter privacy', () => {
     document.cookie = '_fbp=; Max-Age=0; path=/';
     document.cookie = '_fbc=; Max-Age=0; path=/';
     localStorage.clear();
+    sessionStorage.clear();
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
@@ -146,4 +147,56 @@ describe('Meta browser adapter privacy', () => {
       expect(fetch).not.toHaveBeenCalled();
     },
   );
+  it('loads the Pixel for an OnboardingStep only on the onboarding route, with hashed matching', async () => {
+    window.history.replaceState(null, '', '/#/onboarding-wizard');
+    document.cookie = '_fbp=fb.1.1234567890.1234567890; path=/';
+    const { metaTracker, setMetaScope } = await import('@/lib/metaTracking');
+    setMetaScope(false);
+    expect(document.getElementById('agendix-meta-pixel')).toBeNull();
+    metaTracker.pageView('/onboarding-wizard', '', true);
+    expect(metaTracker.onboardingStep(2, 6, { email: 'Person@Example.com', external_id: 'user-1', country: 'br' })).toBe(true);
+    const queue = window.fbq!.queue;
+    const init = queue.find(args => args[0] === 'init');
+    expect(init?.[2]).toEqual(expect.objectContaining({ em: expect.stringMatching(/^[0-9a-f]{64}$/) }));
+    expect(JSON.stringify(queue)).not.toContain('Person@Example.com');
+    expect(queue.some(args => args[0] === 'trackSingle' && args[2] === 'PageView')).toBe(false);
+    expect(queue.some(args => args[0] === 'trackSingleCustom' && args[2] === 'OnboardingStep')).toBe(true);
+    expect(queue.filter(args => args[0] === 'consent').map(args => args[1])).not.toContain('revoke');
+    expect(window.fbq?.callMethod).toBeUndefined(); // revoke só corre via callMethod do fbevents.js real (coberto no e2e)
+    await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+    const body = JSON.parse(String(vi.mocked(fetch).mock.calls[0][1]?.body));
+    expect(body).toEqual(expect.objectContaining({
+      event_name: 'OnboardingStep', event_source_url: window.location.origin + '/#/onboarding-wizard',
+      custom_data: { step: 2, total_steps: 6, content_name: 'onboarding' },
+    }));
+  });
+
+  it('never sends marketing events from other authenticated or client-facing routes', async () => {
+    const { metaTracker, setMetaScope } = await import('@/lib/metaTracking');
+    for (const url of ['/#/agenda', '/#/book/demo', '/#/queue/demo']) {
+      window.history.replaceState(null, '', url);
+      setMetaScope(false);
+      metaTracker.pageView(url.slice(2), '', url === '/#/agenda');
+      expect(metaTracker.onboardingStep(1, 6, { email: 'person@example.com' })).toBe(false);
+      expect(metaTracker.viewContent('barber')).toBe(false);
+      expect(metaTracker.startRegistration('barber')).toBe(false);
+    }
+    expect(document.getElementById('agendix-meta-pixel')).toBeNull();
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('sends ViewContent as a standard event and CTAClick as a custom event on the landing', async () => {
+    window.history.replaceState(null, '', '/#/login');
+    document.cookie = '_fbp=fb.1.1234567890.1234567890; path=/';
+    const { metaTracker, setMetaScope } = await import('@/lib/metaTracking');
+    setMetaScope(true);
+    metaTracker.pageView('/login', '', false);
+    metaTracker.viewContent('beauty');
+    metaTracker.ctaClick('free_trial_gateway');
+    const queue = window.fbq!.queue;
+    expect(queue.some(args => args[0] === 'trackSingle' && args[2] === 'ViewContent'
+      && (args[3] as Record<string, unknown>).content_category === 'beauty')).toBe(true);
+    expect(queue.some(args => args[0] === 'trackSingleCustom' && args[2] === 'CTAClick')).toBe(true);
+    await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(3));
+  });
 });

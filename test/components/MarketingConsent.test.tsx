@@ -12,7 +12,7 @@ vi.mock('@/contexts/AuthContext', () => ({
 vi.mock('@/lib/metaTracking', () => ({
   isMetaRoute: (path: string) => ['/login', '/register'].includes(path),
   setMetaScope: vi.fn(),
-  metaTracker: { pageView: vi.fn(), lead: vi.fn() },
+  metaTracker: { pageView: vi.fn(), lead: vi.fn(), startRegistration: vi.fn() },
 }));
 
 describe('MarketingConsent', () => {

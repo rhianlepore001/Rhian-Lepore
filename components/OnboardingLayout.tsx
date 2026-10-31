@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { AgendiXLogo } from './AgendiXLogo';
+import { useMetaOnboardingStep } from '../hooks/useMetaEngagement';
 
 interface OnboardingLayoutProps {
     children: React.ReactNode;
@@ -19,7 +20,9 @@ export const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
     description,
     forceTheme
 }) => {
-    const { userType } = useAuth();
+    const { userType, user, role, fullName, region } = useAuth();
+    // Meta (passivo, só com consentimento): registra o passo alcançado; não altera a tela.
+    useMetaOnboardingStep(currentStep, totalSteps, { email: user?.email, id: user?.id, fullName, region }, role === 'owner');
     const isBeauty = forceTheme ? forceTheme === 'beauty' : userType === 'beauty';
     const [visible, setVisible] = useState(false);
 

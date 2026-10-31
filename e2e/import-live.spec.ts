@@ -66,7 +66,7 @@ test('importa CSV, XLSX e VCF no Supabase local, revisa duplicados e desfaz o lo
   await expect(csv).toContainText('1 ignorado');
   await csv.getByRole('button', { name:'Desfazer esta importação' }).click();
   await csv.getByRole('button', { name:'Confirmar desfazer' }).click();
-  await expect(page.getByRole('status')).toContainText('2 removido(s) ou desvinculado(s)');
+  await expect(page.getByRole('status')).toContainText('2 removidos ou desvinculados');
   const after = await db.from('clients').select('name').eq('user_id', company).order('name');
   expect(after.error).toBeNull();
   expect(after.data!.map(row => row.name)).toEqual(['Ana Fictícia', 'Carla Fictícia', 'Cliente Existente Fictício']);

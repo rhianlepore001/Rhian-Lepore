@@ -320,11 +320,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (error) throw error;
 
         // Mantém profiles.tutorial_completed alinhado ao gate legado / relatórios.
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ tutorial_completed: true })
-          .eq('id', session.user.id);
+        // O UPDATE "não falha" quando o perfil não existe (0 linhas): confere as linhas gravadas
+        // e, se faltar o perfil (cadastro órfão), recria via ensure_owner_profile e grava de novo.
+        const writeProfileFlag = () =>
+          supabase
+            .from('profiles')
+            .update({ tutorial_completed: true })
+            .eq('id', session.user.id)
+            .select('id');
+        let { data: updatedRows, error: profileError } = await writeProfileFlag();
         if (profileError) throw profileError;
+        if (!updatedRows || updatedRows.length === 0) {
+          const { error: ensureError } = await supabase.rpc('ensure_owner_profile');
+          if (ensureError) throw ensureError;
+          ({ data: updatedRows, error: profileError } = await writeProfileFlag());
+          if (profileError) throw profileError;
+          if (!updatedRows || updatedRows.length === 0) {
+            throw new Error('Não foi possível concluir a configuração: perfil não encontrado.');
+          }
+        }
+
+        // Sinalizador legado business_settings.onboarding_completed: nenhum código o gravava
+        // (ficava false para todos os donos). Melhor esforço: o gate do app usa onboarding_progress.
+        const { error: legacyError } = await supabase
+          .from('business_settings')
+          .update({ onboarding_completed: true, onboarding_step: 5 })
+          .eq('user_id', tenantId);
+        if (legacyError) console.warn('Não foi possível gravar onboarding_completed em business_settings:', legacyError);
       }
 
       setTutorialCompleted(true);

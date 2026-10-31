@@ -66,6 +66,16 @@ describe('OnboardingWizard: sem ping-pong com o guard de rota', () => {
     expect(auth.markTutorialCompleted).not.toHaveBeenCalled();
   });
 
+  it('re-renders com função nova do AuthContext (não memoizada) navegam no máximo 1x (sem tempestade de replaceState)', () => {
+    onboarding.completed = true; auth.tutorialCompleted = true;
+    const { rerender } = render(<OnboardingWizard />);
+    for (let i = 0; i < 30; i++) {
+      auth.markTutorialCompleted = vi.fn().mockResolvedValue({ error: null });
+      rerender(<OnboardingWizard />);
+    }
+    expect(navigate).toHaveBeenCalledTimes(1);
+  });
+
   it('não concluído: mostra o wizard e não navega', () => {
     render(<OnboardingWizard />);
     expect(navigate).not.toHaveBeenCalled();

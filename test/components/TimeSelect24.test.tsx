@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event';
 import { TimeSelect24, buildMinuteOptions, parseTime24 } from '../../components/TimeSelect24';
 
 vi.mock('../../hooks/useBrutalTheme', () => ({
-  useBrutalTheme: () => ({ classes: { input: 'input' }, colors: { textMuted: 'muted' } }),
+  useBrutalTheme: () => ({ classes: { input: 'input' }, colors: { textMuted: 'muted' }, isDark: true }),
 }));
 
 function Harness({ initial = '09:30' }: { initial?: string }) {
@@ -19,6 +19,15 @@ function Harness({ initial = '09:30' }: { initial?: string }) {
 }
 
 describe('TimeSelect24', () => {
+  it('mobile: padding enxuto (dígitos não cortam em 390px) e color-scheme escuro (seletor legível no Safari)', () => {
+    render(<Harness />);
+    const hour = screen.getByLabelText('Início (hora)') as HTMLSelectElement;
+    expect(hour.className).toContain('!px-1');
+    expect(hour.className).not.toContain('!px-2');
+    expect(hour.className).toContain('[color-scheme:dark]');
+    expect(hour.className).toContain('appearance-none');
+  });
+
   it('lista as 24 horas em formato 00–23, sem AM/PM', () => {
     render(<Harness />);
     const hour = screen.getByLabelText('Início (hora)') as HTMLSelectElement;

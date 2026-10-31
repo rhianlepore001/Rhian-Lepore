@@ -41,4 +41,15 @@ describe('MarketingConsent', () => {
     render(<MemoryRouter initialEntries={['/privacidade']}><MarketingConsent /></MemoryRouter>);
     expect(screen.getByRole('link', { name: 'Política de Privacidade' })).toHaveAttribute('href', '/privacidade');
   });
+  it('reserves page space for the fixed banner so it never covers the last button', () => {
+    const spy = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({ height: 180 } as DOMRect);
+    const { unmount } = render(<MemoryRouter initialEntries={['/register']}><MarketingConsent /></MemoryRouter>);
+    expect(document.documentElement.style.getPropertyValue('--cookie-space')).toBe('180px');
+    spy.mockReturnValue({ height: 44 } as DOMRect);
+    fireEvent.click(screen.getByRole('button', { name: 'Recusar' }));
+    expect(document.documentElement.style.getPropertyValue('--cookie-space')).toBe('44px');
+    unmount();
+    expect(document.documentElement.style.getPropertyValue('--cookie-space')).toBe('');
+    spy.mockRestore();
+  });
 });

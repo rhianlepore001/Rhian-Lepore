@@ -20,7 +20,7 @@ CREATE TABLE public.services (
 CREATE TABLE public.appointments (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id text NOT NULL,
   client_id uuid REFERENCES public.clients(id) ON DELETE CASCADE,
-  service text
+  service text, appointment_time timestamptz
 );
 CREATE FUNCTION public.get_auth_company_id() RETURNS text LANGUAGE sql STABLE SECURITY DEFINER SET search_path = ''
   AS $$ SELECT COALESCE(NULLIF(btrim(company_id), ''), id) FROM public.profiles WHERE id = auth.uid()::text $$;

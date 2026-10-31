@@ -42,7 +42,7 @@ test('importa arquivo latin1 com IDs repetidos, telefones duplicados e preserva 
 
   // Um atendimento fictício passa a usar um cliente e um serviço importados (o serviço é citado sem acento e em minúsculas).
   const joao = clients.data!.find(row => row.name === 'João Conceição')!;
-  const appointment = await admin.from('appointments').insert({ user_id: userId, client_id: joao.id, service: 'barba terapeutica' }).select('id').single();
+  const appointment = await admin.from('appointments').insert({ user_id: userId, client_id: joao.id, service: 'barba terapeutica', appointment_time: new Date().toISOString() }).select('id').single();
   expect(appointment.error).toBeNull();
 
   await csv.getByRole('button', { name:'Desfazer esta importação' }).click();
@@ -58,4 +58,62 @@ test('importa arquivo latin1 com IDs repetidos, telefones duplicados e preserva 
   expect(afterServices.data!.map(row => row.name)).toEqual(['Barba Terapêutica']);
   const kept = await admin.from('appointments').select('id').eq('id', appointment.data!.id);
   expect(kept.data).toHaveLength(1);
+});
+
+// Mesmo fluxo, agora contra as tabelas reais da produção (estrutura copiada sem dados): o que já foi usado em cada uma delas não pode ser apagado ao desfazer.
+test('desfazer preserva clientes e serviços usados em memberships, agendamentos online, financeiro, ficha capilar e agenda', async ({ page }) => {
+  test.skip(!process.env.IMPORT_REAL_STRUCTURE, 'Exige um banco local com a estrutura real da aplicação (IMPORT_REAL_STRUCTURE=1; veja import-live.md).');
+  const admin = createClient(local, service, { auth: { persistSession: false } });
+  const userId = (await createClient(local, anon, { auth: { persistSession: false } }).auth.signInWithPassword({ email, password })).data.user!.id;
+  await page.goto('/e2e/import-live-harness/');
+  await page.getByLabel('E-mail de teste').fill(email);
+  await page.getByLabel('Senha de teste').fill(password);
+  await page.getByRole('button', { name:'Entrar no teste' }).click();
+  await page.getByRole('button', { name:'Trinks' }).click();
+  await page.getByLabel('Escolher arquivos').setInputFiles([
+    { name:'clientes-reais.csv', mimeType:'text/csv', buffer:Buffer.from('Nome;Celular;ID\nPaulo Membro;11970000001;r-1\nRita Financeira;11970000002;r-2\nSérgio Cabelo;11970000003;r-3\nTânia Agenda;11970000004;r-4\nUriel Livre;11970000005;r-5\n', 'latin1') },
+    { name:'servicos-reais.csv', mimeType:'text/csv', buffer:Buffer.from('Nome;Preço;Duração;ID\nHidratação Capilar;80;60;t-1\nPlatinado Fictício;200;120;t-2\nEscova Progressiva;150;90;t-3\nColoração Fictícia;120;90;t-4\nMechas Fictícias;180;120;t-5\nSobrancelha Livre;25;20;t-6\n', 'utf-8') },
+  ]);
+  await page.getByRole('button', { name:'Analisar arquivos' }).click();
+  await page.getByRole('button', { name:'Preparar revisão' }).click();
+  await page.getByRole('button', { name:'Confirmar importação' }).click();
+  await expect(page.getByRole('heading', { name:'Resultado da importação' })).toBeVisible();
+  const csv = page.locator('section').filter({ has:page.getByRole('heading', { name:'clientes-reais.csv' }) });
+  const services = page.locator('section').filter({ has:page.getByRole('heading', { name:'servicos-reais.csv' }) });
+  await expect(csv).toContainText('5 linhas · 5 importados');
+  await expect(services).toContainText('6 linhas · 6 importados');
+
+  const names = ['Paulo Membro', 'Rita Financeira', 'Sérgio Cabelo', 'Tânia Agenda', 'Uriel Livre'];
+  const svcNames = ['Hidratação Capilar', 'Platinado Fictício', 'Escova Progressiva', 'Coloração Fictícia', 'Mechas Fictícias', 'Sobrancelha Livre'];
+  const c = Object.fromEntries((await admin.from('clients').select('id,name').eq('user_id', userId).in('name', names)).data!.map(r => [r.name, r.id]));
+  const s = Object.fromEntries((await admin.from('services').select('id,name').eq('user_id', userId).in('name', svcNames)).data!.map(r => [r.name, r.id]));
+  expect(Object.keys(c)).toHaveLength(5);
+  expect(Object.keys(s)).toHaveLength(6);
+
+  const ok = (r: { error: unknown }, label: string) => expect(r.error, label).toBeNull();
+  // serviços usados
+  const plan = await admin.from('membership_plans').insert({ user_id: userId, name: 'Plano fictício', price_cents: 9900, service_ids: [s['Hidratação Capilar']] }).select('id').single();
+  ok(plan, 'membership_plans');
+  ok(await admin.from('public_bookings').insert({ business_id: userId, customer_phone: '11960000001', service_ids: [s['Platinado Fictício']], appointment_time: new Date(Date.now() - 864e5).toISOString(), status: 'completed', total_price: 200 }), 'public_bookings service_ids');
+  ok(await admin.from('public_bookings').insert({ business_id: userId, customer_phone: '11960000002', service_ids: [s['Hidratação Capilar']], original_service_ids: [s['Escova Progressiva']], appointment_time: new Date(Date.now() - 2 * 864e5).toISOString(), status: 'completed', total_price: 150 }), 'public_bookings original_service_ids');
+  ok(await admin.from('finance_records').insert({ user_id: userId, barber_name: 'Profissional Fictício', service_name: 'Coloração Fictícia Premium', client_name: 'Rita Financeira', revenue: 120 }), 'finance_records');
+  ok(await admin.from('hair_records').insert({ user_id: userId, client_id: c['Sérgio Cabelo'], date: '2026-10-01', service: 'mechas ficticias' }), 'hair_records');
+  // clientes usados
+  ok(await admin.from('client_memberships').insert({ user_id: userId, client_id: c['Paulo Membro'], plan_id: plan.data!.id }), 'client_memberships');
+  ok(await admin.from('appointments').insert({ user_id: userId, client_id: c['Tânia Agenda'], service: 'Serviço avulso', appointment_time: new Date().toISOString() }), 'appointments');
+
+  await csv.getByRole('button', { name:'Desfazer esta importação' }).click();
+  await csv.getByRole('button', { name:'Confirmar desfazer' }).click();
+  await expect(page.getByRole('status')).toContainText(/1 removido ou desvinculado\. 4 preservados por terem sido alterados ou utilizados\./);
+  await services.getByRole('button', { name:'Desfazer esta importação' }).click();
+  await services.getByRole('button', { name:'Confirmar desfazer' }).click();
+  await expect(page.getByRole('status')).toContainText(/1 removido ou desvinculado\. 5 preservados por terem sido alterados ou utilizados\./);
+
+  const afterClients = await admin.from('clients').select('name').eq('user_id', userId).in('name', names);
+  expect(afterClients.data!.map(r => r.name).sort()).toEqual(['Paulo Membro', 'Rita Financeira', 'Sérgio Cabelo', 'Tânia Agenda']);
+  const afterServices = await admin.from('services').select('name').eq('user_id', userId).in('name', svcNames);
+  expect(afterServices.data!.map(r => r.name).sort()).toEqual(['Coloração Fictícia', 'Escova Progressiva', 'Hidratação Capilar', 'Mechas Fictícias', 'Platinado Fictício']);
+  // o registro de cada tabela segue de pé, apontando para o cliente/serviço preservado
+  expect((await admin.from('hair_records').select('id').eq('client_id', c['Sérgio Cabelo'])).data).toHaveLength(1);
+  expect((await admin.from('client_memberships').select('id').eq('client_id', c['Paulo Membro'])).data).toHaveLength(1);
 });

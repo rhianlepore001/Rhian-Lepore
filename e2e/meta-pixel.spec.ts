@@ -110,3 +110,42 @@ test('keeps private URLs and tokens out of browser and server events after marke
   expect(browserUrls.every(url => !/book|private|minha-area|token/.test(url))).toBe(true);
   expect(serverEvents.every(event => event.event_name === 'PageView')).toBe(true);
 });
+
+test('sends landing and registration-start events once, with the same event_id in Pixel and server', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('agendix:marketing-consent:v1', JSON.stringify({ choice: 'accepted', version: 1, savedAt: Date.now() })));
+  const serverEvents: { event_name: string; event_id: string; custom_data?: Record<string, unknown>; event_source_url: string }[] = [];
+  await page.route('https://example.supabase.co/functions/v1/meta-capi', async route => {
+    if (route.request().method() === 'POST') serverEvents.push(route.request().postDataJSON());
+    await route.fulfill({ status: 200, body: '{}', headers: { 'Access-Control-Allow-Origin': '*' } });
+  });
+  await page.route('https://connect.facebook.net/**', route => route.fulfill({
+    contentType: 'application/javascript',
+    body: `
+      window.__pixelCalls = [];
+      const pixel = window.fbq;
+      pixel.callMethod = (...args) => window.__pixelCalls.push(args);
+      pixel.queue.splice(0).forEach(args => pixel.callMethod(...args));
+    `,
+  }));
+  await page.goto('/#/login');
+  await page.getByTestId('category-beauty').click();
+  await expect.poll(() => serverEvents.map(event => event.event_name)).toContain('ViewContent');
+  await page.getByRole('link', { name: /Criar agora/ }).click();
+  await expect(page.getByLabel('Seu nome')).toBeVisible();
+  await page.getByLabel('Seu nome').click();
+  await page.getByLabel('Seu nome').fill('Pessoa Teste');
+  await page.getByLabel('Seu nome').fill('Pessoa Teste 2');
+  await expect.poll(() => serverEvents.map(event => event.event_name)).toContain('StartRegistration');
+  const names = serverEvents.map(event => event.event_name);
+  expect(names.filter(name => name === 'ViewContent')).toHaveLength(1);
+  expect(names.filter(name => name === 'CTAClick')).toHaveLength(1);
+  expect(names.filter(name => name === 'StartRegistration')).toHaveLength(1);
+  expect(serverEvents.find(event => event.event_name === 'ViewContent')?.custom_data).toEqual(expect.objectContaining({ content_category: 'beauty' }));
+  expect(serverEvents.find(event => event.event_name === 'CTAClick')?.custom_data).toEqual(expect.objectContaining({ cta_id: 'free_trial_login' }));
+  expect(serverEvents.every(event => !/Pessoa/.test(JSON.stringify(event)))).toBe(true);
+  const pixelCalls = await page.evaluate(() => (window as unknown as { __pixelCalls: unknown[][] }).__pixelCalls);
+  for (const name of ['StartRegistration']) {
+    const call = pixelCalls.find(args => args[0] === 'trackSingleCustom' && args[2] === name);
+    expect(call?.[4]).toEqual({ eventID: serverEvents.find(event => event.event_name === name)?.event_id });
+  }
+});

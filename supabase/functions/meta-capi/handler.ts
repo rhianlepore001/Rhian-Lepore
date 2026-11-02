@@ -9,21 +9,42 @@ interface Config {
   now?: () => number;
 }
 
-const EVENT_NAMES = new Set(['PageView', 'Lead', 'CompleteRegistration']);
+// Allow-list de eventos e da rota (hash) em que cada um pode ocorrer. Espelha lib/metaTracking.ts.
+// Landing = #/login. Rotas públicas dos clientes dos salões (#/book, #/queue...) nunca entram.
+// OnboardingStep é o único evento de rota autenticada (o endpoint não exige login, como Lead).
+const EVENT_ROUTES: Record<string, string[]> = {
+  PageView: ['#/login', '#/register', '#/termos', '#/privacidade'],
+  Lead: ['#/register'],
+  CompleteRegistration: ['#/register'],
+  ViewContent: ['#/login'],
+  CTAClick: ['#/login'],
+  Scroll75: ['#/login'],
+  TimeOnPage30s: ['#/login'],
+  StartRegistration: ['#/register'],
+  OnboardingStep: ['#/onboarding-wizard'],
+};
+const EVENT_NAMES = new Set(Object.keys(EVENT_ROUTES));
 const MAX_BYTES = 8192;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-// Mesmas rotas públicas do frontend (lib/metaTracking.ts). Lead/CompleteRegistration só em #/register.
-const PAGEVIEW_HASHES = ['#/login', '#/register', '#/termos', '#/privacidade'];
+const SAFE_TOKEN = /^[a-z][a-z0-9_-]{0,31}$/;
+const USER_KEYS = ['email', 'phone', 'external_id', 'fbp', 'fbc', 'first_name', 'last_name', 'city', 'country'];
+// Mesma normalização do Advanced Matching do navegador (lib/metaMatching.ts).
+const lettersOnly = (value: string) => value.normalize('NFC').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
 const EXTERNAL_ID = /^[\w.:-]{1,128}$/;
 const META_BROWSER_ID = /^fb\.\d\.\d+\.[A-Za-z0-9_.-]+$/;
 
 function validPayload(value: unknown, origin: string, now: number): value is {
   consent: true; event_name: string; event_id: string; event_time: number;
-  event_source_url: string; user_data?: { email?: string; phone?: string; external_id?: string; fbp?: string; fbc?: string };
+  event_source_url: string;
+  user_data?: {
+    email?: string; phone?: string; external_id?: string; fbp?: string; fbc?: string;
+    first_name?: string; last_name?: string; city?: string; country?: string;
+  };
+  custom_data?: { content_category?: string; content_name?: string; cta_id?: string; step?: number; total_steps?: number };
 } {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const v = value as Record<string, unknown>;
-  if (Object.keys(v).some(key => !['consent', 'event_name', 'event_id', 'event_time', 'event_source_url', 'user_data'].includes(key))) return false;
+  if (Object.keys(v).some(key => !['consent', 'event_name', 'event_id', 'event_time', 'event_source_url', 'user_data', 'custom_data'].includes(key))) return false;
   if (v.consent !== true || typeof v.event_name !== 'string' || !EVENT_NAMES.has(v.event_name)) return false;
   if (typeof v.event_id !== 'string' || !UUID.test(v.event_id)) return false;
   if (typeof v.event_time !== 'number' || !Number.isInteger(v.event_time) || v.event_time < now - 3600 || v.event_time > now + 60) return false;
@@ -31,16 +52,32 @@ function validPayload(value: unknown, origin: string, now: number): value is {
   try {
     const source = new URL(v.event_source_url);
     if (source.origin !== origin || source.username || source.password || source.search) return false;
-    if (!PAGEVIEW_HASHES.includes(source.hash)) return false;
-    if (v.event_name !== 'PageView' && source.hash !== '#/register') return false;
+    if (!EVENT_ROUTES[v.event_name].includes(source.hash)) return false;
   } catch { return false; }
+  if (v.custom_data !== undefined) {
+    if (!v.custom_data || typeof v.custom_data !== 'object' || Array.isArray(v.custom_data)) return false;
+    const custom = v.custom_data as Record<string, unknown>;
+    if (Object.keys(custom).some(key => !['content_category', 'content_name', 'cta_id', 'step', 'total_steps'].includes(key))) return false;
+    for (const key of ['content_category', 'content_name', 'cta_id'] as const) {
+      if (custom[key] !== undefined && (typeof custom[key] !== 'string' || !SAFE_TOKEN.test(custom[key] as string))) return false;
+    }
+    for (const key of ['step', 'total_steps'] as const) {
+      const n = custom[key];
+      if (n !== undefined && (typeof n !== 'number' || !Number.isInteger(n) || n < 1 || n > 20)) return false;
+    }
+  }
   if (v.user_data !== undefined) {
     if (!v.user_data || typeof v.user_data !== 'object' || Array.isArray(v.user_data)) return false;
     const user = v.user_data as Record<string, unknown>;
-    if (Object.keys(user).some(key => !['email', 'phone', 'external_id', 'fbp', 'fbc'].includes(key))) return false;
+    if (Object.keys(user).some(key => !USER_KEYS.includes(key))) return false;
     if (user.email !== undefined && (typeof user.email !== 'string' || user.email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email.trim()))) return false;
     if (user.phone !== undefined && (typeof user.phone !== 'string' || user.phone.length > 32 || !/^\+?[\d\s().-]+$/.test(user.phone) || !/^\d{8,15}$/.test(user.phone.replace(/\D/g, '')))) return false;
     if (user.external_id !== undefined && (typeof user.external_id !== 'string' || !EXTERNAL_ID.test(user.external_id))) return false;
+    for (const key of ['first_name', 'last_name', 'city'] as const) {
+      const text = user[key];
+      if (text !== undefined && (typeof text !== 'string' || text.length > 100 || !lettersOnly(text))) return false;
+    }
+    if (user.country !== undefined && (typeof user.country !== 'string' || !/^[A-Za-z]{2}$/.test(user.country))) return false;
     for (const key of ['fbp', 'fbc'] as const) {
       const identifier = user[key];
       if (identifier !== undefined && (typeof identifier !== 'string' || identifier.length > 256 || !META_BROWSER_ID.test(identifier))) return false;
@@ -109,9 +146,14 @@ export function createMetaCapiHandler(config: Config): (request: Request) => Pro
     try {
       const email = value.user_data?.email?.trim().toLowerCase();
       const phone = value.user_data?.phone?.replace(/\D/g, '');
+      const user = value.user_data;
       const userData = {
         ...(email ? { em: [await hash(email)] } : {}),
         ...(phone ? { ph: [await hash(phone)] } : {}),
+        ...(user?.first_name ? { fn: [await hash(lettersOnly(user.first_name))] } : {}),
+        ...(user?.last_name ? { ln: [await hash(lettersOnly(user.last_name))] } : {}),
+        ...(user?.city ? { ct: [await hash(lettersOnly(user.city))] } : {}),
+        ...(user?.country ? { country: [await hash(user.country.toLowerCase())] } : {}),
         ...(value.user_data?.external_id ? { external_id: [await hash(value.user_data.external_id.toLowerCase())] } : {}),
         ...(value.user_data?.fbp ? { fbp: value.user_data.fbp } : {}),
         ...(value.user_data?.fbc ? { fbc: value.user_data.fbc } : {}),
@@ -127,6 +169,7 @@ export function createMetaCapiHandler(config: Config): (request: Request) => Pro
           data: [{
             event_name: value.event_name, event_id: value.event_id, event_time: value.event_time,
             event_source_url: value.event_source_url, action_source: 'website', user_data: userData,
+            ...(value.custom_data && Object.keys(value.custom_data).length ? { custom_data: value.custom_data } : {}),
           }],
           ...(config.testEventCode ? { test_event_code: config.testEventCode } : {}),
         }),

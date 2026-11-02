@@ -13,6 +13,8 @@ import { getBusinessCopy } from '../utils/businessCopy';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { applyPublicAuthTheme } from '../utils/publicAuthTheme';
+import { metaTracker } from '../lib/metaTracking';
+import { useMetaLandingEngagement } from '../hooks/useMetaEngagement';
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
@@ -77,6 +79,10 @@ export const Login: React.FC = () => {
         document.documentElement.setAttribute('data-theme', theme);
         document.documentElement.setAttribute('data-mode', 'dark');
     };
+
+    // Meta (passivo, só com consentimento): nicho da tela, rolagem e permanência. O nicho só é
+    // conhecido depois que o visitante escolhe; no gateway não há content_category.
+    useMetaLandingEngagement(showGateway ? null : loginTheme);
 
     // ─── GATEWAY ─────────────────────────────────────────────────────────────
     if (showGateway) {
@@ -200,6 +206,7 @@ export const Login: React.FC = () => {
                         </p>
                         <Link
                             to="/register"
+                            onClick={() => metaTracker.ctaClick('free_trial_gateway')}
                             className="w-full flex items-center justify-center py-3.5 rounded-xl border border-[var(--color-text)]/15 hover:border-[var(--color-text)]/25 text-[var(--color-text)] text-sm font-mono uppercase tracking-widest transition-all duration-200 bg-[var(--color-card-hover)] hover:bg-[var(--color-card-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-theme-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]"
                         >
                             Crie sua conta grátis
@@ -358,6 +365,7 @@ export const Login: React.FC = () => {
                                 </Link>
                                 <Link
                                     to={`/register?type=${loginTheme}`}
+                                    onClick={() => metaTracker.ctaClick('free_trial_login', loginTheme)}
                                     className={`text-xs font-bold font-mono uppercase tracking-wider ${accent.text} hover:opacity-80 transition-opacity min-h-[44px] inline-flex items-center justify-center`}
                                 >
                                     Não tem conta? Criar agora

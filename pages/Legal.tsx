@@ -60,15 +60,19 @@ export const Legal: React.FC = () => {
                             <p className={P_CLASS}>
                                 O armazenamento essencial mantém a sessão e sua preferência de cookies.
                                 Somente com seu consentimento usamos o Meta Pixel e a API de Conversões
-                                nas páginas de entrada e cadastro para medir visitas, início e conclusão
-                                do cadastro e melhorar anúncios. Não rastreamos o painel nem as páginas
-                                públicas de atendimento dos nossos clientes.
+                                nas páginas de entrada, cadastro, termos e privacidade para medir visitas,
+                                interesse (nicho escolhido, rolagem da página, tempo de permanência e clique
+                                em criar conta), início e conclusão do cadastro e as etapas da configuração
+                                inicial da sua conta, e para melhorar e direcionar anúncios, inclusive a quem
+                                já visitou o site (remarketing). Não rastreamos a agenda, o painel nem as
+                                páginas públicas de atendimento dos nossos clientes.
                             </p>
                             <p className={P_CLASS}>
                                 A Meta pode receber eventos, identificadores de cookies, IP e navegador;
-                                no cadastro, e-mail e telefone são enviados pela API com hash SHA-256
-                                para correspondência. O hash permite associação pela Meta e não torna
-                                esses dados anônimos. A Meta pode processar dados fora do Brasil e do
+                                no cadastro e na configuração inicial, e-mail, telefone, nome, sobrenome,
+                                país, cidade (quando informada) e o identificador interno da sua conta são
+                                enviados com hash SHA-256 para correspondência. O hash permite associação
+                                pela Meta e não torna esses dados anônimos. A Meta pode processar dados fora do Brasil e do
                                 Espaço Econômico Europeu, conforme sua{' '}
                                 <a href="https://www.facebook.com/privacy/policy/" target="_blank" rel="noopener noreferrer" className="underline">Política de Privacidade</a>.
                             </p>

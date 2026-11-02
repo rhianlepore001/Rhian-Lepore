@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { areMetaParamsSafe, buildFbc, createMetaTracker, isMetaRoute } from '@/lib/metaTracking';
 import { CONSENT_KEY, readConsent, saveConsent } from '@/lib/marketingConsent';
+import { hashMatching } from '@/lib/metaMatching';
 
 describe('marketing consent', () => {
   beforeEach(() => localStorage.clear());
@@ -31,7 +32,7 @@ describe('Meta tracking', () => {
     const pixel = vi.fn();
     const send = vi.fn().mockResolvedValue(undefined);
     const tracker = createMetaTracker({
-      pixelId, pixel, send, hasConsent: () => consent,
+      pixelId, pixel, send, hasConsent: () => consent, once: new Set<string>(),
       waitForFbp: pollFbp ? undefined : async () => undefined,
     });
     return { tracker, pixel, send, accept: () => { consent = true; }, reject: () => { consent = false; } };
@@ -184,8 +185,10 @@ describe('Meta tracking', () => {
     expect(lead.user_data).toMatchObject(identity);
     expect(lead.event_id).not.toBe(complete.event_id);
     expect(lead.event_source_url).toMatch(/#\/register$/);
-    expect(s.pixel).toHaveBeenCalledWith('Lead', lead.event_id);
-    expect(s.pixel).toHaveBeenCalledWith('CompleteRegistration', complete.event_id);
+    // O Pixel recebe o mesmo event_id, mais o Advanced Matching já em hash (nunca o e-mail puro).
+    expect(s.pixel).toHaveBeenCalledWith('Lead', lead.event_id, { matching: hashMatching(identity) });
+    expect(s.pixel).toHaveBeenCalledWith('CompleteRegistration', complete.event_id, { matching: hashMatching(identity) });
+    expect(JSON.stringify(s.pixel.mock.calls)).not.toContain('a@example.com');
   });
   it('drops Lead if consent is withdrawn before the account is created', async () => {
     const s = setup(); s.accept();

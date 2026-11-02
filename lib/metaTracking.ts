@@ -1,7 +1,20 @@
 import { clearMetaCookies, readConsent } from './marketingConsent';
+import { hashMatching, type MetaIdentity, type MetaMatching } from './metaMatching';
 
-type MetaEventName = 'PageView' | 'Lead' | 'CompleteRegistration';
-interface Identity { email?: string; phone?: string; external_id?: string; fbp?: string; fbc?: string }
+export type MetaEventName =
+  | 'PageView' | 'Lead' | 'CompleteRegistration' | 'ViewContent'
+  | 'CTAClick' | 'Scroll75' | 'TimeOnPage30s' | 'StartRegistration' | 'OnboardingStep';
+// Eventos padrão da Meta usam trackSingle; os demais são personalizados (trackSingleCustom).
+const STANDARD_EVENTS: ReadonlySet<MetaEventName> = new Set(['PageView', 'Lead', 'CompleteRegistration', 'ViewContent']);
+// Parâmetros próprios (nunca texto livre nem dado pessoal): nomes curtos em minúsculas e números.
+export interface MetaCustomData {
+  content_category?: string;
+  content_name?: string;
+  cta_id?: string;
+  step?: number;
+  total_steps?: number;
+}
+type Identity = MetaIdentity & { fbp?: string; fbc?: string };
 export interface MetaEvent {
   consent: true;
   event_name: MetaEventName;
@@ -9,13 +22,17 @@ export interface MetaEvent {
   event_time: number;
   event_source_url: string;
   user_data?: Identity;
+  custom_data?: MetaCustomData;
 }
+interface PixelExtras { custom?: MetaCustomData; matching?: MetaMatching }
+interface OnceStore { has(key: string): boolean; add(key: string): void }
 interface RegistrationContext { id: string; leadId: string; source: string }
 interface TrackerOptions {
   pixelId: string;
   hasConsent: () => boolean;
   canSend?: (source: string) => boolean;
-  pixel: (name: MetaEventName, id: string) => void;
+  once?: OnceStore;
+  pixel: (name: MetaEventName, id: string, extras?: PixelExtras) => void;
   send: (event: MetaEvent, signal?: AbortSignal) => Promise<unknown>;
   waitForFbp?: () => Promise<string | undefined>;
   getAbortSignal?: () => AbortSignal;
@@ -25,6 +42,45 @@ interface TrackerOptions {
 // públicas de clientes dos salões (/book, /queue, /pro, /minha-area, /clube) ficam de fora:
 // carregam slugs/ids de terceiros. Rotas autenticadas e /update-password também.
 export const META_PUBLIC_PATHS = ['/login', '/register', '/termos', '/privacidade'] as const;
+// Landing = /login. Os eventos de engajamento só valem nela e em /register; o passo do
+// onboarding é a única exceção autenticada e só dispara sem abrir o escopo da rota.
+export const META_LANDING_PATH = '/login';
+export const META_ONBOARDING_PATH = '/onboarding-wizard';
+const TRANSIENT_EVENTS: ReadonlySet<MetaEventName> = new Set(['CompleteRegistration', 'OnboardingStep']);
+
+const SAFE_TOKEN = /^[a-z][a-z0-9_-]{0,31}$/;
+function cleanCustomData(data: MetaCustomData | undefined): MetaCustomData {
+  const clean: MetaCustomData = {};
+  if (!data) return clean;
+  for (const key of ['content_category', 'content_name', 'cta_id'] as const) {
+    const value = data[key];
+    if (typeof value === 'string' && SAFE_TOKEN.test(value)) clean[key] = value;
+  }
+  for (const key of ['step', 'total_steps'] as const) {
+    const value = data[key];
+    if (Number.isInteger(value) && value! >= 1 && value! <= 20) clean[key] = value;
+  }
+  return clean;
+}
+
+/** Mesma visita (aba) = no máximo um disparo por evento. Guardado só depois do consentimento. */
+function sessionOnceStore(): OnceStore {
+  const KEY = 'agendix:meta-once:v1';
+  const memory = new Set<string>();
+  const read = (): string[] => {
+    try {
+      const parsed = JSON.parse(window.sessionStorage.getItem(KEY) || '[]');
+      return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : [];
+    } catch { return []; }
+  };
+  return {
+    has: key => memory.has(key) || read().includes(key),
+    add: key => {
+      memory.add(key);
+      try { window.sessionStorage.setItem(KEY, JSON.stringify([...new Set([...read(), key])].slice(-50))); } catch { void 0; }
+    },
+  };
+}
 
 // O Pixel envia a URL inteira do documento (dl=location.href), então parâmetros que
 // carreguem credenciais, convites ou dados pessoais nunca podem estar na URL ao rastrear.
@@ -73,6 +129,8 @@ export function buildFbc(fbclid: string | null | undefined, now: number = Date.n
 }
 
 export function createMetaTracker(options: TrackerOptions) {
+  const once = options.once ?? sessionOnceStore();
+  let authenticatedNow = false;
   let eligible = false;
   let source = '';
   let path = '';
@@ -85,10 +143,21 @@ export function createMetaTracker(options: TrackerOptions) {
   const led = new WeakSet<RegistrationContext>();
   const enabled = (eventSource: string) => Boolean(options.pixelId.trim())
     && options.hasConsent() && (options.canSend?.(eventSource) ?? true);
-  const emit = (name: MetaEventName, eventSource: string, id: string = crypto.randomUUID(), identity?: Identity) => {
+  const emit = (
+    name: MetaEventName, eventSource: string, id: string = crypto.randomUUID(),
+    identity?: Identity, customData?: MetaCustomData,
+  ) => {
     if (!enabled(eventSource)) return;
     const eventTime = Math.floor(Date.now() / 1000);
-    try { options.pixel(name, id); } catch { void 0; }
+    const custom = customData && Object.keys(customData).length ? customData : undefined;
+    const matching = hashMatching(identity);
+    try {
+      if (custom || matching) {
+        options.pixel(name, id, { ...(custom ? { custom } : {}), ...(matching ? { matching } : {}) });
+      } else {
+        options.pixel(name, id);
+      }
+    } catch { void 0; }
     const signal = options.getAbortSignal?.();
     void (async () => {
       try {
@@ -103,6 +172,7 @@ export function createMetaTracker(options: TrackerOptions) {
           consent: true, event_name: name, event_id: id,
           event_time: eventTime, event_source_url: eventSource,
           ...(Object.keys(userData).length ? { user_data: userData } : {}),
+          ...(custom ? { custom_data: custom } : {}),
         }, signal);
       } catch { void 0; }
     })();
@@ -111,8 +181,48 @@ export function createMetaTracker(options: TrackerOptions) {
     Boolean(context) && registrations.get(context!) === visit
     && path === '/register' && isMetaRoute(path, search, false)
     && context!.source === source && enabled(context!.source);
+  // Eventos passivos de engajamento. Retornam true quando o evento foi enviado agora ou já
+  // tinha sido nesta visita (quem chama pode parar de tentar); false quando não valia agora.
+  const engage = (
+    name: MetaEventName, route: string, key: string, data?: MetaCustomData, identity?: Identity,
+  ): boolean => {
+    if (!eligible || path !== route || !enabled(source)) return false;
+    if (once.has(key)) return true;
+    once.add(key);
+    emit(name, source, undefined, identity, cleanCustomData(data));
+    return true;
+  };
   return {
+    /** Landing: visualização de conteúdo com o nicho da página (uma vez por nicho e visita). */
+    viewContent(niche: string): boolean {
+      return engage('ViewContent', META_LANDING_PATH, 'ViewContent:' + niche, { content_category: niche, content_name: 'landing' });
+    },
+    /** Landing: 75% de rolagem ou 30 s de permanência (uma vez por visita). */
+    landingEngagement(kind: 'Scroll75' | 'TimeOnPage30s', niche?: string | null): boolean {
+      return engage(kind, META_LANDING_PATH, kind, { content_name: 'landing', ...(niche ? { content_category: niche } : {}) });
+    },
+    /** Landing: clique no CTA do teste grátis (uma vez por CTA e visita). */
+    ctaClick(ctaId: string, niche?: string | null): boolean {
+      return engage('CTAClick', META_LANDING_PATH, 'CTAClick:' + ctaId, { cta_id: ctaId, content_name: 'landing', ...(niche ? { content_category: niche } : {}) });
+    },
+    /** /register: primeiro foco ou digitação no formulário (uma vez por visita). */
+    startRegistration(niche?: string | null): boolean {
+      return engage('StartRegistration', '/register', 'StartRegistration', { content_name: 'register', ...(niche ? { content_category: niche } : {}) });
+    },
+    /** Onboarding autenticado: passo alcançado (uma vez por passo e visita). Escopo transitório. */
+    onboardingStep(step: number, totalSteps: number, identity?: Identity): boolean {
+      if (!authenticatedNow || path !== META_ONBOARDING_PATH || !areMetaParamsSafe(search)) return false;
+      if (!enabled(source)) return false;
+      const data = cleanCustomData({ step, total_steps: totalSteps, content_name: 'onboarding' });
+      if (!data.step) return false;
+      const key = 'OnboardingStep:' + data.step;
+      if (once.has(key)) return true;
+      once.add(key);
+      emit('OnboardingStep', source, undefined, identity, data);
+      return true;
+    },
     pageView(nextPath: string, nextSearch: string, authenticated: boolean) {
+      authenticatedNow = authenticated;
       if (nextPath !== path || nextSearch !== search) {
         visit += 1;
         leadSent = false;
@@ -166,10 +276,10 @@ const pixelId = (import.meta.env.VITE_META_PIXEL_ID || '').trim();
 const META_COOKIE_VALUE = /^fb\.\d\.\d+\.[A-Za-z0-9_.-]+$/;
 let loaded = false;
 let scopeAllowed = false;
-let completingRegistration = false;
+let transientName: MetaEventName | null = null;
 let pending = new AbortController();
 
-export function currentMetaSource(): string | null {
+export function currentMetaSource(allowOnboarding = false): string | null {
   const { pathname, search, hash, origin } = window.location;
   if (!['/', '/index.html'].includes(pathname) || !hash.startsWith('#/')) return null;
   // Query externa (anúncios): parâmetros desconhecidos são aceitos, sensíveis não.
@@ -180,7 +290,8 @@ export function currentMetaSource(): string | null {
   const separator = route.indexOf('?');
   const path = separator < 0 ? route : route.slice(0, separator);
   const query = separator < 0 ? '' : route.slice(separator + 1);
-  if (!isMetaRoute(path, query, false)) return null;
+  const onboarding = allowOnboarding && path === META_ONBOARDING_PATH && areMetaParamsSafe(query);
+  if (!onboarding && !isMetaRoute(path, query, false)) return null;
   // Sem query/hash-query: event_source_url e o contexto capturado são sempre sanitizados.
   return origin + pathname + '#' + path;
 }
@@ -220,8 +331,8 @@ function persistFbc(value: string | undefined): string | undefined {
 }
 
 function canUsePixel(): boolean {
-  return Boolean(pixelId && currentMetaSource()) && readConsent() === 'accepted'
-    && (scopeAllowed || completingRegistration);
+  return Boolean(pixelId && currentMetaSource(transientName === 'OnboardingStep')) && readConsent() === 'accepted'
+    && (scopeAllowed || transientName !== null);
 }
 
 function discardPixelQueue(): void {
@@ -234,7 +345,7 @@ function discardPixelQueue(): void {
   if (!queue?.callMethod) loaded = false;
 }
 
-function loadPixel(): void {
+function loadPixel(matching?: MetaMatching): void {
   if (loaded || !canUsePixel()) return;
   const queue = function (...args: unknown[]) {
     if (!canUsePixel()) return;
@@ -250,7 +361,8 @@ function loadPixel(): void {
   window.fbq = window._fbq = queue;
   queue('consent', 'grant');
   queue('set', 'autoConfig', false, pixelId);
-  queue('init', pixelId);
+  if (matching) queue('init', pixelId, matching);
+  else queue('init', pixelId);
   const script = document.createElement('script');
   script.id = 'agendix-meta-pixel';
   script.async = true;
@@ -288,18 +400,22 @@ window.addEventListener('popstate', guardLocation);
 export const metaTracker = createMetaTracker({
   pixelId,
   hasConsent: () => readConsent() === 'accepted',
-  canSend: source => currentMetaSource() === source,
+  canSend: source => currentMetaSource(true) === source,
   getAbortSignal: () => pending.signal,
-  pixel: (name, id) => {
-    if (!currentMetaSource() || (!scopeAllowed && name !== 'CompleteRegistration')) return;
-    completingRegistration = name === 'CompleteRegistration';
+  pixel: (name, id, extras) => {
+    const transient = TRANSIENT_EVENTS.has(name);
+    if (!currentMetaSource(name === 'OnboardingStep') || (!scopeAllowed && !transient)) return;
+    transientName = transient ? name : null;
     try {
-      loadPixel();
+      const wasLoaded = loaded;
+      loadPixel(extras?.matching);
       window.fbq?.('consent', 'grant');
-      window.fbq?.('trackSingle', pixelId, name, {}, { eventID: id });
+      // Advanced Matching (já em hash) só junto de um evento com consentimento.
+      if (wasLoaded && extras?.matching) window.fbq?.('init', pixelId, extras.matching);
+      window.fbq?.(STANDARD_EVENTS.has(name) ? 'trackSingle' : 'trackSingleCustom', pixelId, name, extras?.custom ?? {}, { eventID: id });
     } finally {
-      completingRegistration = false;
       if (!scopeAllowed) window.fbq?.callMethod?.('consent', 'revoke');
+      transientName = null;
     }
   },
   send: async (event, signal) => {

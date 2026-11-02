@@ -37,9 +37,18 @@ async function check(page: Page, project: string, theme: string, step: string, l
   if (crashed) problems.push('tela de erro do sistema apareceu');
   const replaces = await page.evaluate(() => (window as any).__replaceCount as number);
   if (replaces > 20) problems.push(`history.replaceState chamado ${replaces}x (risco do erro do Safari)`);
+  // Alvo de toque: o próprio controle, ou o rótulo clicável quando o campo é uma caixa de seleção/interruptor.
   const small = await page.evaluate(() => Array.from(document.querySelectorAll('button, a[href], input, [role=button]'))
-    .filter((el) => { const r = (el as HTMLElement).getBoundingClientRect(); const vis = r.width > 0 && r.height > 0; return vis && (r.height < 36 || r.width < 36) && (el as HTMLElement).offsetParent !== null; })
-    .map((el) => `${el.tagName.toLowerCase()}:${(el.getAttribute('aria-label') || (el as HTMLElement).innerText || el.getAttribute('placeholder') || '').trim().slice(0, 24)}`).slice(0, 6));
+    .map((el) => {
+      const input = el as HTMLInputElement;
+      const label = input.type === 'checkbox' || input.type === 'radio' ? input.labels?.[0] : undefined;
+      const target = (label ?? el) as HTMLElement;
+      const r = target.getBoundingClientRect();
+      const hit = label && getComputedStyle(label, '::before').position === 'absolute' ? Math.max(r.height, 44) : r.height;
+      return { el, r, hit, target };
+    })
+    .filter(({ r, hit, target }) => r.width > 0 && r.height > 0 && (hit < 36 || r.width < 36) && target.offsetParent !== null)
+    .map(({ el }) => `${el.tagName.toLowerCase()}:${(el.getAttribute('aria-label') || (el as HTMLElement).innerText || el.getAttribute('placeholder') || el.id || el.className).toString().trim().slice(0, 40)}`).slice(0, 6));
   if (small.length && page.viewportSize()!.width < 500) problems.push(`alvos de toque pequenos (<36px): ${small.join(' | ')}`);
   for (const p of problems) findings.push({ project, theme, step, problem: p, screenshot: file });
   return problems;
@@ -74,12 +83,15 @@ for (const theme of THEMES) {
     await check(page, project, theme, '02-cadastro-preenchido', log);
     // O aviso de cookies cobre o botão "Finalizar cadastro"? (hit-test no centro do botão, já rolado até ele)
     const submit = page.locator('form button[type="submit"]');
-    await submit.scrollIntoViewIfNeeded();
+    // Como a pessoa faria: rola até o fim da página e confere se o botão está livre (não coberto pelo aviso).
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await page.waitForTimeout(300);
     const covered = await submit.evaluate((el) => {
       const r = el.getBoundingClientRect();
       const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
       return !(top && (top === el || el.contains(top)));
     });
+    await shot(page, project, theme, '02c-cadastro-botao-finalizar-com-aviso-de-cookies');
     if (covered) {
       const f = await shot(page, project, theme, '02b-botao-finalizar-coberto-pelo-aviso-de-cookies');
       findings.push({ project, theme, step: '02b-cadastro-botao-coberto', problem: 'o aviso de cookies fica por cima do botão "Finalizar cadastro" (e de parte do formulário) até a pessoa aceitar ou recusar', screenshot: f });

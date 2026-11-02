@@ -27,7 +27,7 @@ export const SettingsSwitch: React.FC<SettingsSwitchProps> = ({
   return (
     <label
       htmlFor={id}
-      className="relative inline-flex items-center cursor-pointer flex-shrink-0"
+      className="relative inline-flex items-center cursor-pointer flex-shrink-0 before:absolute before:inset-x-0 before:-inset-y-2.5 before:content-['']"
     >
       <input
         id={id}

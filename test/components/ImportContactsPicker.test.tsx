@@ -4,7 +4,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { ImportDataWizard } from '../../components/ImportDataWizard';
 
 vi.mock('../../hooks/useBrutalTheme', () => ({ useBrutalTheme: () => ({ colors: { text: '', textMuted: '', border: '', surface: '' } }) }));
-vi.mock('../../components/ui', () => ({ Button: ({ children, loading: _loading, ...props }: any) => <button {...props}>{children}</button> }));
+vi.mock('../../components/ui', () => ({ Button: ({ children, loading: _loading, fullWidth: _fullWidth, ...props }: any) => <button {...props}>{children}</button> }));
 
 const api = {
   loadImportCandidates: vi.fn().mockResolvedValue([]),
@@ -138,6 +138,8 @@ describe('seleção dos contatos do celular', () => {
     installPicker(vi.fn().mockReturnValue(pending));
     const close = vi.fn();
     openContacts(close);
+    expect(screen.queryByRole('button', { name: 'Analisar arquivos' })).toBeNull();
+    fireEvent.change(screen.getByLabelText('Escolher arquivos'), { target: { files: [new File(['nome'], 'contatos.csv', { type: 'text/csv' })] } });
     fireEvent.click(screen.getByRole('button', { name: 'Selecionar contatos do celular' }));
     expect(screen.getByRole('button', { name: 'Voltar' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Fechar' })).toBeDisabled();

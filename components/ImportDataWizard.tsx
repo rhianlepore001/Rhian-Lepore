@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { ArrowLeft, FileUp, Smartphone } from 'lucide-react';
 import { Button } from './ui';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import * as importApi from '../services/importStaging';
@@ -74,7 +75,7 @@ function pendingCsv(work: Work): void {
 }
 
 export function ImportDataWizard({ companyId, userId, region, api = importApi, onClose }: Props) {
-  const { colors } = useBrutalTheme();
+  const { colors, radius } = useBrutalTheme();
   const [phase, setPhase] = useState<Phase>('source');
   const [source, setSource] = useState<ImportSource>('spreadsheet');
   const [files, setFiles] = useState<File[]>([]);
@@ -94,7 +95,7 @@ export function ImportDataWizard({ companyId, userId, region, api = importApi, o
   useEffect(() => { void api.purgeExpiredImportData(); }, [api]);
   const readyCount = useMemo(() => works.reduce((sum, work) => sum + work.rows.filter(row => row.outcome === 'pending' && !row.reason).length, 0), [works]);
   const issueCount = useMemo(() => works.reduce((sum, work) => sum + work.rows.filter(row => (row.outcome === 'pending' && !!row.reason) || row.outcome === 'error').length, 0), [works]);
-  const inputClass = `w-full rounded-lg border px-3 py-2 ${colors.border} ${colors.text}`;
+  const inputClass = `w-full border px-3 py-2 text-sm bg-[var(--color-input-bg)] ${radius?.input} ${colors.border} ${colors.text}`;
   const contactPicker = (navigator as ContactsNavigator).contacts;
 
   const selectContacts = async () => {
@@ -287,7 +288,7 @@ export function ImportDataWizard({ companyId, userId, region, api = importApi, o
   };
 
   return <div className={`space-y-5 ${colors.text}`}>
-    <div><h2 className="text-lg font-bold">Trazer meus dados de outro aplicativo</h2><p className={`text-sm ${colors.textMuted}`}>Traga clientes e serviços e confira as informações antes de concluir.</p></div>
+    <div><h2 className="text-lg font-bold">Importar dados</h2><p className={`mt-1 text-sm leading-relaxed ${colors.textMuted}`}>Traga clientes e serviços e confira as informações antes de concluir.</p></div>
     {message && <p role="alert" className="text-sm">{message}</p>}
     {onClose && phase !== 'preview' && phase !== 'report' && <Button variant="ghost" disabled={busy} onClick={onClose}>Fechar</Button>}
     {phase === 'source' && <div className="space-y-4">
@@ -296,16 +297,28 @@ export function ImportDataWizard({ companyId, userId, region, api = importApi, o
       {history.length > 0 && <div className="space-y-2"><h3 className="font-semibold">Importações anteriores</h3>{history.map(batch => <div key={batch.id}><button className="underline" onClick={() => void openHistory(batch)}>{batch.file_name || getImportSource(batch.source).label} · {new Date(batch.created_at).toLocaleDateString('pt-BR')} · {batch.status === 'undone' ? 'Desfeita' : batch.status === 'completed' ? 'Concluída' : 'Em preparação'}</button></div>)}</div>}
     </div>}
     {phase === 'files' && <div className="space-y-4">
-      <h3 className="font-semibold">{getImportSource(source).label}</h3><p>{source === 'contacts' && contactPicker && typeof contactPicker.select === 'function' ? 'Selecione os contatos do celular ou escolha um arquivo de contatos.' : getImportSource(source).instructions}</p>
-      {source === 'contacts' && contactPicker && typeof contactPicker.select === 'function' && <Button variant="secondary" disabled={busy} onClick={() => void selectContacts()}>Selecionar contatos do celular</Button>}
+      <div><h3 className="text-base font-bold">{getImportSource(source).label}</h3><p className={`mt-1 text-sm leading-relaxed ${colors.textMuted}`}>{source === 'contacts' && contactPicker && typeof contactPicker.select === 'function' ? 'Escolha como deseja trazer seus contatos.' : getImportSource(source).instructions}</p></div>
+      {source === 'contacts' && contactPicker && typeof contactPicker.select === 'function' && <>
+        <section className={`space-y-4 border p-4 sm:p-5 ${radius?.card} ${colors.card} ${colors.border}`}>
+          <div className="flex items-start gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--color-accent-dim)] text-[var(--color-accent)]"><Smartphone className="h-5 w-5" aria-hidden="true" /></span><div className="min-w-0"><h4 className="font-bold">Selecionar no celular</h4><p className={`mt-1 text-sm leading-relaxed ${colors.textMuted}`}>Escolha os contatos que deseja trazer para o Agendix.</p></div></div>
+          <Button fullWidth disabled={busy} icon={<Smartphone />} onClick={() => void selectContacts()}>Selecionar contatos do celular</Button>
+        </section>
+        <div className={`flex items-center gap-3 text-xs font-semibold ${colors.textMuted}`}><span className={`h-px flex-1 border-t ${colors.border}`} />ou importe um arquivo<span className={`h-px flex-1 border-t ${colors.border}`} /></div>
+      </>}
       {getImportSource(source).supportRequest && <blockquote className={`p-3 border rounded-lg ${colors.border}`}>{getImportSource(source).supportRequest}</blockquote>}
-      <label htmlFor="import-files" className="block font-semibold">Escolher arquivos</label><input id="import-files" type="file" multiple disabled={busy} accept=".csv,.xlsx,.vcf" onChange={event => setFiles(Array.from(event.target.files || []))} />
-      <p className={`text-sm ${colors.textMuted}`}>Até 10 arquivos, com até 5 MB cada e 10.000 linhas ao todo.</p>
-      <div className="flex flex-wrap gap-2"><Button variant="secondary" disabled={busy} onClick={() => setPhase('source')}>Voltar</Button><Button disabled={!files.length || busy} loading={busy} onClick={() => void analyze()}>Analisar arquivos</Button></div>
+      <section className={`space-y-4 border p-4 sm:p-5 ${radius?.card} ${colors.card} ${colors.border}`}>
+        <div className="flex items-start gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--color-accent-dim)] text-[var(--color-accent)]"><FileUp className="h-5 w-5" aria-hidden="true" /></span><div className="min-w-0"><h4 className="font-bold">Importar arquivo</h4><p className={`mt-1 text-sm leading-relaxed ${colors.textMuted}`}>Selecione arquivos CSV, Excel ou de contatos (VCF).</p></div></div>
+        <input id="import-files" className="peer sr-only" type="file" multiple disabled={busy} accept=".csv,.xlsx,.vcf" onChange={event => setFiles(Array.from(event.target.files || []))} />
+        <label htmlFor="import-files" className={`flex min-h-11 cursor-pointer items-center justify-center border px-4 py-2 text-sm font-semibold transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--color-accent)] ${radius?.button} ${colors.border} ${busy ? 'pointer-events-none opacity-50' : ''}`}>Escolher arquivos</label>
+        <p aria-live="polite" className={`break-words text-sm ${colors.textMuted}`}>{files.length ? files.map(file => file.name).join(', ') : 'Nenhum arquivo selecionado'}</p>
+        <p className={`text-xs leading-relaxed ${colors.textMuted}`}>Até 10 arquivos de 5 MB cada, com até 10.000 linhas no total.</p>
+        {files.length > 0 && <Button fullWidth disabled={busy} loading={busy} onClick={() => void analyze()}>Analisar arquivos</Button>}
+      </section>
+      <Button variant="ghost" disabled={busy} icon={<ArrowLeft />} onClick={() => setPhase('source')}>Voltar</Button>
     </div>}
     {phase === 'mapping' && <div className="space-y-5">
       <p>Confira o tipo de cada arquivo e as informações identificadas. Ajuste apenas o que precisar.</p>
-      {documents.map((doc, index) => <section key={`${doc.sheet.identity}-${index}`} className={`space-y-3 p-4 border rounded-lg ${colors.border}`}>
+      {documents.map((doc, index) => <section key={`${doc.sheet.identity}-${index}`} className={`space-y-3 p-4 border ${radius?.card} ${colors.card} ${colors.border}`}>
         <h3 className="font-semibold break-words">{doc.sheet.name}</h3>
         {doc.sheet.warnings.map(warning => <p key={warning}>{warning}</p>)}
         <label className="block">Tipo de dados<select className={inputClass} value={doc.kind} disabled={doc.sheet.isContacts} onChange={event => { const kind = event.target.value as ImportKind; setDocuments(current => current.map((item, i) => i === index ? { ...item, kind, mapping:inferImportColumns(item.sheet.headers, source, kind) } : item)); }}><option value="client">Clientes</option><option value="service">Serviços</option></select></label>
@@ -318,7 +331,7 @@ export function ImportDataWizard({ companyId, userId, region, api = importApi, o
       {works.some(work => work.incomplete) && <p role="alert">Esta preparação ficou incompleta. Cancele e selecione os arquivos novamente.</p>}
       <p><strong>{readyCount} {readyCount === 1 ? 'linha pronta' : 'linhas prontas'}</strong> · {issueCount} {issueCount === 1 ? 'precisa' : 'precisam'} de atenção.</p>
       <p className={`text-sm ${colors.textMuted}`}>Nenhum cadastro será criado antes da confirmação. A importação não envia mensagens nem autoriza campanhas.</p>
-      {works.map((work, workIndex) => <section key={work.batchId} className={`space-y-3 p-4 border rounded-lg ${colors.border}`}><h3 className="font-semibold">{work.name}</h3>
+      {works.map((work, workIndex) => <section key={work.batchId} className={`space-y-3 p-4 border ${radius?.card} ${colors.card} ${colors.border}`}><h3 className="font-semibold">{work.name}</h3>
         <details><summary className="cursor-pointer">Ver todas as linhas</summary><ul className="max-h-64 overflow-y-auto mt-2 space-y-1">{work.rows.map(row => <li key={row.id}>Linha {row.row_number}: {String(row.normalized_data?.name || row.display_name || 'Sem nome')}{Array.isArray(row.normalized_data?.phones) && row.normalized_data.phones.length > 0 ? ` · ${row.normalized_data.phones.join(', ')}` : ''} · {row.reason || 'Pronto para importar'}</li>)}</ul></details>
         {work.rows.filter(row => (row.outcome === 'pending' && !!row.reason) || row.outcome === 'error').map(row => {
           const data = edits[row.id] || row.normalized_data || {}, found = matches(data, work.candidates, work.kind);
@@ -337,7 +350,7 @@ export function ImportDataWizard({ companyId, userId, region, api = importApi, o
     </div>}
     {phase === 'report' && <div className="space-y-4">
       <h3 className="font-semibold">Resultado da importação</h3>{outcome && <p role="status">{outcome}</p>}
-      {works.map(work => <section key={work.batchId} className={`space-y-2 p-4 border rounded-lg ${colors.border}`}><h4 className="font-semibold">{work.name}</h4><p>{plural(work.report?.total || 0, 'linha', 'linhas')} · {plural(work.report?.imported || 0, 'importado', 'importados')} · {plural(work.report?.updated || 0, 'atualizado', 'atualizados')} · {plural(work.report?.ignored || 0, 'ignorado', 'ignorados')} · {plural((work.report?.pending || 0) + (work.report?.error || 0), 'pendente', 'pendentes')}</p>
+      {works.map(work => <section key={work.batchId} className={`space-y-2 p-4 border ${radius?.card} ${colors.card} ${colors.border}`}><h4 className="font-semibold">{work.name}</h4><p>{plural(work.report?.total || 0, 'linha', 'linhas')} · {plural(work.report?.imported || 0, 'importado', 'importados')} · {plural(work.report?.updated || 0, 'atualizado', 'atualizados')} · {plural(work.report?.ignored || 0, 'ignorado', 'ignorados')} · {plural((work.report?.pending || 0) + (work.report?.error || 0), 'pendente', 'pendentes')}</p>
         <details><summary className="cursor-pointer">Ver resultado de cada linha</summary><ul className="max-h-64 overflow-y-auto mt-2 space-y-1">{work.rows.map(row => <li key={row.id}>Linha {row.row_number}: {row.display_name || String(row.normalized_data?.name || 'Sem nome')} · {row.reason || 'Pendente de revisão.'}</li>)}</ul></details>
         {work.rows.some(row => row.outcome === 'pending' || row.outcome === 'error') && <div className="space-y-2"><p className={`text-sm ${colors.textMuted}`}>As pendências ficam salvas para revisão até você removê-las.</p><div className="flex flex-wrap gap-2"><Button variant="secondary" onClick={() => pendingCsv(work)}>Baixar pendências</Button>{work.status !== 'undone' && <Button variant="secondary" onClick={() => setPhase('preview')}>Revisar pendências</Button>}{pendingClear !== work.batchId && <Button variant="secondary" onClick={() => setPendingClear(work.batchId)}>Remover pendências</Button>}</div>{pendingClear === work.batchId && <div className="space-y-2"><p>Deseja remover os dados das pendências? Baixe uma cópia antes, se precisar.</p><div className="flex gap-2"><Button variant="secondary" onClick={() => setPendingClear(null)}>Voltar</Button><Button variant="danger" loading={busy} onClick={() => void clearPending(work)}>Confirmar remoção</Button></div></div>}</div>}
         <p className={`text-sm ${colors.textMuted}`}>Os dados adicionais de origem ficam disponíveis apenas para o responsável. Você pode baixá-los ou removê-los.</p>

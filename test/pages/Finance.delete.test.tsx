@@ -59,8 +59,6 @@ vi.mock('@/hooks/useTenantLocale', () => ({
   useTenantLocale: () => ({ region: 'BR', currencyRegion: 'BR', currencySymbol: 'R$' }),
 }));
 
-const nowIso = '2026-10-04T14:00:00.000Z';
-
 function stats(transactions: unknown[]) {
   return {
     revenue: 80,
@@ -88,6 +86,7 @@ describe('Finance — exclusão', () => {
     AUTH.role = 'owner';
     AUTH.user = { id: 'owner-1' };
     deleteMutate.mockReset().mockResolvedValue({ ok: true, kind: 'manual' });
+    const nowIso = new Date().toISOString();
     const txs = [
       {
         id: 'apt-1',

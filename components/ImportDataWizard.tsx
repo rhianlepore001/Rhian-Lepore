@@ -21,6 +21,8 @@ interface Props {
 }
 interface DocumentChoice { sheet: ImportSheet; kind: ImportKind; mapping: ImportColumns }
 interface Work { batchId: string; name: string; kind: ImportKind; rows: StoredImportRow[]; candidates: ImportCandidate[]; categories: ImportCategory[]; report?: ImportReport; status?: string; incomplete?: boolean }
+interface PickedContact { name?: string[]; tel?: string[] }
+interface ContactsNavigator extends Navigator { contacts?: { select: (properties: string[], options: { multiple: boolean }) => Promise<PickedContact[]> } }
 type Phase = 'source' | 'files' | 'mapping' | 'preview' | 'report';
 
 const FIELDS: Record<ImportKind, { key: ImportField; label: string }[]> = {
@@ -44,6 +46,7 @@ function validateRow(data: Record<string, unknown>, kind: ImportKind, region: 'B
     const rawPhones = typeof next.phoneText === 'string' ? next.phoneText.split(/[;,/|]+/).map(value => value.trim()).filter(Boolean) : Array.isArray(next.phones) ? next.phones.map(String) : [];
     const phones = rawPhones.map(phone => normalizePhone(phone, region));
     if (phones.some(phone => !phone)) issues.push('Confira os telefones.');
+    if (String(next.source_scope || '').startsWith('picker-') && !phones.length) issues.push('Confira o telefone.');
     next.phones = phones.filter((phone): phone is string => phone !== null);
     delete next.phoneText;
     const email = String(next.email || '').trim();
@@ -92,6 +95,31 @@ export function ImportDataWizard({ companyId, userId, region, api = importApi, o
   const readyCount = useMemo(() => works.reduce((sum, work) => sum + work.rows.filter(row => row.outcome === 'pending' && !row.reason).length, 0), [works]);
   const issueCount = useMemo(() => works.reduce((sum, work) => sum + work.rows.filter(row => (row.outcome === 'pending' && !!row.reason) || row.outcome === 'error').length, 0), [works]);
   const inputClass = `w-full rounded-lg border px-3 py-2 ${colors.border} ${colors.text}`;
+  const contactPicker = (navigator as ContactsNavigator).contacts;
+
+  const selectContacts = async () => {
+    if (!contactPicker || typeof contactPicker.select !== 'function') return;
+    setMessage('');
+    setBusy(true);
+    try {
+      const contacts = await contactPicker.select(['name', 'tel'], { multiple: true });
+      if (!contacts.length) return;
+      if (contacts.length > 10000) throw new Error('A seleção excede o limite de contatos ou telefones.');
+      const maxPhones = contacts.reduce((max, contact) => Math.max(max, contact.tel?.length || 0), 1);
+      if (maxPhones > 100) throw new Error('A seleção excede o limite de contatos ou telefones.');
+      const headers = ['Nome', ...Array.from({ length: maxPhones }, (_, index) => `Telefone ${index + 1}`)];
+      const sheet: ImportSheet = {
+        name: 'Contatos selecionados', identity: `picker-${crypto.randomUUID()}:0`, headers,
+        rows: contacts.map((contact, index) => ({ line: index + 1, values: [contact.name?.join(' ') || '', ...Array.from({ length: maxPhones }, (_, i) => contact.tel?.[i] || '')] })),
+        warnings: [], isContacts: true,
+      };
+      setDocuments([{ sheet, kind: 'client', mapping: inferImportColumns(headers, 'contacts', 'client') }]);
+      setPhase('mapping');
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return;
+      setMessage('Não foi possível abrir os contatos. Tente novamente ou escolha um arquivo de contatos.');
+    } finally { setBusy(false); }
+  };
 
   const analyze = async () => {
     setBusy(true); setMessage('');
@@ -126,7 +154,10 @@ export function ImportDataWizard({ companyId, userId, region, api = importApi, o
         if (!doc.mapping.name?.length || (doc.kind === 'service' && (!doc.mapping.price?.length || !doc.mapping.duration?.length))) throw new Error('Escolha as colunas obrigatórias em cada arquivo.');
         const candidates = await api.loadImportCandidates(companyId, doc.kind);
         const categories = doc.kind === 'service' ? await api.loadImportCategories(companyId) : [];
-        const prepared = prepareImportRows(doc.sheet.headers, doc.sheet.originals ? doc.sheet.rows : dropEmptyImportRows(doc.sheet.rows), doc.mapping, doc.kind, region, doc.sheet.identity);
+        const prepared = prepareImportRows(doc.sheet.headers, doc.sheet.originals || doc.sheet.identity.startsWith('picker-') ? doc.sheet.rows : dropEmptyImportRows(doc.sheet.rows), doc.mapping, doc.kind, region, doc.sheet.identity);
+        if (doc.sheet.identity.startsWith('picker-')) for (const row of prepared) {
+          if (!Array.isArray(row.normalized.phones) || !row.normalized.phones.length) row.issues.push('Confira o telefone.');
+        }
         const repeated = doc.kind === 'client' ? repeatedPhoneRows(prepared.map((row, index) => ({ id: String(index), phones: row.normalized.phones }))) : new Set<string>();
         const rows = prepared.map((row, index) => ({
           rowNumber: row.line, raw: { ...row.raw, arquivo: doc.sheet.name, ...(doc.sheet.originals ? { propriedades: doc.sheet.originals[index] } : {}), ...(doc.sheet.formulas ? { formulas: Object.fromEntries(Object.entries(doc.sheet.formulas).filter(([cell]) => Number(cell.match(/[0-9]+$/)?.[0]) === row.line)) } : {}), ...(doc.sheet.cellSources ? { celulas_originais: Object.fromEntries(Object.entries(doc.sheet.cellSources).filter(([cell]) => Number(cell.match(/[0-9]+$/)?.[0]) === row.line)) } : {}), ...(doc.sheet.mergedRanges && index === 0 ? { celulas_mescladas: doc.sheet.mergedRanges } : {}) },
@@ -142,7 +173,7 @@ export function ImportDataWizard({ companyId, userId, region, api = importApi, o
         const batchId = await api.createImportBatch({ companyId, userId, source, kind: doc.kind, fileName: doc.sheet.name, rows });
         created.push(batchId);
         const mapping = Object.fromEntries(Object.entries(doc.mapping).map(([field, indexes]) => [field, (indexes || []).map(index => doc.sheet.headers[index])]));
-        await api.saveImportMapping(companyId, source, doc.kind, mapping);
+        if (!doc.sheet.identity.startsWith('picker-')) await api.saveImportMapping(companyId, source, doc.kind, mapping);
         const storedRows = await api.loadImportRows(companyId, batchId);
         if (storedRows.length !== rows.length) throw new Error('A preparação ficou incompleta. Tente novamente.');
         result.push({ batchId, name: doc.sheet.name, kind: doc.kind, rows: storedRows, candidates, categories });
@@ -265,11 +296,12 @@ export function ImportDataWizard({ companyId, userId, region, api = importApi, o
       {history.length > 0 && <div className="space-y-2"><h3 className="font-semibold">Importações anteriores</h3>{history.map(batch => <div key={batch.id}><button className="underline" onClick={() => void openHistory(batch)}>{batch.file_name || getImportSource(batch.source).label} · {new Date(batch.created_at).toLocaleDateString('pt-BR')} · {batch.status === 'undone' ? 'Desfeita' : batch.status === 'completed' ? 'Concluída' : 'Em preparação'}</button></div>)}</div>}
     </div>}
     {phase === 'files' && <div className="space-y-4">
-      <h3 className="font-semibold">{getImportSource(source).label}</h3><p>{getImportSource(source).instructions}</p>
+      <h3 className="font-semibold">{getImportSource(source).label}</h3><p>{source === 'contacts' && contactPicker && typeof contactPicker.select === 'function' ? 'Selecione os contatos do celular ou escolha um arquivo de contatos.' : getImportSource(source).instructions}</p>
+      {source === 'contacts' && contactPicker && typeof contactPicker.select === 'function' && <Button variant="secondary" disabled={busy} onClick={() => void selectContacts()}>Selecionar contatos do celular</Button>}
       {getImportSource(source).supportRequest && <blockquote className={`p-3 border rounded-lg ${colors.border}`}>{getImportSource(source).supportRequest}</blockquote>}
-      <label htmlFor="import-files" className="block font-semibold">Escolher arquivos</label><input id="import-files" type="file" multiple accept=".csv,.xlsx,.vcf" onChange={event => setFiles(Array.from(event.target.files || []))} />
+      <label htmlFor="import-files" className="block font-semibold">Escolher arquivos</label><input id="import-files" type="file" multiple disabled={busy} accept=".csv,.xlsx,.vcf" onChange={event => setFiles(Array.from(event.target.files || []))} />
       <p className={`text-sm ${colors.textMuted}`}>Até 10 arquivos, com até 5 MB cada e 10.000 linhas ao todo.</p>
-      <div className="flex flex-wrap gap-2"><Button variant="secondary" onClick={() => setPhase('source')}>Voltar</Button><Button disabled={!files.length} loading={busy} onClick={() => void analyze()}>Analisar arquivos</Button></div>
+      <div className="flex flex-wrap gap-2"><Button variant="secondary" disabled={busy} onClick={() => setPhase('source')}>Voltar</Button><Button disabled={!files.length || busy} loading={busy} onClick={() => void analyze()}>Analisar arquivos</Button></div>
     </div>}
     {phase === 'mapping' && <div className="space-y-5">
       <p>Confira o tipo de cada arquivo e as informações identificadas. Ajuste apenas o que precisar.</p>
@@ -277,7 +309,7 @@ export function ImportDataWizard({ companyId, userId, region, api = importApi, o
         <h3 className="font-semibold break-words">{doc.sheet.name}</h3>
         {doc.sheet.warnings.map(warning => <p key={warning}>{warning}</p>)}
         <label className="block">Tipo de dados<select className={inputClass} value={doc.kind} disabled={doc.sheet.isContacts} onChange={event => { const kind = event.target.value as ImportKind; setDocuments(current => current.map((item, i) => i === index ? { ...item, kind, mapping:inferImportColumns(item.sheet.headers, source, kind) } : item)); }}><option value="client">Clientes</option><option value="service">Serviços</option></select></label>
-        <p className={`text-sm ${colors.textMuted}`}>{plural((doc.sheet.originals ? doc.sheet.rows : dropEmptyImportRows(doc.sheet.rows)).length, 'linha', 'linhas')}. Colunas não usadas serão preservadas junto aos dados de origem.</p>
+        <p className={`text-sm ${colors.textMuted}`}>{plural((doc.sheet.originals || doc.sheet.identity.startsWith('picker-') ? doc.sheet.rows : dropEmptyImportRows(doc.sheet.rows)).length, 'linha', 'linhas')}. Colunas não usadas serão preservadas junto aos dados de origem.</p>
         <details open={!doc.mapping.name?.length || (doc.kind === 'service' && (!doc.mapping.price?.length || !doc.mapping.duration?.length))}><summary className="cursor-pointer font-semibold">Conferir as colunas</summary><div className="grid gap-3 sm:grid-cols-2 mt-3">{FIELDS[doc.kind].map(field => <label key={field.key} className="block text-sm">{field.label}{field.key === 'phone' ? <select className={inputClass} multiple value={(doc.mapping.phone || []).map(String)} onChange={event => changeMapping(index, 'phone', Array.from(event.target.selectedOptions, option => Number(option.value)))}>{doc.sheet.headers.map((header, column) => <option key={column} value={column}>{header || `Coluna ${column + 1}`}</option>)}</select> : <select className={inputClass} value={doc.mapping[field.key]?.[0] ?? ''} onChange={event => changeMapping(index, field.key, event.target.value === '' ? [] : [Number(event.target.value)])}><option value="">Não informado</option>{doc.sheet.headers.map((header, column) => <option key={column} value={column}>{header || `Coluna ${column + 1}`}</option>)}</select>}</label>)}</div></details>
       </section>)}
       <div className="flex flex-wrap gap-2"><Button variant="secondary" onClick={() => setPhase('files')}>Voltar</Button><Button loading={busy} onClick={() => void prepare()}>Preparar revisão</Button></div>
@@ -287,7 +319,7 @@ export function ImportDataWizard({ companyId, userId, region, api = importApi, o
       <p><strong>{readyCount} {readyCount === 1 ? 'linha pronta' : 'linhas prontas'}</strong> · {issueCount} {issueCount === 1 ? 'precisa' : 'precisam'} de atenção.</p>
       <p className={`text-sm ${colors.textMuted}`}>Nenhum cadastro será criado antes da confirmação. A importação não envia mensagens nem autoriza campanhas.</p>
       {works.map((work, workIndex) => <section key={work.batchId} className={`space-y-3 p-4 border rounded-lg ${colors.border}`}><h3 className="font-semibold">{work.name}</h3>
-        <details><summary className="cursor-pointer">Ver todas as linhas</summary><ul className="max-h-64 overflow-y-auto mt-2 space-y-1">{work.rows.map(row => <li key={row.id}>Linha {row.row_number}: {String(row.normalized_data?.name || row.display_name || 'Sem nome')} · {row.reason || 'Pronto para importar'}</li>)}</ul></details>
+        <details><summary className="cursor-pointer">Ver todas as linhas</summary><ul className="max-h-64 overflow-y-auto mt-2 space-y-1">{work.rows.map(row => <li key={row.id}>Linha {row.row_number}: {String(row.normalized_data?.name || row.display_name || 'Sem nome')}{Array.isArray(row.normalized_data?.phones) && row.normalized_data.phones.length > 0 ? ` · ${row.normalized_data.phones.join(', ')}` : ''} · {row.reason || 'Pronto para importar'}</li>)}</ul></details>
         {work.rows.filter(row => (row.outcome === 'pending' && !!row.reason) || row.outcome === 'error').map(row => {
           const data = edits[row.id] || row.normalized_data || {}, found = matches(data, work.candidates, work.kind);
           const phoneTaken = work.kind === 'client' && (found.some(match => match.reason === 'phone') || repeatedPhoneRows(work.rows.map(item => ({ id: item.id, phones: item.id === row.id ? data.phones : item.normalized_data?.phones }))).has(row.id));

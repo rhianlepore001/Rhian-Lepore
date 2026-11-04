@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AttendeePicker } from '@/components/appointment/AttendeePicker';
@@ -45,5 +45,24 @@ describe('Para quem?', () => {
     render(<AttendeePicker companyId="tenant-a" clientId="holder-a" clientName="Titular Fictício" value="archived" snapshot="Pessoa Antiga" onChange={vi.fn()} />);
     expect(screen.getByRole('combobox')).toHaveValue('archived');
     expect(screen.getByRole('option', { name: 'Pessoa Antiga (histórico)' })).toBeInTheDocument();
+  });
+
+  describe('legibilidade do seletor no Safari do iPhone', () => {
+    afterEach(() => document.documentElement.removeAttribute('data-mode'));
+
+    it.each([
+      ['dark', '[color-scheme:dark]', '[color-scheme:light]'],
+      ['light', '[color-scheme:light]', '[color-scheme:dark]'],
+    ])('no modo %s declara o esquema de cor do seletor nativo e usa fundo e texto do tema', (mode, expected, other) => {
+      document.documentElement.setAttribute('data-mode', mode);
+      render(<Picker />);
+      const select = screen.getByRole('combobox', { name: 'Para quem?' });
+      expect(select.className).toContain(expected);
+      expect(select.className).not.toContain(other);
+      expect(select.className).toContain('bg-[var(--color-card)]');
+      expect(select.className).toContain('text-[var(--color-text)]');
+      expect(select.className).toContain('[&>option]:bg-[var(--color-card)]');
+      expect(select.className).toContain('[&>option]:text-[var(--color-text)]');
+    });
   });
 });

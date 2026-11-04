@@ -22,35 +22,18 @@ export interface AIOSDiagnostic {
 }
 
 export const useAIOSDiagnostic = () => {
-    const { user, aiosEnabled } = useAuth();
+    const { user } = useAuth();
     const [diagnostic, setDiagnostic] = useState<AIOSDiagnostic | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // A função get_aios_diagnostic do banco hoje devolve outro formato (status/metrics)
+    // e foi trocada por uma versão com tenant guard; chamá-la gerava 404 a cada carga.
+    // Até existir uma versão compatível, o diagnóstico fica vazio e a interface o omite.
     const fetchDiagnostic = async () => {
-        // Só executa quando aiosEnabled é explicitamente true
-        if (!user || aiosEnabled !== true) {
-            setLoading(false);
-            return;
-        }
-
-        try {
-            const { data, error } = await supabase.rpc('get_aios_diagnostic', {
-                p_establishment_id: user.id
-            });
-
-            if (error) throw error;
-            setDiagnostic(data as AIOSDiagnostic);
-        } catch (err: any) {
-            // Usar warn em vez de error: o estado já é atualizado via setError,
-            // evita spam no console em dev (React StrictMode) e para RPCs ainda não disponíveis
-            if (import.meta.env.DEV) {
-                console.warn('[useAIOSDiagnostic] RPC indisponível (non-fatal):', err?.message ?? err);
-            }
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
+        setDiagnostic(null);
+        setError(null);
+        setLoading(false);
     };
 
     const logCampaignActivity = async (clientId: string, agentName: string, campaignType: string) => {
@@ -71,7 +54,7 @@ export const useAIOSDiagnostic = () => {
 
     useEffect(() => {
         fetchDiagnostic();
-    }, [user, aiosEnabled]);
+    }, [user]);
 
     return { diagnostic, loading, error, refetch: fetchDiagnostic, logCampaignActivity };
 };

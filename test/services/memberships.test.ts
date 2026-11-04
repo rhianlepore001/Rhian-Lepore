@@ -4,6 +4,7 @@ import {
   cancelPublicClientMembership,
   confirmMembershipPayment,
   fetchClientActiveMembership,
+  fetchClientMemberships,
   fetchPublicClientMembership,
   fetchPublicPixConfig,
 } from '@/services/memberships';
@@ -23,6 +24,14 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
+function mockClientsLookup(rows: Array<{ id: string; name: string; phone: string }>, error: unknown = null) {
+  const inMock = vi.fn().mockResolvedValue({ data: error ? null : rows, error });
+  const eq = vi.fn(() => ({ in: inMock }));
+  const select = vi.fn(() => ({ eq }));
+  fromMock.mockReturnValueOnce({ select });
+  return { select, eq, inMock };
+}
+
 describe('memberships service — fetchClientActiveMembership', () => {
   it('retorna a membership ativa do cliente com plano', async () => {
     const membership = {
@@ -40,6 +49,7 @@ describe('memberships service — fetchClientActiveMembership', () => {
     const eqUser = vi.fn(() => ({ eq: eqClient }));
     const select = vi.fn(() => ({ eq: eqUser }));
     fromMock.mockReturnValueOnce({ select });
+    mockClientsLookup([{ id: 'client-1', name: 'Paulo', phone: '11999990000' }]);
 
     const result = await fetchClientActiveMembership('company-001', 'client-1');
 
@@ -48,6 +58,8 @@ describe('memberships service — fetchClientActiveMembership', () => {
     expect(eqClient).toHaveBeenCalledWith('client_id', 'client-1');
     expect(inMock).toHaveBeenCalledWith('status', ['pending', 'active', 'overdue']);
     expect(result?.id).toBe('ms-1');
+    expect(result?.client).toEqual({ id: 'client-1', name: 'Paulo', phone: '11999990000' });
+    expect(String((select.mock.calls as unknown[][])[0][0])).not.toMatch(/clients\s*\(/);
   });
 
   it('retorna null quando o cliente nao tem membership ativa', async () => {
@@ -274,5 +286,66 @@ describe('memberships service — fetchPublicPixConfig', () => {
     const result = await fetchPublicPixConfig('biz-1');
     expect(result.pix_key_type).toBe('email');
     expect(result.mbway_phone).toBe('+351912345678');
+  });
+});
+
+describe('memberships service — fetchClientMemberships (sem relação direta com clients)', () => {
+  function mockMembershipsQuery(rows: unknown[], error: unknown = null) {
+    const result = { data: error ? null : rows, error };
+    const chain: any = {
+      eq: vi.fn(() => chain),
+      order: vi.fn(() => chain),
+      then: (resolve: (r: typeof result) => unknown) => resolve(result),
+    };
+    const select = vi.fn(() => chain);
+    fromMock.mockReturnValueOnce({ select });
+    return { select, chain };
+  }
+
+  it('busca assinaturas e clientes em duas consultas e junta o cliente em cada assinatura', async () => {
+    const { select } = mockMembershipsQuery([
+      { id: 'ms-1', user_id: 'company-001', client_id: 'c1', status: 'active', plan: { id: 'p1' } },
+      { id: 'ms-2', user_id: 'company-001', client_id: 'c2', status: 'pending', plan: { id: 'p1' } },
+      { id: 'ms-3', user_id: 'company-001', client_id: 'c1', status: 'cancelled', plan: { id: 'p1' } },
+    ]);
+    const lookup = mockClientsLookup([
+      { id: 'c1', name: 'Paulo', phone: '1' },
+      { id: 'c2', name: 'Ana', phone: '2' },
+    ]);
+
+    const result = await fetchClientMemberships('company-001');
+
+    expect(String((select.mock.calls as unknown[][])[0][0])).not.toMatch(/clients\s*\(/);
+    expect(fromMock).toHaveBeenNthCalledWith(1, 'client_memberships');
+    expect(fromMock).toHaveBeenNthCalledWith(2, 'clients');
+    expect(lookup.eq).toHaveBeenCalledWith('user_id', 'company-001');
+    expect(lookup.inMock).toHaveBeenCalledWith('id', ['c1', 'c2']);
+    expect(result.map(r => r.client?.name)).toEqual(['Paulo', 'Ana', 'Paulo']);
+  });
+
+  it('deixa client nulo quando o cliente não é encontrado, sem derrubar a lista', async () => {
+    mockMembershipsQuery([{ id: 'ms-1', user_id: 'company-001', client_id: 'gone', status: 'active', plan: null }]);
+    mockClientsLookup([]);
+
+    const result = await fetchClientMemberships('company-001');
+
+    expect(result).toHaveLength(1);
+    expect(result[0].client).toBeNull();
+  });
+
+  it('não consulta clients quando não há assinaturas', async () => {
+    mockMembershipsQuery([]);
+
+    const result = await fetchClientMemberships('company-001');
+
+    expect(result).toEqual([]);
+    expect(fromMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('propaga erro da consulta de clientes', async () => {
+    mockMembershipsQuery([{ id: 'ms-1', user_id: 'company-001', client_id: 'c1', status: 'active', plan: null }]);
+    mockClientsLookup([], { message: 'boom' });
+
+    await expect(fetchClientMemberships('company-001')).rejects.toBeTruthy();
   });
 });

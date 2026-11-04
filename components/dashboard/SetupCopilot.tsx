@@ -172,11 +172,11 @@ export const SetupCopilot: React.FC = () => {
         }
     }, [loading, isActivated, steps]);
 
-    // Marca setup completo no perfil quando tudo concluído
+    // Marca ativação concluída no perfil quando tudo concluído
     useEffect(() => {
         if (allDone && user?.id && !checks.isActivated) {
             supabase.from('profiles')
-                .update({ setup_completed: true, activation_completed: true, activated_at: new Date().toISOString() })
+                .update({ activation_completed: true, activated_at: new Date().toISOString() })
                 .eq('id', user.id)
                 .then(({ error }) => {
                     if (error) console.warn('[SetupCopilot] Falha ao atualizar activation_completed:', error);

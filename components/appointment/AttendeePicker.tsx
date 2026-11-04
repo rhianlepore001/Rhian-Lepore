@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { createDependent } from '@/services/clientDependents';
 import { useClientDependents } from '@/hooks/useClientDependents';
 import { Button } from '@/components/ui/Button';
+import { useColorMode } from '@/hooks/useColorMode';
 
 interface Props {
   companyId: string;
@@ -20,7 +21,10 @@ export function AttendeePicker({ companyId, clientId, clientName, value, snapsho
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const historicalSnapshot = !value && snapshot && snapshot !== clientName;
+  const isDark = useColorMode() === 'dark';
   const inputClass = 'w-full rounded-lg border border-[var(--color-input-border)] bg-[var(--color-input-bg)] p-3 text-theme-text';
+  // color-scheme + fundo/texto opacos: o seletor nativo do iPhone/Safari ignora o fundo translúcido e desenhava branco com texto claro.
+  const selectClass = `w-full rounded-lg border border-[var(--color-input-border)] bg-[var(--color-card)] p-3 text-[var(--color-text)] ${isDark ? '[color-scheme:dark]' : '[color-scheme:light]'} [&>option]:bg-[var(--color-card)] [&>option]:text-[var(--color-text)]`;
   if (!clientId) return null;
   const save = async () => {
     setSaving(true);
@@ -37,7 +41,7 @@ export function AttendeePicker({ companyId, clientId, clientName, value, snapsho
   };
   return <div className="space-y-2 my-3 text-theme-text">
     <label className="block text-sm font-bold">{label}
-      <select className={inputClass} value={historicalSnapshot ? 'historical' : value} disabled={loading || saving} onChange={event => {
+      <select className={selectClass} value={historicalSnapshot ? 'historical' : value} disabled={loading || saving} onChange={event => {
         if (event.target.value === 'new') { setAdding(true); return; }
         const dependent = dependents.find(item => item.id === event.target.value);
         onChange(event.target.value, dependent?.name || clientName);

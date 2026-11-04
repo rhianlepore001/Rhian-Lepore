@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, Target } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { updateGoal } from '../../services/dashboard';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface StepMonthlyGoalProps {
@@ -27,18 +27,14 @@ export const StepMonthlyGoal: React.FC<StepMonthlyGoalProps> = ({ onNext, onBack
         try {
             const goalValue = parseFloat(goal);
             if (!isNaN(goalValue) && goalValue > 0) {
-                await supabase
-                    .from('monthly_goals')
-                    .upsert({
-                        user_id: user.id,
-                        month: new Date().toISOString().slice(0, 7),
-                        goal_value: goalValue
-                    }, { onConflict: 'user_id,month' });
+                try {
+                    await updateGoal(user.id, goalValue);
+                } catch (error) {
+                    console.error('Error saving goal:', error);
+                }
             }
 
             onNext();
-        } catch (error) {
-            console.error('Error saving goal:', error);
         } finally {
             setSubmitting(false);
         }

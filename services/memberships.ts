@@ -292,20 +292,44 @@ export async function deleteMembershipPlan(companyId: string, planId: string): P
     if (error) throw error;
 }
 
+type MembershipClient = NonNullable<MembershipWithPlan['client']>;
+
+// client_memberships.client_id não tem chave estrangeira para clients, então o PostgREST
+// não aceita o embed direto; buscamos os clientes numa segunda consulta e juntamos aqui.
+async function attachClients<T extends { client_id: string }>(
+    companyId: string,
+    rows: T[],
+): Promise<Array<T & { client: MembershipClient | null }>> {
+    const ids = Array.from(new Set(rows.map(r => r.client_id).filter(Boolean)));
+    if (ids.length === 0) return rows.map(r => ({ ...r, client: null }));
+
+    const byId = new Map<string, MembershipClient>();
+    for (let i = 0; i < ids.length; i += 100) {
+        const { data, error } = await supabase
+            .from('clients')
+            .select('id, name, phone')
+            .eq('user_id', companyId)
+            .in('id', ids.slice(i, i + 100));
+        if (error) throw error;
+        for (const c of (data ?? []) as MembershipClient[]) byId.set(c.id, c);
+    }
+    return rows.map(r => ({ ...r, client: byId.get(r.client_id) ?? null }));
+}
+
 export async function fetchClientMemberships(companyId: string, statusFilter?: MembershipStatus): Promise<MembershipWithPlan[]> {
     let query = supabase
         .from('client_memberships')
         .select(`
             *,
-            plan:membership_plans(*),
-            client:clients(id, name, phone)
+            plan:membership_plans(*)
         `)
         .eq('user_id', companyId)
         .order('created_at', { ascending: false });
     if (statusFilter) query = query.eq('status', statusFilter);
     const { data, error } = await query;
     if (error) throw error;
-    return (data ?? []) as unknown as MembershipWithPlan[];
+    const rows = (data ?? []) as unknown as Array<Omit<MembershipWithPlan, 'client'>>;
+    return attachClients(companyId, rows);
 }
 
 export async function fetchClientActiveMembership(companyId: string, clientId: string): Promise<MembershipWithPlan | null> {
@@ -313,8 +337,7 @@ export async function fetchClientActiveMembership(companyId: string, clientId: s
         .from('client_memberships')
         .select(`
             *,
-            plan:membership_plans(*),
-            client:clients(id, name, phone)
+            plan:membership_plans(*)
         `)
         .eq('user_id', companyId)
         .eq('client_id', clientId)
@@ -323,7 +346,9 @@ export async function fetchClientActiveMembership(companyId: string, clientId: s
         .limit(1)
         .maybeSingle();
     if (error) throw error;
-    return (data ?? null) as MembershipWithPlan | null;
+    if (!data) return null;
+    const [withClient] = await attachClients(companyId, [data as unknown as Omit<MembershipWithPlan, 'client'>]);
+    return withClient;
 }
 
 export interface CreateMembershipInput {

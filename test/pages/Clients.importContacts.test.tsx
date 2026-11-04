@@ -1,7 +1,7 @@
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { Clients } from '../../pages/Clients';
 
 const auth = { user: { id: 'responsavel' }, companyId: 'empresa', region: 'BR', role: 'owner' };
@@ -34,10 +34,15 @@ vi.mock('../../components/ui', () => ({
   Card: ({ children }: any) => <div>{children}</div>,
 }));
 
+function ImportProbe() {
+  const location = useLocation();
+  return <p>Página de importação {location.search}</p>;
+}
+
 function mount() {
   return render(<MemoryRouter initialEntries={['/clientes']}><Routes>
     <Route path="/clientes" element={<Clients />} />
-    <Route path="/configuracoes/importar" element={<p>Página de importação</p>} />
+    <Route path="/configuracoes/importar" element={<ImportProbe />} />
   </Routes></MemoryRouter>);
 }
 
@@ -51,7 +56,7 @@ describe('importação pela página de clientes', () => {
     const dialog = screen.getByRole('dialog', { name: 'Novo cliente' });
     expect(dialog).toBeTruthy();
     fireEvent.click(screen.getByRole('link', { name: /Importar dos contatos/i }));
-    expect(await screen.findByText('Página de importação')).toBeTruthy();
+    expect(await screen.findByText('Página de importação ?origem=contatos')).toBeTruthy();
   });
 
   it('não mostra a opção de importação para profissionais da equipe', async () => {

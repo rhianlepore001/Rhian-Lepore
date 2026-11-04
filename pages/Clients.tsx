@@ -1,7 +1,7 @@
 ﻿import { useDraftFields } from '../hooks/useDraftFields';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Cake, ChevronRight, MessageCircle, Plus, Search, User, Users } from 'lucide-react';
+import { Cake, ChevronRight, ContactRound, MessageCircle, Plus, Search, User, Users } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { logger } from '../utils/Logger';
 import { buildOwnerClientPhotoPath } from '../utils/clientPhotoPath';
@@ -409,6 +409,19 @@ export const Clients: React.FC = () => {
         title="Novo cliente"
         size="md"
       >
+        <Link
+          to="/configuracoes/importar"
+          className={`mb-4 flex min-h-[44px] items-center gap-3 border p-3 transition-colors hover:bg-[var(--color-card-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] ${radius.card} ${colors.border} ${colors.card}`}
+        >
+          <span className={`flex h-10 w-10 shrink-0 items-center justify-center ${radius.input} bg-[var(--color-accent-dim)] ${accent.text}`}>
+            <ContactRound className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className={`block text-sm font-semibold ${colors.text}`}>Importar dos contatos</span>
+            <span className={`block text-xs ${colors.textMuted}`}>Trazer clientes da agenda do celular</span>
+          </span>
+          <ChevronRight className={`h-4 w-4 shrink-0 ${colors.textMuted}`} aria-hidden="true" />
+        </Link>
         <form onSubmit={handleCreateClient} className="space-y-4">
           <Input label="Nome completo" value={name} onChange={(e) => setName(e.target.value)} required />
           <div>

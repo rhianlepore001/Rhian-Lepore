@@ -174,3 +174,17 @@ describe('seleção dos contatos do celular', () => {
     expect(api.saveImportMapping).not.toHaveBeenCalled();
   });
 });
+
+describe('abertura direta pelos contatos', () => {
+  it('abre já na opção de contatos do celular quando vem do cadastro de cliente', () => {
+    render(<ImportDataWizard companyId="empresa-ficticia" userId="usuario-ficticio" region="BR" api={api} initialSource="contacts" />);
+    expect(screen.queryByText('De onde vêm seus dados?')).toBeNull();
+    expect(screen.getByRole('heading', { name: 'Contatos do celular' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Voltar' })).toBeTruthy();
+  });
+
+  it('sem origem definida continua mostrando a escolha de origem', () => {
+    render(<ImportDataWizard companyId="empresa-ficticia" userId="usuario-ficticio" region="BR" api={api} />);
+    expect(screen.getByText('De onde vêm seus dados?')).toBeTruthy();
+  });
+});

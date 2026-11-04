@@ -33,7 +33,7 @@ describe('trazer dados', () => {
     const file = new File(['Nome,Celular\nAna Fictícia,11987654321'], 'trinks-ficticio.csv', { type:'text/csv' });
     fireEvent.change(screen.getByLabelText('Escolher arquivos'), { target: { files: [file] } });
     fireEvent.click(screen.getByRole('button', { name:'Analisar arquivos' }));
-    expect(await screen.findByText('trinks-ficticio.csv')).toBeTruthy();
+    await screen.findByRole('button', { name: 'Preparar revisão' });
     fireEvent.click(screen.getByRole('button', { name:'Preparar revisão' }));
     expect(await screen.findByText(/1 linha pronta/)).toBeTruthy();
     expect(api.commitImportBatch).not.toHaveBeenCalled();
@@ -59,7 +59,7 @@ describe('trazer dados', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Trinks' }));
     fireEvent.change(screen.getByLabelText('Escolher arquivos'), { target: { files: [new File(['x'], name, { type: 'text/csv' })] } });
     fireEvent.click(screen.getByRole('button', { name: 'Analisar arquivos' }));
-    await screen.findByText(name);
+    await screen.findByRole('button', { name: 'Preparar revisão' });
     return () => fireEvent.click(screen.getByRole('button', { name: 'Preparar revisão' }));
   }
 

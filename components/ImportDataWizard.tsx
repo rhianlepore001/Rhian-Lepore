@@ -19,6 +19,7 @@ interface Props {
   region: 'BR' | 'PT';
   api?: ImportWizardApi;
   onClose?: () => void;
+  initialSource?: ImportSource;
 }
 interface DocumentChoice { sheet: ImportSheet; kind: ImportKind; mapping: ImportColumns }
 interface Work { batchId: string; name: string; kind: ImportKind; rows: StoredImportRow[]; candidates: ImportCandidate[]; categories: ImportCategory[]; report?: ImportReport; status?: string; incomplete?: boolean }
@@ -74,10 +75,10 @@ function pendingCsv(work: Work): void {
   const link = document.createElement('a'); link.href = url; link.download = 'pendencias-importacao.csv'; document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
 }
 
-export function ImportDataWizard({ companyId, userId, region, api = importApi, onClose }: Props) {
+export function ImportDataWizard({ companyId, userId, region, api = importApi, onClose, initialSource }: Props) {
   const { colors, radius } = useBrutalTheme();
-  const [phase, setPhase] = useState<Phase>('source');
-  const [source, setSource] = useState<ImportSource>('spreadsheet');
+  const [phase, setPhase] = useState<Phase>(initialSource ? 'files' : 'source');
+  const [source, setSource] = useState<ImportSource>(initialSource ?? 'spreadsheet');
   const [files, setFiles] = useState<File[]>([]);
   const [documents, setDocuments] = useState<DocumentChoice[]>([]);
   const [works, setWorks] = useState<Work[]>([]);

@@ -63,6 +63,10 @@ export const SubscriptionSettings: React.FC = () => {
 
             const { data, error } = await supabase.functions.invoke('create-checkout-session', {
                 body: {
+                    // Server resolves the Stripe price from config (planId + currency);
+                    // priceId kept only for backwards compatibility.
+                    planId,
+                    currency,
                     priceId,
                     successUrl: `${window.location.origin}/#/?session_id={CHECKOUT_SESSION_ID}`,
                     cancelUrl: `${window.location.href}`,

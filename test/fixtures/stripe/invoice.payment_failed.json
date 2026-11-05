@@ -1,0 +1,19 @@
+{
+  "id": "evt_test_invoice_failed",
+  "object": "event",
+  "api_version": "2023-10-16",
+  "created": 1760000200,
+  "livemode": false,
+  "pending_webhooks": 1,
+  "request": { "id": null, "idempotency_key": null },
+  "type": "invoice.payment_failed",
+  "data": {
+    "object": {
+      "id": "in_test_fail",
+      "object": "invoice",
+      "customer": "cus_TESTOWNERA",
+      "subscription": "sub_TEST123",
+      "metadata": {}
+    }
+  }
+}

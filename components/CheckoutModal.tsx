@@ -115,7 +115,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [receivedBy, setReceivedBy] = useState<string>('');
   const [machineFeePercent, setMachineFeePercent] = useState<string>('');
   const [finalPrice, setFinalPrice] = useState<number>(0);
-  const [errors, setErrors] = useState<{ paymentMethod?: string; receivedBy?: string }>({});
+  const [durationMinutes, setDurationMinutes] = useState('');
+  const [durationEdited, setDurationEdited] = useState(false);
+  const [errors, setErrors] = useState<{ paymentMethod?: string; receivedBy?: string; duration?: string }>({});
   const [cart, setCart] = useState<CartLine[]>([]);
   const [selectedProductId, setSelectedProductId] = useState('');
   const initializedFor = useRef<string | null>(null);
@@ -160,6 +162,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       setMachineFeePercent('');
       setErrors({});
       setSelectedProductId('');
+      setDurationMinutes(appointment.duration_minutes && appointment.duration_minutes > 0 ? String(appointment.duration_minutes) : '');
+      setDurationEdited(false);
       reset();
     }
     if (!priceEdited.current) {
@@ -248,6 +252,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     receivedBy: [receivedBy, setReceivedBy],
     machineFeePercent: [machineFeePercent, setMachineFeePercent],
     finalPrice: [finalPrice, setFinalPrice],
+    durationMinutes: [durationMinutes, setDurationMinutes],
+    durationEdited: [durationEdited, setDurationEdited],
     cart: [cart, setCart]
   }, { onDiscard: onClose, enabled: !!appointment, ready: !!appointment && pendingLinesFetched,
     restore: data => ({ ...data,
@@ -256,7 +262,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     }) });
 
   const handleConfirm = async () => {
-    const newErrors: { paymentMethod?: string; receivedBy?: string } = {};
+    const newErrors: { paymentMethod?: string; receivedBy?: string; duration?: string } = {};
+    const parsedDuration = Number(durationMinutes);
+    if (durationEdited && (!/^\d+$/.test(durationMinutes) || !Number.isInteger(parsedDuration) || parsedDuration < 1 || parsedDuration > 1440)) {
+      newErrors.duration = 'Informe um tempo de trabalho válido entre 1 e 1440 minutos.';
+    }
 
     // Sprint D+1: Se totalmente coberto pela assinatura, não exige forma de pagamento
     const isFullyCovered = discount.fullyCovered;
@@ -309,6 +319,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         finalPrice,
         machineFeePercent: feePercent,
         machineFeeAmount: feeAmount,
+        actualDurationMinutes: durationEdited ? parsedDuration : null,
       });
 
       formDraft.clear();
@@ -411,6 +422,18 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         <div className={`${colors.surface} rounded-xl p-4 space-y-1 ${colors.border} border backdrop-blur-md`}>
           <p className={`text-xs ${font.mono} uppercase ${colors.textSecondary}`}>Serviço</p>
           <p className={`${colors.text} font-medium`}>{appointment?.service}</p>
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="checkout-duration" className={`block text-sm font-semibold ${colors.text}`}>Tempo de trabalho</label>
+          <div className="flex items-center gap-2">
+            <button type="button" aria-label="Diminuir 10 minutos" disabled={loading} onClick={() => { setDurationMinutes(String(Math.max(1, (Number(durationMinutes) || 1) - 10))); setDurationEdited(true); }} className={`min-h-[44px] min-w-[44px] rounded-lg border ${colors.border} ${colors.text}`}><Minus size={16} className="mx-auto" /></button>
+            <input id="checkout-duration" type="number" min="1" max="1440" step="1" inputMode="numeric" disabled={loading} value={durationMinutes} onChange={event => { setDurationMinutes(event.target.value); setDurationEdited(true); }} aria-invalid={!!errors.duration} aria-describedby="checkout-duration-help" className={`min-w-0 w-24 rounded-lg border px-3 py-2 text-center ${colors.inputBg} ${colors.inputBorder} ${colors.text}`} />
+            <span className={`text-sm ${colors.textSecondary}`}>min</span>
+            <button type="button" aria-label="Aumentar 10 minutos" disabled={loading} onClick={() => { setDurationMinutes(String(Math.min(1440, (Number(durationMinutes) || 0) + 10))); setDurationEdited(true); }} className={`min-h-[44px] min-w-[44px] rounded-lg border ${colors.border} ${colors.text}`}><Plus size={16} className="mx-auto" /></button>
+          </div>
+          <p id="checkout-duration-help" className={`text-xs ${colors.textSecondary}`}>{durationEdited ? 'Tempo informado para este atendimento.' : durationMinutes ? 'Tempo estimado a partir do agendamento. Ajuste se necessário.' : 'Tempo não informado no agendamento. Informe se souber.'}</p>
+          {errors.duration && <p role="alert" className={`text-sm ${status.danger}`}>{errors.duration}</p>}
         </div>
 
         {availableProducts.length > 0 && (

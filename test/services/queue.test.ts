@@ -15,6 +15,7 @@ import {
   QueueLookupError,
   isRecentClosedQueueEntry,
   resetExpiredCallingEntries,
+  settleQueueTicket,
   resolveClientQueueEntry,
   sanitizeQueuePhone,
   storeQueueTicket,
@@ -72,6 +73,19 @@ describe('queue service', () => {
     });
     (supabase.rpc as any).mockResolvedValue({ data: null, error: null });
     lteMock.mockResolvedValue({ error: null });
+  });
+
+  it('conclui a fila e salva a duração ajustada pela mesma RPC', async () => {
+    await settleQueueTicket({ entryId: 'q-1', serviceName: 'Corte', actualDurationMinutes: 50 });
+    expect(supabase.rpc).toHaveBeenCalledWith('settle_queue_ticket_with_duration', {
+      p_entry_id: 'q-1', p_service_name: 'Corte', p_final_price: null,
+      p_professional_id: null, p_payment_method: null, p_actual_duration_minutes: 50,
+    });
+  });
+
+  it('preserva a RPC anterior para chamadas sem campo de duração', async () => {
+    await settleQueueTicket({ entryId: 'q-1' });
+    expect(supabase.rpc).toHaveBeenCalledWith('settle_queue_ticket', expect.not.objectContaining({ p_actual_duration_minutes: expect.anything() }));
   });
 
   it('calcula tempo estimado como posicao x 20 minutos', () => {

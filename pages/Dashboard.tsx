@@ -16,11 +16,15 @@ import { NextAppointmentHero } from '../components/dashboard/NextAppointmentHero
 import { AttentionInbox, type AttentionItem } from '../components/dashboard/AttentionInbox';
 import { TodayKpiStrip, type TodayKpi } from '../components/dashboard/TodayKpiStrip';
 import { TodayAgendaList } from '../components/dashboard/TodayAgendaList';
+import { ChairHourCard } from '../components/performance/ChairHourCard';
 import { PageHeader } from '../components/ui/PageHeader';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { formatCurrency, formatDateLong } from '../utils/formatters';
 import { useTenantLocale } from '../hooks/useTenantLocale';
+import { useBusinessSettings } from '../hooks/useSettings';
+import { resolveBusinessTimezone } from '../utils/businessTimezone';
+import { chairHourMonth } from '../utils/chairHourPeriod';
 import {
   countActiveToday,
   countRemainingFreeHours,
@@ -96,6 +100,8 @@ export const Dashboard: React.FC = () => {
   const { accent, colors, font, status, isBeauty } = useBrutalTheme();
   const { data: clubStats } = useMembershipStats();
   const { region: currencyRegion } = useTenantLocale();
+  const { data: businessSettings } = useBusinessSettings();
+  const chairMonth = chairHourMonth(resolveBusinessTimezone({ timezone: businessSettings?.timezone, region: currencyRegion }));
 
   const firstName = fullName?.split(' ')[0] || 'Profissional';
   const todayLabel = formatDateLong(new Date(), currencyRegion);
@@ -295,6 +301,8 @@ export const Dashboard: React.FC = () => {
       />
 
       <TodayKpiStrip items={isStaff ? staffKpis : ownerKpis} loading={loadingStrip} />
+
+      <ChairHourCard month={chairMonth} />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,0.85fr)] lg:items-start">
         <div className="space-y-4">

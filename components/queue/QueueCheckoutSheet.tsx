@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Minus, Plus, X } from 'lucide-react';
 import { Button, Modal, Select, useToast } from '@/components/ui';
 import { useProducts } from '@/hooks/useCatalog';
 import { sellProduct } from '@/services/catalog';
@@ -57,7 +57,25 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
   const askProfessional = !knownProfessionalId && teamMembers.length > 0;
   const resolvedProfessionalId = knownProfessionalId ?? (professionalId || null);
   const [saving, setSaving] = useState<'settle' | 'close' | null>(null);
+  const [durationMinutes, setDurationMinutes] = useState('');
+  const [durationEdited, setDurationEdited] = useState(false);
+  const [durationError, setDurationError] = useState('');
+  const durationEntryId = useRef<string | null>(null);
   const { data: catalog = [] } = useProducts({ companyId, includeInactive: false });
+
+  const estimatedDuration = entry?.duration_minutes ?? services.find(service => service.id === entry?.service_id)?.duration_minutes ?? null;
+  useEffect(() => {
+    if (!open || !entry?.id) { durationEntryId.current = null; return; }
+    const changed = durationEntryId.current !== entry.id;
+    if (changed) {
+      durationEntryId.current = entry.id;
+      setDurationEdited(false);
+      setDurationError('');
+    }
+    if (changed || !durationEdited) {
+      setDurationMinutes(estimatedDuration && Number.isInteger(estimatedDuration) && estimatedDuration > 0 ? String(estimatedDuration) : '');
+    }
+  }, [open, entry?.id, estimatedDuration, durationEdited]);
 
   // Comanda reaberta volta com os itens guardados em "Deixar em aberto".
   // Chave serializada: o polling recria o array e não pode apagar o que o gestor está editando.
@@ -120,6 +138,12 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
 
   const handleSettle = async () => {
     if (!entry) return;
+    const parsedDuration = Number(durationMinutes);
+    if (durationEdited && (!/^\d+$/.test(durationMinutes) || !Number.isInteger(parsedDuration) || parsedDuration < 1 || parsedDuration > 1440)) {
+      setDurationError('Informe um tempo de trabalho válido entre 1 e 1440 minutos.');
+      return;
+    }
+    setDurationError('');
     if (pendingDigital) {
       showToast(`Confirme ou cancele o ${pendingDigitalLabel} do cliente no card antes de fechar a comanda.`, 'error');
       return;
@@ -145,7 +169,7 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
         paymentMethod: needsPaymentMethod ? paymentMethod || null : null,
         alreadyPaid: alreadyPaid && !needsPaymentMethod,
       });
-      await settleQueueTicket(payload);
+      await settleQueueTicket({ ...payload, actualDurationMinutes: durationEdited ? parsedDuration : null });
       settled = true;
       // Cada produto vira uma venda própria (baixa de estoque + lançamento no financeiro).
       const sales = await Promise.allSettled(products.map((line) => sellProduct({
@@ -253,6 +277,18 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
               </li>
             )}
           </ul>
+
+          <div className="space-y-2">
+            <label htmlFor="queue-checkout-duration" className="block text-sm font-semibold text-theme-text">Tempo de trabalho</label>
+            <div className="flex items-center gap-2">
+              <button type="button" aria-label="Diminuir 10 minutos" disabled={!!saving} onClick={() => { setDurationMinutes(String(Math.max(1, (Number(durationMinutes) || 1) - 10))); setDurationEdited(true); }} className="min-h-[44px] min-w-[44px] rounded-lg border border-theme-border text-theme-text"><Minus size={16} className="mx-auto" /></button>
+              <input id="queue-checkout-duration" type="number" min="1" max="1440" step="1" inputMode="numeric" disabled={!!saving} value={durationMinutes} onChange={event => { setDurationMinutes(event.target.value); setDurationEdited(true); }} aria-invalid={!!durationError} aria-describedby="queue-checkout-duration-help" className="min-w-0 w-24 rounded-lg border border-theme-border bg-[var(--color-input-bg)] px-3 py-2 text-center text-theme-text" />
+              <span className="text-sm text-theme-textSecondary">min</span>
+              <button type="button" aria-label="Aumentar 10 minutos" disabled={!!saving} onClick={() => { setDurationMinutes(String(Math.min(1440, (Number(durationMinutes) || 0) + 10))); setDurationEdited(true); }} className="min-h-[44px] min-w-[44px] rounded-lg border border-theme-border text-theme-text"><Plus size={16} className="mx-auto" /></button>
+            </div>
+            <p id="queue-checkout-duration-help" className="text-xs text-theme-textSecondary">{durationEdited ? 'Tempo informado para este atendimento.' : durationMinutes ? extras.length ? 'Tempo estimado apenas do serviço principal. Ajuste para incluir os serviços extras.' : 'Tempo estimado a partir do serviço. Ajuste se necessário.' : 'Tempo não informado no serviço. Informe se souber.'}</p>
+            {durationError && <p role="alert" className="text-sm text-[var(--color-danger)]">{durationError}</p>}
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Select

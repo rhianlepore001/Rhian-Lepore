@@ -615,6 +615,7 @@ export const Agenda: React.FC = () => {
                     price: apt.price,
                     status: apt.status,
                     professional_id: apt.professional_id,
+                    duration_minutes: apt.duration_minutes ?? undefined,
                     basePrice: basePrice,
                     notes: apt.notes,
                     public_booking_id: apt.public_booking_id ?? null,
@@ -865,26 +866,6 @@ export const Agenda: React.FC = () => {
         }
     };
 
-    const handleCompleteAppointment = async (appointmentId: string, isOverdue: boolean = false) => {
-        if (isStaff) {
-            showToast('Apenas o dono pode concluir agendamentos.', 'warning');
-            return;
-        }
-        try {
-            const { error } = await supabase.rpc('complete_appointment', { p_appointment_id: appointmentId });
-
-            if (error) throw error;
-
-            if (isOverdue) {
-                fetchOverdueAppointments();
-            } else {
-                fetchData();
-            }
-        } catch (error: any) {
-            logger.error('Error completing appointment', error);
-            showToast('Erro ao concluir agendamento. Tente novamente.', 'error');
-        }
-    };
     const handleCancelAppointment = (appointmentId: string, isOverdue: boolean = false, professionalId?: string | null) => {
         // Dono sempre; colaborador conforme "Permissões da equipe" (o banco aplica a mesma regra).
         if (!staffPermission.canEdit(professionalId)) {
@@ -1439,7 +1420,7 @@ export const Agenda: React.FC = () => {
                                                         </button>
                                                         {!isStaff && (
                                                             <button
-                                                                onClick={() => handleCompleteAppointment(apt.id, true)}
+                                                                onClick={() => setCheckoutAppointment({ ...apt, time: formatTimeInTimeZone(apt.appointment_time, shopTimeZone), status: apt.status as import('../types').Appointment['status'], professional_id: apt.professional_id ?? undefined })}
                                                                 className={`px-3 py-2 min-h-[44px] items-center font-bold rounded-lg transition-all flex items-center gap-2 text-xs ${classes.buttonSuccess}`}
                                                                 title="Concluir e Faturar"
                                                             >
@@ -2079,6 +2060,7 @@ export const Agenda: React.FC = () => {
                     openFormsDraft.clear();
                     setCheckoutAppointment(null);
                     fetchData();
+                    if (isOverdueFilter) void fetchOverdueAppointments();
                 }}
             />
         </div>

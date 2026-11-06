@@ -8,6 +8,7 @@ import {
   fetchPendingPublicBookings,
   getMachineFeePercent,
   markAppointmentComplete,
+  mapToAgendaAppointment,
 } from '@/services/scheduling';
 import { supabase } from '@/lib/supabase';
 
@@ -18,6 +19,10 @@ vi.mock('@/lib/supabase', () => ({
 }));
 
 describe('scheduling service', () => {
+  it('preserva a duração agendada para o checkout', () => {
+    const item = mapToAgendaAppointment({ id: 'a', client_id: 'c', service: 'Corte', appointment_time: '2026-01-01T10:00:00Z', price: 50, status: 'Confirmed', professional_id: null, duration_minutes: 45 }, new Map());
+    expect(item.duration_minutes).toBe(45);
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     (supabase.rpc as any).mockResolvedValue({ data: null, error: null });

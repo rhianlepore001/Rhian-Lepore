@@ -29,6 +29,7 @@ export const checkoutInputSchema = z.object({
   finalPrice: moneyAmountSchema,
   machineFeePercent: z.number().finite().min(0).max(100),
   machineFeeAmount: moneyAmountSchema,
+  actualDurationMinutes: z.number().int().min(1).max(1440).nullable().optional(),
 });
 
 export const internalAttendeeInputSchema = z.object({
@@ -80,6 +81,7 @@ export const agendaAppointmentViewSchema = z.object({
   basePrice: z.number().optional(),
   notes: z.string().optional(),
   payment_method: z.string().nullable().optional(),
+  duration_minutes: z.number().optional(),
 });
 
 export interface AgendaAppointmentView {
@@ -97,6 +99,7 @@ export interface AgendaAppointmentView {
   basePrice?: number;
   notes?: string;
   payment_method?: string | null;
+  duration_minutes?: number;
 }
 
 export const createAgendaAppointmentInputSchema = z.object({

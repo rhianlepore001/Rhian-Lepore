@@ -35,6 +35,7 @@ interface AppointmentRow {
   professional_id: string | null;
   notes?: string | null;
   payment_method?: string | null;
+  duration_minutes?: number | null;
   clients?: { name?: string; id?: string; phone?: string } | null;
 }
 
@@ -70,6 +71,7 @@ export function mapToAgendaAppointment(
     basePrice,
     notes: apt.notes ?? undefined,
     payment_method: apt.payment_method,
+    duration_minutes: apt.duration_minutes ?? undefined,
   };
 }
 
@@ -99,7 +101,8 @@ export function calcCheckoutNetAmount(finalPrice: number, machineFeeAmount: numb
 export async function completeAppointment(input: CheckoutInput): Promise<void> {
   const parsed = checkoutInputSchema.parse(input);
 
-  const { error } = await supabase.rpc('complete_appointment', {
+  const durationProvided = parsed.actualDurationMinutes !== undefined;
+  const { error } = await supabase.rpc(durationProvided ? 'complete_appointment_with_duration' : 'complete_appointment', {
     p_appointment_id: parsed.appointmentId,
     p_payment_method: parsed.paymentMethod,
     p_received_by: parsed.receivedBy ?? null,
@@ -107,6 +110,7 @@ export async function completeAppointment(input: CheckoutInput): Promise<void> {
     p_final_price: parsed.finalPrice,
     p_machine_fee_percent: parsed.machineFeePercent,
     p_machine_fee_amount: parsed.machineFeeAmount,
+    ...(durationProvided ? { p_actual_duration_minutes: parsed.actualDurationMinutes } : {}),
   });
 
   if (error) throw error;

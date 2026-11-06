@@ -1,6 +1,7 @@
 export type BusinessTheme = 'barber' | 'beauty';
 
 export interface BusinessCopy {
+  chairHour: string;
   segmentLabel: string;
   segmentLabelShort: string;
   segmentLabelPlural: string;
@@ -27,6 +28,7 @@ export interface BusinessCopy {
 }
 
 const BARBER_COPY: BusinessCopy = {
+  chairHour: 'hora de cadeira',
   segmentLabel: 'Barbearia',
   segmentLabelShort: 'Barbearia',
   segmentLabelPlural: 'Barbearias',
@@ -55,6 +57,7 @@ const BARBER_COPY: BusinessCopy = {
 };
 
 const BEAUTY_COPY: BusinessCopy = {
+  chairHour: 'hora de atendimento',
   segmentLabel: 'Salão de Beleza',
   segmentLabelShort: 'Salão',
   segmentLabelPlural: 'Salões & Studios',

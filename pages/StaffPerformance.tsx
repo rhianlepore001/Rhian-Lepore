@@ -11,6 +11,7 @@ import { PerformancePageSkeleton } from '../components/performance/PerformancePa
 import { PerformanceSection } from '../components/performance/PerformanceSection';
 import { TeamOverview } from '../components/performance/TeamOverview';
 import { TeamRanking } from '../components/performance/TeamRanking';
+import { ChairHourCard } from '../components/performance/ChairHourCard';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useBusinessCopy } from '../hooks/useBusinessCopy';
@@ -168,6 +169,8 @@ export const StaffPerformance: React.FC = () => {
             </div>
 
             <div className="mt-4 lg:mt-8 flex flex-col gap-8">
+
+            <ChairHourCard month={filters.start} endDate={filters.end} professionalId={filters.pro} />
 
             {status === 'loading' && <PerformancePageSkeleton />}
 

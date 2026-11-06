@@ -604,13 +604,16 @@ export async function settleQueueTicket(input: {
   finalPrice?: number | null;
   professionalId?: string | null;
   paymentMethod?: string | null;
+  actualDurationMinutes?: number | null;
 }) {
-  const { error } = await supabase.rpc('settle_queue_ticket', {
+  const hasDuration = input.actualDurationMinutes !== undefined;
+  const { error } = await supabase.rpc(hasDuration ? 'settle_queue_ticket_with_duration' : 'settle_queue_ticket', {
     p_entry_id: input.entryId,
     p_service_name: input.serviceName ?? null,
     p_final_price: input.finalPrice ?? null,
     p_professional_id: input.professionalId ?? null,
     p_payment_method: input.paymentMethod ?? null,
+    ...(hasDuration ? { p_actual_duration_minutes: input.actualDurationMinutes } : {}),
   });
   if (error) throw error;
 }

@@ -62,6 +62,54 @@ describe('QueueCheckoutSheet', () => {
     sellProduct.mockResolvedValue({});
   });
 
+  it('permite registrar o tempo de trabalho ao fechar a comanda', async () => {
+    render(<QueueCheckoutSheet {...baseProps} entry={{ ...entry, duration_minutes: 40 }} />);
+    expect(screen.getByLabelText('Tempo de trabalho')).toHaveValue(40);
+    fireEvent.click(screen.getByRole('button', { name: 'Aumentar 10 minutos' }));
+    fireEvent.change(screen.getByLabelText('Forma de pagamento'), { target: { value: 'pix' } });
+    fireEvent.click(screen.getByRole('button', { name: /finalizar/i }));
+    await waitFor(() => expect(settleQueueTicket).toHaveBeenCalledWith(expect.objectContaining({ actualDurationMinutes: 50 })));
+  });
+
+  it('mantém o tempo estimado quando não há ajuste explícito', async () => {
+    render(<QueueCheckoutSheet {...baseProps} entry={{ ...entry, duration_minutes: 40 }} />);
+    expect(screen.getByText(/estimado/i)).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Forma de pagamento'), { target: { value: 'pix' } });
+    fireEvent.click(screen.getByRole('button', { name: /finalizar/i }));
+    await waitFor(() => expect(settleQueueTicket).toHaveBeenCalledWith(expect.objectContaining({ actualDurationMinutes: null })));
+  });
+
+  it('não conclui se o tempo informado for inválido', () => {
+    render(<QueueCheckoutSheet {...baseProps} entry={{ ...entry, duration_minutes: 40 }} />);
+    fireEvent.change(screen.getByLabelText('Tempo de trabalho'), { target: { value: '0' } });
+    fireEvent.change(screen.getByLabelText('Forma de pagamento'), { target: { value: 'pix' } });
+    fireEvent.click(screen.getByRole('button', { name: /finalizar/i }));
+    expect(settleQueueTicket).not.toHaveBeenCalled();
+    expect(screen.getByRole('alert')).toHaveTextContent(/tempo de trabalho válido/i);
+  });
+
+  it('usa a duração do serviço escolhido quando a senha não informa duração', () => {
+    render(<QueueCheckoutSheet {...baseProps} services={[{ id: 's-1', name: 'Corte', price: 50, active: true, duration_minutes: 35 } as any]} entry={entry} />);
+    expect(screen.getByLabelText('Tempo de trabalho')).toHaveValue(35);
+  });
+
+  it('redefine tempo e estado estimado ao trocar a senha', () => {
+    const { rerender } = render(<QueueCheckoutSheet {...baseProps} entry={{ ...entry, duration_minutes: 40 }} />);
+    fireEvent.change(screen.getByLabelText('Tempo de trabalho'), { target: { value: '65' } });
+    rerender(<QueueCheckoutSheet {...baseProps} entry={{ ...entry, id: 'q-2', duration_minutes: 25 }} />);
+    expect(screen.getByLabelText('Tempo de trabalho')).toHaveValue(25);
+    expect(screen.getByText(/estimado/i)).toBeInTheDocument();
+  });
+
+  it('explica que o tempo estimado considera apenas o serviço principal ao adicionar extras', () => {
+    render(<QueueCheckoutSheet {...baseProps} entry={{ ...entry, duration_minutes: 40 }} />);
+    fireEvent.change(screen.getByLabelText('Adicionar serviço extra'), { target: { value: 's-2' } });
+    expect(screen.getByLabelText('Tempo de trabalho')).toHaveValue(40);
+    expect(screen.getByText(/apenas do serviço principal/i)).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Tempo de trabalho'), { target: { value: '75' } });
+    expect(screen.getByLabelText('Tempo de trabalho')).toHaveValue(75);
+  });
+
   it('cobra o total ao gestor, mas lança o produto só na venda própria', async () => {
     render(<QueueCheckoutSheet {...baseProps} entry={entry} />);
 

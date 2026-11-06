@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Testa 20261003090000_agenda_blocks_allow_queue_completed num Postgres local descartável.
+# Testa 20261003101803_agenda_blocks_allow_queue_completed num Postgres local descartável.
 #   scripts/test-sql-agenda-blocks-queue.sh             # baseline = live (md5) -> teste FALHA -> hotfix 2x -> teste passa + regressões
 #   scripts/test-sql-agenda-blocks-queue.sh --rollback  # hotfix + rollback: trigger volta ao md5 do live
 set -euo pipefail
@@ -7,8 +7,8 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PGBIN="${PGBIN:-$(ls -d /usr/lib/postgresql/*/bin | sort -V | tail -1)}"
 TMP="$(mktemp -d)"
 PORT="${PGPORT_TEST:-55461}"
-MIG="$ROOT/supabase/migrations/20261003090000_agenda_blocks_allow_queue_completed.sql"
-RB="$ROOT/docs/rollbacks/20261003090000_agenda_blocks_allow_queue_completed_rollback.sql"
+MIG="$ROOT/supabase/migrations/20261003101803_agenda_blocks_allow_queue_completed.sql"
+RB="$ROOT/docs/rollbacks/20261003101803_agenda_blocks_allow_queue_completed_rollback.sql"
 cleanup() { "$PGBIN/pg_ctl" -D "$TMP/data" -m immediate stop >/dev/null 2>&1 || true; rm -rf "$TMP"; }
 trap cleanup EXIT
 "$PGBIN/initdb" -D "$TMP/data" -U postgres -A trust >/dev/null

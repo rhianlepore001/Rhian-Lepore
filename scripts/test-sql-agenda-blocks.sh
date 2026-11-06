@@ -87,12 +87,12 @@ if [ "${1:-}" = "--113-only" ]; then
 fi
 
 # #115 está vendored em supabase/migrations (não depende do branch remoto).
-HOTFIX="$ROOT/supabase/migrations/20261003090000_agenda_blocks_allow_queue_completed.sql"
+HOTFIX="$ROOT/supabase/migrations/20261003101803_agenda_blocks_allow_queue_completed.sql"
 if [ ! -f "$HOTFIX" ]; then
   echo "falta $HOTFIX no working tree" >&2
   exit 1
 fi
 psql_db postgres -f "$HOTFIX"
-psql_db postgres -f "$ROOT/supabase/migrations/20261003120000_agenda_blocks_acceptance_followup.sql"
+psql_db postgres -f "$ROOT/supabase/migrations/20261003102005_agenda_blocks_acceptance_followup.sql"
 psql_db postgres -f "$ROOT/supabase/tests/agenda_blocks.test.sql"
 echo "agenda_blocks SQL tests ok (#113+#115+#117)"

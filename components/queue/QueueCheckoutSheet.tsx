@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Minus, Plus, X } from 'lucide-react';
 import { Button, Modal, Select, useToast } from '@/components/ui';
 import { useProducts } from '@/hooks/useCatalog';
-import { sellProduct } from '@/services/catalog';
 import { closeQueueTicket, settleQueueTicket } from '@/services/queue';
 import { buildQueueClosePayload, buildQueueSettlePayload } from '@/utils/queueTicketPayload';
 import { formatCurrency, type Region } from '@/utils/formatters';
@@ -157,7 +156,6 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
       return;
     }
     setSaving('settle');
-    let settled = false;
     try {
       const payload = buildQueueSettlePayload({
         entryId: entry.id,
@@ -169,31 +167,17 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
         paymentMethod: needsPaymentMethod ? paymentMethod || null : null,
         alreadyPaid: alreadyPaid && !needsPaymentMethod,
       });
-      await settleQueueTicket({ ...payload, actualDurationMinutes: durationEdited ? parsedDuration : null });
-      settled = true;
-      // Cada produto vira uma venda própria (baixa de estoque + lançamento no financeiro).
-      const sales = await Promise.allSettled(products.map((line) => sellProduct({
-        productId: line.id,
-        quantity: 1,
-        professionalId: resolvedProfessionalId,
-        paymentMethod: needsPaymentMethod ? paymentMethod || null : entry.payment_method,
-      })));
-      const failed = products.filter((_, index) => sales[index].status === 'rejected');
-      if (failed.length > 0) {
-        showToast(
-          `Atendimento finalizado, mas a venda de ${failed.map((line) => line.name).join(', ')} não foi registrada. Lance em Produtos.`,
-          'error',
-        );
-      } else {
-        showToast(`Atendimento de ${entry.client_name} finalizado.`, 'success');
-      }
+      await settleQueueTicket({ ...payload,
+        actualDurationMinutes: durationEdited && parsedDuration !== estimatedDuration ? parsedDuration : null,
+        products: products.map(line => ({ productId: line.id, quantity: 1 })),
+      });
+      showToast(`Atendimento de ${entry.client_name} finalizado.`, 'success');
       onDone();
     } catch {
       showToast(
-        settled ? 'Atendimento finalizado, mas houve um erro ao registrar os produtos.' : 'Não foi possível finalizar a comanda. Tente de novo.',
+        'Não foi possível finalizar a comanda. Tente de novo.',
         'error',
       );
-      if (settled) onDone();
     } finally {
       setSaving(null);
     }
@@ -286,7 +270,7 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
               <span className="text-sm text-theme-textSecondary">min</span>
               <button type="button" aria-label="Aumentar 10 minutos" disabled={!!saving} onClick={() => { setDurationMinutes(String(Math.min(1440, (Number(durationMinutes) || 0) + 10))); setDurationEdited(true); }} className="min-h-[44px] min-w-[44px] rounded-lg border border-theme-border text-theme-text"><Plus size={16} className="mx-auto" /></button>
             </div>
-            <p id="queue-checkout-duration-help" className="text-xs text-theme-textSecondary">{durationEdited ? 'Tempo informado para este atendimento.' : durationMinutes ? extras.length ? 'Tempo estimado apenas do serviço principal. Ajuste para incluir os serviços extras.' : 'Tempo estimado a partir do serviço. Ajuste se necessário.' : 'Tempo não informado no serviço. Informe se souber.'}</p>
+            <p id="queue-checkout-duration-help" className="text-xs text-theme-textSecondary">{durationEdited && Number(durationMinutes) !== estimatedDuration ? 'Tempo informado para este atendimento.' : durationMinutes ? extras.length ? 'Tempo estimado apenas do serviço principal. Ajuste para incluir os serviços extras.' : 'Tempo estimado a partir do serviço. Ajuste se necessário.' : 'Tempo não informado no serviço. Informe se souber.'}</p>
             {durationError && <p role="alert" className="text-sm text-[var(--color-danger)]">{durationError}</p>}
           </div>
 

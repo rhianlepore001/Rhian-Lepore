@@ -30,6 +30,14 @@ DO $$ BEGIN
  IF (SELECT price FROM public.appointments WHERE id='91000000-0000-0000-0000-000000000003')<>100 THEN RAISE EXCEPTION 'legacy retry changed price'; END IF;
  IF (SELECT status FROM public.appointments WHERE id='91000000-0000-0000-0000-000000000004')<>'Pending' OR EXISTS(SELECT 1 FROM public.finance_records WHERE appointment_id='91000000-0000-0000-0000-000000000004') THEN RAISE EXCEPTION 'cart failure did not roll back completion'; END IF;
 END $$;
+SET request.jwt.claim.sub='10000000-0000-0000-0000-000000000001';
+SET ROLE authenticated;
+DO $$ DECLARE r json; BEGIN
+ r:=public.get_finance_stats('10000000-0000-0000-0000-000000000001','2026-11-08','2026-11-08',NULL);
+ IF (r->>'revenue')::numeric<>360 THEN RAISE EXCEPTION 'owner receipts were lost or double-counted: %',r; END IF;
+END $$;
+RESET ROLE;
+SET request.jwt.claim.sub='10000000-0000-0000-0000-0000000000a1';
 -- Inactive accounts retain a profile but lose operational access immediately.
 UPDATE public.team_members SET active=false WHERE staff_user_id='10000000-0000-0000-0000-0000000000a1';
 SET ROLE authenticated;

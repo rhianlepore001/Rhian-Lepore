@@ -2,10 +2,12 @@
 -- removing this version history loses the protection for configuration changes since installation.
 -- Execute BEFORE the stage1 rollback. No customer rows/receipts are deleted.
 BEGIN;
+DROP FUNCTION IF EXISTS public.settle_queue_checkout_v1(uuid,text,numeric,uuid,text,integer,jsonb);
 DROP FUNCTION IF EXISTS public.complete_appointment_checkout_v1(uuid,text,uuid,uuid,numeric,numeric,numeric,integer,jsonb);
 DROP FUNCTION IF EXISTS public.get_checkout_products_v1(text,boolean);
 DROP TRIGGER IF EXISTS chair_capture_professional ON public.team_members;
 DROP TRIGGER IF EXISTS chair_capture_business ON public.business_settings;
+DROP TRIGGER IF EXISTS chair_guard_past_blocks ON public.agenda_blocks;
 DROP TRIGGER IF EXISTS chair_capture_material ON public.service_costs;
 DROP POLICY IF EXISTS chair_finance_owner_only ON public.finance_records;
 DROP POLICY IF EXISTS chair_products_owner_only ON public.products;
@@ -26,6 +28,7 @@ DO $$ DECLARE r record; a record; grantee text; BEGIN
  END LOOP;
 END $$;
 DROP FUNCTION IF EXISTS chair_hour_private.capture_history();
+DROP FUNCTION IF EXISTS chair_hour_private.guard_past_blocks();
 DROP TABLE IF EXISTS chair_hour_private.history;
 DROP TABLE IF EXISTS chair_hour_private.routine_backup;
 DROP SCHEMA IF EXISTS chair_hour_private;

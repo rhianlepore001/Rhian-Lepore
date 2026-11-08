@@ -24,6 +24,7 @@ export interface ChairHourData {
   services?: { name: string; status: string | null }[];
   services_pending_count?: number;
   history_estimated?: boolean;
+  unassigned_attendance_count?: number;
 }
 
 export function useChairHour(month: string, professionalId: string | null = null, endDate: string | null = null) {

@@ -195,6 +195,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const feeAmount = paymentMethod ? calcMachineFee(finalPrice, paymentMethod, feePercent) : 0;
   const netAmount = calcCheckoutNetAmount(finalPrice, feeAmount);
   const loading = isPending;
+  const durationIsAdjusted = durationEdited && Number(durationMinutes) !== appointment?.duration_minutes;
 
   const getProductById = (id: string) => availableProducts.find(p => p.id === id);
 
@@ -302,7 +303,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         finalPrice,
         machineFeePercent: feePercent,
         machineFeeAmount: feeAmount,
-        actualDurationMinutes: durationEdited ? parsedDuration : null,
+        actualDurationMinutes: durationIsAdjusted ? parsedDuration : null,
       });
 
       formDraft.clear();
@@ -415,7 +416,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             <span className={`text-sm ${colors.textSecondary}`}>min</span>
             <button type="button" aria-label="Aumentar 10 minutos" disabled={loading} onClick={() => { setDurationMinutes(String(Math.min(1440, (Number(durationMinutes) || 0) + 10))); setDurationEdited(true); }} className={`min-h-[44px] min-w-[44px] rounded-lg border ${colors.border} ${colors.text}`}><Plus size={16} className="mx-auto" /></button>
           </div>
-          <p id="checkout-duration-help" className={`text-xs ${colors.textSecondary}`}>{durationEdited ? 'Tempo informado para este atendimento.' : durationMinutes ? 'Tempo estimado a partir do agendamento. Ajuste se necessário.' : 'Tempo não informado no agendamento. Informe se souber.'}</p>
+          <p id="checkout-duration-help" className={`text-xs ${colors.textSecondary}`}>{durationIsAdjusted ? 'Tempo informado para este atendimento.' : durationMinutes ? 'Tempo estimado a partir do agendamento. Ajuste se necessário.' : 'Tempo não informado no agendamento. Informe se souber.'}</p>
           {errors.duration && <p role="alert" className={`text-sm ${status.danger}`}>{errors.duration}</p>}
         </div>
 

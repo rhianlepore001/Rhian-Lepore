@@ -79,6 +79,15 @@ describe('QueueCheckoutSheet', () => {
     await waitFor(() => expect(settleQueueTicket).toHaveBeenCalledWith(expect.objectContaining({ actualDurationMinutes: null })));
   });
 
+  it('retornar à duração do serviço mantém o tempo estimado', async () => {
+    render(<QueueCheckoutSheet {...baseProps} entry={{ ...entry, duration_minutes:40 }} />);
+    fireEvent.click(screen.getByRole('button',{name:'Aumentar 10 minutos'}));
+    fireEvent.click(screen.getByRole('button',{name:'Diminuir 10 minutos'}));
+    fireEvent.change(screen.getByLabelText('Forma de pagamento'),{target:{value:'pix'}});
+    fireEvent.click(screen.getByRole('button',{name:/finalizar/i}));
+    await waitFor(()=>expect(settleQueueTicket).toHaveBeenCalledWith(expect.objectContaining({actualDurationMinutes:null})));
+  });
+
   it('não conclui se o tempo informado for inválido', () => {
     render(<QueueCheckoutSheet {...baseProps} entry={{ ...entry, duration_minutes: 40 }} />);
     fireEvent.change(screen.getByLabelText('Tempo de trabalho'), { target: { value: '0' } });
@@ -110,7 +119,7 @@ describe('QueueCheckoutSheet', () => {
     expect(screen.getByLabelText('Tempo de trabalho')).toHaveValue(75);
   });
 
-  it('cobra o total ao gestor, mas lança o produto só na venda própria', async () => {
+  it('cobra o total com produto e serviço em uma única transação', async () => {
     render(<QueueCheckoutSheet {...baseProps} entry={entry} />);
 
     fireEvent.change(screen.getByLabelText('Adicionar produto'), { target: { value: 'p-1' } });
@@ -124,12 +133,8 @@ describe('QueueCheckoutSheet', () => {
       finalPrice: 50,
       paymentMethod: 'pix',
     }));
-    await waitFor(() => expect(sellProduct).toHaveBeenCalledWith(expect.objectContaining({
-      productId: 'p-1',
-      quantity: 1,
-      professionalId: 'pro-1',
-      paymentMethod: 'pix',
-    })));
+    expect(settleQueueTicket).toHaveBeenCalledWith(expect.objectContaining({ products: [{ productId: 'p-1', quantity: 1 }] }));
+    expect(sellProduct).not.toHaveBeenCalled();
     expect(baseProps.onDone).toHaveBeenCalled();
   });
 

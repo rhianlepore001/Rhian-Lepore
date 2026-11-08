@@ -15,14 +15,14 @@ CREATE TABLE IF NOT EXISTS chair_hour_private.routine_backup(identity text PRIMA
 REVOKE ALL ON chair_hour_private.routine_backup FROM PUBLIC,anon,authenticated;
 INSERT INTO chair_hour_private.routine_backup
  SELECT p.oid::regprocedure::text,pg_get_functiondef(p.oid),COALESCE(p.proacl,acldefault('f',p.proowner)) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
- WHERE n.nspname='public' AND p.proname=ANY(ARRAY['get_chair_hour_v1','complete_appointment','complete_appointment_with_duration','settle_queue_ticket','settle_queue_ticket_with_duration','get_finance_stats','get_monthly_finance_history','get_dashboard_stats','get_dashboard_insights','get_dashboard_actions','get_aios_diagnostic','get_marketing_opportunities','get_professional_finance_summary','get_professional_commission_details','get_commissions_due','sell_product']) ON CONFLICT DO NOTHING;
+ WHERE n.nspname='public' AND p.proname=ANY(ARRAY['get_chair_hour_v1','complete_appointment','complete_appointment_with_duration','settle_queue_ticket','settle_queue_ticket_with_duration','get_finance_stats','get_monthly_finance_history','get_dashboard_stats','get_dashboard_insights','get_dashboard_actions','get_aios_diagnostic','get_marketing_opportunities','get_professional_finance_summary','get_professional_commission_details','get_commissions_due','mark_expense_as_paid','recalculate_pending_commissions','update_commission_record','sell_product']) ON CONFLICT DO NOTHING;
 -- Freeze the starting configuration, explicitly marked as an unverified baseline.
 INSERT INTO chair_hour_private.history(company_id,kind,entity_id,effective_at,baseline,value)
  SELECT t.user_id::text,'professional',t.id::text,'-infinity',true,
  jsonb_build_object('working_hours',t.working_hours,'active',t.active AND t.deleted_at IS NULL)
  FROM public.team_members t WHERE NOT EXISTS (SELECT 1 FROM chair_hour_private.history h WHERE h.kind='professional' AND h.entity_id=t.id::text);
 INSERT INTO chair_hour_private.history(company_id,kind,entity_id,effective_at,baseline,value)
- SELECT b.user_id::text,'business',b.user_id::text,'-infinity',true,jsonb_build_object('business_hours',b.business_hours)
+ SELECT b.user_id::text,'business',b.user_id::text,'-infinity',true,jsonb_build_object('business_hours',b.business_hours,'timezone',COALESCE(b.timezone,(SELECT CASE WHEN p.region='PT' THEN 'Europe/Lisbon' ELSE 'America/Sao_Paulo' END FROM public.profiles p WHERE p.id=b.user_id::text)))
  FROM public.business_settings b WHERE NOT EXISTS (SELECT 1 FROM chair_hour_private.history h WHERE h.kind='business' AND h.entity_id=b.user_id::text);
 INSERT INTO chair_hour_private.history(company_id,kind,entity_id,effective_at,baseline,value)
  SELECT c.company_id,'material',c.service_id::text,'-infinity',true,jsonb_build_object('amount',c.amount)
@@ -36,9 +36,9 @@ BEGIN
    v_kind:='professional'; v_company:=NEW.user_id::text; v_entity:=NEW.id::text;
    v_value:=jsonb_build_object('working_hours',NEW.working_hours,'active',NEW.active AND NEW.deleted_at IS NULL);
  ELSIF TG_TABLE_NAME='business_settings' THEN
-   IF TG_OP='UPDATE' AND NEW.business_hours IS NOT DISTINCT FROM OLD.business_hours THEN RETURN NEW; END IF;
+   IF TG_OP='UPDATE' AND NEW.business_hours IS NOT DISTINCT FROM OLD.business_hours AND NEW.timezone IS NOT DISTINCT FROM OLD.timezone THEN RETURN NEW; END IF;
    v_kind:='business'; v_company:=NEW.user_id::text; v_entity:=NEW.user_id::text;
-   v_value:=jsonb_build_object('business_hours',NEW.business_hours);
+   v_value:=jsonb_build_object('business_hours',NEW.business_hours,'timezone',COALESCE(NEW.timezone,(SELECT CASE WHEN p.region='PT' THEN 'Europe/Lisbon' ELSE 'America/Sao_Paulo' END FROM public.profiles p WHERE p.id=NEW.user_id::text)));
  ELSE
    IF TG_OP='UPDATE' AND NEW.amount IS NOT DISTINCT FROM OLD.amount THEN RETURN NEW; END IF;
    v_kind:='material';
@@ -73,8 +73,16 @@ BEGIN
  SELECT COALESCE(bs.timezone, CASE WHEN p.region='PT' THEN 'Europe/Lisbon' ELSE 'America/Sao_Paulo' END), bs.business_hours
  INTO v_timezone,v_hours FROM public.profiles p LEFT JOIN public.business_settings bs ON bs.user_id::text=v_company
  WHERE p.id=v_company LIMIT 1;
+ IF v_timezone IS NULL OR NOT EXISTS(SELECT 1 FROM pg_timezone_names WHERE name=v_timezone) THEN v_timezone:='UTC'; END IF;
+ SELECT COALESCE((SELECT h.value->>'timezone' FROM chair_hour_private.history h WHERE h.company_id=v_company AND h.kind='business' AND h.effective_at <= v_start::timestamp AT TIME ZONE COALESCE(v_timezone,'UTC') ORDER BY h.effective_at DESC,h.id DESC LIMIT 1),v_timezone) INTO v_timezone;
  SELECT COALESCE((SELECT low_margin_pct FROM public.chair_hour_settings WHERE company_id=v_company),20) INTO v_threshold;
  IF v_timezone IS NULL OR NOT EXISTS (SELECT 1 FROM pg_timezone_names WHERE name=v_timezone) THEN v_timezone := 'UTC'; END IF;
+ IF EXISTS(SELECT 1 FROM (
+  SELECT h.effective_at,h.value->>'timezone' AS tz,lag(h.value->>'timezone') OVER(ORDER BY h.effective_at,h.id) AS previous_tz,lag(h.id) OVER(ORDER BY h.effective_at,h.id) AS previous_id
+  FROM chair_hour_private.history h WHERE h.company_id=v_company AND h.kind='business'
+ ) x WHERE x.previous_id IS NOT NULL AND x.tz IS DISTINCT FROM x.previous_tz AND x.effective_at > v_start::timestamp AT TIME ZONE v_timezone AND x.effective_at < (v_end+1)::timestamp AT TIME ZONE v_timezone) THEN
+  RAISE EXCEPTION 'timezone_changed_in_period_select_smaller_period' USING ERRCODE='22023';
+ END IF;
  IF v_role = 'staff' THEN
    SELECT t.id INTO v_staff FROM public.team_members t WHERE t.user_id::text=v_company AND t.staff_user_id=auth.uid() AND t.active AND t.deleted_at IS NULL LIMIT 1;
    IF v_staff IS NULL OR (p_professional_id IS NOT NULL AND p_professional_id<>v_staff) THEN RAISE EXCEPTION 'not_authorized' USING ERRCODE='42501'; END IF;
@@ -130,7 +138,7 @@ BEGIN
  shared AS (SELECT COALESCE(sum(amount),0) AS amount FROM costs WHERE professional_id IS NULL),
  attendance AS (
    SELECT a.id,a.professional_id,a.service,a.appointment_time,COALESCE(a.actual_duration_minutes,a.duration_minutes) AS minutes,
-     (a.actual_duration_minutes IS NULL) AS estimated, fr.revenue AS revenue,
+     (a.actual_duration_minutes IS NULL) AS estimated, CASE WHEN a.price>=0 THEN a.price END AS revenue,
      CASE WHEN p.is_owner THEN 0 ELSE fr.commission_value END AS commission, COALESCE(a.machine_fee_amount,0) AS machine_fee
    FROM public.appointments a JOIN professionals p ON p.id=a.professional_id
    LEFT JOIN LATERAL (SELECT CASE WHEN count(*)=1 THEN max(f.revenue) END AS revenue,
@@ -202,6 +210,7 @@ BEGIN
       ELSE to_jsonb(d) END ORDER BY d.name) FROM data d WHERE (v_role='staff' AND d.id=v_staff) OR (v_role='owner' AND (p_professional_id IS NULL OR d.id=p_professional_id))),'[]'::jsonb))
    || CASE WHEN v_role='owner' THEN jsonb_build_object('total',(SELECT to_jsonb(t) || jsonb_build_object('margin_per_hour',t.revenue_per_available_hour-t.cost_per_hour) FROM total_values t),
        'services',COALESCE((SELECT jsonb_agg(jsonb_build_object('name',s.name,'status',s.status) ORDER BY s.name) FROM service_results s WHERE s.status IS NOT NULL),'[]'::jsonb),
+       'unassigned_attendance_count',(SELECT count(*) FROM public.appointments a WHERE a.user_id::text=v_company AND a.status='Completed' AND a.appointment_time >= v_start::timestamp AT TIME ZONE v_timezone AND a.appointment_time < (v_end+1)::timestamp AT TIME ZONE v_timezone AND NOT EXISTS(SELECT 1 FROM professionals p WHERE p.id=a.professional_id)),
        'services_pending_count',(SELECT count(*) FROM service_match s JOIN data d ON d.id=s.professional_id WHERE (p_professional_id IS NULL OR s.professional_id=p_professional_id) AND (s.service_id IS NULL OR s.material IS NULL OR s.minutes IS NULL OR s.minutes<=0 OR s.revenue IS NULL OR s.commission IS NULL OR d.fixed_cost IS NULL OR d.available_minutes IS NULL OR d.available_minutes=0))) ELSE '{}'::jsonb END
  INTO v_result;
  RETURN v_result;
@@ -209,6 +218,20 @@ END $$;
 REVOKE ALL ON FUNCTION public.get_chair_hour_v1(date,uuid,date) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.get_chair_hour_v1(date,uuid,date) TO authenticated;
 
+CREATE OR REPLACE FUNCTION chair_hour_private.guard_past_blocks() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
+DECLARE v_tz text; v_company text; v_start timestamptz;
+BEGIN
+ IF auth.uid() IS NULL THEN IF TG_OP='DELETE' THEN RETURN OLD; END IF; RETURN NEW; END IF;
+ IF TG_OP='INSERT' THEN v_company:=NEW.user_id::text; v_start:=NEW.starts_at; ELSE v_company:=OLD.user_id::text; v_start:=OLD.starts_at; END IF;
+ SELECT timezone INTO v_tz FROM public.business_settings WHERE user_id::text=v_company LIMIT 1;
+ IF v_tz IS NULL OR NOT EXISTS(SELECT 1 FROM pg_timezone_names WHERE name=v_tz) THEN v_tz:='UTC'; END IF;
+ IF (v_start AT TIME ZONE v_tz)::date < (now() AT TIME ZONE v_tz)::date OR (TG_OP='UPDATE' AND (NEW.starts_at AT TIME ZONE v_tz)::date < (now() AT TIME ZONE v_tz)::date) THEN RAISE EXCEPTION 'block_history_immutable' USING ERRCODE='42501'; END IF;
+ IF TG_OP='DELETE' THEN RETURN OLD; END IF; RETURN NEW;
+END $$;
+REVOKE ALL ON FUNCTION chair_hour_private.guard_past_blocks() FROM PUBLIC,anon,authenticated;
+DROP TRIGGER IF EXISTS chair_guard_past_blocks ON public.agenda_blocks;
+CREATE TRIGGER chair_guard_past_blocks BEFORE INSERT OR UPDATE OR DELETE ON public.agenda_blocks FOR EACH ROW EXECUTE FUNCTION chair_hour_private.guard_past_blocks();
 -- Restrictive policies intersect EVERY legacy permissive policy, including own-row grants.
 ALTER TABLE public.finance_records ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS chair_finance_owner_only ON public.finance_records;
@@ -232,7 +255,7 @@ DO $$ DECLARE r record; definition text; guard text; BEGIN
  $g$;
  FOR r IN SELECT p.oid FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
   WHERE n.nspname='public' AND p.prolang=(SELECT oid FROM pg_language WHERE lanname='plpgsql')
-  AND p.proname=ANY(ARRAY['get_finance_stats','get_monthly_finance_history','get_dashboard_stats','get_dashboard_insights','get_dashboard_actions','get_aios_diagnostic','get_marketing_opportunities','get_professional_finance_summary','get_professional_commission_details','get_commissions_due'])
+  AND p.proname=ANY(ARRAY['get_finance_stats','get_monthly_finance_history','get_dashboard_stats','get_dashboard_insights','get_dashboard_actions','get_aios_diagnostic','get_marketing_opportunities','get_professional_finance_summary','get_professional_commission_details','get_commissions_due','mark_expense_as_paid','recalculate_pending_commissions','update_commission_record'])
  LOOP
   definition:=pg_get_functiondef(r.oid);
   IF position(guard IN definition)=0 THEN EXECUTE regexp_replace(definition,'\mBEGIN\M',guard,'i'); END IF;
@@ -246,7 +269,7 @@ DO $$ DECLARE d text; BEGIN
 END $$;
 -- Close legacy completion entrypoints too. A wrapper alone is not a security boundary.
 DO $$ DECLARE r record; definition text; guard text; BEGIN
- FOR r IN SELECT p.oid,p.proname FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+ FOR r IN SELECT p.oid,p.proname,p.proargnames FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
  WHERE n.nspname='public' AND p.proname=ANY(ARRAY['complete_appointment','complete_appointment_with_duration','settle_queue_ticket','settle_queue_ticket_with_duration']) LOOP
  guard:=$g$BEGIN
  IF auth.uid() IS NULL OR COALESCE(public.get_auth_role(),'') NOT IN ('owner','staff') THEN RAISE EXCEPTION 'not_authorized' USING ERRCODE='42501'; END IF;
@@ -267,6 +290,16 @@ DO $$ DECLARE r record; definition text; guard text; BEGIN
  AND (p_professional_id IS NULL OR p_professional_id=t.id)
  AND t.user_id::text=q.business_id::text AND t.staff_user_id=auth.uid() AND t.active AND t.deleted_at IS NULL
  ) THEN RAISE EXCEPTION 'not_authorized' USING ERRCODE='42501'; END IF;
+ $g$;
+ END IF;
+ IF r.proname LIKE 'complete_%' AND 'p_received_by'=ANY(r.proargnames) THEN
+ guard:=guard||$g$
+ IF (p_received_by IS NOT NULL AND NOT EXISTS(SELECT 1 FROM public.team_members WHERE id=p_received_by AND user_id::text=public.get_auth_company_id() AND deleted_at IS NULL)) OR (p_completed_by IS NOT NULL AND NOT EXISTS(SELECT 1 FROM public.team_members WHERE id=p_completed_by AND user_id::text=public.get_auth_company_id() AND deleted_at IS NULL)) THEN RAISE EXCEPTION 'not_authorized' USING ERRCODE='42501'; END IF;
+ $g$;
+ END IF;
+ IF r.proname LIKE 'settle_%' THEN
+ guard:=guard||$g$
+ IF EXISTS(SELECT 1 FROM public.queue_entries q WHERE q.id=p_entry_id AND q.business_id::text=public.get_auth_company_id() AND COALESCE(p_professional_id,q.professional_id) IS NOT NULL AND NOT EXISTS(SELECT 1 FROM public.team_members t WHERE t.id=COALESCE(p_professional_id,q.professional_id) AND t.user_id::text=q.business_id::text AND t.deleted_at IS NULL)) THEN RAISE EXCEPTION 'not_authorized' USING ERRCODE='42501'; END IF;
  $g$;
  END IF;
  IF r.proname='complete_appointment' THEN
@@ -335,7 +368,7 @@ BEGIN
  -- Under the same row lock, a lost response/retry cannot sell or deduct stock twice.
  IF a.status='Completed' THEN RETURN; END IF;
  IF a.status IN ('Cancelled','NoShow') THEN RAISE EXCEPTION 'invalid_status' USING ERRCODE='22023'; END IF;
- IF p_machine_fee_percent IS NULL OR p_machine_fee_percent NOT BETWEEN 0 AND 100 OR p_machine_fee_amount IS NULL OR p_machine_fee_amount<0 OR p_machine_fee_amount>COALESCE(p_final_price,a.price) OR COALESCE(p_final_price,a.price)<0 THEN RAISE EXCEPTION 'invalid_price' USING ERRCODE='22023'; END IF;
+ IF p_machine_fee_percent IS NULL OR p_machine_fee_percent NOT BETWEEN 0 AND 100 OR p_machine_fee_amount IS NULL OR p_machine_fee_amount<0 OR p_machine_fee_amount>COALESCE(p_final_price,a.price) OR COALESCE(p_final_price,a.price) IS NULL OR COALESCE(p_final_price,a.price)<0 THEN RAISE EXCEPTION 'invalid_price' USING ERRCODE='22023'; END IF;
  IF jsonb_typeof(p_products) IS DISTINCT FROM 'array' OR jsonb_array_length(p_products)>100 THEN RAISE EXCEPTION 'invalid_products' USING ERRCODE='22023'; END IF;
  IF EXISTS(SELECT 1 FROM jsonb_to_recordset(p_products) AS x(product_id uuid,quantity integer) WHERE x.product_id IS NULL OR x.quantity IS NULL OR x.quantity<=0) THEN RAISE EXCEPTION 'invalid_quantity' USING ERRCODE='22023'; END IF;
  IF public.get_auth_role()='staff' AND (p_received_by IS NOT NULL AND p_received_by<>a.professional_id OR p_completed_by IS NOT NULL AND p_completed_by<>a.professional_id) THEN RAISE EXCEPTION 'not_authorized' USING ERRCODE='42501'; END IF;
@@ -349,4 +382,28 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION public.complete_appointment_checkout_v1(uuid,text,uuid,uuid,numeric,numeric,numeric,integer,jsonb) FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.complete_appointment_checkout_v1(uuid,text,uuid,uuid,numeric,numeric,numeric,integer,jsonb) TO authenticated;
+CREATE OR REPLACE FUNCTION public.settle_queue_checkout_v1(
+ p_entry_id uuid,p_service_name text DEFAULT NULL,p_final_price numeric DEFAULT NULL,p_professional_id uuid DEFAULT NULL,p_payment_method text DEFAULT NULL,
+ p_actual_duration_minutes integer DEFAULT NULL,p_products jsonb DEFAULT '[]')
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
+DECLARE q public.queue_entries%ROWTYPE; a public.appointments%ROWTYPE; line record; v_company text:=public.get_auth_company_id();
+BEGIN
+ IF auth.uid() IS NULL OR v_company IS NULL OR COALESCE(public.get_auth_role(),'') NOT IN ('owner','staff') THEN RAISE EXCEPTION 'not_authorized' USING ERRCODE='42501'; END IF;
+ SELECT * INTO q FROM public.queue_entries WHERE id=p_entry_id AND business_id::text=v_company FOR UPDATE;
+ IF NOT FOUND THEN RAISE EXCEPTION 'not_authorized' USING ERRCODE='42501'; END IF;
+ IF public.get_auth_role()='staff' AND NOT EXISTS(SELECT 1 FROM public.team_members t WHERE t.id=q.professional_id AND t.user_id::text=v_company AND t.staff_user_id=auth.uid() AND t.active AND t.deleted_at IS NULL AND (p_professional_id IS NULL OR p_professional_id=t.id)) THEN RAISE EXCEPTION 'not_authorized' USING ERRCODE='42501'; END IF;
+ IF q.ticket_status='settled' THEN RETURN; END IF;
+ IF q.payment_status='awaiting_confirmation' THEN RAISE EXCEPTION 'payment_confirmation_required' USING ERRCODE='22023'; END IF;
+ IF COALESCE(p_final_price,q.service_price_cents/100.0,0)<0 THEN RAISE EXCEPTION 'invalid_price' USING ERRCODE='22023'; END IF;
+ IF jsonb_typeof(p_products) IS DISTINCT FROM 'array' OR jsonb_array_length(p_products)>100 THEN RAISE EXCEPTION 'invalid_products' USING ERRCODE='22023'; END IF;
+ IF EXISTS(SELECT 1 FROM jsonb_to_recordset(p_products) AS x(product_id uuid,quantity integer) WHERE x.product_id IS NULL OR x.quantity IS NULL OR x.quantity<=0) THEN RAISE EXCEPTION 'invalid_quantity' USING ERRCODE='22023'; END IF;
+ PERFORM public.settle_queue_ticket_with_duration(p_entry_id,p_service_name,p_final_price,p_professional_id,p_payment_method,p_actual_duration_minutes);
+ SELECT * INTO a FROM public.appointments WHERE id=(SELECT settled_appointment_id FROM public.queue_entries WHERE id=p_entry_id) AND user_id::text=v_company;
+ IF NOT FOUND THEN RAISE EXCEPTION 'missing_appointment'; END IF;
+ FOR line IN SELECT x.product_id,sum(x.quantity)::integer AS quantity FROM jsonb_to_recordset(p_products) AS x(product_id uuid,quantity integer) GROUP BY x.product_id ORDER BY x.product_id LOOP
+  PERFORM chair_hour_private.sell_product(line.product_id,line.quantity,a.id,a.client_id,a.professional_id,COALESCE(p_payment_method,q.payment_method));
+ END LOOP;
+END $$;
+REVOKE ALL ON FUNCTION public.settle_queue_checkout_v1(uuid,text,numeric,uuid,text,integer,jsonb) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.settle_queue_checkout_v1(uuid,text,numeric,uuid,text,integer,jsonb) TO authenticated;
 COMMIT;

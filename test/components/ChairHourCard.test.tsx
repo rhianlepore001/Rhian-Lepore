@@ -11,7 +11,7 @@ vi.mock('@/hooks/useTenantLocale', () => ({ useTenantLocale: () => ({ formatMone
 vi.mock('@/hooks/useBrutalTheme', () => ({ useBrutalTheme: () => ({ colors: { text: '', textMuted: '', border: '', card: '', textSecondary: '' }, radius: { card: '' }, density: { cardPadding: '' }, shadow: { card: '' }, classes: {} }) }));
 vi.mock('@/hooks/useChairHour', () => ({ useChairHour: () => ({ data: state.data, status: state.status, retry: vi.fn() }) }));
 
-const metrics = { available_minutes: 600, worked_minutes: 300, estimated_count: 1, revenue: 500, revenue_per_worked_hour: 100, revenue_per_available_hour: 50, occupancy: 0.5, cost_per_hour: 25, margin_per_hour: 75, idle_cost: 125 };
+const metrics = { available_minutes: 600, worked_minutes: 300, estimated_count: 1, revenue: 500, revenue_per_worked_hour: 100, revenue_per_available_hour: 50, occupancy: 0.5, cost_per_hour: 25, margin_per_hour: 25, idle_cost: 125 };
 const mount = () => render(<MemoryRouter><ChairHourCard month="2026-11-01" /></MemoryRouter>);
 
 beforeEach(() => { state.role = 'owner'; state.teamMemberId = '1'; state.theme = 'barber'; state.status = 'ready'; state.data = { month: '2026-11-01', role: 'owner', total: metrics, professionals: [{ id: '1', name: 'Ana', ...metrics }], services: [{ name: 'Corte', status: 'loss' }] }; });
@@ -44,6 +44,20 @@ describe('hora de trabalho', () => {
     state.data = { month: '2026-11-01', role: 'owner', total: { ...metrics, available_minutes: null, cost_per_hour: null, margin_per_hour: null, idle_cost: null, revenue_per_available_hour: null }, professionals: [], services: [] }; mount();
     expect(screen.getByText(/configure.*horário/i)).toBeInTheDocument();
     expect(screen.queryByText(/Infinity|NaN/)).not.toBeInTheDocument();
+  });
+  it('preserva rendimento conhecido quando a jornada histórica é desconhecida, sem custos para a equipe', () => {
+    state.role = 'staff';
+    state.data = { month:'2026-11-01',role:'staff',history_estimated:true,professionals:[{ id:'1',...metrics,available_minutes:null,revenue_per_available_hour:null,occupancy:null }] };
+    mount();
+    expect(screen.getByText('R$ 100.00')).toBeInTheDocument();
+    expect(screen.queryByText('Custo por hora')).not.toBeInTheDocument();
+    expect(screen.queryByText('Margem por hora')).not.toBeInTheDocument();
+    expect(screen.getByText(/Histórico anterior à implantação/)).toBeInTheDocument();
+  });
+  it('identifica atendimentos não atribuídos sem fabricar métricas', () => {
+    state.data = { month:'2026-11-01',role:'owner',total:metrics,professionals:[],unassigned_attendance_count:2 };
+    mount();
+    expect(screen.getByText(/2 atendimentos sem profissional identificado/)).toBeInTheDocument();
   });
   it('distingue período sem horas disponíveis e mantém receita por hora trabalhada', () => {
     state.data = { month: '2026-11-01', role: 'owner', total: { ...metrics, available_minutes: 0, cost_per_hour: null, margin_per_hour: null, idle_cost: null, revenue_per_available_hour: null }, professionals: [], services: [] }; mount();

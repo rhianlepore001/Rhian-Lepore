@@ -605,15 +605,17 @@ export async function settleQueueTicket(input: {
   professionalId?: string | null;
   paymentMethod?: string | null;
   actualDurationMinutes?: number | null;
+  products?: { productId: string; quantity: number }[];
 }) {
   const hasDuration = input.actualDurationMinutes !== undefined;
-  const { error } = await supabase.rpc(hasDuration ? 'settle_queue_ticket_with_duration' : 'settle_queue_ticket', {
+  const { error } = await supabase.rpc(input.products !== undefined ? 'settle_queue_checkout_v1' : hasDuration ? 'settle_queue_ticket_with_duration' : 'settle_queue_ticket', {
     p_entry_id: input.entryId,
     p_service_name: input.serviceName ?? null,
     p_final_price: input.finalPrice ?? null,
     p_professional_id: input.professionalId ?? null,
     p_payment_method: input.paymentMethod ?? null,
-    ...(hasDuration ? { p_actual_duration_minutes: input.actualDurationMinutes } : {}),
+    ...(hasDuration || input.products !== undefined ? { p_actual_duration_minutes: input.actualDurationMinutes ?? null } : {}),
+    ...(input.products !== undefined ? { p_products: input.products.map(line => ({ product_id: line.productId, quantity: line.quantity })) } : {}),
   });
   if (error) throw error;
 }

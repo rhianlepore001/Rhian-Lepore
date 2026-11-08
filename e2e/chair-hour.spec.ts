@@ -32,7 +32,7 @@ for (const theme of ['barber', 'beauty']) for (const mode of ['dark', 'light']) 
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth)).toBe(true);
     await page.screenshot({path:`/workspace/artifacts/chair-local-20261108/checkout-${theme}-${mode}-${width}.png`,fullPage:true});
     await page.getByLabel('Tempo de trabalho').fill('55');
-    await page.getByLabel('PIX',{exact:true}).check();
+    await page.getByText('PIX',{exact:true}).click();
     await page.getByLabel(/Recebido por/i).selectOption('owner');
     await page.getByRole('button',{name:'Confirmar Pagamento'}).click();
     await expect.poll(()=>page.evaluate(()=>(window as unknown as {fixtureCheckout?:{actualDurationMinutes:number}}).fixtureCheckout?.actualDurationMinutes)).toBe(55);

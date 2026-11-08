@@ -23,6 +23,7 @@ export interface ChairHourData {
   total?: HourMetrics | null;
   services?: { name: string; status: string | null }[];
   services_pending_count?: number;
+  history_estimated?: boolean;
 }
 
 export function useChairHour(month: string, professionalId: string | null = null, endDate: string | null = null) {

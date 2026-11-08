@@ -29,6 +29,7 @@ export const checkoutInputSchema = z.object({
   finalPrice: moneyAmountSchema,
   machineFeePercent: z.number().finite().min(0).max(100),
   machineFeeAmount: moneyAmountSchema,
+  products: z.array(z.object({ productId: uuidSchema, quantity: z.number().int().positive() })).max(100).optional(),
   actualDurationMinutes: z.number().int().min(1).max(1440).nullable().optional(),
 });
 

@@ -122,7 +122,7 @@ describe('CheckoutModal', () => {
     fireEvent.click(screen.getByLabelText('PIX'));
     fireEvent.change(screen.getByLabelText(/recebido por/i), { target: { value: 'owner' } });
     fireEvent.click(screen.getByText('Confirmar Pagamento'));
-    await waitFor(() => expect(supabase.rpc).toHaveBeenCalledWith('complete_appointment_with_duration', expect.objectContaining({ p_appointment_id: 'apt-001', p_actual_duration_minutes: 55 })));
+    await waitFor(() => expect(supabase.rpc).toHaveBeenCalledWith('complete_appointment_checkout_v1', expect.objectContaining({ p_appointment_id: 'apt-001', p_actual_duration_minutes: 55 })));
   });
 
   it('mantém duração estimada nula ao concluir sem ajuste, inclusive sem duração agendada', async () => {
@@ -131,7 +131,7 @@ describe('CheckoutModal', () => {
     fireEvent.click(screen.getByLabelText('PIX'));
     fireEvent.change(screen.getByLabelText(/recebido por/i), { target: { value: 'owner' } });
     fireEvent.click(screen.getByText('Confirmar Pagamento'));
-    await waitFor(() => expect(supabase.rpc).toHaveBeenCalledWith('complete_appointment_with_duration', expect.objectContaining({ p_actual_duration_minutes: null })));
+    await waitFor(() => expect(supabase.rpc).toHaveBeenCalledWith('complete_appointment_checkout_v1', expect.objectContaining({ p_actual_duration_minutes: null })));
   });
 
   it('não conclui com tempo de trabalho inválido', () => {
@@ -141,7 +141,7 @@ describe('CheckoutModal', () => {
     fireEvent.change(screen.getByLabelText(/recebido por/i), { target: { value: 'owner' } });
     fireEvent.click(screen.getByText('Confirmar Pagamento'));
     expect(screen.getByText(/informe um tempo de trabalho válido/i)).toBeInTheDocument();
-    expect(supabase.rpc).not.toHaveBeenCalledWith('complete_appointment_with_duration', expect.anything());
+    expect(supabase.rpc).not.toHaveBeenCalledWith('complete_appointment_checkout_v1', expect.anything());
   });
 
   it('exibe mensagem de erro ao confirmar sem payment_method', () => {
@@ -197,7 +197,7 @@ describe('CheckoutModal', () => {
     fireEvent.click(screen.getByText('Confirmar Pagamento'));
 
     await waitFor(() => {
-      expect(supabase.rpc).toHaveBeenCalledWith('complete_appointment_with_duration', {
+      expect(supabase.rpc).toHaveBeenCalledWith('complete_appointment_checkout_v1', {
         p_appointment_id: 'apt-001',
         p_payment_method: 'debit',
         p_received_by: '11111111-1111-4111-8111-111111111111',
@@ -206,6 +206,7 @@ describe('CheckoutModal', () => {
         p_machine_fee_percent: 2.5,
         p_machine_fee_amount: 1.75,
         p_actual_duration_minutes: null,
+        p_products: [],
       });
     });
     expect(supabase.from).not.toHaveBeenCalledWith('appointments');

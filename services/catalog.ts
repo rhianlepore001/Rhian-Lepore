@@ -22,16 +22,10 @@ import {
 
 export async function listProducts(input: ListProductsInput): Promise<Product[]> {
   const parsed = listProductsInputSchema.parse(input);
-  let query = supabase
-    .from('products')
-    .select('*')
-    .eq('company_id', parsed.companyId);
-
-  if (!parsed.includeInactive) {
-    query = query.eq('is_active', true);
-  }
-
-  const { data, error } = await query.order('name');
+  const { data, error } = await supabase.rpc('get_checkout_products_v1', {
+    p_company_id: parsed.companyId,
+    p_include_inactive: parsed.includeInactive,
+  });
   if (error) throw error;
   return (data || []).flatMap(item => {
     const parsed = productSchema.safeParse(item);

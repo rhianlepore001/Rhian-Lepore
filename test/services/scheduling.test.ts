@@ -75,6 +75,16 @@ describe('scheduling service', () => {
     });
   });
 
+  it('envia produtos e duração em uma única transação, sem venda prévia', async () => {
+    await completeAppointment({ appointmentId: 'apt-001', paymentMethod: 'pix', finalPrice: 80,
+      machineFeePercent: 0, machineFeeAmount: 0, actualDurationMinutes: null,
+      products: [{ productId: '11111111-1111-4111-8111-111111111111', quantity: 2 }] } as any);
+    expect(supabase.rpc).toHaveBeenCalledTimes(1);
+    expect(supabase.rpc).toHaveBeenCalledWith('complete_appointment_checkout_v1', expect.objectContaining({
+      p_products: [{ product_id: '11111111-1111-4111-8111-111111111111', quantity: 2 }], p_actual_duration_minutes: null,
+    }));
+  });
+
   it('completeAppointment propaga erro da RPC', async () => {
     (supabase.rpc as any).mockResolvedValue({
       data: null,

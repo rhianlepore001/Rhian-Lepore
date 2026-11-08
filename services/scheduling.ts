@@ -102,7 +102,7 @@ export async function completeAppointment(input: CheckoutInput): Promise<void> {
   const parsed = checkoutInputSchema.parse(input);
 
   const durationProvided = parsed.actualDurationMinutes !== undefined;
-  const { error } = await supabase.rpc(durationProvided ? 'complete_appointment_with_duration' : 'complete_appointment', {
+  const { error } = await supabase.rpc(parsed.products !== undefined ? 'complete_appointment_checkout_v1' : durationProvided ? 'complete_appointment_with_duration' : 'complete_appointment', {
     p_appointment_id: parsed.appointmentId,
     p_payment_method: parsed.paymentMethod,
     p_received_by: parsed.receivedBy ?? null,
@@ -110,7 +110,8 @@ export async function completeAppointment(input: CheckoutInput): Promise<void> {
     p_final_price: parsed.finalPrice,
     p_machine_fee_percent: parsed.machineFeePercent,
     p_machine_fee_amount: parsed.machineFeeAmount,
-    ...(durationProvided ? { p_actual_duration_minutes: parsed.actualDurationMinutes } : {}),
+    ...(durationProvided || parsed.products !== undefined ? { p_actual_duration_minutes: parsed.actualDurationMinutes ?? null } : {}),
+    ...(parsed.products !== undefined ? { p_products: parsed.products.map(line => ({ product_id: line.productId, quantity: line.quantity })) } : {}),
   });
 
   if (error) throw error;

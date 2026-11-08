@@ -86,13 +86,22 @@ describe('catalog service', () => {
   });
 
   it('lista produtos ativos por company_id', async () => {
+    mocks.rpcMock.mockResolvedValueOnce({ data: [product], error: null });
     const result = await listProducts({ companyId: product.company_id });
 
     expect(result).toHaveLength(1);
     expect(result[0].name).toBe('Pomada');
-    expect(supabase.from).toHaveBeenCalledWith('products');
-    expect(mocks.companyEqMock).toHaveBeenCalledWith('company_id', product.company_id);
-    expect(mocks.activeEqMock).toHaveBeenCalledWith('is_active', true);
+    expect(supabase.rpc).toHaveBeenCalledWith('get_checkout_products_v1', {
+      p_company_id: product.company_id, p_include_inactive: false,
+    });
+    expect(supabase.from).not.toHaveBeenCalled();
+  });
+
+  it('aceita o catálogo da equipe sem inventar um custo zero', async () => {
+    const { cost_price: _privateCost, ...safeProduct } = product;
+    mocks.rpcMock.mockResolvedValueOnce({ data: [safeProduct], error: null });
+    const result = await listProducts({ companyId: product.company_id });
+    expect(result[0].cost_price).toBeNull();
   });
 
   it('cria produto ativo com estoque e comissão', async () => {

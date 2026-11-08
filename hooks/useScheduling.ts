@@ -36,7 +36,12 @@ export function useCheckout() {
   return useMutation({
     mutationKey: ['scheduling', 'checkout'],
     mutationFn: completeAppointment,
-    onSuccess: () => invalidateAgendaQueries(queryClient),
+    onSuccess: () => {
+      invalidateAgendaQueries(queryClient);
+      for (const key of ['products', 'catalog', 'finance', 'chair-hour', 'staff-performance']) {
+        void queryClient.invalidateQueries({ queryKey: [key] });
+      }
+    },
   });
 }
 

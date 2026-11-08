@@ -11,7 +11,7 @@ import type { Appointment } from '@/types';
 import { calcCheckoutNetAmount, calcMachineFee, getMachineFeePercent } from '@/services/scheduling';
 import { useCheckout } from '@/hooks/useScheduling';
 import type { CheckoutPaymentMethod } from '@/types/scheduling';
-import { useAppointmentProductLines, useProducts, useSellProduct } from '@/hooks/useCatalog';
+import { useAppointmentProductLines, useProducts } from '@/hooks/useCatalog';
 import type { Product } from '@/types/catalog';
 import { useTenantLocale } from '../hooks/useTenantLocale';
 
@@ -108,7 +108,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const { showToast } = useToast();
   const { colors, accent, font, status } = useBrutalTheme();
   const checkout = useCheckout();
-  const sellProductMutation = useSellProduct();
   const { isPending, mutateAsync, reset } = checkout;
 
   const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethod | ''>('');
@@ -195,7 +194,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const feePercent = parseFloat(machineFeePercent) || 0;
   const feeAmount = paymentMethod ? calcMachineFee(finalPrice, paymentMethod, feePercent) : 0;
   const netAmount = calcCheckoutNetAmount(finalPrice, feeAmount);
-  const loading = isPending || sellProductMutation.isPending;
+  const loading = isPending;
 
   const getProductById = (id: string) => availableProducts.find(p => p.id === id);
 
@@ -290,29 +289,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     setErrors({});
 
     try {
-      const sellerId =
-        receivedBy && receivedBy !== 'owner'
-          ? receivedBy
-          : (appointment as { professional_id?: string | null }).professional_id ?? null;
-      const clientId = (appointment as { client_id?: string | null }).client_id ?? null;
-
       const receivedByUUID = receivedBy !== 'owner' ? receivedBy : null;
       // Coberto pela assinatura: registra como 'membership' pra nao poluir o Pix no financeiro
       const effectiveMethod: CheckoutPaymentMethod = isFullyCovered ? 'membership' : (paymentMethod as CheckoutPaymentMethod);
 
-      for (const line of cart) {
-        await sellProductMutation.mutateAsync({
-          productId: line.productId,
-          quantity: line.quantity,
-          appointmentId: appointment.id,
-          professionalId: sellerId,
-          clientId,
-          paymentMethod: effectiveMethod,
-        });
-      }
-
       await mutateAsync({
         appointmentId: appointment.id,
+        products: cart,
         paymentMethod: effectiveMethod,
         receivedBy: receivedByUUID,
         completedBy: receivedByUUID,

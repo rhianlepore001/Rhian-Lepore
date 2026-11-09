@@ -47,6 +47,7 @@ if [ "${CHAIR_BASELINE:-0}" != "1" ]; then
  "${PSQL[@]}" -f "$ROOT/supabase/tests/chair_hour_atomic.test.sql"
  "${PSQL[@]}" -f "$ROOT/supabase/tests/chair_hour_history.test.sql"
  "${PSQL[@]}" -f "$ROOT/supabase/tests/chair_hour_staff_finance.test.sql"
+ "${PSQL[@]}" -f "$ROOT/supabase/tests/chair_hour_team_checkout.test.sql"
  "${PSQL[@]}" -c "CREATE FUNCTION public.test_concurrent_delay() RETURNS trigger LANGUAGE plpgsql AS \$\$ BEGIN IF OLD.status='Pending' AND NEW.status='Completed' THEN PERFORM pg_sleep(0.3); END IF; RETURN NEW; END \$\$; CREATE TRIGGER test_concurrent_delay BEFORE UPDATE ON public.appointments FOR EACH ROW EXECUTE FUNCTION public.test_concurrent_delay();"
  CALL="SET request.jwt.claim.sub='10000000-0000-0000-0000-000000000001'; SET ROLE authenticated; SELECT public.complete_appointment_checkout_v1('91000000-0000-0000-0000-000000000005',p_actual_duration_minutes=>55,p_products=>'[{\"product_id\":\"94000000-0000-0000-0000-000000000001\",\"quantity\":2}]');"
  "${PSQL[@]}" -c "$CALL" > "$TMP/concurrent1.log" 2>&1 & PID1=$!
@@ -61,7 +62,7 @@ if [ "${CHAIR_BASELINE:-0}" != "1" ]; then
  "${PSQL[@]}" -c "$QCALL" > "$TMP/queue2.log" 2>&1 & QPID2=$!
  wait "$QPID1" || { cat "$TMP/queue1.log"; exit 1; }
  wait "$QPID2" || { cat "$TMP/queue2.log"; exit 1; }
- "${PSQL[@]}" -c "DO \$\$ DECLARE a uuid; BEGIN SELECT settled_appointment_id INTO a FROM public.queue_entries WHERE id='92000000-0000-0000-0000-000000000002'; IF (SELECT count(*) FROM public.product_sales WHERE appointment_id=a)<>1 OR (SELECT stock_quantity FROM public.products LIMIT 1)<>11 THEN RAISE EXCEPTION 'queue concurrent duplicate'; END IF; END \$\$; SELECT 'PASS queue concurrent completion, single sale and stock deduction';"
+ "${PSQL[@]}" -c "DO \$\$ DECLARE a uuid; BEGIN SELECT settled_appointment_id INTO a FROM public.queue_entries WHERE id='92000000-0000-0000-0000-000000000002'; IF (SELECT count(*) FROM public.product_sales WHERE appointment_id=a)<>1 OR (SELECT stock_quantity FROM public.products WHERE id='94000000-0000-0000-0000-000000000001')<>11 THEN RAISE EXCEPTION 'queue concurrent duplicate'; END IF; END \$\$; SELECT 'PASS queue concurrent completion, single sale and stock deduction';"
  "${PSQL[@]}" -f "$ROOT/docs/rollbacks/20261109103000_chair_hour_products_owner_only.sql"
  "${PSQL[@]}" -f "$ROOT/docs/rollbacks/20261108150422_chair_hour_hardening.sql"
  "${PSQL[@]}" -f "$ROOT/docs/rollbacks/20261108150422_chair_hour_hardening.sql"

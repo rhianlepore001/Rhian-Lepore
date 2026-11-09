@@ -14,6 +14,6 @@ DO $$ DECLARE a uuid; BEGIN
  SELECT settled_appointment_id INTO a FROM public.queue_entries WHERE id='92000000-0000-0000-0000-000000000003';
  IF (SELECT count(*) FROM public.product_sales WHERE appointment_id=a)<>1 OR (SELECT actual_duration_minutes FROM public.appointments WHERE id=a)<>55 THEN RAISE EXCEPTION 'queue retry duplicated sale/changed time'; END IF;
  IF (SELECT sum(revenue) FROM public.finance_records WHERE appointment_id=a)<>140 THEN RAISE EXCEPTION 'queue receipt total'; END IF;
- IF (SELECT stock_quantity FROM public.products LIMIT 1)<>13 THEN RAISE EXCEPTION 'queue stock'; END IF;
+ IF (SELECT stock_quantity FROM public.products WHERE id='94000000-0000-0000-0000-000000000001')<>13 THEN RAISE EXCEPTION 'queue stock'; END IF;
 END $$;
 SELECT 'PASS queue cart atomic rollback, retry, receipt total, duration' AS result;

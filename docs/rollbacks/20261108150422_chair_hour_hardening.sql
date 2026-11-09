@@ -5,6 +5,7 @@ BEGIN;
 DROP FUNCTION IF EXISTS public.settle_queue_checkout_v1(uuid,text,numeric,uuid,text,integer,jsonb);
 DROP FUNCTION IF EXISTS public.complete_appointment_checkout_v1(uuid,text,uuid,uuid,numeric,numeric,numeric,integer,jsonb);
 DROP FUNCTION IF EXISTS public.get_checkout_products_v1(text,boolean);
+DROP FUNCTION IF EXISTS public.get_product_sale_prices_v1(uuid[]);
 DROP TRIGGER IF EXISTS chair_capture_professional ON public.team_members;
 DROP TRIGGER IF EXISTS chair_capture_business ON public.business_settings;
 DROP TRIGGER IF EXISTS chair_guard_past_blocks ON public.agenda_blocks;

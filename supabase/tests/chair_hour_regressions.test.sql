@@ -8,13 +8,14 @@ DO $$ DECLARE r jsonb; BEGIN
  RAISE EXCEPTION 'REGRESSION: inactive historical professional disappeared'; END IF;
 END $$;
 RESET ROLE;
--- Staff cannot close a colleague, even through the legacy entry point.
-SET request.jwt.claim.sub='10000000-0000-0000-0000-0000000000b1';
+-- Rule approved 9/11: any ACTIVE member closes colleagues' work of the SAME business (see
+-- chair_hour_team_checkout.test.sql). Another business's staff never can, even via the legacy entry point.
+SET request.jwt.claim.sub='30000000-0000-0000-0000-0000000000b1';
 SET ROLE authenticated;
 DO $$ BEGIN
  BEGIN
  PERFORM public.complete_appointment_with_duration('91000000-0000-0000-0000-000000000001');
- RAISE EXCEPTION 'REGRESSION: colleague checkout accepted';
+ RAISE EXCEPTION 'REGRESSION: cross-business checkout accepted';
  EXCEPTION WHEN insufficient_privilege THEN NULL; END;
 END $$;
 RESET ROLE;

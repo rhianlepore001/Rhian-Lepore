@@ -262,7 +262,7 @@ const AppRoutes: React.FC = () => {
           <Route path="/clientes" element={<ClientsRouteGuard><Clients /></ClientsRouteGuard>} />
           <Route path="/clientes/:id" element={<ClientsRouteGuard><ClientCRM /></ClientsRouteGuard>} />
           <Route path="/produtos" element={<Products />} />
-          <Route path="/financeiro" element={<Finance />} />
+          <Route path="/financeiro" element={<OwnerRouteGuard><Finance /></OwnerRouteGuard>} />
           <Route path="/financeiro/performance" element={<PerformanceAccessGuard><OwnerRouteGuard><Suspense fallback={<PerformancePageSkeleton />}><StaffPerformance /></Suspense></OwnerRouteGuard></PerformanceAccessGuard>} />
           <Route path="/insights" element={<OwnerRouteGuard><Reports /></OwnerRouteGuard>} />
           <Route path="/meus-insights" element={<StaffInsights />} />

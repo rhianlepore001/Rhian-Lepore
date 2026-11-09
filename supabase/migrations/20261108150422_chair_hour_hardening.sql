@@ -296,20 +296,19 @@ DO $$ DECLARE r record; definition text; guard text; BEGIN
  $g$;
  IF r.proname LIKE 'complete_%' THEN
  guard:=guard||$g$
- IF public.get_auth_role()='staff' AND NOT EXISTS (
- SELECT 1 FROM public.appointments a JOIN public.team_members t ON t.id=a.professional_id
- WHERE a.id=p_appointment_id AND a.user_id::text=public.get_auth_company_id()
- AND t.user_id::text=a.user_id::text AND t.staff_user_id=auth.uid() AND t.active AND t.deleted_at IS NULL
- ) THEN RAISE EXCEPTION 'not_authorized' USING ERRCODE='42501'; END IF;
+ IF public.get_auth_role()='staff' AND (NOT EXISTS (
+ SELECT 1 FROM public.team_members t WHERE t.user_id::text=public.get_auth_company_id()
+ AND t.staff_user_id=auth.uid() AND t.active AND t.deleted_at IS NULL
+ ) OR NOT EXISTS (SELECT 1 FROM public.appointments a WHERE a.id=p_appointment_id AND a.user_id::text=public.get_auth_company_id()))
+ THEN RAISE EXCEPTION 'not_authorized' USING ERRCODE='42501'; END IF;
  $g$;
  ELSE
  guard:=guard||$g$
- IF public.get_auth_role()='staff' AND NOT EXISTS (
- SELECT 1 FROM public.queue_entries q JOIN public.team_members t ON t.id=q.professional_id
- WHERE q.id=p_entry_id AND q.business_id::text=public.get_auth_company_id()
- AND (p_professional_id IS NULL OR p_professional_id=t.id)
- AND t.user_id::text=q.business_id::text AND t.staff_user_id=auth.uid() AND t.active AND t.deleted_at IS NULL
- ) THEN RAISE EXCEPTION 'not_authorized' USING ERRCODE='42501'; END IF;
+ IF public.get_auth_role()='staff' AND (NOT EXISTS (
+ SELECT 1 FROM public.team_members t WHERE t.user_id::text=public.get_auth_company_id()
+ AND t.staff_user_id=auth.uid() AND t.active AND t.deleted_at IS NULL
+ ) OR NOT EXISTS (SELECT 1 FROM public.queue_entries q WHERE q.id=p_entry_id AND q.business_id::text=public.get_auth_company_id()))
+ THEN RAISE EXCEPTION 'not_authorized' USING ERRCODE='42501'; END IF;
  $g$;
  END IF;
  IF r.proname LIKE 'complete_%' AND 'p_received_by'=ANY(r.proargnames) THEN
@@ -346,6 +345,20 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION public.get_checkout_products_v1(text,boolean) FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.get_checkout_products_v1(text,boolean) TO authenticated;
+-- Appointment product lines need the SALE price only. Own business, inactive included, never costs.
+CREATE OR REPLACE FUNCTION public.get_product_sale_prices_v1(p_product_ids uuid[])
+RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=public,pg_temp AS $$
+DECLARE v_company text:=public.get_auth_company_id(); v_role text:=public.get_auth_role(); result jsonb;
+BEGIN
+ IF auth.uid() IS NULL OR v_company IS NULL OR COALESCE(v_role,'') NOT IN ('owner','staff') THEN RAISE EXCEPTION 'not_authorized' USING ERRCODE='42501'; END IF;
+ IF v_role='staff' AND NOT EXISTS(SELECT 1 FROM public.team_members t WHERE t.user_id::text=v_company AND t.staff_user_id=auth.uid() AND t.active AND t.deleted_at IS NULL) THEN RAISE EXCEPTION 'not_authorized' USING ERRCODE='42501'; END IF;
+ IF p_product_ids IS NULL OR cardinality(p_product_ids)>200 THEN RAISE EXCEPTION 'invalid_products' USING ERRCODE='22023'; END IF;
+ SELECT COALESCE(jsonb_agg(jsonb_build_object('id',p.id,'name',p.name,'sale_price',p.sale_price) ORDER BY p.name),'[]') INTO result
+ FROM public.products p WHERE p.company_id::text=v_company AND p.id=ANY(p_product_ids);
+ RETURN result;
+END $$;
+REVOKE ALL ON FUNCTION public.get_product_sale_prices_v1(uuid[]) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.get_product_sale_prices_v1(uuid[]) TO authenticated;
 -- Preserve product sales implementation privately; never expose its cost-bearing row to staff.
 DO $$ BEGIN
  IF to_regprocedure('chair_hour_private.sell_product(uuid,integer,uuid,uuid,uuid,text)') IS NULL AND to_regprocedure('public.sell_product(uuid,integer,uuid,uuid,uuid,text)') IS NOT NULL THEN
@@ -359,16 +372,13 @@ DO $$ DECLARE r record; BEGIN
 END $$;
 CREATE OR REPLACE FUNCTION public.sell_product(p_product_id uuid,p_quantity integer,p_appointment_id uuid DEFAULT NULL,p_client_id uuid DEFAULT NULL,p_professional_id uuid DEFAULT NULL,p_payment_method text DEFAULT NULL)
 RETURNS public.product_sales LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
-DECLARE v_sale public.product_sales; v_staff uuid; v_professional uuid:=p_professional_id; v_role text:=public.get_auth_role();
+DECLARE v_sale public.product_sales; v_role text:=public.get_auth_role();
 BEGIN
  IF auth.uid() IS NULL OR COALESCE(v_role,'') NOT IN ('owner','staff') THEN RAISE EXCEPTION 'not_authorized' USING ERRCODE='42501'; END IF;
- IF v_role='staff' THEN
-  SELECT id INTO v_staff FROM public.team_members WHERE user_id::text=public.get_auth_company_id() AND staff_user_id=auth.uid() AND active AND deleted_at IS NULL LIMIT 1;
-  IF v_staff IS NULL OR (p_professional_id IS NOT NULL AND p_professional_id<>v_staff)
-   OR (p_appointment_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM public.appointments WHERE id=p_appointment_id AND user_id::text=public.get_auth_company_id() AND professional_id=v_staff)) THEN RAISE EXCEPTION 'not_authorized' USING ERRCODE='42501'; END IF;
-  v_professional:=v_staff;
- END IF;
- v_sale:=chair_hour_private.sell_product(p_product_id,p_quantity,p_appointment_id,p_client_id,v_professional,p_payment_method);
+ -- Today's rule: any ACTIVE team member sells for the business (the private function keeps
+ -- validating appointment/client/professional against the caller's business).
+ IF v_role='staff' AND NOT EXISTS(SELECT 1 FROM public.team_members WHERE user_id::text=public.get_auth_company_id() AND staff_user_id=auth.uid() AND active AND deleted_at IS NULL) THEN RAISE EXCEPTION 'not_authorized' USING ERRCODE='42501'; END IF;
+ v_sale:=chair_hour_private.sell_product(p_product_id,p_quantity,p_appointment_id,p_client_id,p_professional_id,p_payment_method);
  IF v_role='staff' THEN v_sale.unit_cost_price:=NULL; v_sale.total_cost:=NULL; v_sale.commission_value:=NULL; v_sale.commission_percent:=NULL; END IF;
  RETURN v_sale;
 END $$;
@@ -384,14 +394,14 @@ BEGIN
  IF auth.uid() IS NULL OR v_company IS NULL OR COALESCE(public.get_auth_role(),'') NOT IN ('owner','staff') THEN RAISE EXCEPTION 'not_authorized' USING ERRCODE='42501'; END IF;
  SELECT * INTO a FROM public.appointments WHERE id=p_appointment_id AND user_id::text=v_company FOR UPDATE;
  IF NOT FOUND THEN RAISE EXCEPTION 'not_authorized' USING ERRCODE='42501'; END IF;
- IF public.get_auth_role()='staff' AND NOT EXISTS(SELECT 1 FROM public.team_members t WHERE t.id=a.professional_id AND t.user_id::text=v_company AND t.staff_user_id=auth.uid() AND t.active AND t.deleted_at IS NULL) THEN RAISE EXCEPTION 'not_authorized' USING ERRCODE='42501'; END IF;
+ -- Today's rule: any ACTIVE team member closes any appointment of the business (colleague's or unassigned).
+ IF public.get_auth_role()='staff' AND NOT EXISTS(SELECT 1 FROM public.team_members t WHERE t.user_id::text=v_company AND t.staff_user_id=auth.uid() AND t.active AND t.deleted_at IS NULL) THEN RAISE EXCEPTION 'not_authorized' USING ERRCODE='42501'; END IF;
  -- Under the same row lock, a lost response/retry cannot sell or deduct stock twice.
  IF a.status='Completed' THEN RETURN; END IF;
  IF a.status IN ('Cancelled','NoShow') THEN RAISE EXCEPTION 'invalid_status' USING ERRCODE='22023'; END IF;
  IF p_machine_fee_percent IS NULL OR p_machine_fee_percent NOT BETWEEN 0 AND 100 OR p_machine_fee_amount IS NULL OR p_machine_fee_amount<0 OR p_machine_fee_amount>COALESCE(p_final_price,a.price) OR COALESCE(p_final_price,a.price) IS NULL OR COALESCE(p_final_price,a.price)<0 THEN RAISE EXCEPTION 'invalid_price' USING ERRCODE='22023'; END IF;
  IF jsonb_typeof(p_products) IS DISTINCT FROM 'array' OR jsonb_array_length(p_products)>100 THEN RAISE EXCEPTION 'invalid_products' USING ERRCODE='22023'; END IF;
  IF EXISTS(SELECT 1 FROM jsonb_to_recordset(p_products) AS x(product_id uuid,quantity integer) WHERE x.product_id IS NULL OR x.quantity IS NULL OR x.quantity<=0) THEN RAISE EXCEPTION 'invalid_quantity' USING ERRCODE='22023'; END IF;
- IF public.get_auth_role()='staff' AND (p_received_by IS NOT NULL AND p_received_by<>a.professional_id OR p_completed_by IS NOT NULL AND p_completed_by<>a.professional_id) THEN RAISE EXCEPTION 'not_authorized' USING ERRCODE='42501'; END IF;
  seller:=COALESCE(p_received_by,a.professional_id);
  -- Validate all references through the duration entrypoint before any stock mutation.
  PERFORM public.complete_appointment_with_duration(p_appointment_id,p_payment_method,p_received_by,p_completed_by,p_machine_fee_percent,p_machine_fee_amount,p_final_price,p_actual_duration_minutes);
@@ -411,7 +421,7 @@ BEGIN
  IF auth.uid() IS NULL OR v_company IS NULL OR COALESCE(public.get_auth_role(),'') NOT IN ('owner','staff') THEN RAISE EXCEPTION 'not_authorized' USING ERRCODE='42501'; END IF;
  SELECT * INTO q FROM public.queue_entries WHERE id=p_entry_id AND business_id::text=v_company FOR UPDATE;
  IF NOT FOUND THEN RAISE EXCEPTION 'not_authorized' USING ERRCODE='42501'; END IF;
- IF public.get_auth_role()='staff' AND NOT EXISTS(SELECT 1 FROM public.team_members t WHERE t.id=q.professional_id AND t.user_id::text=v_company AND t.staff_user_id=auth.uid() AND t.active AND t.deleted_at IS NULL AND (p_professional_id IS NULL OR p_professional_id=t.id)) THEN RAISE EXCEPTION 'not_authorized' USING ERRCODE='42501'; END IF;
+ IF public.get_auth_role()='staff' AND NOT EXISTS(SELECT 1 FROM public.team_members t WHERE t.user_id::text=v_company AND t.staff_user_id=auth.uid() AND t.active AND t.deleted_at IS NULL) THEN RAISE EXCEPTION 'not_authorized' USING ERRCODE='42501'; END IF;
  IF q.ticket_status='settled' THEN RETURN; END IF;
  IF q.payment_status='awaiting_confirmation' THEN RAISE EXCEPTION 'payment_confirmation_required' USING ERRCODE='22023'; END IF;
  IF COALESCE(p_final_price,q.service_price_cents/100.0,0)<0 THEN RAISE EXCEPTION 'invalid_price' USING ERRCODE='22023'; END IF;

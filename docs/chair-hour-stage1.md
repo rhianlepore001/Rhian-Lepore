@@ -28,3 +28,9 @@
 - Playwright usa os componentes reais e dependências de dados simuladas: 320/390 px × barber/beauty × claro/escuro, cartão e checkout. Não é contratação/pagamento real nem integração com clientes reais.
 - Integração remota, merge e deploy dependem da parada confirmada do Codex e revisão do delta. Nada desta execução local aplica migrations em produção.
 - Rollback adicional: exportar `chair_hour_private.history` e `routine_backup` antes; executar o rollback adicional **antes** do rollback da etapa original. Definições e ACLs originais são preservadas para restauração.
+
+## Decisões aprovadas em 9/11/2026 (Rhian)
+- **Fechamento pela equipe (regra de hoje mantida):** qualquer profissional **ativo** do próprio negócio pode "Confirmar e cobrar" qualquer atendimento ou ficha da fila do negócio, inclusive de colega ou sem profissional, por todos os caminhos (`complete_appointment*`, `complete_appointment_checkout_v1`, `settle_queue_ticket*`, `settle_queue_checkout_v1`, `sell_product`). Nunca outro negócio, ex-colaborador ou inativo. O colaborador continua sem ver custos.
+- **Preço dos produtos no agendamento:** lido por `get_product_sale_prices_v1(uuid[])` (SECURITY DEFINER, escopo do negócio do usuário, só id/nome/preço de venda). Se um preço não vier, a gravação falha (`product_price_unavailable`) em vez de salvar R$ 0.
+- **`/financeiro`:** protegido pelo `OwnerRouteGuard`; o colaborador que abrir o endereço é levado ao painel.
+- **Bloqueios de agenda em dias passados:** não podem ser criados, alterados ou apagados (nem pelo dono), para preservar o histórico da hora de cadeira. Aceito como está.

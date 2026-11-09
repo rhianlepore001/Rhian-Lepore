@@ -22,7 +22,7 @@ DO $$ BEGIN
 END $$;
 RESET ROLE;
 DO $$ BEGIN
- IF (SELECT stock_quantity FROM public.products LIMIT 1)<>17 THEN RAISE EXCEPTION 'stock duplicate or rollback failed'; END IF;
+ IF (SELECT stock_quantity FROM public.products WHERE id='94000000-0000-0000-0000-000000000001')<>17 THEN RAISE EXCEPTION 'stock duplicate or rollback failed'; END IF;
  IF (SELECT count(*) FROM public.product_sales WHERE appointment_id='91000000-0000-0000-0000-000000000003')<>1 THEN RAISE EXCEPTION 'duplicate sale'; END IF;
  IF (SELECT count(*) FROM public.finance_records WHERE appointment_id='91000000-0000-0000-0000-000000000003')<>2 THEN RAISE EXCEPTION 'receipt total missing/duplicate'; END IF;
  IF (SELECT sum(revenue) FROM public.finance_records WHERE appointment_id='91000000-0000-0000-0000-000000000003')<>140 THEN RAISE EXCEPTION 'service/product receipts overwritten'; END IF;

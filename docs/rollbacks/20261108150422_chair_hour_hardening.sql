@@ -1,6 +1,6 @@
 -- Local/admin-only rollback. Export chair_hour_private.history and routine_backup first:
 -- removing this version history loses the protection for configuration changes since installation.
--- Execute BEFORE the stage1 rollback. No customer rows/receipts are deleted.
+-- Execute AFTER the 20261109103000 rollback and BEFORE the stage1 rollback. No customer rows/receipts are deleted.
 BEGIN;
 DROP FUNCTION IF EXISTS public.settle_queue_checkout_v1(uuid,text,numeric,uuid,text,integer,jsonb);
 DROP FUNCTION IF EXISTS public.complete_appointment_checkout_v1(uuid,text,uuid,uuid,numeric,numeric,numeric,integer,jsonb);
@@ -10,6 +10,10 @@ DROP TRIGGER IF EXISTS chair_capture_business ON public.business_settings;
 DROP TRIGGER IF EXISTS chair_guard_past_blocks ON public.agenda_blocks;
 DROP TRIGGER IF EXISTS chair_capture_material ON public.service_costs;
 DROP POLICY IF EXISTS chair_finance_owner_only ON public.finance_records;
+DROP POLICY IF EXISTS chair_finance_read ON public.finance_records;
+DROP POLICY IF EXISTS chair_finance_insert ON public.finance_records;
+DROP POLICY IF EXISTS chair_finance_update ON public.finance_records;
+DROP POLICY IF EXISTS chair_finance_delete ON public.finance_records;
 DROP POLICY IF EXISTS chair_products_owner_only ON public.products;
 DROP POLICY IF EXISTS chair_products_owner_only ON public.product_sales;
 DO $$ DECLARE r record; a record; grantee text; BEGIN

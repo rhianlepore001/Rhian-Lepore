@@ -5,7 +5,7 @@ INSERT INTO public.appointments(id,user_id,client_id,appointment_time,status,pri
 SET request.jwt.claim.sub='10000000-0000-0000-0000-0000000000a1';
 SET ROLE authenticated;
 DO $$ DECLARE r jsonb; BEGIN
- IF EXISTS(SELECT 1 FROM public.products) OR EXISTS(SELECT 1 FROM public.product_sales) OR EXISTS(SELECT 1 FROM public.finance_records) THEN RAISE EXCEPTION 'staff reads raw costs'; END IF;
+ IF EXISTS(SELECT 1 FROM public.products) OR EXISTS(SELECT 1 FROM public.product_sales) OR EXISTS(SELECT 1 FROM public.finance_records WHERE professional_id IS DISTINCT FROM '20000000-0000-0000-0000-0000000000a1' OR type IS DISTINCT FROM 'revenue') THEN RAISE EXCEPTION 'staff reads raw costs'; END IF;
  r:=public.get_checkout_products_v1('10000000-0000-0000-0000-000000000001');
  IF jsonb_array_length(r)<>1 OR r->0 ?| ARRAY['cost_price','commission_percent','profit','total_cost'] THEN RAISE EXCEPTION 'catalog cost leak: %',r; END IF;
  BEGIN PERFORM public.get_finance_stats('10000000-0000-0000-0000-000000000001',NULL,NULL,NULL); RAISE EXCEPTION 'legacy financial RPC accepted staff'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;

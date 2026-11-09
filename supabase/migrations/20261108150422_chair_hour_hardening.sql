@@ -235,17 +235,37 @@ CREATE TRIGGER chair_guard_past_blocks BEFORE INSERT OR UPDATE OR DELETE ON publ
 -- Restrictive policies intersect EVERY legacy permissive policy, including own-row grants.
 ALTER TABLE public.finance_records ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS chair_finance_owner_only ON public.finance_records;
-CREATE POLICY chair_finance_owner_only ON public.finance_records AS RESTRICTIVE FOR ALL TO authenticated
- USING (user_id::text=public.get_auth_company_id() AND public.get_auth_role()='owner')
- WITH CHECK (user_id::text=public.get_auth_company_id() AND public.get_auth_role()='owner');
-DO $$ DECLARE t text; BEGIN
- FOREACH t IN ARRAY ARRAY['products','product_sales'] LOOP
-  IF to_regclass('public.'||t) IS NOT NULL THEN
-   EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY',t);
-   EXECUTE format('DROP POLICY IF EXISTS chair_products_owner_only ON public.%I',t);
-   EXECUTE format($policy$CREATE POLICY chair_products_owner_only ON public.%I AS RESTRICTIVE FOR ALL TO authenticated USING (company_id::text=public.get_auth_company_id() AND public.get_auth_role()='owner') WITH CHECK (company_id::text=public.get_auth_company_id() AND public.get_auth_role()='owner')$policy$,t);
-  END IF;
- END LOOP;
+DROP POLICY IF EXISTS chair_finance_read ON public.finance_records;
+DROP POLICY IF EXISTS chair_finance_insert ON public.finance_records;
+DROP POLICY IF EXISTS chair_finance_update ON public.finance_records;
+DROP POLICY IF EXISTS chair_finance_delete ON public.finance_records;
+-- Reads: owner sees the tenant; staff keeps exactly today's own-commission access
+-- (legacy "Staff can view own commissions"), narrowed to its own revenue rows of the
+-- member's own tenant: no colleagues, expenses or other financial types.
+CREATE POLICY chair_finance_read ON public.finance_records AS RESTRICTIVE FOR SELECT TO authenticated
+ USING (
+  (user_id::text=(SELECT public.get_auth_company_id()) AND (SELECT public.get_auth_role())='owner')
+  OR (type='revenue' AND EXISTS (SELECT 1 FROM public.team_members tm
+       WHERE tm.id=finance_records.professional_id AND tm.staff_user_id=(SELECT auth.uid())
+         AND tm.user_id::text=finance_records.user_id::text))
+ );
+-- Writes stay owner-only (staff never had a write policy here).
+CREATE POLICY chair_finance_insert ON public.finance_records AS RESTRICTIVE FOR INSERT TO authenticated
+ WITH CHECK (user_id::text=(SELECT public.get_auth_company_id()) AND (SELECT public.get_auth_role())='owner');
+CREATE POLICY chair_finance_update ON public.finance_records AS RESTRICTIVE FOR UPDATE TO authenticated
+ USING (user_id::text=(SELECT public.get_auth_company_id()) AND (SELECT public.get_auth_role())='owner')
+ WITH CHECK (user_id::text=(SELECT public.get_auth_company_id()) AND (SELECT public.get_auth_role())='owner');
+CREATE POLICY chair_finance_delete ON public.finance_records AS RESTRICTIVE FOR DELETE TO authenticated
+ USING (user_id::text=(SELECT public.get_auth_company_id()) AND (SELECT public.get_auth_role())='owner');
+-- product_sales carries cost/commission of every colleague: owner-only now.
+-- products is restricted in 20261109103000 AFTER the frontend that reads the catalog through
+-- get_checkout_products_v1 is live, so staff checkout keeps listing products in between.
+DO $$ BEGIN
+ IF to_regclass('public.product_sales') IS NOT NULL THEN
+  ALTER TABLE public.product_sales ENABLE ROW LEVEL SECURITY;
+  DROP POLICY IF EXISTS chair_products_owner_only ON public.product_sales;
+  CREATE POLICY chair_products_owner_only ON public.product_sales AS RESTRICTIVE FOR ALL TO authenticated USING (company_id::text=public.get_auth_company_id() AND public.get_auth_role()='owner') WITH CHECK (company_id::text=public.get_auth_company_id() AND public.get_auth_role()='owner');
+ END IF;
 END $$;
 -- Keep the original versioned routines, but close every known financial overload.
 -- No regex-generated authorization based on user data: only this explicit allowlist.

@@ -11,9 +11,10 @@ import type { Appointment } from '@/types';
 import { calcCheckoutNetAmount, calcMachineFee, getMachineFeePercent } from '@/services/scheduling';
 import { useCheckout } from '@/hooks/useScheduling';
 import type { CheckoutPaymentMethod } from '@/types/scheduling';
-import { useAppointmentProductLines, useProducts, useSellProduct } from '@/hooks/useCatalog';
+import { useAppointmentProductLines, useProducts } from '@/hooks/useCatalog';
 import type { Product } from '@/types/catalog';
 import { useTenantLocale } from '../hooks/useTenantLocale';
+import { DurationField } from './DurationField';
 
 interface TeamMember {
   id: string;
@@ -108,14 +109,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const { showToast } = useToast();
   const { colors, accent, font, status } = useBrutalTheme();
   const checkout = useCheckout();
-  const sellProductMutation = useSellProduct();
   const { isPending, mutateAsync, reset } = checkout;
 
   const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethod | ''>('');
   const [receivedBy, setReceivedBy] = useState<string>('');
   const [machineFeePercent, setMachineFeePercent] = useState<string>('');
   const [finalPrice, setFinalPrice] = useState<number>(0);
-  const [errors, setErrors] = useState<{ paymentMethod?: string; receivedBy?: string }>({});
+  const [durationMinutes, setDurationMinutes] = useState('');
+  const [durationEdited, setDurationEdited] = useState(false);
+  const [errors, setErrors] = useState<{ paymentMethod?: string; receivedBy?: string; duration?: string }>({});
   const [cart, setCart] = useState<CartLine[]>([]);
   const [selectedProductId, setSelectedProductId] = useState('');
   const initializedFor = useRef<string | null>(null);
@@ -160,6 +162,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       setMachineFeePercent('');
       setErrors({});
       setSelectedProductId('');
+      setDurationMinutes(appointment.duration_minutes && appointment.duration_minutes > 0 ? String(appointment.duration_minutes) : '');
+      setDurationEdited(false);
       reset();
     }
     if (!priceEdited.current) {
@@ -191,7 +195,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const feePercent = parseFloat(machineFeePercent) || 0;
   const feeAmount = paymentMethod ? calcMachineFee(finalPrice, paymentMethod, feePercent) : 0;
   const netAmount = calcCheckoutNetAmount(finalPrice, feeAmount);
-  const loading = isPending || sellProductMutation.isPending;
+  const loading = isPending;
+  const durationIsAdjusted = durationEdited && Number(durationMinutes) !== appointment?.duration_minutes;
 
   const getProductById = (id: string) => availableProducts.find(p => p.id === id);
 
@@ -248,6 +253,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     receivedBy: [receivedBy, setReceivedBy],
     machineFeePercent: [machineFeePercent, setMachineFeePercent],
     finalPrice: [finalPrice, setFinalPrice],
+    durationMinutes: [durationMinutes, setDurationMinutes],
+    durationEdited: [durationEdited, setDurationEdited],
     cart: [cart, setCart]
   }, { onDiscard: onClose, enabled: !!appointment, ready: !!appointment && pendingLinesFetched,
     restore: data => ({ ...data,
@@ -256,7 +263,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     }) });
 
   const handleConfirm = async () => {
-    const newErrors: { paymentMethod?: string; receivedBy?: string } = {};
+    const newErrors: { paymentMethod?: string; receivedBy?: string; duration?: string } = {};
+    const parsedDuration = Number(durationMinutes);
+    if (durationEdited && (!/^\d+$/.test(durationMinutes) || !Number.isInteger(parsedDuration) || parsedDuration < 1 || parsedDuration > 1440)) {
+      newErrors.duration = 'Informe um tempo de trabalho válido entre 1 e 1440 minutos.';
+    }
 
     // Sprint D+1: Se totalmente coberto pela assinatura, não exige forma de pagamento
     const isFullyCovered = discount.fullyCovered;
@@ -280,35 +291,20 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     setErrors({});
 
     try {
-      const sellerId =
-        receivedBy && receivedBy !== 'owner'
-          ? receivedBy
-          : (appointment as { professional_id?: string | null }).professional_id ?? null;
-      const clientId = (appointment as { client_id?: string | null }).client_id ?? null;
-
       const receivedByUUID = receivedBy !== 'owner' ? receivedBy : null;
       // Coberto pela assinatura: registra como 'membership' pra nao poluir o Pix no financeiro
       const effectiveMethod: CheckoutPaymentMethod = isFullyCovered ? 'membership' : (paymentMethod as CheckoutPaymentMethod);
 
-      for (const line of cart) {
-        await sellProductMutation.mutateAsync({
-          productId: line.productId,
-          quantity: line.quantity,
-          appointmentId: appointment.id,
-          professionalId: sellerId,
-          clientId,
-          paymentMethod: effectiveMethod,
-        });
-      }
-
       await mutateAsync({
         appointmentId: appointment.id,
+        products: cart,
         paymentMethod: effectiveMethod,
         receivedBy: receivedByUUID,
         completedBy: receivedByUUID,
         finalPrice,
         machineFeePercent: feePercent,
         machineFeeAmount: feeAmount,
+        actualDurationMinutes: durationIsAdjusted ? parsedDuration : null,
       });
 
       formDraft.clear();
@@ -412,6 +408,18 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           <p className={`text-xs ${font.mono} uppercase ${colors.textSecondary}`}>Serviço</p>
           <p className={`${colors.text} font-medium`}>{appointment?.service}</p>
         </div>
+
+        <DurationField
+          id="checkout-duration"
+          value={durationMinutes}
+          estimate={appointment?.duration_minutes}
+          adjusted={durationIsAdjusted}
+          disabled={loading}
+          error={errors.duration}
+          source="agenda"
+          onChange={value => { setDurationMinutes(value); setDurationEdited(true); }}
+          onRestore={() => { setDurationMinutes(String(appointment?.duration_minutes ?? '')); setDurationEdited(false); }}
+        />
 
         {availableProducts.length > 0 && (
           <div className="space-y-3">

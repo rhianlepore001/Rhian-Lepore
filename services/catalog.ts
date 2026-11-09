@@ -22,16 +22,10 @@ import {
 
 export async function listProducts(input: ListProductsInput): Promise<Product[]> {
   const parsed = listProductsInputSchema.parse(input);
-  let query = supabase
-    .from('products')
-    .select('*')
-    .eq('company_id', parsed.companyId);
-
-  if (!parsed.includeInactive) {
-    query = query.eq('is_active', true);
-  }
-
-  const { data, error } = await query.order('name');
+  const { data, error } = await supabase.rpc('get_checkout_products_v1', {
+    p_company_id: parsed.companyId,
+    p_include_inactive: parsed.includeInactive,
+  });
   if (error) throw error;
   return (data || []).flatMap(item => {
     const parsed = productSchema.safeParse(item);
@@ -120,6 +114,22 @@ export async function setAppointmentProductLines(
 ): Promise<AppointmentProductLine[]> {
   const parsed = setAppointmentProductLinesInputSchema.parse(input);
 
+  // Sale prices come from a cost-free RPC (staff cannot read product rows/cost_price).
+  // Resolve them BEFORE replacing the lines, and never fall back to R$ 0.
+  const priceMap = new Map<string, number>();
+  if (parsed.lines.length > 0) {
+    const productIds = [...new Set(parsed.lines.map(l => l.productId))];
+    const { data: prices, error: pricesError } = await supabase.rpc('get_product_sale_prices_v1', {
+      p_product_ids: productIds,
+    });
+    if (pricesError) throw pricesError;
+    for (const item of (prices || []) as { id: string; sale_price: number | string }[]) {
+      priceMap.set(item.id, Number(item.sale_price));
+    }
+    const missing = productIds.filter(id => !Number.isFinite(priceMap.get(id)));
+    if (missing.length > 0) throw new Error('product_price_unavailable');
+  }
+
   const { error: deleteError } = await supabase
     .from('appointment_product_lines')
     .delete()
@@ -130,23 +140,12 @@ export async function setAppointmentProductLines(
 
   if (parsed.lines.length === 0) return [];
 
-  const productIds = parsed.lines.map(l => l.productId);
-  const { data: products, error: productsError } = await supabase
-    .from('products')
-    .select('id, sale_price')
-    .eq('company_id', parsed.companyId)
-    .in('id', productIds);
-
-  if (productsError) throw productsError;
-
-  const priceMap = new Map((products || []).map(p => [p.id as string, Number(p.sale_price)]));
-
   const rows = parsed.lines.map(line => ({
     company_id: parsed.companyId,
     appointment_id: parsed.appointmentId,
     product_id: line.productId,
     quantity: line.quantity,
-    unit_sale_price: priceMap.get(line.productId) ?? 0,
+    unit_sale_price: priceMap.get(line.productId) as number,
   }));
 
   const { data, error } = await supabase

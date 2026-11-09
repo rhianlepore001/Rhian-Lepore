@@ -8,6 +8,7 @@ import {
   fetchPendingPublicBookings,
   getMachineFeePercent,
   markAppointmentComplete,
+  mapToAgendaAppointment,
 } from '@/services/scheduling';
 import { supabase } from '@/lib/supabase';
 
@@ -18,6 +19,10 @@ vi.mock('@/lib/supabase', () => ({
 }));
 
 describe('scheduling service', () => {
+  it('preserva a duração agendada para o checkout', () => {
+    const item = mapToAgendaAppointment({ id: 'a', client_id: 'c', service: 'Corte', appointment_time: '2026-01-01T10:00:00Z', price: 50, status: 'Confirmed', professional_id: null, duration_minutes: 45 }, new Map());
+    expect(item.duration_minutes).toBe(45);
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     (supabase.rpc as any).mockResolvedValue({ data: null, error: null });
@@ -68,6 +73,16 @@ describe('scheduling service', () => {
       p_machine_fee_percent: 2.5,
       p_machine_fee_amount: 2,
     });
+  });
+
+  it('envia produtos e duração em uma única transação, sem venda prévia', async () => {
+    await completeAppointment({ appointmentId: 'apt-001', paymentMethod: 'pix', finalPrice: 80,
+      machineFeePercent: 0, machineFeeAmount: 0, actualDurationMinutes: null,
+      products: [{ productId: '11111111-1111-4111-8111-111111111111', quantity: 2 }] } as any);
+    expect(supabase.rpc).toHaveBeenCalledTimes(1);
+    expect(supabase.rpc).toHaveBeenCalledWith('complete_appointment_checkout_v1', expect.objectContaining({
+      p_products: [{ product_id: '11111111-1111-4111-8111-111111111111', quantity: 2 }], p_actual_duration_minutes: null,
+    }));
   });
 
   it('completeAppointment propaga erro da RPC', async () => {

@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import { Button, Modal, Select, useToast } from '@/components/ui';
 import { useProducts } from '@/hooks/useCatalog';
-import { sellProduct } from '@/services/catalog';
 import { closeQueueTicket, settleQueueTicket } from '@/services/queue';
 import { buildQueueClosePayload, buildQueueSettlePayload } from '@/utils/queueTicketPayload';
 import { formatCurrency, type Region } from '@/utils/formatters';
 import type { QueueRecord } from '@/types/queue';
 import type { ServiceItem } from '@/types/serviceSettings';
 import type { CheckoutPaymentMethod } from '@/types/scheduling';
+import { DurationField } from '@/components/DurationField';
 
 interface QueueCheckoutSheetProps {
   open: boolean;
@@ -57,7 +57,25 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
   const askProfessional = !knownProfessionalId && teamMembers.length > 0;
   const resolvedProfessionalId = knownProfessionalId ?? (professionalId || null);
   const [saving, setSaving] = useState<'settle' | 'close' | null>(null);
+  const [durationMinutes, setDurationMinutes] = useState('');
+  const [durationEdited, setDurationEdited] = useState(false);
+  const [durationError, setDurationError] = useState('');
+  const durationEntryId = useRef<string | null>(null);
   const { data: catalog = [] } = useProducts({ companyId, includeInactive: false });
+
+  const estimatedDuration = entry?.duration_minutes ?? services.find(service => service.id === entry?.service_id)?.duration_minutes ?? null;
+  useEffect(() => {
+    if (!open || !entry?.id) { durationEntryId.current = null; return; }
+    const changed = durationEntryId.current !== entry.id;
+    if (changed) {
+      durationEntryId.current = entry.id;
+      setDurationEdited(false);
+      setDurationError('');
+    }
+    if (changed || !durationEdited) {
+      setDurationMinutes(estimatedDuration && Number.isInteger(estimatedDuration) && estimatedDuration > 0 ? String(estimatedDuration) : '');
+    }
+  }, [open, entry?.id, estimatedDuration, durationEdited]);
 
   // Comanda reaberta volta com os itens guardados em "Deixar em aberto".
   // Chave serializada: o polling recria o array e não pode apagar o que o gestor está editando.
@@ -120,6 +138,12 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
 
   const handleSettle = async () => {
     if (!entry) return;
+    const parsedDuration = Number(durationMinutes);
+    if (durationEdited && (!/^\d+$/.test(durationMinutes) || !Number.isInteger(parsedDuration) || parsedDuration < 1 || parsedDuration > 1440)) {
+      setDurationError('Informe um tempo de trabalho válido entre 1 e 1440 minutos.');
+      return;
+    }
+    setDurationError('');
     if (pendingDigital) {
       showToast(`Confirme ou cancele o ${pendingDigitalLabel} do cliente no card antes de fechar a comanda.`, 'error');
       return;
@@ -133,7 +157,6 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
       return;
     }
     setSaving('settle');
-    let settled = false;
     try {
       const payload = buildQueueSettlePayload({
         entryId: entry.id,
@@ -145,31 +168,17 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
         paymentMethod: needsPaymentMethod ? paymentMethod || null : null,
         alreadyPaid: alreadyPaid && !needsPaymentMethod,
       });
-      await settleQueueTicket(payload);
-      settled = true;
-      // Cada produto vira uma venda própria (baixa de estoque + lançamento no financeiro).
-      const sales = await Promise.allSettled(products.map((line) => sellProduct({
-        productId: line.id,
-        quantity: 1,
-        professionalId: resolvedProfessionalId,
-        paymentMethod: needsPaymentMethod ? paymentMethod || null : entry.payment_method,
-      })));
-      const failed = products.filter((_, index) => sales[index].status === 'rejected');
-      if (failed.length > 0) {
-        showToast(
-          `Atendimento finalizado, mas a venda de ${failed.map((line) => line.name).join(', ')} não foi registrada. Lance em Produtos.`,
-          'error',
-        );
-      } else {
-        showToast(`Atendimento de ${entry.client_name} finalizado.`, 'success');
-      }
+      await settleQueueTicket({ ...payload,
+        actualDurationMinutes: durationEdited && parsedDuration !== estimatedDuration ? parsedDuration : null,
+        products: products.map(line => ({ productId: line.id, quantity: 1 })),
+      });
+      showToast(`Atendimento de ${entry.client_name} finalizado.`, 'success');
       onDone();
     } catch {
       showToast(
-        settled ? 'Atendimento finalizado, mas houve um erro ao registrar os produtos.' : 'Não foi possível finalizar a comanda. Tente de novo.',
+        'Não foi possível finalizar a comanda. Tente de novo.',
         'error',
       );
-      if (settled) onDone();
     } finally {
       setSaving(null);
     }
@@ -253,6 +262,19 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
               </li>
             )}
           </ul>
+
+          <DurationField
+            id="queue-checkout-duration"
+            value={durationMinutes}
+            estimate={estimatedDuration}
+            adjusted={durationEdited && Number(durationMinutes) !== estimatedDuration}
+            disabled={!!saving}
+            error={durationError}
+            source="serviço"
+            note={extras.length ? 'O tempo vem apenas do serviço principal; some o tempo dos extras.' : undefined}
+            onChange={value => { setDurationMinutes(value); setDurationEdited(true); }}
+            onRestore={() => { setDurationMinutes(estimatedDuration ? String(estimatedDuration) : ''); setDurationEdited(false); }}
+          />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Select

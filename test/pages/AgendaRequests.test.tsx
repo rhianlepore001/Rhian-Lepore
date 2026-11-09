@@ -15,8 +15,9 @@ vi.mock('../../hooks/useAgendaBlocks', () => ({ useAgendaBlocks: () => ({ data: 
 vi.mock('../../hooks/useWhatsAppTemplates', () => ({ useWhatsAppTemplates: () => ({ templates: {}, isEnabled: () => true, render: () => '' }) }));
 vi.mock('../../hooks/useAppTour', () => ({ useAppTour: vi.fn() }));
 vi.mock('../../hooks/usePendingPublicBookingsLive', () => ({ usePendingPublicBookingsLive: vi.fn() }));
-vi.mock('../../hooks/useStaffAppointmentPermission', () => ({ useStaffAppointmentPermission: () => ({ lockProfessionalToSelf: false }) }));
-vi.mock('../../components/CheckoutModal', () => ({ CheckoutModal: () => null }));
+vi.mock('../../hooks/useStaffAppointmentPermission', () => ({ useStaffAppointmentPermission: () => ({ lockProfessionalToSelf: false, canEdit: () => true }) }));
+const checkoutProps: { current: any } = { current: null };
+vi.mock('../../components/CheckoutModal', () => ({ CheckoutModal: (props: any) => { checkoutProps.current = props; return null; } }));
 vi.mock('../../components/agenda/AgendaBlockForm', () => ({ AgendaBlockForm: () => null }));
 vi.mock('../../components/agenda/AgendaResourceGrid', () => ({ AgendaResourceGrid: () => null }));
 vi.mock('../../components/agenda/AgendaDayScroller', () => ({ AgendaDayScroller: () => null }));
@@ -46,6 +47,7 @@ const snapshot = () => ({
 
 describe('Agenda: requisições na montagem e na troca de dia', () => {
   beforeEach(() => {
+    checkoutProps.current = null;
     calls.length = 0;
     rpcCalls.length = 0;
     vi.mocked(supabase.from).mockImplementation(((table: string) => {
@@ -60,6 +62,27 @@ describe('Agenda: requisições na montagem e na troca de dia', () => {
       return query;
     }) as any);
     vi.mocked(supabase.rpc).mockImplementation(((name: string) => { rpcCalls.push(name); return Promise.resolve({ data: [], error: null }); }) as any);
+  });
+
+  it('abre o fechamento com duração agendada ao faturar um atendimento atrasado', async () => {
+    const overdue = { id: 'atrasado-1', client_id: 'client-1', clients: { name: 'Cliente Exemplo', phone: '11999999999' }, service: 'Corte', appointment_time: '2025-01-01T12:00:00Z', duration_minutes: 45, price: 50, status: 'Confirmed', professional_id: 'pro-fictional' };
+    vi.mocked(supabase.from).mockImplementation(((table: string) => {
+      let isOverdue = false;
+      const result = () => ({ data: table === 'appointments' && isOverdue ? [overdue] : table === 'team_members' ? [{ id: 'pro-fictional', name: 'Profissional', active: true }] : [], error: null });
+      const query: any = {
+        then: (resolve: (value: unknown) => unknown) => Promise.resolve(result()).then(resolve),
+        single: () => Promise.resolve({ data: { business_name: 'Empresa Fictícia' }, error: null }),
+        maybeSingle: () => Promise.resolve({ data: null, error: null }),
+      };
+      for (const method of ['select', 'eq', 'neq', 'gte', 'lte', 'gt', 'in', 'order', 'not', 'limit', 'is']) query[method] = () => query;
+      query.lt = () => { isOverdue = true; return query; };
+      return query;
+    }) as any);
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={client}><MemoryRouter initialEntries={['/agenda?filter=overdue']}><Agenda /></MemoryRouter></QueryClientProvider>);
+    fireEvent.click(await screen.findByRole('button', { name: /faturar/i }));
+    await waitFor(() => expect(checkoutProps.current?.appointment).toMatchObject({ id: 'atrasado-1', duration_minutes: 45 }));
+    expect(vi.mocked(supabase.rpc)).not.toHaveBeenCalledWith('complete_appointment', expect.anything());
   });
 
   it('busca cada dado uma única vez ao abrir e só os dados do dia ao trocar de dia', async () => {

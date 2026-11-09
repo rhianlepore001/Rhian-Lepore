@@ -6,9 +6,10 @@ import { useBusinessSettings, useUpdateBusinessSettings } from '../../hooks/useS
 import { SettingsLayout } from '../../components/SettingsLayout';
 import { Loader2 } from 'lucide-react';
 import { SettingsSwitch } from '../../components/SettingsSwitch';
+import { FixedCostsSettings } from '../../components/settings/FixedCostsSettings';
 
 export const FinancialSettings: React.FC = () => {
-  const { companyId } = useAuth();
+  const { companyId, role, region } = useAuth();
   const { isBeauty, accent, colors, classes } = useBrutalTheme();
   const { data: settings, isLoading } = useBusinessSettings();
   const updateSettingsMutation = useUpdateBusinessSettings();
@@ -61,6 +62,8 @@ export const FinancialSettings: React.FC = () => {
             Configure o repasse de taxa de maquininha para os colaboradores.
           </p>
         </div>
+
+        {role === 'owner' && companyId && <FixedCostsSettings companyId={companyId} region={region === 'PT' ? 'PT' : 'BR'} timezone={settings?.timezone} businessHours={settings?.business_hours} />}
 
         <Card>
           <div className="space-y-5">

@@ -33,7 +33,7 @@ END $$;
 SET request.jwt.claim.sub='10000000-0000-0000-0000-000000000001';
 SET ROLE authenticated;
 DO $$ DECLARE r json; BEGIN
- r:=public.get_finance_stats('10000000-0000-0000-0000-000000000001','2026-11-08','2026-11-08',NULL);
+ r:=public.get_finance_stats('10000000-0000-0000-0000-000000000001','2026-11-08',greatest(date '2026-11-08',current_date)::text,NULL);
  IF (r->>'revenue')::numeric<>360 THEN RAISE EXCEPTION 'owner receipts were lost or double-counted: %',r; END IF;
 END $$;
 RESET ROLE;

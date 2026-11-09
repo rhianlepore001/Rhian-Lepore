@@ -22,14 +22,15 @@ describe('custos fixos e materiais', () => {
     const api = makeApi();
     render(<FixedCostsSettings companyId="empresa" region={region} api={api} />);
     expect(await screen.findByText(`Custo mensal (${currency})`)).toBeInTheDocument();
-    expect(screen.getByText(`Custo de material por atendimento: Corte (${currency})`)).toBeInTheDocument();
+    expect(screen.getByLabelText('Custo de material por atendimento: Corte')).toBeInTheDocument();
+    expect(screen.getAllByText(currency).length).toBeGreaterThan(0);
     expect(screen.getByLabelText('Custo mensal')).toBeEnabled();
   });
 
   it('pede confirmação antes de salvar uma despesa sugerida', async () => {
     const api = makeApi();
     render(<FixedCostsSettings companyId="empresa" api={api} />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Sugerir despesas já lançadas' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Puxar despesas já lançadas' }));
     fireEvent.click(await screen.findByRole('button', { name: /usar aluguel/i }));
     expect(api.saveCost).not.toHaveBeenCalled();
     expect(screen.getByLabelText('Descrição')).toHaveValue('Aluguel');
@@ -65,7 +66,7 @@ describe('custos fixos e materiais', () => {
     expect(screen.getByLabelText('Custo mensal')).toBeDisabled();
     expect(screen.getByLabelText('Categoria')).toBeDisabled();
     expect(screen.getByLabelText('Profissional')).toBeDisabled();
-    fireEvent.change(screen.getByLabelText('Fim da vigência (opcional)'), { target: { value: '2099-12-31' } });
+    fireEvent.change(screen.getByLabelText('Termina em (opcional)'), { target: { value: '2099-12-31' } });
     fireEvent.click(screen.getByRole('button', { name: 'Salvar custo mensal' }));
     await waitFor(() => expect(api.saveCost).toHaveBeenCalledWith(expect.objectContaining({ id: 'c1', amount: 500, start_date: '2025-01-01', end_date: '2099-12-31' })));
   });
@@ -74,7 +75,7 @@ describe('custos fixos e materiais', () => {
     const api = makeApi();
     render(<FixedCostsSettings companyId="empresa" api={api} />);
     expect(await screen.findByText(/o valor inicial pode ser alterado/i)).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText(/limite de margem para rende pouco/i), { target: { value: '15' } });
+    fireEvent.change(screen.getByLabelText(/avisar .*sobra pouco/i), { target: { value: '15' } });
     fireEvent.click(screen.getByRole('button', { name: /salvar limite/i }));
     await waitFor(() => expect(api.saveLowMargin).toHaveBeenCalledWith('empresa', 15));
   });
@@ -94,7 +95,7 @@ describe('custos fixos e materiais', () => {
     const api = makeApi();
     api.list.mockResolvedValue({ costs: [{ id: 'salary-old', company_id: 'empresa', professional_id: null, category: 'Gestão', description: 'Pró-labore', amount: 500, start_date: '2025-01-01', end_date: null, is_owner_salary: true, active: false }], services: [], materials: [], professionals: [] } as never);
     render(<FixedCostsSettings companyId="empresa" api={api} />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Nova vigência de Pró-labore' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Mudar valor de Pró-labore' }));
     expect(screen.getByLabelText('Incluir pró-labore do dono')).not.toBeChecked();
     fireEvent.click(screen.getByLabelText('Incluir pró-labore do dono'));
     fireEvent.click(screen.getByRole('button', { name: 'Salvar custo mensal' }));
@@ -108,7 +109,7 @@ describe('custos fixos e materiais', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Encerrar pró-labore' }));
     expect(screen.getByText(/encerramento será aplicado ao salvar/i)).toBeInTheDocument();
     expect(screen.getByLabelText('Custo mensal')).toBeDisabled();
-    const end = (screen.getByLabelText('Fim da vigência (opcional)') as HTMLInputElement).value;
+    const end = (screen.getByLabelText('Termina em (opcional)') as HTMLInputElement).value;
     expect(end).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(api.saveCost).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Salvar custo mensal' }));
@@ -122,7 +123,7 @@ describe('custos fixos e materiais', () => {
     expect(await screen.findByText(/encerrado em 31\/12\/2020/i)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Encerrar pró-labore' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Editar Pró-labore' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Nova vigência de Pró-labore' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Mudar valor de Pró-labore' })).toBeEnabled();
   });
 
   it('não permite alterar custos quando os dados não puderem ser carregados', async () => {

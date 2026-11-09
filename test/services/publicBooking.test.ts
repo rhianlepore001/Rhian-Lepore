@@ -188,6 +188,20 @@ describe('public booking service', () => {
     expect(insertMock).toHaveBeenLastCalledWith(expect.objectContaining({ public_booking_id: 'booking-002' }));
   });
 
+  it('fallback do aceite marca origin=booking (pedido veio do link público)', async () => {
+    singleMock.mockResolvedValueOnce({ data: { id: 'appt-004' }, error: null });
+    await createAcceptedAppointmentFromBooking({
+      businessId: 'business-001',
+      clientId: 'client-001',
+      serviceNames: 'Corte',
+      bookingId: 'booking-004',
+      appointmentTime: '2026-05-30T10:00:00-03:00',
+      totalPrice: 80,
+      durationMinutes: 30,
+    });
+    expect(insertMock).toHaveBeenLastCalledWith(expect.objectContaining({ origin: 'booking' }));
+  });
+
   it('fallback do aceite: preservePublicBookingLink=false explícito continua sem vínculo', async () => {
     singleMock.mockResolvedValueOnce({ data: { id: 'appt-003' }, error: null });
     await createAcceptedAppointmentFromBooking({
@@ -229,6 +243,7 @@ describe('public booking service', () => {
       price: 80,
       status: 'Confirmed',
       duration_minutes: 30,
+      origin: 'booking',
       public_booking_id: 'booking-001',
     });
     expect(updateMock).not.toHaveBeenCalled();

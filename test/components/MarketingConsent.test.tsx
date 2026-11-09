@@ -47,9 +47,20 @@ describe('MarketingConsent', () => {
     expect(document.documentElement.style.getPropertyValue('--cookie-space')).toBe('180px');
     spy.mockReturnValue({ height: 44 } as DOMRect);
     fireEvent.click(screen.getByRole('button', { name: 'Recusar' }));
-    expect(document.documentElement.style.getPropertyValue('--cookie-space')).toBe('44px');
+    // Botão compacto fica no fim da página (absolute no body): reserva altura + margens (12px + 12px).
+    expect(document.documentElement.style.getPropertyValue('--cookie-space')).toBe('68px');
     unmount();
     expect(document.documentElement.style.getPropertyValue('--cookie-space')).toBe('');
     spy.mockRestore();
+  });
+  it('no celular o botão "Preferências de cookies" não flutua sobre os campos (fica no fim da página)', () => {
+    localStorage.clear();
+    render(<MemoryRouter initialEntries={['/register']}><MarketingConsent /></MemoryRouter>);
+    fireEvent.click(screen.getByRole('button', { name: 'Recusar' }));
+    const pill = screen.getByRole('button', { name: 'Preferências de cookies' });
+    const classes = pill.className.split(/\s+/);
+    expect(classes).toContain('absolute');
+    expect(classes).not.toContain('fixed');
+    expect(classes).toContain('md:fixed');
   });
 });

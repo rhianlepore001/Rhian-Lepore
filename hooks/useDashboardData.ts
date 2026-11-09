@@ -169,6 +169,8 @@ export function useDashboardData() {
         currentMonthRevenue,
         weeklyGrowth,
         loading: statsLoading && appointments.length === 0,
+        /** true só quando as estatísticas chegaram (evita textos provisórios com zeros). */
+        statsReady: stats !== undefined,
         monthlyGoal,
         dailyGoal,
         goalHistory,

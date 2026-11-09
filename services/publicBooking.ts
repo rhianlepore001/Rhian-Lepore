@@ -275,6 +275,8 @@ export async function createAcceptedAppointmentFromBooking(
     price: parsed.totalPrice,
     status: 'Confirmed',
     duration_minutes: parsed.durationMinutes,
+    // Pedido veio do link público: não contar como agendamento feito na Agenda.
+    origin: 'booking',
   };
 
   if (parsed.preservePublicBookingLink) {

@@ -14,6 +14,8 @@ vi.mock('../../contexts/AuthContext', () => ({
   useAuth: () => authState,
 }));
 
+vi.mock('../../hooks/useCurrentPlan', () => ({ useCurrentPlan: () => null }));
+
 vi.mock('../../hooks/useSubscription', () => ({
   useSubscription: () => ({
     subscriptionStatus: 'trial',

@@ -5,6 +5,7 @@ import { render, screen, fireEvent, waitFor, within } from '@testing-library/rea
 const invoke = vi.fn(() => new Promise(() => {})); // fica carregando
 vi.mock('../../lib/supabase', () => ({ supabase: { functions: { invoke: (...a: unknown[]) => invoke(...(a as [])) } } }));
 vi.mock('../../contexts/AuthContext', () => ({ useAuth: () => ({ businessName: 'Fictício', region: 'BR', userType: 'barber' }) }));
+vi.mock('../../hooks/useCurrentPlan', () => ({ useCurrentPlan: () => null }));
 vi.mock('../../hooks/useSubscription', () => ({
   useSubscription: () => ({ subscriptionStatus: 'trial', trialDaysRemaining: 5, isSubscriptionActive: true, isTrial: true }),
 }));

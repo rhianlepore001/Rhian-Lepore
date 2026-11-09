@@ -6,6 +6,7 @@ const invoke = vi.fn();
 const auth = { businessName: 'Negócio fictício', region: 'BR' as 'BR' | 'PT' };
 vi.mock('../../lib/supabase', () => ({ supabase: { functions: { invoke: (...a: unknown[]) => invoke(...a) } } }));
 vi.mock('../../contexts/AuthContext', () => ({ useAuth: () => auth }));
+vi.mock('../../hooks/useCurrentPlan', () => ({ useCurrentPlan: () => null }));
 vi.mock('../../hooks/useSubscription', () => ({
   useSubscription: () => ({ subscriptionStatus: 'trial', trialDaysRemaining: 5, isSubscriptionActive: true, isTrial: true }),
 }));

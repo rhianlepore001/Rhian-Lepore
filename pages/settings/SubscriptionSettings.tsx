@@ -9,7 +9,9 @@ import { mapError } from '../../utils/mapError';
 
 import { Check, Zap, Calendar, ShieldCheck, CreditCard, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { getPlanPricing, regionToPlanCurrency } from '../../utils/planPricing';
+import { getPlanPricing, regionToPlanCurrency, type AgendixPlanId } from '../../utils/planPricing';
+import { planCardState } from '../../utils/planCardState';
+import { useCurrentPlan } from '../../hooks/useCurrentPlan';
 
 export const SubscriptionSettings: React.FC = () => {
     const { businessName, region } = useAuth();
@@ -20,8 +22,10 @@ export const SubscriptionSettings: React.FC = () => {
     const { showToast } = useToast();
 
     const pricing = getPlanPricing(currency);
+    const currentPlan = useCurrentPlan();
+    const hasCurrentPlan = subscriptionStatus === 'active' && currentPlan !== null;
 
-    const plans = [
+    const plans: Array<{ id: AgendixPlanId; name: string; price: string; period: string; description: string; features: string[]; recommended: boolean }> = [
         {
             id: 'solo',
             name: 'Plano Solo',
@@ -134,20 +138,41 @@ export const SubscriptionSettings: React.FC = () => {
 
                 {/* Planos */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {plans.map((plan) => (
+                    {plans.map((plan) => {
+                        const card = planCardState(plan.id, { status: subscriptionStatus, currentPlan });
+                        // Com plano atual conhecido, o destaque passa a ser dele (e não o "Recomendado").
+                        const highlighted = hasCurrentPlan ? card.isCurrent : plan.recommended;
+                        const primaryAction = hasCurrentPlan ? !card.isCurrent : plan.recommended;
+                        const headingId = `plano-${plan.id}-titulo`;
+                        return (
                         <Card
                             key={plan.id}
                             forceTheme={isBeauty ? 'beauty' : 'barber'}
-                            className={`flex flex-col h-full relative overflow-hidden ${plan.recommended ? 'ring-2 ring-[var(--color-accent)]' : ''}`}
+                            className={`flex flex-col h-full relative overflow-hidden ${highlighted ? 'ring-2 ring-[var(--color-accent)]' : ''}`}
                         >
-                            {plan.recommended && (
+                            <section
+                                aria-labelledby={headingId}
+                                aria-current={card.isCurrent ? 'true' : undefined}
+                                className="flex flex-col h-full"
+                            >
+                            {!hasCurrentPlan && plan.recommended && (
                                 <div className="absolute top-4 right-[-35px] rotate-45 px-10 py-1 text-xs font-black uppercase tracking-tighter bg-theme-accent text-[var(--color-on-accent)]">
                                     Recomendado
                                 </div>
                             )}
 
+                            {card.isCurrent && (
+                                <span
+                                    data-current-plan-badge
+                                    className={`self-start inline-flex items-center gap-1.5 mb-4 px-3 py-1 ${radius.badge} text-xs font-bold uppercase tracking-wide bg-theme-accent text-[var(--color-on-accent)]`}
+                                >
+                                    <Check className="w-3.5 h-3.5" aria-hidden="true" />
+                                    Seu plano atual
+                                </span>
+                            )}
+
                             <div className="mb-6">
-                                <h4 className={`text-xl font-heading ${colors.text} uppercase mb-1`}>{plan.name}</h4>
+                                <h4 id={headingId} className={`text-xl font-heading ${colors.text} uppercase mb-1`}>{plan.name}</h4>
                                 <p className={`${colors.textSecondary} text-sm`}>{plan.description}</p>
                             </div>
 
@@ -172,12 +197,12 @@ export const SubscriptionSettings: React.FC = () => {
 
                             <Button
                                 forceTheme={isBeauty ? 'beauty' : 'barber'}
-                                variant={plan.recommended ? 'primary' : 'ghost'}
-                                onClick={() => handleSubscribe(plan.id)}
+                                variant={primaryAction ? 'primary' : 'ghost'}
+                                onClick={card.canCheckout ? () => handleSubscribe(plan.id) : undefined}
                                 // O botão que está carregando não usa `disabled` (que apaga para 50%):
                                 // fica com opacidade total e aria-busy; cliques repetidos são ignorados.
                                 className={`w-full ${loading === plan.id ? 'cursor-wait ring-1 ring-[var(--color-accent)]' : ''}`}
-                                disabled={loading !== null && loading !== plan.id}
+                                disabled={!card.canCheckout || (loading !== null && loading !== plan.id)}
                                 aria-busy={loading === plan.id}
                             >
                                 {loading === plan.id ? (
@@ -186,11 +211,13 @@ export const SubscriptionSettings: React.FC = () => {
                                         <span>Abrindo pagamento…</span>
                                     </span>
                                 ) : (
-                                    isTrial ? 'Começar Assinatura' : 'Alterar Plano'
+                                    card.label
                                 )}
                             </Button>
+                            </section>
                         </Card>
-                    ))}
+                        );
+                    })}
                 </div>
 
                 {/* Footer Info */}

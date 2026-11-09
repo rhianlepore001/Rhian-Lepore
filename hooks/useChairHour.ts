@@ -27,10 +27,10 @@ export interface ChairHourData {
   unassigned_attendance_count?: number;
 }
 
-export function useChairHour(month: string, professionalId: string | null = null, endDate: string | null = null) {
+export function useChairHour(month: string, professionalId: string | null = null, endDate: string | null = null, options: { enabled?: boolean } = {}) {
   const { companyId, role, user, teamMemberId } = useAuth();
   const selectedProfessional = role === 'staff' ? null : professionalId;
-  const enabled = !!companyId && !!user?.id && !!month && (role !== 'staff' || !!teamMemberId);
+  const enabled = options.enabled !== false && !!companyId && !!user?.id && !!month && (role !== 'staff' || !!teamMemberId);
   const query = useQuery({
     queryKey: ['chair-hour', companyId, user?.id, role, month, endDate, selectedProfessional],
     enabled,
@@ -42,5 +42,5 @@ export function useChairHour(month: string, professionalId: string | null = null
       return data as ChairHourData;
     },
   }, queryClient);
-  return { data: query.data ?? null, status: !enabled ? 'ready' : query.isPending ? 'loading' : query.isError ? 'error' : 'ready', retry: () => { void query.refetch(); } };
+  return { data: options.enabled === false ? null : query.data ?? null, status: !enabled ? 'ready' : query.isPending ? 'loading' : query.isError ? 'error' : 'ready', retry: () => { void query.refetch(); } };
 }

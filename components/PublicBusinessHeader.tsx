@@ -3,6 +3,7 @@ import { Instagram, Phone, MapPin, Star, Scissors, Sparkles, ChevronLeft, Chevro
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { useTheme } from '../contexts/ThemeContext';
 import { getBusinessCopy, resolveBusinessTheme } from '../utils/businessCopy';
+import { publicRatingBadge } from '../utils/publicRating';
 import { buildWhatsAppLink, type WhatsAppRegion } from '../utils/whatsappTemplates';
 
 interface PublicBusinessHeaderProps {
@@ -52,6 +53,8 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
         : null;
 
     // Badge de segmento
+    const rating = publicRatingBadge(googleRating, totalReviews);
+
     const segmentLabel = getBusinessCopy(resolveBusinessTheme(userType)).segmentLabel;
     const SegmentIcon = isBeauty ? Sparkles : Scissors;
 
@@ -176,14 +179,14 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
                             {businessName}
                         </h1>
 
-                        {/* Rating badge */}
-                        {googleRating && googleRating > 0 ? (
+                        {/* Rating badge: só com avaliações reais (sem nota inventada para negócio novo) */}
+                        {rating ? (
                             <div className={`inline-flex items-center gap-2 px-3 py-1.5 mb-3 rounded-full border ${colors.card} ${colors.border} ${colors.text} backdrop-blur-xl`}>
                                 <Star className="w-3.5 h-3.5 text-[var(--color-warning)] fill-amber-400" />
-                                <span className="text-sm font-black tracking-tight">{googleRating.toFixed(1)}</span>
+                                <span className="text-sm font-black tracking-tight">{rating.value}</span>
                                 <div className="w-px h-3 bg-current opacity-20" />
                                 <span className="text-xs uppercase font-bold tracking-[0.1em] opacity-60">
-                                    {totalReviews} avaliações
+                                    {rating.countLabel}
                                 </span>
                             </div>
                         ) : null}

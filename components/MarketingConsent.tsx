@@ -14,16 +14,20 @@ export const MarketingConsent: React.FC = () => {
   const legal = pathname === '/privacidade' || pathname === '/termos';
   const [box, setBox] = useState<HTMLElement | null>(null);
   const visible = eligible || legal;
+  const compact = !!consent && !editing;
 
   // O aviso fica fixo no rodapé: reserva o mesmo espaço no fim da página para que ele
   // nunca cubra o último botão do formulário (ex.: "Finalizar cadastro") no celular.
+  // Já o botão compacto "Preferências de cookies" no celular fica no fim da página
+  // (absolute no body) para não flutuar sobre campos; reserva altura + margens (12px + 12px).
   useLayoutEffect(() => {
     const root = document.documentElement;
     if (!box || !visible) {
       root.style.removeProperty('--cookie-space');
       return;
     }
-    const apply = () => root.style.setProperty('--cookie-space', `${Math.ceil(box.getBoundingClientRect().height)}px`);
+    const extra = compact ? 24 : 0;
+    const apply = () => root.style.setProperty('--cookie-space', `${Math.ceil(box.getBoundingClientRect().height) + extra}px`);
     apply();
     if (typeof ResizeObserver === 'undefined') return () => root.style.removeProperty('--cookie-space');
     const observer = new ResizeObserver(apply);
@@ -32,7 +36,7 @@ export const MarketingConsent: React.FC = () => {
       observer.disconnect();
       root.style.removeProperty('--cookie-space');
     };
-  }, [box, visible]);
+  }, [box, visible, compact]);
 
   useLayoutEffect(() => {
     setMetaScope(eligible && consent === 'accepted');
@@ -56,13 +60,13 @@ export const MarketingConsent: React.FC = () => {
 
   if (!eligible && !legal) return null;
 
-  if (consent && !editing) {
+  if (compact) {
     return (
       <button
         ref={setBox}
         type="button"
         onClick={() => setEditing(true)}
-        className="fixed bottom-3 left-3 z-[var(--z-toast)] min-h-11 rounded-full border border-[var(--color-border)] bg-[var(--color-card)] px-4 text-xs text-[var(--color-text-secondary)] shadow-[var(--elevation-1)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+        className="absolute bottom-3 left-3 md:fixed z-[var(--z-toast)] min-h-11 rounded-full border border-[var(--color-border)] bg-[var(--color-card)] px-4 text-xs text-[var(--color-text-secondary)] shadow-[var(--elevation-1)] focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
       >
         Preferências de cookies
       </button>

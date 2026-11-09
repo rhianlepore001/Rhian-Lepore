@@ -16,6 +16,7 @@ import { NextAppointmentHero } from '../components/dashboard/NextAppointmentHero
 import { AttentionInbox, type AttentionItem } from '../components/dashboard/AttentionInbox';
 import { TodayKpiStrip, type TodayKpi } from '../components/dashboard/TodayKpiStrip';
 import { TodayAgendaList } from '../components/dashboard/TodayAgendaList';
+import { DailyTipCard } from '../components/dashboard/DailyTipCard';
 import { ChairHourCard } from '../components/performance/ChairHourCard';
 import { PageHeader } from '../components/ui/PageHeader';
 import { Card } from '../components/ui/Card';
@@ -91,6 +92,7 @@ export const Dashboard: React.FC = () => {
     updateDailyGoal,
     profitMetrics,
     actionItems,
+    statsReady,
   } = useDashboardData();
 
   const { appointments, next, upcoming, loading: agendaLoading } = useTodayAgenda();
@@ -462,27 +464,7 @@ export const Dashboard: React.FC = () => {
             </Card>
           )}
 
-          {!isStaff && (
-            <Card variant="outlined">
-              <div className="flex items-start gap-3 min-w-0">
-                <div className={`${iconClass} shrink-0`}>
-                  <Sparkles className="h-5 w-5" />
-                </div>
-                <div className="min-w-0">
-                  <h2 className={`font-heading text-base font-bold ${colors.text}`}>
-                    Dica para hoje
-                  </h2>
-                  <p className={`mt-1 text-sm ${colors.textSecondary} text-pretty`}>
-                    {weeklyGrowth > 0
-                      ? `Você está ${weeklyGrowth}% acima da média recente. Mantenha a agenda cheia nos horários de maior procura.`
-                      : weeklyGrowth < 0
-                        ? `Seu movimento caiu ${Math.abs(weeklyGrowth)}% em relação à média recente. Que tal avisar os clientes dos horários vagos de hoje?`
-                        : 'Seu movimento está estável. Preencha os horários vagos para crescer em relação à média recente.'}
-                  </p>
-                </div>
-              </div>
-            </Card>
-          )}
+          {!isStaff && <DailyTipCard weeklyGrowth={statsReady ? weeklyGrowth : null} />}
         </div>
       </div>
 

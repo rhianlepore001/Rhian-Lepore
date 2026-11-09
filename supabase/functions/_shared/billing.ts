@@ -226,3 +226,44 @@ export function checkoutTrialEnd(
   if (!Number.isFinite(t) || t - now.getTime() < 48 * 3600 * 1000) return undefined;
   return Math.floor(t / 1000);
 }
+
+/**
+ * Stripe API version for Checkout Session creation. `adaptive_pricing` only exists
+ * from 2024-11-20.acacia; the client keeps its default version for other calls.
+ */
+export const CHECKOUT_STRIPE_API_VERSION = '2024-11-20.acacia';
+
+export interface CheckoutSessionInput {
+  customerId: string;
+  userId: string;
+  planId: AgendixPlanId;
+  currency: PlanCurrency;
+  priceId: string;
+  successUrl: string;
+  cancelUrl: string;
+  trialEnd?: number;
+}
+
+/**
+ * Checkout Session params. Adaptive Pricing is disabled so the customer always pays
+ * the configured price in its own currency (EUR plan = real EUR price, never the BRL
+ * price converted by Stripe).
+ */
+export function buildCheckoutSessionParams(input: CheckoutSessionInput) {
+  const metadata = { supabase_user_id: input.userId, plan_id: input.planId, currency: input.currency };
+  return {
+    customer: input.customerId,
+    client_reference_id: input.userId,
+    line_items: [{ price: input.priceId, quantity: 1 }],
+    mode: 'subscription' as const,
+    success_url: input.successUrl,
+    cancel_url: input.cancelUrl,
+    allow_promotion_codes: true,
+    adaptive_pricing: { enabled: false },
+    metadata,
+    subscription_data: {
+      metadata,
+      ...(input.trialEnd ? { trial_end: input.trialEnd } : {}),
+    },
+  };
+}

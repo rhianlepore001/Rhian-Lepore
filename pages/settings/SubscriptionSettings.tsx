@@ -56,6 +56,7 @@ export const SubscriptionSettings: React.FC = () => {
     ];
 
     const handleSubscribe = async (planId: string) => {
+        if (loading !== null) return;
         try {
             setLoading(planId);
 
@@ -173,11 +174,17 @@ export const SubscriptionSettings: React.FC = () => {
                                 forceTheme={isBeauty ? 'beauty' : 'barber'}
                                 variant={plan.recommended ? 'primary' : 'ghost'}
                                 onClick={() => handleSubscribe(plan.id)}
-                                className="w-full"
-                                disabled={loading !== null}
+                                // O botão que está carregando não usa `disabled` (que apaga para 50%):
+                                // fica com opacidade total e aria-busy; cliques repetidos são ignorados.
+                                className={`w-full ${loading === plan.id ? 'cursor-wait ring-1 ring-[var(--color-accent)]' : ''}`}
+                                disabled={loading !== null && loading !== plan.id}
+                                aria-busy={loading === plan.id}
                             >
                                 {loading === plan.id ? (
-                                    <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                                    <span className="inline-flex items-center gap-2 text-theme-accent">
+                                        <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+                                        <span>Abrindo pagamento…</span>
+                                    </span>
                                 ) : (
                                     isTrial ? 'Começar Assinatura' : 'Alterar Plano'
                                 )}

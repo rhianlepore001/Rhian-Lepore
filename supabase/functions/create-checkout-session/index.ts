@@ -7,6 +7,8 @@ import {
     isAllowedReturnUrl,
 } from "./allowlist.ts";
 import {
+    CHECKOUT_STRIPE_API_VERSION,
+    buildCheckoutSessionParams,
     checkoutTrialEnd,
     configuredPriceIds,
     isAgendixPlanId,
@@ -106,23 +108,23 @@ serve(async (req) => {
             if (stripeIdError) throw stripeIdError;
         }
 
-        const metadata = { supabase_user_id: user.id, plan_id: planId, currency };
         const trialEnd = checkoutTrialEnd(profile?.subscription_status, profile?.trial_ends_at);
-
-        const session = await stripe.checkout.sessions.create({
-            customer: customerId,
-            client_reference_id: user.id,
-            line_items: [{ price: priceId, quantity: 1 }],
-            mode: "subscription",
-            success_url: successUrl,
-            cancel_url: cancelUrl,
-            allow_promotion_codes: true,
-            metadata,
-            subscription_data: {
-                metadata,
-                ...(trialEnd ? { trial_end: trialEnd } : {}),
-            },
+        const params = buildCheckoutSessionParams({
+            customerId,
+            userId: user.id,
+            planId,
+            currency,
+            priceId,
+            successUrl,
+            cancelUrl,
+            trialEnd,
         });
+
+        // adaptive_pricing exige a API 2024-11-20+; só esta chamada usa essa versão.
+        const session = await stripe.checkout.sessions.create(
+            params as unknown as Stripe.Checkout.SessionCreateParams,
+            { apiVersion: CHECKOUT_STRIPE_API_VERSION },
+        );
 
         return new Response(JSON.stringify({ url: session.url }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },

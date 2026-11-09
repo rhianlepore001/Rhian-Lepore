@@ -14,6 +14,7 @@ import type { CheckoutPaymentMethod } from '@/types/scheduling';
 import { useAppointmentProductLines, useProducts } from '@/hooks/useCatalog';
 import type { Product } from '@/types/catalog';
 import { useTenantLocale } from '../hooks/useTenantLocale';
+import { DurationField } from './DurationField';
 
 interface TeamMember {
   id: string;
@@ -408,17 +409,17 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           <p className={`${colors.text} font-medium`}>{appointment?.service}</p>
         </div>
 
-        <div className="space-y-2">
-          <label htmlFor="checkout-duration" className={`block text-sm font-semibold ${colors.text}`}>Tempo de trabalho</label>
-          <div className="flex items-center gap-2">
-            <button type="button" aria-label="Diminuir 10 minutos" disabled={loading} onClick={() => { setDurationMinutes(String(Math.max(1, (Number(durationMinutes) || 1) - 10))); setDurationEdited(true); }} className={`min-h-[44px] min-w-[44px] rounded-lg border ${colors.border} ${colors.text}`}><Minus size={16} className="mx-auto" /></button>
-            <input id="checkout-duration" type="number" min="1" max="1440" step="1" inputMode="numeric" disabled={loading} value={durationMinutes} onChange={event => { setDurationMinutes(event.target.value); setDurationEdited(true); }} aria-invalid={!!errors.duration} aria-describedby="checkout-duration-help" className={`min-w-0 w-24 rounded-lg border px-3 py-2 text-center ${colors.inputBg} ${colors.inputBorder} ${colors.text}`} />
-            <span className={`text-sm ${colors.textSecondary}`}>min</span>
-            <button type="button" aria-label="Aumentar 10 minutos" disabled={loading} onClick={() => { setDurationMinutes(String(Math.min(1440, (Number(durationMinutes) || 0) + 10))); setDurationEdited(true); }} className={`min-h-[44px] min-w-[44px] rounded-lg border ${colors.border} ${colors.text}`}><Plus size={16} className="mx-auto" /></button>
-          </div>
-          <p id="checkout-duration-help" className={`text-xs ${colors.textSecondary}`}>{durationIsAdjusted ? 'Tempo informado para este atendimento.' : durationMinutes ? 'Tempo estimado a partir do agendamento. Ajuste se necessário.' : 'Tempo não informado no agendamento. Informe se souber.'}</p>
-          {errors.duration && <p role="alert" className={`text-sm ${status.danger}`}>{errors.duration}</p>}
-        </div>
+        <DurationField
+          id="checkout-duration"
+          value={durationMinutes}
+          estimate={appointment?.duration_minutes}
+          adjusted={durationIsAdjusted}
+          disabled={loading}
+          error={errors.duration}
+          source="agenda"
+          onChange={value => { setDurationMinutes(value); setDurationEdited(true); }}
+          onRestore={() => { setDurationMinutes(String(appointment?.duration_minutes ?? '')); setDurationEdited(false); }}
+        />
 
         {availableProducts.length > 0 && (
           <div className="space-y-3">

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Minus, Plus, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Button, Modal, Select, useToast } from '@/components/ui';
 import { useProducts } from '@/hooks/useCatalog';
 import { closeQueueTicket, settleQueueTicket } from '@/services/queue';
@@ -8,6 +8,7 @@ import { formatCurrency, type Region } from '@/utils/formatters';
 import type { QueueRecord } from '@/types/queue';
 import type { ServiceItem } from '@/types/serviceSettings';
 import type { CheckoutPaymentMethod } from '@/types/scheduling';
+import { DurationField } from '@/components/DurationField';
 
 interface QueueCheckoutSheetProps {
   open: boolean;
@@ -262,17 +263,18 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
             )}
           </ul>
 
-          <div className="space-y-2">
-            <label htmlFor="queue-checkout-duration" className="block text-sm font-semibold text-theme-text">Tempo de trabalho</label>
-            <div className="flex items-center gap-2">
-              <button type="button" aria-label="Diminuir 10 minutos" disabled={!!saving} onClick={() => { setDurationMinutes(String(Math.max(1, (Number(durationMinutes) || 1) - 10))); setDurationEdited(true); }} className="min-h-[44px] min-w-[44px] rounded-lg border border-theme-border text-theme-text"><Minus size={16} className="mx-auto" /></button>
-              <input id="queue-checkout-duration" type="number" min="1" max="1440" step="1" inputMode="numeric" disabled={!!saving} value={durationMinutes} onChange={event => { setDurationMinutes(event.target.value); setDurationEdited(true); }} aria-invalid={!!durationError} aria-describedby="queue-checkout-duration-help" className="min-w-0 w-24 rounded-lg border border-theme-border bg-[var(--color-input-bg)] px-3 py-2 text-center text-theme-text" />
-              <span className="text-sm text-theme-textSecondary">min</span>
-              <button type="button" aria-label="Aumentar 10 minutos" disabled={!!saving} onClick={() => { setDurationMinutes(String(Math.min(1440, (Number(durationMinutes) || 0) + 10))); setDurationEdited(true); }} className="min-h-[44px] min-w-[44px] rounded-lg border border-theme-border text-theme-text"><Plus size={16} className="mx-auto" /></button>
-            </div>
-            <p id="queue-checkout-duration-help" className="text-xs text-theme-textSecondary">{durationEdited && Number(durationMinutes) !== estimatedDuration ? 'Tempo informado para este atendimento.' : durationMinutes ? extras.length ? 'Tempo estimado apenas do serviço principal. Ajuste para incluir os serviços extras.' : 'Tempo estimado a partir do serviço. Ajuste se necessário.' : 'Tempo não informado no serviço. Informe se souber.'}</p>
-            {durationError && <p role="alert" className="text-sm text-[var(--color-danger)]">{durationError}</p>}
-          </div>
+          <DurationField
+            id="queue-checkout-duration"
+            value={durationMinutes}
+            estimate={estimatedDuration}
+            adjusted={durationEdited && Number(durationMinutes) !== estimatedDuration}
+            disabled={!!saving}
+            error={durationError}
+            source="serviço"
+            note={extras.length ? 'O tempo vem apenas do serviço principal; some o tempo dos extras.' : undefined}
+            onChange={value => { setDurationMinutes(value); setDurationEdited(true); }}
+            onRestore={() => { setDurationMinutes(estimatedDuration ? String(estimatedDuration) : ''); setDurationEdited(false); }}
+          />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Select

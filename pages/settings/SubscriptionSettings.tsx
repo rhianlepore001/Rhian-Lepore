@@ -36,7 +36,6 @@ export const SubscriptionSettings: React.FC = () => {
                 'Suporte via WhatsApp'
             ],
             recommended: !isBeauty,
-            priceId: pricing.solo.priceId
         },
         {
             id: 'team',
@@ -53,21 +52,19 @@ export const SubscriptionSettings: React.FC = () => {
                 'Prioridade no Suporte'
             ],
             recommended: isBeauty,
-            priceId: pricing.team.priceId
         }
     ];
 
-    const handleSubscribe = async (planId: string, priceId: string) => {
+    const handleSubscribe = async (planId: string) => {
         try {
             setLoading(planId);
 
             const { data, error } = await supabase.functions.invoke('create-checkout-session', {
                 body: {
-                    // Server resolves the Stripe price from config (planId + currency);
-                    // priceId kept only for backwards compatibility.
+                    // O servidor resolve o preço Stripe pelos secrets STRIPE_PRICE_<PLANO>_<MOEDA>.
+                    // Não enviamos priceId: os VITE_STRIPE_PRICE_* do front não são a fonte da verdade.
                     planId,
                     currency,
-                    priceId,
                     successUrl: `${window.location.origin}/#/?session_id={CHECKOUT_SESSION_ID}`,
                     cancelUrl: `${window.location.href}`,
                     mode: 'subscription'
@@ -175,7 +172,7 @@ export const SubscriptionSettings: React.FC = () => {
                             <Button
                                 forceTheme={isBeauty ? 'beauty' : 'barber'}
                                 variant={plan.recommended ? 'primary' : 'ghost'}
-                                onClick={() => handleSubscribe(plan.id, plan.priceId)}
+                                onClick={() => handleSubscribe(plan.id)}
                                 className="w-full"
                                 disabled={loading !== null}
                             >

@@ -55,13 +55,13 @@ describe('checkoutAllowlist (A-06)', () => {
     expect(isAllowedCheckoutMode('setup')).toBe(false);
   });
 
-  it('edge allowlist mirrors utils price IDs (keep in sync)', () => {
+  it('edge allowlist no longer hard-codes price IDs (prices come from STRIPE_PRICE_* config)', () => {
     const edge = readFileSync(
       resolve(__dirname, '../../supabase/functions/create-checkout-session/allowlist.ts'),
       'utf8',
     );
     for (const id of [...FALLBACK_STRIPE_PRICE_IDS, ...PRODUCTION_STRIPE_PRICE_IDS]) {
-      expect(edge).toContain(id);
+      expect(edge).not.toContain(id);
     }
     expect(edge).toContain('isAllowedReturnUrl');
   });

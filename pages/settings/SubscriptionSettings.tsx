@@ -36,7 +36,6 @@ export const SubscriptionSettings: React.FC = () => {
                 'Suporte via WhatsApp'
             ],
             recommended: !isBeauty,
-            priceId: pricing.solo.priceId
         },
         {
             id: 'team',
@@ -53,17 +52,20 @@ export const SubscriptionSettings: React.FC = () => {
                 'Prioridade no Suporte'
             ],
             recommended: isBeauty,
-            priceId: pricing.team.priceId
         }
     ];
 
-    const handleSubscribe = async (planId: string, priceId: string) => {
+    const handleSubscribe = async (planId: string) => {
+        if (loading !== null) return;
         try {
             setLoading(planId);
 
             const { data, error } = await supabase.functions.invoke('create-checkout-session', {
                 body: {
-                    priceId,
+                    // O servidor resolve o preço Stripe pelos secrets STRIPE_PRICE_<PLANO>_<MOEDA>.
+                    // Não enviamos priceId: os VITE_STRIPE_PRICE_* do front não são a fonte da verdade.
+                    planId,
+                    currency,
                     successUrl: `${window.location.origin}/#/?session_id={CHECKOUT_SESSION_ID}`,
                     cancelUrl: `${window.location.href}`,
                     mode: 'subscription'
@@ -171,12 +173,18 @@ export const SubscriptionSettings: React.FC = () => {
                             <Button
                                 forceTheme={isBeauty ? 'beauty' : 'barber'}
                                 variant={plan.recommended ? 'primary' : 'ghost'}
-                                onClick={() => handleSubscribe(plan.id, plan.priceId)}
-                                className="w-full"
-                                disabled={loading !== null}
+                                onClick={() => handleSubscribe(plan.id)}
+                                // O botão que está carregando não usa `disabled` (que apaga para 50%):
+                                // fica com opacidade total e aria-busy; cliques repetidos são ignorados.
+                                className={`w-full ${loading === plan.id ? 'cursor-wait ring-1 ring-[var(--color-accent)]' : ''}`}
+                                disabled={loading !== null && loading !== plan.id}
+                                aria-busy={loading === plan.id}
                             >
                                 {loading === plan.id ? (
-                                    <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                                    <span className="inline-flex items-center gap-2 text-theme-accent">
+                                        <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+                                        <span>Abrindo pagamento…</span>
+                                    </span>
                                 ) : (
                                     isTrial ? 'Começar Assinatura' : 'Alterar Plano'
                                 )}

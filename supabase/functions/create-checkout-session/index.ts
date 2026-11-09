@@ -11,6 +11,7 @@ import {
     buildCheckoutSessionParams,
     checkoutTrialEnd,
     configuredPriceIds,
+    resolveCheckoutCustomer,
     isAgendixPlanId,
     isPlanCurrency,
     priceEnvKey,
@@ -90,18 +91,17 @@ serve(async (req) => {
             .eq("id", user.id)
             .single();
 
-        let customerId = profile?.stripe_customer_id;
-        if (!customerId) {
-            const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-            if (customers.data.length > 0) {
-                customerId = customers.data[0].id;
-            } else {
-                const newCustomer = await stripe.customers.create({
-                    email: user.email,
-                    metadata: { supabase_user_id: user.id },
-                });
-                customerId = newCustomer.id;
-            }
+        const { customerId, persist } = await resolveCheckoutCustomer(
+            profile?.stripe_customer_id,
+            user.email ?? "",
+            user.id,
+            {
+                retrieve: (id) => stripe.customers.retrieve(id) as Promise<{ id: string; deleted?: boolean }>,
+                listByEmail: async (email) => email ? (await stripe.customers.list({ email, limit: 1 })).data : [],
+                create: (email, uid) => stripe.customers.create({ email, metadata: { supabase_user_id: uid } }),
+            },
+        );
+        if (persist) {
             const { error: stripeIdError } = await supabaseClient.rpc("set_stripe_customer_id_for_caller", {
                 p_customer_id: customerId,
             });

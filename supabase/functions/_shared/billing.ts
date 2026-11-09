@@ -267,3 +267,35 @@ export function buildCheckoutSessionParams(input: CheckoutSessionInput) {
     },
   };
 }
+
+export interface CheckoutCustomerApi {
+  retrieve(id: string): Promise<{ id: string; deleted?: boolean }>;
+  listByEmail(email: string): Promise<Array<{ id: string }>>;
+  create(email: string, userId: string): Promise<{ id: string }>;
+}
+
+/**
+ * Stripe customer for Checkout. A stored id that no longer exists in the current
+ * Stripe account/mode (e.g. created in another account, or test vs live) is replaced
+ * instead of failing with "No such customer". `persist` is true only when the profile
+ * had no customer yet (the caller RPC never overwrites an existing id; the webhook,
+ * running as service role, records the new one after checkout).
+ */
+export async function resolveCheckoutCustomer(
+  stored: string | null | undefined,
+  email: string,
+  userId: string,
+  api: CheckoutCustomerApi,
+): Promise<{ customerId: string; persist: boolean }> {
+  if (stored) {
+    try {
+      const c = await api.retrieve(stored);
+      if (!c.deleted) return { customerId: c.id, persist: false };
+    } catch (e) {
+      if ((e as { code?: string })?.code !== 'resource_missing') throw e;
+    }
+  }
+  const existing = await api.listByEmail(email);
+  const customerId = existing[0]?.id ?? (await api.create(email, userId)).id;
+  return { customerId, persist: !stored };
+}

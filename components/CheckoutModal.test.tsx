@@ -103,6 +103,57 @@ describe('CheckoutModal', () => {
     expect(screen.getByText('Concluir Atendimento')).toBeInTheDocument();
   });
 
+  it('mostra o tempo agendado como estimado e permite ajustá-lo', () => {
+    renderCheckoutModal({ ...defaultProps, appointment: { ...mockAppointment, duration_minutes: 40 } });
+    const duration = screen.getByLabelText('Tempo de trabalho');
+    expect(duration).toHaveValue(40);
+    expect(screen.getByText(/estimado/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Aumentar 10 minutos' }));
+    expect(duration).toHaveValue(50);
+    fireEvent.click(screen.getByRole('button', { name: 'Diminuir 10 minutos' }));
+    expect(duration).toHaveValue(40);
+    fireEvent.change(duration, { target: { value: '55' } });
+    expect(duration).toHaveValue(55);
+  });
+
+  it('envia o tempo ajustado na mesma RPC que conclui o atendimento', async () => {
+    renderCheckoutModal({ ...defaultProps, appointment: { ...mockAppointment, duration_minutes: 40 } });
+    fireEvent.change(screen.getByLabelText('Tempo de trabalho'), { target: { value: '55' } });
+    fireEvent.click(screen.getByLabelText('PIX'));
+    fireEvent.change(screen.getByLabelText(/recebido por/i), { target: { value: 'owner' } });
+    fireEvent.click(screen.getByText('Confirmar Pagamento'));
+    await waitFor(() => expect(supabase.rpc).toHaveBeenCalledWith('complete_appointment_checkout_v1', expect.objectContaining({ p_appointment_id: 'apt-001', p_actual_duration_minutes: 55 })));
+  });
+
+  it('voltar ao tempo agendado mantém estimado, mesmo após usar atalhos', async () => {
+    renderCheckoutModal({ ...defaultProps, appointment: { ...mockAppointment, duration_minutes: 40 } });
+    fireEvent.click(screen.getByRole('button', { name: 'Aumentar 10 minutos' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Diminuir 10 minutos' }));
+    fireEvent.click(screen.getByLabelText('PIX'));
+    fireEvent.change(screen.getByLabelText(/recebido por/i), { target: { value: 'owner' } });
+    fireEvent.click(screen.getByText('Confirmar Pagamento'));
+    await waitFor(() => expect(supabase.rpc).toHaveBeenCalledWith('complete_appointment_checkout_v1', expect.objectContaining({ p_actual_duration_minutes: null })));
+  });
+
+  it('mantém duração estimada nula ao concluir sem ajuste, inclusive sem duração agendada', async () => {
+    renderCheckoutModal();
+    expect(screen.getByLabelText('Tempo de trabalho')).toHaveValue(null);
+    fireEvent.click(screen.getByLabelText('PIX'));
+    fireEvent.change(screen.getByLabelText(/recebido por/i), { target: { value: 'owner' } });
+    fireEvent.click(screen.getByText('Confirmar Pagamento'));
+    await waitFor(() => expect(supabase.rpc).toHaveBeenCalledWith('complete_appointment_checkout_v1', expect.objectContaining({ p_actual_duration_minutes: null })));
+  });
+
+  it('não conclui com tempo de trabalho inválido', () => {
+    renderCheckoutModal({ ...defaultProps, appointment: { ...mockAppointment, duration_minutes: 40 } });
+    fireEvent.change(screen.getByLabelText('Tempo de trabalho'), { target: { value: '0' } });
+    fireEvent.click(screen.getByLabelText('PIX'));
+    fireEvent.change(screen.getByLabelText(/recebido por/i), { target: { value: 'owner' } });
+    fireEvent.click(screen.getByText('Confirmar Pagamento'));
+    expect(screen.getByText(/informe um tempo de trabalho válido/i)).toBeInTheDocument();
+    expect(supabase.rpc).not.toHaveBeenCalledWith('complete_appointment_checkout_v1', expect.anything());
+  });
+
   it('exibe mensagem de erro ao confirmar sem payment_method', () => {
     renderCheckoutModal();
     fireEvent.click(screen.getByText('Confirmar Pagamento'));
@@ -156,7 +207,7 @@ describe('CheckoutModal', () => {
     fireEvent.click(screen.getByText('Confirmar Pagamento'));
 
     await waitFor(() => {
-      expect(supabase.rpc).toHaveBeenCalledWith('complete_appointment', {
+      expect(supabase.rpc).toHaveBeenCalledWith('complete_appointment_checkout_v1', {
         p_appointment_id: 'apt-001',
         p_payment_method: 'debit',
         p_received_by: '11111111-1111-4111-8111-111111111111',
@@ -164,6 +215,8 @@ describe('CheckoutModal', () => {
         p_final_price: 70,
         p_machine_fee_percent: 2.5,
         p_machine_fee_amount: 1.75,
+        p_actual_duration_minutes: null,
+        p_products: [],
       });
     });
     expect(supabase.from).not.toHaveBeenCalledWith('appointments');

@@ -104,7 +104,7 @@ function productToForm(product: Product): ProductFormState {
   return {
     name: product.name,
     salePrice: String(product.sale_price),
-    costPrice: String(product.cost_price),
+    costPrice: String(product.cost_price ?? 0),
     stockQuantity: String(product.stock_quantity),
     minStockQuantity: String(product.min_stock_quantity),
   };
@@ -303,8 +303,8 @@ export const Products: React.FC = () => {
   );
 
   const renderMobileCard = (product: Product) => {
-    const margin = product.sale_price - product.cost_price;
-    const marginPct = product.sale_price > 0 ? Math.round((margin / product.sale_price) * 100) : 0;
+    const margin = product.cost_price == null ? null : product.sale_price - product.cost_price;
+    const marginPct = margin != null && product.sale_price > 0 ? Math.round((margin / product.sale_price) * 100) : 0;
     const outOfStock = product.stock_quantity === 0;
 
     return (
@@ -325,7 +325,7 @@ export const Products: React.FC = () => {
         </p>
         {isOwner && (
           <p className={`text-xs ${colors.textSecondary} mb-4`}>
-            Margem: {formatPrice(margin)} ({marginPct}%)
+            Margem: {margin == null ? '—' : `${formatPrice(margin)} (${marginPct}%)`}
           </p>
         )}
         <div className={`border-t ${colors.divider} pt-3`}>
@@ -367,7 +367,7 @@ export const Products: React.FC = () => {
           headerClassName: 'font-mono uppercase text-xs',
           render: (row) => (
             <span className={`font-mono tabular-nums ${colors.textSecondary}`}>
-              {formatPrice(row.cost_price)}
+              {row.cost_price == null ? '—' : formatPrice(row.cost_price)}
             </span>
           ),
         },
@@ -377,6 +377,7 @@ export const Products: React.FC = () => {
           align: 'right',
           headerClassName: 'font-mono uppercase text-xs',
           render: (row) => {
+            if (row.cost_price == null) return <span>—</span>;
             const margin = row.sale_price - row.cost_price;
             const pct = row.sale_price > 0 ? Math.round((margin / row.sale_price) * 100) : 0;
             return (

@@ -5,10 +5,9 @@ import { useUI } from '../contexts/UIContext';
 import { BugReportMenu } from './BugReportMenu';
 import { BugReportModal } from './BugReportModal';
 import { capturePageForBugReport, type BugContext } from '../lib/bugReport';
+import { SUPPORT_WHATSAPP_URL } from '../lib/support';
 
 type ReportType = 'bug' | 'idea' | 'question';
-
-const SUPPORT_WHATSAPP_URL = '#';
 
 export const BugReportButton: React.FC = () => {
   const { classes, accent, radius } = useBrutalTheme();
@@ -53,9 +52,8 @@ export const BugReportButton: React.FC = () => {
   const handleContactSupport = useCallback(() => {
     setShowMenu(false);
     setModalOpen(false);
-    if (SUPPORT_WHATSAPP_URL && SUPPORT_WHATSAPP_URL !== '#') {
-      window.open(SUPPORT_WHATSAPP_URL, '_blank', 'noopener,noreferrer');
-    }
+    // Nova aba sem acesso ao window.opener (noopener/noreferrer).
+    window.open(SUPPORT_WHATSAPP_URL, '_blank', 'noopener,noreferrer');
   }, [setModalOpen]);
 
   const handleToggleMenu = useCallback(() => {

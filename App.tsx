@@ -30,6 +30,7 @@ const Agenda = React.lazy(() => import('./pages/Agenda').then(module => ({ defau
 const Clients = React.lazy(() => import('./pages/Clients').then(module => ({ default: module.Clients })));
 const PublicBooking = React.lazy(() => import('./pages/PublicBooking').then(module => ({ default: module.PublicBooking })));
 const ImportDataSettings = React.lazy(() => import('./pages/settings/ImportDataSettings').then(module => ({ default: module.ImportDataSettings })));
+const FinancialSettings = React.lazy(() => import('./pages/settings/FinancialSettings').then(module => ({ default: module.FinancialSettings })));
 const GeneralSettings = React.lazy(() => import('./pages/settings/GeneralSettings').then(module => ({ default: module.GeneralSettings })));
 const WhatsAppMessagesSettings = React.lazy(() => import('./pages/settings/WhatsAppMessagesSettings').then(module => ({ default: module.WhatsAppMessagesSettings })));
 const PublicBookingSettings = React.lazy(() => import('./pages/settings/PublicBookingSettings').then(module => ({ default: module.PublicBookingSettings })));
@@ -261,7 +262,7 @@ const AppRoutes: React.FC = () => {
           <Route path="/clientes" element={<ClientsRouteGuard><Clients /></ClientsRouteGuard>} />
           <Route path="/clientes/:id" element={<ClientsRouteGuard><ClientCRM /></ClientsRouteGuard>} />
           <Route path="/produtos" element={<Products />} />
-          <Route path="/financeiro" element={<Finance />} />
+          <Route path="/financeiro" element={<OwnerRouteGuard><Finance /></OwnerRouteGuard>} />
           <Route path="/financeiro/performance" element={<PerformanceAccessGuard><OwnerRouteGuard><Suspense fallback={<PerformancePageSkeleton />}><StaffPerformance /></Suspense></OwnerRouteGuard></PerformanceAccessGuard>} />
           <Route path="/insights" element={<OwnerRouteGuard><Reports /></OwnerRouteGuard>} />
           <Route path="/meus-insights" element={<StaffInsights />} />
@@ -275,7 +276,7 @@ const AppRoutes: React.FC = () => {
           <Route path="/configuracoes/equipe" element={<OwnerRouteGuard><TeamSettings /></OwnerRouteGuard>} />
           <Route path="/configuracoes/servicos" element={<OwnerRouteGuard><ServiceSettings /></OwnerRouteGuard>} />
           <Route path="/configuracoes/comissoes" element={<Navigate to="/configuracoes/equipe" replace />} />
-          <Route path="/configuracoes/financeiro" element={<Navigate to="/configuracoes/equipe" replace />} />
+          <Route path="/configuracoes/financeiro" element={<OwnerRouteGuard><FinancialSettings /></OwnerRouteGuard>} />
           <Route path="/configuracoes/assinatura" element={<OwnerRouteGuard><SubscriptionSettings /></OwnerRouteGuard>} />
           <Route path="/configuracoes/clube" element={<OwnerRouteGuard><MembershipPlansSettings /></OwnerRouteGuard>} />
           <Route path="/configuracoes/clube/pix" element={<OwnerRouteGuard><MembershipSettings /></OwnerRouteGuard>} />

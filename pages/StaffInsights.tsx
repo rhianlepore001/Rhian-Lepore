@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useBusinessCopy } from '../hooks/useBusinessCopy';
 import { useStaffInsights } from '../hooks/useStaffInsights';
+import { ChairHourCard } from '../components/performance/ChairHourCard';
 import { useTenantLocale } from '../hooks/useTenantLocale';
 import type { StaffPeriod } from '../types/insights';
 import { buildMetricAccount, STAFF_METRIC_IDS } from '../utils/staffPerformanceAccount';
@@ -90,6 +91,8 @@ export const StaffInsights: React.FC = () => {
         subtitle={<span>{subtitle}</span>}
         className="!pb-0 !gap-1"
       />
+
+      {data?.period && <ChairHourCard month={data.period.start} endDate={data.period.end} />}
 
       <div className="flex items-center gap-2 min-w-0">
         <div

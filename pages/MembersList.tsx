@@ -19,6 +19,7 @@ import { PixActions } from '../components/membership/PixActions';
 import { MembershipStatus, MembershipWithPlan } from '../services/memberships';
 import { formatCurrency } from '../utils/formatters';
 import { buildWhatsAppLink } from '../utils/whatsappTemplates';
+import { openWhatsApp } from '../utils/openWhatsApp';
 
 const TABS: { value: MembershipStatus | 'all'; label: string }[] = [
     { value: 'all', label: 'Todos' },
@@ -102,7 +103,7 @@ export const MembersList: React.FC = () => {
             estabelecimento: businessName || 'seu clube de assinatura',
             plano: m.plan?.name || '',
         });
-        window.open(buildWhatsAppLink(phone, region, message), '_blank');
+        openWhatsApp(buildWhatsAppLink(phone, region, message));
     };
 
     return (

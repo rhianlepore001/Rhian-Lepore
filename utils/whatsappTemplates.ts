@@ -213,14 +213,22 @@ export function renderWhatsAppTemplate(
 }
 
 export function buildWhatsAppLink(phone: string, region: WhatsAppRegion = 'BR', message?: string): string {
-  let digits = String(phone ?? '').replace(/\D/g, '');
+  const raw = String(phone ?? '').trim();
+  let digits = raw.replace(/\D/g, '');
+  const text = message ? `?text=${encodeURIComponent(message)}` : '';
+  // Número salvo com + ou 00 já é internacional (ex.: cliente de Portugal numa
+  // barbearia do Brasil): usar como está, sem prefixar o DDI do negócio.
   const ddi = region === 'PT' ? '351' : '55';
   const maximumNationalLength = region === 'PT' ? 9 : 11;
+  const international = (raw.startsWith('+') && digits.length > 6) ||
+    (raw.startsWith('00') && digits.length > maximumNationalLength + 2);
+  if (international) {
+    return `https://wa.me/${raw.startsWith('+') ? digits : digits.slice(2)}${text}`;
+  }
 
   while (digits.startsWith(ddi) && digits.length > maximumNationalLength) {
     digits = digits.slice(ddi.length);
   }
 
-  const text = message ? `?text=${encodeURIComponent(message)}` : '';
   return `https://wa.me/${ddi}${digits}${text}`;
 }

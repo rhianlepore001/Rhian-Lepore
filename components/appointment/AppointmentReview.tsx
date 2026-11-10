@@ -22,6 +22,10 @@ interface AppointmentReviewProps {
     accentColor: string;
     sendWhatsapp: boolean;
     whatsappEnabled?: boolean;
+    /** Cliente tem telefone? Sem ele, a chave fica visível mas avisa. */
+    clientHasPhone?: boolean;
+    /** Só para o gestor: abre o editor da mensagem sem sair do atendimento. */
+    onCustomizeMessage?: () => void;
     setSendWhatsapp: (v: boolean) => void;
     customPrice: string;
     setCustomPrice: (v: string) => void;
@@ -53,6 +57,8 @@ export const AppointmentReview: React.FC<AppointmentReviewProps> = ({
     currencyRegion,
     sendWhatsapp,
     whatsappEnabled = true,
+    clientHasPhone = true,
+    onCustomizeMessage,
     setSendWhatsapp,
     customPrice,
     setCustomPrice,
@@ -150,18 +156,33 @@ export const AppointmentReview: React.FC<AppointmentReviewProps> = ({
             </div>
 
             {/* WhatsApp: opção discreta, por último */}
-            {whatsappEnabled && <div data-testid="review-whatsapp" className="mt-4 flex items-center justify-between gap-3 px-1 py-1">
-                <span className="flex items-center gap-2 min-w-0 text-sm text-theme-textSecondary">
-                    <MessageCircle className={`w-4 h-4 shrink-0 ${sendWhatsapp ? 'text-[var(--color-success)]' : 'text-[var(--color-text-muted)]'}`} aria-hidden="true" />
-                    <span className="truncate">Enviar confirmação no WhatsApp</span>
-                </span>
-                <SettingsSwitch
-                    id="review-whatsapp-toggle"
-                    size="sm"
-                    checked={sendWhatsapp}
-                    onChange={setSendWhatsapp}
-                    ariaLabel="Enviar confirmação no WhatsApp"
-                />
+            {whatsappEnabled && <div data-testid="review-whatsapp" className="mt-4 px-1">
+                <div className="flex items-center justify-between gap-3 py-1">
+                    <span className="flex items-center gap-2 min-w-0 text-sm text-theme-textSecondary">
+                        <MessageCircle className={`w-4 h-4 shrink-0 ${sendWhatsapp ? 'text-[var(--color-success)]' : 'text-[var(--color-text-muted)]'}`} aria-hidden="true" />
+                        <span className="truncate">Enviar confirmação no WhatsApp</span>
+                    </span>
+                    <SettingsSwitch
+                        id="review-whatsapp-toggle"
+                        size="sm"
+                        checked={sendWhatsapp}
+                        onChange={setSendWhatsapp}
+                        ariaLabel="Enviar confirmação no WhatsApp"
+                    />
+                </div>
+                {sendWhatsapp && !clientHasPhone && (
+                    <p role="status" className="pl-6 text-xs text-[var(--color-text-muted)]">Cliente sem telefone cadastrado.</p>
+                )}
+                {onCustomizeMessage && (
+                    <button
+                        type="button"
+                        onClick={onCustomizeMessage}
+                        data-testid="review-whatsapp-customize"
+                        className="ml-6 -mt-2 inline-flex items-center min-h-[44px] text-xs text-[var(--color-text-muted)] underline underline-offset-4 decoration-[var(--color-border)] hover:text-theme-text hover:decoration-current focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-input-focus)] rounded"
+                    >
+                        Personalizar mensagem
+                    </button>
+                )}
             </div>}
         </div>
     );

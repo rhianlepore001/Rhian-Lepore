@@ -8,6 +8,7 @@ import { AlertsProvider } from './contexts/AlertsContext';
 import { PublicClientProvider } from './contexts/PublicClientContext';
 import { DesignSystemProvider } from './contexts/DesignSystemProvider';
 import { ToastProvider } from './components/ui';
+import { WhatsAppHandoffHost } from './components/whatsapp/WhatsAppHandoff';
 
 import { ActivationBanner } from './components/onboarding/ActivationBanner';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -323,6 +324,7 @@ const App: React.FC = () => {
               <AlertsProvider>
                   <AppRoutes />
                   <ActivationBanner />
+                  <WhatsAppHandoffHost />
                   <DevBugButton />
               </AlertsProvider>
             </PublicClientProvider>

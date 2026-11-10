@@ -69,6 +69,17 @@ describe('Mensagens do WhatsApp', () => {
       async (_company, row) => row,
     );
   });
+  it('Novo agendamento não tem "Ativa": a escolha é feita em cada atendimento', async () => {
+    vi.mocked(service.fetchWhatsAppTemplates).mockResolvedValue([
+      { message_key: 'wizard_confirm', enabled: false, body: 'Oi {cliente}' },
+    ]);
+    setup();
+    const card = await screen.findByRole('article', { name: 'Novo agendamento' });
+    expect(card.querySelector('input[type="checkbox"]')).toBeNull();
+    expect(card).toHaveTextContent('Você escolhe em cada atendimento se envia.');
+    expect(card).toHaveTextContent('Texto personalizado');
+    expect(screen.getByRole('checkbox', { name: 'Ativa: Horário remarcado' })).toBeInTheDocument();
+  });
   it('edita, visualiza como texto, insere variável e salva', async () => {
     setup();
     await userEvent.click(
@@ -125,7 +136,6 @@ describe('Mensagens do WhatsApp', () => {
     expect(open).toHaveBeenCalledWith(
       'https://wa.me/5500000000000?text=Oi%20Cliente%20Exemplo%20de%20Neg%C3%B3cio%20Exemplo',
       '_blank',
-      'noopener,noreferrer',
     );
     open.mockRestore();
   });

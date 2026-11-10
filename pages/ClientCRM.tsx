@@ -38,6 +38,7 @@ import {
 
 import { useStaffClientPermission } from '../hooks/useStaffClientPermission';
 import { isStaffClientEditForbiddenError, STAFF_CLIENT_EDIT_FORBIDDEN_MESSAGE } from '../utils/staffClientPermission';
+import { openWhatsApp } from '../utils/openWhatsApp';
 
 const HISTORY_PAGE = 10;
 
@@ -204,7 +205,7 @@ export const ClientCRM: React.FC = () => {
       showToast('Cliente sem telefone cadastrado.', 'info');
       return;
     }
-    window.open(buildWhatsAppLink(client.phone, region === 'PT' ? 'PT' : 'BR'), '_blank');
+    openWhatsApp(buildWhatsAppLink(client.phone, region === 'PT' ? 'PT' : 'BR'));
   };
 
   const handleUpdateClient = async (e: React.FormEvent) => {

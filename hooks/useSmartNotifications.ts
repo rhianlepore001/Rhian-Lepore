@@ -5,6 +5,7 @@ import { useAIOSDiagnostic } from './useAIOSDiagnostic';
 import { formatCurrency } from '../utils/formatters';
 import { generateReactivationMessage } from '../utils/aiosCopywriter';
 import { buildWhatsAppLink } from '../utils/whatsappTemplates';
+import { openWhatsApp } from '../utils/openWhatsApp';
 
 export interface SmartNotification {
     id: string;
@@ -144,10 +145,12 @@ export function useSmartNotifications() {
                 ltv: notification.client.totalSpent,
             });
 
-            await logCampaignActivity(notification.client.id, 'SmartNotification', 'whatsapp_reactivation');
-
+            // Abre no próprio toque, antes de qualquer await: o Safari do iPhone
+            // bloqueia nova aba aberta depois de esperar a rede.
             const url = buildWhatsAppLink(notification.client.phone, region === 'PT' ? 'PT' : 'BR', message);
-            window.open(url, '_blank');
+            openWhatsApp(url);
+
+            await logCampaignActivity(notification.client.id, 'SmartNotification', 'whatsapp_reactivation');
 
             // Auto-dismiss after sending
             dismiss(notification.id);

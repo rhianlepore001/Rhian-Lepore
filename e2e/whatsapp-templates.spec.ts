@@ -1,283 +1,13 @@
-import { expect, test, type Page, type Route } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
-import type { WhatsAppTemplateOverride } from '../utils/whatsappTemplates';
+import { installMocks } from './whatsapp-mocks';
 
 test.skip(process.env.AGENDIX_WHATSAPP_E2E !== '1', 'Use e2e/whatsapp-templates.config.ts para executar esta suíte isolada.');
 
-const OWNER = '00000000-0000-4000-8000-00000000000a';
-const STAFF = '00000000-0000-4000-8000-00000000001a';
 const SHOTS =
   process.env.SHOT_DIR ??
   path.join(process.cwd(), 'docs/whatsapp-messages/screenshots');
-const HOURS = Object.fromEntries(
-  ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map((day) => [
-    day,
-    { isOpen: true, blocks: [{ start: '09:00', end: '19:00' }] },
-  ]),
-);
-
-async function respond(route: Route, data: unknown) {
-  const single = route
-    .request()
-    .headers()
-    .accept?.includes('vnd.pgrst.object+json');
-  await route.fulfill({
-    status: 200,
-    contentType: 'application/json',
-    headers: { 'access-control-allow-origin': '*' },
-    body: JSON.stringify(
-      single && Array.isArray(data) ? (data[0] ?? null) : data,
-    ),
-  });
-}
-
-async function installMocks(
-  page: Page,
-  theme: 'barber' | 'beauty',
-  role: 'owner' | 'staff' = 'owner',
-  withBooking = false,
-) {
-  const id = role === 'owner' ? OWNER : STAFF;
-  const encode = (value: unknown) =>
-    Buffer.from(JSON.stringify(value)).toString('base64url');
-  const session = {
-    access_token: `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode({ sub: id, role: 'authenticated', aud: 'authenticated', exp: Math.floor(Date.now() / 1000) + 86400 })}.sig`,
-    refresh_token: 'local',
-    expires_in: 86400,
-    expires_at: Math.floor(Date.now() / 1000) + 86400,
-    token_type: 'bearer',
-    user: {
-      id,
-      email: 'dono@example.test',
-      aud: 'authenticated',
-      role: 'authenticated',
-      user_metadata: {},
-      app_metadata: { provider: 'email' },
-      created_at: '2026-01-01T00:00:00Z',
-    },
-  };
-  const templates: WhatsAppTemplateOverride[] = [];
-  const writes: WhatsAppTemplateOverride[] = [];
-  const opens: string[] = [];
-  let accepted = false;
-  await page.addInitScript(
-    ({ session, theme }) => {
-      localStorage.setItem(
-        'sb-whatsapp-e2e-auth-token',
-        JSON.stringify(session),
-      );
-      localStorage.setItem(
-        'rhian_public_client_00000000-0000-4000-8000-00000000000a',
-        JSON.stringify({
-          id: 'cliente-exemplo',
-          name: 'Cliente Exemplo',
-          phone: '00000000000',
-          business_id: '00000000-0000-4000-8000-00000000000a',
-        }),
-      );
-      localStorage.setItem(
-        'agendix_color_mode',
-        theme === 'beauty' ? 'light' : 'dark',
-      );
-      window.open = (url) => {
-        window.dispatchEvent(
-          new CustomEvent('test-whatsapp-open', { detail: String(url) }),
-        );
-        return null;
-      };
-    },
-    { session, theme },
-  );
-  await page.exposeFunction('recordWhatsApp', (url: string) => opens.push(url));
-  await page.addInitScript(() =>
-    window.addEventListener(
-      'test-whatsapp-open',
-      (event) =>
-        void (
-          window as unknown as { recordWhatsApp: (url: string) => void }
-        ).recordWhatsApp((event as CustomEvent).detail),
-    ),
-  );
-  await page.route('**/*', async (route) => {
-    const url = new URL(route.request().url());
-    if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
-      await route.continue();
-      return;
-    }
-    if (url.hostname !== 'whatsapp-e2e.supabase.co') {
-      await route.abort();
-      return;
-    }
-    if (route.request().method() === 'OPTIONS') {
-      await route.fulfill({
-        status: 204,
-        headers: {
-          'access-control-allow-origin': '*',
-          'access-control-allow-headers': '*',
-          'access-control-allow-methods': '*',
-        },
-      });
-      return;
-    }
-    const p = url.pathname;
-    if (p.endsWith('/rpc/list_company_pending_public_bookings')) {
-      await respond(route, withBooking && !accepted ? [{ id: '00000000-0000-4000-8000-0000000000b1', business_id: OWNER, customer_name: 'Cliente Exemplo', customer_phone: '00000000000', status: 'pending', appointment_time: new Date(Date.now() + 3 * 86400_000).toISOString(), total_price: 90, service_ids: [], professional_id: null }] : []);
-      return;
-    }
-    if (p.endsWith('/rpc/accept_public_booking_v2')) {
-      accepted = true;
-      await respond(route, { appointment_id: '00000000-0000-4000-8000-0000000000b2', service_names: 'Atendimento' });
-      return;
-    }
-    if (p.includes('/auth/v1/user')) {
-      await respond(route, session.user);
-      return;
-    }
-    if (p.includes('/auth/v1/')) {
-      await respond(route, session);
-      return;
-    }
-    if (p.endsWith('/whatsapp_message_templates')) {
-      if (route.request().method() === 'POST') {
-        const row = route.request().postDataJSON();
-        expect(row.business_id).toBe(OWNER);
-        const saved = {
-          message_key: row.message_key,
-          body: row.body,
-          enabled: row.enabled,
-        };
-        const index = templates.findIndex(
-          (item) => item.message_key === row.message_key,
-        );
-        if (index >= 0) templates[index] = saved;
-        else templates.push(saved);
-        writes.push(saved);
-        await respond(route, saved);
-      } else {
-        expect(url.searchParams.get('business_id')).toBe(`eq.${OWNER}`);
-        await respond(route, templates);
-      }
-      return;
-    }
-    if (p.endsWith('/profiles')) {
-      await respond(route, [
-        {
-          id,
-          role,
-          company_id: OWNER,
-          full_name: 'Dani',
-          phone: '00000000000',
-          business_name: 'Negócio Exemplo',
-          business_slug: 'negocio-exemplo',
-          user_type: theme,
-          region: 'BR',
-          subscription_status: 'active',
-          tutorial_completed: true,
-          public_booking_enabled: true,
-        },
-      ]);
-      return;
-    }
-    if (p.endsWith('/business_settings')) {
-      await respond(route, [
-        {
-          user_id: OWNER,
-          business_hours: HOURS,
-          timezone: 'America/Sao_Paulo',
-          onboarding_completed: true,
-          enable_self_rescheduling: true,
-        },
-      ]);
-      return;
-    }
-    if (p.endsWith('/onboarding_progress')) {
-      await respond(route, [{ is_completed: true }]);
-      return;
-    }
-    if (p.endsWith('/rpc/get_public_whatsapp_templates')) {
-      await respond(
-        route,
-        templates.filter(
-          (row) =>
-            row.message_key.startsWith('client_') ||
-            ['membership_overdue', 'membership_pending'].includes(
-              row.message_key,
-            ),
-        ),
-      );
-      return;
-    }
-    if (p.endsWith('/rpc/get_public_profile_by_slug')) {
-      await respond(route, {
-        id: OWNER,
-        business_name: 'Negócio Exemplo',
-        business_slug: 'negocio-exemplo',
-        user_type: theme,
-        region: 'BR',
-        phone: '00000000000',
-        public_booking_enabled: true,
-      });
-      return;
-    }
-    if (p.endsWith('/rpc/get_public_business_settings_json')) {
-      await respond(route, {
-        business_hours: HOURS,
-        timezone: 'America/Sao_Paulo',
-        enable_self_rescheduling: true,
-        client_cancel_cutoff_hours: 2,
-      });
-      return;
-    }
-    if (p.endsWith('/rpc/get_client_bookings_history_v2')) {
-      await respond(
-        route,
-        [
-          {
-            id: 'booking-pending',
-            status: 'pending',
-            appointment_time: new Date(
-              Date.now() + 3 * 86400_000,
-            ).toISOString(),
-          },
-          {
-            id: 'booking-confirmed',
-            status: 'confirmed',
-            appointment_time: new Date(
-              Date.now() + 4 * 86400_000,
-            ).toISOString(),
-          },
-          {
-            id: 'booking-near',
-            status: 'confirmed',
-            appointment_time: new Date(Date.now() + 30 * 60_000).toISOString(),
-          },
-        ].map((booking) => ({
-          ...booking,
-          service_names: ['Atendimento'],
-          professional_name: 'Dani',
-          total_price: 90,
-          created_at: new Date(Date.now() - 86400_000).toISOString(),
-        })),
-      );
-      return;
-    }
-    if (
-      p.endsWith('/rpc/get_public_membership_plans') ||
-      p.endsWith('/rpc/get_client_booking_cancellations')
-    ) {
-      await respond(route, []);
-      return;
-    }
-    if (p.includes('/rpc/')) {
-      await respond(route, null);
-      return;
-    }
-    await respond(route, []);
-  });
-  return { templates, writes, opens };
-}
-
 for (const theme of ['barber', 'beauty'] as const) {
   test(`${theme}: edita, salva, recarrega, desliga, restaura e testa`, async ({
     page,
@@ -444,3 +174,73 @@ for (const enabled of [true, false]) {
     }
   });
 }
+
+/** Cliente → serviço → horário → Confirmar, no Novo Atendimento da Agenda. */
+async function wizardToConfirm(page: import('@playwright/test').Page) {
+  await page.goto('/#/agenda');
+  await page.getByRole('button', { name: /Novo Agendamento/i }).first().click();
+  const choice = page.getByRole('button', { name: /Novo atendimento/ });
+  if (await choice.isVisible().catch(() => false)) await choice.click();
+  await page.getByRole('button', { name: /Buscar cliente/i }).click();
+  await page.getByText('Cliente Exemplo', { exact: true }).first().click();
+  await page.getByRole('button', { name: 'Continuar', exact: true }).click();
+  await page.getByText('Atendimento Exemplo', { exact: true }).first().click();
+  await page.getByRole('button', { name: 'Continuar', exact: true }).click();
+  const next = page.getByRole('button', { name: 'Continuar', exact: true });
+  if (await next.isDisabled()) {
+    const pro = page.getByTestId('wizard-pro-list').getByRole('button').first();
+    if (await pro.isVisible().catch(() => false)) await pro.click();
+    if (await next.isDisabled()) await page.locator('button.font-mono:not([disabled])').first().click();
+  }
+  await next.click();
+  await expect(page.getByRole('button', { name: 'Confirmar Atendimento' })).toBeVisible();
+}
+
+for (const theme of ['barber', 'beauty'] as const) {
+  test(`${theme}: Novo agendamento personalizado em Ajustes chega ao wa.me com as variáveis`, async ({ page }) => {
+    const mock = await installMocks(page, theme, 'owner', false, { agenda: true });
+    await page.goto('/#/configuracoes/whatsapp');
+    await page.getByRole('button', { name: 'Editar Novo agendamento' }).click();
+    await page.getByLabel('Texto da mensagem').fill('Oi {cliente}! {data} às {hora} em {estabelecimento}. Até já!');
+    await page.getByRole('button', { name: 'Salvar', exact: true }).click();
+    await expect.poll(() => mock.writes.length).toBe(1);
+    expect(mock.writes[0]).toMatchObject({ message_key: 'wizard_confirm', body: 'Oi {cliente}! {data} às {hora} em {estabelecimento}. Até já!' });
+
+    await wizardToConfirm(page);
+    const toggle = page.getByRole('checkbox', { name: 'Enviar confirmação no WhatsApp' });
+    await expect(toggle).not.toBeChecked();
+    await page.locator('label[for="review-whatsapp-toggle"]').click();
+    await expect(toggle).toBeChecked();
+    await page.getByRole('button', { name: 'Confirmar Atendimento' }).click();
+    await expect.poll(() => mock.created.length).toBe(1);
+    const open = page.getByRole('link', { name: /Abrir WhatsApp/ });
+    await expect(open).toBeVisible();
+    const href = new URL((await open.getAttribute('href'))!);
+    expect(href.host).toBe('wa.me');
+    expect(href.pathname).toBe('/5511900000001');
+    expect(href.searchParams.get('text')).toMatch(/^Oi Cliente Exemplo! \d{2}\/\d{2}\/\d{4} às \d{2}:\d{2} em Negócio Exemplo\. Até já!$/);
+    const [popup] = await Promise.all([page.waitForEvent('popup'), open.click()]);
+    await popup.waitForURL(/^https:\/\/wa\.me\//);
+    expect(new URL(popup.url()).searchParams.get('text')).toBe(href.searchParams.get('text'));
+    await expect(open).toHaveCount(0);
+    // Nenhum window.open escondido: só o toque no link.
+    expect(mock.opens).toHaveLength(0);
+  });
+}
+
+test('"Personalizar mensagem" no passo Confirmar edita sem perder o atendimento', async ({ page }) => {
+  const mock = await installMocks(page, 'barber', 'owner', false, { agenda: true });
+  await wizardToConfirm(page);
+  await page.getByRole('button', { name: 'Personalizar mensagem' }).click();
+  const editor = page.getByRole('dialog', { name: 'Novo agendamento' });
+  await editor.getByLabel('Texto da mensagem').fill('Combinado, {cliente}: {data} {hora}.');
+  await editor.getByRole('button', { name: 'Salvar', exact: true }).click();
+  await expect(editor).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Confirmar Atendimento' })).toBeVisible();
+  await expect(page.getByText('Cliente Exemplo').first()).toBeVisible();
+  await page.locator('label[for="review-whatsapp-toggle"]').click();
+  await page.getByRole('button', { name: 'Confirmar Atendimento' }).click();
+  const href = new URL((await page.getByRole('link', { name: /Abrir WhatsApp/ }).getAttribute('href'))!);
+  expect(href.searchParams.get('text')).toMatch(/^Combinado, Cliente Exemplo: \d{2}\/\d{2}\/\d{4} \d{2}:\d{2}\.$/);
+  expect(mock.writes[0]).toMatchObject({ message_key: 'wizard_confirm', enabled: true });
+});

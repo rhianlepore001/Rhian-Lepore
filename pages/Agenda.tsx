@@ -73,6 +73,7 @@ import { useTenantLocale } from '../hooks/useTenantLocale';
 import { useBusinessCopy } from '../hooks/useBusinessCopy';
 import { getOwnerAcceptWhatsAppText } from '../utils/publicBookingCopy';
 import { formatRescheduleHistoryLine } from '../utils/rescheduleCopy';
+import { openWhatsApp } from '../utils/openWhatsApp';
 
 interface Appointment {
     id: string;
@@ -835,7 +836,7 @@ export const Agenda: React.FC = () => {
                     cancelLabel: 'Agora não',
                     onConfirm: () => {
                         setConfirmDialog(null);
-                        window.open(buildWhatsAppLink(phone, currencyRegion, message), '_blank');
+                        openWhatsApp(buildWhatsAppLink(phone, currencyRegion, message));
                     },
                 });
             } else {
@@ -1019,7 +1020,7 @@ export const Agenda: React.FC = () => {
                     cancelLabel: 'Agora não',
                     onConfirm: () => {
                         setConfirmDialog(null);
-                        window.open(buildWhatsAppLink(clientPhone, currencyRegion, message), '_blank');
+                        openWhatsApp(buildWhatsAppLink(clientPhone, currencyRegion, message));
                     },
                 });
             } else {

@@ -71,6 +71,10 @@ vi.mock('../../utils/rescheduleOccupancy', () => ({
 import { fetchRescheduleOccupancy } from '../../utils/rescheduleOccupancy';
 import { RescheduleAppointmentModal } from '../../components/agenda/RescheduleAppointmentModal';
 import { RESCHEDULE_OCCUPANCY_ERROR } from '../../utils/rescheduleCopy';
+import { WhatsAppHandoffHost, clearWhatsAppHandoff } from '../../components/whatsapp/WhatsAppHandoff';
+import { act } from '@testing-library/react';
+
+const handoffHref = () => screen.getByRole('link', { name: /Abrir WhatsApp/ }).getAttribute('href')!;
 
 const appointment = {
   id: 'apt-1',
@@ -108,15 +112,18 @@ describe('RescheduleAppointmentModal', () => {
     vi.mocked(fetchRescheduleOccupancy).mockResolvedValue([]);
     rpc.mockResolvedValue({ data: { success: true }, error: null });
     vi.stubGlobal('open', open);
+    act(() => clearWhatsAppHandoff());
   });
 
   it('envia o texto salvo com nome puro do cliente', async () => {
     messageOverrides.reschedule = { message_key: 'reschedule', enabled: true, body: 'Oi {cliente}, remarcamos para {hora}.' };
     renderModal();
+    render(<WhatsAppHandoffHost />);
     fireEvent.click(screen.getByText('slot-10:30'));
     fireEvent.click(screen.getByTestId('reschedule-confirm'));
-    await waitFor(() => expect(open).toHaveBeenCalled());
-    expect(new URL(String(open.mock.calls[0][0])).searchParams.get('text')).toBe('Oi Cliente Exemplo, remarcamos para 10:30.');
+    // iPhone: depois do await da RPC, nada de window.open; a pessoa toca no link.
+    await waitFor(() => expect(new URL(handoffHref()).searchParams.get('text')).toBe('Oi Cliente Exemplo, remarcamos para 10:30.'));
+    expect(open).not.toHaveBeenCalled();
   });
 
   it('desligada não mostra caixa de aviso nem abre WhatsApp', async () => {
@@ -127,6 +134,7 @@ describe('RescheduleAppointmentModal', () => {
     fireEvent.click(screen.getByTestId('reschedule-confirm'));
     await waitFor(() => expect(showToast).toHaveBeenCalledWith('Horário remarcado.', 'success'));
     expect(open).not.toHaveBeenCalled();
+    expect(screen.queryByRole('link', { name: /Abrir WhatsApp/ })).toBeNull();
   });
 
   it('mostra Atual e desabilita confirmar sem mudança (R-09)', () => {
@@ -172,14 +180,15 @@ describe('RescheduleAppointmentModal', () => {
   it('sucesso chama RPC, toast Horário remarcado. e abre wa.me', async () => {
     const onSuccess = vi.fn();
     renderModal({ onSuccess });
+    render(<WhatsAppHandoffHost />);
     fireEvent.click(screen.getByText('slot-10:30'));
     fireEvent.click(screen.getByTestId('reschedule-confirm'));
     await waitFor(() => expect(rpc).toHaveBeenCalled());
     expect(rpc.mock.calls[0][0]).toBe('reschedule_appointment');
     await waitFor(() => expect(showToast).toHaveBeenCalledWith('Horário remarcado.', 'success'));
     expect(onSuccess).toHaveBeenCalled();
-    expect(open).toHaveBeenCalled();
-    expect(String(open.mock.calls[0][0])).toContain('https://wa.me/');
+    expect(handoffHref()).toContain('https://wa.me/');
+    expect(open).not.toHaveBeenCalled();
   });
 
   it('mostra erro inline acima de confirmar, limpa no retry e some no sucesso', async () => {

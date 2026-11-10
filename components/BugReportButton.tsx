@@ -6,6 +6,7 @@ import { BugReportMenu } from './BugReportMenu';
 import { BugReportModal } from './BugReportModal';
 import { capturePageForBugReport, type BugContext } from '../lib/bugReport';
 import { SUPPORT_WHATSAPP_URL } from '../lib/support';
+import { openWhatsApp } from '../utils/openWhatsApp';
 
 type ReportType = 'bug' | 'idea' | 'question';
 
@@ -52,8 +53,8 @@ export const BugReportButton: React.FC = () => {
   const handleContactSupport = useCallback(() => {
     setShowMenu(false);
     setModalOpen(false);
-    // Nova aba sem acesso ao window.opener (noopener/noreferrer).
-    window.open(SUPPORT_WHATSAPP_URL, '_blank', 'noopener,noreferrer');
+    // Nova aba sem window.opener; no iPhone, cai para a própria aba se bloquear.
+    openWhatsApp(SUPPORT_WHATSAPP_URL);
   }, [setModalOpen]);
 
   const handleToggleMenu = useCallback(() => {

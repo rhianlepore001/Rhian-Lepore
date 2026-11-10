@@ -62,6 +62,21 @@ describe('buildWhatsAppLink', () => {
     expect(buildWhatsAppLink('+351 000 000 000', 'PT')).toBe('https://wa.me/351000000000');
   });
 
+  it('respeita número internacional salvo com + ou 00 (cliente de outro país)', () => {
+    expect(buildWhatsAppLink('+351 900 000 001', 'BR')).toBe('https://wa.me/351900000001');
+    expect(buildWhatsAppLink('00351 900 000 001', 'BR')).toBe('https://wa.me/351900000001');
+    expect(buildWhatsAppLink('+55 11 90000-0001', 'PT')).toBe('https://wa.me/5511900000001');
+  });
+
+  it('codifica quebra de linha, emoji, asterisco e & sem perder nada', () => {
+    const text = 'Oi João! ✂️\n*Corte* & barba às 10:00 #1';
+    const url = new URL(buildWhatsAppLink('11900000001', 'BR', text));
+    expect(url.host).toBe('wa.me');
+    expect(url.pathname).toBe('/5511900000001');
+    expect(url.searchParams.get('text')).toBe(text);
+    expect(url.search).not.toMatch(/[ #\n]/);
+  });
+
   it('não duplica o DDI brasileiro já salvo', () => {
     expect(buildWhatsAppLink('+55 00 00000-0000', 'BR')).toBe('https://wa.me/5500000000000');
   });

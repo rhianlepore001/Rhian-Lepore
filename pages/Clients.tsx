@@ -30,6 +30,7 @@ import {
   syncPublicClientsToCrm,
 } from '../services/crm';
 import type { ClientFilter, ClientRecord, EnrichedClient } from '../types/crm';
+import { openWhatsApp } from '../utils/openWhatsApp';
 
 const FILTERS: ClientFilter[] = ['Todos', 'VIP', 'Novos', 'Inativo'];
 
@@ -358,7 +359,7 @@ export const Clients: React.FC = () => {
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              window.open(buildWhatsAppLink(client.phone!, region === 'PT' ? 'PT' : 'BR'), '_blank');
+                              openWhatsApp(buildWhatsAppLink(client.phone!, region === 'PT' ? 'PT' : 'BR'));
                             }}
                             className="p-1 rounded-full hover:bg-[var(--color-success-bg)] transition-colors text-[var(--color-success)] min-h-[44px] min-w-[44px] inline-flex items-center justify-center -my-2"
                             title="WhatsApp"

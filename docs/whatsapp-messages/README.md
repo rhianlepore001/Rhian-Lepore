@@ -6,7 +6,16 @@ Base: `main` com #164. Migration preparada para revisão; nenhum SQL remoto ou d
 
 - Ajustes > Mensagens do WhatsApp: 14 mensagens em seis grupos, acesso exclusivo do gestor.
 - Texto personalizado por negócio e mensagem. Sem linha ou com `body = null`, usa o padrão do código no tema do negócio.
-- Desativar `booking_accepted`, `booking_confirmed`, `wizard_confirm` ou `reschedule` oculta a oferta/caixa de envio. Nas demais mensagens, o contato abre o WhatsApp sem texto.
+- Desativar `booking_accepted`, `booking_confirmed` ou `reschedule` oculta a oferta/caixa de envio. Nas demais mensagens, o contato abre o WhatsApp sem texto.
+- `wizard_confirm` (Novo agendamento) não tem "Ativa": a chave "Enviar confirmação no WhatsApp" aparece sempre no passo Confirmar, começa desligada e usa o texto salvo (ou o padrão). Abaixo dela, "Personalizar mensagem" (só gestor) abre este mesmo editor por cima do atendimento, sem perder o que foi preenchido.
+
+## iPhone (Safari e app na tela inicial)
+
+- O Safari do iOS só abre nova aba se `window.open` rodar dentro do toque. Depois de um `await` (salvar no banco), ele bloqueia em silêncio.
+- Regra no código: abrir o WhatsApp só com `openWhatsApp(url)` (`utils/openWhatsApp.ts`), chamado de forma síncrona no `onClick`. Fluxos que salvam antes (Novo Atendimento, Remarcar) usam `requestWhatsAppHandoff`, que mostra o texto e um link real "Abrir WhatsApp" para a pessoa tocar.
+- Se a nova aba for bloqueada no iPhone/iPad ou no app instalado na tela inicial, `openWhatsApp` navega para o wa.me na própria aba.
+- Telefone salvo com `+` ou `00` é tratado como internacional (ex.: cliente +351 numa barbearia do Brasil).
+- Suíte WebKit com iPhone emulado (local, fora do CI): `npx playwright install webkit && npx playwright test --config e2e/whatsapp-ios.config.ts`. Não substitui o teste no aparelho.
 - O editor valida as variáveis disponíveis, 1.000 caracteres Unicode, até três quebras seguidas e ausência de controles. A prévia e o texto são renderizados por React como texto.
 - “Restaurar padrão” pede confirmação, grava `body = null` e preserva a opção Ativa.
 - O teste usa o WhatsApp do perfil do usuário e dados fictícios relacionados ao negócio.

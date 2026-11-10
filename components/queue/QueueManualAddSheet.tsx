@@ -16,6 +16,7 @@ import {
   buildQueueTrackingMessage,
   buildQueueTrackingUrl,
 } from '@/utils/queueShare';
+import { openWhatsApp } from '../../utils/openWhatsApp';
 
 interface TeamOption {
   id: string;
@@ -272,7 +273,7 @@ export const QueueManualAddSheet: React.FC<QueueManualAddSheetProps> = ({
                   fullWidth
                   data-testid="queue-tracking-whatsapp"
                   icon={<MessageCircle className="h-4 w-4" />}
-                  onClick={() => window.open(whatsappHref, '_blank', 'noopener,noreferrer')}
+                  onClick={() => openWhatsApp(whatsappHref)}
                 >
                   Enviar no WhatsApp
                 </Button>

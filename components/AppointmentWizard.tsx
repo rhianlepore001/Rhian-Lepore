@@ -19,7 +19,9 @@ import { GroupReview, type GroupReviewRow } from './appointment/GroupReview';
 import { buildAttendeeSequence, type AttendeeSelection } from '@/utils/appointmentAttendees';
 import { WizardProps } from './appointment/types';
 import { formatCurrency } from '../utils/formatters';
-import { buildWhatsAppLink } from '../utils/whatsappTemplates';
+import { buildWhatsAppLink, renderWhatsAppTemplate } from '../utils/whatsappTemplates';
+import { requestWhatsAppHandoff } from './whatsapp/WhatsAppHandoff';
+import { WhatsAppTemplateEditorModal } from './whatsapp/WhatsAppTemplateEditorModal';
 import type { Region } from '../utils/formatters';
 import { ServiceSearchBar } from './appointment/ServiceSearchBar';
 import { CategoryFilter } from './appointment/CategoryFilter';
@@ -60,7 +62,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     businessHours = null,
     shopTimeZone,
 }) => {
-    const { user, region, businessName, companyId } = useAuth();
+    const { user, region, businessName, companyId, role } = useAuth();
     const whatsapp = useWhatsAppTemplates();
     const { isBeauty, accent, colors } = useBrutalTheme();
     const { establishmentFallback } = useBusinessCopy();
@@ -92,6 +94,7 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     const [notes, setNotes] = useState<string>('');
     // Opt-in: o envio abre o WhatsApp numa nova aba; só acontece se o dono ligar neste agendamento.
     const [sendWhatsapp, setSendWhatsapp] = useState(false);
+    const [customizingMessage, setCustomizingMessage] = useState(false);
     const [autoAssigningPro, setAutoAssigningPro] = useState(false);
     const [selectedProductLines, setSelectedProductLines] = useState<ProductLineSelection[]>([]);
 
@@ -303,23 +306,34 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
             }
 
             // WhatsApp Notification
-            if (sendWhatsapp && whatsapp.isEnabled('wizard_confirm')) {
+            // A chave aparece sempre e começa desligada; ligar é o pedido do
+            // dono neste atendimento. Usa o texto salvo em Ajustes mesmo que o
+            // modelo esteja marcado como desativado, ou o padrão.
+            if (sendWhatsapp) {
                 const client = clients.find(c => c.id === selectedClientId);
                 if (client?.phone) {
                     const formattedDate = dateTime.toLocaleDateString('pt-BR');
                     const formattedTime = dateTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                    const message = whatsapp.render('wizard_confirm', isBeauty ? 'beauty' : 'barber', {
+                    const saved = whatsapp.templates.wizard_confirm;
+                    const message = renderWhatsAppTemplate('wizard_confirm', isBeauty ? 'beauty' : 'barber', {
                         cliente: client.name,
                         atendido: attendeeName || client.name,
                         para_quem: dependentId || extraAttendees.length ? ` para ${[attendeeName || client.name, ...extraAttendees.map(person => person.name || client.name)].join(', ')}` : '',
                         estabelecimento: businessName || establishmentFallback,
                         data: formattedDate,
                         hora: formattedTime,
-                    });
+                    }, undefined, saved ? { ...saved, enabled: true } : undefined);
 
                     const attendedNames = [attendeeName || client.name, ...extraAttendees.map(person => person.name || client.name)].join(', ');
                     const contactMessage = (dependentId || extraAttendees.length) && !message.includes(attendedNames) ? `${message}\nAtendimento para: ${attendedNames}.` : message;
-                    window.open(buildWhatsAppLink(client.phone, currencyRegion, contactMessage), '_blank');
+                    // iPhone: o Safari bloqueia nova aba aberta depois do await de
+                    // salvar. A pessoa toca em "Abrir WhatsApp" (gesto real).
+                    requestWhatsAppHandoff({
+                        url: buildWhatsAppLink(client.phone, currencyRegion, contactMessage),
+                        title: 'Atendimento criado',
+                        description: `Toque em Abrir WhatsApp para enviar a confirmação para ${client.name}.`,
+                        message: contactMessage,
+                    });
                 }
             }
 
@@ -601,7 +615,9 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                             currencyRegion={currencyRegion}
                             isBeauty={isBeauty}
                             accentColor={accent.text}
-                            whatsappEnabled={whatsapp.isEnabled('wizard_confirm')}
+                            whatsappEnabled
+                            clientHasPhone={!!clients.find(c => c.id === selectedClientId)?.phone?.replace(/\D/g, '')}
+                            onCustomizeMessage={role === 'owner' ? () => setCustomizingMessage(true) : undefined}
                             sendWhatsapp={sendWhatsapp}
                             setSendWhatsapp={setSendWhatsapp}
                             customPrice={customPrice}
@@ -669,6 +685,13 @@ const STEPS = ['Cliente', 'Serviços', 'Horário', 'Confirmar'];
                     </div>
                     </div>
                 </div>
+                {/* Editor da mensagem por cima do assistente: nada do atendimento se perde. */}
+                {customizingMessage && (
+                    <WhatsAppTemplateEditorModal
+                        editing="wizard_confirm"
+                        onClose={() => setCustomizingMessage(false)}
+                    />
+                )}
         </Modal>
     );
 };

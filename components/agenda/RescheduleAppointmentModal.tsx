@@ -19,6 +19,7 @@ import {
   zonedDateTimeToDate,
 } from '../../utils/businessTimezone';
 import { buildWhatsAppLink } from '../../utils/whatsappTemplates';
+import { requestWhatsAppHandoff } from '../whatsapp/WhatsAppHandoff';
 import { mapError } from '../../utils/mapError';
 import { slotOverlapsOccupying, type OccupyingAppointment } from '../../utils/agendaBlockRange';
 import { fetchRescheduleOccupancy } from '../../utils/rescheduleOccupancy';
@@ -194,7 +195,14 @@ export const RescheduleAppointmentModal: React.FC<RescheduleAppointmentModalProp
           timeZone: shopTimeZone,
           professionalName: destName,
         });
-        window.open(buildWhatsAppLink(appointment.clientPhone || '', currencyRegion, message), '_blank');
+        // iPhone: o Safari bloqueia nova aba aberta depois do await da RPC.
+        // A pessoa toca em "Abrir WhatsApp" (gesto real).
+        requestWhatsAppHandoff({
+          url: buildWhatsAppLink(appointment.clientPhone || '', currencyRegion, message),
+          title: 'Horário remarcado',
+          description: `Toque em Abrir WhatsApp para avisar ${appointment.clientName || 'o cliente'} do novo horário.`,
+          message,
+        });
       }
       onSuccess({ id: appointment.id, time: selectedInstant, professionalId: selectedProId });
       onClose();

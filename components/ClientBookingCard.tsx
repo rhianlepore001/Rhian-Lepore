@@ -40,6 +40,7 @@ import {
     isClientEditPending,
     CLIENT_EDIT_PENDING_STATUS_LABEL,
 } from '../utils/clientEditRequest';
+import { openWhatsApp } from '../utils/openWhatsApp';
 
 export interface ClientBooking {
     id: string;
@@ -265,7 +266,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
             data: dateInSentence,
             hora: formattedTime,
         });
-        window.open(buildWhatsAppLink(businessPhone, region, msg), '_blank', 'noopener,noreferrer');
+        openWhatsApp(buildWhatsAppLink(businessPhone, region, msg));
     };
 
     const handleTalkToBusiness = () => {
@@ -278,7 +279,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
             data: dateInSentence,
             hora: formattedTime,
         });
-        window.open(buildWhatsAppLink(businessPhone, region, msg), '_blank', 'noopener,noreferrer');
+        openWhatsApp(buildWhatsAppLink(businessPhone, region, msg));
     };
 
     const handleConfirmWhatsApp = () => {
@@ -292,7 +293,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
             timeLabel: formattedTime,
             theme: isBeauty ? 'beauty' : 'barber',
         });
-        window.open(buildWhatsAppLink(businessPhone, region, msg), '_blank', 'noopener,noreferrer');
+        openWhatsApp(buildWhatsAppLink(businessPhone, region, msg));
     };
 
     return (

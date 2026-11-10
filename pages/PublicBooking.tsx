@@ -56,6 +56,7 @@ import { Checkbox, ConfirmModal, Button, useToast } from '@/components/ui';
 import { PublicGroupBooking } from '@/components/booking/PublicGroupBooking';
 import { PublicBookingMemberships } from '@/components/membership/PublicBookingMemberships';
 import FocusTrap from 'focus-trap-react';
+import { openWhatsApp } from '../utils/openWhatsApp';
 
 interface Message {
     id: string;
@@ -808,7 +809,7 @@ export const PublicBooking: React.FC = () => {
         const msg = whatsapp.render('client_change', isBeauty ? 'beauty' : 'barber', {
             cliente: name,
         });
-        window.open(buildWhatsAppLink(business.phone, currencyRegion, msg), '_blank', 'noopener,noreferrer');
+        openWhatsApp(buildWhatsAppLink(business.phone, currencyRegion, msg));
     };
 
     const stepIndex = { services: 0, datetime: 1, contact: 2, success: 3 };

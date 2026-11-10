@@ -24,7 +24,7 @@ export const WHATSAPP_TEMPLATE_GROUPS: {
       {
         key: 'wizard_confirm',
         title: 'Novo agendamento',
-        summary: 'Confirmação ao concluir o agendamento em etapas.',
+        summary: 'Confirmação ao concluir o agendamento em etapas. Você escolhe em cada atendimento se envia.',
       },
     ],
   },
@@ -160,3 +160,10 @@ export function whatsAppPreviewVars(
     plano: 'Plano Essencial',
   };
 }
+
+/**
+ * Mensagens cuja opção de envio aparece sempre (desligada por padrão) e a
+ * pessoa escolhe a cada vez. Para elas não existe "Ativa" em Ajustes: ligar a
+ * chave no atendimento usa o texto salvo (ou o padrão).
+ */
+export const ALWAYS_OFFERED_WHATSAPP_KEYS: ReadonlySet<WhatsAppTemplateKey> = new Set<WhatsAppTemplateKey>(['wizard_confirm']);

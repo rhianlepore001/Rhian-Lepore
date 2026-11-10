@@ -90,7 +90,8 @@ export const AppointmentWizard: React.FC<WizardProps> = ({
     const [customPrice, setCustomPrice] = useState<string>('');
     const [discount, setDiscount] = useState<string>('0');
     const [notes, setNotes] = useState<string>('');
-    const [sendWhatsapp, setSendWhatsapp] = useState(true);
+    // Opt-in: o envio abre o WhatsApp numa nova aba; só acontece se o dono ligar neste agendamento.
+    const [sendWhatsapp, setSendWhatsapp] = useState(false);
     const [autoAssigningPro, setAutoAssigningPro] = useState(false);
     const [selectedProductLines, setSelectedProductLines] = useState<ProductLineSelection[]>([]);
 

@@ -1,4 +1,9 @@
 import { supabase } from '@/lib/supabase';
+import {
+  recognizedInRangeFilter,
+  revenueRecognizedAt,
+  type RecognizableAppointment,
+} from '@/utils/revenueRecognition';
 import { z } from 'zod';
 import {
   dashboardStatsSchema,
@@ -95,38 +100,43 @@ export async function fetchDashboardActions(effectiveUserId: string): Promise<Ac
 }
 
 export async function fetchTodayRevenue(effectiveUserId: string): Promise<number> {
-  const todayStr = new Date().toISOString().split('T')[0];
+  // Dia local do usuário; receita reconhecida na conclusão (fallback: data marcada).
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(start);
+  end.setHours(23, 59, 59, 999);
   const { data, error } = await supabase
     .from('appointments')
     .select('price')
     .eq('user_id', effectiveUserId)
     .eq('status', 'Completed')
-    .gte('appointment_time', todayStr + 'T00:00:00')
-    .lte('appointment_time', todayStr + 'T23:59:59');
+    .or(recognizedInRangeFilter(start.toISOString(), end.toISOString()));
 
   if (error) throw error;
 
   return data?.reduce((sum, a) => sum + (Number(a.price) || 0), 0) ?? 0;
 }
 
-/** Receita dos últimos 7 dias (inclui hoje), somada por dia — alimenta o sparkline do hero. */
+/** Receita dos últimos 7 dias (inclui hoje), somada pelo dia da conclusão — alimenta o sparkline do hero. */
 export async function fetchRevenueSparkline(effectiveUserId: string): Promise<number[]> {
   const start = new Date();
   start.setDate(start.getDate() - 6);
   start.setHours(0, 0, 0, 0);
+  const end = new Date();
+  end.setHours(23, 59, 59, 999);
 
   const { data, error } = await supabase
     .from('appointments')
-    .select('price, appointment_time')
+    .select('price, appointment_time, completed_at')
     .eq('user_id', effectiveUserId)
     .eq('status', 'Completed')
-    .gte('appointment_time', start.toISOString());
+    .or(recognizedInRangeFilter(start.toISOString(), end.toISOString()));
 
   if (error) throw error;
 
   const days: number[] = Array(7).fill(0);
   for (const row of data ?? []) {
-    const d = new Date(row.appointment_time as string);
+    const d = new Date(revenueRecognizedAt(row as RecognizableAppointment));
     d.setHours(0, 0, 0, 0);
     const idx = Math.round((d.getTime() - start.getTime()) / 86400000);
     if (idx >= 0 && idx < 7) days[idx] += Number(row.price) || 0;

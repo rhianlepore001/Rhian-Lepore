@@ -7,6 +7,7 @@ import { Button } from './ui/Button';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
 import { mapError } from '../utils/mapError';
 import { useTenantLocale } from '../hooks/useTenantLocale';
+import { recognizedInRangeFilter, revenueRecognizedAt } from '../utils/revenueRecognition';
 
 interface CommissionLine {
     id: string;
@@ -139,6 +140,7 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
                     .select(`
                         id,
                         appointment_time,
+                        completed_at,
                         service,
                         price,
                         clients (name),
@@ -153,8 +155,8 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
                     .eq('professional_id', professionalId)
                     .eq('user_id', user.id)
                     .eq('status', 'Completed')
-                    .gte('appointment_time', `${startDate}T00:00:00`)
-                    .lte('appointment_time', `${endDate}T23:59:59`)
+                    // Receita/comissão entram na data da conclusão (fallback: data marcada).
+                    .or(recognizedInRangeFilter(`${startDate}T00:00:00`, `${endDate}T23:59:59`))
                     .order('appointment_time', { ascending: false }),
             ]);
 
@@ -170,6 +172,7 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
             const serviceLines: CommissionLine[] = (appointments || []).map((apt: {
                 id: string;
                 appointment_time: string;
+                completed_at?: string | null;
                 service: string;
                 price: number;
                 clients?: { name?: string } | { name?: string }[] | null;
@@ -191,7 +194,7 @@ export const ProfessionalCommissionDetails: React.FC<ProfessionalCommissionDetai
                     id: `service-${apt.id}`,
                     sourceId: apt.id,
                     kind: 'service' as const,
-                    occurred_at: apt.appointment_time,
+                    occurred_at: revenueRecognizedAt(apt),
                     client_name: relationName(apt.clients) || 'Cliente Desconhecido',
                     title: apt.service,
                     price: Number(apt.price) || 0,

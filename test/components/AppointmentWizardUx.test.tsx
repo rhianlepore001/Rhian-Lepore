@@ -83,9 +83,26 @@ describe('AppointmentWizard: títulos, passo Horário e passo Confirmar', () => 
     await userEvent.click(screen.getByText('Corte Social'));
     await next();
     expect(screen.queryByTestId('review-whatsapp') !== null).toBe(enabled);
+    // Opt-in: o dono liga o envio neste agendamento.
+    if (enabled) await userEvent.click(screen.getByRole('checkbox', { name: 'Enviar confirmação no WhatsApp' }));
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar Atendimento' }));
     if (enabled) expect(new URL(String(open.mock.calls[0][0])).searchParams.get('text')).toBe('Oi Bruno, até 10:00!');
     else expect(open).not.toHaveBeenCalled();
+    open.mockRestore();
+  });
+
+  it('confirmação no WhatsApp vem DESLIGADA por padrão: sem abrir o WhatsApp se o dono não ligar', async () => {
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    render(<AppointmentWizard {...props} clients={[{ id: 'cli-bruno', name: 'Bruno', phone: '11987654321' }]} initialDate={new Date(2026, 8, 28)} initialProfessionalId="pro-bob" initialTime="10:00" slotContext="Horário disponível" />);
+    await userEvent.click(screen.getByRole('button', { name: 'cliente Bruno' }));
+    await next();
+    await userEvent.click(screen.getByText('Corte Social'));
+    await next();
+    expect(screen.getByTestId('review-whatsapp')).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: 'Enviar confirmação no WhatsApp' })).not.toBeChecked();
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar Atendimento' }));
+    await waitFor(() => expect(mutateAsync).toHaveBeenCalled());
+    expect(open).not.toHaveBeenCalled();
     open.mockRestore();
   });
 

@@ -20,6 +20,7 @@ import { MembershipStatus, MembershipWithPlan } from '../services/memberships';
 import { formatCurrency } from '../utils/formatters';
 import { buildWhatsAppLink } from '../utils/whatsappTemplates';
 import { openWhatsApp } from '../utils/openWhatsApp';
+import { membersEmptyState } from '../utils/membersEmptyState';
 
 const TABS: { value: MembershipStatus | 'all'; label: string }[] = [
     { value: 'all', label: 'Todos' },
@@ -63,6 +64,7 @@ export const MembersList: React.FC = () => {
             (m.plan?.name || '').toLowerCase().includes(s)
         );
     }, [memberships, search]);
+    const emptyState = membersEmptyState(tab, search);
 
     const openConfirm = (m: MembershipWithPlan) => {
         setConfirmMethod(
@@ -173,10 +175,8 @@ export const MembersList: React.FC = () => {
                 <Card>
                     <div className="text-center py-12 space-y-3">
                         <Users className={`w-12 h-12 mx-auto ${colors.textMuted}`} />
-                        <p className={`${colors.text} text-lg`}>Nenhum assinante {tab !== 'all' ? `com status "${TABS.find(t => t.value === tab)?.label}"` : ''}.</p>
-                        <p className={`${colors.textMuted} text-sm`}>
-                            {tab === 'all' ? 'Crie planos em Configurações e compartilhe o link do clube.' : 'Mude o filtro para ver outros.'}
-                        </p>
+                        <p className={`${colors.text} text-lg`}>{emptyState.title}</p>
+                        <p className={`${colors.textMuted} text-sm`}>{emptyState.hint}</p>
                     </div>
                 </Card>
             ) : (

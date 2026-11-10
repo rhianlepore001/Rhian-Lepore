@@ -4,7 +4,7 @@ process.env.AGENDIX_WHATSAPP_E2E = '1';
 
 export default defineConfig({
   testDir: '.',
-  testMatch: 'whatsapp-templates.spec.ts',
+  testMatch: ['whatsapp-templates.spec.ts', 'consent-logout.spec.ts', 'members-empty.spec.ts'],
   fullyParallel: false,
   workers: 1,
   retries: 0,

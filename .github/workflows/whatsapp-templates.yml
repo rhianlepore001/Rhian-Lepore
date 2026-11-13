@@ -7,7 +7,7 @@ on:
 jobs:
   database:
     name: WhatsApp RLS and rollback
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo apt-get install -y postgresql
@@ -15,7 +15,7 @@ jobs:
 
   browser:
     name: WhatsApp mobile and desktop
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

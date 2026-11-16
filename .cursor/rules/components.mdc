@@ -1,0 +1,15 @@
+---
+description: Regras de UI para componentes e páginas do AgendiX
+globs: components/**,pages/**,styles/**,design-system/**
+alwaysApply: false
+---
+
+# Componentes e páginas
+
+- Mobile first: o barbeiro usa o celular. Alvos de toque ≥ 44px. Teste em 390px.
+- Temas `barber` (escuro) e `beauty` (claro) via `UIContext`. Uma mudança visual precisa dos dois, quando a tela existir nos dois temas.
+- Antes de publicar UI: prints 390px, barbearia escuro e salão claro. Crítica com `playwright-visual-critique`; use `impeccable` e `design-taste-frontend` quando a tela for de produto ou marketing. Nota ≤8 reprova.
+- HashRouter: links internos são `/#/rota`. `React.lazy()` sempre dentro de `<Suspense>`.
+- Rotas de dono passam por `OwnerRouteGuard`. Não libere tela de gestão para colaborador sem pedido.
+- Siga o estilo dos componentes vizinhos. Não introduza design system paralelo.
+- iOS: não use `window.open` depois de um `await` para abrir WhatsApp ou outro app. Use um `<a>` real.

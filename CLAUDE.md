@@ -2,6 +2,8 @@
 
 Instruções para agentes de IA que trabalham neste repositório.
 
+Comportamento, regras do Rhian, modelos e publicação: `AGENTS.md`, `docs/runbooks/publicacao.md` e `docs/runbooks/acessos.md`.
+
 ---
 
 ## Projeto

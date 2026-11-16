@@ -89,6 +89,8 @@ write_file.cjs
 .cursor/*
 !.cursor/rules/
 !.cursor/rules/**
+!.cursor/skills/
+!.cursor/skills/**
 .squads/
 .vercel/
 .testsprite/
@@ -106,7 +108,7 @@ testsprite_tests/tmp/
 .playwright-mcp/
 .harness/
 .interface-design/
-impeccable/
+/impeccable/
 skills-lock.json
 opencode.json
 
@@ -127,7 +129,7 @@ screenshots*/
 !docs/whatsapp-messages/screenshots/*.png
 auto-*.png
 relatorio/
-impeccable/
+/impeccable/
 
 
 
@@ -138,6 +140,12 @@ supabase/.temp/
 
 # Playwright storageState (contem access_tokens - nunca versionar)
 e2e/.auth/
+
+# Handoff de credenciais e backups locais (nunca versionar)
+cursor-handoff.env
+**/cursor-handoff.env
+secrets/backups/
+/backups/
 
 # Local visual QA screenshots
 screenshot_*.webp

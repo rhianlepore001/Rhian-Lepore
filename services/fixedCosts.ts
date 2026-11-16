@@ -6,9 +6,24 @@ export type WorkingHours = Record<string, { isOpen: boolean; blocks: { start: st
 export interface CostChoice { id: string; name: string; working_hours?: WorkingHours | null }
 export interface MaterialCost { service_id: string; amount: number }
 export interface ExpenseSuggestion { id: string; description: string; amount: number; created_at: string }
+export interface CatalogMaterial {
+  id: string;
+  company_id?: string;
+  name: string;
+  package_price: number;
+  yield_mode: 'count' | 'quantity';
+  yield_count: number | null;
+  package_qty: number | null;
+}
+export interface ServiceMaterialUse {
+  id: string;
+  service_id: string;
+  material_id: string;
+  qty_per_service: number | null;
+}
 
 export const fixedCostsApi = {
-  async list(companyId: string): Promise<{ costs: FixedCost[]; services: CostChoice[]; materials: MaterialCost[]; professionals: CostChoice[]; lowMargin?: number; lowMarginSaved?: boolean }> {
+  async list(companyId: string): Promise<{ costs: FixedCost[]; services: CostChoice[]; materials: MaterialCost[]; professionals: CostChoice[]; lowMargin?: number; lowMarginSaved?: boolean; catalog?: CatalogMaterial[]; uses?: ServiceMaterialUse[] }> {
     const [costs, services, materials, professionals, settings] = await Promise.all([
       supabase.from('fixed_costs').select('*').eq('company_id', companyId).order('start_date', { ascending: false }),
       supabase.from('services').select('id,name').eq('user_id', companyId).order('name'),
@@ -24,6 +39,8 @@ export const fixedCostsApi = {
       professionals: (professionals.data || []) as CostChoice[],
       lowMargin: Number(settings.data?.low_margin_pct ?? 20),
       lowMarginSaved: settings.data != null,
+      catalog: [],
+      uses: [],
     };
   },
   async suggestions(companyId: string): Promise<ExpenseSuggestion[]> {

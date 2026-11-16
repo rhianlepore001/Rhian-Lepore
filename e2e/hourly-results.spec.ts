@@ -37,6 +37,12 @@ async function stubCore(page: Page, theme: string) {
       body: `export function useBusinessCopy() { return { chairHour: '${theme === 'beauty' ? 'hora de atendimento' : 'hora de cadeira'}' }; }`,
     }),
   );
+  await page.route('**/hooks/useSettings.ts*', route =>
+    route.fulfill({
+      contentType: 'application/javascript',
+      body: `export function useBusinessSettings() { return { data: { business_hours: { mon: { isOpen: true, blocks: [{ start: '09:00', end: '18:00' }] } } }, isLoading: false }; }`,
+    }),
+  );
 }
 
 const cases: {

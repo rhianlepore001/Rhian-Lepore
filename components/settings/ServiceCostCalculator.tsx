@@ -31,6 +31,15 @@ const toLine = (draft: DraftLine): MaterialCostLine => ({
 
 const money = (currency: string, value: number) => `${currency} ${value.toFixed(2).replace('.', ',')}`;
 
+const toDraft = (line: MaterialCostLine): DraftLine => ({
+  name: line.name,
+  mode: line.mode,
+  packagePrice: line.packagePrice == null ? '' : String(line.packagePrice),
+  yieldCount: line.yieldCount == null ? '' : String(line.yieldCount),
+  packageQty: line.packageQty == null ? '' : String(line.packageQty),
+  qtyPerService: line.qtyPerService == null ? '' : String(line.qtyPerService),
+});
+
 export function ServiceCostCalculator({
   serviceId,
   serviceName,
@@ -38,16 +47,20 @@ export function ServiceCostCalculator({
   savedAmount,
   onSave,
   busy = false,
+  persistLines = false,
+  initialLines,
 }: {
   serviceId: string;
   serviceName: string;
   currency: string;
   savedAmount?: number | null;
-  onSave: (serviceId: string, amount: number) => void;
+  onSave: (serviceId: string, amount: number, lines: MaterialCostLine[]) => void;
   busy?: boolean;
+  persistLines?: boolean;
+  initialLines?: MaterialCostLine[];
 }) {
   const { classes } = useBrutalTheme();
-  const [lines, setLines] = useState<DraftLine[]>([emptyLine()]);
+  const [lines, setLines] = useState<DraftLine[]>(() => (initialLines?.length ? initialLines.map(toDraft) : [emptyLine()]));
   const [error, setError] = useState('');
   const total = totalServiceMaterialCost(lines.map(toLine));
   const field = 'block space-y-1.5 text-sm font-semibold text-theme-text';
@@ -63,13 +76,17 @@ export function ServiceCostCalculator({
       setError('Informe preço e rendimento (ou quantidade) de pelo menos um material.');
       return;
     }
-    onSave(serviceId, total);
+    onSave(serviceId, total, lines.map(toLine));
   };
 
   return (
     <div className="space-y-3">
       <h3 className="text-base font-bold text-theme-text">{serviceName}</h3>
-      <p className={hint}>Você salva só o total deste serviço. Os itens servem para somar o total; eles não ficam guardados.</p>
+      <p className={hint}>
+        {persistLines
+          ? 'Guardamos o total e os materiais deste serviço. Mudar o preço da embalagem recalcula os serviços que usam esse material.'
+          : 'Você salva só o total deste serviço. Os itens servem para somar o total; eles não ficam guardados.'}
+      </p>
       {savedAmount != null && (
         <div className="space-y-1">
           <p className="text-sm text-theme-text">
@@ -136,7 +153,7 @@ export function ServiceCostCalculator({
       {total == null && <p className={hint}>Preencha o preço e o rendimento para calcular.</p>}
       <div className="flex flex-wrap gap-2">
         <Button disabled={busy || total == null} onClick={save}>Salvar total do serviço</Button>
-        <Button variant="ghost" disabled={busy} onClick={() => onSave(serviceId, 0)}>Este serviço não usa material</Button>
+        <Button variant="ghost" disabled={busy} onClick={() => onSave(serviceId, 0, [])}>Este serviço não usa material</Button>
       </div>
     </div>
   );

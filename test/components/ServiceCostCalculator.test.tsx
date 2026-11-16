@@ -21,7 +21,7 @@ describe('ServiceCostCalculator', () => {
     fireEvent.change(screen.getByLabelText(/rendimento/i), { target: { value: '40' } });
     expect(screen.getByText(/0[,.]50.*por atendimento/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /salvar total do serviço/i }));
-    expect(onSave).toHaveBeenCalledWith('s1', 0.5);
+    expect(onSave).toHaveBeenCalledWith('s1', 0.5, expect.arrayContaining([expect.objectContaining({ name: 'Giletes', mode: 'count' })]));
   });
 
   it('não chama onSave se nada válido foi preenchido e o botão salvar fica desabilitado', () => {
@@ -46,7 +46,7 @@ describe('ServiceCostCalculator', () => {
     const onSave = vi.fn();
     render(<ServiceCostCalculator serviceId="s1" serviceName="Corte" currency="R$" onSave={onSave} />);
     fireEvent.click(screen.getByRole('button', { name: /este serviço não usa material/i }));
-    expect(onSave).toHaveBeenCalledWith('s1', 0);
+    expect(onSave).toHaveBeenCalledWith('s1', 0, []);
   });
 
   it('mostra fórmula no modo rendimento e no modo quantidade', () => {
@@ -56,9 +56,39 @@ describe('ServiceCostCalculator', () => {
     expect(screen.getByText(/preço × \(quantidade usada ÷ quantidade da embalagem\)/i)).toBeInTheDocument();
   });
 
-  it('explica que só o total é guardado', () => {
+  it('explica que só o total é guardado quando linhas não são persistidas', () => {
     render(<ServiceCostCalculator serviceId="s1" serviceName="Corte" currency="R$" onSave={vi.fn()} />);
     expect(screen.getByText(/guarda o total|só o total/i)).toBeInTheDocument();
+    expect(screen.getByText(/não ficam guardados/i)).toBeInTheDocument();
+  });
+
+  it('com persistLines não avisa que os itens não ficam guardados', () => {
+    render(
+      <ServiceCostCalculator
+        serviceId="s1"
+        serviceName="Corte"
+        currency="R$"
+        persistLines
+        onSave={vi.fn()}
+      />,
+    );
+    expect(screen.queryByText(/não ficam guardados/i)).not.toBeInTheDocument();
+  });
+
+  it('com initialLines preenche nome, preço e rendimento do catálogo', () => {
+    render(
+      <ServiceCostCalculator
+        serviceId="s1"
+        serviceName="Corte"
+        currency="R$"
+        persistLines
+        initialLines={[{ name: 'Giletes', mode: 'count', packagePrice: 20, yieldCount: 40 }]}
+        onSave={vi.fn()}
+      />,
+    );
+    expect(screen.getByLabelText(/^nome$/i)).toHaveValue('Giletes');
+    expect(screen.getByLabelText(/preço da embalagem/i)).toHaveValue(20);
+    expect(screen.getByLabelText(/rendimento/i)).toHaveValue(40);
   });
 
   it('não usa R$ 0,00 como herói vazio', () => {
@@ -82,6 +112,6 @@ describe('ServiceCostCalculator', () => {
     fireEvent.change(screen.getByLabelText(/qtd.*atendimento/i), { target: { value: '60' } });
     expect(screen.getByText(/6[,.]00?.*por atendimento/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /salvar total do serviço/i }));
-    expect(onSave).toHaveBeenCalledWith('s2', 6);
+    expect(onSave).toHaveBeenCalledWith('s2', 6, expect.arrayContaining([expect.objectContaining({ name: 'Tintura', mode: 'quantity' })]));
   });
 });

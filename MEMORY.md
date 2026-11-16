@@ -9,6 +9,15 @@
 
 ---
 
+## Horas de atendimento v2 — revisão Bob (16 Nov 2026, NÃO merge)
+
+Dois drafts empilhados. Não merge. Não aplicar migration em produção.
+
+- PR1 `cursor/resultados-hora-tela-wizard-23c9` (#208) — tela `/#/resultados-por-hora`, wizard de 4 blocos, deep link `?bloco=` no HashRouter, acordeão (um bloco aberto), empty ligado ao progresso real, aviso de margem separado do custo.
+- PR2 `cursor/materiais-persistidos-recalculo-23c9` (#209, stack no #208) — catálogo `materials` + `service_material_uses`, recálculo do total. SQL arredonda só o total, apaga `service_costs` sem usos, linha incompleta = null, backup/restore no rollback. Teste só em Postgres 17 isolado (`scripts/test-sql-reusable-materials.sh --rollback`).
+- UX (Sonnet 5.5 high, 4 rodadas): D5–D8 = 9; D9 = 8,5 com nits de scroll pós-load, aviso e erro do wizard aplicados na 4ª.
+- Prints: `/opt/cursor/artifacts/hourly-results-v2/` (não versionados).
+
 ## Finance PR-C — gráfico Entradas e saídas + fuso do mês (4 Out 2026, draft)
 
 Branch `cursor/fin-c-cashflow-chart-e4e7`. Só frontend. SVG próprio (sem recharts na rota Financeiro); semanas no mobile / dias no desktop; intervalo `[start,end)` ISO no fuso do negócio; react-query paralelo; histórico só na aba Histórico. Prints em `/opt/cursor/artifacts/screenshots/fin-c/`.

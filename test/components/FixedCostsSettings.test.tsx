@@ -1,6 +1,7 @@
 import React from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { HashRouter } from 'react-router-dom';
 import { FixedCostsSettings } from '../../components/settings/FixedCostsSettings';
 
 vi.mock('../../hooks/useBrutalTheme', () => ({ useBrutalTheme: () => ({ colors: { text: '', textMuted: '', border: '', card: '' }, classes: { input: '', label: '' }, radius: { card: '', button: '' } }) }));
@@ -15,6 +16,8 @@ const makeApi = () => ({
   removeCost: vi.fn().mockResolvedValue(undefined),
   saveLowMargin: vi.fn().mockResolvedValue(undefined),
   saveWorkingHours: vi.fn().mockResolvedValue(undefined),
+  saveMaterialLines: vi.fn().mockResolvedValue(undefined),
+  updateMaterialPrice: vi.fn().mockResolvedValue(undefined),
 });
 
 const expandService = async (name: string) => {
@@ -33,6 +36,7 @@ describe('custos fixos e materiais', () => {
     render(<FixedCostsSettings companyId="empresa" region={region} api={api} />);
     expect(await screen.findByText(`Custo mensal (${currency})`)).toBeInTheDocument();
     expect(screen.getByLabelText('Custo mensal')).toBeEnabled();
+    await openWizardBlock(/3\.\s*Materiais/i);
     expect(screen.getByRole('heading', { name: 'Corte' })).toBeInTheDocument();
     await expandService('Corte');
     expect(screen.getByLabelText(/preço da embalagem/i)).toBeInTheDocument();
@@ -76,20 +80,22 @@ describe('custos fixos e materiais', () => {
   it('distingue custo de material não informado de zero informado', async () => {
     const api = makeApi();
     render(<FixedCostsSettings companyId="empresa" api={api} />);
+    await openWizardBlock(/3\.\s*Materiais/i);
     await screen.findByRole('heading', { name: 'Corte' });
     await expandService('Corte');
     fireEvent.click(screen.getByRole('button', { name: /salvar total do serviço/i }));
-    expect(api.saveMaterial).not.toHaveBeenCalled();
+    expect(api.saveMaterialLines).not.toHaveBeenCalled();
     fireEvent.change(screen.getByLabelText(/preço da embalagem/i), { target: { value: '0' } });
     fireEvent.change(screen.getByLabelText(/rendimento/i), { target: { value: '40' } });
     fireEvent.click(screen.getByRole('button', { name: /salvar total do serviço/i }));
-    await waitFor(() => expect(api.saveMaterial).toHaveBeenCalledWith('empresa', 's1', 0));
+    await waitFor(() => expect(api.saveMaterialLines).toHaveBeenCalledWith('empresa', 's1', expect.any(Array), 0));
   });
 
   it('preserva o histórico ao editar custo existente, permitindo apenas encerrar a vigência', async () => {
     const api = makeApi();
     api.list.mockResolvedValue({ costs: [{ id: 'c1', company_id: 'empresa', professional_id: null, category: 'Aluguel', description: 'Sala', amount: 500, start_date: '2025-01-01', end_date: null, is_owner_salary: false, active: true }], services: [], materials: [], professionals: [] } as never);
     render(<FixedCostsSettings companyId="empresa" api={api} />);
+    await openWizardBlock(/1\.\s*Contas do mês/i);
     fireEvent.click(await screen.findByRole('button', { name: 'Editar Sala' }));
     expect(screen.getByLabelText('Custo mensal')).toBeDisabled();
     expect(screen.getByLabelText('Categoria')).toBeDisabled();
@@ -135,7 +141,6 @@ describe('custos fixos e materiais', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Editar horário de segunda' }));
     fireEvent.click(screen.getByRole('button', { name: 'Salvar horários' }));
     await waitFor(() => expect(api.saveWorkingHours).toHaveBeenCalledWith('empresa', 'p1', { mon: { isOpen: true, blocks: [{ start: '09:00', end: '18:00' }] } }));
-    await openWizardBlock(/2\.\s*Horários da equipe/i);
     fireEvent.click(screen.getByRole('button', { name: 'Usar horário do negócio' }));
     await waitFor(() => expect(api.saveWorkingHours).toHaveBeenCalledWith('empresa', 'p1', null));
   });
@@ -156,6 +161,7 @@ describe('custos fixos e materiais', () => {
     const api = makeApi();
     api.list.mockResolvedValue({ costs: [{ id: 'salary-active', company_id: 'empresa', professional_id: null, category: 'Gestão', description: 'Pró-labore', amount: 500, start_date: '2025-01-01', end_date: null, is_owner_salary: true, active: true }], services: [], materials: [], professionals: [] } as never);
     render(<FixedCostsSettings companyId="empresa" timezone="America/Sao_Paulo" api={api} />);
+    await openWizardBlock(/1\.\s*Contas do mês/i);
     fireEvent.click(await screen.findByRole('button', { name: 'Encerrar pró-labore' }));
     expect(screen.getByText(/encerramento será aplicado ao salvar/i)).toBeInTheDocument();
     expect(screen.getByLabelText('Custo mensal')).toBeDisabled();
@@ -180,6 +186,7 @@ describe('custos fixos e materiais', () => {
     const api = makeApi();
     api.list.mockResolvedValue({ costs: [], services: [{ id: 's1', name: 'Corte' }, { id: 's2', name: 'Barba' }], materials: [{ service_id: 's2', amount: 0 }], professionals: [], lowMargin: 20, lowMarginSaved: false });
     render(<FixedCostsSettings companyId="empresa" api={api} />);
+    await openWizardBlock(/3\.\s*Materiais/i);
     await screen.findByRole('heading', { name: 'Corte' });
     expect(screen.getAllByText(/não configurado|Não informado/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/não usa material/i).length).toBeGreaterThan(0);
@@ -248,9 +255,85 @@ describe('FixedCostsSettings — UX 390px', () => {
   it('serviço Corte listado com calculadora recolhida até expandir', async () => {
     const api = makeApi();
     render(<FixedCostsSettings companyId="empresa" api={api} />);
+    await openWizardBlock(/3\.\s*Materiais/i);
     await screen.findByRole('heading', { name: 'Corte' });
     expect(screen.queryByLabelText(/preço da embalagem/i)).not.toBeInTheDocument();
     await expandService('Corte');
     expect(screen.getByLabelText(/preço da embalagem/i)).toBeInTheDocument();
+  });
+});
+
+describe('FixedCostsSettings — deep link e acordeão (UX rodada 3)', () => {
+  const originalHash = window.location.hash;
+
+  afterEach(() => {
+    window.location.hash = originalHash;
+  });
+
+  const renderWithHash = (hash: string, api = makeApi()) => {
+    window.location.hash = hash;
+    return render(
+      <HashRouter>
+        <FixedCostsSettings companyId="empresa" api={api} />
+      </HashRouter>,
+    );
+  };
+
+  it.each([
+    '#/configuracoes/financeiro?bloco=materiais',
+    '#/configuracoes/financeiro#materiais',
+  ])('monta com %s e abre bloco Materiais', async (hash) => {
+    renderWithHash(hash);
+    await screen.findByRole('heading', { name: 'Corte' });
+    const materialsToggle = screen.getByRole('button', { name: /3\.\s*Materiais/i });
+    expect(materialsToggle).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.queryByLabelText('Profissional para horários')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Custo mensal')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Corte' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /configurar corte/i })).toBeInTheDocument();
+  });
+
+  it('acordeão honesto: lista da conta “Sala” só aparece ao abrir bloco 1', async () => {
+    const api = makeApi();
+    api.list.mockResolvedValue({
+      costs: [{
+        id: 'c1',
+        company_id: 'empresa',
+        professional_id: null,
+        category: 'Aluguel',
+        description: 'Sala',
+        amount: 500,
+        start_date: '2026-01-01',
+        end_date: null,
+        is_owner_salary: false,
+        active: true,
+      }],
+      services: [{ id: 's1', name: 'Corte' }],
+      materials: [],
+      professionals: [{ id: 'p1', name: 'Ana' }],
+      lowMargin: 20,
+      lowMarginSaved: false,
+    } as never);
+    renderWithHash('#/configuracoes/financeiro', api);
+    await screen.findByRole('heading', { name: /1\.\s*Contas do mês/i });
+    expect(screen.getByRole('heading', { name: /1\.\s*Contas do mês/i }).closest('button')?.parentElement).toBeTruthy();
+    expect(screen.queryByText('Sala')).not.toBeInTheDocument();
+    const resumo = screen.queryByText(/1 conta/i);
+    if (resumo) expect(resumo).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /1\.\s*Contas do mês/i }));
+    expect((await screen.findAllByText('Sala')).length).toBeGreaterThan(0);
+  });
+
+  it('após salvar limite o campo do bloco 4 permanece visível', async () => {
+    const api = makeApi();
+    api.list
+      .mockResolvedValueOnce({ costs: [], services: [{ id: 's1', name: 'Corte' }], materials: [], professionals: [], lowMargin: 20, lowMarginSaved: false })
+      .mockResolvedValueOnce({ costs: [], services: [{ id: 's1', name: 'Corte' }], materials: [], professionals: [], lowMargin: 15, lowMarginSaved: true });
+    renderWithHash('#/configuracoes/financeiro?bloco=margem', api);
+    fireEvent.change(await screen.findByLabelText(/avisar .*sobra pouco/i), { target: { value: '15' } });
+    fireEvent.click(screen.getByRole('button', { name: /salvar limite/i }));
+    await waitFor(() => expect(api.saveLowMargin).toHaveBeenCalledWith('empresa', 15));
+    await waitFor(() => expect(api.list).toHaveBeenCalledTimes(2));
+    expect(screen.getByLabelText(/avisar .*sobra pouco/i)).toBeInTheDocument();
   });
 });

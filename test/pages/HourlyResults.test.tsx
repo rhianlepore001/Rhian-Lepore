@@ -1,6 +1,6 @@
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { HourlyResults } from '@/pages/HourlyResults';
 
@@ -10,6 +10,14 @@ const state = vi.hoisted(() => ({
   theme: 'barber',
   data: null as unknown,
   status: 'ready',
+}));
+
+const businessSettingsState = vi.hoisted(() => ({
+  data: undefined as { business_hours?: Record<string, unknown> } | undefined,
+}));
+
+vi.mock('@/hooks/useSettings', () => ({
+  useBusinessSettings: () => ({ data: businessSettingsState.data, isLoading: false }),
 }));
 
 vi.mock('@/contexts/AuthContext', () => ({
@@ -42,6 +50,19 @@ vi.mock('@/services/fixedCosts', () => ({
 }));
 
 const openHours = { mon: { isOpen: true, blocks: [{ start: '09:00', end: '18:00' }] } };
+
+const activeCost = {
+  id: 'c1',
+  company_id: 'c1',
+  professional_id: null,
+  category: 'Aluguel',
+  description: 'Sala',
+  amount: 500,
+  start_date: '2026-01-01',
+  end_date: null,
+  is_owner_salary: false,
+  active: true,
+};
 
 const wizardPayload = (complete: boolean) =>
   complete
@@ -107,6 +128,7 @@ describe('HourlyResults — gestor', () => {
     state.theme = 'barber';
     state.status = 'ready';
     state.data = { month: '2026-11-01', role: 'owner', total: { ...metrics, worked_minutes: 0, available_minutes: null }, professionals: [] };
+    businessSettingsState.data = undefined;
     wizardList.mockReset();
     wizardList.mockResolvedValue(wizardPayload(false));
   });
@@ -121,7 +143,7 @@ describe('HourlyResults — gestor', () => {
     expect(screen.getAllByText(/horários/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/material dos serviços/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/defina quando avisar que sobrou pouco/i)).toBeInTheDocument();
-    expect(screen.getByText(/O progresso aparece em Ajustes como N de 4/i)).toBeInTheDocument();
+    expect(screen.getByText(/de 4/i)).toBeInTheDocument();
     expect(screen.getByText(/fechar o primeiro atendimento/i)).toBeInTheDocument();
     expect(screen.getByText(/Nenhum número é inventado/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Voltar à performance da equipe/i })).toHaveAttribute('href', '/financeiro/performance');
@@ -177,6 +199,97 @@ describe('HourlyResults — gestor', () => {
     await waitFor(() => expect(wizardList).toHaveBeenCalled());
     expect(screen.queryByText(/Não é o caixa do dia/i)).not.toBeInTheDocument();
     expect(screen.getByText('Cada hora aberta rendeu')).toBeInTheDocument();
+  });
+
+  it('enquanto wizardList não resolve, os passos não exibem quatro selos “Falta”', async () => {
+    wizardList.mockImplementation(() => new Promise(() => {}));
+    mount();
+    await waitFor(() => expect(screen.getByText(/de 4/i)).toBeInTheDocument());
+    expect(screen.queryAllByText('Falta')).not.toHaveLength(4);
+  });
+
+  it('links dos passos apontam para financeiro com query bloco=', async () => {
+    mount();
+    await waitFor(() => expect(wizardList).toHaveBeenCalledWith('c1'));
+    const stepLinks = screen.getAllByRole('link').filter((el) => /contas do mês|horários|material|sobrar|sobra/i.test(el.textContent ?? ''));
+    expect(stepLinks.length).toBeGreaterThanOrEqual(4);
+    for (const link of stepLinks.slice(0, 4)) {
+      expect(link.getAttribute('href')).toMatch(/bloco=(contas|horarios|materiais|margem)/);
+    }
+  });
+
+  it('sem working_hours do profissional mas business_hours aberto → passo Horários “Feito”', async () => {
+    businessSettingsState.data = { business_hours: openHours };
+    wizardList.mockResolvedValue({
+      costs: [],
+      services: [{ id: 's1', name: 'Corte' }],
+      materials: [],
+      professionals: [{ id: 'p1', name: 'Ana', working_hours: null }],
+      lowMargin: 20,
+      lowMarginSaved: false,
+    });
+    mount();
+    await waitFor(() => expect(wizardList).toHaveBeenCalled());
+    const horariosRow = screen.getAllByText(/Horários/i).find((node) => node.closest('li'));
+    expect(horariosRow).toBeTruthy();
+    const row = horariosRow!.closest('li')!;
+    expect(within(row).getByText('Feito')).toBeInTheDocument();
+  });
+
+  it('com atendimento e só margem pendente: aviso sobre avisar sobra, sem custo baixo', async () => {
+    wizardList.mockResolvedValue({
+      costs: [activeCost],
+      services: [{ id: 's1', name: 'Corte' }],
+      materials: [{ service_id: 's1', amount: 2 }],
+      professionals: [{ id: 'p1', name: 'Ana', working_hours: openHours }],
+      lowMargin: 20,
+      lowMarginSaved: false,
+    });
+    state.data = {
+      month: '2026-11-01',
+      role: 'owner',
+      total: metrics,
+      professionals: [{ id: '1', name: 'Ana', ...metrics }],
+      services: [{ name: 'Corte', status: 'ok' }],
+    };
+    mount();
+    await waitFor(() => expect(wizardList).toHaveBeenCalled());
+    expect(screen.getByText(/definir quando avisar|avisar.*sobra/i)).toBeInTheDocument();
+    expect(screen.queryByText(/custo da hora pode estar baixo/i)).not.toBeInTheDocument();
+  });
+
+  it('erro ao carregar o wizard mostra Tentar de novo, sem selos Falta eternamente', async () => {
+    wizardList.mockRejectedValue(new Error('falha'));
+    mount();
+    expect(await screen.findByText(/Não foi possível conferir os ajustes/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /tentar de novo/i })).toBeInTheDocument();
+    expect(screen.queryAllByText('Falta')).not.toHaveLength(4);
+  });
+
+  it('com atendimento e contas+material pendentes: aviso 2 de 4 e link Completar com bloco=', async () => {
+    businessSettingsState.data = { business_hours: openHours };
+    wizardList.mockResolvedValue({
+      costs: [],
+      services: [{ id: 's1', name: 'Corte' }],
+      materials: [],
+      professionals: [{ id: 'p1', name: 'Ana', working_hours: null }],
+      lowMargin: 20,
+      lowMarginSaved: true,
+    });
+    state.data = {
+      month: '2026-11-01',
+      role: 'owner',
+      total: metrics,
+      professionals: [{ id: '1', name: 'Ana', ...metrics }],
+      services: [{ name: 'Corte', status: 'loss' }],
+    };
+    mount();
+    await waitFor(() => expect(wizardList).toHaveBeenCalled());
+    expect(screen.getByText(/Faltam 2 de 4/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /completar/i })).toHaveAttribute(
+      'href',
+      expect.stringMatching(/configuracoes\/financeiro.*bloco=/i),
+    );
   });
 });
 

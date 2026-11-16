@@ -5,12 +5,31 @@ import { fixedCostsApi, type ExpenseSuggestion, type FixedCost, type FixedCostIn
 import { BusinessHoursEditor } from '../BusinessHoursEditor';
 import { formatCurrency } from '../../utils/formatters';
 import { getTodayInTimeZone, resolveBusinessTimezone } from '../../utils/businessTimezone';
-import { firstPendingBlock, hasOpenBusinessHours, setupProgress, setupProgressLabel, type SetupBlockId } from '../../utils/hourlyResultsSetup';
+import { allServicesHaveMaterialDecision, firstPendingBlock, hasOpenBusinessHours, setupProgress, setupProgressLabel, wizardBlockFromLocation, WIZARD_BLOCK_HASH, type SetupBlockId } from '../../utils/hourlyResultsSetup';
 import { ServiceCostCalculator } from './ServiceCostCalculator';
+import type { MaterialCostLine } from '../../utils/serviceMaterialCost';
 
-type Api = typeof fixedCostsApi;
+type Api = typeof fixedCostsApi & {
+  saveMaterialLines?: (companyId: string, serviceId: string, lines: MaterialCostLine[], total: number) => Promise<void>;
+  updateMaterialPrice?: (companyId: string, materialId: string, price: number) => Promise<void>;
+};
 type Data = Awaited<ReturnType<Api['list']>>;
-const emptyData: Data = { costs: [], services: [], materials: [], professionals: [], lowMargin: 20, lowMarginSaved: false };
+const emptyData: Data = { costs: [], services: [], materials: [], professionals: [], lowMargin: 20, lowMarginSaved: false, catalog: [], uses: [] };
+
+function CatalogPriceRow({ item, currency, busy, inputClass, onSave }: { item: { id: string; name: string; package_price: number }; currency: string; busy: boolean; inputClass: string; onSave: (id: string, price: number) => void }) {
+  const [price, setPrice] = useState(String(item.package_price));
+  useEffect(() => { setPrice(String(item.package_price)); }, [item.package_price]);
+  return (
+    <li className="flex flex-wrap items-end gap-2 rounded-xl border border-[var(--color-border)] p-3">
+      <p className="min-w-0 flex-1 text-sm font-semibold text-theme-text">{item.name}</p>
+      <label className="block space-y-1.5 text-sm font-semibold text-theme-text">
+        <span>Preço da embalagem ({currency})</span>
+        <input aria-label={`Preço de ${item.name}`} className={`${inputClass} tabular-nums`} inputMode="decimal" min="0" step="0.01" type="number" value={price} onChange={(event) => setPrice(event.target.value)} />
+      </label>
+      <Button disabled={busy} onClick={() => onSave(item.id, Number(price.replace(',', '.')))}>Salvar preço</Button>
+    </li>
+  );
+}
 
 function materialStatus(amount: number | undefined): 'missing' | 'none' | 'saved' {
   if (amount == null) return 'missing';
@@ -51,9 +70,24 @@ export function FixedCostsSettings({ companyId, region = 'BR', timezone, busines
     catch { setError('Não foi possível carregar os custos. Tente novamente.'); setLoadState('error'); }
   }, [api, companyId]);
   useEffect(() => { void reload(); }, [reload]);
+  useEffect(() => {
+    const apply = (scroll: boolean) => {
+      const target = wizardBlockFromLocation(window.location.hash);
+      if (!target) return;
+      setBlockTouched(true);
+      setOpenBlock(target);
+      if (!scroll) return;
+      const node = document.getElementById(WIZARD_BLOCK_HASH[target]);
+      if (node && typeof node.scrollIntoView === 'function') node.scrollIntoView({ block: 'start' });
+    };
+    apply(loadState === 'ready');
+    const onHash = () => apply(true);
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, [loadState]);
 
   const clearForm = () => { setEditing(undefined); setEndingSalary(false); setCostFormOpen(false); setCategory(''); setDescription(''); setAmount(''); setProfessional(''); setStart(today()); setEnd(''); setSalary(false); setActive(true); };
-  const edit = (cost: FixedCost) => { setEndingSalary(false); setCostFormOpen(true); setEditing(cost.id); setCategory(cost.category); setDescription(cost.description); setAmount(String(cost.amount)); setProfessional(cost.professional_id || ''); setStart(cost.start_date); setEnd(cost.end_date || ''); setSalary(cost.is_owner_salary); setActive(cost.active); open('costs'); };
+  const edit = (cost: FixedCost) => { setEndingSalary(false); setCostFormOpen(true); setEditing(cost.id); setCategory(cost.category); setDescription(cost.description); setAmount(String(cost.amount)); setProfessional(cost.professional_id || ''); setStart(cost.start_date); setEnd(cost.end_date || ''); setSalary(cost.is_owner_salary); setActive(cost.active); open('costs', true); };
   const newPeriod = (cost: FixedCost) => { edit(cost); setEditing(undefined); setStart(today()); setEnd(''); setActive(!cost.is_owner_salary); setNotice(cost.is_owner_salary && cost.active && (!cost.end_date || cost.end_date >= today()) ? 'A vigência atual continua ativa. Encerre-a antes de iniciar outra.' : ''); };
   const endSalary = (cost: FixedCost) => { edit(cost); setEnd(today()); setNotice(''); setEndingSalary(true); };
   const save = async () => {
@@ -66,7 +100,7 @@ export function FixedCostsSettings({ companyId, region = 'BR', timezone, busines
     if (!editing && active && data.costs.some(cost => cost.active && cost.category.toLowerCase() === category.trim().toLowerCase() && cost.description.toLowerCase() === description.trim().toLowerCase() && cost.professional_id === (professional || null) && (!cost.end_date || cost.end_date >= start) && (!end || cost.start_date <= end))) { setError('Já existe um custo igual com vigência sobreposta.'); return; }
     const input: FixedCostInput = { id: editing, company_id: companyId, category: category.trim(), description: description.trim(), amount: value, professional_id: professional || null, start_date: start, end_date: end || null, is_owner_salary: salary, active };
     setBusy(true);
-    try { await api.saveCost(input); clearForm(); setBlockTouched(false); await reload(true); setNotice('Conta salva.'); }
+    try { await api.saveCost(input); clearForm(); setBlockTouched(true); setOpenBlock('costs'); await reload(true); setNotice('Conta salva.'); }
     catch { setError('Não foi possível salvar o custo. Tente novamente.'); }
     finally { setBusy(false); }
   };
@@ -75,7 +109,7 @@ export function FixedCostsSettings({ companyId, region = 'BR', timezone, busines
     const value = Number(lowMargin);
     if (!lowMargin.trim() || !Number.isFinite(value) || value < 0 || value > 100) { setError('Informe um limite entre 0% e 100%.'); return; }
     setBusy(true); setError('');
-    try { await api.saveLowMargin(companyId, value); setBlockTouched(false); await reload(true); setNotice('Limite salvo.'); }
+    try { await api.saveLowMargin(companyId, value); setBlockTouched(true); setOpenBlock('margin'); await reload(true); setNotice('Limite salvo.'); }
     catch { setError('Não foi possível salvar o limite.'); }
     finally { setBusy(false); }
   };
@@ -83,15 +117,30 @@ export function FixedCostsSettings({ companyId, region = 'BR', timezone, busines
     if (!hoursProfessional) return;
     if (selected && Object.values(selected).some(day => day.isOpen && (day.blocks.length === 0 || day.blocks.some(block => !/^([01]\d|2[0-3]):[0-5]\d$/.test(block.start) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(block.end) || block.end <= block.start) || [...day.blocks].sort((a, b) => a.start.localeCompare(b.start)).some((block, index, blocks) => index > 0 && block.start < blocks[index - 1].end)))) { setError('Confira os horários e evite intervalos sobrepostos.'); return; }
     setBusy(true); setError('');
-    try { await api.saveWorkingHours(companyId, hoursProfessional, selected); setBlockTouched(false); await reload(true); setHours(selected || businessHours || {}); setNotice('Salvo. Vale a partir de amanhã.'); }
+    try { await api.saveWorkingHours(companyId, hoursProfessional, selected); setBlockTouched(true); setOpenBlock('hours'); await reload(true); setHours(selected || businessHours || {}); setNotice('Salvo. Vale a partir de amanhã.'); }
     catch { setError('Não foi possível salvar os horários.'); }
     finally { setBusy(false); }
   };
-  const saveMaterial = async (id: string, value: number) => {
+  const saveMaterial = async (id: string, value: number, lines: MaterialCostLine[] = []) => {
     if (!Number.isFinite(value) || value < 0) { setError('Informe um custo de material válido.'); return; }
     setBusy(true); setError('');
-    try { await api.saveMaterial(companyId, id, value); setNotice(value === 0 ? `Salvo: ${data.services.find((item) => item.id === id)?.name ?? 'serviço'} não usa material.` : 'Material salvo.'); setBlockTouched(false); await reload(true); }
-    catch { setError('Não foi possível salvar o custo do serviço.'); }
+    try {
+      if (api.saveMaterialLines) await api.saveMaterialLines(companyId, id, lines, value);
+      else await api.saveMaterial(companyId, id, value);
+      setNotice(value === 0 ? `Salvo: ${data.services.find((item) => item.id === id)?.name ?? 'serviço'} não usa material.` : 'Material salvo.');
+      setBlockTouched(true);
+      setOpenBlock('materials');
+      await reload(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível salvar o custo do serviço.');
+    }
+    finally { setBusy(false); }
+  };
+  const saveCatalogPrice = async (materialId: string, price: number) => {
+    if (!api.updateMaterialPrice) return;
+    setBusy(true); setError('');
+    try { await api.updateMaterialPrice(companyId, materialId, price); setNotice('Preço atualizado. Os serviços que usam este material foram recalculados.'); await reload(true); }
+    catch { setError('Não foi possível atualizar o preço do material.'); }
     finally { setBusy(false); }
   };
   const currency = region === 'PT' ? '€' : 'R$';
@@ -101,14 +150,15 @@ export function FixedCostsSettings({ companyId, region = 'BR', timezone, busines
   const progress = setupProgress({
     hasActiveCost: data.costs.some((cost) => cost.active && (!cost.end_date || cost.end_date >= today())),
     hasOpenHours: hasOpenBusinessHours(businessHours) || data.professionals.some((person) => hasOpenBusinessHours(person.working_hours)),
-    hasMaterial: data.materials.length > 0,
+    hasMaterial: allServicesHaveMaterialDecision(data.services, data.materials),
     marginSaved: !!data.lowMarginSaved,
   });
   const pending = firstPendingBlock(progress.blocks);
   const activeBlock = blockTouched ? openBlock : pending;
-  function open(id: SetupBlockId) {
+  function open(id: SetupBlockId, force = false) {
+    const alreadyOpen = (blockTouched ? openBlock : pending) === id;
     setBlockTouched(true);
-    setOpenBlock((current) => (current === id && blockTouched ? null : id));
+    setOpenBlock(alreadyOpen && !force ? null : id);
   }
   if (loadState !== 'ready') return <div className="space-y-3">
     {loadState === 'loading'
@@ -127,15 +177,13 @@ export function FixedCostsSettings({ companyId, region = 'BR', timezone, busines
   return <div className="space-y-5">
     <div className="space-y-2">
       <h2 className={`text-lg font-bold ${colors.text}`}>Contas, horários e material</h2>
-      <p className={hint}>Quando os 4 estiverem prontos, Resultados por hora mostra quanto sobra em cada hora.</p>
-      <p className="text-sm leading-relaxed text-theme-text">Custo da hora = contas do mês ÷ horas abertas + (material + comissão) ÷ horas atendidas.</p>
-      <p className="text-sm leading-relaxed text-theme-text">Sobra = o que a hora atendida rendeu − esse custo.</p>
-      <p className={hint}>Hora aberta: está na agenda, com ou sem cliente. Hora atendida: teve cliente.</p>
       <p className="text-sm font-semibold tabular-nums text-theme-text">{setupProgressLabel(progress.configured, progress.total)}</p>
-      <a href="/#/resultados-por-hora" className="inline-flex min-h-11 items-center text-sm font-semibold text-[var(--color-accent)]">Ver resultados por hora</a>
       <div aria-hidden="true" className="h-2 overflow-hidden rounded-full bg-[var(--color-border-strong)]">
         <div className="h-full bg-[var(--color-accent)]" style={{ width: `${(progress.configured / progress.total) * 100}%` }} />
       </div>
+      <a href="/#/resultados-por-hora" className="inline-flex min-h-11 items-center text-sm font-semibold text-[var(--color-accent)]">Ver resultados por hora</a>
+      <p className="text-sm leading-relaxed text-theme-text">Custo da hora = contas do mês ÷ horas abertas + (material + comissão já cadastrada) ÷ horas atendidas. Sobra = o que a hora atendida rendeu − esse custo.</p>
+      <p className={hint}>Hora aberta: na agenda, com ou sem cliente. Hora atendida: teve cliente. Numa hora com cliente: contas 12,50 + material 3 + comissão 27 = 42,50. Rendeu 80, sobra 37,50.</p>
     </div>
     <div aria-live="polite" className="space-y-2">
       {error && <p role="alert" className="rounded-xl border border-[var(--color-danger-border)] bg-[var(--color-danger-bg)] p-3 text-sm text-theme-text">{error}</p>}
@@ -145,7 +193,11 @@ export function FixedCostsSettings({ companyId, region = 'BR', timezone, busines
     <Card><div id="contas" className="space-y-4 scroll-mt-24">
       {blockToggle('costs', '1. Contas do mês', progress.blocks.costs)}
       <p className={hint}>Aluguel, luz, internet: o que você paga todo mês, com ou sem cliente.</p>
-      <p className={hint}>Ex.: aluguel 2.000 ÷ 160 h abertas = 12,50 por hora aberta. Fórmula: contas do mês ÷ horas abertas.</p>
+      <p className={hint}>Ex.: aluguel 2.000 ÷ 160 h abertas = 12,50 por hora aberta.</p>
+      {activeBlock !== 'costs' && data.costs.length > 0 && (
+        <p className={hint}>{data.costs.length === 1 ? '1 conta' : `${data.costs.length} contas`} · toque para ver</p>
+      )}
+      {activeBlock === 'costs' && <>
       {data.costs.length === 0
         ? <p className="rounded-xl border border-dashed border-[var(--color-border-strong)] p-3 text-sm text-theme-textSecondary">Nenhuma conta informada ainda. Comece pelo aluguel.</p>
         : <ul className="divide-y divide-[var(--color-border)] rounded-xl border border-[var(--color-border)]">
@@ -162,7 +214,6 @@ export function FixedCostsSettings({ companyId, region = 'BR', timezone, busines
             </div>
           </li>)}
         </ul>}
-      {activeBlock === 'costs' && <>
       <Button variant="secondary" disabled={busy} onClick={() => void suggest()}>Usar despesas que já lancei</Button>
       {suggestions.length > 0 && <div className="space-y-2"><p className={hint}>Toque em uma despesa para preencher o formulário. Ela só entra quando você salvar.</p>{suggestions.map(item => <div key={item.id} className="flex flex-wrap items-center justify-between gap-2 text-sm"><span className="tabular-nums">{item.description} · {formatCurrency(item.amount, region)} · {new Date(item.created_at).toLocaleDateString(region === 'PT' ? 'pt-PT' : 'pt-BR', { timeZone: resolveBusinessTimezone({ timezone, region }) })}</span><Button variant="ghost" size="sm" onClick={() => { setEditing(undefined); setCostFormOpen(true); setDescription(item.description); setAmount(String(item.amount)); }}>Usar<span className="sr-only"> {item.description}</span></Button></div>)}</div>}
 
@@ -204,22 +255,56 @@ export function FixedCostsSettings({ companyId, region = 'BR', timezone, busines
     <Card><div id="materiais" className="space-y-4 scroll-mt-24">
       {blockToggle('materials', '3. Materiais', progress.blocks.materials)}
       <p className={hint}>Quanto de material cada atendimento gasta.</p>
-      <p className={hint}>Ex.: caixa de giletes 20,00 ÷ 40 cortes = 0,50 por corte. Fórmula: preço da embalagem ÷ atendimentos que rende.</p>
-      {data.services.length === 0 && <p className="rounded-xl border border-dashed border-[var(--color-border-strong)] p-3 text-sm text-theme-textSecondary">Cadastre serviços para informar o material.</p>}
-      {data.services.length > 0 && <ul className="space-y-3">{[...data.services].sort((a, b) => {
-        const rank = (id: string) => { const status = materialStatus(data.materials.find((item) => item.service_id === id)?.amount); return status === 'missing' ? 0 : status === 'saved' ? 1 : 2; };
-        return rank(a.id) - rank(b.id);
-      }).map(service => {
+      <p className={hint}>Ex.: tinta 30,00 ÷ 10 aplicações = 3,00 por aplicação.</p>
+      {activeBlock !== 'materials' && data.services.length > 0 && (
+        <p className={hint}>{data.services.length === 1 ? '1 serviço' : `${data.services.length} serviços`} · toque para ver</p>
+      )}
+      {activeBlock === 'materials' && (data.catalog ?? []).length > 0 && (
+        <div className="space-y-2">
+          <p className="text-sm font-semibold text-theme-text">Materiais reutilizáveis. Mudar o preço recalcula os serviços que usam esse material.</p>
+          <ul className="space-y-2">
+            {(data.catalog ?? []).map((item) => (
+              <CatalogPriceRow key={item.id} item={item} currency={currency} busy={busy} inputClass={classes.input} onSave={(id, price) => { void saveCatalogPrice(id, price); }} />
+            ))}
+          </ul>
+        </div>
+      )}
+      {activeBlock === 'materials' && data.services.length === 0 && (
+        <p className="rounded-xl border border-dashed border-[var(--color-border-strong)] p-3 text-sm text-theme-textSecondary">
+          Cadastre serviços para informar o material.{' '}
+          <a href="/#/configuracoes/servicos" className="inline-flex min-h-11 items-center font-semibold text-[var(--color-accent)]">Cadastrar serviço</a>
+        </p>
+      )}
+      {activeBlock === 'materials' && data.services.length > 0 && <ul className="space-y-3">{data.services.map(service => {
         const saved = data.materials.find((item) => item.service_id === service.id)?.amount;
         const status = materialStatus(saved);
         const expanded = activeBlock === 'materials' && openService === service.id;
+        const initialLines = (data.uses ?? [])
+          .filter((use) => use.service_id === service.id)
+          .map((use): MaterialCostLine | null => {
+            const material = (data.catalog ?? []).find((item) => item.id === use.material_id);
+            if (!material) return null;
+            return {
+              name: material.name,
+              mode: material.yield_mode,
+              packagePrice: material.package_price,
+              yieldCount: material.yield_count,
+              packageQty: material.package_qty,
+              qtyPerService: use.qty_per_service,
+            };
+          })
+          .filter((line): line is MaterialCostLine => line != null);
         return (
           <li key={service.id} className="rounded-xl border border-[var(--color-border)] p-3">
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="text-base font-bold text-theme-text">{service.name}</h3>
-              <span className="text-sm text-theme-textSecondary">{status === 'missing' ? 'Não informado' : status === 'none' ? 'Não usa material' : `Total salvo`}</span>
-              {status === 'missing' && <span className="text-sm text-theme-textSecondary">não configurado</span>}
-              <Button variant="ghost" size="sm" onClick={() => { setBlockTouched(true); setOpenBlock('materials'); setOpenService(expanded ? null : service.id); }}>{expanded ? 'Recolher' : `Configurar ${service.name}`}</Button>
+              <span className="text-sm text-theme-textSecondary">
+                {status === 'missing' ? 'Não informado' : status === 'none' ? 'Não usa material' : `${formatCurrency(Number(saved), region)} por atendimento`}
+              </span>
+              {status === 'missing' && (
+                <Button variant="ghost" size="sm" onClick={() => { void saveMaterial(service.id, 0, []); }}>Não usa material</Button>
+              )}
+              <Button variant="ghost" size="sm" onClick={() => { setBlockTouched(true); setOpenBlock('materials'); setOpenService(expanded ? null : service.id); }}>{expanded ? 'Recolher' : status === 'none' ? `Alterar ${service.name}` : `Configurar ${service.name}`}</Button>
             </div>
             {expanded && (
               <div className="pt-3">
@@ -228,8 +313,10 @@ export function FixedCostsSettings({ companyId, region = 'BR', timezone, busines
                   serviceName={service.name}
                   currency={currency}
                   savedAmount={saved ?? null}
+                  initialLines={initialLines}
+                  persistLines={!!api.saveMaterialLines}
                   busy={busy}
-                  onSave={(id, value) => { void saveMaterial(id, value); }}
+                  onSave={(id, value, lines) => { void saveMaterial(id, value, lines); }}
                 />
               </div>
             )}

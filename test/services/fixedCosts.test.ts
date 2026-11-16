@@ -103,4 +103,36 @@ describe('custos fixos', () => {
     await expect(fixedCostsApi.saveCost({ id: 'c1', company_id: 'empresa', professional_id: null, category: 'Aluguel', description: 'Sala', amount: 500, start_date: '2025-01-01', end_date: '2099-12-31', is_owner_salary: false, active: true })).rejects.toThrow();
     expect(eqCompany).toHaveBeenCalledWith('company_id', 'empresa');
   });
+
+  it('grava linhas de material reutilizáveis com company_id e recai no total se o catálogo falhar', async () => {
+    const maybeSingle = vi.fn().mockResolvedValue({ data: { id: 'm1' }, error: null });
+    const select = vi.fn().mockReturnValue({ maybeSingle });
+    const upsert = vi.fn().mockReturnValue({ select });
+    const delEqService = vi.fn().mockResolvedValue({ error: null });
+    const delEqCompany = vi.fn().mockReturnValue({ eq: delEqService });
+    const del = vi.fn().mockReturnValue({ eq: delEqCompany });
+    const insert = vi.fn().mockResolvedValue({ error: null });
+    state.from.mockImplementation((table: string) => {
+      if (table === 'materials') return { upsert };
+      if (table === 'service_material_uses') return { delete: del, insert };
+      return { upsert: vi.fn() };
+    });
+    await expect(fixedCostsApi.saveMaterialLines('empresa', 's1', [{ name: 'Giletes', mode: 'count', packagePrice: 20, yieldCount: 40 }], 0.5)).resolves.toBeUndefined();
+    expect(upsert).toHaveBeenCalledWith(expect.objectContaining({ company_id: 'empresa', name: 'Giletes', package_price: 20, yield_mode: 'count' }), { onConflict: 'company_id,name_key' });
+    expect(insert).toHaveBeenCalledWith([expect.objectContaining({ company_id: 'empresa', service_id: 's1', material_id: 'm1' })]);
+  });
+
+  it('atualiza preço do material só da empresa autenticada', async () => {
+    const maybeSingle = vi.fn().mockResolvedValue({ data: { id: 'm1' }, error: null });
+    const select = vi.fn().mockReturnValue({ maybeSingle });
+    const eqCompany = vi.fn().mockReturnValue({ select });
+    const eqId = vi.fn().mockReturnValue({ eq: eqCompany });
+    const update = vi.fn().mockReturnValue({ eq: eqId });
+    state.from.mockReturnValue({ update });
+    await expect(fixedCostsApi.updateMaterialPrice('empresa', 'm1', 40)).resolves.toBeUndefined();
+    expect(state.from).toHaveBeenCalledWith('materials');
+    expect(eqId).toHaveBeenCalledWith('id', 'm1');
+    expect(eqCompany).toHaveBeenCalledWith('company_id', 'empresa');
+    expect(update).toHaveBeenCalledWith({ package_price: 40 });
+  });
 });

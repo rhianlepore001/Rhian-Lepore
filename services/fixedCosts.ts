@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { costPerService, type MaterialCostLine } from '@/utils/serviceMaterialCost';
 
 export interface FixedCost { id: string; company_id: string; professional_id: string | null; category: string; description: string; amount: number; start_date: string; end_date: string | null; is_owner_salary: boolean; active: boolean }
 export type FixedCostInput = Omit<FixedCost, 'id'> & { id?: string };
@@ -8,7 +9,7 @@ export interface MaterialCost { service_id: string; amount: number }
 export interface ExpenseSuggestion { id: string; description: string; amount: number; created_at: string }
 export interface CatalogMaterial {
   id: string;
-  company_id?: string;
+  company_id: string;
   name: string;
   package_price: number;
   yield_mode: 'count' | 'quantity';
@@ -24,12 +25,14 @@ export interface ServiceMaterialUse {
 
 export const fixedCostsApi = {
   async list(companyId: string): Promise<{ costs: FixedCost[]; services: CostChoice[]; materials: MaterialCost[]; professionals: CostChoice[]; lowMargin?: number; lowMarginSaved?: boolean; catalog?: CatalogMaterial[]; uses?: ServiceMaterialUse[] }> {
-    const [costs, services, materials, professionals, settings] = await Promise.all([
+    const [costs, services, materials, professionals, settings, catalog, uses] = await Promise.all([
       supabase.from('fixed_costs').select('*').eq('company_id', companyId).order('start_date', { ascending: false }),
       supabase.from('services').select('id,name').eq('user_id', companyId).order('name'),
       supabase.from('service_costs').select('service_id,amount').eq('company_id', companyId),
       supabase.from('team_members').select('id,name,working_hours').eq('user_id', companyId).eq('active', true).order('name'),
       supabase.from('chair_hour_settings').select('low_margin_pct').eq('company_id', companyId).maybeSingle(),
+      supabase.from('materials').select('id,company_id,name,package_price,yield_mode,yield_count,package_qty').eq('company_id', companyId).order('name'),
+      supabase.from('service_material_uses').select('id,service_id,material_id,qty_per_service').eq('company_id', companyId),
     ]);
     if (costs.error || services.error || materials.error || professionals.error || settings.error) throw new Error('Não foi possível carregar os custos.');
     return {
@@ -39,8 +42,8 @@ export const fixedCostsApi = {
       professionals: (professionals.data || []) as CostChoice[],
       lowMargin: Number(settings.data?.low_margin_pct ?? 20),
       lowMarginSaved: settings.data != null,
-      catalog: [],
-      uses: [],
+      catalog: catalog.error ? [] : (catalog.data || []) as CatalogMaterial[],
+      uses: uses.error ? [] : (uses.data || []) as ServiceMaterialUse[],
     };
   },
   async suggestions(companyId: string): Promise<ExpenseSuggestion[]> {
@@ -74,5 +77,39 @@ export const fixedCostsApi = {
   async saveMaterial(companyId: string, serviceId: string, amount: number): Promise<void> {
     const { error } = await supabase.from('service_costs').upsert({ company_id: companyId, service_id: serviceId, amount }, { onConflict: 'company_id,service_id' });
     if (error) throw new Error('Não foi possível salvar o custo do serviço.');
+  },
+  async saveMaterialLines(companyId: string, serviceId: string, lines: MaterialCostLine[], fallbackAmount: number): Promise<void> {
+    const usable = lines.filter((line) => line.name.trim() && costPerService(line) != null);
+    if (!usable.length) {
+      await supabase.from('service_material_uses').delete().eq('company_id', companyId).eq('service_id', serviceId);
+      return this.saveMaterial(companyId, serviceId, fallbackAmount);
+    }
+    const uses: { company_id: string; service_id: string; material_id: string; qty_per_service: number | null }[] = [];
+    for (const line of usable) {
+      const row = {
+        company_id: companyId,
+        name: line.name.trim(),
+        package_price: line.packagePrice,
+        yield_mode: line.mode,
+        yield_count: line.mode === 'count' ? line.yieldCount : null,
+        package_qty: line.mode === 'quantity' ? line.packageQty : null,
+      };
+      const { data, error } = await supabase.from('materials').upsert(row, { onConflict: 'company_id,name_key' }).select('id').maybeSingle();
+      if (error || !data?.id) throw new Error('Não foi possível guardar os materiais.');
+      uses.push({
+        company_id: companyId,
+        service_id: serviceId,
+        material_id: String(data.id),
+        qty_per_service: line.mode === 'quantity' ? line.qtyPerService ?? null : null,
+      });
+    }
+    await supabase.from('service_material_uses').delete().eq('company_id', companyId).eq('service_id', serviceId);
+    const { error: useError } = await supabase.from('service_material_uses').insert(uses);
+    if (useError) throw new Error('Não foi possível guardar os materiais.');
+  },
+  async updateMaterialPrice(companyId: string, materialId: string, price: number): Promise<void> {
+    if (!Number.isFinite(price) || price < 0) throw new Error('Informe um preço válido.');
+    const { data, error } = await supabase.from('materials').update({ package_price: price }).eq('id', materialId).eq('company_id', companyId).select('id').maybeSingle();
+    if (error || !data) throw new Error('Não foi possível atualizar o preço do material.');
   },
 };

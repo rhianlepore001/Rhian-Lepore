@@ -13,6 +13,7 @@ interface TeamMember {
     commission_rate?: number | null;
     commission_payment_frequency?: CommissionPaymentFrequency | string | null;
     commission_payment_day?: number | null;
+    staff_user_id?: string | null;
 }
 
 export interface CommissionDraft {
@@ -22,6 +23,8 @@ export interface CommissionDraft {
 interface TeamMemberCardProps {
     member: TeamMember;
     onEdit: (member: TeamMember) => void;
+    /** Abre o convite para reenviar (cadastro ativo ainda sem login). */
+    onResendInvite?: (member: TeamMember) => void;
     /** Colaborador com ciclo de acerto próprio (exceção à regra do negócio). */
     hasOwnCycle?: boolean;
 }
@@ -33,9 +36,11 @@ const formatRate = (rate: number) =>
  * Linha compacta da equipe (~64 px): avatar 40 px, nome, cargo e % de comissão.
  * Tudo que é edição (dados, comissão, bloqueios, exclusão) fica no drawer "Editar".
  */
-export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({ member, onEdit, hasOwnCycle = false }) => {
+export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({ member, onEdit, onResendInvite, hasOwnCycle = false }) => {
     const { colors, radius, accent } = useBrutalTheme();
     const rate = member.commission_rate ?? 0;
+    const pendingInvite = !member.is_owner && member.active && !member.staff_user_id;
+    const handleResend = onResendInvite ?? onEdit;
 
     return (
         <li
@@ -76,6 +81,21 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({ member, onEdit, 
                         </>
                     )}
                 </p>
+                {pendingInvite && (
+                    <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5" data-testid="invite-pending">
+                        <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-warning)]" />
+                        <span className={`text-xs font-semibold ${colors.text}`}>Ainda sem acesso</span>
+                        <span aria-hidden="true" className={`text-xs ${colors.textSecondary}`}>·</span>
+                        <button
+                            type="button"
+                            onClick={() => handleResend(member)}
+                            aria-label={`Reenviar convite para ${member.name}`}
+                            className={`text-xs font-semibold underline-offset-4 hover:underline ${accent.text} min-h-[44px] sm:min-h-0 inline-flex items-center`}
+                        >
+                            Reenviar convite
+                        </button>
+                    </div>
+                )}
             </div>
 
             <button

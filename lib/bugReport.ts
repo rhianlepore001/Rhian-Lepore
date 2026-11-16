@@ -1,3 +1,4 @@
+import { redactInviteToken } from '../utils/redactUrl';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export type BugReportType = 'bug' | 'idea' | 'question';
@@ -42,7 +43,7 @@ export function startCapturing(): void {
 }
 
 export function getConsoleErrors(): ReadonlyArray<string> {
-  return consoleErrorBuffer.slice();
+  return consoleErrorBuffer.slice().map(redactInviteToken);
 }
 
 export function stopCapturing(): void {
@@ -58,12 +59,12 @@ export function captureContext(): BugContext {
   return {
     route:
       typeof window !== 'undefined'
-        ? window.location.hash || window.location.pathname
+        ? redactInviteToken(window.location.hash || window.location.pathname)
         : '',
     pathname: typeof window !== 'undefined' ? window.location.pathname : '',
-    search: typeof window !== 'undefined' ? window.location.search : '',
-    hash: typeof window !== 'undefined' ? window.location.hash : '',
-    url: typeof window !== 'undefined' ? window.location.href : '',
+    search: typeof window !== 'undefined' ? redactInviteToken(window.location.search) : '',
+    hash: typeof window !== 'undefined' ? redactInviteToken(window.location.hash) : '',
+    url: typeof window !== 'undefined' ? redactInviteToken(window.location.href) : '',
     userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
     viewportWidth: typeof window !== 'undefined' ? window.innerWidth : 0,
     viewportHeight: typeof window !== 'undefined' ? window.innerHeight : 0,

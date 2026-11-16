@@ -48,12 +48,12 @@ export const AgendiXLogo: React.FC<AgendiXLogoProps> = ({
                     src="/img/logo-agendix-icon-256.webp"
                     alt=""
                     aria-hidden="true"
+                    className="[html[data-mode='dark']_&]:mix-blend-screen"
                     style={{
                         width: iconSize,
                         height: iconSize,
                         objectFit: 'contain',
                         display: 'block',
-                        mixBlendMode: 'screen',
                     }}
                 />
                 <span
@@ -73,12 +73,12 @@ export const AgendiXLogo: React.FC<AgendiXLogoProps> = ({
             <img
                 src="/img/logo-agendix-icon-256.webp"
                 alt="AgendiX"
+                className="[html[data-mode='dark']_&]:mix-blend-screen"
                 style={{
                     width: numSize,
                     height: numSize,
                     objectFit: 'contain',
                     display: 'block',
-                    mixBlendMode: 'screen',
                 }}
             />
         </div>

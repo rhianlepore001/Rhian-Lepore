@@ -14,6 +14,7 @@ import { supabase } from '@/lib/supabase';
 
 const COMPANY = '6d16babf-0000-4000-8000-000000000001';
 const MEMBER = '8c00405e-0000-4000-8000-000000000002';
+const INVITE_TOKEN = 'f'.repeat(64);
 
 type RpcResult = { data: unknown; error: unknown };
 let rpcHandlers: Record<string, (args: unknown) => RpcResult | Promise<RpcResult>> = {};
@@ -23,7 +24,7 @@ const rpc = supabase.rpc as unknown as ReturnType<typeof vi.fn>;
 
 function renderInvite() {
   return render(
-    <MemoryRouter initialEntries={[`/register?company=${COMPANY}&member=${MEMBER}`]}>
+    <MemoryRouter initialEntries={[`/register?company=${COMPANY}&member=${MEMBER}&invite=${INVITE_TOKEN}`]}>
       <AuthProvider>
         <Routes>
           <Route path="/register" element={<Register />} />

@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 import { supabase } from '../lib/supabase';
+import { redactInviteToken } from './redactUrl';
 
 // Níveis de Log
 export type LogLevel = 'info' | 'warning' | 'error' | 'critical';
@@ -46,7 +47,7 @@ class LoggerService {
                 p_component_stack: context?.componentStack || null,
                 p_severity: 'error',
                 p_context: {
-                    url: window.location.href,
+                    url: redactInviteToken(window.location.href),
                     userAgent: navigator.userAgent,
                     ...context,
                     rawError: error?.toString()

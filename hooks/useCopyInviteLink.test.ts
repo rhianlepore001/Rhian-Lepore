@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { useCopyInviteLink } from '@/hooks/useCopyInviteLink';
+import { supabase } from '@/lib/supabase';
 
 vi.mock('@/contexts/AuthContext', () => ({
     useAuth: () => ({
@@ -37,12 +38,15 @@ describe('useCopyInviteLink', () => {
         expect(result.current.inviteLink).toBe('https://app.example.com/#/register?company=owner-uuid-123');
     });
 
-    it('inclui member_id quando informado', () => {
+    it('inclui member_id e o token do convite quando informado', async () => {
+        const token = 'e'.repeat(64);
+        (supabase.rpc as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ data: token, error: null });
         const { result } = renderHook(() =>
             useCopyInviteLink({ memberId: 'member-uuid-9', recipientName: 'Lucas' })
         );
+        await waitFor(() => expect(result.current.inviteLink).not.toBe(''));
         expect(result.current.inviteLink).toBe(
-            'https://app.example.com/#/register?company=owner-uuid-123&member=member-uuid-9'
+            `https://app.example.com/#/register?company=owner-uuid-123&member=member-uuid-9&invite=${token}`
         );
         expect(result.current.inviteText).toContain('integrar a equipe');
         expect(result.current.inviteText).toContain('Lucas');

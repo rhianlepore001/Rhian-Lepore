@@ -1,7 +1,7 @@
 import { useDraftFields } from '../hooks/useDraftFields';
 import { invalidateAgendaStaticData } from '@/lib/agendaStaticInvalidation';
 import React, { useEffect, useState, useRef } from 'react';
-import { Upload, User, Check, Link as LinkIcon, CheckCircle2, Share2, Copy, Trash2 } from 'lucide-react';
+import { Upload, User, Check, Link as LinkIcon, CheckCircle2, Share2, Copy, Trash2, RefreshCw } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Modal } from './ui/Modal';
@@ -139,7 +139,15 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
     }, { onDiscard: onClose, ready: !showSchedule || scheduleReady, enabled: step === 'form' });
 
     const inviteMemberId = createdMemberId || (initialData?.staff_user_id ? null : initialData?.id) || null;
-    const { inviteLink, copied: copiedInviteLink, copy: copyInviteLink, share: shareInviteLink } = useCopyInviteLink({
+    const {
+        inviteLink,
+        copied: copiedInviteLink,
+        copy: copyInviteLink,
+        share: shareInviteLink,
+        regenerate: regenerateInviteLink,
+        regenerating: regeneratingInviteLink,
+        inviteError,
+    } = useCopyInviteLink({
         recipientName: name.trim() || undefined,
         memberId: inviteMemberId,
     });
@@ -344,14 +352,18 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                         data-testid="invite-link"
                         className={`p-3 rounded-lg border border-dashed ${colors.border} break-all text-xs ${font.mono} ${colors.textSecondary}`}
                     >
-                        {inviteLink || 'Gerando link…'}
+                        {inviteLink || (inviteError ? '—' : 'Gerando link…')}
                     </div>
+                    {inviteError && (
+                        <p role="alert" className="text-xs text-[var(--color-danger)]">{inviteError}</p>
+                    )}
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <Button
                             type="button"
                             variant="primary"
                             fullWidth
+                            disabled={!inviteLink}
                             onClick={() => void copyInviteLink()}
                             icon={copiedInviteLink ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                         >
@@ -361,11 +373,28 @@ export const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
                             type="button"
                             variant="secondary"
                             fullWidth
+                            disabled={!inviteLink}
                             onClick={() => void shareInviteLink()}
                             icon={<Share2 className="w-4 h-4" />}
                         >
                             Enviar
                         </Button>
+                    </div>
+
+                    <div className={`flex flex-col gap-1 border-t ${colors.divider} pt-4 sm:flex-row sm:items-center sm:justify-between sm:gap-3`}>
+                        <p className={`text-xs ${colors.textMuted} leading-relaxed`}>
+                            Vale por 30 dias, para um único cadastro. Um link novo cancela o anterior.
+                        </p>
+                        <button
+                            type="button"
+                            data-testid="invite-regenerate"
+                            onClick={() => void regenerateInviteLink()}
+                            disabled={regeneratingInviteLink || (!inviteLink && !inviteError)}
+                            className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 self-start text-xs font-semibold ${accent.text} underline-offset-4 hover:underline disabled:opacity-50 sm:self-auto`}
+                        >
+                            <RefreshCw className={`w-3.5 h-3.5 ${regeneratingInviteLink ? 'animate-spin' : ''}`} aria-hidden="true" />
+                            Gerar novo link
+                        </button>
                     </div>
 
                     <Button

@@ -10,10 +10,15 @@ html[data-mode=light] .demo-niches a[aria-current],html[data-mode=light] .demo-n
 .demo-toolbar { display:flex; justify-content:space-between; align-items:center; gap:16px; max-width:1320px; margin:auto; padding:22px 24px 14px; }
 .demo-toolbar strong { display:block; font:700 20px Chivo,sans-serif; }
 .demo-toolbar span { display:block; color:var(--color-text-secondary); font-size:13px; margin-top:5px; }
+.demo-toolbar .demo-badge { display:inline-block; margin:4px 0 0; font-size:12px; line-height:1; }
 .demo-toolbar button,.demo-tour button { border:1px solid var(--color-border); }
 .demo-nav { display:flex; gap:4px; overflow-x:auto; max-width:1320px; margin:auto; padding:0 24px 16px; border-bottom:1px solid var(--color-border); }
+.demo-nav-wrap { position:relative; max-width:1320px; margin:auto; }
 .demo-nav a { white-space:nowrap; }
 .demo-content { max-width:1320px; margin:auto; padding:24px; }
+.demo-content [data-testid="agenda-resource-grid"] [data-agenda-slot]:not([data-off-hours]) { background:#f8f9fa; }
+.demo-content #btn-new-appointment { background:#536174; color:#fff; border-color:#536174; }
+.demo-content #btn-new-appointment:hover { background:#425064; }
 .demo-loading { padding:48px 24px; }
 .demo-tour { max-width:1272px; margin:16px auto 0; padding:20px; background:var(--color-surface); border-radius:12px; display:flex; align-items:center; gap:24px; }
 .demo-tour span { color:var(--color-text-secondary); font-size:13px; }
@@ -24,17 +29,19 @@ html[data-mode=light] .demo-niches a[aria-current],html[data-mode=light] .demo-n
 .demo-shell a:hover,.demo-shell button:hover { filter:brightness(.9); }
 .demo-shell :focus-visible { outline:2px solid var(--demo-accent); outline-offset:3px; }
 @media(max-width:640px) {
- .demo-header { gap:10px; padding:12px 16px; }
- .demo-brand { font-size:24px; }
+ .demo-header { gap:6px; padding:8px 12px; }
+ .demo-brand { font-size:21px; }
  .demo-niches { margin-left:auto; }
- .demo-niches a { padding:10px; }
- .demo-signup { width:100%; text-align:center; }
- .demo-toolbar { padding:18px 16px 12px; align-items:flex-start; }
- .demo-toolbar strong { font-size:18px; }
- .demo-toolbar span { font-size:12px; max-width:180px; }
- .demo-toolbar button { max-width:120px; padding:8px 12px; font-size:13px; }
- .demo-nav { padding:0 16px 12px; }
- .demo-content { padding:20px 12px; }
+ .demo-niches a { padding:10px 7px; font-size:12px; }
+ .demo-signup { padding:12px 8px; font-size:12px; white-space:nowrap; }
+ .demo-toolbar { padding:12px 16px 8px; align-items:center; }
+ .demo-toolbar strong { display:inline; font-size:16px; }
+ .demo-toolbar .demo-badge { margin:0 0 0 6px; padding:3px 6px; }
+ .demo-toolbar span { font-size:12px; margin-top:2px; }
+ .demo-toolbar button { padding:8px 10px; font-size:12px; white-space:nowrap; }
+ .demo-nav { padding:0 32px 8px 16px; }
+ .demo-nav-wrap::after { content:""; position:absolute; right:0; top:0; bottom:9px; width:32px; pointer-events:none; background:linear-gradient(to right,transparent,var(--color-bg)); }
+ .demo-content { padding:12px; }
  .demo-tour { margin:12px; flex-direction:column; align-items:flex-start; gap:12px; }
  .demo-tour-actions { flex-wrap:wrap; }
 }

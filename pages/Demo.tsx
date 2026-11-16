@@ -48,7 +48,6 @@ export const Demo = () => {
     <div className="demo-shell">
       <header className="demo-header">
         <Link className="demo-brand" to="/">AgendiX</Link>
-        <span className="demo-badge">Simulação</span>
         <div className="demo-niches" aria-label="Tipo de negócio">
           <Link aria-current={niche === 'barber' ? 'page' : undefined} to="/demo/barber/agenda">Barbearia</Link>
           <Link aria-current={niche === 'beauty' ? 'page' : undefined} to="/demo/beauty/agenda">Salão</Link>
@@ -56,10 +55,10 @@ export const Demo = () => {
         <a className="demo-signup" href={niche === 'beauty' ? '/#/register?type=beauty' : '/#/register'}>Crie sua conta grátis</a>
       </header>
       <div className="demo-toolbar">
-        <div><strong>{niche === 'beauty' ? 'Studio Aurora' : 'Barbearia Corte Fino'}</strong><span>Dados fictícios · reinicia ao recarregar</span></div>
+        <div><strong>{niche === 'beauty' ? 'Studio Aurora' : 'Barbearia Corte Fino'}</strong><span className="demo-badge">Simulação</span><span>Dados fictícios · reinicia ao recarregar</span></div>
         <button onClick={() => goTour(0)}>Fazer tour guiado</button>
       </div>
-      <nav className="demo-nav" aria-label="Telas da simulação">{screens.map(screen => <Link key={screen.path} to={`${base}/${screen.path}`} aria-current={location.pathname === `${base}/${screen.path}` ? 'page' : undefined}>{screen.label}</Link>)}</nav>
+      <div className="demo-nav-wrap"><nav className="demo-nav" aria-label="Telas da simulação">{screens.map(screen => <Link key={screen.path} to={`${base}/${screen.path}`} aria-current={location.pathname === `${base}/${screen.path}` ? 'page' : undefined}>{screen.label}</Link>)}</nav></div>
       {tour !== null && <aside className="demo-tour" aria-label="Tour guiado" aria-live="polite">
         <div><span>Passo {tour + 1} de {screens.length}</span><h2>{screens[tour].title}</h2><p>{screens[tour].text}</p></div>
         <div className="demo-tour-actions">{tour > 0 && <button onClick={() => goTour(tour - 1)}>Anterior</button>}<button onClick={() => tour < screens.length - 1 ? goTour(tour + 1) : setTour(null)}>{tour < screens.length - 1 ? 'Próximo passo' : 'Concluir tour'}</button><button onClick={() => setTour(null)}>Fechar tour</button></div>

@@ -1,4 +1,15 @@
 .demo-shell { --demo-accent:#536174; min-height:100svh; background:var(--color-bg); color:var(--color-text); }
+html[data-theme=barber] .demo-shell {
+ --color-accent:#536174;
+ --color-accent-hover:#425064;
+ --color-accent-dim:rgba(83,97,116,.12);
+ --color-accent-border:rgba(83,97,116,.4);
+ --color-on-accent:#fff;
+ --color-input-focus:#536174;
+ --color-focus-ring:#536174;
+ --shadow-card-accent:0 3px 10px rgba(83,97,116,.16);
+ --shadow-btn-primary:0 4px 12px rgba(32,40,51,.14);
+}
 .demo-header { display:flex; align-items:center; gap:16px; padding:12px max(24px,calc((100vw - 1320px)/2)); border-bottom:1px solid var(--color-border); flex-wrap:wrap; }
 .demo-brand { font:900 27px Chivo,sans-serif; letter-spacing:-.04em; }
 .demo-badge { font-size:12px; border:1px solid var(--color-border); padding:5px 9px; border-radius:6px; }
@@ -12,8 +23,17 @@ html[data-mode=light] .demo-niches a[aria-current],html[data-mode=light] .demo-n
 .demo-toolbar span { display:block; color:var(--color-text-secondary); font-size:13px; margin-top:5px; }
 .demo-toolbar .demo-badge { display:inline-block; margin:4px 0 0; font-size:12px; line-height:1; }
 .demo-toolbar button,.demo-tour button { border:1px solid var(--color-border); }
-.demo-nav { display:flex; gap:4px; overflow-x:auto; max-width:1320px; margin:auto; padding:0 24px 16px; border-bottom:1px solid var(--color-border); }
-.demo-nav-wrap { position:relative; max-width:1320px; margin:auto; }
+.demo-nav { display:flex; min-width:0; flex:1; gap:4px; overflow-x:auto; max-width:1320px; margin:auto; padding:0 24px 16px; border-bottom:1px solid var(--color-border); }
+.demo-nav-wrap { position:relative; display:flex; align-items:flex-start; max-width:1320px; margin:auto; border-bottom:1px solid var(--color-border); }
+.demo-nav-wrap .demo-nav { border-bottom:0; }
+.demo-nav-wrap.has-overflow::after { content:""; position:absolute; right:44px; top:0; height:44px; width:40px; pointer-events:none; background:linear-gradient(to right,transparent,var(--color-bg)); }
+.demo-nav-wrap.at-end::after { display:none; }
+.demo-nav-scroll { flex:none; width:44px; height:44px; display:flex; align-items:center; justify-content:center; background:var(--color-card); border:1px solid var(--color-border); border-radius:8px; color:var(--demo-accent); }
+.demo-content [data-testid="agenda-day-scroller"]>div:last-child::before { content:""; position:absolute; right:0; top:0; bottom:0; width:52px; z-index:1; pointer-events:none; background:linear-gradient(to right,transparent 0%,var(--color-bg) 70%); }
+.demo-content [data-testid="agenda-day-scroller"]>div:last-child::after { content:""; position:absolute; right:10px; top:25px; width:9px; height:9px; border-top:2px solid var(--demo-accent); border-right:2px solid var(--demo-accent); transform:rotate(45deg); z-index:1; pointer-events:none; }
+.demo-content [data-testid="agenda-month-trigger"],.demo-content [data-testid="agenda-hoje-chip"] { min-height:44px; color:#202833; }
+.demo-content header:has(#btn-new-appointment) button:not(#btn-new-appointment) { color:#344154; border-color:#8a93a0; background:#fff; }
+.demo-content [data-agenda-slot] > button[aria-label^="Novo agendamento"] span { opacity:1; color:#2a3340; border-color:#536174; border-width:1.5px; border-style:solid; background:#fff; width:1.85rem; height:1.85rem; }
 .demo-nav a { white-space:nowrap; }
 .demo-content { max-width:1320px; margin:auto; padding:24px; }
 .demo-content [data-testid="agenda-resource-grid"] [data-agenda-slot]:not([data-off-hours]) { background:#f8f9fa; }
@@ -29,19 +49,25 @@ html[data-mode=light] .demo-niches a[aria-current],html[data-mode=light] .demo-n
 .demo-shell a:hover,.demo-shell button:hover { filter:brightness(.9); }
 .demo-shell :focus-visible { outline:2px solid var(--demo-accent); outline-offset:3px; }
 @media(max-width:640px) {
- .demo-header { gap:6px; padding:8px 12px; }
+ .demo-header { gap:6px; padding:6px 12px; }
  .demo-brand { font-size:21px; }
  .demo-niches { margin-left:auto; }
  .demo-niches a { padding:10px 7px; font-size:12px; }
  .demo-signup { padding:12px 8px; font-size:12px; white-space:nowrap; }
- .demo-toolbar { padding:12px 16px 8px; align-items:center; }
+ .demo-toolbar { padding:6px 12px; align-items:center; }
  .demo-toolbar strong { display:inline; font-size:16px; }
  .demo-toolbar .demo-badge { margin:0 0 0 6px; padding:3px 6px; }
  .demo-toolbar span { font-size:12px; margin-top:2px; }
  .demo-toolbar button { padding:8px 10px; font-size:12px; white-space:nowrap; }
- .demo-nav { padding:0 32px 8px 16px; }
- .demo-nav-wrap::after { content:""; position:absolute; right:0; top:0; bottom:9px; width:32px; pointer-events:none; background:linear-gradient(to right,transparent,var(--color-bg)); }
- .demo-content { padding:12px; }
+ .demo-nav { padding:0 12px 4px; }
+ .demo-content { padding:8px 12px; }
+ .demo-content[data-demo-screen=agenda]>div { gap:8px; }
+ .demo-content[data-demo-screen=agenda]>div>div:first-child { padding-top:0; }
+ .demo-content[data-demo-screen=agenda]>div>div:first-child>header { gap:0; padding-bottom:0; }
+ .demo-content[data-demo-screen=agenda]>div>div:first-child>header>div:first-child { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+ .demo-content[data-demo-screen=agenda] header:has(#btn-new-appointment)>div:last-child>div { flex-wrap:nowrap; gap:6px; }
+ .demo-content[data-demo-screen=agenda] header:has(#btn-new-appointment) button:not(#btn-new-appointment) { flex:0 0 44px; width:44px; padding:0; }
+ .demo-content #btn-new-appointment { padding-inline:10px; }
  .demo-tour { margin:12px; flex-direction:column; align-items:flex-start; gap:12px; }
  .demo-tour-actions { flex-wrap:wrap; }
 }

@@ -42,3 +42,9 @@ Troca pelas fotos reais: substituir os arquivos em `public/landing/` mantendo os
 ## Rodada de tema claro
 
 As imagens de `agenda`, `beauty`, `hero-agenda`, `booking`, `finance`, `performance`, `queue` e `team` foram recapturadas em modo claro usando os tokens reais dos dois temas. A imagem OG foi atualizada a partir da agenda clara. As imagens de produto preservam textos, estados e dados fictícios da UI; o recorte do pôster mobile ainda precisa de revisão visual.
+
+## Polimento r2 — 16/11/2026
+
+Recaptura local das sete telas da demo clara em 390 e 1440px; acentos da barbearia usam azul ardósia apenas na demo. O agendamento mostra a primeira linha de serviços completa (nome, preço e duração). A performance enquadra título, filtros e a visão principal de hora de cadeira até a ocupação; o mobile vem da UI responsiva com o botão Filtrar. Capturas sem alterações nos dados fictícios.
+
+Fontes PNG, provas e script reproduzível: `/workspace/artifacts/site-v2/polish-r2/`. Avaliação independente pendente; esta rodada não atribui nota nem autoriza publicação.

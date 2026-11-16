@@ -32,6 +32,23 @@ for (const width of [1440, 390]) {
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'barber');
     await expect(page.getByRole('heading', { name: /Agenda/i }).first()).toBeVisible();
     await expect(page.getByRole('button', { name: /Pedro Souza —/ }).first()).toBeVisible();
+    const selectedDay = page.getByTestId('agenda-day-selected');
+    await expect(selectedDay).toHaveCSS('background-color', 'rgb(83, 97, 116)');
+    if (width === 390) {
+      const grid = await page.getByTestId('agenda-grid-root').boundingBox();
+      expect(grid?.y, 'A grade deve começar antes de 390px').toBeLessThan(390);
+      const moreScreens = page.getByRole('button', { name: 'Ver mais telas' });
+      await expect(moreScreens).toBeVisible();
+      await moreScreens.click();
+      await expect(page.getByRole('link', { name: 'Equipe', exact: true })).toBeInViewport();
+      await page.getByRole('button', { name: 'Ver telas anteriores' }).click();
+      await expect(page.getByRole('link', { name: 'Agenda', exact: true })).toBeInViewport();
+      for (const control of [page.getByRole('button', { name: 'Histórico', exact: true }), page.getByTestId('agenda-public-link'), page.getByRole('button', { name: 'Todos os agendamentos', exact: true }), page.locator('#btn-new-appointment'), page.getByTestId('agenda-month-trigger')]) {
+        const box = await control.boundingBox();
+        expect(box?.height).toBeGreaterThanOrEqual(44);
+        expect(box?.width).toBeGreaterThanOrEqual(44);
+      }
+    }
     await page.getByRole('button', { name: /Novo Agendamento/i }).first().click();
     await expect(page.getByRole('dialog').first()).toBeVisible();
     await page.getByTestId('agenda-choice-new-appointment').click();

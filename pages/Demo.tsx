@@ -1,4 +1,4 @@
-import { DemoNavigation } from '../components/DemoNavigation';
+import { DemoNavigation, DemoScreenNavigation } from '../components/DemoNavigation';
 import React, { lazy, Suspense, useEffect, useState } from 'react';
 import { Link, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -58,12 +58,12 @@ export const Demo = () => {
         <div><strong>{niche === 'beauty' ? 'Studio Aurora' : 'Barbearia Corte Fino'}</strong><span className="demo-badge">Simulação</span><span>Dados fictícios · reinicia ao recarregar</span></div>
         <button onClick={() => goTour(0)}>Fazer tour guiado</button>
       </div>
-      <div className="demo-nav-wrap"><nav className="demo-nav" aria-label="Telas da simulação">{screens.map(screen => <Link key={screen.path} to={`${base}/${screen.path}`} aria-current={location.pathname === `${base}/${screen.path}` ? 'page' : undefined}>{screen.label}</Link>)}</nav></div>
+      <DemoScreenNavigation locationKey={location.pathname}>{screens.map(screen => <Link key={screen.path} to={`${base}/${screen.path}`} aria-current={location.pathname === `${base}/${screen.path}` ? 'page' : undefined}>{screen.label}</Link>)}</DemoScreenNavigation>
       {tour !== null && <aside className="demo-tour" aria-label="Tour guiado" aria-live="polite">
         <div><span>Passo {tour + 1} de {screens.length}</span><h2>{screens[tour].title}</h2><p>{screens[tour].text}</p></div>
         <div className="demo-tour-actions">{tour > 0 && <button onClick={() => goTour(tour - 1)}>Anterior</button>}<button onClick={() => tour < screens.length - 1 ? goTour(tour + 1) : setTour(null)}>{tour < screens.length - 1 ? 'Próximo passo' : 'Concluir tour'}</button><button onClick={() => setTour(null)}>Fechar tour</button></div>
       </aside>}
-      <DemoNavigation><main className="demo-content" key={niche} onClickCapture={event => {
+      <DemoNavigation><main className="demo-content" data-demo-screen={screens.find(screen => location.pathname === `${base}/${screen.path}`)?.path ?? 'agenda'} key={niche} onClickCapture={event => {
         const anchor = (event.target as HTMLElement).closest('a');
         if (anchor && /wa\.me|whatsapp|mailto:/.test(anchor.href)) { event.preventDefault(); event.stopPropagation(); }
       }}>

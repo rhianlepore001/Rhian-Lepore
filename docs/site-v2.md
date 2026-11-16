@@ -32,7 +32,7 @@ Nenhuma migration ou alteração no fluxo real de cadastro/login/autenticação.
 
 ## Situação visual
 
-Revisão independente: landing 7,5/10; demo 8/10. Ambas **reprovadas para publicação** pelo corte >8. O lote único de correções foi consumido. Permanecem recortes mobile pouco legíveis, captura instável de serviços e casca da demo alta no celular. Taste Gate: `FAIL 34`; sem aprovação declarada. Detalhamento em `/workspace/artifacts/site-v2/CRITIQUE.md` no ambiente da tarefa. O PR deve permanecer em rascunho.
+Após o polimento r2/r3 de 16/11/2026, a crítica independente atribuiu **landing 8/10** e **demo 8,5/10**. A landing permanece **reprovada para publicação** pelo corte >8; as três rodadas foram consumidas. Pendências: legendas menores do Financeiro em 390px e verificação do CTA fixo mobile em mais posições de rolagem. Taste Gate histórico: `FAIL 34`; sem aprovação declarada. Detalhamento em `/workspace/artifacts/site-v2/CRITIQUE.md`. O PR deve permanecer em rascunho.
 
 O executável `graphify` não está instalado neste ambiente: `graphify update .` retornou `command not found`. O grafo não foi atualizado.
 
@@ -49,4 +49,8 @@ O GitHub recusou a alteração do workflow por falta do escopo OAuth `workflow`.
 
 A demo força `data-mode="light"` para os dois nichos e mantém `data-theme` de cada um. A barbearia usa os tokens reais de modo claro do app; o salão usa os seus tokens reais claros. A casca usa #536174 na navegação, sem modificar `design-system/tokens.css`. O booking público da demo conserva o modo claro e não oferece troca para escuro. Fora da demo, o modo e o botão de troca do agendamento público continuam com o comportamento original.
 
-Hero, pôsteres, imagens de agenda, booking, financeiro, equipe, fila, performance e OG foram recapturados da UI real em modo claro. As capturas são dados fictícios e não representam clientes reais. Avaliação visual da rodada: landing 8/10 e demo 8/10, reprovadas para o corte >8. Persistem recorte lateral do pôster mobile, legibilidade dos prints dos benefícios em celular e altura da casca da demo antes da grade.
+Hero, pôsteres, imagens de agenda, booking, financeiro, equipe, fila, performance e OG foram recapturados da UI real em modo claro, e de novo após o polimento r2/r3. As capturas são dados fictícios e não representam clientes reais.
+
+## Polimento visual r2/r3 — 16 Nov 2026
+
+Três rodadas: r1 já em `e64fb371`; r2 com recortes, pista de rolagem, casca mais baixa e acento ardósia só na demo; r3 com hierarquia do fechamento, contraste dos “+” e CTA mobile abaixo do menu. Crítica independente final: landing 8/10, demo 8,5/10. A landing não superou o corte. Sem merge nem publicação.

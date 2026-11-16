@@ -8,7 +8,7 @@ export interface MaterialCost { service_id: string; amount: number }
 export interface ExpenseSuggestion { id: string; description: string; amount: number; created_at: string }
 
 export const fixedCostsApi = {
-  async list(companyId: string): Promise<{ costs: FixedCost[]; services: CostChoice[]; materials: MaterialCost[]; professionals: CostChoice[]; lowMargin?: number }> {
+  async list(companyId: string): Promise<{ costs: FixedCost[]; services: CostChoice[]; materials: MaterialCost[]; professionals: CostChoice[]; lowMargin?: number; lowMarginSaved?: boolean }> {
     const [costs, services, materials, professionals, settings] = await Promise.all([
       supabase.from('fixed_costs').select('*').eq('company_id', companyId).order('start_date', { ascending: false }),
       supabase.from('services').select('id,name').eq('user_id', companyId).order('name'),
@@ -17,7 +17,14 @@ export const fixedCostsApi = {
       supabase.from('chair_hour_settings').select('low_margin_pct').eq('company_id', companyId).maybeSingle(),
     ]);
     if (costs.error || services.error || materials.error || professionals.error || settings.error) throw new Error('Não foi possível carregar os custos.');
-    return { costs: (costs.data || []) as FixedCost[], services: (services.data || []) as CostChoice[], materials: (materials.data || []) as MaterialCost[], professionals: (professionals.data || []) as CostChoice[], lowMargin: Number(settings.data?.low_margin_pct ?? 20) };
+    return {
+      costs: (costs.data || []) as FixedCost[],
+      services: (services.data || []) as CostChoice[],
+      materials: (materials.data || []) as MaterialCost[],
+      professionals: (professionals.data || []) as CostChoice[],
+      lowMargin: Number(settings.data?.low_margin_pct ?? 20),
+      lowMarginSaved: settings.data != null,
+    };
   },
   async suggestions(companyId: string): Promise<ExpenseSuggestion[]> {
     const { data, error } = await supabase.from('finance_records').select('id,description,commission_value,created_at,appointment_id').eq('user_id', companyId).eq('type', 'expense').is('appointment_id', null).order('created_at', { ascending: false }).limit(100);

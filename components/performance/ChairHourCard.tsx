@@ -7,7 +7,7 @@ import { useChairHour, type ChairHourData, type HourMetrics } from '@/hooks/useC
 import { useTenantLocale } from '@/hooks/useTenantLocale';
 import { formatHours, isNumber, outOfTen, periodLabel, pickTip, previousPeriod } from '@/utils/chairHourCopy';
 
-interface Props { month: string; endDate?: string | null; professionalId?: string | null }
+interface Props { month: string; endDate?: string | null; professionalId?: string | null; hidePeriod?: boolean }
 type Money = (value: number | null | undefined) => string;
 
 const SETTINGS = '/configuracoes/financeiro';
@@ -27,8 +27,8 @@ function Help({ label, children }: { label: string; children: React.ReactNode })
 function Quality({ estimated, historical }: { estimated: number | null | undefined; historical?: boolean }) {
   const count = isNumber(estimated) ? estimated : 0;
   const text = historical ? 'Período antigo: horários estimados'
-    : count > 0 ? `Agenda: ${count} ${count === 1 ? 'tempo estimado' : 'tempos estimados'}`
-      : 'Tempos informados no fechamento';
+    : count > 0 ? `${count} ${count === 1 ? 'atendimento com duração estimada' : 'atendimentos com duração estimada'}`
+      : 'Duração informada no fechamento';
   return <p title="Tempo estimado vem da agenda; tempo informado é o ajustado no fechamento." className="inline-flex min-h-7 items-center gap-1.5 whitespace-nowrap rounded-full border border-[var(--color-border-strong)] px-2.5 text-xs font-medium text-theme-textSecondary">
     <span aria-hidden="true" className={`h-1.5 w-1.5 rounded-full ${count > 0 || historical ? 'bg-[var(--color-warning)]' : 'bg-[var(--color-success)]'}`} />
     {text}
@@ -140,7 +140,10 @@ function Services({ data }: { data: ChairHourData }) {
     <ul className="space-y-2">
       {flagged.map((service, index) => { const copy = STATUS_COPY[service.status as string]; return <li key={`${service.name}-${index}`} className={`relative rounded-xl border p-3 pr-12 ${copy.tone}`}>
         <p className="text-sm font-semibold text-theme-text">{service.name}</p>
-        <p className="text-sm text-theme-text">{copy.label} <span className={muted}>· estimado</span></p>
+        <p className="text-sm text-theme-text">{copy.label} <span className={muted}>· valores estimados</span></p>
+        {service.status === 'loss' && (
+          <p className={`text-sm ${muted}`}>No geral a hora sobrou, mas este serviço, sozinho, não cobre o custo da hora.</p>
+        )}
         <Help label={copy.label}>{copy.help}</Help>
       </li>; })}
     </ul>
@@ -212,7 +215,7 @@ function StaffView({ item, previous, teamMemberId, money, monthly }: { item: Hou
   </div>;
 }
 
-export function ChairHourCard({ month, endDate = null, professionalId = null }: Props) {
+export function ChairHourCard({ month, endDate = null, professionalId = null, hidePeriod = false }: Props) {
   const { role, teamMemberId } = useAuth();
   const { chairHour } = useBusinessCopy();
   const { formatMoney } = useTenantLocale();
@@ -228,7 +231,8 @@ export function ChairHourCard({ month, endDate = null, professionalId = null }: 
     <header className="flex flex-wrap items-start justify-between gap-2">
       <div className="min-w-0">
         <h2 className="text-lg font-bold text-theme-text">{staff ? 'Sua agenda' : `Sua ${chairHour}`}</h2>
-        <p className={`text-sm ${muted}`}>{periodLabel(month, endDate)}</p>
+        <p className={`text-sm ${muted}`}>{staff ? 'Cada hora da sua agenda, com ou sem cliente' : 'Cada hora com agenda aberta, com ou sem cliente'}</p>
+        {!hidePeriod && <p className={`text-sm ${muted}`}>{periodLabel(month, endDate)}</p>}
       </div>
       {status === 'ready' && selected && <Quality estimated={estimatedCount} historical={data?.history_estimated} />}
     </header>

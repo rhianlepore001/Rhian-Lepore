@@ -47,15 +47,16 @@ describe('hora de cadeira — gestor', () => {
   });
   it('usa selo que não condena o serviço e deixa claro que é estimativa', () => {
     mount();
-    expect(screen.getByText(/não cobre o custo da hora/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/não cobre o custo da hora/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/este serviço, sozinho, não cobre o custo da hora/i)).toBeInTheDocument();
     expect(screen.getAllByText(/estimad/i).length).toBeGreaterThan(0);
   });
   it('mostra selo de qualidade dos dados sempre visível', () => {
     mount();
-    expect(screen.getByText('Agenda: 1 tempo estimado')).toBeInTheDocument();
+    expect(screen.getByText('1 atendimento com duração estimada')).toBeInTheDocument();
     state.data = { month: '2026-11-01', role: 'owner', total: { ...metrics, estimated_count: 0 }, professionals: [] };
     mount();
-    expect(screen.getByText('Tempos informados no fechamento')).toBeInTheDocument();
+    expect(screen.getByText('Duração informada no fechamento')).toBeInTheDocument();
   });
   it('dá uma dica prática baseada nos números', () => {
     mount();
@@ -115,6 +116,18 @@ describe('hora de cadeira — gestor', () => {
   it('não consulta período anterior para o gestor', () => {
     mount();
     expect(state.calls.some(args => (args[3] as { enabled?: boolean } | undefined)?.enabled === true)).toBe(false);
+  });
+
+  it('isolado: horas abertas sem atendimento ainda pode exibir estrutura (empty fica na página HourlyResults)', () => {
+    state.data = {
+      month: '2026-11-01',
+      role: 'owner',
+      total: { ...metrics, worked_minutes: 0, revenue_per_available_hour: 0 },
+      professionals: [],
+      services: [],
+    };
+    mount();
+    expect(screen.getByRole('heading', { name: 'Sua hora de cadeira' })).toBeInTheDocument();
   });
 });
 

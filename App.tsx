@@ -65,6 +65,7 @@ const DashboardCockpitDemo = React.lazy(() => import('./pages/DashboardCockpitDe
 const FinanceChartDemo = React.lazy(() => import('./pages/FinanceChartDemo').then(module => ({ default: module.FinanceChartDemo })));
 const Placeholder = React.lazy(() => import('./pages/Placeholder').then(module => ({ default: module.Placeholder })));
 const StaffInsights = React.lazy(() => import('./pages/StaffInsights').then(module => ({ default: module.StaffInsights })));
+const HourlyResults = React.lazy(() => import('./pages/HourlyResults').then(module => ({ default: module.HourlyResults })));
 const StaffPerformance = React.lazy(() => {
   void import('./hooks/useStaffPerformance').then((m) => m.prefetchStaffPerformanceFromLocation());
   return import('./pages/StaffPerformance').then((module) => ({ default: module.StaffPerformance }));
@@ -267,6 +268,7 @@ const AppRoutes: React.FC = () => {
           <Route path="/financeiro/performance" element={<PerformanceAccessGuard><OwnerRouteGuard><Suspense fallback={<PerformancePageSkeleton />}><StaffPerformance /></Suspense></OwnerRouteGuard></PerformanceAccessGuard>} />
           <Route path="/insights" element={<OwnerRouteGuard><Reports /></OwnerRouteGuard>} />
           <Route path="/meus-insights" element={<StaffInsights />} />
+          <Route path="/resultados-por-hora" element={<HourlyResults />} />
 
           {/* Settings Routes */}
           <Route path="/configuracoes" element={<OwnerRouteGuard><Navigate to="/configuracoes/geral" replace /></OwnerRouteGuard>} />

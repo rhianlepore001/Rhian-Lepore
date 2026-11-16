@@ -11,7 +11,7 @@ import { PerformancePageSkeleton } from '../components/performance/PerformancePa
 import { PerformanceSection } from '../components/performance/PerformanceSection';
 import { TeamOverview } from '../components/performance/TeamOverview';
 import { TeamRanking } from '../components/performance/TeamRanking';
-import { ChairHourCard } from '../components/performance/ChairHourCard';
+import { HourlyResultsEntry } from '../components/performance/HourlyResultsEntry';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useBusinessCopy } from '../hooks/useBusinessCopy';
@@ -170,7 +170,11 @@ export const StaffPerformance: React.FC = () => {
 
             <div className="mt-4 lg:mt-8 flex flex-col gap-8">
 
-            <ChairHourCard month={filters.start} endDate={filters.end} professionalId={filters.pro} />
+            <HourlyResultsEntry
+              to={`/resultados-por-hora?${filtersToSearch(filters)}`}
+              subtitle="Quanto cada hora aberta rendeu neste período. Veja se a hora paga as contas."
+              period={compactPeriodLine(filters.start, filters.end, null, false)}
+            />
 
             {status === 'loading' && <PerformancePageSkeleton />}
 

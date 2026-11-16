@@ -34,7 +34,7 @@ export const Header: React.FC = () => {
   const isSettingsRoute = pathname.startsWith('/configuracoes');
   const { accent, colors, status, isBeauty, isLight } = useBrutalTheme();
   const { segmentLabel, segmentLabelShort } = useBusinessCopy();
-  const mobileBack = pathname !== '/' ? resolveHeaderBackTarget(pathname) : null;
+  const mobileBack = pathname !== '/' ? resolveHeaderBackTarget(pathname, role === 'staff' ? 'staff' : 'owner') : null;
 
   // Fechar menus ao clicar fora
   useEffect(() => {

@@ -22,15 +22,28 @@ describe('custos fixos e materiais', () => {
     const api = makeApi();
     render(<FixedCostsSettings companyId="empresa" region={region} api={api} />);
     expect(await screen.findByText(`Custo mensal (${currency})`)).toBeInTheDocument();
-    expect(screen.getByLabelText('Custo de material por atendimento: Corte')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Corte' })).toBeInTheDocument();
+    expect(screen.getByLabelText(/preço da embalagem/i)).toBeInTheDocument();
     expect(screen.getAllByText(currency).length).toBeGreaterThan(0);
     expect(screen.getByLabelText('Custo mensal')).toBeEnabled();
+  });
+
+  it('mostra progresso 0 de 4 e os quatro blocos de ajuste quando vazio', async () => {
+    const api = makeApi();
+    render(<FixedCostsSettings companyId="empresa" api={api} />);
+    expect(await screen.findByText(/\d+ de 4 configurados/)).toHaveTextContent('0 de 4 configurados');
+    expect(screen.getByRole('heading', { name: /Contas do mês/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Horários da equipe/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Materiais/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Quanto precisa sobrar|Margem desejada|Sobra pouco|Quando avisar/i })).toBeInTheDocument();
+    expect(screen.getAllByText('Falta')).toHaveLength(4);
+    expect(screen.getByRole('link', { name: /ver resultados por hora/i })).toHaveAttribute('href', '/#/resultados-por-hora');
   });
 
   it('pede confirmação antes de salvar uma despesa sugerida', async () => {
     const api = makeApi();
     render(<FixedCostsSettings companyId="empresa" api={api} />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Puxar despesas já lançadas' }));
+    fireEvent.click(await screen.findByRole('button', { name: /usar despesas que já lancei/i }));
     fireEvent.click(await screen.findByRole('button', { name: /usar aluguel/i }));
     expect(api.saveCost).not.toHaveBeenCalled();
     expect(screen.getByLabelText('Descrição')).toHaveValue('Aluguel');
@@ -42,7 +55,8 @@ describe('custos fixos e materiais', () => {
   it('pró-labore começa desligado e exige valor e categoria válidos', async () => {
     const api = makeApi();
     render(<FixedCostsSettings companyId="empresa" api={api} />);
-    expect(await screen.findByLabelText('Incluir pró-labore do dono')).not.toBeChecked();
+    expect(await screen.findByLabelText(/este custo é a minha retirada \(pró-labore\)/i)).not.toBeChecked();
+    expect(screen.queryByLabelText(/incluir essa retirada no custo da hora/i)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Salvar custo mensal' }));
     expect(api.saveCost).not.toHaveBeenCalled();
     expect(await screen.findByRole('alert')).toBeInTheDocument();
@@ -51,10 +65,12 @@ describe('custos fixos e materiais', () => {
   it('distingue custo de material não informado de zero informado', async () => {
     const api = makeApi();
     render(<FixedCostsSettings companyId="empresa" api={api} />);
-    const input = await screen.findByLabelText('Custo de material por atendimento: Corte');
-    expect(input).toHaveValue(null);
-    fireEvent.change(input, { target: { value: '0' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Salvar material de Corte' }));
+    await screen.findByRole('heading', { name: 'Corte' });
+    fireEvent.click(screen.getByRole('button', { name: /salvar total do serviço/i }));
+    expect(api.saveMaterial).not.toHaveBeenCalled();
+    fireEvent.change(screen.getByLabelText(/preço da embalagem/i), { target: { value: '0' } });
+    fireEvent.change(screen.getByLabelText(/rendimento/i), { target: { value: '40' } });
+    fireEvent.click(screen.getByRole('button', { name: /salvar total do serviço/i }));
     await waitFor(() => expect(api.saveMaterial).toHaveBeenCalledWith('empresa', 's1', 0));
   });
 
@@ -66,7 +82,7 @@ describe('custos fixos e materiais', () => {
     expect(screen.getByLabelText('Custo mensal')).toBeDisabled();
     expect(screen.getByLabelText('Categoria')).toBeDisabled();
     expect(screen.getByLabelText('Profissional')).toBeDisabled();
-    fireEvent.change(screen.getByLabelText('Termina em (opcional)'), { target: { value: '2099-12-31' } });
+    fireEvent.change(screen.getByLabelText(/termina em \(opcional/i), { target: { value: '2099-12-31' } });
     fireEvent.click(screen.getByRole('button', { name: 'Salvar custo mensal' }));
     await waitFor(() => expect(api.saveCost).toHaveBeenCalledWith(expect.objectContaining({ id: 'c1', amount: 500, start_date: '2025-01-01', end_date: '2099-12-31' })));
   });
@@ -95,9 +111,10 @@ describe('custos fixos e materiais', () => {
     const api = makeApi();
     api.list.mockResolvedValue({ costs: [{ id: 'salary-old', company_id: 'empresa', professional_id: null, category: 'Gestão', description: 'Pró-labore', amount: 500, start_date: '2025-01-01', end_date: null, is_owner_salary: true, active: false }], services: [], materials: [], professionals: [] } as never);
     render(<FixedCostsSettings companyId="empresa" api={api} />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Mudar valor de Pró-labore' }));
-    expect(screen.getByLabelText('Incluir pró-labore do dono')).not.toBeChecked();
-    fireEvent.click(screen.getByLabelText('Incluir pró-labore do dono'));
+    fireEvent.click(await screen.findByRole('button', { name: /novo valor a partir de/i }));
+    expect(screen.getByLabelText(/este custo é a minha retirada \(pró-labore\)/i)).toBeChecked();
+    expect(screen.getByLabelText(/incluir essa retirada no custo da hora/i)).not.toBeChecked();
+    fireEvent.click(screen.getByLabelText(/incluir essa retirada no custo da hora/i));
     fireEvent.click(screen.getByRole('button', { name: 'Salvar custo mensal' }));
     await waitFor(() => expect(api.saveCost).toHaveBeenCalledWith(expect.objectContaining({ id: undefined, active: true, is_owner_salary: true, amount: 500 })));
   });
@@ -109,7 +126,7 @@ describe('custos fixos e materiais', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Encerrar pró-labore' }));
     expect(screen.getByText(/encerramento será aplicado ao salvar/i)).toBeInTheDocument();
     expect(screen.getByLabelText('Custo mensal')).toBeDisabled();
-    const end = (screen.getByLabelText('Termina em (opcional)') as HTMLInputElement).value;
+    const end = (screen.getByLabelText(/termina em \(opcional/i) as HTMLInputElement).value;
     expect(end).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(api.saveCost).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Salvar custo mensal' }));
@@ -123,7 +140,7 @@ describe('custos fixos e materiais', () => {
     expect(await screen.findByText(/encerrado em 31\/12\/2020/i)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Encerrar pró-labore' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Editar Pró-labore' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Mudar valor de Pró-labore' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: /novo valor a partir de/i })).toBeEnabled();
   });
 
   it('não permite alterar custos quando os dados não puderem ser carregados', async () => {

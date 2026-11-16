@@ -8,7 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useBusinessCopy } from '../hooks/useBusinessCopy';
 import { useStaffInsights } from '../hooks/useStaffInsights';
-import { ChairHourCard } from '../components/performance/ChairHourCard';
+import { HourlyResultsEntry } from '../components/performance/HourlyResultsEntry';
 import { useTenantLocale } from '../hooks/useTenantLocale';
 import type { StaffPeriod } from '../types/insights';
 import { buildMetricAccount, STAFF_METRIC_IDS } from '../utils/staffPerformanceAccount';
@@ -92,7 +92,11 @@ export const StaffInsights: React.FC = () => {
         className="!pb-0 !gap-1"
       />
 
-      {data?.period && <ChairHourCard month={data.period.start} endDate={data.period.end} />}
+      <HourlyResultsEntry
+        to={data?.period ? `/resultados-por-hora?de=${data.period.start}&ate=${data.period.end}` : '/resultados-por-hora'}
+        subtitle="Quanto cada hora da sua agenda rendeu neste período"
+        period={data?.period ? periodLabel : undefined}
+      />
 
       <div className="flex items-center gap-2 min-w-0">
         <div

@@ -20,4 +20,18 @@ describe('resolveHeaderBackTarget', () => {
     expect(resolveHeaderBackTarget('/agenda').to).toBe('/');
     expect(resolveHeaderBackTarget('/meus-insights').to).toBe('/');
   });
+
+  it('Resultados por hora — gestor volta à performance', () => {
+    expect(resolveHeaderBackTarget('/resultados-por-hora')).toEqual({
+      to: '/financeiro/performance',
+      label: 'Voltar à performance da equipe',
+    });
+  });
+
+  it('Resultados por hora — colaborador volta a Meus resultados', () => {
+    expect(resolveHeaderBackTarget('/resultados-por-hora', 'staff')).toEqual({
+      to: '/meus-insights',
+      label: 'Voltar a Meus resultados',
+    });
+  });
 });

@@ -1,3 +1,4 @@
+import { isDemoMode } from '../lib/demo/mode';
 /**
  * Abre o WhatsApp (wa.me) de forma que funcione no iPhone.
  *
@@ -41,6 +42,7 @@ export function openWhatsApp(
   url: string,
   navigate: (href: string) => void = (href) => window.location.assign(href),
 ): boolean {
+  if (isDemoMode()) return false;
   if (!isWhatsAppUrl(url)) return false;
   // Sem 'noopener' nas features: com ele o retorno é sempre null e não dá para
   // saber se o Safari bloqueou. Cortamos o opener logo em seguida.

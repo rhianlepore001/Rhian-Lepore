@@ -104,7 +104,7 @@ describe('custos fixos', () => {
     expect(eqCompany).toHaveBeenCalledWith('company_id', 'empresa');
   });
 
-  it('grava linhas de material reutilizáveis com company_id e recai no total se o catálogo falhar', async () => {
+  it('grava linhas de material reutilizáveis com company_id quando o catálogo responde', async () => {
     const maybeSingle = vi.fn().mockResolvedValue({ data: { id: 'm1' }, error: null });
     const select = vi.fn().mockReturnValue({ maybeSingle });
     const upsert = vi.fn().mockReturnValue({ select });
@@ -120,6 +120,23 @@ describe('custos fixos', () => {
     await expect(fixedCostsApi.saveMaterialLines('empresa', 's1', [{ name: 'Giletes', mode: 'count', packagePrice: 20, yieldCount: 40 }], 0.5)).resolves.toBeUndefined();
     expect(upsert).toHaveBeenCalledWith(expect.objectContaining({ company_id: 'empresa', name: 'Giletes', package_price: 20, yield_mode: 'count' }), { onConflict: 'company_id,name_key' });
     expect(insert).toHaveBeenCalledWith([expect.objectContaining({ company_id: 'empresa', service_id: 's1', material_id: 'm1' })]);
+  });
+
+  it('erro no upsert de materials rejeita com mensagem clara e não recai em saveMaterial', async () => {
+    const saveMaterialUpsert = vi.fn().mockResolvedValue({ error: null });
+    const select = vi.fn().mockReturnValue({
+      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: { message: 'catalog unavailable' } }),
+    });
+    const upsert = vi.fn().mockReturnValue({ select });
+    state.from.mockImplementation((table: string) => {
+      if (table === 'materials') return { upsert };
+      if (table === 'service_costs') return { upsert: saveMaterialUpsert };
+      return { upsert: vi.fn() };
+    });
+    await expect(
+      fixedCostsApi.saveMaterialLines('empresa', 's1', [{ name: 'Giletes', mode: 'count', packagePrice: 20, yieldCount: 40 }], 0.5),
+    ).rejects.toThrow(/não foi possível guardar os materiais/i);
+    expect(saveMaterialUpsert).not.toHaveBeenCalled();
   });
 
   it('atualiza preço do material só da empresa autenticada', async () => {

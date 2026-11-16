@@ -22,7 +22,7 @@ run_with_pgbin() {
   "${PSQL[@]}" -f "$ROOT/supabase/tests/reusable_materials.test.sql"
   if [ "${2:-}" = "--rollback" ]; then
     "${PSQL[@]}" -f "$ROOT/docs/rollbacks/20261116180000_reusable_materials.sql"
-    "${PSQL[@]}" -c "DO \$\$ BEGIN IF to_regclass('public.materials') IS NOT NULL OR to_regclass('public.service_material_uses') IS NOT NULL THEN RAISE EXCEPTION 'rollback incompleto'; END IF; END \$\$;"
+    "${PSQL[@]}" -c "DO \$\$ BEGIN IF to_regclass('public.materials') IS NOT NULL OR to_regclass('public.service_material_uses') IS NOT NULL OR to_regclass('public.service_costs_material_recalc_backup') IS NOT NULL THEN RAISE EXCEPTION 'rollback incompleto'; END IF; END \$\$;"
   fi
 }
 

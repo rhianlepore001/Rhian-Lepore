@@ -43,6 +43,20 @@ CREATE POLICY service_material_uses_owner ON public.service_material_uses FOR AL
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.materials, public.service_material_uses TO authenticated;
 REVOKE ALL ON public.materials, public.service_material_uses FROM anon;
 
+CREATE TABLE IF NOT EXISTS public.service_costs_material_recalc_backup (
+  company_id text NOT NULL,
+  service_id uuid NOT NULL,
+  amount numeric(12,2) NOT NULL,
+  PRIMARY KEY (company_id, service_id)
+);
+ALTER TABLE public.service_costs_material_recalc_backup ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS service_costs_material_recalc_backup_owner ON public.service_costs_material_recalc_backup;
+CREATE POLICY service_costs_material_recalc_backup_owner ON public.service_costs_material_recalc_backup
+  FOR SELECT TO authenticated
+  USING (company_id = (SELECT public.get_auth_company_id()) AND (SELECT public.get_auth_role()) = 'owner');
+GRANT SELECT ON public.service_costs_material_recalc_backup TO authenticated;
+REVOKE INSERT, UPDATE, DELETE ON public.service_costs_material_recalc_backup FROM PUBLIC, anon, authenticated;
+
 CREATE OR REPLACE FUNCTION public.service_material_line_cost(
   p_mode text,
   p_package_price numeric,
@@ -55,31 +69,56 @@ BEGIN
   IF p_package_price IS NULL OR p_package_price < 0 THEN RETURN NULL; END IF;
   IF p_mode = 'count' THEN
     IF p_yield_count IS NULL OR p_yield_count <= 0 THEN RETURN NULL; END IF;
-    RETURN round(p_package_price / p_yield_count, 2);
+    RETURN p_package_price / p_yield_count;
   END IF;
-  IF p_package_qty IS NULL OR p_package_qty <= 0 OR p_qty_per_service IS NULL OR p_qty_per_service < 0 THEN RETURN NULL; END IF;
-  RETURN round(p_package_price * (p_qty_per_service / p_package_qty), 2);
+  IF p_package_qty IS NULL OR p_package_qty <= 0 OR p_qty_per_service IS NULL THEN RETURN NULL; END IF;
+  IF p_qty_per_service < 0 THEN RETURN NULL; END IF;
+  RETURN p_package_price * (p_qty_per_service / p_package_qty);
 END $$;
 REVOKE ALL ON FUNCTION public.service_material_line_cost(text, numeric, numeric, numeric, numeric) FROM PUBLIC, anon, authenticated;
 
 CREATE OR REPLACE FUNCTION public.recalc_service_material_cost(p_company_id text, p_service_id uuid) RETURNS numeric
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp AS $$
-DECLARE v_total numeric;
+DECLARE v_total numeric; v_has_use boolean; v_previous numeric;
 BEGIN
-  SELECT round(COALESCE(sum(public.service_material_line_cost(m.yield_mode, m.package_price, m.yield_count, m.package_qty, u.qty_per_service)), 0), 2)
+  SELECT EXISTS (
+    SELECT 1 FROM public.service_material_uses WHERE company_id = p_company_id AND service_id = p_service_id
+  ) INTO v_has_use;
+  SELECT amount INTO v_previous FROM public.service_costs WHERE company_id = p_company_id AND service_id = p_service_id;
+  IF v_previous IS NOT NULL THEN
+    INSERT INTO public.service_costs_material_recalc_backup (company_id, service_id, amount)
+    VALUES (p_company_id, p_service_id, v_previous)
+    ON CONFLICT (company_id, service_id) DO UPDATE SET amount = EXCLUDED.amount;
+  END IF;
+  IF NOT v_has_use THEN
+    DELETE FROM public.service_costs WHERE company_id = p_company_id AND service_id = p_service_id;
+    RETURN NULL;
+  END IF;
+  SELECT sum(public.service_material_line_cost(m.yield_mode, m.package_price, m.yield_count, m.package_qty, u.qty_per_service))
     INTO v_total
   FROM public.service_material_uses u
   JOIN public.materials m ON m.id = u.material_id AND m.company_id = u.company_id
   WHERE u.company_id = p_company_id AND u.service_id = p_service_id;
-  IF NOT EXISTS (SELECT 1 FROM public.service_material_uses WHERE company_id = p_company_id AND service_id = p_service_id) THEN
+  IF v_total IS NULL THEN
+    DELETE FROM public.service_costs WHERE company_id = p_company_id AND service_id = p_service_id;
     RETURN NULL;
   END IF;
+  v_total := round(v_total, 2);
   INSERT INTO public.service_costs (company_id, service_id, amount)
   VALUES (p_company_id, p_service_id, v_total)
   ON CONFLICT (company_id, service_id) DO UPDATE SET amount = EXCLUDED.amount;
   RETURN v_total;
 END $$;
 REVOKE ALL ON FUNCTION public.recalc_service_material_cost(text, uuid) FROM PUBLIC, anon, authenticated;
+
+CREATE OR REPLACE FUNCTION public.restore_service_costs_from_material_recalc_backup() RETURNS void
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp AS $$
+BEGIN
+  INSERT INTO public.service_costs (company_id, service_id, amount)
+  SELECT company_id, service_id, amount FROM public.service_costs_material_recalc_backup
+  ON CONFLICT (company_id, service_id) DO UPDATE SET amount = EXCLUDED.amount;
+END $$;
+REVOKE ALL ON FUNCTION public.restore_service_costs_from_material_recalc_backup() FROM PUBLIC, anon, authenticated;
 
 CREATE OR REPLACE FUNCTION public.recalc_services_for_material() RETURNS trigger
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp AS $$

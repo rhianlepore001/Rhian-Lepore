@@ -4,6 +4,8 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { Register } from '@/pages/Register';
 
+const INVITE_TOKEN = 'f'.repeat(64);
+
 const registerMock = vi.fn();
 
 vi.mock('@/contexts/AuthContext', () => ({
@@ -72,7 +74,7 @@ describe('Register page', () => {
 
   it('rola até o erro de senha fraca no convite da equipe', async () => {
     render(
-      <MemoryRouter initialEntries={['/register?company=owner-1&member=member-1']}>
+      <MemoryRouter initialEntries={[`/register?company=owner-1&member=member-1&invite=${INVITE_TOKEN}`]}>
         <Register />
       </MemoryRouter>
     );
@@ -99,7 +101,7 @@ describe('Register page', () => {
     registerMock.mockResolvedValue({ error: null });
 
     render(
-      <MemoryRouter initialEntries={['/register?company=owner-1&member=member-new-reinvite']}>
+      <MemoryRouter initialEntries={[`/register?company=owner-1&member=member-new-reinvite&invite=${INVITE_TOKEN}`]}>
         <Register />
       </MemoryRouter>
     );
@@ -117,6 +119,7 @@ describe('Register page', () => {
           email: 'e2e.colab@example.com',
           companyId: 'owner-1',
           teamMemberId: 'member-new-reinvite',
+          inviteToken: INVITE_TOKEN,
         }),
       );
     });
@@ -147,7 +150,7 @@ describe('Register page', () => {
     registerMock.mockImplementation(() => new Promise((resolve) => { resolveRegister = resolve; }));
 
     render(
-      <MemoryRouter initialEntries={['/register?company=owner-1&member=member-1']}>
+      <MemoryRouter initialEntries={[`/register?company=owner-1&member=member-1&invite=${INVITE_TOKEN}`]}>
         <Register />
       </MemoryRouter>
     );

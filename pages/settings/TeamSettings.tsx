@@ -389,6 +389,10 @@ export const TeamSettings: React.FC = () => {
                                         setEditingMember(m);
                                         setIsModalOpen(true);
                                     }}
+                                    onResendInvite={(m) => {
+                                        setEditingMember(m);
+                                        setIsModalOpen(true);
+                                    }}
                                 />
                             ))}
                         </ul>

@@ -4,6 +4,8 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { Register } from '@/pages/Register';
 
+const INVITE_TOKEN = 'f'.repeat(64);
+
 const registerMock = vi.fn();
 
 vi.mock('@/contexts/AuthContext', () => ({
@@ -70,7 +72,7 @@ describe('Cadastro: nova política de senha', () => {
 
   it('convite de colaborador usa a mesma regra', async () => {
     render(
-      <MemoryRouter initialEntries={['/register?company=owner-1&member=member-1']}>
+      <MemoryRouter initialEntries={[`/register?company=owner-1&member=member-1&invite=${INVITE_TOKEN}`]}>
         <Register />
       </MemoryRouter>,
     );

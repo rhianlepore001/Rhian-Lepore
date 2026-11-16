@@ -16,6 +16,14 @@ const staff = {
   active: true,
   is_owner: false,
   commission_rate: 40,
+  staff_user_id: 'auth-1',
+};
+
+const pending = {
+  ...staff,
+  id: 'staff-pending',
+  name: 'Ana Souza',
+  staff_user_id: null,
 };
 
 const owner = {
@@ -38,12 +46,27 @@ describe('TeamMemberCard (linha compacta)', () => {
     expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
   });
 
-  it('o único botão é "Editar" e abre o drawer do colaborador', async () => {
+  it('colaborador com acesso tem só o botão "Editar" e abre o drawer', async () => {
     const onEdit = vi.fn();
-    render(<TeamMemberCard member={staff} onEdit={onEdit} />);
+    const onResendInvite = vi.fn();
+    render(<TeamMemberCard member={staff} onEdit={onEdit} onResendInvite={onResendInvite} />);
     expect(screen.getAllByRole('button')).toHaveLength(1);
+    expect(screen.queryByRole('button', { name: /Reenviar convite/i })).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Editar João Silva' }));
     expect(onEdit).toHaveBeenCalledWith(staff);
+    expect(onResendInvite).not.toHaveBeenCalled();
+  });
+
+  it('colaborador pendente mostra "Editar" e "Reenviar convite"', async () => {
+    const onEdit = vi.fn();
+    const onResendInvite = vi.fn();
+    render(<TeamMemberCard member={pending} onEdit={onEdit} onResendInvite={onResendInvite} />);
+    expect(screen.getAllByRole('button')).toHaveLength(2);
+    expect(screen.getByText('Ainda sem acesso')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Editar Ana Souza' }));
+    expect(onEdit).toHaveBeenCalledWith(pending);
+    await userEvent.click(screen.getByRole('button', { name: 'Reenviar convite para Ana Souza' }));
+    expect(onResendInvite).toHaveBeenCalledWith(pending);
   });
 
   it('dono aparece como "Dono", sem % de comissão', () => {

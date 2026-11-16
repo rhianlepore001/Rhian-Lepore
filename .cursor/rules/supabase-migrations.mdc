@@ -1,0 +1,16 @@
+---
+description: Regras para migrations e SQL do Supabase
+globs: supabase/migrations/**,docs/rollbacks/**,scripts/test-sql-*.sh,scripts/apply_migration*
+alwaysApply: false
+---
+
+# Migrations e SQL
+
+- Não aplique SQL em produção sem OK explícito do Rhian e sem seguir `docs/runbooks/publicacao.md`.
+- Toda migration nova vem com rollback em `docs/rollbacks/` e script de verify. O rollback precisa ter sido testado em PostgreSQL 17 isolado, junto com os testes SQL (`scripts/test-sql-*.sh`).
+- Se o verify em produção falhar: rode o rollback, confirme, **pare** e avise. Não publique o app.
+- Antes de aplicar: backup fora do repositório (veja o runbook). Não commite dumps nem connection strings.
+- Aplicação em produção: preferir Supabase MCP `apply_migration` ou a CLI, que registram a versão em `supabase_migrations.schema_migrations`. O script `node scripts/apply_migration_remote.mjs <arquivo.sql>` (com `SUPABASE_ACCESS_TOKEN` e `SUPABASE_PROJECT_ID`) só executa o SQL; nesse caso, registre e confira a versão depois. Não hardcode tokens.
+- `npm run backup` / `scripts/backup-supabase.js` não substitui o backup do runbook.
+- Multi-tenant: policies e RPCs respeitam `company_id` e RLS. RPCs privilegiadas são `SECURITY DEFINER` com checagem explícita de sessão. Não desabilite RLS.
+- Não invente nome de migration que conflite com a versão já aplicada em produção. Se precisar alinhar nomes, isso é um PR próprio, com OK.

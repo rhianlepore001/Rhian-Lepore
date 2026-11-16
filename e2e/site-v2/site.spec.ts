@@ -56,6 +56,13 @@ for (const width of [1440, 390]) {
     await page.keyboard.press('Escape');
     await page.getByRole('link', { name: 'Financeiro', exact: true }).click();
     await expect(page.getByRole('heading', { name: /Financeiro/i }).first()).toBeVisible();
+    if (width === 390) {
+      await expect(page.getByTestId('finance-tx-card')).toHaveCount(6);
+      await expect(page.getByTestId('finance-tx-card').filter({ hasText: 'Saída' }).first()).toBeVisible();
+      await expect(page.getByTestId('finance-tx-card').filter({ hasText: 'Entrada' }).first()).toBeVisible();
+      await page.getByRole('button', { name: 'Mostrar mais transações' }).click();
+      await expect(page.getByTestId('finance-tx-card')).toHaveCount(12);
+    }
     if (width === 1440) {
       await page.getByRole('button', { name: 'Performance da equipe', exact: true }).click();
       await expect(page).toHaveURL(/#\/demo\/barber\/financeiro\/performance/);
@@ -107,6 +114,9 @@ test('mantém o agendamento público da demo claro sem alterar o modo salvo', as
   await page.goto('/#/demo/barber/book/simulacao');
   await expect(page.getByText('Escolha seus serviços', { exact: true })).toBeVisible();
   await expect(page.getByText('Corte masculino', { exact: true })).toBeVisible();
+  await expect(page.locator('#booking-root img[src*="/landing/agenda-"]')).toHaveCount(0);
+  await page.getByText('Corte masculino', { exact: true }).first().click();
+  await expect(page.getByRole('button', { name: /Continuar/ }).first()).toBeEnabled();
   await expect(page.locator('html')).toHaveAttribute('data-mode', 'light');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'barber');
   await expect(page.getByRole('button', { name: 'Ativar modo escuro' })).toHaveCount(0);

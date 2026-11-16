@@ -6,7 +6,7 @@ export function demoPerformance(tables: DemoTables, args: Record<string, any>) {
   const metrics = (professionalId?: string) => {
     const records = tables.finance_records.filter(r => {
       const day = getDateStringInTimeZone(r.created_at, 'America/Sao_Paulo');
-      return day >= args.p_start.slice(0, 10) && day <= args.p_end.slice(0, 10) && (!professionalId || r.professional_id === professionalId);
+      return r.type === 'revenue' && day >= args.p_start.slice(0, 10) && day <= args.p_end.slice(0, 10) && (!professionalId || r.professional_id === professionalId);
     });
     const revenue = records.reduce((sum, r) => sum + r.revenue, 0);
     const commission = records.reduce((sum, r) => sum + r.commission_value, 0);

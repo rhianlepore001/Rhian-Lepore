@@ -32,7 +32,7 @@ Nenhuma migration ou alteração no fluxo real de cadastro/login/autenticação.
 
 ## Situação visual
 
-Após o polimento r2/r3 de 16/11/2026, a crítica independente atribuiu **landing 8/10** e **demo 8,5/10**. A landing permanece **reprovada para publicação** pelo corte >8; as três rodadas foram consumidas. Pendências: legendas menores do Financeiro em 390px e verificação do CTA fixo mobile em mais posições de rolagem. Taste Gate histórico: `FAIL 34`; sem aprovação declarada. Detalhamento em `/workspace/artifacts/site-v2/CRITIQUE.md`. O PR deve permanecer em rascunho.
+Após o polimento r4/r5 de 16/11/2026, a crítica independente com as skills impeccable, design-taste-frontend e playwright-visual-critique atribuiu **7,7/10** (landing 8,0 e demo 7,4), ainda **reprovada para publicação** pelo corte >8. Subiu 0,9 em relação aos 6,8 da auditoria em `e64fb371`. As duas rodadas autorizadas neste lote foram consumidas. Pendências: nome da barbearia ilegível no booking desktop, cartão “Lucro” ambíguo frente às comissões, grade da agenda sobre os cartões no mobile. Taste `consistency.mjs` não concluiu nesta revisão; sem aprovação de gate. Detalhamento em `/workspace/artifacts/site-v2/CRITIQUE.md` e `polish-r4/critica-independente-r5.md`. O PR deve permanecer em rascunho.
 
 O executável `graphify` não está instalado neste ambiente: `graphify update .` retornou `command not found`. O grafo não foi atualizado.
 
@@ -53,4 +53,8 @@ Hero, pôsteres, imagens de agenda, booking, financeiro, equipe, fila, performan
 
 ## Polimento visual r2/r3 — 16 Nov 2026
 
-Três rodadas: r1 já em `e64fb371`; r2 com recortes, pista de rolagem, casca mais baixa e acento ardósia só na demo; r3 com hierarquia do fechamento, contraste dos “+” e CTA mobile abaixo do menu. Crítica independente final: landing 8/10, demo 8,5/10. A landing não superou o corte. Sem merge nem publicação.
+Três rodadas anteriores: r1 em `e64fb371`; r2/r3 com recortes, pista de rolagem, casca mais baixa, hierarquia do fechamento e acento ardósia na casca. Uma crítica só com playwright-visual-critique tinha dado landing 8 e demo 8,5; a auditoria com as 3 skills no mesmo `e64fb371` deu 6,8.
+
+## Polimento visual r4/r5 — 16 Nov 2026
+
+r4: acento slate também dentro do produto (Barbearia e Salão) só em `styles/demo.css`, fundo #F6F7F8, dados fictícios plausíveis, contraste AA dos rótulos, CTA após o FAQ, #produto dividido, pôsteres recapturados. r5: cartões tipográficos no agendamento, subtítulo honesto de despesas, lista financeira mobile paginada e selos com contraste reforçado. Crítica independente final com as 3 skills: 7,7/10 (landing 8,0, demo 7,4). Sem merge nem publicação.

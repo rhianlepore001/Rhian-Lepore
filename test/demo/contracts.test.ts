@@ -48,3 +48,25 @@ it('respeita o período selecionado na performance e na hora de cadeira', async 
   const chair = await client.rpc('get_chair_hour_v1', { p_month: '2001-01-01' });
   expect(chair.data.total.worked_minutes).toBe(0);
 });
+
+it('apresenta dados fictícios coerentes na demonstração', async () => {
+  const client = createDemoClient();
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
+  const { data: chair } = await client.rpc('get_chair_hour_v1', { p_month: `${today.slice(0, 7)}-01` });
+  expect(chair.total.estimated_count).toBeGreaterThanOrEqual(120);
+  expect(chair.total.estimated_count).toBeLessThanOrEqual(180);
+  expect(chair.total.occupancy).toBeGreaterThanOrEqual(0.55);
+  expect(chair.total.occupancy).toBeLessThanOrEqual(0.7);
+  expect(chair.total.revenue_per_available_hour).toBeGreaterThanOrEqual(45);
+  expect(chair.total.revenue_per_available_hour).toBeLessThanOrEqual(90);
+  expect(chair.total.margin_per_hour).toBeGreaterThan(0);
+  const { data: records } = await client.from('finance_records').select('*');
+  expect(records.some((row: any) => row.type === 'expense' && row.expense > 0)).toBe(true);
+  expect(records.map((row: any) => row.payment_method)).toEqual(expect.arrayContaining(['pix', 'dinheiro', 'cartao']));
+  const stats = await client.rpc('get_finance_stats', { p_start_date: `${today.slice(0, 7)}-01T00:00:00Z`, p_end_date: `${today.slice(0, 7)}-28T23:59:59Z` });
+  expect(Object.values(stats.data.revenue_by_method).every(value => Number(value) > 0)).toBe(true);
+  const { data: services } = await client.from('services').select('*');
+  expect(services.every((service: any) => service.image_url === null)).toBe(true);
+  const { data: queue } = await client.from('queue_entries').select('*');
+  expect(queue.every((entry: any) => Date.now() - new Date(entry.joined_at).getTime() < 60 * 60 * 1000)).toBe(true);
+});

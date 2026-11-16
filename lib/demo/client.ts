@@ -86,10 +86,11 @@ export function createDemoClient() {
         t.public_bookings.push(row); data = [row]; break;
       }
       case 'get_finance_stats': {
-        const records = t.finance_records.filter(r => r.created_at >= args.p_start_date && r.created_at <= args.p_end_date && (!args.p_professional_id || r.professional_id === args.p_professional_id));
+        const records = t.finance_records.filter(r => r.created_at >= args.p_start_date && r.created_at <= args.p_end_date && (!args.p_professional_id || r.professional_id === args.p_professional_id)).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         const revenue = records.reduce((sum, r) => sum + r.revenue, 0);
-        const expenses = records.reduce((sum, r) => sum + r.commission_value, 0);
-        data = { total_revenue: revenue, total_expenses: expenses, net_profit: revenue - expenses, total_appointments: records.length, transactions: records }; break;
+        const expenses = records.filter(r => r.type === 'expense').reduce((sum, r) => sum + r.expense, 0);
+        const revenueByMethod = Object.fromEntries(['pix', 'dinheiro', 'cartao'].map(method => [method, records.filter(r => r.type === 'revenue' && r.payment_method === method).reduce((sum, r) => sum + r.revenue, 0)]));
+        data = { total_revenue: revenue, total_expenses: expenses, net_profit: revenue - expenses, total_appointments: records.filter(r => r.type === 'revenue').length, revenue_by_method: revenueByMethod, transactions: records }; break;
       }
       case 'get_chair_hour_v1': {
         const month = args.p_month.slice(0, 7);
@@ -101,12 +102,15 @@ export function createDemoClient() {
         const metric = (professionalId?: string) => {
           const records = t.finance_records.filter(r => {
             const day = getDateStringInTimeZone(r.created_at, 'America/Sao_Paulo');
-            return day.startsWith(month) && day <= end && (!professionalId || r.professional_id === professionalId);
+            return r.type === 'revenue' && day.startsWith(month) && day <= end && (!professionalId || r.professional_id === professionalId);
           });
           const worked = records.reduce((sum, r) => sum + Number(t.services.find(service => service.name === r.service_name)?.duration_minutes ?? 30), 0);
           const revenue = records.reduce((sum, r) => sum + r.revenue, 0);
-          const available = days * 12 * 60 * (professionalId ? 1 : t.team_members.length);
-          return { available_minutes: available, worked_minutes: worked, estimated_count: records.length, revenue_per_worked_hour: worked ? revenue / (worked / 60) : null, revenue_per_available_hour: revenue / (available / 60), occupancy: worked / available, cost_per_hour: null, margin_per_hour: null, idle_cost: null };
+          const available = worked ? Math.round(worked / 0.62) : days * 12 * 60 * (professionalId ? 1 : t.team_members.length);
+          const expenses = t.finance_records.filter(r => r.type === 'expense' && r.created_at.slice(0, 7) === month).reduce((sum, r) => sum + r.expense, 0) / (professionalId ? t.team_members.length : 1);
+          const commission = records.reduce((sum, r) => sum + r.commission_value, 0);
+          const costPerHour = worked ? (expenses + commission) / (available / 60) : null;
+          return { available_minutes: available, worked_minutes: worked, estimated_count: records.length, revenue_per_worked_hour: worked ? revenue / (worked / 60) : null, revenue_per_available_hour: revenue / (available / 60), occupancy: worked / available, cost_per_hour: costPerHour, margin_per_hour: costPerHour === null ? null : revenue / (available / 60) - costPerHour, idle_cost: worked ? (available - worked) / available * expenses : null };
         };
         data = { month: args.p_month, role: 'owner', professionals: t.team_members.filter(p => !args.p_professional_id || p.id === args.p_professional_id).map(p => ({ id: p.id, name: p.name, ...metric(p.id) })), total: metric(), services: [], services_pending_count: 0, history_estimated: false, unassigned_attendance_count: 0 }; break;
       }

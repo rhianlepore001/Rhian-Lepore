@@ -38,3 +38,7 @@ Troca pelas fotos reais: substituir os arquivos em `public/landing/` mantendo os
 ## Capturas locais do produto
 
 `agenda`, `beauty`, `finance`, `performance`, `queue`, `team` e `booking`, em variantes `1440` e `mobile`, vêm dos componentes reais montados nas rotas `/demo`. São recortes da área de conteúdo capturados localmente com Playwright, sem retocar nomes ou dados. Não representam métricas de um cliente real. Originais completos em `/workspace/artifacts/site-v2/demo-shots/`.
+
+## Rodada de tema claro
+
+As imagens de `agenda`, `beauty`, `hero-agenda`, `booking`, `finance`, `performance`, `queue` e `team` foram recapturadas em modo claro usando os tokens reais dos dois temas. A imagem OG foi atualizada a partir da agenda clara. As imagens de produto preservam textos, estados e dados fictícios da UI; o recorte do pôster mobile ainda precisa de revisão visual.

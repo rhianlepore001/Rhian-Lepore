@@ -33,7 +33,7 @@ export const Demo = () => {
     const root = document.documentElement;
     const previous = { theme: root.getAttribute('data-theme'), mode: root.getAttribute('data-mode') };
     root.setAttribute('data-theme', niche);
-    root.setAttribute('data-mode', niche === 'beauty' ? 'light' : 'dark');
+    root.setAttribute('data-mode', 'light');
     return () => {
       for (const [key, value] of Object.entries(previous)) {
         if (value) root.setAttribute(`data-${key}`, value); else root.removeAttribute(`data-${key}`);

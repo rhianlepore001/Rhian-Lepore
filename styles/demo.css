@@ -1,10 +1,10 @@
-.demo-shell { min-height:100svh; background:var(--color-bg); color:var(--color-text); }
+.demo-shell { --demo-accent:#536174; min-height:100svh; background:var(--color-bg); color:var(--color-text); }
 .demo-header { display:flex; align-items:center; gap:16px; padding:12px max(24px,calc((100vw - 1320px)/2)); border-bottom:1px solid var(--color-border); flex-wrap:wrap; }
 .demo-brand { font:900 27px Chivo,sans-serif; letter-spacing:-.04em; }
 .demo-badge { font-size:12px; border:1px solid var(--color-border); padding:5px 9px; border-radius:6px; }
 .demo-niches { display:flex; gap:4px; margin-left:auto; }
 .demo-niches a,.demo-nav a,.demo-toolbar button,.demo-tour button { min-height:44px; display:inline-flex; align-items:center; padding:10px 16px; border-radius:8px; font-size:14px; }
-.demo-niches a[aria-current],.demo-nav a[aria-current] { background:var(--color-accent); color:var(--color-bg); font-weight:600; }
+.demo-niches a[aria-current],.demo-nav a[aria-current] { background:var(--demo-accent); color:#fff; font-weight:600; }
 html[data-mode=light] .demo-niches a[aria-current],html[data-mode=light] .demo-nav a[aria-current] { color:#fff; }
 .demo-signup { background:var(--color-text); color:var(--color-bg); padding:13px 18px; font-size:14px; border-radius:8px; font-weight:600; }
 .demo-toolbar { display:flex; justify-content:space-between; align-items:center; gap:16px; max-width:1320px; margin:auto; padding:22px 24px 14px; }
@@ -22,7 +22,7 @@ html[data-mode=light] .demo-niches a[aria-current],html[data-mode=light] .demo-n
 .demo-tour-actions { display:flex; gap:8px; flex-shrink:0; }
 .demo-shell a,.demo-shell button { transition:background-color .15s ease,filter .15s ease; }
 .demo-shell a:hover,.demo-shell button:hover { filter:brightness(.9); }
-.demo-shell :focus-visible { outline:2px solid var(--color-accent); outline-offset:3px; }
+.demo-shell :focus-visible { outline:2px solid var(--demo-accent); outline-offset:3px; }
 @media(max-width:640px) {
  .demo-header { gap:10px; padding:12px 16px; }
  .demo-brand { font-size:24px; }

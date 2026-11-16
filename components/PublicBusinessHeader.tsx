@@ -20,6 +20,7 @@ interface PublicBusinessHeaderProps {
     gallery?: { id: string; image_url: string }[];
     clientSession?: { name: string; photo_url?: string | null } | null;
     businessSlug?: string;
+    showThemeToggle?: boolean;
 }
 
 export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
@@ -36,6 +37,7 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
     gallery = [],
     clientSession,
     businessSlug,
+    showThemeToggle = true,
 }) => {
     const galleryRef = useRef<HTMLDivElement>(null);
     const isBeauty = userType === 'beauty';
@@ -106,7 +108,7 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
                         <SegmentIcon className="w-3 h-3" />
                         {segmentLabel}
                     </div>
-                    <button
+                    {showThemeToggle && <button
                         onClick={toggleMode}
                         aria-label={mode === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'}
                         title={mode === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
@@ -123,7 +125,7 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
                                 ? <Moon className="w-4 h-4" />
                                 : <Sun className="w-4 h-4" />}
                         </span>
-                    </button>
+                    </button>}
                 </div>
 
                 {/* Sessão do Cliente (Canto Superior Direito) */}

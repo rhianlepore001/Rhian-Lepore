@@ -28,6 +28,8 @@ for (const width of [1440, 390]) {
     const verify = await isolate(page);
     await page.goto('/#/demo/barber/agenda');
     await expect(page.getByText('Simulação', { exact: true })).toBeVisible();
+    await expect(page.locator('html')).toHaveAttribute('data-mode', 'light');
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'barber');
     await expect(page.getByRole('heading', { name: /Agenda/i }).first()).toBeVisible();
     await expect(page.getByRole('button', { name: /Pedro Souza —/ }).first()).toBeVisible();
     await page.getByRole('button', { name: /Novo Agendamento/i }).first().click();
@@ -46,6 +48,7 @@ for (const width of [1440, 390]) {
     await page.getByRole('link', { name: 'Salão', exact: true }).click();
     await expect(page.getByText('Studio Aurora', { exact: true })).toBeVisible();
     await expect(page.locator('html')).toHaveAttribute('data-mode', 'light');
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'beauty');
     await expect(page.getByRole('button', { name: /Beatriz Souza —/ }).first()).toBeVisible();
     await page.getByRole('button', { name: 'Fazer tour guiado' }).click();
     await page.getByRole('button', { name: 'Próximo passo' }).click();
@@ -79,4 +82,21 @@ test('preserva o callback de recuperação inválida antes de montar o router', 
   await expect(page).toHaveURL(/#\/update-password/);
   await expect(page.getByText('Este link expirou', { exact: true })).toBeVisible();
   verify();
+});
+
+test('mantém o agendamento público da demo claro sem alterar o modo salvo', async ({ page }) => {
+  const verify = await isolate(page);
+  await page.addInitScript(() => localStorage.setItem('agendix_color_mode', 'dark'));
+  await page.goto('/#/demo/barber/book/simulacao');
+  await expect(page.getByText('Escolha seus serviços', { exact: true })).toBeVisible();
+  await expect(page.getByText('Corte masculino', { exact: true })).toBeVisible();
+  await expect(page.locator('html')).toHaveAttribute('data-mode', 'light');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'barber');
+  await expect(page.getByRole('button', { name: 'Ativar modo escuro' })).toHaveCount(0);
+  expect(await page.evaluate(() => localStorage.getItem('agendix_color_mode'))).toBe('dark');
+  verify();
+  await page.getByRole('link', { name: 'AgendiX', exact: true }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Seu talento cuida dos clientes.');
+  await expect(page.locator('html')).toHaveAttribute('data-mode', 'dark');
+  expect(await page.evaluate(() => localStorage.getItem('agendix_color_mode'))).toBe('dark');
 });

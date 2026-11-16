@@ -43,3 +43,10 @@ A raiz tem teste de regressão com os estados autenticado/deslogado: visitante v
 O diretório de metadados do worktree original é somente leitura; os commits para o PR foram preparados em `/workspace/artifacts/site-v2/git-submit`, com a mesma base `ca252dea` e branch `feat/site-oficial-v2`. Os arquivos-fonte implementados permanecem em `/workspace/wt-site-v2`; o HEAD local desse worktree não pode ser avançado neste ambiente. Não houve force-push, reset de histórico remoto ou bypass de hooks.
 
 O GitHub recusou a alteração do workflow por falta do escopo OAuth `workflow`. O workflow original foi preservado byte a byte. O job E2E opcional ficou em `/workspace/artifacts/site-v2/CI_SITE_V2.patch`, sem aplicação remota. Os testes novos e a guarda SHA-256 de Login/Register são executados pelo `npm test` do CI existente; a suíte Playwright nova passou localmente e tem comando próprio versionado.
+
+
+## Rodada de tema claro — 16 Nov 2026
+
+A demo força `data-mode="light"` para os dois nichos e mantém `data-theme` de cada um. A barbearia usa os tokens reais de modo claro do app; o salão usa os seus tokens reais claros. A casca usa #536174 na navegação, sem modificar `design-system/tokens.css`. O booking público da demo conserva o modo claro e não oferece troca para escuro. Fora da demo, o modo e o botão de troca do agendamento público continuam com o comportamento original.
+
+Hero, pôsteres, imagens de agenda, booking, financeiro, equipe, fila, performance e OG foram recapturados da UI real em modo claro. As capturas são dados fictícios e não representam clientes reais. Avaliação visual da rodada: landing 8/10 e demo 8/10, reprovadas para o corte >8. Persistem recorte lateral do pôster mobile, legibilidade dos prints dos benefícios em celular e altura da casca da demo antes da grade.

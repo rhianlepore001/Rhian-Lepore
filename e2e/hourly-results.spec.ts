@@ -13,6 +13,12 @@ export function useChairHour() {
 }`;
 
 async function stubCore(page: Page, theme: string) {
+  await page.route('**/services/fixedCosts.ts*', route =>
+    route.fulfill({
+      contentType: 'application/javascript',
+      body: `export const fixedCostsApi = { list: async () => ({ costs: [], services: [{ id:'s1', name:'Corte' }], materials: [], professionals: [{ id:'p1', name:'Ana', working_hours: null }], lowMargin: 20, lowMarginSaved: false }) };`,
+    }),
+  );
   await page.route('**/contexts/AuthContext.tsx*', route =>
     route.fulfill({
       contentType: 'application/javascript',

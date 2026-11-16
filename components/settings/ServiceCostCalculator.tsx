@@ -101,7 +101,7 @@ export function ServiceCostCalculator({
               <span>Preço da embalagem ({currency})</span>
               <span className="relative block">
                 <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-theme-textSecondary">{currency}</span>
-                <input aria-label="Preço da embalagem" className={`${classes.input} pl-11 tabular-nums`} inputMode="decimal" min="0" step="0.01" type="number" value={line.packagePrice} onChange={(e) => update(index, { packagePrice: e.target.value })} placeholder="0,00" />
+                <input aria-label="Preço da embalagem" className={`${classes.input} pl-11 tabular-nums`} inputMode="decimal" min="0" step="0.01" type="number" value={line.packagePrice} onChange={(e) => update(index, { packagePrice: e.target.value })} placeholder="ex.: 20,00" />
               </span>
             </label>
             {line.mode === 'count' ? (

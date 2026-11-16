@@ -66,6 +66,12 @@ describe('ServiceCostCalculator', () => {
     expect(container.textContent).not.toMatch(/R\$\s*0[,.]00/);
   });
 
+  it('placeholder neutro no preço da embalagem', () => {
+    render(<ServiceCostCalculator serviceId="s1" serviceName="Corte" currency="R$" onSave={vi.fn()} />);
+    expect(screen.getByLabelText(/preço da embalagem/i)).toHaveAttribute('placeholder', 'ex.: 20,00');
+    expect(screen.getByLabelText(/preço da embalagem/i).getAttribute('placeholder')).not.toMatch(/^0[,.]00$/);
+  });
+
   it('modo quantidade: embalagem 1000 ml, 60 ml por atendimento', () => {
     const onSave = vi.fn();
     render(<ServiceCostCalculator serviceId="s2" serviceName="Coloração" currency="€" onSave={onSave} />);

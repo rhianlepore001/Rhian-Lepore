@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hasOpenBusinessHours, setupProgress, setupProgressLabel } from '@/utils/hourlyResultsSetup';
+import { firstPendingBlock, hasOpenBusinessHours, setupProgress, setupProgressLabel } from '@/utils/hourlyResultsSetup';
 
 describe('hourlyResultsSetup', () => {
   it('nada configurado → 0 de 4', () => {
@@ -23,6 +23,12 @@ describe('hourlyResultsSetup', () => {
     const p = setupProgress({ hasActiveCost: true, hasOpenHours: true, hasMaterial: true, marginSaved: false });
     expect(p.blocks.margin).toBe(false);
     expect(p.configured).toBe(3);
+  });
+
+  it('firstPendingBlock aponta o próximo incompleto na ordem', () => {
+    expect(firstPendingBlock({ costs: false, hours: false, materials: false, margin: false })).toBe('costs');
+    expect(firstPendingBlock({ costs: true, hours: true, materials: false, margin: false })).toBe('materials');
+    expect(firstPendingBlock({ costs: true, hours: true, materials: true, margin: true })).toBeNull();
   });
 
   it('hasOpenBusinessHours detecta bloco com início antes do fim', () => {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Card, ErrorState, PageHeader } from '../components/ui';
 import { ChairHourCard } from '../components/performance/ChairHourCard';
@@ -6,14 +6,31 @@ import { useAuth } from '../contexts/AuthContext';
 import { useChairHour } from '../hooks/useChairHour';
 import { chairHourMonth } from '../utils/chairHourPeriod';
 import { hourlyEmptyKind } from '../utils/hourlyResultsEmpty';
+import { firstPendingBlock, hasOpenBusinessHours, setupProgress, type SetupBlockId } from '../utils/hourlyResultsSetup';
 import { periodLabel } from '../utils/chairHourCopy';
 import { resolveHeaderBackTarget } from '../utils/headerBackTarget';
+import { fixedCostsApi } from '../services/fixedCosts';
+import { getTodayInTimeZone } from '../utils/businessTimezone';
 
 const PAGE_PB = 'pb-[calc(8rem+var(--safe-bottom))] md:pb-16';
 const SETTINGS = '/configuracoes/financeiro';
 
+const STEPS: { id: SetupBlockId; label: string; hint: string; hash: string }[] = [
+  { id: 'costs', label: 'Contas do mês', hint: 'Informe as contas do mês (aluguel, luz, internet).', hash: 'contas' },
+  { id: 'hours', label: 'Horários da equipe', hint: 'Confira os horários de cada profissional.', hash: 'horarios' },
+  { id: 'materials', label: 'Material dos serviços', hint: 'Calcule o material dos serviços (gilete, tinta, progressiva).', hash: 'materiais' },
+  { id: 'margin', label: 'Quanto precisa sobrar', hint: 'Defina quando avisar que sobrou pouco.', hash: 'margem' },
+];
+
+const missingLabel: Record<SetupBlockId, string> = {
+  costs: 'contas do mês',
+  hours: 'horários',
+  materials: 'material',
+  margin: 'o aviso de sobra pouco',
+};
+
 export const HourlyResults: React.FC = () => {
-  const { role, teamMemberId } = useAuth();
+  const { role, teamMemberId, companyId } = useAuth();
   const [params] = useSearchParams();
   const start = params.get('de') || chairHourMonth('America/Sao_Paulo');
   const end = params.get('ate') || null;
@@ -25,8 +42,36 @@ export const HourlyResults: React.FC = () => {
     : pro
       ? data?.professionals?.find((person) => person.id === pro)
       : data?.total;
-  const kind = status === 'ready' ? hourlyEmptyKind({ role: staff ? 'staff' : 'owner', item: selected }) : null;
+  const [setupComplete, setSetupComplete] = useState<boolean | undefined>(staff ? true : undefined);
+  const [blocks, setBlocks] = useState<Record<SetupBlockId, boolean> | null>(null);
+
+  useEffect(() => {
+    if (staff || !companyId) return;
+    let cancelled = false;
+    void fixedCostsApi.list(companyId).then((result) => {
+      if (cancelled) return;
+      const today = getTodayInTimeZone('America/Sao_Paulo');
+      const progress = setupProgress({
+        hasActiveCost: result.costs.some((cost) => cost.active && (!cost.end_date || cost.end_date >= today)),
+        hasOpenHours: result.professionals.some((person) => hasOpenBusinessHours(person.working_hours)),
+        hasMaterial: result.materials.length > 0,
+        marginSaved: !!result.lowMarginSaved,
+      });
+      setBlocks(progress.blocks);
+      setSetupComplete(progress.configured === progress.total);
+    }).catch(() => {
+      if (cancelled) return;
+      setSetupComplete(false);
+    });
+    return () => { cancelled = true; };
+  }, [companyId, staff]);
+
+  const kind = status === 'ready'
+    ? hourlyEmptyKind({ role: staff ? 'staff' : 'owner', item: selected, setupComplete })
+    : null;
   const back = resolveHeaderBackTarget('/resultados-por-hora', staff ? 'staff' : 'owner');
+  const pending = blocks ? firstPendingBlock(blocks) : 'costs';
+  const continueStep = STEPS.find((step) => step.id === (pending ?? 'costs')) ?? STEPS[0];
 
   return (
     <div className={`flex flex-col gap-4 lg:gap-8 ${PAGE_PB} max-w-[1120px]`}>
@@ -60,18 +105,29 @@ export const HourlyResults: React.FC = () => {
           <div className="space-y-4">
             <p className="text-base leading-relaxed text-theme-text">Aqui você vê se cada hora aberta paga as contas e quanto sobra. Não é o caixa do dia.</p>
             <p className="text-sm text-theme-textSecondary">Para ver seu primeiro resultado, complete os 4 passos em Ajustes:</p>
-            <ol className="list-decimal space-y-2 pl-5 text-sm leading-relaxed text-theme-text">
-              <li>Informe as contas do mês (aluguel, luz, internet).</li>
-              <li>Confira os horários de cada profissional.</li>
-              <li>Calcule o material dos serviços (gilete, tinta, progressiva).</li>
-              <li>Defina quando avisar que sobrou pouco.</li>
+            <ol className="list-none space-y-2 text-sm leading-relaxed text-theme-text">
+              {STEPS.map((step, index) => {
+                const done = blocks?.[step.id] === true;
+                return (
+                  <li key={step.id} className="flex flex-wrap items-center gap-2">
+                    <Link
+                      to={`${SETTINGS}#${step.hash}`}
+                      className="inline-flex min-h-11 items-center font-semibold text-[var(--color-accent)]"
+                    >
+                      {index + 1}. {step.label}
+                    </Link>
+                    <span className="rounded-full border border-[var(--color-border-strong)] px-2 py-0.5 text-xs font-semibold">{done ? 'Feito' : 'Falta'}</span>
+                    <span className="w-full text-theme-textSecondary">{step.hint}</span>
+                  </li>
+                );
+              })}
             </ol>
             <p className="text-sm leading-relaxed text-theme-text">O progresso aparece em Ajustes como N de 4. Depois: fechar o primeiro atendimento na Agenda ou na Fila.</p>
             <Link
-              to={`${SETTINGS}#contas`}
+              to={`${SETTINGS}#${continueStep.hash}`}
               className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--color-accent-border)] px-4 text-sm font-semibold text-[var(--color-accent)] hover:bg-[var(--color-accent-dim)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
             >
-              Ir para ajustes financeiros
+              Continuar nos ajustes: {continueStep.label}
             </Link>
           </div>
         </Card>
@@ -102,7 +158,14 @@ export const HourlyResults: React.FC = () => {
       )}
 
       {status === 'ready' && kind === null && (
-        <ChairHourCard month={start} endDate={end} professionalId={staff ? null : pro} hidePeriod />
+        <>
+          {setupComplete === false && pending && (
+            <p className="rounded-xl border border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] p-3 text-sm text-theme-text">
+              Falta {missingLabel[pending]} nos ajustes. O custo da hora pode estar baixo.
+            </p>
+          )}
+          <ChairHourCard month={start} endDate={end} professionalId={staff ? null : pro} hidePeriod />
+        </>
       )}
 
       {status === 'ready' && kind === 'setup' && !staff && (

@@ -11,7 +11,10 @@ export function hourlyEmptyKind(args: {
   const worked = item?.worked_minutes ?? 0;
   const noSchedule = !item || (item.available_minutes == null && !(worked > 0));
   if (noSchedule) return args.role === 'staff' ? 'staff_no_hours' : 'setup';
-  if (worked === 0) return 'no_attendance';
+  if (worked === 0) {
+    if (args.role === 'owner' && args.setupComplete === false) return 'setup';
+    return 'no_attendance';
+  }
   const workedHour = item?.revenue_per_worked_hour;
   const openHour = item?.revenue_per_available_hour;
   if (workedHour === 0 || (workedHour == null && openHour === 0)) return 'unmeasurable';

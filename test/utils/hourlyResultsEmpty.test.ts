@@ -18,8 +18,25 @@ describe('hourlyResultsEmpty', () => {
     expect(hourlyEmptyKind({ role: 'owner', item: undefined })).toBe('setup');
   });
 
-  it('dono com horas abertas e sem atendimento → no_attendance', () => {
-    expect(hourlyEmptyKind({ role: 'owner', item: base({ available_minutes: 600, worked_minutes: 0 }) })).toBe('no_attendance');
+  it('dono com horas abertas e sem atendimento → no_attendance só com wizard completo', () => {
+    const item = base({ available_minutes: 600, worked_minutes: 0 });
+    expect(hourlyEmptyKind({ role: 'owner', item, setupComplete: true })).toBe('no_attendance');
+    expect(hourlyEmptyKind({ role: 'owner', item, setupComplete: false })).toBe('setup');
+  });
+
+  it('dono com atendimento mensurável e wizard incompleto → null (não esconde resultado)', () => {
+    expect(
+      hourlyEmptyKind({
+        role: 'owner',
+        setupComplete: false,
+        item: base({ available_minutes: 600, worked_minutes: 300, revenue_per_worked_hour: 100 }),
+      }),
+    ).toBeNull();
+  });
+
+  it('colaborador sem item → staff_no_hours mesmo com wizard incompleto', () => {
+    expect(hourlyEmptyKind({ role: 'staff', item: null, setupComplete: false })).toBe('staff_no_hours');
+    expect(hourlyEmptyKind({ role: 'staff', item: undefined, setupComplete: false })).toBe('staff_no_hours');
   });
 
   it('colaborador sem item → staff_no_hours', () => {

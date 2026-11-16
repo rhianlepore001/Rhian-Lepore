@@ -32,3 +32,8 @@ export function setupProgress(input: SetupInput): { configured: number; total: 4
 export function setupProgressLabel(configured: number, total = 4): string {
   return `${configured} de ${total} configurados`;
 }
+
+export function firstPendingBlock(blocks: Record<SetupBlockId, boolean>): SetupBlockId | null {
+  const order: SetupBlockId[] = ['costs', 'hours', 'materials', 'margin'];
+  return order.find((id) => !blocks[id]) ?? null;
+}

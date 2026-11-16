@@ -144,3 +144,5 @@ screenshot_*.webp
 
 # Playwright visual critique (PNGs + CRITIQUE preenchido — podem ter PII)
 artifacts/visual-critique/
+
+artifacts/journey-15d/

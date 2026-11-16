@@ -2,6 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
+  testIgnore: /journey-15d|ciclo-de-receita/,
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: 0,
@@ -44,7 +45,7 @@ export default defineConfig({
     {
       // Os specs legados rodam sem storageState (sem login)
       name: 'chromium-legacy',
-      testIgnore: /auth\.setup\.ts|sprint5-audit\.spec\.ts|visual-critique/,
+      testIgnore: /auth\.setup\.ts|sprint5-audit\.spec\.ts|visual-critique|journey-15d|ciclo-de-receita/,
       use: {
         browserName: 'chromium',
         viewport: { width: 1440, height: 900 },

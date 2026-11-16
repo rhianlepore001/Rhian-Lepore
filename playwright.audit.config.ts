@@ -8,6 +8,7 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './e2e',
+  testIgnore: /journey-15d|ciclo-de-receita/,
   testMatch: /onboarding-(audit|scenarios)\.spec\.ts/,
   fullyParallel: false,
   workers: 1,

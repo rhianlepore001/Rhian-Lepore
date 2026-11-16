@@ -20,7 +20,7 @@
     "backup": "node scripts/backup-supabase.js",
     "visual:critique": "playwright test --config e2e/visual-critique/playwright.config.ts",
     "e2e:journey-15d": "playwright test --config e2e/journey-15d/playwright.config.ts",
-    "e2e:journey-15d:live": "playwright test --config e2e/journey-15d/playwright.config.ts journey-live-15d.spec.ts"
+    "e2e:journey-15d:live": "playwright test --config e2e/journey-15d/playwright.live.config.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

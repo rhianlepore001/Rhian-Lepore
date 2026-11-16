@@ -1,3 +1,4 @@
+import { virtualDayIso, virtualDayTime } from './virtualCalendar';
 import type { Page, Route } from '@playwright/test';
 import {
   EMAIL,
@@ -7,16 +8,15 @@ import {
   type MockState,
 } from '../../helpers/mockBackend';
 
-const PROJECT_REF = process.env.E2E_SUPABASE_REF || 'lcqwrngscsziysyfhpfj';
 const ANA_ID = '20000000-0000-0000-0000-0000000000a1';
 const SLUG = 'journey-barbearia-e2e';
 
-const MORNING = '2026-09-10T09:15:00.000Z';
+const MORNING = virtualDayTime(10).toISOString();
 
 const paidFinanceRows = [
   {
     id: 'jr-fr-1',
-    created_at: '2026-09-05T14:00:00.000Z',
+    created_at: virtualDayTime(5, '11:00:00').toISOString(),
     service_name: 'Corte',
     description: null,
     client_name: 'Cliente Journey',
@@ -35,26 +35,13 @@ const paidFinanceRows = [
 const commissionPayments = [
   {
     paid_at: MORNING,
-    start_date: '2026-08-06',
-    end_date: '2026-09-05',
+    start_date: virtualDayIso(1),
+    end_date: virtualDayIso(5),
     professional_id: ANA_ID,
     status: 'paid',
     amount: 20,
   },
 ];
-
-function b64url(obj: unknown): string {
-  return Buffer.from(JSON.stringify(obj)).toString('base64url');
-}
-
-function fakeJwt(sub: string): string {
-  return `${b64url({ alg: 'HS256', typ: 'JWT' })}.${b64url({
-    sub,
-    role: 'authenticated',
-    aud: 'authenticated',
-    exp: Math.floor(Date.now() / 1000) + 86400,
-  })}.e2e-journey`;
-}
 
 async function fulfillJson(route: Route, body: unknown, status = 200) {
   const accept = route.request().headers()['accept'] || '';
@@ -86,9 +73,10 @@ export async function installJourneyMocks(page: Page): Promise<MockState> {
   if (state.profile) {
     state.profile.business_slug = SLUG;
     state.profile.tutorial_completed = true;
+    state.profile.trial_ends_at = virtualDayTime(31).toISOString();
   }
   state.tables.clients = [
-    { id: 'cli-1', name: 'Cliente Journey', phone: '11911111111', user_id: UID },
+    { id: 'cli-1', company_id: UID, name: 'Cliente Journey', phone: '11911111111', user_id: UID },
   ];
   state.tables.team_members = [
     {
@@ -103,36 +91,10 @@ export async function installJourneyMocks(page: Page): Promise<MockState> {
     },
   ];
   state.tables.services = [
-    { id: 'svc-1', name: 'Corte Masculino', duration: 30, price: 45, user_id: UID },
+    { id: 'svc-1', name: 'Corte Masculino', duration_minutes: 30, active: true, price: 45, user_id: UID },
   ];
 
   await mockBackend(page, state);
-
-  const accessToken = fakeJwt(UID);
-  const session = {
-    access_token: accessToken,
-    refresh_token: 'e2e-refresh',
-    expires_in: 86400,
-    expires_at: Math.floor(Date.now() / 1000) + 86400,
-    token_type: 'bearer',
-    user: {
-      id: UID,
-      email: EMAIL,
-      aud: 'authenticated',
-      role: 'authenticated',
-      app_metadata: { provider: 'email' },
-      user_metadata: { full_name: 'Rafael Journey' },
-    },
-  };
-
-  await page.addInitScript(
-    ({ key, value }) => {
-      localStorage.setItem(key, JSON.stringify(value));
-      localStorage.setItem('agendix_color_mode', 'light');
-      navigator.serviceWorker?.getRegistrations().then((regs) => regs.forEach((r) => r.unregister()));
-    },
-    { key: `sb-${PROJECT_REF}-auth-token`, value: session },
-  );
 
   await page.route(/supabase\.co|\/auth\/v1\/|\/rest\/v1\//, async (route) => {
     const req = route.request();
@@ -151,6 +113,30 @@ export async function installJourneyMocks(page: Page): Promise<MockState> {
       return;
     }
 
+    if (pathname.includes('/rpc/create_secure_booking')) {
+      const body = req.postDataJSON();
+      if (body.p_business_id !== UID) throw new Error('Tenant inválido no mock');
+      const appointment = {
+        id: `journey-appointment-${state.tables.appointments.length + 1}`,
+        company_id: UID, user_id: UID, client_id: body.p_client_id,
+        professional_id: body.p_professional_id, appointment_time: body.p_appointment_time,
+        service: 'Corte Masculino', service_ids: body.p_service_ids, price: body.p_total_price,
+        status: body.p_status, duration_minutes: body.p_duration_min,
+        clients: state.tables.clients.find((client) => client.id === body.p_client_id),
+        team_members: state.tables.team_members.find((member) => member.id === body.p_professional_id),
+      };
+      state.tables.appointments.push(appointment);
+      await fulfillJson(route, { success: true, id: appointment.id });
+      return;
+    }
+    if (pathname.includes('/rpc/list_company_pending_public_bookings')) {
+      await fulfillJson(route, [{
+        id: 'journey-pending-7', business_id: UID, customer_name: 'Pedido Journey',
+        customer_phone: '11911111111', appointment_time: virtualDayTime(7, '14:00:00').toISOString(),
+        total_price: 45, professional_id: ANA_ID, service_ids: ['svc-1'], status: 'pending', is_edit: false,
+      }]);
+      return;
+    }
     if (pathname.includes('/rpc/get_commission_cycle_v1')) {
       await fulfillJson(route, { message: 'Could not find the function', code: 'PGRST202' }, 404);
       return;

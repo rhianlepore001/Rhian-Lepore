@@ -2,6 +2,7 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
+  testIgnore: /journey-15d|ciclo-de-receita/,
   testMatch: /audit-ui-producao\.spec\.ts/,
   fullyParallel: false,
   forbidOnly: !!process.env.CI,

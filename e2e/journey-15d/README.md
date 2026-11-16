@@ -1,50 +1,47 @@
-# Journey E2E — 15 dias virtuais
+# Jornada mock — 15 dias virtuais
 
-Simula um mês de operação em **15 dias virtuais** (âncora `E2E_ANCHOR_DATE`, default `2026-09-01`), cobrindo:
+Conjunto de cenários e smoke tests em Chromium, com desktop (1280×800), iPhone emulado (390×844) e Android emulado (393×851). Não representa 15 features completas nem um ciclo de receita validado.
 
-| Dia | Feature |
-|-----|---------|
-| D1 | Cadastro dono (mock) |
-| D2 | Onboarding |
-| D3 | Link público |
-| D4–D8 | Agenda + booking + solicitações |
-| D9–D10 | Fila digital |
-| D11–D13 | Financeiro, comissões, relatório |
-| D14 | Insights |
-| D15 | Navegação SPA |
+| Dia | O que é verificado |
+|---|---|
+| D1 | Cadastro mock abre o wizard; onboarding não é concluído |
+| D2 | Primeiro passo do wizard visível |
+| D3 | Smoke dos ajustes de agendamento |
+| D4 | Agenda com URL no dia civil correto |
+| D5 | UI cria atendimento e confere os dados persistidos no mock |
+| D6 | Smoke do catálogo público, sem enviar pedido |
+| D7 | Painel exibe solicitação online mockada no dia correto |
+| D8 | Smoke da grade de agenda; não faz checkout |
+| D9–D12 | Smoke de fila pública, fila autenticada, financeiro e comissões |
+| D13 | Abre histórico e relatório de comissão mockada |
+| D14–D15 | Smoke de análises e navegação entre rotas |
 
-## Ambientes
+D1/D2 usam o mesmo estado de cadastro. Antes de D3 o estado é substituído explicitamente por um dono já configurado. A suíte não valida conclusão do onboarding, confirmação de booking, checkout, `complete_appointment`, Stripe, RLS nem persistência real.
 
-- `desktop` (1280×800)
-- `iphone` (390×844)
-- `android` (Pixel 5)
-
-## Comandos
+## Execução isolada
 
 ```bash
 npm run e2e:journey-15d
+E2E_ANCHOR_DATE=2026-09-01 npm run e2e:journey-15d -- --project desktop
+npm test -- --run test/journeySafety.test.ts
 ```
 
-Com âncora e saída customizada:
+A config coleta apenas `journey-15d.spec.ts`, inicia seu próprio Vite e nunca reutiliza servidor. Recusa `E2E_BASE_URL` fora de `http://localhost:<porta>` ou `http://127.0.0.1:<porta>` antes de navegar. A config Vite dedicada não lê `.env` da raiz. Não forneça credenciais reais.
 
-```bash
-E2E_ANCHOR_DATE=2026-09-01 JOURNEY_OUT_DIR=/opt/cursor/artifacts/journey-15d \
-  npm run e2e:journey-15d
-```
+O Supabase é fictício: URL local `<baseURL>/__journey_supabase_mock` e chave `e2e-fake-anon-key`. Assim REST, Auth, Functions e realtime usam a mesma origem do servidor de teste, sem exceção para outro backend. Os handlers respondem em memória; websocket realtime local é fechado sem conectar. Service workers são bloqueados. Links de fontes externas são removidos do HTML servido pelo harness para usar fontes do sistema.
 
-Live (Supabase real + credenciais):
+Qualquer tentativa de HTTP ou WebSocket fora da origem local é bloqueada e reprova a jornada com a URL na mensagem. Um teste separado tenta propositalmente REST, Auth, Functions e websocket em `outside.invalid`, validando bloqueio e denúncia sem deixar tráfego sair. Outra regressão usa dois servidores locais e confirma que um redirect para fora da base nunca chega ao destino.
 
-```bash
-E2E_OWNER_EMAIL=... E2E_OWNER_PASS=... npm run e2e:journey-15d:live
-```
+O relógio do app avança com `page.clock.setFixedTime` para 09h em São Paulo a cada cenário. Datas de atendimentos, solicitações e comissões derivam da mesma âncora civil (`2026-09-01` por padrão).
 
-## Artefatos
+## Relatórios
 
-- `artifacts/journey-15d/ledger-<ambiente>.json`
-- `artifacts/journey-15d/RELATORIO.md` — nota crítica e achados
+Cada chamada cria `artifacts/journey-15d/<timestamp-uuid>/`, contendo ledgers por ambiente, `RELATORIO.md`, `summary.json` e evidências Playwright de falhas. `JOURNEY_OUT_DIR` altera apenas a pasta pai. Artefatos e ledgers são ignorados pelo Git; a CI os retém por sete dias.
 
-## Limitações do mock
+O ledger registra e relança erros; o relatório é salvo em `finally`. Warns, skips e cenários ausentes não recebem pontos. Uma falha Playwright zera a nota do respectivo ambiente. A nota se refere às asserções executadas, sem achados históricos ou promessa de cobertura completa.
 
-Não grava em produção. Não exercita `complete_appointment` nem pagamento Stripe. Para isso, use `journey-live-15d.spec.ts` e o spec canônico `e2e/ciclo-de-receita.spec.ts`.
+## Live separado (somente staging)
 
-Backlog de produto (30d): [`../campaign-30d/MATRIX.md`](../campaign-30d/MATRIX.md).
+O script `e2e:journey-15d:live` tem config própria e não participa da CI nem das configs compartilhadas. É um smoke de três superfícies (agenda, financeiro e comissões), não um teste de receita ou checkout. Não foi executado nesta correção.
+
+Exige destinos explícitos de staging em `E2E_BASE_URL` e `VITE_SUPABASE_URL`. Quando autorizado para staging, usa credenciais exclusivas desse ambiente. A config e o spec recusam explicitamente o app `agendixstudio.com` (incluindo subdomínios) e o ref Supabase de produção; não fazem skip para mascarar esse destino. Não execute live nem ciclo-de-receita contra produção.

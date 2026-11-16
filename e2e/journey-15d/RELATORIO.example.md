@@ -1,7 +1,11 @@
-# Exemplo de relatório (gerado em runtime)
+# Exemplo de relatório
 
-O arquivo real é escrito em `artifacts/journey-15d/RELATORIO.md` após `npm run e2e:journey-15d`.
+O relatório real fica em `artifacts/journey-15d/<timestamp-uuid>/RELATORIO.md`.
+Os números abaixo são ilustrativos, não evidência de uma execução.
 
-Última execução verde (cloud agent): **nota global 10/10 (A)** em desktop, iPhone e Android — 15/15 features pass.
+| Ambiente | Nota dos cenários | Pass | Fail | Warn | Skip | Ausentes |
+|---|---:|---:|---:|---:|---:|---:|
+| desktop | 0/10 | 4 | 1 | 0 | 0 | 10 |
+| iphone | 0/10 | 0 | 0 | 0 | 0 | 15 |
 
-Ver também backlog de produto em `e2e/campaign-30d/MATRIX.md` (CAM-001…025).
+Uma falha encerra a jornada, salva o ledger em `finally` e deixa os cenários seguintes ausentes. Cada cenário tem um único veredito. A nota avalia apenas estas asserções, incluindo smoke tests; não certifica features completas, onboarding ou checkout. Falhas Playwright zeram a nota do ambiente, inclusive se ocorrerem fora de um passo do ledger.

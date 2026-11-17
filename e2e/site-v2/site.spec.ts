@@ -38,6 +38,20 @@ async function isolate(page: Page, requireNoExternal = true) {
 }
 
 for (const width of [1440, 390]) {
+  test(`entrada pública abre o login e mantém a landing separada ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/');
+    await expect(page).toHaveURL(/#\/login$/);
+    await expect(page.getByTestId('category-barber')).toBeVisible();
+    await expect(page.getByTestId('category-beauty')).toBeVisible();
+    await expect(page.locator('.landing')).toHaveCount(0);
+    await page.getByTestId('category-barber').click();
+    await expect(page.getByLabel('E-mail', { exact: true })).toBeVisible();
+    await expect(page.getByLabel('Senha', { exact: true })).toBeVisible();
+    await page.goto('/#/landing');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Seu talento cuida dos clientes.');
+    await expect(page.getByRole('link', { name: 'AgendiX, início' })).toHaveAttribute('href', '/#/landing');
+  });
   test(`demo isolada ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
     const verify = await isolate(page);
@@ -111,7 +125,7 @@ for (const width of [1440, 390]) {
   });
   test(`landing e capturas ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
-    await page.goto('/');
+    await page.goto('/#/landing');
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Seu talento cuida dos clientes.');
     await expect(page.getByRole('link', { name: 'Entrar', exact: true })).toHaveAttribute('href', '/#/login');
     await expect(page.getByRole('link', { name: 'Crie sua conta grátis', exact: true }).first()).toHaveAttribute('href', '/#/register');
@@ -138,7 +152,7 @@ for (const width of [320, 390, 768, 1440]) {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     const runtimeErrors: string[] = [];
     page.on('pageerror', error => runtimeErrors.push(error.message));
-    await page.goto('/');
+    await page.goto('/#/landing');
     await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
     await expect(page.locator('.landing-hero .landing-button').first()).toBeInViewport();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -187,7 +201,7 @@ for (const width of [320, 390, 768, 1440]) {
 
 test('explora a demonstração embutida mantendo segmento e tarefa sem integrações externas', async ({ page }) => {
   const verify = await isolate(page);
-  await page.goto('/');
+  await page.goto('/#/landing');
   const business = page.getByRole('group', { name: 'Negócio da demonstração' });
   const views = page.getByRole('group', { name: 'Tela da demonstração' });
   await business.getByRole('button', { name: 'Salão', exact: true }).click();

@@ -48,7 +48,7 @@ export const Demo = () => {
   return <QueryClientProvider client={client}><UIProvider>
     <div className="demo-shell">
       <header className="demo-header">
-        <Link className="demo-brand" to="/">AgendiX</Link>
+        <Link className="demo-brand" to="/landing">AgendiX</Link>
         <div className="demo-niches" aria-label="Tipo de negócio">
           <Link aria-current={niche === 'barber' ? 'page' : undefined} to={`/demo/barber/${currentScreen}`}>Barbearia</Link>
           <Link aria-current={niche === 'beauty' ? 'page' : undefined} to={`/demo/beauty/${currentScreen}`}>Salão</Link>

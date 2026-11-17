@@ -10,6 +10,11 @@
 ---
 
 
+## Entrada do domínio — login e landing separada (17 Nov 2026)
+
+Usuário pediu retirar a landing da entrada principal após teste em produção, preservando o serviço. `/` e `/#/` voltam ao login para visitantes; usuários com sessão mantêm o Dashboard. A landing fica em `/#/landing`; o endereço `/landing` redireciona temporariamente para ela na Vercel. Logo da landing e retorno da demo apontam para a rota de testes. Nenhum serviço, domínio, arquivo da landing ou fluxo real de autenticação foi removido. Publicação desta alteração foi autorizada no mesmo pedido. Verificações: typecheck/lint/build, 2.527 testes e 13 E2E aprovados.
+
+
 ## Landing AgendiX — refinamento profissional (17 Nov 2026, release do site oficial)
 
 Base sincronizada com `main` em `fd3c490` (PR #211). Landing oficial em `pages/Landing.tsx` e `styles/landing.css`: logo horizontal fornecida pelo usuário no cabeçalho, fontes locais, seleção antecipada de segmento, demonstração por tarefa e convite ao cadastro após a experiência. Mobile abre a demo em tela cheia; desktop carrega iframe sob demanda. Dez capturas próprias do Studio Aurora completam as prévias do salão. Login/Register preservados pela guarda SHA-256.

@@ -1,5 +1,12 @@
 # Site oficial v2 e simulação
 
+## Entrada pública e landing de testes — 17 Nov 2026
+
+A pedido do usuário, a landing deixa de ser a entrada principal do domínio. Visitantes sem sessão que abrem `/` ou `/#/` são direcionados para `/#/login`; quem já tem sessão mantém o Dashboard e o Layout originais. A landing e a demonstração são preservadas para testes.
+
+Acesso à landing: `/#/landing`, disponível com ou sem sessão. Em produção, o endereço amigável `/landing` tem um redirecionamento temporário para `/#/landing` no `vercel.json`. Esse redirecionamento não intercepta os arquivos de `/landing/`. O logotipo da landing e o retorno da demo apontam para a página separada, sem levar o teste de volta à entrada do sistema. Os testes do site usam a rota nova e cobrem o redirecionamento da raiz para o login em desktop e celular. Verificação desta alteração: typecheck, lint e build aprovados; 2.527 testes Vitest em 333 arquivos e 13 testes E2E aprovados sobre o build de produção local.
+
+
 ## Revisão da landing — 17 Nov 2026
 
 Base atualizada a partir de `main`, commit `fd3c490` (PR #211). A revisão mantém branco, azul ardósia, Chivo e Inter, com a logo horizontal fornecida pelo usuário sobre um cabeçalho escuro. O percurso agora apresenta a proposta, permite experimentar por tarefa e segmento, explica os benefícios e orienta o início em três passos antes das dúvidas e do convite final.
@@ -61,7 +68,7 @@ Após o polimento r4/r5 de 16/11/2026, a crítica independente com as skills imp
 
 O executável `graphify` não está instalado neste ambiente: `graphify update .` retornou `command not found`. O grafo não foi atualizado.
 
-A raiz tem teste de regressão com os estados autenticado/deslogado: visitante vê a landing; usuário autenticado continua no Dashboard dentro do Layout original em `/#/`. O callback inválido de recuperação também tem e2e próprio, com a rede abortada e sem tokens reais.
+A raiz tem teste de regressão com os estados autenticado/deslogado: visitante é direcionado para o login; usuário autenticado continua no Dashboard dentro do Layout original em `/#/`. A landing fica separada em `/#/landing`, com cobertura para visitantes e usuários autenticados. O callback inválido de recuperação também tem e2e próprio, com a rede abortada e sem tokens reais.
 
 ## Ambiente de Git e CI
 

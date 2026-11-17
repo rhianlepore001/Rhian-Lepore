@@ -115,7 +115,6 @@ const RoutedOutlet = () => {
 // Wrapper for authenticated routes that need the Sidebar/Header
 const ProtectedLayout = () => {
   const { isAuthenticated, loading, tutorialCompleted, role } = useAuth();
-  const location = useLocation();
 
   if (loading) {
     if (typeof window !== 'undefined' && window.location.hash.includes('/financeiro/performance')) {
@@ -132,7 +131,6 @@ const ProtectedLayout = () => {
     if (window.location.hash.includes('update-password')) {
       return <Outlet />;
     }
-    if (location.pathname === '/') return <Landing />;
     return <Navigate to="/login" replace />;
   }
 
@@ -207,6 +205,7 @@ const AppRoutes: React.FC = () => {
       <Suspense fallback={<LoadingFull />}>
       <Routes>
         {/* Public / Standalone Routes */}
+        <Route path="/landing" element={<Landing />} />
         <Route path="/demo/*" element={<Demo />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />

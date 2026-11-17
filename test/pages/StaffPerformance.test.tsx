@@ -100,6 +100,13 @@ describe('StaffPerformance (P2) — /financeiro/performance', () => {
         await waitFor(() => expect(fetchStaffPerformance).toHaveBeenCalledWith(expect.objectContaining({ start: '2026-10-01', end: '2026-10-31' })));
     });
 
+    it('entrada para resultados por hora sem o card de hora de cadeira', async () => {
+        mount();
+        await screen.findByTestId('team-overview');
+        expect(screen.getByTestId('hourly-results-entry')).toBeInTheDocument();
+        expect(screen.queryByRole('heading', { name: /Sua hora de cadeira|Sua hora de atendimento/i })).not.toBeInTheDocument();
+    });
+
     it('linha de equipe + ranking por Retorno por hora, com selos e aviso de comparação', async () => {
         mount();
         const overview = await screen.findByTestId('team-overview');

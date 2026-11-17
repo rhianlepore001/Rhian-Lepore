@@ -35,6 +35,9 @@ describe('StaffInsights — Meus resultados (P3, D1)', () => {
   it('mostra só as próprias métricas operacionais, com linguagem de colaborador', async () => {
     render(<MemoryRouter><StaffInsights /></MemoryRouter>);
     expect(await screen.findByRole('heading', { name: 'Meus resultados' })).toBeInTheDocument();
+    expect(screen.getByTestId('hourly-results-entry')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /ver resultados/i })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /Sua hora/i })).toBeNull();
     expect(screen.getByText(/Ana · /)).toBeInTheDocument();
     expect(await screen.findByText('12')).toBeInTheDocument();
     expect(screen.getByText('2 do Clube')).toBeInTheDocument();

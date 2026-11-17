@@ -59,7 +59,7 @@ export const FinancialSettings: React.FC = () => {
             Configurações Financeiras
           </h2>
           <p className={`${colors.textMuted} text-sm mt-1`}>
-            Configure o repasse de taxa de maquininha para os colaboradores.
+            Informe contas, horários, materiais e a margem para medir cada hora. A taxa da maquininha fica mais abaixo.
           </p>
         </div>
 
@@ -67,6 +67,7 @@ export const FinancialSettings: React.FC = () => {
 
         <Card>
           <div className="space-y-5">
+            <h3 className={`text-base font-bold ${colors.text}`}>Taxa da maquininha</h3>
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className={`font-medium ${colors.text}`}>Repassar taxa de maquininha ao colaborador?</p>

@@ -8,10 +8,14 @@ export interface HeaderBackTarget {
   label: string;
 }
 
-export function resolveHeaderBackTarget(pathname: string): HeaderBackTarget {
+export function resolveHeaderBackTarget(pathname: string, role?: 'owner' | 'staff'): HeaderBackTarget {
   if (pathname.startsWith('/financeiro/')) {
     // Performance (e futuras sub-rotas) entram pelo fluxo de Pagamentos/comissões.
     return { to: '/financeiro?tab=commissions', label: 'Voltar ao Financeiro' };
+  }
+  if (pathname === '/resultados-por-hora') {
+    if (role === 'staff') return { to: '/meus-insights', label: 'Voltar a Meus resultados' };
+    return { to: '/financeiro/performance', label: 'Voltar à performance da equipe' };
   }
   // Meus resultados é destino primário do staff na nav; sem histórico de finance,
   // a Home continua sendo o fallback seguro.

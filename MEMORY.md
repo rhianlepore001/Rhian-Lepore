@@ -13,7 +13,6 @@
 
 Prévias das seis telas do AgendiX em molduras de celular, com capturas reais de Barber escuro e Beauty claro e dados fictícios. Azul ardósia na landing e nas molduras. A demo abre em tela cheia em telas estreitas e carrega sob demanda dentro da moldura em telas largas. A incorporação usa `/demo-preview` com `SAMEORIGIN` e mantém a mesma simulação isolada. A landing usa `/landing` e `/#/landing`, com login na raiz para visitantes. Ver `docs/site-v2.md`.
 
-
 ## Imagens próprias da landing (17 Nov 2026)
 
 As duas fotografias de banco visíveis na landing foram substituídas, a pedido do usuário, por imagens geradas com imagegen para a gestão em barbearia e a colaboração no salão. WebP responsivo em duas larguras por cena; originais preservados fora do repositório e procedência registrada em `public/landing/ASSETS.md`. Legendas de banco e crédito público Unsplash removidos da landing; capas antigas da demo e avisos de dados fictícios preservados. Conferência no navegador em 320/390/768/1440px: imagens carregadas, sem overflow horizontal e raiz no login. Revisão visual independente das imagens: 9,1/10, sem bloqueadores. Verificações: typecheck, lint, build e 2.527 testes em 333 arquivos aprovados. `graphify update .` continua indisponível no ambiente.
@@ -35,6 +34,15 @@ Base sincronizada com `main` em `fd3c490` (PR #211). Landing oficial em `pages/L
 Demo: nome do negócio legível no booking; eventos da agenda opacos; “Saldo do período” com indicação de comissões pendentes apenas na simulação. Troca de segmento mantém a tela. O provider de alertas aguarda usuário/empresa/autenticação antes de abrir canais, corrigindo tentativas de conexão de visitantes da landing.
 
 Benchmark oficial: Trinks, Booksy, Fresha e SQUIRE. Revisão independente final **9,2/10**, sem bloqueadores; todos os critérios pelo menos 9. Oito combinações de segmento/largura sem violações automáticas axe ou overflow. Os 11 E2E passaram no build de produção local; typecheck/lint/build, 44 regressões direcionadas e a suíte completa (333 arquivos / 2.525 testes) passaram. Documentação e limites: `docs/site-v2.md`; provas locais em `artifacts/site-v2/review-2026-11-17/` (gitignored). O aviso anterior de import estático/dinâmico no build permanece; `graphify` não está instalado. Publicação autorizada pelo usuário; entrega pela integração GitHub (`main`) → Vercel.
+
+## Horas de atendimento v2 — revisão Bob (16 Nov 2026, NÃO merge)
+
+Dois drafts empilhados. Não merge. Não aplicar migration em produção.
+
+- PR1 `cursor/resultados-hora-tela-wizard-23c9` (#208) — tela `/#/resultados-por-hora`, wizard de 4 blocos, deep link `?bloco=` no HashRouter, acordeão (um bloco aberto), empty ligado ao progresso real, aviso de margem separado do custo.
+- PR2 `cursor/materiais-persistidos-recalculo-23c9` (#209, stack no #208) — catálogo `materials` + `service_material_uses`, recálculo do total. SQL arredonda só o total, apaga `service_costs` sem usos, linha incompleta = null, backup/restore no rollback. Teste só em Postgres 17 isolado (`scripts/test-sql-reusable-materials.sh --rollback`).
+- UX (Sonnet 5.5 high, 4 rodadas): D5–D8 = 9; D9 = 8,5 com nits de scroll pós-load, aviso e erro do wizard aplicados na 4ª.
+- Prints: `/opt/cursor/artifacts/hourly-results-v2/` (não versionados).
 
 ## Finance PR-C — gráfico Entradas e saídas + fuso do mês (4 Out 2026, draft)
 

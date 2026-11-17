@@ -10,6 +10,11 @@
 ---
 
 
+## História da landing aprovada (17 Nov 2026)
+
+Aplicada a narrativa aprovada pelo usuário sobre a vivência de Rhian Lepore em ambiente familiar da beleza e a dificuldade de transformar movimento financeiro em gestão. Relato dos pais em primeira pessoa, atribuído ao criador; removidas as referências anteriores a terceiros. Slogan: “Você cresce. O AgendiX acompanha você e ajuda seu negócio a ir além.” Landing segue em `/landing` / `/#/landing`; raiz segue no login. Publicação da revisão autorizada no pedido do usuário. Typecheck/lint/build e 2.527 testes aprovados; texto e responsividade conferidos em 320/390/1440px.
+
+
 ## Entrada do domínio — login e landing separada (17 Nov 2026)
 
 Usuário pediu retirar a landing da entrada principal após teste em produção, preservando o serviço. `/` e `/#/` voltam ao login para visitantes; usuários com sessão mantêm o Dashboard. A landing fica em `/#/landing`; o endereço `/landing` redireciona temporariamente para ela na Vercel. Logo da landing e retorno da demo apontam para a rota de testes. Nenhum serviço, domínio, arquivo da landing ou fluxo real de autenticação foi removido. Publicação desta alteração foi autorizada no mesmo pedido. Verificações: typecheck/lint/build, 2.527 testes e 13 E2E aprovados.

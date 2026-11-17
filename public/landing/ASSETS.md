@@ -16,7 +16,7 @@ A landing usa Chivo e Inter em arquivos WOFF2 variáveis locais, sem depender do
 
 Arquivos: `fonts/chivo-latin-variable.woff2` (33.220 bytes) e `fonts/inter-latin-variable.woff2` (48.256 bytes). Licenças SIL Open Font License 1.1 preservadas em `fonts/CHIVO-LICENSE.txt` e `fonts/INTER-LICENSE.txt`.
 
-Licença: [Unsplash License](https://unsplash.com/license) — uso comercial permitido, inclusive em site de produto, sem exclusividade. A atribuição não é obrigatória, mas vamos registrar fonte e trocar com facilidade pelas fotos reais da Moderna / Tales quando o Rhian enviar.
+Licença: [Unsplash License](https://unsplash.com/license) — uso comercial permitido, inclusive em site de produto, sem exclusividade. A atribuição não é obrigatória, mas vamos registrar fonte e trocar com facilidade pelas fotos reais que o criador do AgendiX enviar.
 
 As imagens originais estão em `/workspace/artifacts/site-v2/stock-photos/`. No repositório, copie versões otimizadas (WebP/AVIF, larguras 800/1600) para `public/landing/`, com este arquivo ao lado. Não use as fotos com marca de fabricante visível.
 

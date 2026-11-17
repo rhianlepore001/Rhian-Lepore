@@ -1,5 +1,12 @@
 # Site oficial v2 e simulação
 
+## História do criador — texto aprovado em 17 Nov 2026
+
+A seção “Nossa história” foi substituída pela narrativa aprovada pelo usuário: Rhian Lepore cresceu entre barbearias e salões em um ambiente familiar ligado à beleza; a percepção do esforço dos pais e da necessidade de gerir custos e entradas motivou a criação do AgendiX. O relato aparece em primeira pessoa, atribuído ao criador, sem listar familiares. As referências anteriores a terceiros e a seus estabelecimentos foram removidas da seção e da documentação pública dos assets.
+
+Slogan aprovado: **“Você cresce. O AgendiX acompanha você e ajuda seu negócio a ir além.”** Revisão conferida no navegador em 320, 390 e 1440px, sem rolagem horizontal; typecheck, lint, build e os 2.527 testes passaram. A landing continua separada em `/#/landing` (com atalho `/landing`), e a entrada principal do domínio continua no login para visitantes sem sessão.
+
+
 ## Entrada pública e landing de testes — 17 Nov 2026
 
 A pedido do usuário, a landing deixa de ser a entrada principal do domínio. Visitantes sem sessão que abrem `/` ou `/#/` são direcionados para `/#/login`; quem já tem sessão mantém o Dashboard e o Layout originais. A landing e a demonstração são preservadas para testes.
@@ -42,7 +49,7 @@ O AuthProvider escolhe um provider fictício antes de montar a autenticação re
 
 ## Direção e assets
 
-Fotos provisórias de banco não representam a Moderna nem o Tales. Fontes e substituição: `public/landing/ASSETS.md`. Nenhuma foto TRU, Amaro ou GBS. Prints de produto são capturados da UI local da simulação, com dados fictícios. Os prints públicos de produção preservam o prefixo “DEMO ·”; não foram retocados nem usados como prova autenticada. Não foram tentadas novas senhas das contas do seed.
+As fotografias de banco são ilustrativas e não representam o criador do AgendiX, sua família ou clientes reais. Fontes e substituição: `public/landing/ASSETS.md`. Nenhuma foto TRU, Amaro ou GBS. Prints de produto são capturados da UI local da simulação, com dados fictícios. Os prints públicos de produção preservam o prefixo “DEMO ·”; não foram retocados nem usados como prova autenticada. Não foram tentadas novas senhas das contas do seed.
 
 A landing relaxa o viewport apenas enquanto montada; ao sair, restaura o conteúdo anterior. Não altera o viewport do app autenticado. Movimento reduzido, foco visível e navegação por teclado fazem parte da superfície de marketing.
 

@@ -253,8 +253,7 @@ describe('HourlyResults — gestor', () => {
       services: [{ name: 'Corte', status: 'ok' }],
     };
     mount();
-    await waitFor(() => expect(wizardList).toHaveBeenCalled());
-    expect(screen.getByText(/definir quando avisar|avisar.*sobra/i)).toBeInTheDocument();
+    expect(await screen.findByText(/definir quando avisar|avisar.*sobra/i)).toBeInTheDocument();
     expect(screen.queryByText(/custo da hora pode estar baixo/i)).not.toBeInTheDocument();
   });
 
@@ -284,8 +283,7 @@ describe('HourlyResults — gestor', () => {
       services: [{ name: 'Corte', status: 'loss' }],
     };
     mount();
-    await waitFor(() => expect(wizardList).toHaveBeenCalled());
-    expect(screen.getByText(/Faltam 2 de 4/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Faltam 2 de 4/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /completar/i })).toHaveAttribute(
       'href',
       expect.stringMatching(/configuracoes\/financeiro.*bloco=/i),

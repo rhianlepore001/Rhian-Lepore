@@ -6,6 +6,7 @@ import { BusinessHoursEditor } from '../BusinessHoursEditor';
 import { formatCurrency } from '../../utils/formatters';
 import { getTodayInTimeZone, resolveBusinessTimezone } from '../../utils/businessTimezone';
 import { allServicesHaveMaterialDecision, firstPendingBlock, hasOpenBusinessHours, setupProgress, setupProgressLabel, wizardBlockFromLocation, WIZARD_BLOCK_HASH, type SetupBlockId } from '../../utils/hourlyResultsSetup';
+import { CHAIR_HOUR_COST_EXAMPLE, CHAIR_HOUR_COST_FORMULA } from '../../utils/chairHourFormulaCopy';
 import { ServiceCostCalculator } from './ServiceCostCalculator';
 import type { MaterialCostLine } from '../../utils/serviceMaterialCost';
 
@@ -182,8 +183,8 @@ export function FixedCostsSettings({ companyId, region = 'BR', timezone, busines
         <div className="h-full bg-[var(--color-accent)]" style={{ width: `${(progress.configured / progress.total) * 100}%` }} />
       </div>
       <a href="/#/resultados-por-hora" className="inline-flex min-h-11 items-center text-sm font-semibold text-[var(--color-accent)]">Ver resultados por hora</a>
-      <p className="text-sm leading-relaxed text-theme-text">Custo da hora = contas do mês ÷ horas abertas + (material + comissão já cadastrada) ÷ horas atendidas. Sobra = o que a hora atendida rendeu − esse custo.</p>
-      <p className={hint}>Hora aberta: na agenda, com ou sem cliente. Hora atendida: teve cliente. Numa hora com cliente: contas 12,50 + material 3 + comissão 27 = 42,50. Rendeu 80, sobra 37,50.</p>
+      <p className="text-sm leading-relaxed text-theme-text">{CHAIR_HOUR_COST_FORMULA}</p>
+      <p className={hint}>{CHAIR_HOUR_COST_EXAMPLE}</p>
     </div>
     <div aria-live="polite" className="space-y-2">
       {error && <p role="alert" className="rounded-xl border border-[var(--color-danger-border)] bg-[var(--color-danger-bg)] p-3 text-sm text-theme-text">{error}</p>}

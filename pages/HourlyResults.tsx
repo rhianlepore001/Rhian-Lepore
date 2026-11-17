@@ -10,7 +10,7 @@ import { allServicesHaveMaterialDecision, firstPendingBlock, hasOpenBusinessHour
 import { periodLabel } from '../utils/chairHourCopy';
 import { resolveHeaderBackTarget } from '../utils/headerBackTarget';
 import { fixedCostsApi } from '../services/fixedCosts';
-import { getTodayInTimeZone } from '../utils/businessTimezone';
+import { getTodayInTimeZone, resolveBusinessTimezone } from '../utils/businessTimezone';
 import { useBusinessSettings } from '@/hooks/useSettings';
 
 const PAGE_PB = 'pb-[calc(8rem+var(--safe-bottom))] md:pb-16';
@@ -24,10 +24,11 @@ const STEPS: { id: SetupBlockId; label: string; hint: string; hash: string }[] =
 ];
 
 export const HourlyResults: React.FC = () => {
-  const { role, teamMemberId, companyId } = useAuth();
+  const { role, teamMemberId, companyId, region } = useAuth();
   const { data: settings } = useBusinessSettings();
+  const timezone = resolveBusinessTimezone({ timezone: settings?.timezone, region });
   const [params] = useSearchParams();
-  const start = params.get('de') || chairHourMonth('America/Sao_Paulo');
+  const start = params.get('de') || chairHourMonth(timezone);
   const end = params.get('ate') || null;
   const pro = params.get('pro');
   const staff = role === 'staff';
@@ -48,7 +49,7 @@ export const HourlyResults: React.FC = () => {
     setWizardError(false);
     void fixedCostsApi.list(companyId).then((result) => {
       if (cancelled) return;
-      const today = getTodayInTimeZone('America/Sao_Paulo');
+      const today = getTodayInTimeZone(timezone);
       const progress = setupProgress({
         hasActiveCost: result.costs.some((cost) => cost.active && (!cost.end_date || cost.end_date >= today)),
         hasOpenHours: hasOpenBusinessHours(settings?.business_hours as WorkingHoursLike)
@@ -64,7 +65,7 @@ export const HourlyResults: React.FC = () => {
       setWizardError(true);
     });
     return () => { cancelled = true; };
-  }, [companyId, staff, settings?.business_hours, wizardRetry]);
+  }, [companyId, staff, settings?.business_hours, timezone, wizardRetry]);
 
   const kind = status === 'ready'
     ? hourlyEmptyKind({ role: staff ? 'staff' : 'owner', item: selected, setupComplete })

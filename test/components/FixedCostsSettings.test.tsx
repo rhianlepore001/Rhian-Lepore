@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { HashRouter } from 'react-router-dom';
 import { FixedCostsSettings } from '../../components/settings/FixedCostsSettings';
+import { CHAIR_HOUR_COST_EXAMPLE, CHAIR_HOUR_COST_FORMULA } from '../../utils/chairHourFormulaCopy';
 
 vi.mock('../../hooks/useBrutalTheme', () => ({ useBrutalTheme: () => ({ colors: { text: '', textMuted: '', border: '', card: '' }, classes: { input: '', label: '' }, radius: { card: '', button: '' } }) }));
 vi.mock('../../components/ui', () => ({ Card: ({ children }: { children: React.ReactNode }) => <div>{children}</div>, Button: ({ children, loading: _loading, fullWidth: _fullWidth, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { loading?: boolean; fullWidth?: boolean }) => <button {...props}>{children}</button> }));
@@ -231,14 +232,13 @@ describe('FixedCostsSettings — UX 390px', () => {
     expect(screen.queryByLabelText(/avisar .*sobra pouco/i)).not.toBeInTheDocument();
   });
 
-  it('fórmula da hora no topo reflete contas, material e comissão (#192)', async () => {
+  it('fórmula da hora no topo reflete o SQL de #192 (tudo ÷ horas abertas, com taxa e sobra da hora aberta)', async () => {
     const api = makeApi();
     render(<FixedCostsSettings companyId="empresa" api={api} />);
     await screen.findByText('0 de 4 configurados');
-    expect(screen.getAllByText(/contas do mês.*horas abertas/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/material.*comiss/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/horas atendidas/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/sobra.*custo da hora|rendeu.*custo/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(CHAIR_HOUR_COST_FORMULA)).toBeInTheDocument();
+    expect(screen.getByText(CHAIR_HOUR_COST_EXAMPLE)).toBeInTheDocument();
+    expect(screen.queryByText(/horas atendidas|hora atendida/i)).not.toBeInTheDocument();
   });
 
   it('fórmula e exemplo de cada bloco visíveis sem abrir “Ver exemplo e fórmula”', async () => {

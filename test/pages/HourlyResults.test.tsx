@@ -1,5 +1,5 @@
 import React from 'react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { HourlyResults } from '@/pages/HourlyResults';
@@ -13,7 +13,7 @@ const state = vi.hoisted(() => ({
 }));
 
 const businessSettingsState = vi.hoisted(() => ({
-  data: undefined as { business_hours?: Record<string, unknown> } | undefined,
+  data: undefined as { business_hours?: Record<string, unknown>; timezone?: string } | undefined,
 }));
 
 vi.mock('@/hooks/useSettings', () => ({
@@ -21,7 +21,7 @@ vi.mock('@/hooks/useSettings', () => ({
 }));
 
 vi.mock('@/contexts/AuthContext', () => ({
-  useAuth: () => ({ role: state.role, teamMemberId: state.teamMemberId, companyId: 'c1', user: { id: 'u1' } }),
+  useAuth: () => ({ role: state.role, teamMemberId: state.teamMemberId, companyId: 'c1', user: { id: 'u1' }, region: 'BR' }),
 }));
 vi.mock('@/hooks/useBusinessCopy', () => ({
   useBusinessCopy: () => ({ chairHour: state.theme === 'beauty' ? 'hora de atendimento' : 'hora de cadeira' }),
@@ -306,5 +306,38 @@ describe('HourlyResults — colaborador', () => {
     expect(screen.queryByText(/contas do mês/i)).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Voltar a Meus resultados/i })).toHaveAttribute('href', '/meus-insights');
     noZeroHero(container);
+  });
+});
+
+describe('HourlyResults — fuso do negócio', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  beforeEach(() => {
+    state.role = 'owner';
+    state.teamMemberId = null;
+    state.theme = 'barber';
+    state.status = 'ready';
+    state.data = { month: '2026-11-01', role: 'owner', total: { available_minutes: null, worked_minutes: 0, estimated_count: null, revenue_per_worked_hour: null, revenue_per_available_hour: null, occupancy: null }, professionals: [] };
+    wizardList.mockReset();
+    wizardList.mockResolvedValue(wizardPayload(false));
+    vi.useFakeTimers({ toFake: ['Date'] });
+    // 01/12/2026 01:00 UTC: já é dezembro em Lisboa e ainda 30/11 à noite em São Paulo.
+    vi.setSystemTime(new Date('2026-12-01T01:00:00Z'));
+  });
+
+  it('sem ?de=, o mês padrão segue o fuso do negócio (Lisboa)', async () => {
+    businessSettingsState.data = { timezone: 'Europe/Lisbon' };
+    mount('/resultados-por-hora');
+    expect(await screen.findByText(/Dezembro de 2026/i)).toBeInTheDocument();
+    await waitFor(() => expect(wizardList).toHaveBeenCalled());
+  });
+
+  it('sem ?de=, America/Sao_Paulo no mesmo instante cai em novembro', async () => {
+    businessSettingsState.data = { timezone: 'America/Sao_Paulo' };
+    mount('/resultados-por-hora');
+    expect(await screen.findByText(/Novembro de 2026/i)).toBeInTheDocument();
+    await waitFor(() => expect(wizardList).toHaveBeenCalled());
   });
 });

@@ -21,6 +21,7 @@ import { ASSISTANT_ENABLED } from '../utils/featureFlags';
 import { logger } from '../utils/Logger';
 import { mapError, formatUserFacingError } from '../utils/mapError';
 import { filterStaffTransactions, mapFinanceTransaction } from '../services/finance';
+import { isDemoMode } from '../lib/demo/mode';
 import {
   financeDeleteConfirmMessage,
   mapFinanceDeleteError,
@@ -106,6 +107,7 @@ const [searchParams, setSearchParams] = useSearchParams();
   const [endDate, setEndDate] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'revenue' | 'expense'>('all');
   const [filterPaymentMethod, setFilterPaymentMethod] = useState<string>('all');
+  const [demoTransactionLimit, setDemoTransactionLimit] = useState(6);
   // Staff não vê aba de comissões nem histórico
   const isStaff = role === 'staff';
   const canDeleteTransactions = shouldShowFinanceDelete(role);
@@ -744,14 +746,16 @@ const [searchParams, setSearchParams] = useSearchParams();
                   icon={<TrendingDown className="h-4 w-4" />}
                   title="Despesas"
                   value={formatCurrency(summary.expenses || 0, currencyRegion)}
-                  subtitle="Comissões e custos liquidados"
+                  subtitle="Despesas registradas no período"
                     />
                 <FinanceKpi
                   icon={<Wallet className="h-4 w-4" />}
-                  title="Lucro"
+                  title={isDemoMode() ? 'Saldo do período' : 'Lucro'}
                   value={formatCurrency(summary.profit || 0, currencyRegion)}
                   subtitle={
-                    summary.revenue > 0
+                    isDemoMode()
+                      ? 'Antes de comissões pendentes'
+                      : summary.revenue > 0
                       ? `${Math.round(((summary.profit || 0) / summary.revenue) * 100)}% margem`
                       : 'Sem receita no período'
                   }
@@ -835,7 +839,7 @@ const [searchParams, setSearchParams] = useSearchParams();
             <div className="p-3 md:p-4">
               <Table<Transaction>
                 columns={transactionColumns}
-                data={transactions}
+                data={isDemoMode() ? transactions.slice(0, demoTransactionLimit) : transactions}
                 rowKey={(t) => t.id}
                 stickyHeader
                 compact
@@ -872,7 +876,7 @@ const [searchParams, setSearchParams] = useSearchParams();
                           {formatCurrency(transactionAmount(t), currencyRegion, false)}
                         </span>
                       </div>
-                      <p className={`mt-0.5 text-xs ${colors.textMuted} truncate`}>
+                      <p className={`mt-0.5 text-xs ${colors.textMuted}`}>
                         <span className={t.type === 'expense' ? status.danger : status.success}>
                           {t.type === 'expense' ? 'Saída' : 'Entrada'}
                         </span>
@@ -886,6 +890,11 @@ const [searchParams, setSearchParams] = useSearchParams();
                   </button>
                 )}
               />
+              {isDemoMode() && transactions.length > demoTransactionLimit && (
+                <Button variant="ghost" onClick={() => setDemoTransactionLimit(limit => limit + 6)}>
+                  Mostrar mais transações
+                </Button>
+              )}
             </div>
           </Card>
           </>

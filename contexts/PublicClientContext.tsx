@@ -15,7 +15,7 @@ const parseStoredClient = (raw: string): PublicClient | null => {
     }
 };
 
-interface PublicClientContextType {
+export interface PublicClientContextType {
     client: PublicClient | null;
     loading: boolean;
     login: (phone: string, businessId: string) => Promise<PublicClient | null>;
@@ -25,7 +25,7 @@ interface PublicClientContextType {
     logout: (businessId?: string) => void;
 }
 
-const PublicClientContext = createContext<PublicClientContextType>({} as PublicClientContextType);
+export const PublicClientContext = createContext<PublicClientContextType>({} as PublicClientContextType);
 
 export const usePublicClient = () => useContext(PublicClientContext);
 

@@ -140,6 +140,7 @@ export const Sidebar: React.FC = () => {
           <button
             onClick={() => {
               logout();
+              navigate('/login', { replace: true });
               closeSidebar();
             }}
             className={`w-full group flex items-center px-4 py-2.5 text-sm font-sans font-medium ${colors.textMuted} hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)] rounded-xl border border-transparent hover:border-[var(--color-danger-border)] transition-all duration-200`}

@@ -39,6 +39,7 @@ const formatRate = (rate: number) =>
 export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({ member, onEdit, onResendInvite, hasOwnCycle = false }) => {
     const { colors, radius, accent } = useBrutalTheme();
     const rate = member.commission_rate ?? 0;
+    const roleLabel = member.role === 'staff' ? (member.is_owner ? 'Dono' : 'Profissional') : member.role === 'owner' ? 'Dono' : member.role || (member.is_owner ? 'Dono' : '');
     const pendingInvite = !member.is_owner && member.active && !member.staff_user_id;
     const handleResend = onResendInvite ?? onEdit;
 
@@ -60,7 +61,7 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({ member, onEdit, 
             <div className="min-w-0 flex-1">
                 <p className={`flex items-center gap-2 text-[15px] font-semibold leading-5 ${member.active ? colors.text : colors.textMuted}`}>
                     <span className="truncate">{member.name}</span>
-                    {member.is_owner && !/\bdono\b/i.test(member.role ?? '') && (
+                    {member.is_owner && roleLabel !== 'Dono' && (
                         <span className={`shrink-0 rounded-md ${accent.bgDim} ${accent.text} px-1.5 py-px text-xs font-semibold leading-4`}>
                             Dono
                         </span>
@@ -72,7 +73,7 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({ member, onEdit, 
                     )}
                 </p>
                 <p className={`mt-0.5 truncate text-[13px] leading-5 ${colors.textSecondary}`}>
-                    {member.role ? <span>{member.role}</span> : member.is_owner && <span>Dono</span>}
+                    {roleLabel && <span>{roleLabel}</span>}
                     {!member.is_owner && (
                         <>
                             {member.role && <span aria-hidden="true"> · </span>}

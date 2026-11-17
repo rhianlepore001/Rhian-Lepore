@@ -9,6 +9,28 @@
 
 ---
 
+## Imagens próprias da landing (17 Nov 2026)
+
+As duas fotografias de banco visíveis na landing foram substituídas, a pedido do usuário, por imagens geradas com imagegen para a gestão em barbearia e a colaboração no salão. WebP responsivo em duas larguras por cena; originais preservados fora do repositório e procedência registrada em `public/landing/ASSETS.md`. Legendas de banco e crédito público Unsplash removidos da landing; capas antigas da demo e avisos de dados fictícios preservados. Conferência no navegador em 320/390/768/1440px: imagens carregadas, sem overflow horizontal e raiz no login. Revisão visual independente das imagens: 9,1/10, sem bloqueadores. Verificações: typecheck, lint, build e 2.527 testes em 333 arquivos aprovados. `graphify update .` continua indisponível no ambiente.
+
+## História da landing aprovada (17 Nov 2026)
+
+Aplicada a narrativa aprovada pelo usuário sobre a vivência de Rhian Lepore em ambiente familiar da beleza e a dificuldade de transformar movimento financeiro em gestão. Relato dos pais em primeira pessoa, atribuído ao criador; removidas as referências anteriores a terceiros. Slogan: “Você cresce. O AgendiX acompanha você e ajuda seu negócio a ir além.” Landing segue em `/landing` / `/#/landing`; raiz segue no login. Publicação da revisão autorizada no pedido do usuário. Typecheck/lint/build e 2.527 testes aprovados; texto e responsividade conferidos em 320/390/1440px.
+
+
+## Entrada do domínio — login e landing separada (17 Nov 2026)
+
+Usuário pediu retirar a landing da entrada principal após teste em produção, preservando o serviço. `/` e `/#/` voltam ao login para visitantes; usuários com sessão mantêm o Dashboard. A landing fica em `/#/landing`; o endereço `/landing` redireciona temporariamente para ela na Vercel. Logo da landing e retorno da demo apontam para a rota de testes. Nenhum serviço, domínio, arquivo da landing ou fluxo real de autenticação foi removido. Publicação desta alteração foi autorizada no mesmo pedido. Verificações: typecheck/lint/build, 2.527 testes e 13 E2E aprovados.
+
+
+## Landing AgendiX — refinamento profissional (17 Nov 2026, release do site oficial)
+
+Base sincronizada com `main` em `fd3c490` (PR #211). Landing oficial em `pages/Landing.tsx` e `styles/landing.css`: logo horizontal fornecida pelo usuário no cabeçalho, fontes locais, seleção antecipada de segmento, demonstração por tarefa e convite ao cadastro após a experiência. Mobile abre a demo em tela cheia; desktop carrega iframe sob demanda. Dez capturas próprias do Studio Aurora completam as prévias do salão. Login/Register preservados pela guarda SHA-256.
+
+Demo: nome do negócio legível no booking; eventos da agenda opacos; “Saldo do período” com indicação de comissões pendentes apenas na simulação. Troca de segmento mantém a tela. O provider de alertas aguarda usuário/empresa/autenticação antes de abrir canais, corrigindo tentativas de conexão de visitantes da landing.
+
+Benchmark oficial: Trinks, Booksy, Fresha e SQUIRE. Revisão independente final **9,2/10**, sem bloqueadores; todos os critérios pelo menos 9. Oito combinações de segmento/largura sem violações automáticas axe ou overflow. Os 11 E2E passaram no build de produção local; typecheck/lint/build, 44 regressões direcionadas e a suíte completa (333 arquivos / 2.525 testes) passaram. Documentação e limites: `docs/site-v2.md`; provas locais em `artifacts/site-v2/review-2026-11-17/` (gitignored). O aviso anterior de import estático/dinâmico no build permanece; `graphify` não está instalado. Publicação autorizada pelo usuário; entrega pela integração GitHub (`main`) → Vercel.
+
 ## Horas de atendimento v2 — revisão Bob (16 Nov 2026, NÃO merge)
 
 Dois drafts empilhados. Não merge. Não aplicar migration em produção.
@@ -581,3 +603,5 @@ npm test             # Vitest
 ---
 
 *Para detalhes de segurança/auditoria sensíveis, consultar as notas privadas (fora do repo). Este arquivo é público.*
+
+- **Site oficial v2 + demo isolada (16 Nov 2026, PR rascunho #211):** branch nova `feat/site-oficial-v2`, base `ca252dea`; não continua #75. Raiz deslogada recebe landing, raiz autenticada preserva Dashboard/Layout. `/demo` usa facade Supabase em memória, dois tenants, sessão fictícia e páginas reais; cliente público também em memória. Login/Register intactos; callback de recuperação preservado; nenhuma migration/banco/produção. Verificações locais: typecheck, lint, build e pós-build passaram; 2.513 testes Vitest e 5 Playwright passaram. Revisão visual independente **reprovada**: landing 7,5/10, demo 8/10; Taste Gate FAIL 34. PR deve continuar rascunho até nova rodada visual autorizada. Arquitetura e limites em `docs/site-v2.md`; artefatos em `/workspace/artifacts/site-v2/`. PR: https://github.com/rhianlepore001/Rhian-Lepore/pull/211. O Git original está somente leitura, portanto os commits ficam na cópia `/workspace/artifacts/site-v2/git-submit`; os fontes permanecem em `/workspace/wt-site-v2`. Job E2E adicional de CI ficou em patch externo, pois a credencial OAuth não tem escopo workflow. `graphify update .` indisponível no ambiente.

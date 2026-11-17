@@ -1,3 +1,4 @@
+import { isDemoMode, demoPath } from '../../lib/demo/mode';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Check, Copy, Link as LinkIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -13,7 +14,7 @@ export interface AgendaPublicLinkBarProps {
 }
 
 export function buildPublicBookingLink(slug: string, origin: string = window.location.origin): string {
-  return `${origin}/#/book/${slug}`;
+  return `${origin}/#${isDemoMode() ? demoPath(`/book/${slug}`) : `/book/${slug}`}`;
 }
 
 export const AgendaPublicLinkBar: React.FC<AgendaPublicLinkBarProps> = ({

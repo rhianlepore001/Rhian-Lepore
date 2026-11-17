@@ -1,0 +1,15 @@
+@font-face {
+  font-family: 'Agendix Chivo';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/landing/fonts/chivo-latin-variable.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Agendix Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/landing/fonts/inter-latin-variable.woff2') format('woff2');
+}

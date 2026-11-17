@@ -88,6 +88,7 @@ export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose })
 
   const handleLogout = () => {
     logout();
+    navigate('/login', { replace: true });
     handleClose();
   };
 

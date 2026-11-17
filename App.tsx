@@ -1,3 +1,6 @@
+import { syncSupabaseMode } from './lib/supabase';
+import { DemoPublicClientProvider } from './contexts/DemoPublicClientContext';
+import { isDemoMode } from './lib/demo/mode';
 import { MarketingConsent } from './components/MarketingConsent';
 import { UpdatePrompt } from './components/UpdatePrompt';
 import React, { Suspense } from 'react';
@@ -19,6 +22,9 @@ import { PerformanceAccessGuard } from './components/performance/PerformanceAcce
 import { PerformancePageSkeleton } from './components/performance/PerformancePageSkeleton';
 import { getBusinessCopy, resolveBusinessTheme } from './utils/businessCopy';
 
+
+const Landing = React.lazy(() => import('./pages/Landing').then(m => ({ default: m.Landing })));
+const Demo = React.lazy(() => import('./pages/Demo').then(m => ({ default: m.Demo })));
 
 // Lazy Load Pages
 const Dashboard = React.lazy(() => import('./pages/Dashboard').then(module => ({ default: module.Dashboard })));
@@ -200,6 +206,8 @@ const AppRoutes: React.FC = () => {
       <Suspense fallback={<LoadingFull />}>
       <Routes>
         {/* Public / Standalone Routes */}
+        <Route path="/landing" element={<Landing />} />
+        <Route path="/demo/*" element={<Demo />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/termos" element={<Legal />} />
@@ -300,6 +308,24 @@ const AppRoutes: React.FC = () => {
   );
 };
 
+const RouteAuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const location = useLocation();
+  React.useEffect(syncSupabaseMode, [location.pathname]);
+  return <AuthProvider demoRoute={location.pathname}>{children}</AuthProvider>;
+};
+
+const RoutePublicClientProvider = ({ children }: { children: React.ReactNode }) => {
+  const location = useLocation();
+  if (isDemoMode()) return <DemoPublicClientProvider key={location.pathname.split('/')[2] || 'barber'}>{children}</DemoPublicClientProvider>;
+  return <PublicClientProvider>{children}</PublicClientProvider>;
+};
+
+const ProductionExtras = () => {
+  useLocation();
+  if (isDemoMode()) return null;
+  return <><DynamicBranding /><MarketingConsent /><UpdatePrompt /><ActivationBanner /><WhatsAppHandoffHost /><DevBugButton /></>;
+};
+
 const App: React.FC = () => {
   React.useEffect(() => {
     // Detectar hardware limitado e desativar animações infinitas
@@ -317,21 +343,17 @@ const App: React.FC = () => {
     <HashRouter unstable_useTransitions={false}>
       <HashRouterSync />
       <DesignSystemProvider>
-        <AuthProvider>
+        <RouteAuthProvider>
           <ToastProvider>
-            <DynamicBranding />
-            <MarketingConsent />
-            <UpdatePrompt />
-            <PublicClientProvider>
+
+            <RoutePublicClientProvider>
               <AlertsProvider>
                   <AppRoutes />
-                  <ActivationBanner />
-                  <WhatsAppHandoffHost />
-                  <DevBugButton />
+                  <ProductionExtras />
               </AlertsProvider>
-            </PublicClientProvider>
+            </RoutePublicClientProvider>
           </ToastProvider>
-        </AuthProvider>
+        </RouteAuthProvider>
       </DesignSystemProvider>
     </HashRouter>
   );

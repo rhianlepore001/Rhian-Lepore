@@ -254,7 +254,9 @@ describe('HourlyResults — gestor', () => {
     };
     mount();
     await waitFor(() => expect(wizardList).toHaveBeenCalled());
-    expect(screen.getByText(/definir quando avisar|avisar.*sobra/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/Falta definir quando avisar/i)).toBeInTheDocument();
+    });
     expect(screen.queryByText(/custo da hora pode estar baixo/i)).not.toBeInTheDocument();
   });
 

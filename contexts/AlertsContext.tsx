@@ -224,6 +224,7 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     useEffect(() => {
         void refreshAlerts();
+        if (authLoading || !user?.id || !companyId) return;
 
         const interval = setInterval(() => { void refreshAlerts(); }, 5 * 60 * 1000);
 

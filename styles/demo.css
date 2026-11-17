@@ -109,3 +109,85 @@ html[data-mode="light"] .demo-shell #booking-root .bg-theme-accent { color:#fff 
 .demo-content[data-demo-screen="financeiro"] .text-\[var\(--color-success\)\] { color:#006346; }
 .demo-content[data-demo-screen="financeiro"] .text-\[var\(--color-danger\)\] { color:#b91c1c; }
 .demo-content[data-demo-screen="financeiro/performance"] .text-\[var\(--color-warning\)\] { color:#92400e; }
+
+.demo-shell #booking-root .container:has(h1) {
+ margin-top:0;
+ padding-top:24px;
+ background:var(--color-card);
+}
+.demo-shell #booking-root .container:has(h1) h1 {
+ color:var(--color-text);
+ font-size:clamp(28px,3.4vw,46px);
+ line-height:1.12;
+ overflow-wrap:anywhere;
+}
+.demo-shell #booking-root .container:has(h1) > div { align-items:center; }
+.demo-shell #booking-root .container:has(h1) > div > div:first-child > div:first-child {
+ width:96px;
+ height:96px;
+}
+.demo-shell #booking-root .container:has(h1) > div > div:nth-child(2) { padding-bottom:0; }
+.demo-content .agenda-event-chip.agenda-status-completed {
+ background:color-mix(in srgb,var(--color-success) 16%,var(--color-card));
+}
+.demo-content .agenda-event-chip.agenda-status-overdue {
+ background:color-mix(in srgb,var(--color-warning) 16%,var(--color-card));
+}
+.demo-content .agenda-event-chip.agenda-status-cancelled {
+ background:color-mix(in srgb,var(--color-danger) 12%,var(--color-card));
+}
+.demo-content .agenda-event-chip[data-frees-slot=true]:not(.agenda-status-cancelled) {
+ background:color-mix(in srgb,var(--color-text-muted) 15%,var(--color-card));
+}
+.demo-content[data-demo-screen="financeiro"] [data-testid="finance-kpi"] p:last-child {
+ white-space:normal;
+}
+@media(max-width:640px) {
+ .demo-shell #booking-root .container:has(h1) { padding-top:20px; }
+ .demo-shell #booking-root .container:has(h1) > div {
+  flex-direction:row;
+  align-items:center;
+  gap:16px;
+ }
+ .demo-shell #booking-root .container:has(h1) > div > div:first-child > div:first-child {
+  width:64px;
+  height:64px;
+ }
+ .demo-shell #booking-root .container:has(h1) h1 { font-size:26px; }
+ .demo-content[data-demo-screen=agenda] header:has(#btn-new-appointment)>div:last-child>div {
+  width:100%;
+ }
+ .demo-content #btn-new-appointment {
+  min-width:0;
+  flex:1 1 auto;
+  gap:4px;
+  padding-inline:6px;
+  font-size:12px;
+ }
+ .demo-content #btn-new-appointment svg { width:15px; flex-shrink:0; }
+}
+
+.demo-toolbar strong { display:inline; }
+.demo-toolbar .demo-badge { margin-left:8px; }
+.demo-toolbar { padding-block:16px 10px; }
+.demo-shell #booking-root [data-testid="group-booking-entry"] { display:none; }
+.demo-shell #booking-root .space-y-8:has([data-testid="group-booking-entry"]) {
+ display:flex;
+ flex-direction:column;
+ gap:18px;
+}
+.demo-shell #booking-root .space-y-8:has([data-testid="group-booking-entry"]) > * { margin-block:0; }
+.demo-shell #booking-root .container:has(> .sticky) { padding-top:16px; }
+.demo-shell #booking-root .container > .sticky { margin-bottom:18px; }
+@media(min-width:768px) {
+ .demo-shell #booking-root div:has(> .container h1) > div:first-child:has(> img) {
+  height:80px;
+  min-height:80px;
+ }
+ .demo-shell #booking-root .container:has(h1) { padding-block:8px; }
+ .demo-shell #booking-root .container:has(h1) > div > div:first-child > div:first-child {
+  width:64px;
+  height:64px;
+ }
+ .demo-shell #booking-root .container:has(h1) h1 { font-size:36px; }
+}

@@ -1,5 +1,30 @@
 # Site oficial v2 e simulação
 
+## Revisão da landing — 17 Nov 2026
+
+Base atualizada a partir de `main`, commit `fd3c490` (PR #211). A revisão mantém branco, azul ardósia, Chivo e Inter, com a logo horizontal fornecida pelo usuário sobre um cabeçalho escuro. O percurso agora apresenta a proposta, permite experimentar por tarefa e segmento, explica os benefícios e orienta o início em três passos antes das dúvidas e do convite final.
+
+As escolhas de segmento acompanham os links de demonstração e cadastro. No celular, a ação principal da simulação abre a tela completa; no desktop, o iframe é carregado somente após a ação do visitante. O cabeçalho reúne a navegação e o cadastro em uma única faixa. O menu fecha com Escape e devolve o foco ao botão. O zoom permanece liberado apenas nesta superfície, com restauração ao sair. Textos auxiliares têm pelo menos 12px e os parágrafos mobile, 15px. As fontes são locais e têm licenças preservadas.
+
+A demo recebeu ajustes de legibilidade no agendamento público, cartões opacos na agenda e a indicação “Saldo do período / Antes de comissões pendentes” no financeiro, exclusivamente na simulação. Trocar o segmento mantém a tarefa em exploração. Os prints correspondentes foram recapturados da UI fictícia, sem retoques; a origem está em `public/landing/ASSETS.md`. Todas as prévias acompanham o segmento escolhido, incluindo financeiro, agendamento, performance, equipe e fila do salão.
+
+A validação do iframe também identificou canais de notificações sendo criados pela página principal sem sessão. O provider agora só abre os canais após resolver usuário e empresa; o encerramento dos canais continua no cleanup do efeito. Login e Register permanecem protegidos pela verificação SHA-256 existente.
+
+A avaliação independente passou de **7,8 para 9,2/10**, após as rodadas de revisão e benchmarking. Notas finais: proposta 9,3; conversão 9,3; composição 9,2; mobile 9,0; acessibilidade 9,1; credibilidade 9,3. É uma avaliação heurística, sem teste com usuários ou medição de conversão. A nota substitui o status visual anterior descrito no histórico abaixo.
+
+As capturas e auditorias locais ficam em `artifacts/site-v2/review-2026-11-17/` (gitignored). A auditoria axe-core nas oito combinações de segmento e largura (barbearia/salão × 320/390/768/1440px) não encontrou violações automáticas WCAG A/AA. Os nós com análise de contraste inconclusiva foram conferidos pelos pares explícitos de cores: ardósia/branco 6,31:1; texto principal/branco 14,86:1; ardósia/superfície clara 5,82:1. A avaliação inclui teclado, foco, redução de movimento, imagens carregadas e ausência de overflow horizontal.
+
+Resíduos: o hero do salão usa um recorte mais amplo que o da barbearia; a extensão da página deve ser refinada com dados reais de cliques e rolagem. O cabeçalho em 320px já acomoda logo, cadastro e navegação em uma linha. O build mantém o aviso anterior de import estático/dinâmico de `useStaffPerformance`. O comando `graphify update .` continua indisponível neste ambiente. As referências de caminhos e reprovações das seções seguintes registram rodadas históricas.
+
+
+### Benchmarking e identidade
+
+A rodada adicional consultou as páginas oficiais da [Trinks para barbearias](https://negocios.trinks.com/negocios/barbearias/), [Booksy Business Brasil](https://biz.booksy.com/pt-br), [Fresha Business](https://www.fresha.com/for-business) e [SQUIRE](https://www.getsquire.com/). As referências orientaram padrões de apresentação por tarefa, identificação do público e convites contextuais após demonstrar valor. Não foram importados textos, métricas, depoimentos, preços ou promessas de automação desses produtos.
+
+Aplicações no AgendiX: seleção do segmento desde o hero; demonstração inicialmente no fluxo do cliente, evitando repetir a agenda; orientação curta por tarefa; convite ao cadastro imediatamente após a simulação; dez capturas próprias do salão; logo branca/prateada no cabeçalho, em WebP otimizado. A fonte dos assets está em `public/landing/ASSETS.md`.
+
+A validação do build de produção local passou nos **11 E2E** do site: quatro larguras, demonstração autônoma e embutida, troca de segmento/tarefa, teclado, zoom, recuperação de senha e ausência de integrações externas na simulação. `typecheck`, lint e build passaram; os **44 testes direcionados** de landing, contratos da demo e notificações também passaram. A suíte completa final passou em **333 arquivos e 2.525 testes**, incluindo a nova regressão de personalização.
+
 Superfície de marketing: Persuade. Público: donos de barbearias e salões. Ação principal: criar conta pelo cadastro existente. Paleta aprovada: branco + azul ardósia #536174; Chivo + Inter preservados. Composição editorial: título e introdução em colunas, produto real em largura, história com fotografia e demonstração antes dos benefícios. O briefing prevalece sobre sorteios de tipografia, paleta e efeitos da Taste Skill.
 
 ## Isolamento

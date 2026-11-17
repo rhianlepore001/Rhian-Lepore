@@ -9,6 +9,15 @@
 
 ---
 
+
+## Landing AgendiX — refinamento profissional (17 Nov 2026, release do site oficial)
+
+Base sincronizada com `main` em `fd3c490` (PR #211). Landing oficial em `pages/Landing.tsx` e `styles/landing.css`: logo horizontal fornecida pelo usuário no cabeçalho, fontes locais, seleção antecipada de segmento, demonstração por tarefa e convite ao cadastro após a experiência. Mobile abre a demo em tela cheia; desktop carrega iframe sob demanda. Dez capturas próprias do Studio Aurora completam as prévias do salão. Login/Register preservados pela guarda SHA-256.
+
+Demo: nome do negócio legível no booking; eventos da agenda opacos; “Saldo do período” com indicação de comissões pendentes apenas na simulação. Troca de segmento mantém a tela. O provider de alertas aguarda usuário/empresa/autenticação antes de abrir canais, corrigindo tentativas de conexão de visitantes da landing.
+
+Benchmark oficial: Trinks, Booksy, Fresha e SQUIRE. Revisão independente final **9,2/10**, sem bloqueadores; todos os critérios pelo menos 9. Oito combinações de segmento/largura sem violações automáticas axe ou overflow. Os 11 E2E passaram no build de produção local; typecheck/lint/build, 44 regressões direcionadas e a suíte completa (333 arquivos / 2.525 testes) passaram. Documentação e limites: `docs/site-v2.md`; provas locais em `artifacts/site-v2/review-2026-11-17/` (gitignored). O aviso anterior de import estático/dinâmico no build permanece; `graphify` não está instalado. Publicação autorizada pelo usuário; entrega pela integração GitHub (`main`) → Vercel.
+
 ## Finance PR-C — gráfico Entradas e saídas + fuso do mês (4 Out 2026, draft)
 
 Branch `cursor/fin-c-cashflow-chart-e4e7`. Só frontend. SVG próprio (sem recharts na rota Financeiro); semanas no mobile / dias no desktop; intervalo `[start,end)` ISO no fuso do negócio; react-query paralelo; histórico só na aba Histórico. Prints em `/opt/cursor/artifacts/screenshots/fin-c/`.

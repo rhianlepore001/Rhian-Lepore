@@ -1,6 +1,6 @@
 import { syncSupabaseMode } from './lib/supabase';
 import { DemoPublicClientProvider } from './contexts/DemoPublicClientContext';
-import { isDemoMode } from './lib/demo/mode';
+import { isDemoMode, isDemoPreview } from './lib/demo/mode';
 import { MarketingConsent } from './components/MarketingConsent';
 import { UpdatePrompt } from './components/UpdatePrompt';
 import React, { Suspense } from 'react';
@@ -200,6 +200,8 @@ const ClientsRouteGuard = ({ children }: { children: React.ReactElement }) => {
 const AppRoutes: React.FC = () => {
   // Retorno do e-mail de redefinição de senha: capturado em lib/supabase.ts
   // (captureRecoveryCallback) antes do client ler a URL.
+  const { pathname } = useLocation();
+  if (isDemoPreview() && !/^\/demo(?:\/|$)/.test(pathname)) return <Navigate to="/demo/barber/agenda" replace />;
 
   return (
     <ErrorBoundary>

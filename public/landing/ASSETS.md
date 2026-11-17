@@ -1,5 +1,9 @@
 # Assets da landing v2
 
+## Prévias mobile com os temas do produto — 17 Nov 2026
+
+Os 12 arquivos `phone-{barber,beauty}-{agenda,booking,finance,performance,team,queue}.webp` foram capturados das telas reais da simulação em `/demo-preview#/demo/`. As imagens têm 390 × 640 px, WebP com qualidade 90 e dados fictícios. O tema Barber usa fundo escuro e dourado. O tema Beauty usa fundo claro e lilás. A moldura azul ardósia vem do CSS da landing e os pixels das telas mantêm as cores do aplicativo.
+
 ## Cenas criadas para a landing — 17 Nov 2026
 
 As duas fotografias de banco da seção de equipe e de “Nossa história” foram substituídas por imagens originais geradas com a ferramenta OpenAI imagegen para esta revisão do AgendiX. A direção de arte combina luz natural, madeira, branco e azul ardósia com cenas de gestão na rotina da beleza. As pessoas e os estabelecimentos são fictícios; as imagens não retratam Rhian, seus familiares ou clientes reais e não são capturas do produto.

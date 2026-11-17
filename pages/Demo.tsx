@@ -1,9 +1,9 @@
 import { DemoNavigation, DemoScreenNavigation } from '../components/DemoNavigation';
-import React, { lazy, Suspense, useEffect, useState } from 'react';
+import React, { lazy, Suspense, useLayoutEffect, useState } from 'react';
 import { Link, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { UIProvider } from '../contexts/UIContext';
-import { getDemoNiche } from '../lib/demo/mode';
+import { getDemoNiche, isDemoPreview } from '../lib/demo/mode';
 import '../styles/demo.css';
 
 const Agenda = lazy(() => import('./Agenda').then(m => ({ default: m.Agenda })));
@@ -25,16 +25,17 @@ const screens = [
 export const Demo = () => {
   const niche = getDemoNiche();
   const base = `/demo/${niche}`;
+  const embedded = isDemoPreview();
   const location = useLocation();
   const currentScreen = screens.find(screen => location.pathname === `${base}/${screen.path}`)?.path ?? 'agenda';
   const navigate = useNavigate();
   const [tour, setTour] = useState<number | null>(null);
   const [client] = useState(() => new QueryClient({ defaultOptions: { queries: { retry: false } } }));
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = document.documentElement;
     const previous = { theme: root.getAttribute('data-theme'), mode: root.getAttribute('data-mode') };
     root.setAttribute('data-theme', niche);
-    root.setAttribute('data-mode', 'light');
+    root.setAttribute('data-mode', niche === 'beauty' ? 'light' : 'dark');
     return () => {
       for (const [key, value] of Object.entries(previous)) {
         if (value) root.setAttribute(`data-${key}`, value); else root.removeAttribute(`data-${key}`);
@@ -46,8 +47,8 @@ export const Demo = () => {
     navigate(`${base}/${screens[step].path}`);
   };
   return <QueryClientProvider client={client}><UIProvider>
-    <div className="demo-shell">
-      <header className="demo-header">
+    <div className="demo-shell" data-embedded={embedded || undefined}>
+      {!embedded && <><header className="demo-header">
         <Link className="demo-brand" to="/landing">AgendiX</Link>
         <div className="demo-niches" aria-label="Tipo de negócio">
           <Link aria-current={niche === 'barber' ? 'page' : undefined} to={`/demo/barber/${currentScreen}`}>Barbearia</Link>
@@ -63,7 +64,7 @@ export const Demo = () => {
       {tour !== null && <aside className="demo-tour" aria-label="Tour guiado" aria-live="polite">
         <div><span>Passo {tour + 1} de {screens.length}</span><h2>{screens[tour].title}</h2><p>{screens[tour].text}</p></div>
         <div className="demo-tour-actions">{tour > 0 && <button onClick={() => goTour(tour - 1)}>Anterior</button>}<button onClick={() => tour < screens.length - 1 ? goTour(tour + 1) : setTour(null)}>{tour < screens.length - 1 ? 'Próximo passo' : 'Concluir tour'}</button><button onClick={() => setTour(null)}>Fechar tour</button></div>
-      </aside>}
+      </aside>}</>}
       <DemoNavigation><main className="demo-content" data-demo-screen={currentScreen} key={niche} onClickCapture={event => {
         const anchor = (event.target as HTMLElement).closest('a');
         if (anchor && /wa\.me|whatsapp|mailto:/.test(anchor.href)) { event.preventDefault(); event.stopPropagation(); }

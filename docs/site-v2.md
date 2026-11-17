@@ -1,5 +1,15 @@
 # Site oficial v2 e simulação
 
+## Refinamento mobile 2.0 — 17 Nov 2026
+
+A abertura apresenta o AgendiX como gestão pelo celular. As prévias de agenda, agendamento online, financeiro, hora de cadeira, equipe e fila usam capturas reais em molduras de celular. Barbearia usa o tema Barber escuro e dourado. Salão usa o tema Beauty claro e lilás. Os controles e o fundo da landing mantêm branco e azul ardósia.
+
+A escolha do negócio sincroniza as prévias e os links. Em telas abaixo de 960 px, a ação principal abre a simulação em tela cheia. Em telas maiores, a simulação abre sob demanda dentro da moldura e mantém um link para a versão em tela cheia. O modo incorporado usa `/demo-preview`, rota que aceita apenas telas da simulação e permite incorporação pela mesma origem. A versão autônoma conserva a navegação entre telas e o tour guiado.
+
+As telas reutilizam os componentes e tokens do aplicativo, com dados fictícios. O enquadramento do agendamento incorporado é compacto para expor o primeiro serviço e parte do fluxo sem rolar dentro do celular. A landing continua em `/landing` e `/#/landing`; a raiz direciona visitantes sem sessão para o login.
+
+A revisão heurística alcançou **9,3/10**. O Chromium verificou ambos os temas em 320, 390, 768, 1024 e 1440 px, sem rolagem horizontal na landing. O axe-core não apontou violações WCAG A/AA nas dez combinações. Os 14 testes Playwright passaram no build local com os cabeçalhos do Vercel aplicados, incluindo o agendamento incorporado e a troca de tema. A incorporação também foi conferida com o service worker ativo. Typecheck, lint, build e 2.527 testes Vitest passaram. O executável `graphify` estava indisponível. Relatório e capturas em `/workspace/artifacts/site-v2/mobile-2/`.
+
 ## Imagens de barbearia e salão — 17 Nov 2026
 
 As duas fotos de banco da landing foram substituídas por cenas originais geradas para o AgendiX: gestão com tablet na barbearia e colaboração entre profissionais no salão. Os arquivos responsivos WebP preservam a direção visual da página. As legendas de banco e o crédito Unsplash foram retirados da landing. As pessoas são fictícias, sem representar o criador, familiares ou clientes reais; a origem está em `public/landing/ASSETS.md`. Os antigos assets usados pelas capas da demo foram preservados, assim como os avisos de dados fictícios nas telas do produto. A raiz continua no login e a landing em `/#/landing`. Verificações desta troca: typecheck, lint, build e 2.527 testes aprovados; imagens e recortes conferidos em 320/390/768/1440px. Revisão visual independente das imagens: 9,1/10, sem bloqueadores.

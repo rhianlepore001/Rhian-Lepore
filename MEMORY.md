@@ -9,6 +9,10 @@
 
 ---
 
+## Landing mobile 2.0 (17 Nov 2026)
+
+Prévias das seis telas do AgendiX em molduras de celular, com capturas reais de Barber escuro e Beauty claro e dados fictícios. Azul ardósia na landing e nas molduras. A demo abre em tela cheia em telas estreitas e carrega sob demanda dentro da moldura em telas largas. A incorporação usa `/demo-preview` com `SAMEORIGIN` e mantém a mesma simulação isolada. A landing usa `/landing` e `/#/landing`, com login na raiz para visitantes. Ver `docs/site-v2.md`.
+
 ## Imagens próprias da landing (17 Nov 2026)
 
 As duas fotografias de banco visíveis na landing foram substituídas, a pedido do usuário, por imagens geradas com imagegen para a gestão em barbearia e a colaboração no salão. WebP responsivo em duas larguras por cena; originais preservados fora do repositório e procedência registrada em `public/landing/ASSETS.md`. Legendas de banco e crédito público Unsplash removidos da landing; capas antigas da demo e avisos de dados fictícios preservados. Conferência no navegador em 320/390/768/1440px: imagens carregadas, sem overflow horizontal e raiz no login. Revisão visual independente das imagens: 9,1/10, sem bloqueadores. Verificações: typecheck, lint, build e 2.527 testes em 333 arquivos aprovados. `graphify update .` continua indisponível no ambiente.

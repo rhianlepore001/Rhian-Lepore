@@ -1,4 +1,17 @@
-# Assets da landing v2 — fotos de banco (provisórias)
+# Assets da landing v2
+
+## Cenas criadas para a landing — 17 Nov 2026
+
+As duas fotografias de banco da seção de equipe e de “Nossa história” foram substituídas por imagens originais geradas com a ferramenta OpenAI imagegen para esta revisão do AgendiX. A direção de arte combina luz natural, madeira, branco e azul ardósia com cenas de gestão na rotina da beleza. As pessoas e os estabelecimentos são fictícios; as imagens não retratam Rhian, seus familiares ou clientes reais e não são capturas do produto.
+
+| Arquivos de entrega | Cena | Dimensões |
+|---|---|---|
+| `story-barbershop-{800,1536}.webp` | Profissional conferindo um tablet na recepção da barbearia | 800×533 / 1536×1024 |
+| `team-salon-{800,1448}.webp` | Duas profissionais organizando o dia no salão com um tablet | 800×600 / 1448×1086 |
+
+Originais PNG preservados em `/workspace/generated_images/exec-0be55153-9841-4687-bb44-64825077bb6f.png` (barbearia) e `/workspace/generated_images/exec-57359248-b697-42cb-a774-06cb6d83460f.png` (salão). Versões WebP codificadas com qualidade 87 e metadados removidos. As legendas e o crédito de banco de imagens foram retirados da landing; os avisos de dados fictícios nas demonstrações continuam presentes.
+
+As referências Unsplash abaixo documentam os assets anteriores e as capas que continuam na demonstração. Elas não se aplicam às duas cenas geradas acima.
 
 ## Marca no cabeçalho — 17 Nov 2026
 
@@ -16,11 +29,13 @@ A landing usa Chivo e Inter em arquivos WOFF2 variáveis locais, sem depender do
 
 Arquivos: `fonts/chivo-latin-variable.woff2` (33.220 bytes) e `fonts/inter-latin-variable.woff2` (48.256 bytes). Licenças SIL Open Font License 1.1 preservadas em `fonts/CHIVO-LICENSE.txt` e `fonts/INTER-LICENSE.txt`.
 
+## Licença dos assets anteriores de banco
+
 Licença: [Unsplash License](https://unsplash.com/license) — uso comercial permitido, inclusive em site de produto, sem exclusividade. A atribuição não é obrigatória, mas vamos registrar fonte e trocar com facilidade pelas fotos reais que o criador do AgendiX enviar.
 
 As imagens originais estão em `/workspace/artifacts/site-v2/stock-photos/`. No repositório, copie versões otimizadas (WebP/AVIF, larguras 800/1600) para `public/landing/`, com este arquivo ao lado. Não use as fotos com marca de fabricante visível.
 
-## Usar na v2
+## Acervo anterior de banco de imagens
 
 | Arquivo local | ID Unsplash (`images.unsplash.com/<id>`) | Uso sugerido | Notas de direção |
 |---|---|---|---|

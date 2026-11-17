@@ -1,5 +1,9 @@
 # Site oficial v2 e simulação
 
+## Imagens de barbearia e salão — 17 Nov 2026
+
+As duas fotos de banco da landing foram substituídas por cenas originais geradas para o AgendiX: gestão com tablet na barbearia e colaboração entre profissionais no salão. Os arquivos responsivos WebP preservam a direção visual da página. As legendas de banco e o crédito Unsplash foram retirados da landing. As pessoas são fictícias, sem representar o criador, familiares ou clientes reais; a origem está em `public/landing/ASSETS.md`. Os antigos assets usados pelas capas da demo foram preservados, assim como os avisos de dados fictícios nas telas do produto. A raiz continua no login e a landing em `/#/landing`. Verificações desta troca: typecheck, lint, build e 2.527 testes aprovados; imagens e recortes conferidos em 320/390/768/1440px. Revisão visual independente das imagens: 9,1/10, sem bloqueadores.
+
 ## História do criador — texto aprovado em 17 Nov 2026
 
 A seção “Nossa história” foi substituída pela narrativa aprovada pelo usuário: Rhian Lepore cresceu entre barbearias e salões em um ambiente familiar ligado à beleza; a percepção do esforço dos pais e da necessidade de gerir custos e entradas motivou a criação do AgendiX. O relato aparece em primeira pessoa, atribuído ao criador, sem listar familiares. As referências anteriores a terceiros e a seus estabelecimentos foram removidas da seção e da documentação pública dos assets.
@@ -49,7 +53,7 @@ O AuthProvider escolhe um provider fictício antes de montar a autenticação re
 
 ## Direção e assets
 
-As fotografias de banco são ilustrativas e não representam o criador do AgendiX, sua família ou clientes reais. Fontes e substituição: `public/landing/ASSETS.md`. Nenhuma foto TRU, Amaro ou GBS. Prints de produto são capturados da UI local da simulação, com dados fictícios. Os prints públicos de produção preservam o prefixo “DEMO ·”; não foram retocados nem usados como prova autenticada. Não foram tentadas novas senhas das contas do seed.
+As cenas de barbearia e salão da landing são geradas e retratam pessoas fictícias; não representam o criador do AgendiX, sua família ou clientes reais. As fotos de banco anteriores ficam apenas no acervo e nas capas da demo. Origem e substituição: `public/landing/ASSETS.md`. Nenhuma foto TRU, Amaro ou GBS. Prints de produto são capturados da UI local da simulação, com dados fictícios. Os prints públicos de produção preservam o prefixo “DEMO ·”; não foram retocados nem usados como prova autenticada. Não foram tentadas novas senhas das contas do seed.
 
 A landing relaxa o viewport apenas enquanto montada; ao sair, restaura o conteúdo anterior. Não altera o viewport do app autenticado. Movimento reduzido, foco visível e navegação por teclado fazem parte da superfície de marketing.
 

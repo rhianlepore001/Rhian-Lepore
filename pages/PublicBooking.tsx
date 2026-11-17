@@ -1,3 +1,4 @@
+import { isDemoMode } from '../lib/demo/mode';
 import { matchesServiceSearch } from '../utils/serviceSearch';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useWhatsAppTemplates } from '../hooks/useWhatsAppTemplates';
@@ -211,7 +212,7 @@ export const PublicBooking: React.FC = () => {
         if (!business) return;
         const html = document.documentElement;
         html.setAttribute('data-theme', themeOverride);
-        html.setAttribute('data-mode', themeOverride === 'beauty' ? 'light' : 'dark');
+        html.setAttribute('data-mode', isDemoMode() || themeOverride === 'beauty' ? 'light' : 'dark');
     }, [business, themeOverride]);
 
     const accentTextOnAccent = isBeauty ? 'text-[var(--color-text)]' : 'text-[var(--color-on-accent)]';
@@ -958,6 +959,7 @@ export const PublicBooking: React.FC = () => {
             </div>
 
             <PublicBusinessHeader
+                showThemeToggle={!isDemoMode()}
                 businessName={business.business_name}
                 logoUrl={business.logo_url}
                 coverPhotoUrl={business.cover_photo_url}

@@ -1,3 +1,4 @@
+import { isDemoMode, getDemoNiche, demoCompanyId } from '../lib/demo/mode';
 import { saveSignupAttribution } from '../lib/signupAttribution';
 import { metaTracker, normalizeMetaPhone } from '../lib/metaTracking';
 import { queryClient } from '@/lib/queryClient';
@@ -56,7 +57,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const currentUserIdRef = useRef<string | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [userType, setUserType] = useState<UserType>('barber');
@@ -647,6 +648,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       {children}
     </AuthContext.Provider>
   );
+};
+
+export const AuthProvider: React.FC<{ children: React.ReactNode; demoRoute?: string }> = ({ children, demoRoute }) => {
+  if (!isDemoMode()) return <RealAuthProvider key="real">{children}</RealAuthProvider>;
+  const niche = getDemoNiche();
+  const unavailable = async (): Promise<never> => { throw new Error('Autenticação indisponível na simulação. Crie sua conta para continuar.'); };
+  const value: AuthContextType = {
+    isAuthenticated: true,
+    user: { id: demoCompanyId(), app_metadata: {}, user_metadata: {}, aud: 'authenticated', created_at: '' } as User,
+    userType: niche, region: 'BR', businessName: niche === 'beauty' ? 'Studio Aurora' : 'Barbearia Corte Fino',
+    fullName: niche === 'beauty' ? 'Marina Costa' : 'Rafael Costa', avatarUrl: null,
+    tutorialCompleted: true, subscriptionStatus: 'active', trialEndsAt: null, isSubscriptionActive: true,
+    role: 'owner', companyId: demoCompanyId(), teamMemberId: null, isDev: false, aiosEnabled: false,
+    setDevUserType: () => undefined, updateRegion: () => undefined, loading: false,
+    login: unavailable, logout: unavailable, register: unavailable, markTutorialCompleted: async () => ({ error: null }),
+  };
+  return <AuthContext.Provider key={demoRoute?.split('/')[2] || niche} value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {

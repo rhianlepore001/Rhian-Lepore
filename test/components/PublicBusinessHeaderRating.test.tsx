@@ -17,4 +17,10 @@ describe('PublicBusinessHeader — nota pública', () => {
     expect(screen.getByText('4.8')).toBeInTheDocument();
     expect(screen.getByText('23 avaliações')).toBeInTheDocument();
   });
+  it('mantém a troca de tema por padrão e permite ocultá-la na simulação', () => {
+    const { rerender } = render(<PublicBusinessHeader businessName="Barbearia Fictícia" />);
+    expect(screen.getByRole('button', { name: 'Ativar modo claro' })).toBeVisible();
+    rerender(<PublicBusinessHeader businessName="Barbearia Fictícia" showThemeToggle={false} />);
+    expect(screen.queryByRole('button', { name: 'Ativar modo claro' })).not.toBeInTheDocument();
+  });
 });

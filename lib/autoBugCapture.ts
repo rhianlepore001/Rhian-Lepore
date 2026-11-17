@@ -1,3 +1,4 @@
+import { isDemoMode } from './demo/mode';
 /**
  * Captura automática de erros → bug_reports.
  *
@@ -86,7 +87,7 @@ interface CaptureInput {
 }
 
 async function capture(input: CaptureInput): Promise<void> {
-  if (inFlight) return;
+  if (isDemoMode() || inFlight) return;
   if (sessionCount >= MAX_PER_SESSION) return;
 
   const message = (input.message || '').trim() || 'Erro inesperado';

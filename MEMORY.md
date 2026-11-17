@@ -9,6 +9,10 @@
 
 ---
 
+## Landing mobile 2.0 (17 Nov 2026)
+
+Prévias das seis telas do AgendiX em molduras de celular, com capturas reais de Barber escuro e Beauty claro e dados fictícios. Azul ardósia na landing e nas molduras. A demo abre em tela cheia em telas estreitas e carrega sob demanda dentro da moldura em telas largas. A incorporação usa `/demo-preview` com `SAMEORIGIN` e mantém a mesma simulação isolada. A landing usa `/landing` e `/#/landing`, com login na raiz para visitantes. Ver `docs/site-v2.md`.
+
 
 ## Imagens próprias da landing (17 Nov 2026)
 

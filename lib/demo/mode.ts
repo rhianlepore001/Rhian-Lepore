@@ -1,5 +1,9 @@
+export function isDemoPreview(): boolean {
+  return typeof window !== 'undefined' && window.location.pathname === '/demo-preview';
+}
+
 export function isDemoMode(hash = typeof window === 'undefined' ? '' : window.location.hash): boolean {
-  return /^#\/demo(?:\/|\?|$)/.test(hash);
+  return isDemoPreview() || /^#\/demo(?:\/|\?|$)/.test(hash);
 }
 
 export function getDemoNiche(): 'barber' | 'beauty' {

@@ -12,7 +12,7 @@ describe('site oficial', () => {
     expect(screen.getByRole('img', { name: 'AgendiX' })).toHaveAttribute('src', '/landing/agendix-logo-header.webp');
     expect(screen.getByRole('link', { name: 'Entrar' })).toHaveAttribute('href', '/#/login');
     expect(screen.getAllByRole('link', { name: /Crie sua conta grátis/ })[0]).toHaveAttribute('href', '/#/register');
-    expect(screen.getByRole('link', { name: 'Criar conta para salão' })).toHaveAttribute('href', '/#/register?type=beauty');
+    expect(screen.getByText('Criar conta para salão')).toHaveAttribute('href', '/#/register?type=beauty');
     expect(screen.getByRole('link', { name: /suporte no WhatsApp/i })).toHaveAttribute('href', expect.stringContaining('wa.me/351927688674'));
   });
   it('preserva Login e Register byte a byte', () => {
@@ -39,8 +39,8 @@ describe('site oficial', () => {
   it('mantém o salão escolhido nos convites de cadastro e demonstração', async () => {
     const { container } = render(<Landing />);
     const choices = screen.getByRole('group', { name: 'Negócio da demonstração' });
-    await userEvent.click(within(choices).getByRole('button', { name: 'Salão' }));
-    expect(within(choices).getByRole('button', { name: 'Salão' })).toHaveAttribute('aria-pressed', 'true');
+    await userEvent.click(within(choices).getByRole('button', { name: 'Salão de beleza' }));
+    expect(within(choices).getByRole('button', { name: 'Salão de beleza' })).toHaveAttribute('aria-pressed', 'true');
     const demoLinks = container.querySelectorAll<HTMLAnchorElement>('a[href^="/#/demo/"]');
     expect(demoLinks.length).toBeGreaterThan(3);
     for (const link of demoLinks) expect(link.getAttribute('href')).toMatch(/^\/#\/demo\/beauty\//);
@@ -53,12 +53,12 @@ describe('site oficial', () => {
     const { container } = render(<Landing />);
     const heroChoices = screen.getByRole('group', { name: 'Seu tipo de negócio' });
     await userEvent.click(within(heroChoices).getByRole('button', { name: 'Salão de beleza' }));
-    expect(container.querySelector('.landing-demo-poster img')).toHaveAttribute('src', '/landing/beauty-booking-1440.webp');
+    expect(container.querySelector('.landing-demo-poster img')).toHaveAttribute('src', '/landing/phone-beauty-booking.webp');
     expect(container.querySelector('.landing-demo-conversion .landing-button')).toHaveAttribute('href', '/#/register?type=beauty');
     const views = screen.getByRole('group', { name: 'Tela da demonstração' });
     await userEvent.click(within(views).getByRole('button', { name: 'Financeiro' }));
     expect(container.querySelector('.landing-demo-task')).toHaveTextContent('saldo ilustrativo do período');
-    expect(container.querySelector('.landing-demo-poster img')).toHaveAttribute('src', '/landing/beauty-finance-1440.webp');
+    expect(container.querySelector('.landing-demo-poster img')).toHaveAttribute('src', '/landing/phone-beauty-finance.webp');
   });
   it('explica o cadastro sem cartão e mantém o prazo da oferta neutro', () => {
     const { container } = render(<Landing />);
@@ -69,13 +69,16 @@ describe('site oficial', () => {
     const { container } = render(<Landing />);
     const business = screen.getByRole('group', { name: 'Negócio da demonstração' });
     const views = screen.getByRole('group', { name: 'Tela da demonstração' });
-    await userEvent.click(within(business).getByRole('button', { name: 'Salão' }));
+    await userEvent.click(within(business).getByRole('button', { name: 'Salão de beleza' }));
     await userEvent.click(within(views).getByRole('button', { name: 'Financeiro' }));
     expect(container.querySelector('iframe')).toBeNull();
     expect(screen.getByRole('link', { name: 'Abrir em tela cheia' })).toHaveAttribute('href', '/#/demo/beauty/financeiro');
     await userEvent.click(screen.getByRole('button', { name: 'Explorar a simulação' }));
-    expect(screen.getByTitle('Simulação interativa do salão: Financeiro')).toHaveAttribute('src', '/#/demo/beauty/financeiro');
+    expect(screen.getByTitle('Simulação interativa do salão: Financeiro')).toHaveAttribute('src', '/demo-preview#/demo/beauty/financeiro');
     await userEvent.click(within(views).getByRole('button', { name: 'Agendamento online' }));
-    expect(screen.getByTitle('Simulação interativa do salão: Agendamento online')).toHaveAttribute('src', '/#/demo/beauty/book/simulacao');
+    expect(screen.getByTitle('Simulação interativa do salão: Agendamento online')).toHaveAttribute('src', '/demo-preview#/demo/beauty/book/simulacao');
+    await userEvent.click(screen.getByRole('button', { name: 'Fechar a simulação' }));
+    expect(container.querySelector('iframe')).toBeNull();
+    expect(container.querySelector('.landing-demo-poster img')).toHaveAttribute('src', '/landing/phone-beauty-booking.webp');
   });
 });

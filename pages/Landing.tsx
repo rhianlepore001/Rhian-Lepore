@@ -215,16 +215,28 @@ export const Landing = () => {
           <div className="landing-phone-stage landing-hero-product">
             <BusinessSelector niche={niche} label="Seu tipo de negócio" onChange={chooseNiche} />
             <a href={`/#/demo/${niche}`} className="landing-product-stage landing-product-stage-hero" aria-label={`Experimentar o painel de início do AgendiX: ${businesses[niche]}`}>
-              <img
-                className="landing-atlas-hero"
-                src={`/landing/atlas/hero-inicio-agendamento-${atlasSuffix[niche]}.webp`}
-                alt={`Painel de início e agendamento online do AgendiX em celulares, com dados fictícios de ${businesses[niche]}`}
-                width="2080"
-                height="2080"
-                decoding="async"
-                loading="eager"
-                fetchPriority="high"
-              />
+              <picture className="landing-atlas-hero-picture">
+                <source
+                  media="(max-width: 639px)"
+                  srcSet={`/landing/atlas/inicio-${atlasSuffix[niche]}-640.webp 640w, /landing/atlas/inicio-${atlasSuffix[niche]}.webp 1120w`}
+                  sizes="(max-width: 639px) min(90vw, 355px)"
+                />
+                <source
+                  media="(min-width: 640px)"
+                  srcSet={`/landing/atlas/hero-inicio-agendamento-${atlasSuffix[niche]}-1040.webp 1040w, /landing/atlas/hero-inicio-agendamento-${atlasSuffix[niche]}-1560.webp 1560w, /landing/atlas/hero-inicio-agendamento-${atlasSuffix[niche]}.webp 2080w`}
+                  sizes="(min-width: 1024px) 460px, 45vw"
+                />
+                <img
+                  className="landing-atlas-hero"
+                  src={`/landing/atlas/hero-inicio-agendamento-${atlasSuffix[niche]}.webp`}
+                  alt={`Painel de início e agendamento online do AgendiX em celulares, com dados fictícios de ${businesses[niche]}`}
+                  width="2080"
+                  height="2080"
+                  decoding="async"
+                  loading="eager"
+                  fetchPriority="high"
+                />
+              </picture>
               <span className="landing-hero-screen-label">Início e agendamento online · Dados fictícios <ArrowRight size={15} aria-hidden="true" /></span>
             </a>
           </div>
@@ -258,9 +270,11 @@ export const Landing = () => {
                   <PhoneImage niche={niche} view={view} alt={`${activeView.label} do AgendiX, no tema ${niche === 'barber' ? 'Barber' : 'Beauty'}, com dados fictícios`} />
                 </div>
                 {interactive && (
-                  <PhoneFrame niche={niche}>
-                    <iframe key={demoHref} title={`Simulação interativa ${niche === 'barber' ? 'da barbearia' : 'do salão'}: ${activeView.label}`} src={`/demo-preview${demoHref.slice(1)}`} sandbox="allow-scripts allow-same-origin allow-forms" />
-                  </PhoneFrame>
+                  <div className="landing-demo-interactive">
+                    <PhoneFrame niche={niche}>
+                      <iframe key={demoHref} title={`Simulação interativa ${niche === 'barber' ? 'da barbearia' : 'do salão'}: ${activeView.label}`} src={`/demo-preview${demoHref.slice(1)}`} sandbox="allow-scripts allow-same-origin allow-forms" />
+                    </PhoneFrame>
+                  </div>
                 )}
               </div>
               <figcaption>{businesses[niche]} · Dados fictícios</figcaption>

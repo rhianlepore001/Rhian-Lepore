@@ -2,7 +2,7 @@
 
 html[data-surface=marketing], html[data-surface=marketing] body { background:#fff; color:#202833; }
 html[data-surface=marketing] { scroll-padding-top:112px; }
-.landing { --lp-ink:#202833; --lp-muted:#536174; --lp-rule:#dce0e4; --lp-surface:#f4f6f7; --lp-accent:#536174; background:#fff; color:var(--lp-ink); font:400 16px/1.7 'Agendix Inter',sans-serif; padding-bottom:0; overflow:clip; }
+.landing { --lp-ink:#202833; --lp-muted:#536174; --lp-rule:#dce0e4; --lp-surface:#f4f6f7; --lp-accent:#536174; --atlas-phone-fill:0.76; --phone-visible-width:268px; --demo-phone-width:290px; background:#fff; color:var(--lp-ink); font:400 16px/1.7 'Agendix Inter',sans-serif; padding-bottom:0; overflow:clip; }
 .landing *, .landing *::before, .landing *::after { box-sizing:border-box; }
 .landing ::selection { background:var(--lp-accent); color:#fff; }
 .landing a { color:inherit; text-decoration:none; }
@@ -327,8 +327,9 @@ html[data-surface=marketing] { scroll-padding-top:112px; }
 .landing .landing-business-selector button[aria-pressed=true]:focus-visible { outline-color:#fff; }
 .landing-product-stage { display:grid; justify-items:center; gap:4px; width:min(100%, 330px); border-radius:32px; }
 .landing-product-stage-hero { width:min(100%, 460px); border-radius:20px; }
+.landing-atlas-hero-picture { display:contents; }
 .landing-atlas-hero { display:block; width:100%; max-width:460px; height:auto; aspect-ratio:1 / 1; object-fit:contain; }
-.landing-atlas-phone { display:block; width:100%; max-width:300px; height:auto; aspect-ratio:1120 / 2080; object-fit:contain; margin-inline:auto; }
+.landing-atlas-phone { display:block; width:min(100%, calc(var(--phone-visible-width) / var(--atlas-phone-fill))); height:auto; aspect-ratio:1120 / 2080; object-fit:contain; margin-inline:auto; }
 .landing-hero-screen-label {
   display:flex;
   justify-content:center;
@@ -345,17 +346,16 @@ html[data-surface=marketing] { scroll-padding-top:112px; }
   --phone-bg:#e5e5e5;
   --phone-ink:#141414;
   position:relative;
-  width:100%;
+  width:min(100%, var(--phone-visible-width));
   min-width:0;
-  padding:8px;
-  border-radius:clamp(28px,3.2vw,38px);
-  background:linear-gradient(145deg,#5a6575 0%,#222a35 28%,#181e27 72%,#455061 100%);
+  padding:10px;
+  border-radius:clamp(32px,3.6vw,42px);
+  background:linear-gradient(155deg,#2e343e 0%,#14181f 34%,#0b0d12 72%,#262c35 100%);
   box-shadow:
-    inset 0 0 0 1px #ffffff30,
-    inset 0 0 0 2.5px #0c1016,
-    0 34px 64px -22px #0f172a66,
-    0 14px 28px -12px #0f172a40,
-    0 2px 6px -1px #0f172a24;
+    inset 0 0 0 1px #ffffff24,
+    inset 0 0 0 2.5px #050608,
+    0 28px 56px -14px #0f172a6b,
+    0 10px 24px -8px #0f172a3d;
 }
 .landing-phone[data-niche=beauty] { --phone-bg:#ebe5f5; --phone-ink:#1e1633; }
 .landing-phone::before, .landing-phone::after { display:none; }
@@ -365,7 +365,7 @@ html[data-surface=marketing] { scroll-padding-top:112px; }
 .landing-phone-btn-power {
   position:absolute;
   width:3px;
-  background:linear-gradient(180deg,#647082,#27303c,#515c6d);
+  background:linear-gradient(180deg,#3d4450,#181c22,#323844);
   pointer-events:none;
 }
 .landing-phone-btn-mute { left:-3px; top:16%; height:20px; border-radius:2px 0 0 2px; }
@@ -378,9 +378,9 @@ html[data-surface=marketing] { scroll-padding-top:112px; }
   flex-direction:column;
   overflow:hidden;
   isolation:isolate;
-  border-radius:clamp(21px,2.5vw,30px);
+  border-radius:clamp(24px,2.8vw,33px);
   background:var(--phone-bg);
-  box-shadow:inset 0 0 0 2px #090b0f;
+  box-shadow:inset 0 0 0 2px #050608;
 }
 .landing-phone-screen::after {
   content:'';
@@ -537,17 +537,25 @@ html[data-surface=marketing] { scroll-padding-top:112px; }
 .landing-demo-start .landing-button:hover { background:#e5edf6; }
 .landing-demo-start .landing-text-link { color:#e5ebf3; }
 .landing-demo-start .landing-demo-mobile-action { display:none; }
-.landing-demo-preview { width:min(100%, 348px); justify-self:center; min-width:0; margin:0; }
+.landing-demo-preview { width:min(100%, calc(var(--demo-phone-width) / var(--atlas-phone-fill))); justify-self:center; min-width:0; margin:0; }
 .landing-demo-preview figcaption { color:#e5ebf3; }
-.landing-demo-preview .landing-phone { box-shadow:inset 0 0 0 1px #ffffff2b, inset 0 0 0 2.5px #0c1016, 0 32px 60px -18px #070d17e0, 0 12px 24px -10px #070d1790; }
-.landing-demo-poster { display:grid; justify-items:center; width:100%; }
+.landing-demo-frame {
+  --phone-visible-width:var(--demo-phone-width);
+  display:grid;
+  grid-template-areas:"stage";
+  place-items:center;
+  width:100%;
+  min-height:calc(var(--demo-phone-width) / var(--atlas-phone-fill) * 2080 / 1120);
+}
+.landing-demo-preview .landing-phone { width:min(100%, var(--demo-phone-width)); box-shadow:inset 0 0 0 1px #ffffff20, inset 0 0 0 2.5px #050608, 0 28px 56px -14px #040812e0, 0 10px 24px -8px #04081299; }
+.landing-demo-poster, .landing-demo-interactive { grid-area:stage; display:grid; justify-items:center; width:100%; }
 .landing-demo-frame iframe { position:absolute; inset:0; width:100%; height:100%; border:0; display:block; }
 .landing-demo-frame[data-interactive=true] .landing-demo-poster { display:none; }
 .landing-demo-frame iframe:focus-visible { outline-offset:-3px; }
 
 .landing-feature-shot { display:grid; justify-items:center; margin:0; padding:25px 12px 17px; }
-.landing-feature-shot .landing-phone, .landing-team-operation .landing-phone { max-width:268px; }
-.landing-feature-shot .landing-atlas-phone, .landing-team-operation .landing-atlas-phone { max-width:288px; }
+.landing-feature-shot .landing-phone, .landing-team-operation .landing-phone { max-width:var(--phone-visible-width); }
+.landing-feature-shot .landing-atlas-phone, .landing-team-operation .landing-atlas-phone { width:min(100%, calc(var(--phone-visible-width) / var(--atlas-phone-fill))); }
 .feature-1 .landing-feature-shot, .feature-3 .landing-feature-shot { grid-column:1; grid-row:1; }
 .landing-team-operation {
   grid-column:1 / -1;
@@ -582,6 +590,7 @@ html[data-surface=marketing] { scroll-padding-top:112px; }
   .landing-demo-view-tabs button { padding-inline:9px; }
 }
 @media (max-width:760px) {
+  .landing { --phone-visible-width:254px; --demo-phone-width:254px; }
   .landing-hero-layout { grid-template-columns:1fr; gap:24px; }
   .landing-hero h1 { margin-top:14px; max-width:16ch; text-wrap:initial; }
   .landing-hero-copy > p { margin-top:14px; }
@@ -599,10 +608,16 @@ html[data-surface=marketing] { scroll-padding-top:112px; }
   .landing-demo-controls .landing-demo-task { min-height:0; }
   .landing-demo-start { margin-top:13px; }
   .landing-demo-start .landing-demo-mobile-action { width:100%; justify-content:space-between; gap:8px; }
-  .landing-demo-preview { width:min(100%, 304px); }
+  .landing-demo-preview { width:min(100%, 334px); }
+  .landing-demo-frame { min-height:0; }
   .landing-feature-shot .landing-phone, .landing-team-operation .landing-phone, .landing-team-operation figure { max-width:254px; }
+  .landing-team-operation figure:has(.landing-atlas-phone) { width:min(100%, calc(var(--phone-visible-width) / var(--atlas-phone-fill))); max-width:none; }
   .landing-feature-shot { padding:16px 12px 12px; }
   .landing-team-operation { grid-template-columns:1fr; gap:14px; padding:12px 14px 15px; }
+}
+@media (max-width:639px) {
+  .landing-product-stage-hero { width:min(100%, calc(var(--phone-visible-width) / var(--atlas-phone-fill))); }
+  .landing-atlas-hero { max-width:calc(var(--phone-visible-width) / var(--atlas-phone-fill)); aspect-ratio:1120 / 2080; }
 }
 @media (max-width:380px) {
   .landing-hero { padding-top:19px; }

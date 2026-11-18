@@ -137,7 +137,7 @@ describe('HourlyResults — gestor', () => {
     const { container } = mount();
     await waitFor(() => expect(wizardList).toHaveBeenCalledWith('c1'));
     expect(screen.getByRole('heading', { name: 'Resultados por hora', level: 1 })).toBeInTheDocument();
-    expect(screen.getByText(/Aqui você vê se cada hora aberta paga as contas/)).toBeInTheDocument();
+    expect(await screen.findByText(/Aqui você vê se cada hora aberta paga as contas/)).toBeInTheDocument();
     expect(screen.getByText(/Não é o caixa do dia/i)).toBeInTheDocument();
     expect(screen.getAllByText(/contas do mês/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/horários/i).length).toBeGreaterThan(0);
@@ -156,7 +156,7 @@ describe('HourlyResults — gestor', () => {
     state.data = { month: '2026-11-01', role: 'owner', total: { ...metrics, available_minutes: 600, worked_minutes: 0 }, professionals: [] };
     const { container } = mount();
     await waitFor(() => expect(wizardList).toHaveBeenCalledWith('c1'));
-    expect(screen.getByText(/Ainda não há atendimento fechado neste período/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Ainda não há atendimento fechado neste período/i)).toBeInTheDocument();
     expect(screen.queryByText(/contas do mês.*Falta|Falta.*contas do mês/i)).not.toBeInTheDocument();
     noZeroHero(container);
   });
@@ -166,7 +166,7 @@ describe('HourlyResults — gestor', () => {
     state.data = { month: '2026-11-01', role: 'owner', total: { ...metrics, available_minutes: 600, worked_minutes: 0 }, professionals: [] };
     const { container } = mount();
     await waitFor(() => expect(wizardList).toHaveBeenCalledWith('c1'));
-    expect(screen.getByText(/Aqui você vê se cada hora aberta paga as contas/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Aqui você vê se cada hora aberta paga as contas/i)).toBeInTheDocument();
     expect(screen.getAllByText('Falta').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText(/Horários/i).length).toBeGreaterThan(0);
     expect(screen.queryByText(/Ainda não há atendimento fechado neste período/i)).not.toBeInTheDocument();

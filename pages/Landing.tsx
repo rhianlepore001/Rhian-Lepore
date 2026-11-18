@@ -69,7 +69,7 @@ const PhoneFrame = ({ niche, children }: { niche: Niche; children: React.ReactNo
 );
 
 const PhoneImage = ({ niche, view, alt, eager }: { niche: Niche; view: ProductView; alt: string; eager?: boolean }) => (
-  <img src={`/landing/phone-${niche}-${view}.webp`} alt={alt} width="780" height="1620"
+  <img src={`/landing/phone-${niche}-${view}.webp`} alt={alt} width="780" height="1588"
     decoding="async" loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : undefined} />
 );
 

@@ -231,44 +231,55 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
 
             {/* Galeria de Fotos — visível em todos os tamanhos */}
             {gallery.length > 0 && (
-                <div className={`relative border-t ${colors.divider} pt-0`}>
-                    {/* Setas de navegação */}
-                    <button
-                        onClick={() => scrollGallery('left')}
-                        className={`absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center shadow-lg transition-all ${colors.card} ${colors.border} ${colors.text} rounded-full hover:brightness-110`}>
-                        <ChevronLeft className="w-4 h-4" />
-                    </button>
-                    <button
-                        onClick={() => scrollGallery('right')}
-                        className={`absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center shadow-lg transition-all ${colors.card} ${colors.border} ${colors.text} rounded-full hover:brightness-110`}>
-                        <ChevronRight className="w-4 h-4" />
-                    </button>
-
-                    <div
-                        ref={galleryRef}
-                        className="flex gap-1.5 overflow-x-auto scrollbar-hide px-4 py-3"
-                        style={{ scrollSnapType: 'x mandatory' }}>
-                        {gallery.map((item) => (
-                            <div
-                                key={item.id}
-                                className={`flex-shrink-0 w-[140px] md:w-[200px] h-[90px] md:h-[130px] overflow-hidden rounded-lg cursor-pointer group`}
-                                style={{ scrollSnapAlign: 'start' }}>
-                                <img
-                                    src={item.image_url}
-                                    loading="lazy"
-                                    decoding="async"
-                                    width={400}
-                                    height={400}
-                                    alt="Portfólio"
-                                    className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700"
-                                />
-                            </div>
-                        ))}
+                <div className={`border-t ${colors.divider}`}>
+                    <div className="px-4 pt-3 pb-1 flex items-center justify-between">
+                        <span
+                            data-testid="public-gallery-heading"
+                            className={`text-xs font-bold uppercase tracking-[0.2em] ${colors.textSecondary}`}
+                        >
+                            Portfólio
+                        </span>
                     </div>
 
-                    {/* Label da galeria */}
-                    <div className={`absolute top-4 right-12 text-xs font-bold uppercase tracking-[0.2em] ${colors.textMuted}`}>
-                        Portfólio
+                    <div className="relative">
+                        {/* Setas de navegação */}
+                        <button
+                            type="button"
+                            aria-label="Fotos anteriores do portfólio"
+                            onClick={() => scrollGallery('left')}
+                            className={`absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center shadow-lg transition-all ${colors.card} ${colors.border} ${colors.text} rounded-full hover:brightness-110`}>
+                            <ChevronLeft className="w-4 h-4" />
+                        </button>
+                        <button
+                            type="button"
+                            aria-label="Próximas fotos do portfólio"
+                            onClick={() => scrollGallery('right')}
+                            className={`absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center shadow-lg transition-all ${colors.card} ${colors.border} ${colors.text} rounded-full hover:brightness-110`}>
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+
+                        <div
+                            ref={galleryRef}
+                            data-testid="public-gallery-track"
+                            className="flex gap-1.5 overflow-x-auto scrollbar-hide px-4 pt-1 pb-3"
+                            style={{ scrollSnapType: 'x mandatory' }}>
+                            {gallery.map((item) => (
+                                <div
+                                    key={item.id}
+                                    className={`flex-shrink-0 w-[140px] md:w-[200px] h-[90px] md:h-[130px] overflow-hidden rounded-lg cursor-pointer group`}
+                                    style={{ scrollSnapAlign: 'start' }}>
+                                    <img
+                                        src={item.image_url}
+                                        loading="lazy"
+                                        decoding="async"
+                                        width={400}
+                                        height={400}
+                                        alt="Portfólio"
+                                        className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700"
+                                    />
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             )}

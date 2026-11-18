@@ -87,7 +87,10 @@ export const Clients: React.FC = () => {
   const [fetchError, setFetchError] = useState(false);
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   const [showModal, setShowModal] = useState(false);
-  const [filterType, setFilterType] = useState<ClientFilter>('Todos');
+  const initialFilter = searchParams.get('filter');
+  const [filterType, setFilterType] = useState<ClientFilter>(
+    FILTERS.includes(initialFilter as ClientFilter) ? (initialFilter as ClientFilter) : 'Todos',
+  );
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');

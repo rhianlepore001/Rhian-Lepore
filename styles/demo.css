@@ -1,168 +1,39 @@
-.demo-shell { --demo-accent:#536174; min-height:100svh; background:var(--color-bg); color:var(--color-text); }
-.demo-shell > :is(.demo-header, .demo-toolbar, .demo-nav-wrap, .demo-tour) {
- --color-bg:#f4f6f8;
- --color-card:#fff;
- --color-surface:#e9edf1;
- --color-border:#dce0e4;
- --color-accent:var(--demo-accent);
- --color-text:#202833;
- --color-text-secondary:#536174;
- color:var(--color-text);
- background:var(--color-bg);
-}
-.demo-shell[data-embedded] > .demo-content { padding:12px; }
-.demo-header { display:flex; align-items:center; gap:16px; padding:12px max(24px,calc((100vw - 1320px)/2)); border-bottom:1px solid var(--color-border); flex-wrap:wrap; }
-.demo-brand { font:900 27px Chivo,sans-serif; letter-spacing:-.04em; }
-.demo-badge { font-size:12px; border:1px solid var(--color-border); padding:5px 9px; border-radius:6px; }
-.demo-niches { display:flex; gap:4px; margin-left:auto; }
-.demo-niches a,.demo-nav a,.demo-toolbar button,.demo-tour button { min-height:44px; display:inline-flex; align-items:center; padding:10px 16px; border-radius:8px; font-size:14px; }
-.demo-niches a[aria-current],.demo-nav a[aria-current] { background:var(--demo-accent); color:#fff; font-weight:600; }
-.demo-signup { background:var(--color-text); color:var(--color-bg); padding:13px 18px; font-size:14px; border-radius:8px; font-weight:600; }
-.demo-toolbar { display:flex; justify-content:space-between; align-items:center; gap:16px; max-width:1320px; margin:auto; padding:22px 24px 14px; }
-.demo-toolbar strong { display:block; font:700 20px Chivo,sans-serif; }
-.demo-toolbar span { display:block; color:var(--color-text-secondary); font-size:13px; margin-top:5px; }
-.demo-toolbar .demo-badge { display:inline-block; margin:4px 0 0; font-size:12px; line-height:1; }
-.demo-toolbar button,.demo-tour button { border:1px solid var(--color-border); }
-.demo-nav { display:flex; min-width:0; flex:1; gap:4px; overflow-x:auto; max-width:1320px; margin:auto; padding:0 24px 16px; border-bottom:1px solid var(--color-border); }
-.demo-nav-wrap { position:relative; display:flex; align-items:flex-start; max-width:1320px; margin:auto; border-bottom:1px solid var(--color-border); }
-.demo-nav-wrap .demo-nav { border-bottom:0; }
-.demo-nav-wrap.has-overflow::after { content:""; position:absolute; right:44px; top:0; height:44px; width:40px; pointer-events:none; background:linear-gradient(to right,transparent,var(--color-bg)); }
-.demo-nav-wrap.at-end::after { display:none; }
-.demo-nav-scroll { flex:none; width:44px; height:44px; display:flex; align-items:center; justify-content:center; background:var(--color-card); border:1px solid var(--color-border); border-radius:8px; color:var(--demo-accent); }
-.demo-content [data-testid="agenda-day-scroller"]>div:last-child::before { content:""; position:absolute; right:0; top:0; bottom:0; width:52px; z-index:1; pointer-events:none; background:linear-gradient(to right,transparent 0%,var(--color-bg) 70%); }
-.demo-content [data-testid="agenda-day-scroller"]>div:last-child::after { content:""; position:absolute; right:10px; top:25px; width:9px; height:9px; border-top:2px solid var(--demo-accent); border-right:2px solid var(--demo-accent); transform:rotate(45deg); z-index:1; pointer-events:none; }
-.demo-content [data-testid="agenda-month-trigger"],.demo-content [data-testid="agenda-hoje-chip"] { min-height:44px; color:var(--color-text); }
-.demo-content header:has(#btn-new-appointment) button:not(#btn-new-appointment) { color:var(--color-text); border-color:var(--color-border-strong); background:var(--color-card); }
-.demo-content [data-agenda-slot] > button[aria-label^="Novo agendamento"] span { opacity:1; color:var(--color-accent); border-color:var(--color-accent-border); border-width:1.5px; border-style:solid; background:var(--color-card); width:1.85rem; height:1.85rem; }
-.demo-nav a { white-space:nowrap; }
-.demo-content { max-width:1320px; margin:auto; padding:24px; }
-.demo-content [data-testid="agenda-resource-grid"] [data-agenda-slot]:not([data-off-hours]) { background:var(--color-bg); }
-.demo-loading { padding:48px 24px; }
-.demo-tour { max-width:1272px; margin:16px auto 0; padding:20px; background:var(--color-surface); border-radius:12px; display:flex; align-items:center; gap:24px; }
-.demo-tour span { color:var(--color-text-secondary); font-size:13px; }
-.demo-tour h2 { font:700 20px Chivo,sans-serif; margin:6px 0; }
-.demo-tour p { font-size:14px; line-height:1.5; max-width:72ch; }
-.demo-tour-actions { display:flex; gap:8px; flex-shrink:0; }
-.demo-shell a,.demo-shell button { transition:background-color .15s ease,filter .15s ease; }
-.demo-shell a:hover,.demo-shell button:hover { filter:brightness(.9); }
-.demo-shell :focus-visible { outline:2px solid var(--color-accent); outline-offset:3px; }
-@media(max-width:640px) {
- .demo-header { gap:6px; padding:6px 12px; }
- .demo-brand { font-size:21px; }
- .demo-niches { margin-left:auto; }
- .demo-niches a { padding:10px 7px; font-size:12px; }
- .demo-signup { padding:12px 8px; font-size:12px; white-space:nowrap; }
- .demo-toolbar { padding:6px 12px; align-items:center; }
- .demo-toolbar strong { display:inline; font-size:16px; }
- .demo-toolbar .demo-badge { margin:0 0 0 6px; padding:3px 6px; }
- .demo-toolbar span { font-size:12px; margin-top:2px; }
- .demo-toolbar button { padding:8px 10px; font-size:12px; white-space:nowrap; }
- .demo-nav { padding:0 12px 4px; }
- .demo-content { padding:8px 12px; }
- .demo-content[data-demo-screen=agenda]>div { gap:8px; }
- .demo-content[data-demo-screen=agenda]>div>div:first-child { padding-top:0; }
- .demo-content[data-demo-screen=agenda]>div>div:first-child>header { gap:0; padding-bottom:0; }
- .demo-content[data-demo-screen=agenda]>div>div:first-child>header>div:first-child { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
- .demo-content[data-demo-screen=agenda] header:has(#btn-new-appointment)>div:last-child>div { flex-wrap:nowrap; gap:6px; }
- .demo-content[data-demo-screen=agenda] header:has(#btn-new-appointment) button:not(#btn-new-appointment) { flex:0 0 44px; width:44px; padding:0; }
- .demo-content #btn-new-appointment { padding-inline:10px; }
- .demo-tour { margin:12px; flex-direction:column; align-items:flex-start; gap:12px; }
- .demo-tour-actions { flex-wrap:wrap; }
-}
-@media(prefers-reduced-motion:reduce) { .demo-shell * { animation:none!important; transition:none!important; scroll-behavior:auto!important; } }
+.demo-shell { --demo-bar-height:48px; --demo-ink:#202833; --demo-ink-soft:#2c3747; --demo-line:#ffffff22; --demo-text:#f4f6f7; --demo-muted:#c3ccd8; min-height:100svh; background:var(--color-bg); color:var(--color-text); }
+.demo-shell[data-embedded] { --demo-bar-height:0px; }
+.demo-shell *, .demo-shell *::before, .demo-shell *::after { box-sizing:border-box; }
 
-.demo-shell #booking-root .select-none.pointer-events-none.overflow-hidden { display:none; }
-.demo-content[data-demo-screen="financeiro"] .text-xs { font-size:0.8125rem; line-height:1.25rem; }
+.demo-bar { position:fixed; inset:0 0 auto 0; z-index:60; display:flex; align-items:center; gap:12px; height:var(--demo-bar-height); padding:0 clamp(10px,1.8vw,24px); background:var(--demo-ink); color:var(--demo-text); border-bottom:1px solid var(--demo-line); font:500 13px/1.2 'Agendix Inter',Inter,sans-serif; }
+.demo-bar a { color:inherit; text-decoration:none; }
+.demo-bar :focus-visible { outline:2px solid #fff; outline-offset:2px; }
+.demo-bar-back { display:inline-flex; align-items:center; gap:6px; min-height:40px; padding:0 6px 0 2px; border-radius:8px; font:800 15px/1 'Agendix Chivo',Chivo,sans-serif; letter-spacing:-.03em; white-space:nowrap; }
+.demo-bar-back:hover { background:var(--demo-ink-soft); }
+.demo-bar-center { display:flex; align-items:center; gap:10px; margin-inline:auto; min-width:0; }
+.demo-badge { font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--demo-muted); border:1px solid var(--demo-line); padding:4px 8px; border-radius:999px; white-space:nowrap; }
+.demo-niches { display:flex; gap:2px; padding:2px; border-radius:999px; background:var(--demo-ink-soft); }
+.demo-niches a { display:inline-flex; align-items:center; gap:6px; min-height:34px; padding:0 12px; border-radius:999px; font-weight:600; color:var(--demo-muted); white-space:nowrap; transition:background-color .15s ease,color .15s ease; }
+.demo-niches a:hover { color:#fff; }
+.demo-niches a[aria-current] { background:#fff; color:var(--demo-ink); }
+.demo-bar-note { color:var(--demo-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.demo-signup { display:inline-flex; align-items:center; min-height:36px; padding:0 14px; border-radius:8px; background:#fff; color:var(--demo-ink); font-weight:700; white-space:nowrap; transition:background-color .15s ease; }
+.demo-signup:hover { background:#e3e9ef; }
 
-.demo-shell aside nav p.opacity-70 { opacity:1; }
-.demo-content[data-demo-screen="configuracoes/equipe"] .opacity-40:has(label) { opacity:1; }
+.demo-product { position:relative; }
+.demo-booking { min-height:100svh; padding-top:var(--demo-bar-height); }
+.demo-loading { padding:48px 24px; color:var(--color-text-secondary); }
 
-.demo-shell #booking-root .group:has(> div > div > div > h4) > div:first-child { display:none; }
-.demo-shell #booking-root .group:has(> div > div > div > h4) { border:1px solid var(--color-border); }
+.demo-unavailable { max-width:520px; margin:clamp(24px,8vh,72px) auto; padding:28px; border:1px solid var(--color-border); border-radius:16px; background:var(--color-card); text-align:center; }
+.demo-unavailable h2 { margin:0; font-size:22px; line-height:1.25; }
+.demo-unavailable p { margin:10px 0 0; color:var(--color-text-secondary); font-size:14px; line-height:1.6; }
+.demo-unavailable div { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:22px; }
+.demo-unavailable a { display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:0 18px; border-radius:10px; border:1px solid var(--color-border); color:var(--color-text); font-weight:600; font-size:14px; text-decoration:none; }
+.demo-unavailable a:last-child { background:var(--color-accent); color:var(--color-on-accent,#fff); border-color:transparent; }
 
-.demo-shell #booking-root .container:has(h1) {
- margin-top:0;
- padding-top:24px;
- background:var(--color-card);
+@media (max-width:760px) {
+  .demo-bar { gap:8px; padding:0 8px 0 4px; }
+  .demo-bar-back span, .demo-badge, .demo-bar-note { display:none; }
+  .demo-bar-back { min-width:40px; justify-content:center; padding:0; }
+  .demo-niches a { padding:0 10px; font-size:12px; }
+  .demo-signup { padding:0 10px; font-size:12px; }
 }
-.demo-shell #booking-root .container:has(h1) h1 {
- color:var(--color-text);
- font-size:clamp(28px,3.4vw,46px);
- line-height:1.12;
- overflow-wrap:anywhere;
-}
-.demo-shell #booking-root .container:has(h1) > div { align-items:center; }
-.demo-shell #booking-root .container:has(h1) > div > div:first-child > div:first-child {
- width:96px;
- height:96px;
-}
-.demo-shell #booking-root .container:has(h1) > div > div:nth-child(2) { padding-bottom:0; }
-.demo-content .agenda-event-chip.agenda-status-completed {
- background:color-mix(in srgb,var(--color-success) 16%,var(--color-card));
-}
-.demo-content .agenda-event-chip.agenda-status-overdue {
- background:color-mix(in srgb,var(--color-warning) 16%,var(--color-card));
-}
-.demo-content .agenda-event-chip.agenda-status-cancelled {
- background:color-mix(in srgb,var(--color-danger) 12%,var(--color-card));
-}
-.demo-content .agenda-event-chip[data-frees-slot=true]:not(.agenda-status-cancelled) {
- background:color-mix(in srgb,var(--color-text-muted) 15%,var(--color-card));
-}
-.demo-content[data-demo-screen="financeiro"] [data-testid="finance-kpi"] p:last-child {
- white-space:normal;
-}
-@media(max-width:640px) {
- .demo-shell #booking-root .container:has(h1) { padding-top:20px; }
- .demo-shell #booking-root .container:has(h1) > div {
-  flex-direction:row;
-  align-items:center;
-  gap:16px;
- }
- .demo-shell #booking-root .container:has(h1) > div > div:first-child > div:first-child {
-  width:64px;
-  height:64px;
- }
- .demo-shell #booking-root .container:has(h1) h1 { font-size:26px; }
- .demo-content[data-demo-screen=agenda] header:has(#btn-new-appointment)>div:last-child>div {
-  width:100%;
- }
- .demo-content #btn-new-appointment {
-  min-width:0;
-  flex:1 1 auto;
-  gap:4px;
-  padding-inline:6px;
-  font-size:12px;
- }
- .demo-content #btn-new-appointment svg { width:15px; flex-shrink:0; }
-}
-
-.demo-toolbar strong { display:inline; }
-.demo-toolbar .demo-badge { margin-left:8px; }
-.demo-toolbar { padding-block:16px 10px; }
-.demo-shell #booking-root [data-testid="group-booking-entry"] { display:none; }
-.demo-shell #booking-root .space-y-8:has([data-testid="group-booking-entry"]) {
- display:flex;
- flex-direction:column;
- gap:18px;
-}
-.demo-shell #booking-root .space-y-8:has([data-testid="group-booking-entry"]) > * { margin-block:0; }
-.demo-shell #booking-root .container:has(> .sticky) { padding-top:16px; }
-.demo-shell #booking-root .container > .sticky { margin-bottom:18px; }
-.demo-shell[data-embedded] #booking-root div:has(> .container h1) > div:first-child:has(> img) { height:80px; min-height:80px; }
-.demo-shell[data-embedded] #booking-root .container:has(h1) { padding-block:12px; }
-.demo-shell[data-embedded] #booking-root .container:has(> .sticky) { padding-top:8px; }
-.demo-shell[data-embedded] #booking-root .container > .sticky { margin-bottom:8px; }
-.demo-shell[data-embedded] #booking-root .space-y-8:has([data-testid="group-booking-entry"]) { gap:10px; }
-@media(min-width:768px) {
- .demo-shell #booking-root div:has(> .container h1) > div:first-child:has(> img) {
-  height:80px;
-  min-height:80px;
- }
- .demo-shell #booking-root .container:has(h1) { padding-block:8px; }
- .demo-shell #booking-root .container:has(h1) > div > div:first-child > div:first-child {
-  width:64px;
-  height:64px;
- }
- .demo-shell #booking-root .container:has(h1) h1 { font-size:36px; }
-}
+@media (min-width:761px) and (max-width:1100px) { .demo-bar-note { display:none; } }
+@media (prefers-reduced-motion:reduce) { .demo-shell * { animation:none!important; transition:none!important; scroll-behavior:auto!important; } }

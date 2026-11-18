@@ -3,38 +3,124 @@ import { demoCompanyId } from './mode';
 export type DemoRow = Record<string, any>;
 export type DemoTables = Record<string, DemoRow[]>;
 const id = (niche: string, n: number) => `d0000000-0000-4000-${niche === 'beauty' ? '8002' : '8001'}-${String(n).padStart(12, '0')}`;
+export const DEMO_TIME_ZONE = 'America/Sao_Paulo';
+
+/** Gerador determinístico: a simulação precisa ser igual em cada recarga e em cada captura. */
+const random = (seed: number) => () => {
+  seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+  return seed / 0x7fffffff;
+};
+
+const dayString = (date: Date) => new Intl.DateTimeFormat('en-CA', { timeZone: DEMO_TIME_ZONE }).format(date);
+const shiftDay = (day: string, offset: number) => {
+  const date = new Date(`${day}T12:00:00-03:00`);
+  date.setUTCDate(date.getUTCDate() + offset);
+  return dayString(date);
+};
+const at = (day: string, hour: number, minute = 0) => new Date(`${day}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00-03:00`).toISOString();
+
+const catalog = {
+  barber: {
+    business: 'Barbearia Corte Fino',
+    category: 'Barbearia',
+    services: [['Corte masculino', 45, 30], ['Barba', 35, 30], ['Corte + barba', 75, 60], ['Sobrancelha', 20, 15], ['Pigmentação', 60, 45]],
+    team: ['Rafael Costa', 'Lucas Mendes', 'André Lima'],
+    clients: ['Pedro Souza', 'Gabriel Ferreira', 'João Alves', 'Bruno Santos', 'Felipe Lima', 'Diego Rocha', 'Matheus Oliveira', 'Thiago Carvalho', 'Rodrigo Nunes', 'Caio Martins', 'Vinícius Araújo', 'Leonardo Dias', 'Henrique Barros', 'Eduardo Pires'],
+  },
+  beauty: {
+    business: 'Studio Aurora',
+    category: 'Cabelo',
+    services: [['Corte e finalização', 120, 60], ['Escova', 80, 45], ['Coloração', 220, 90], ['Hidratação', 90, 45], ['Manicure', 55, 45]],
+    team: ['Marina Costa', 'Luiza Martins', 'Ana Ribeiro'],
+    clients: ['Beatriz Souza', 'Clara Ferreira', 'Juliana Alves', 'Camila Santos', 'Helena Lima', 'Isabela Rocha', 'Larissa Oliveira', 'Fernanda Carvalho', 'Mariana Nunes', 'Patrícia Martins', 'Renata Araújo', 'Sofia Dias', 'Amanda Barros', 'Letícia Pires'],
+  },
+} as const;
 
 export function createDemoSeed(niche: 'barber' | 'beauty'): DemoTables {
   const beauty = niche === 'beauty';
+  const data = catalog[niche];
   const company = demoCompanyId(niche);
-  const date = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
-  const at = (hour: number, day = date) => `${day}T${String(hour).padStart(2, '0')}:00:00-03:00`;
+  const now = new Date();
+  const today = dayString(now);
+  const rand = random(beauty ? 7 : 3);
   const common = { user_id: company, company_id: company, business_id: company };
   const category = id(niche, 10);
-  const services = (beauty ? [['Corte e finalização', 120, 60], ['Escova', 80, 45], ['Coloração', 220, 90]] : [['Corte masculino', 45, 30], ['Barba', 35, 30], ['Corte + barba', 75, 60]])
-    .map(([name, price, duration_minutes], i) => ({ ...common, id: id(niche, 20 + i), name, price, duration_minutes, category_id: category, active: true, description: null, image_url: null }));
-  const team = (beauty ? ['Marina Costa', 'Luiza Martins', 'Ana Ribeiro'] : ['Rafael Costa', 'Lucas Mendes', 'André Lima']).map((name, i) => ({ ...common, id: id(niche, 30 + i), name, active: true, is_owner: i === 0, commission_rate: 40, photo_url: null, staff_user_id: i === 0 ? company : null, specialties: [], work_schedule: null }));
-  const clients = (beauty ? ['Beatriz Souza', 'Clara Ferreira', 'Juliana Alves', 'Camila Santos', 'Helena Lima', 'Isabela Rocha'] : ['Pedro Souza', 'Gabriel Ferreira', 'João Alves', 'Bruno Santos', 'Felipe Lima', 'Diego Rocha']).map((name, i) => ({ ...common, id: id(niche, 40 + i), name, phone: '', email: null, photo_url: null }));
-  const appointments = Array.from({ length: 9 }, (_, i) => {
-    const service = services[i % services.length];
-    const client = clients[i % clients.length];
-    return { ...common, id: id(niche, 60 + i), client_id: client.id, clients: client, professional_id: team[i % team.length].id, service: service.name, price: service.price, duration_minutes: service.duration_minutes, appointment_time: at(9 + Math.floor(i / 3) * 2), status: i < 3 ? 'Completed' : 'Confirmed', origin: 'internal', notes: '', payment_method: i < 3 ? 'pix' : null, public_booking_id: null };
-  });
-  const finance = Array.from({ length: 270 }, (_, i) => {
-    const service = services[i % services.length];
-    const when = new Date(`${date}T15:00:00-03:00`);
-    if (i < 150) {
-      when.setDate(1 + (i % Number(date.slice(8, 10))));
-    } else {
-      when.setDate(1);
-      when.setMonth(when.getMonth() - 1);
-      when.setDate(1 + (i % 28));
+  const services = data.services.map(([name, price, duration_minutes], i) => ({ ...common, id: id(niche, 20 + i), name, price, duration_minutes, category_id: category, active: true, description: null, image_url: null }));
+  const team = data.team.map((name, i) => ({ ...common, id: id(niche, 30 + i), name, active: true, is_owner: i === 0, commission_rate: 40, photo_url: null, staff_user_id: i === 0 ? company : null, specialties: [], work_schedule: null, deleted_at: null, email: null, phone: null, display_order: i }));
+  // Telefones fictícios: o prefixo 9 + 8 dígitos sem relação com números reais.
+  const phone = (i: number) => `11 9${String(7000 + i * 137).padStart(4, '0')}-${String(1000 + i * 311).slice(-4)}`;
+  const clients = data.clients.map((name, i) => ({ ...common, id: id(niche, 40 + i), name, phone: phone(i), email: null, photo_url: null, birth_date: i === 2 ? `${today.slice(0, 4)}-${today.slice(5, 7)}-${String(Math.min(28, Number(today.slice(8, 10)) + 3)).padStart(2, '0')}` : null, notes: null, is_active: true, created_at: at(shiftDay(today, -120 + i * 6), 10) }));
+
+  // Visitas históricas: alguns clientes frequentes, alguns novos e alguns inativos há mais de 35 dias.
+  const appointments: DemoRow[] = [];
+  const finance: DemoRow[] = [];
+  let sequence = 60;
+  const completed = (clientIndex: number, day: string, hour: number, minute: number, serviceIndex: number, memberIndex: number) => {
+    const service = services[serviceIndex % services.length];
+    const client = clients[clientIndex];
+    const member = team[memberIndex % team.length];
+    const time = at(day, hour, minute);
+    const method = ['pix', 'cartao', 'dinheiro'][sequence % 3];
+    const appointment = { ...common, id: id(niche, sequence), client_id: client.id, clients: client, professional_id: member.id, service: service.name, price: service.price, duration_minutes: service.duration_minutes, appointment_time: time, completed_at: time, status: 'Completed', origin: sequence % 4 === 0 ? 'public' : 'internal', notes: '', payment_method: method, public_booking_id: null };
+    appointments.push(appointment);
+    finance.push({ ...common, id: id(niche, 1000 + sequence), appointment_id: appointment.id, type: 'revenue', revenue: service.price, amount: service.price, commission_value: member.is_owner ? 0 : Number(service.price) * 0.4, expense: 0, professional_id: member.id, barber_name: member.name, client_name: client.name, service_name: service.name, created_at: time, commission_paid: false, status: 'paid', payment_method: method, description: service.name });
+    sequence++;
+  };
+  const profiles: Array<[number, number, number]> = [
+    [0, 14, 10], [1, 21, 9], [2, 12, 18], [3, 28, 6], [4, 10, 9], [5, 18, 8],
+    [6, 40, 4], [7, 52, 5], [8, 61, 3], [9, 75, 4], [10, 7, 2], [11, 3, 1], [12, 24, 7], [13, 47, 3],
+  ];
+  for (const [clientIndex, lastVisitDaysAgo, visits] of profiles) {
+    for (let v = 0; v < visits; v++) {
+      const day = shiftDay(today, -lastVisitDaysAgo - Math.round(v * (18 + rand() * 14)));
+      if (day < shiftDay(today, -365)) break;
+      completed(clientIndex, day, 9 + Math.floor(rand() * 10), rand() < .5 ? 0 : 30, (clientIndex + v) % services.length, (clientIndex + v) % team.length);
     }
-    when.setUTCHours(11 + (i % 4), (i * 17) % 60, 0, 0);
-    return { ...common, id: id(niche, 1000 + i), type: 'revenue', revenue: service.price, amount: service.price, commission_value: Number(service.price) * 0.4, expense: 0, professional_id: team[i % 3].id, barber_name: team[i % 3].name, client_name: clients[i % 6].name, service_name: service.name, created_at: when.toISOString(), commission_paid: false, status: 'paid', payment_method: ['pix', 'dinheiro', 'cartao'][i % 3] };
-  });
-  const expenses = ['Aluguel', 'Produtos', 'Energia'].map((name, i) => ({ ...common, id: id(niche, 1400 + i), type: 'expense', revenue: 0, amount: 0, commission_value: [1100, 480, 260][i], expense: [1100, 480, 260][i], professional_id: null, barber_name: null, client_name: null, service_name: name, created_at: at(12), commission_paid: true, status: 'paid', payment_method: null }));
-  const settings = { ...common, id: id(niche, 1), business_hours: Object.fromEntries(Array.from({ length: 7 }, (_, d) => [['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][d], { isOpen: true, blocks: [{ start: '08:00', end: '20:00' }] }])), timezone: 'America/Sao_Paulo', onboarding_completed: true, onboarding_step: 5, commission_settlement_day_of_month: 5, payment_day: 5, machine_fee_enabled: false, debit_fee_percent: 0, credit_fee_percent: 0, public_products_enabled: false, enable_self_rescheduling: true, online_booking_requires_approval: true, staff_appointment_edit_scope: 'own', staff_agenda_block_scope: 'own', client_cancel_cutoff_hours: 2 };
-  const profile = { ...common, id: company, business_name: beauty ? 'Studio Aurora' : 'Barbearia Corte Fino', full_name: team[0].name, user_type: niche, role: 'owner', region: 'BR', tutorial_completed: true, subscription_status: 'active', business_slug: `simulacao-${niche}`, public_booking_enabled: true, booking_lead_time_hours: 0, booking_lead_time_minutes: 0, logo_url: null, cover_photo_url: `/landing/${beauty ? 'salon' : 'barber'}-800.webp`, address_street: null, phone: null, monthly_goal: 10000 };
-  return { profiles: [profile], business_settings: [settings], services, service_categories: [{ ...common, id: category, name: beauty ? 'Cabelo' : 'Barbearia' }], team_members: team, clients, appointments, finance_records: [...finance, ...expenses], notifications: [], onboarding_progress: [{ company_id: company, is_completed: true }], agenda_blocks: [], public_bookings: [], public_clients: [], appointment_reschedules: [], products: [], appointment_products: [], product_sales: [], team_member_services: [], client_dependents: [], queue_entries: clients.slice(0, 2).map((client, i) => ({ ...common, id: id(niche, 150 + i), client_id: client.id, client_name: client.name, client_phone: '', customer_name: client.name, status: 'waiting', position: i + 1, joined_at: new Date(Date.now() - (i + 1) * 8 * 60_000).toISOString(), service_ids: [services[0].id], service_name: services[0].name, estimated_duration: 30, professional_id: null, total_price: services[0].price, payment_status: 'unpaid', created_at: new Date(Date.now() - (i + 1) * 8 * 60_000).toISOString() })) };
+  }
+  // Movimento diário do mês corrente e do anterior, preservando os clientes inativos (6..9, 13).
+  const activeClients = [0, 1, 2, 3, 4, 5, 10, 11, 12];
+  const currentDayOfMonth = Number(today.slice(8, 10));
+  for (let offset = 1; offset <= 58; offset++) {
+    const day = shiftDay(today, -offset);
+    const weekday = new Date(`${day}T12:00:00-03:00`).getUTCDay();
+    if (weekday === 0) continue;
+    const isCurrentMonth = day.slice(0, 7) === today.slice(0, 7);
+    const baseVolume = isCurrentMonth ? (weekday === 6 ? 8 : 5 + Math.floor(rand() * 3)) : (Number(day.slice(8, 10)) <= currentDayOfMonth ? (weekday === 6 ? 6 : 3 + Math.floor(rand() * 3)) : 0);
+    for (let n = 0; n < baseVolume; n++) completed(activeClients[Math.floor(rand() * activeClients.length)], day, 9 + Math.floor(n * 1.4), n % 2 ? 30 : 0, Math.floor(rand() * services.length), n % team.length);
+  }
+
+  // O dia de hoje: atendimentos concluídos mais cedo (garante receita > 0 no início) e os próximos confirmados.
+  const nowMinutes = Number(new Intl.DateTimeFormat('en-GB', { timeZone: DEMO_TIME_ZONE, hour: '2-digit', hour12: false }).format(now)) * 60 + Number(new Intl.DateTimeFormat('en-GB', { timeZone: DEMO_TIME_ZONE, minute: '2-digit' }).format(now));
+  const morningCompleted: Array<[number, number, number, number]> = [[8, 0, 0, 0], [8, 30, 1, 1], [9, 0, 2, 2]];
+  for (const [hour, minute, clientIndex, memberIndex] of morningCompleted) {
+    completed(clientIndex, today, hour, minute, clientIndex % services.length, memberIndex);
+  }
+  const todayPlan: Array<[number, number, number, number]> = [[10, 0, 3, 0], [10, 30, 4, 1], [11, 30, 5, 2], [13, 0, 0, 0], [14, 0, 10, 1], [15, 0, 1, 2], [16, 0, 12, 0], [17, 0, 2, 1], [18, 0, 4, 2], [18, 30, 11, 0]];
+  for (const [hour, minute, clientIndex, memberIndex] of todayPlan) {
+    const time = at(today, hour, minute);
+    if (hour * 60 + minute + 30 < nowMinutes) { completed(clientIndex, today, hour, minute, clientIndex % services.length, memberIndex); continue; }
+    const service = services[clientIndex % services.length];
+    const client = clients[clientIndex];
+    appointments.push({ ...common, id: id(niche, sequence++), client_id: client.id, clients: client, professional_id: team[memberIndex].id, service: service.name, price: service.price, duration_minutes: service.duration_minutes, appointment_time: time, completed_at: null, status: 'Confirmed', origin: hour % 2 ? 'public' : 'internal', notes: '', payment_method: null, public_booking_id: null });
+  }
+  // Amanhã e depois: agenda já com pedidos.
+  for (const [dayOffset, hour, clientIndex, memberIndex] of [[1, 9, 3, 0], [1, 10, 11, 1], [1, 14, 4, 2], [1, 16, 9, 0], [2, 9, 0, 1], [2, 11, 13, 2], [2, 15, 2, 0]] as const) {
+    const service = services[clientIndex % services.length];
+    const client = clients[clientIndex];
+    appointments.push({ ...common, id: id(niche, sequence++), client_id: client.id, clients: client, professional_id: team[memberIndex].id, service: service.name, price: service.price, duration_minutes: service.duration_minutes, appointment_time: at(shiftDay(today, dayOffset), hour), completed_at: null, status: 'Confirmed', origin: 'public', notes: '', payment_method: null, public_booking_id: null });
+  }
+
+  const monthStart = `${today.slice(0, 7)}-01`;
+  const previousMonth = shiftDay(monthStart, -1).slice(0, 7);
+  const expenses = [['Aluguel', 1800], ['Produtos', 620], ['Energia', 310], ['Internet', 120]].flatMap(([name, value], i) => [monthStart, `${previousMonth}-01`].map((day, m) => ({ ...common, id: id(niche, 1400 + i * 2 + m), type: 'expense', revenue: 0, amount: 0, commission_value: 0, expense: value, professional_id: null, barber_name: null, client_name: null, service_name: name, description: name, created_at: at(shiftDay(day, 4 + i), 12), commission_paid: true, status: 'paid', payment_method: null })));
+  const settings = { ...common, id: id(niche, 1), business_hours: Object.fromEntries(Array.from({ length: 7 }, (_, d) => [['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][d], d === 0 ? { isOpen: false, blocks: [] } : { isOpen: true, blocks: [{ start: '09:00', end: '20:00' }] }])), timezone: DEMO_TIME_ZONE, onboarding_completed: true, onboarding_step: 5, commission_settlement_day_of_month: 5, payment_day: 5, machine_fee_enabled: false, debit_fee_percent: 0, credit_fee_percent: 0, public_products_enabled: false, enable_self_rescheduling: true, online_booking_requires_approval: true, staff_appointment_edit_scope: 'own', staff_agenda_block_scope: 'own', client_cancel_cutoff_hours: 2 };
+  const profile = { ...common, id: company, business_name: data.business, full_name: team[0].name, user_type: niche, role: 'owner', region: 'BR', tutorial_completed: true, subscription_status: 'active', business_slug: `simulacao-${niche}`, public_booking_enabled: true, booking_lead_time_hours: 0, booking_lead_time_minutes: 0, logo_url: null, cover_photo_url: `/landing/${beauty ? 'salon' : 'barber'}-800.webp`, address_street: null, phone: null, monthly_goal: beauty ? 18000 : 9000 };
+  const queueMinutesAgo = (minutes: number) => new Date(now.getTime() - minutes * 60_000).toISOString();
+  const queue = [
+    { client: clients[7], status: 'serving', waited: 26, serviceIndex: 2, member: team[1] },
+    { client: clients[9], status: 'waiting', waited: 14, serviceIndex: 0, member: null },
+    { client: clients[11], status: 'waiting', waited: 6, serviceIndex: 1, member: null },
+  ].map((entry, i) => ({ ...common, id: id(niche, 150 + i), client_id: entry.client.id, client_name: entry.client.name, client_phone: entry.client.phone, customer_name: entry.client.name, status: entry.status, position: i + 1, joined_at: queueMinutesAgo(entry.waited), called_at: entry.status === 'serving' ? queueMinutesAgo(entry.waited - 8) : null, serving_at: entry.status === 'serving' ? queueMinutesAgo(entry.waited - 10) : null, service_ids: [services[entry.serviceIndex].id], service_name: services[entry.serviceIndex].name, estimated_duration: services[entry.serviceIndex].duration_minutes, professional_id: entry.member?.id ?? null, total_price: services[entry.serviceIndex].price, payment_status: 'unpaid', payment_method: null, created_at: queueMinutesAgo(entry.waited) }));
+  const publicBookings = [[1, 10, 5, 0], [1, 15, 6, 2]].map(([dayOffset, hour, clientIndex, memberIndex], i) => ({ ...common, id: id(niche, 170 + i), customer_name: clients[clientIndex].name, customer_phone: clients[clientIndex].phone, appointment_time: at(shiftDay(today, dayOffset), hour), professional_id: team[memberIndex].id, service_ids: [services[(clientIndex + 1) % services.length].id], total_price: services[(clientIndex + 1) % services.length].price, duration_minutes: services[(clientIndex + 1) % services.length].duration_minutes, status: 'pending', is_edit: false, created_at: queueMinutesAgo(40 + i * 25), notes: null }));
+  return { profiles: [profile], business_settings: [settings], services, service_categories: [{ ...common, id: category, name: data.category }], team_members: team, clients, appointments, finance_records: [...finance, ...expenses], notifications: [], onboarding_progress: [{ company_id: company, is_completed: true }], agenda_blocks: [], public_bookings: publicBookings, public_clients: [], appointment_reschedules: [], products: [], appointment_products: [], product_sales: [], team_member_services: [], client_dependents: [], goal_settings: [], client_photos: [], commission_payments: [], queue_entries: queue };
 }

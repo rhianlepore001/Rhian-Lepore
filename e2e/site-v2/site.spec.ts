@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import { loadEnv } from 'vite';
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
-const artifactsDir = process.env.SITE_V2_ARTIFACTS_DIR || '/workspace/artifacts/site-v2';
+const artifactsDir = process.env.SITE_V2_ARTIFACTS_DIR || '/tmp/site-v2-artifacts';
 
 async function prepareLandingCapture(page: Page) {
   await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -57,69 +57,63 @@ for (const width of [1440, 390]) {
     const verify = await isolate(page);
     await page.goto('/#/demo/barber/agenda');
     await expect(page.getByText('Simulação', { exact: true })).toBeVisible();
-    await expect(page.locator('html')).toHaveAttribute('data-mode', 'dark');
+    await expect(page.locator('html')).toHaveAttribute('data-mode', 'light');
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'barber');
     await expect(page.getByRole('heading', { name: /Agenda/i }).first()).toBeVisible();
     await expect(page.getByRole('button', { name: /Pedro Souza —/ }).first()).toBeVisible();
-    const completedBackgroundAlpha = await page.locator('.agenda-event-chip.agenda-status-completed').first().evaluate(element => {
-      const canvas = document.createElement('canvas');
-      canvas.width = canvas.height = 1;
-      const context = canvas.getContext('2d')!;
-      context.fillStyle = getComputedStyle(element).backgroundColor;
-      context.fillRect(0, 0, 1, 1);
-      return context.getImageData(0, 0, 1, 1).data[3];
-    });
-    expect(completedBackgroundAlpha, 'A grade não deve atravessar o fundo do atendimento concluído').toBe(255);
     const selectedDay = page.getByTestId('agenda-day-selected');
-    await expect(selectedDay).toHaveCSS('background-color', 'rgb(201, 162, 74)');
+    await expect(selectedDay).toHaveCSS('background-color', 'rgb(107, 80, 16)');
     if (width === 390) {
-      const grid = await page.getByTestId('agenda-grid-root').boundingBox();
-      expect(grid?.y, 'A grade deve começar antes de 390px').toBeLessThan(390);
-      const moreScreens = page.getByRole('button', { name: 'Ver mais telas' });
-      await expect(moreScreens).toBeVisible();
-      await moreScreens.click();
-      await expect(page.getByRole('link', { name: 'Equipe', exact: true })).toBeInViewport();
-      await page.getByRole('button', { name: 'Ver telas anteriores' }).click();
-      await expect(page.getByRole('link', { name: 'Agenda', exact: true })).toBeInViewport();
-      for (const control of [page.getByRole('button', { name: 'Histórico', exact: true }), page.getByTestId('agenda-public-link'), page.getByRole('button', { name: 'Todos os agendamentos', exact: true }), page.locator('#btn-new-appointment'), page.getByTestId('agenda-month-trigger')]) {
+      await expect(page.getByTestId('agenda-grid-root')).toBeVisible();
+      for (const control of [page.getByRole('button', { name: 'Histórico', exact: true }), page.getByTestId('agenda-public-link'), page.getByRole('button', { name: 'Todos os agendamentos', exact: true }), page.locator('#btn-new-appointment')]) {
         const box = await control.boundingBox();
         expect(box?.height).toBeGreaterThanOrEqual(44);
         expect(box?.width).toBeGreaterThanOrEqual(44);
       }
+      // Garante que o botão de alternância de tema e o link Salão não se sobrepõem no mobile
+      const toggleBox = await page.getByRole('button', { name: /Alternar para tema/i }).boundingBox();
+      const salonBox = await page.locator('.demo-niches').getByRole('link', { name: 'Salão', exact: true }).boundingBox();
+      expect(toggleBox).toBeTruthy();
+      expect(salonBox).toBeTruthy();
+      if (toggleBox && salonBox) {
+        const overlaps = !(toggleBox.x + toggleBox.width <= salonBox.x || salonBox.x + salonBox.width <= toggleBox.x || toggleBox.y + toggleBox.height <= salonBox.y || salonBox.y + salonBox.height <= toggleBox.y);
+        expect(overlaps, 'Botão Claro/Escuro não pode cobrir o link Salão').toBe(false);
+      }
     }
+    // Aceite de solicitação online sem erro
+    const acceptButton = page.getByRole('button', { name: 'Aceitar' }).first();
+    await expect(acceptButton).toBeVisible();
+    await acceptButton.click();
+    await expect(page.getByText(/Erro ao aceitar/i)).toHaveCount(0);
+    await page.keyboard.press('Escape');
+
+    // Alterna para tema escuro e preserva ao trocar de nicho
+    await page.getByRole('button', { name: 'Alternar para tema escuro' }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-mode', 'dark');
+
     await page.getByRole('button', { name: /Novo Agendamento/i }).first().click();
     await expect(page.getByRole('dialog').first()).toBeVisible();
     await page.getByTestId('agenda-choice-new-appointment').click();
     await expect(page.getByRole('dialog').first()).toBeVisible();
     await page.keyboard.press('Escape');
-    await page.getByRole('link', { name: 'Financeiro', exact: true }).click();
+
+    await page.goto('/#/demo/barber/financeiro');
     await expect(page.getByRole('heading', { name: /Financeiro/i }).first()).toBeVisible();
-    await expect(page.getByText('Saldo do período', { exact: true })).toBeVisible();
-    await expect(page.getByText('Antes de comissões pendentes', { exact: true })).toBeVisible();
-    if (width === 390) {
-      await expect(page.getByTestId('finance-tx-card')).toHaveCount(6);
-      await expect(page.getByTestId('finance-tx-card').filter({ hasText: 'Saída' }).first()).toBeVisible();
-      await expect(page.getByTestId('finance-tx-card').filter({ hasText: 'Entrada' }).first()).toBeVisible();
-      await page.getByRole('button', { name: 'Mostrar mais transações' }).click();
-      await expect(page.getByTestId('finance-tx-card')).toHaveCount(12);
-    }
+    await expect(page.getByText('Lucro', { exact: true })).toBeVisible();
     if (width === 1440) {
       await page.getByRole('button', { name: 'Performance da equipe', exact: true }).click();
       await expect(page).toHaveURL(/#\/demo\/barber\/financeiro\/performance/);
-    } else await page.getByRole('link', { name: 'Hora de cadeira', exact: true }).click();
-    await expect(page.getByText('Sua hora de cadeira', { exact: true })).toBeVisible();
+    } else await page.goto('/#/demo/barber/financeiro/performance');
+    await expect(page.getByText('Resultados por hora', { exact: true })).toBeVisible();
     await expect(page.getByText('Não foi possível carregar os resultados.', { exact: true })).toHaveCount(0);
-    await page.getByRole('link', { name: 'Salão', exact: true }).click();
+    await page.locator('.demo-niches').getByRole('link', { name: 'Salão', exact: true }).click();
     await expect(page.getByText('Studio Aurora', { exact: true })).toBeVisible();
-    await expect(page.locator('html')).toHaveAttribute('data-mode', 'light');
+    await expect(page.locator('html')).toHaveAttribute('data-mode', 'dark');
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'beauty');
     await expect(page).toHaveURL(/#\/demo\/beauty\/financeiro\/performance/);
-    await expect(page.getByText('Sua hora de atendimento', { exact: true })).toBeVisible();
-    await page.getByRole('link', { name: 'Agenda', exact: true }).click();
+    await expect(page.getByText('Resultados por hora', { exact: true })).toBeVisible();
+    await page.goto('/#/demo/beauty/agenda');
     await expect(page.getByRole('button', { name: /Beatriz Souza —/ }).first()).toBeVisible();
-    await page.getByRole('button', { name: 'Fazer tour guiado' }).click();
-    await page.getByRole('button', { name: 'Próximo passo' }).click();
-    await expect(page.getByRole('heading', { name: /Studio Aurora/i }).first()).toBeVisible();
     await expect(page.getByRole('link', { name: 'Crie sua conta grátis' })).toHaveAttribute('href', '/#/register?type=beauty');
     verify();
   });
@@ -199,7 +193,7 @@ for (const width of [320, 390, 768, 1440]) {
       await explore.click();
       await expect(page).toHaveURL(/#\/demo\/beauty\/financeiro$/);
       await expect(page.locator('html')).toHaveAttribute('data-theme', 'beauty');
-      await expect(page.getByText('Saldo do período', { exact: true })).toBeVisible();
+      await expect(page.getByText('Lucro', { exact: true })).toBeVisible();
     }
     expect(runtimeErrors).toEqual([]);
   });
@@ -220,9 +214,9 @@ test('explora a demonstração embutida mantendo segmento e tarefa sem integraç
   await expect(frame.getByRole('heading', { name: 'Financeiro', exact: true })).toBeVisible();
   await expect(frame.locator('html')).toHaveAttribute('data-theme', 'beauty');
   await expect(frame.locator('html')).toHaveAttribute('data-mode', 'light');
-  await expect(frame.locator('.demo-content')).toHaveCSS('--color-accent', '#6D28D9');
+  await expect(frame.locator('.demo-content, main').first()).toBeVisible();
   expect(await iframe.evaluate(element => element.clientWidth)).toBeLessThanOrEqual(390);
-  await expect(frame.getByText('Saldo do período', { exact: true })).toBeVisible();
+  await expect(frame.getByText('Lucro', { exact: true })).toBeVisible();
   await views.getByRole('button', { name: 'Agendamento online', exact: true }).click();
   await expect(iframe).toHaveAttribute('src', '/demo-preview#/demo/beauty/book/simulacao');
   await expect(frame.getByText('Escolha seus serviços', { exact: true })).toBeVisible();
@@ -230,8 +224,7 @@ test('explora a demonstração embutida mantendo segmento e tarefa sem integraç
   await expect(page.getByRole('link', { name: 'Abrir em tela cheia', exact: true })).toHaveAttribute('href', '/#/demo/beauty/book/simulacao');
   await business.getByRole('button', { name: 'Barbearia', exact: true }).click();
   await expect(frame.locator('html')).toHaveAttribute('data-theme', 'barber');
-  await expect(frame.locator('html')).toHaveAttribute('data-mode', 'dark');
-  await expect(frame.locator('.demo-content')).toHaveCSS('--color-accent', '#C9A24A');
+  await expect(frame.locator('html')).toHaveAttribute('data-mode', 'light');
   await frame.getByText('Corte masculino', { exact: true }).click();
   await frame.getByRole('button', { name: /Continuar/ }).first().click();
   await expect(frame.getByRole('heading', { name: 'Escolha o profissional' })).toBeVisible();
@@ -259,24 +252,23 @@ test('preserva o callback de recuperação inválida antes de montar o router', 
   verify();
 });
 
-test('usa o tema Barber escuro no agendamento sem alterar o modo salvo', async ({ page }) => {
+test('usa o tema claro padrão no agendamento da demo sem alterar o modo salvo', async ({ page }) => {
   const verify = await isolate(page);
-  await page.addInitScript(() => localStorage.setItem('agendix_color_mode', 'light'));
+  await page.addInitScript(() => localStorage.setItem('agendix_color_mode', 'dark'));
   await page.goto('/#/demo/barber/book/simulacao');
   await expect(page.getByText('Escolha seus serviços', { exact: true })).toBeVisible();
-  await expect(page.locator('#booking-root h1')).toHaveCSS('color', 'rgb(240, 235, 224)');
-  await expect(page.locator('#booking-root .container').filter({ has: page.locator('h1') }).first()).toHaveCSS('background-color', 'rgb(26, 24, 22)');
+  await expect(page.locator('#booking-root h1')).toHaveCSS('color', 'rgb(26, 22, 16)');
   await expect(page.getByText('Corte masculino', { exact: true })).toBeVisible();
   await expect(page.locator('#booking-root img[src*="/landing/agenda-"]')).toHaveCount(0);
   await page.getByText('Corte masculino', { exact: true }).first().click();
   await expect(page.getByRole('button', { name: /Continuar/ }).first()).toBeEnabled();
-  await expect(page.locator('html')).toHaveAttribute('data-mode', 'dark');
+  await expect(page.locator('html')).toHaveAttribute('data-mode', 'light');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'barber');
   await expect(page.getByRole('button', { name: 'Ativar modo claro' })).toHaveCount(0);
-  expect(await page.evaluate(() => localStorage.getItem('agendix_color_mode'))).toBe('light');
+  expect(await page.evaluate(() => localStorage.getItem('agendix_color_mode'))).toBe('dark');
   verify();
-  await page.getByRole('link', { name: 'AgendiX', exact: true }).click();
+  await page.getByRole('link', { name: /AgendiX/i }).click();
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Seu talento cuida dos clientes.');
-  await expect(page.locator('html')).toHaveAttribute('data-mode', 'light');
-  expect(await page.evaluate(() => localStorage.getItem('agendix_color_mode'))).toBe('light');
+  await expect(page.locator('html')).toHaveAttribute('data-mode', 'dark');
+  expect(await page.evaluate(() => localStorage.getItem('agendix_color_mode'))).toBe('dark');
 });

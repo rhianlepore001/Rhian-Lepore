@@ -78,7 +78,7 @@ export const Landing = () => {
   const [niche, setNiche] = useState<Niche>('barber');
   const [nicheChosen, setNicheChosen] = useState(false);
   const [operation, setOperation] = useState<(typeof teamViews)[number]['id']>('fila');
-  const [view, setView] = useState<(typeof demoViews)[number]['id']>('booking');
+  const [view, setView] = useState<(typeof demoViews)[number]['id']>('dashboard');
   const [interactive, setInteractive] = useState(false);
   const menuTrigger = useRef<HTMLButtonElement>(null);
   const navigation = useRef<HTMLElement>(null);

@@ -17,3 +17,13 @@ export const demoCompanyId = (niche = getDemoNiche()) => niche === 'beauty'
 export function demoPath(path: string, niche = getDemoNiche()): string {
   return path.startsWith('/') && !path.startsWith('/demo/') ? `/demo/${niche}${path}` : path;
 }
+
+let demoColorMode: 'light' | 'dark' = 'light';
+
+export function getDemoColorMode(): 'light' | 'dark' {
+  return demoColorMode;
+}
+
+export function setDemoColorMode(mode: 'light' | 'dark'): void {
+  demoColorMode = mode;
+}

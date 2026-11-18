@@ -102,7 +102,49 @@ export function createDemoClient() {
     const t = tables();
     let data: any;
     switch (name) {
-      case 'list_company_pending_public_bookings': data = t.public_bookings; break;
+      case 'list_company_pending_public_bookings': data = t.public_bookings.filter(b => b.status === 'pending'); break;
+      case 'accept_public_booking_v2':
+      case 'accept_public_booking': {
+        const booking = t.public_bookings.find(b => b.id === args.p_booking_id);
+        if (!booking) return unsupported('solicitação pública não encontrada');
+        booking.status = 'confirmed';
+        const serviceList = t.services.filter(s => (booking.service_ids ?? []).includes(s.id));
+        const serviceNames = serviceList.map(s => s.name).join(', ') || 'Serviço';
+        let client = t.clients.find(c => c.phone === booking.customer_phone || c.name === booking.customer_name);
+        if (!client) {
+          client = { id: crypto.randomUUID(), user_id: demoCompanyId(), company_id: demoCompanyId(), name: booking.customer_name, phone: booking.customer_phone ?? '', email: null, photo_url: null, is_active: true };
+          t.clients.push(client);
+        }
+        const appointment = {
+          id: crypto.randomUUID(),
+          user_id: demoCompanyId(),
+          company_id: demoCompanyId(),
+          client_id: client.id,
+          clients: client,
+          professional_id: booking.professional_id ?? t.team_members[0].id,
+          service: serviceNames,
+          price: booking.total_price ?? serviceList.reduce((sum, s) => sum + Number(s.price), 0),
+          duration_minutes: booking.duration_minutes ?? 30,
+          appointment_time: booking.appointment_time,
+          completed_at: null,
+          status: 'Confirmed',
+          origin: 'booking',
+          notes: booking.notes ?? '',
+          payment_method: null,
+          public_booking_id: booking.id,
+        };
+        t.appointments.push(appointment);
+        data = [{ appointment_id: appointment.id, service_names: serviceNames }];
+        break;
+      }
+      case 'reject_public_booking_v2':
+      case 'reject_public_booking': {
+        const booking = t.public_bookings.find(b => b.id === args.p_booking_id);
+        if (!booking) return unsupported('solicitação pública não encontrada');
+        booking.status = 'cancelled';
+        data = null;
+        break;
+      }
       case 'get_public_profile_by_slug': data = t.profiles[0]; break;
       case 'get_public_business_settings_json': data = t.business_settings[0]; break;
       case 'get_public_services_catalog': data = t.services; break;

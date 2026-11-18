@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, Moon, Scissors, Sparkles, Sun } from 'lucide-rea
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Layout } from '../components/Layout';
 import { DemoNavigation } from '../components/DemoNavigation';
-import { getDemoNiche, isDemoPreview } from '../lib/demo/mode';
+import { getDemoColorMode, getDemoNiche, isDemoPreview, setDemoColorMode } from '../lib/demo/mode';
 import '../styles/demo.css';
 
 const Dashboard = lazy(() => import('./Dashboard').then(m => ({ default: m.Dashboard })));
@@ -42,18 +42,28 @@ export const Demo = () => {
   const location = useLocation();
   const inner = location.pathname.startsWith(`${base}/`) ? location.pathname.slice(base.length) : '/';
   const isBooking = inner.startsWith('/book/');
-  const [colorMode, setColorMode] = useState<'light' | 'dark'>('light');
+  const [colorMode, setColorModeState] = useState<'light' | 'dark'>(() => getDemoColorMode());
+  const setColorMode = (next: 'light' | 'dark' | ((prev: 'light' | 'dark') => 'light' | 'dark')) => {
+    setColorModeState(prev => {
+      const value = typeof next === 'function' ? next(prev) : next;
+      setDemoColorMode(value);
+      return value;
+    });
+  };
   const [client] = useState(() => new QueryClient({ defaultOptions: { queries: { retry: false } } }));
   useLayoutEffect(() => {
     const root = document.documentElement;
     const previous = { theme: root.getAttribute('data-theme'), mode: root.getAttribute('data-mode') };
-    root.setAttribute('data-theme', niche);
-    root.setAttribute('data-mode', colorMode);
     return () => {
       for (const [key, value] of Object.entries(previous)) {
         if (value) root.setAttribute(`data-${key}`, value); else root.removeAttribute(`data-${key}`);
       }
     };
+  }, []);
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    root.setAttribute('data-theme', niche);
+    root.setAttribute('data-mode', colorMode);
   }, [niche, colorMode]);
   useEffect(() => {
     const root = document.documentElement;

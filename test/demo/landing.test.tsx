@@ -53,7 +53,7 @@ describe('site oficial', () => {
     const { container } = render(<Landing />);
     const heroChoices = screen.getByRole('group', { name: 'Seu tipo de negócio' });
     await userEvent.click(within(heroChoices).getByRole('button', { name: 'Salão de beleza' }));
-    expect(container.querySelector('.landing-demo-poster img')).toHaveAttribute('src', '/landing/phone-beauty-booking.webp');
+    expect(container.querySelector('.landing-demo-poster img')).toHaveAttribute('src', '/landing/phone-beauty-dashboard.webp');
     expect(container.querySelector('.landing-demo-conversion .landing-button')).toHaveAttribute('href', '/#/register?type=beauty');
     const views = screen.getByRole('group', { name: 'Tela da demonstração' });
     await userEvent.click(within(views).getByRole('button', { name: 'Financeiro' }));

@@ -47,8 +47,8 @@ export function createDemoSeed(niche: 'barber' | 'beauty'): DemoTables {
   const category = id(niche, 10);
   const services = data.services.map(([name, price, duration_minutes], i) => ({ ...common, id: id(niche, 20 + i), name, price, duration_minutes, category_id: category, active: true, description: null, image_url: null }));
   const team = data.team.map((name, i) => ({ ...common, id: id(niche, 30 + i), name, active: true, is_owner: i === 0, commission_rate: 40, photo_url: null, staff_user_id: i === 0 ? company : null, specialties: [], work_schedule: null, deleted_at: null, email: null, phone: null, display_order: i }));
-  // Telefones fictícios: o prefixo 9 + 8 dígitos sem relação com números reais.
-  const phone = (i: number) => `11 9${String(7000 + i * 137).padStart(4, '0')}-${String(1000 + i * 311).slice(-4)}`;
+  // Telefones claramente fictícios para a simulação.
+  const phone = (i: number) => `11 90000-${String(i + 1).padStart(4, '0')}`;
   const clients = data.clients.map((name, i) => ({ ...common, id: id(niche, 40 + i), name, phone: phone(i), email: null, photo_url: null, birth_date: i === 2 ? `${today.slice(0, 4)}-${today.slice(5, 7)}-${String(Math.min(28, Number(today.slice(8, 10)) + 3)).padStart(2, '0')}` : null, notes: null, is_active: true, created_at: at(shiftDay(today, -120 + i * 6), 10) }));
 
   // Visitas históricas: alguns clientes frequentes, alguns novos e alguns inativos há mais de 35 dias.

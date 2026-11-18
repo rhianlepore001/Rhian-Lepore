@@ -39,6 +39,15 @@ type Niche = 'barber' | 'beauty';
 type ProductView = (typeof demoViews)[number]['id'] | (typeof teamViews)[number]['id'];
 
 const businesses = { barber: 'Barbearia Corte Fino', beauty: 'Studio Aurora' } as const;
+const atlasSuffix: Record<Niche, 'barbearia' | 'salao'> = { barber: 'barbearia', beauty: 'salao' };
+const atlasSlugMap: Partial<Record<ProductView, string>> = {
+  dashboard: 'inicio',
+  booking: 'agendamento-online',
+  fila: 'fila',
+  finance: 'financeiro',
+  commissions: 'comissoes',
+  clientes: 'clientes-inativo',
+};
 
 const BusinessSelector = ({ niche, label, onChange }: { niche: Niche; label: string; onChange: (niche: Niche) => void }) => (
   <div className="landing-business-selector" role="group" aria-label={label}>
@@ -68,10 +77,29 @@ const PhoneFrame = ({ niche, children }: { niche: Niche; children: React.ReactNo
   </div>
 );
 
-const PhoneImage = ({ niche, view, alt, eager }: { niche: Niche; view: ProductView; alt: string; eager?: boolean }) => (
-  <img src={`/landing/phone-${niche}-${view}.webp`} alt={alt} width="780" height="1588"
-    decoding="async" loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : undefined} />
-);
+const PhoneImage = ({ niche, view, alt, eager }: { niche: Niche; view: ProductView; alt: string; eager?: boolean }) => {
+  const atlasSlug = atlasSlugMap[view];
+  if (atlasSlug) {
+    return (
+      <img
+        className="landing-atlas-phone"
+        src={`/landing/atlas/${atlasSlug}-${atlasSuffix[niche]}.webp`}
+        alt={alt}
+        width="1120"
+        height="2080"
+        decoding="async"
+        loading={eager ? 'eager' : 'lazy'}
+        fetchPriority={eager ? 'high' : undefined}
+      />
+    );
+  }
+  return (
+    <PhoneFrame niche={niche}>
+      <img src={`/landing/phone-${niche}-${view}.webp`} alt={alt} width="780" height="1588"
+        decoding="async" loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : undefined} />
+    </PhoneFrame>
+  );
+};
 
 export const Landing = () => {
   const [menu, setMenu] = useState(false);
@@ -150,7 +178,7 @@ export const Landing = () => {
         <a className="landing-text-link" href={`/#/demo/${niche}/${item.route}`}>{item.action} <ArrowRight size={18} aria-hidden="true" /></a>
       </div>
       <figure className="landing-phone-stage landing-feature-shot">
-        <PhoneFrame niche={niche}><PhoneImage niche={niche} view={item.image} alt={item.alt} /></PhoneFrame>
+        <PhoneImage niche={niche} view={item.image} alt={item.alt} />
         <figcaption>Dados fictícios</figcaption>
       </figure>
     </article>
@@ -186,9 +214,18 @@ export const Landing = () => {
           </div>
           <div className="landing-phone-stage landing-hero-product">
             <BusinessSelector niche={niche} label="Seu tipo de negócio" onChange={chooseNiche} />
-            <a href={`/#/demo/${niche}`} className="landing-product-stage" aria-label={`Experimentar o painel de início do AgendiX: ${businesses[niche]}`}>
-              <PhoneFrame niche={niche}><PhoneImage niche={niche} view="dashboard" eager alt={`Painel de início do AgendiX em um celular, com dados fictícios de ${businesses[niche]}`} /></PhoneFrame>
-              <span className="landing-hero-screen-label">Painel de início · Dados fictícios <ArrowRight size={15} aria-hidden="true" /></span>
+            <a href={`/#/demo/${niche}`} className="landing-product-stage landing-product-stage-hero" aria-label={`Experimentar o painel de início do AgendiX: ${businesses[niche]}`}>
+              <img
+                className="landing-atlas-hero"
+                src={`/landing/atlas/hero-inicio-agendamento-${atlasSuffix[niche]}.webp`}
+                alt={`Painel de início e agendamento online do AgendiX em celulares, com dados fictícios de ${businesses[niche]}`}
+                width="2080"
+                height="2080"
+                decoding="async"
+                loading="eager"
+                fetchPriority="high"
+              />
+              <span className="landing-hero-screen-label">Início e agendamento online · Dados fictícios <ArrowRight size={15} aria-hidden="true" /></span>
             </a>
           </div>
         </div>
@@ -217,10 +254,14 @@ export const Landing = () => {
             </div>
             <figure className="landing-demo-preview" id="landing-demo-screen">
               <div className="landing-demo-frame" data-interactive={interactive}>
-                <PhoneFrame niche={niche}>
-                  <div className="landing-demo-poster"><PhoneImage niche={niche} view={view} alt={`${activeView.label} do AgendiX, no tema ${niche === 'barber' ? 'Barber' : 'Beauty'}, com dados fictícios`} /></div>
-                  {interactive && <iframe key={demoHref} title={`Simulação interativa ${niche === 'barber' ? 'da barbearia' : 'do salão'}: ${activeView.label}`} src={`/demo-preview${demoHref.slice(1)}`} sandbox="allow-scripts allow-same-origin allow-forms" />}
-                </PhoneFrame>
+                <div className="landing-demo-poster">
+                  <PhoneImage niche={niche} view={view} alt={`${activeView.label} do AgendiX, no tema ${niche === 'barber' ? 'Barber' : 'Beauty'}, com dados fictícios`} />
+                </div>
+                {interactive && (
+                  <PhoneFrame niche={niche}>
+                    <iframe key={demoHref} title={`Simulação interativa ${niche === 'barber' ? 'da barbearia' : 'do salão'}: ${activeView.label}`} src={`/demo-preview${demoHref.slice(1)}`} sandbox="allow-scripts allow-same-origin allow-forms" />
+                  </PhoneFrame>
+                )}
               </div>
               <figcaption>{businesses[niche]} · Dados fictícios</figcaption>
             </figure>
@@ -241,7 +282,7 @@ export const Landing = () => {
             <a className="landing-text-link" href={`/#/demo/${niche}/${activeOperation.route}`}>{activeOperation.action} <ArrowRight size={17} aria-hidden="true" /></a>
           </div>
           <figure>
-            <PhoneFrame niche={niche}><PhoneImage niche={niche} view={operation} alt={activeOperation.alt} /></PhoneFrame>
+            <PhoneImage niche={niche} view={operation} alt={activeOperation.alt} />
             <figcaption>Dados fictícios</figcaption>
           </figure>
         </div></div>

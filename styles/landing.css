@@ -326,6 +326,9 @@ html[data-surface=marketing] { scroll-padding-top:112px; }
 .landing .landing-business-selector button:focus-visible { outline-color:#354558; outline-offset:-4px; }
 .landing .landing-business-selector button[aria-pressed=true]:focus-visible { outline-color:#fff; }
 .landing-product-stage { display:grid; justify-items:center; gap:4px; width:min(100%, 330px); border-radius:32px; }
+.landing-product-stage-hero { width:min(100%, 460px); border-radius:20px; }
+.landing-atlas-hero { display:block; width:100%; max-width:460px; height:auto; aspect-ratio:1 / 1; object-fit:contain; }
+.landing-atlas-phone { display:block; width:100%; max-width:300px; height:auto; aspect-ratio:1120 / 2080; object-fit:contain; margin-inline:auto; }
 .landing-hero-screen-label {
   display:flex;
   justify-content:center;
@@ -537,12 +540,14 @@ html[data-surface=marketing] { scroll-padding-top:112px; }
 .landing-demo-preview { width:min(100%, 348px); justify-self:center; min-width:0; margin:0; }
 .landing-demo-preview figcaption { color:#e5ebf3; }
 .landing-demo-preview .landing-phone { box-shadow:inset 0 0 0 1px #ffffff2b, inset 0 0 0 2.5px #0c1016, 0 32px 60px -18px #070d17e0, 0 12px 24px -10px #070d1790; }
-.landing-demo-poster, .landing-demo-frame iframe { position:absolute; inset:0; width:100%; height:100%; border:0; display:block; }
+.landing-demo-poster { display:grid; justify-items:center; width:100%; }
+.landing-demo-frame iframe { position:absolute; inset:0; width:100%; height:100%; border:0; display:block; }
 .landing-demo-frame[data-interactive=true] .landing-demo-poster { display:none; }
 .landing-demo-frame iframe:focus-visible { outline-offset:-3px; }
 
 .landing-feature-shot { display:grid; justify-items:center; margin:0; padding:25px 12px 17px; }
 .landing-feature-shot .landing-phone, .landing-team-operation .landing-phone { max-width:268px; }
+.landing-feature-shot .landing-atlas-phone, .landing-team-operation .landing-atlas-phone { max-width:288px; }
 .feature-1 .landing-feature-shot, .feature-3 .landing-feature-shot { grid-column:1; grid-row:1; }
 .landing-team-operation {
   grid-column:1 / -1;

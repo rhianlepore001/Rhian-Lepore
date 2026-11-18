@@ -24,7 +24,7 @@ export const TodayKpiStrip: React.FC<TodayKpiStripProps> = ({ items, loading = f
     return (
       <section className="grid grid-cols-2 gap-3 xl:grid-cols-4" aria-busy="true">
         {[1, 2, 3, 4].map((i) => (
-          <Card key={i} variant="outlined" className="min-h-[96px] animate-pulse">
+          <Card key={i} variant="outlined" noPadding className="min-h-[96px] animate-pulse p-3 sm:p-4">
             <div className={`h-3 w-16 rounded ${colors.surface}`} />
             <div className={`mt-3 h-7 w-20 rounded ${colors.surface}`} />
           </Card>
@@ -39,17 +39,18 @@ export const TodayKpiStrip: React.FC<TodayKpiStripProps> = ({ items, loading = f
         <Card
           key={item.id}
           variant="outlined"
-          className="p-4"
+          noPadding
+          className="p-3 sm:p-4"
           onClick={item.onClick}
         >
           <p className={`text-xs font-semibold uppercase tracking-wide ${colors.textMuted}`}>
             {item.label}
           </p>
-          <p className={`mt-1 font-mono text-xl font-black tabular-nums md:text-2xl ${colors.text}`}>
+          <p className={`mt-1 whitespace-nowrap font-mono text-[clamp(1rem,4.4vw,1.25rem)] font-black tabular-nums sm:text-xl md:text-2xl ${colors.text}`}>
             {item.value}
           </p>
           {item.hint && (
-            <p className={`mt-0.5 text-xs ${colors.textSecondary} truncate`}>{item.hint}</p>
+            <p className={`mt-0.5 text-xs leading-snug ${colors.textSecondary}`}>{item.hint}</p>
           )}
           {item.progress != null && (
             <div

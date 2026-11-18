@@ -53,8 +53,9 @@ it('apresenta dados fictícios coerentes na demonstração', async () => {
   const client = createDemoClient();
   const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
   const { data: chair } = await client.rpc('get_chair_hour_v1', { p_month: `${today.slice(0, 7)}-01` });
-  expect(chair.total.estimated_count).toBeGreaterThanOrEqual(120);
-  expect(chair.total.estimated_count).toBeLessThanOrEqual(180);
+  const dayOfMonth = Number(today.slice(8, 10));
+  expect(chair.total.estimated_count).toBeGreaterThanOrEqual(Math.max(3, dayOfMonth * 4));
+  expect(chair.total.estimated_count).toBeLessThanOrEqual(dayOfMonth * 8 + 10);
   expect(chair.total.occupancy).toBeGreaterThanOrEqual(0.55);
   expect(chair.total.occupancy).toBeLessThanOrEqual(0.7);
   expect(chair.total.revenue_per_available_hour).toBeGreaterThanOrEqual(45);
@@ -66,7 +67,10 @@ it('apresenta dados fictícios coerentes na demonstração', async () => {
   const stats = await client.rpc('get_finance_stats', { p_start_date: `${today.slice(0, 7)}-01T00:00:00Z`, p_end_date: `${today.slice(0, 7)}-28T23:59:59Z` });
   expect(Object.values(stats.data.revenue_by_method).every(value => Number(value) > 0)).toBe(true);
   const { data: services } = await client.from('services').select('*');
-  expect(services.every((service: any) => service.image_url === null)).toBe(true);
+  expect(services.every((service: any) => typeof service.image_url === 'string' && service.image_url.startsWith('/demo/'))).toBe(true);
+  const { data: gallery } = await client.rpc('get_public_gallery_catalog', { p_business_id: demoCompanyId() });
+  expect(gallery).toHaveLength(12);
+  expect(gallery.every((item: any) => typeof item.image_url === 'string' && item.image_url.startsWith('/demo/'))).toBe(true);
   const { data: queue } = await client.from('queue_entries').select('*');
   expect(queue.every((entry: any) => Date.now() - new Date(entry.joined_at).getTime() < 60 * 60 * 1000)).toBe(true);
 });

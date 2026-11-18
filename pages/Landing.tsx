@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowDown, ArrowRight, CalendarDays, Check, CreditCard, Menu, Scissors, Smartphone, Sparkles, Wallet, X } from 'lucide-react';
+import { ArrowDown, ArrowRight, CalendarDays, Check, Clock, CreditCard, LayoutDashboard, Menu, Scissors, Smartphone, Sparkles, Users, Wallet, X } from 'lucide-react';
 import { buildWhatsAppLink } from '../utils/whatsappTemplates';
 import '../styles/landing.css';
 
@@ -7,7 +7,9 @@ const features = [
   { title: 'Uma agenda que acompanha o seu dia.', text: 'Veja os horários, os serviços e quem vai atender. Do primeiro cliente ao último encaixe, tenha o dia inteiro em uma só visão.', image: 'agenda', route: 'agenda', alt: 'Agenda real do AgendiX com horários organizados por profissional', label: 'A rotina, em ordem', action: 'Explorar a agenda' },
   { title: 'Seu cliente escolhe. Você acompanha.', text: 'Coloque seu link na bio ou compartilhe pelo WhatsApp. O cliente consulta serviços e horários, escolhe o profissional e envia o pedido de agendamento.', image: 'booking', route: 'book/simulacao', alt: 'Agendamento público do AgendiX com seleção de serviços e horários', label: 'Um link para o próximo atendimento', action: 'Explorar o agendamento' },
   { title: 'Saiba o que entra. Entenda o que fica.', text: 'Acompanhe entradas e despesas sem juntar anotações de lugares diferentes. Consulte as comissões e o movimento do caixa para decidir com mais clareza.', image: 'finance', route: 'financeiro', alt: 'Financeiro real do AgendiX com fluxo de caixa e lançamentos ilustrativos', label: 'Clareza para gerir', action: 'Explorar o financeiro' },
+  { title: 'Chame de volta quem sumiu há mais de 35 dias.', text: 'O filtro de clientes inativos mostra quem não volta há mais de 35 dias, com histórico de visitas e atalho direto para retomar o contato.', image: 'clientes', route: 'clientes?filter=Inativo', alt: 'Lista de clientes do AgendiX filtrada por inativos há mais de 35 dias', label: 'Retenção sem planilha', action: 'Explorar clientes inativos' },
 ] as const;
+
 const questions = [
   ['O AgendiX é para barbearias ou salões?', 'Para os dois. A agenda, os serviços e a linguagem acompanham o seu tipo de negócio. Experimente a barbearia e o salão na simulação antes de criar sua conta.'],
   ['Preciso de cartão para criar minha conta?', 'Não. Você cria sua conta sem cadastrar um cartão e conhece o produto durante o período de teste. Depois, escolhe o plano adequado ao seu negócio.'],
@@ -17,16 +19,20 @@ const questions = [
   ['A simulação usa dados de clientes reais?', 'Não. Os nomes, atendimentos e valores são fictícios. As alterações ficam na memória do navegador e reiniciam ao recarregar. Nenhuma mensagem é enviada pela simulação.'],
   ['Como falo com o suporte?', 'Fale com o suporte pelo WhatsApp +351 927 688 674. O link está no rodapé desta página.'],
 ];
+
 const demoViews = [
+  { id: 'dashboard', label: 'Início', icon: LayoutDashboard, route: '', task: 'Acompanhe o próximo atendimento, a receita do dia e a fila em um só painel.' },
   { id: 'agenda', label: 'Agenda', icon: CalendarDays, route: 'agenda', task: 'Encontre um horário livre e experimente criar um atendimento.' },
   { id: 'booking', label: 'Agendamento online', icon: Smartphone, route: 'book/simulacao', task: 'Escolha um serviço e veja como seu cliente pede um horário pelo seu link.' },
-  { id: 'finance', label: 'Financeiro', icon: Wallet, route: 'financeiro', task: 'Confira as entradas, as despesas e o saldo ilustrativo do período.' },
+  { id: 'fila', label: 'Fila', icon: Clock, route: 'fila', task: 'Organize quem chega sem marcar e acompanhe quem está em atendimento.' },
+  { id: 'finance', label: 'Financeiro', icon: Wallet, route: 'financeiro', task: 'Confira as entradas, as despesas e o movimento ilustrativo do período.' },
+  { id: 'clientes', label: 'Clientes', icon: Users, route: 'clientes?filter=Inativo', task: 'Filtre clientes inativos há mais de 35 dias e veja o histórico de visitas.' },
 ] as const;
 
 const teamViews = [
+  { id: 'fila', label: 'Fila', route: 'fila', action: 'Experimentar a fila digital', alt: 'Fila de espera e próximos atendimentos no AgendiX' },
+  { id: 'commissions', label: 'Comissões', route: 'financeiro?tab=commissions', action: 'Experimentar o acerto de comissões', alt: 'Gestão de comissões da equipe por ciclo no AgendiX' },
   { id: 'performance', label: 'Hora de cadeira', route: 'financeiro/performance', action: 'Experimentar a visão de hora de cadeira', alt: 'Indicadores de faturamento por hora e ocupação no AgendiX' },
-  { id: 'team', label: 'Equipe', route: 'configuracoes/equipe', action: 'Experimentar a gestão da equipe', alt: 'Gestão de profissionais e comissões no AgendiX' },
-  { id: 'queue', label: 'Fila', route: 'fila', action: 'Experimentar a fila digital', alt: 'Fila de espera e próximos atendimentos no AgendiX' },
 ] as const;
 
 type Niche = 'barber' | 'beauty';
@@ -43,12 +49,27 @@ const BusinessSelector = ({ niche, label, onChange }: { niche: Niche; label: str
 
 const PhoneFrame = ({ niche, children }: { niche: Niche; children: React.ReactNode }) => (
   <div className="landing-phone" data-niche={niche}>
-    <div className="landing-phone-screen">{children}</div>
+    <span className="landing-phone-btn-mute" aria-hidden="true" />
+    <span className="landing-phone-btn-vol-up" aria-hidden="true" />
+    <span className="landing-phone-btn-vol-down" aria-hidden="true" />
+    <span className="landing-phone-btn-power" aria-hidden="true" />
+    <div className="landing-phone-screen">
+      <div className="landing-phone-statusbar" aria-hidden="true">
+        <span className="landing-phone-time">9:41</span>
+        <span className="landing-phone-island"><span className="landing-phone-lens" /></span>
+        <span className="landing-phone-indicators">
+          <span className="landing-phone-signal"><i /><i /><i /><i /></span>
+          <span className="landing-phone-battery"><i /></span>
+        </span>
+      </div>
+      <div className="landing-phone-viewport">{children}</div>
+      <div className="landing-phone-homebar" aria-hidden="true" />
+    </div>
   </div>
 );
 
 const PhoneImage = ({ niche, view, alt, eager }: { niche: Niche; view: ProductView; alt: string; eager?: boolean }) => (
-  <img src={`/landing/phone-${niche}-${view}.webp`} alt={alt} width="390" height="640"
+  <img src={`/landing/phone-${niche}-${view}.webp`} alt={alt} width="780" height="1588"
     decoding="async" loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : undefined} />
 );
 
@@ -56,15 +77,15 @@ export const Landing = () => {
   const [menu, setMenu] = useState(false);
   const [niche, setNiche] = useState<Niche>('barber');
   const [nicheChosen, setNicheChosen] = useState(false);
-  const [operation, setOperation] = useState<(typeof teamViews)[number]['id']>('performance');
-  const [view, setView] = useState<(typeof demoViews)[number]['id']>('booking');
+  const [operation, setOperation] = useState<(typeof teamViews)[number]['id']>('fila');
+  const [view, setView] = useState<(typeof demoViews)[number]['id']>('dashboard');
   const [interactive, setInteractive] = useState(false);
   const menuTrigger = useRef<HTMLButtonElement>(null);
   const navigation = useRef<HTMLElement>(null);
   const header = useRef<HTMLElement>(null);
   const activeView = demoViews.find(item => item.id === view)!;
   const signupHref = nicheChosen ? `/#/register?type=${niche}` : '/#/register';
-  const demoHref = `/#/demo/${niche}/${activeView.route}`;
+  const demoHref = activeView.route ? `/#/demo/${niche}/${activeView.route}` : `/#/demo/${niche}`;
   const activeOperation = teamViews.find(item => item.id === operation)!;
 
   useEffect(() => {
@@ -165,9 +186,9 @@ export const Landing = () => {
           </div>
           <div className="landing-phone-stage landing-hero-product">
             <BusinessSelector niche={niche} label="Seu tipo de negócio" onChange={chooseNiche} />
-            <a href={`/#/demo/${niche}/agenda`} className="landing-product-stage" aria-label={`Experimentar a agenda do AgendiX: ${businesses[niche]}`}>
-              <PhoneFrame niche={niche}><PhoneImage niche={niche} view="agenda" eager alt={`Agenda do AgendiX em um celular, com atendimentos fictícios de ${businesses[niche]}`} /></PhoneFrame>
-              <span className="landing-hero-screen-label">Agenda · Dados fictícios <ArrowRight size={15} aria-hidden="true" /></span>
+            <a href={`/#/demo/${niche}`} className="landing-product-stage" aria-label={`Experimentar o painel de início do AgendiX: ${businesses[niche]}`}>
+              <PhoneFrame niche={niche}><PhoneImage niche={niche} view="dashboard" eager alt={`Painel de início do AgendiX em um celular, com dados fictícios de ${businesses[niche]}`} /></PhoneFrame>
+              <span className="landing-hero-screen-label">Painel de início · Dados fictícios <ArrowRight size={15} aria-hidden="true" /></span>
             </a>
           </div>
         </div>
@@ -178,7 +199,7 @@ export const Landing = () => {
           <div className="landing-demo-stage">
             <div className="landing-demo-controls">
               <h2>Experimente o AgendiX.</h2>
-              <p>Escolha o seu tipo de negócio e explore as telas do produto com dados fictícios, sem cadastro.</p>
+              <p>Escolha o seu tipo de negócio e explore as telas reais do produto com dados fictícios, sem cadastro.</p>
               <BusinessSelector niche={niche} label="Negócio da demonstração" onChange={chooseNiche} />
               <div className="landing-demo-view-tabs" role="group" aria-label="Tela da demonstração">
                 {demoViews.map(({ id, label, icon: Icon }) => (
@@ -211,7 +232,7 @@ export const Landing = () => {
       <section id="produto" className="landing-features" tabIndex={-1}>
         <div className="landing-wrap wrap"><div className="landing-benefits-head"><span className="landing-eyebrow">Da primeira marcação ao fechamento</span><h2>Seu negócio funciona melhor<br /><span>quando tudo se conecta.</span></h2><p>A organização deixa de ser mais uma tarefa e passa a fazer parte do atendimento.</p></div>{features.slice(0, 2).map(feature)}</div>
       </section>
-      <section className="landing-features landing-features-more" aria-label="Financeiro e gestão da equipe"><div className="landing-wrap wrap">{features.slice(2).map((item, index) => feature(item, index + 2))}
+      <section className="landing-features landing-features-more" aria-label="Financeiro, clientes e gestão da equipe"><div className="landing-wrap wrap">{features.slice(2).map((item, index) => feature(item, index + 2))}
         <div className="landing-team"><div className="landing-team-intro"><span className="landing-eyebrow">O valor de cada atendimento</span><h3>Seu tempo importa.<br /><span>O da sua equipe, também.</span></h3><p>Acompanhe comissões e faturamento por hora de cadeira. Para quem chega sem marcar, organize a fila em uma tela própria.</p><div className="landing-team-points"><span><Check size={16} aria-hidden="true" /> Mais clareza sobre o trabalho da equipe</span><span><Check size={16} aria-hidden="true" /> Atendimentos com e sem agendamento</span></div></div><figure className="landing-team-photo"><img src="/landing/team-salon-800.webp" srcSet="/landing/team-salon-800.webp 800w, /landing/team-salon-1448.webp 1448w" sizes="(max-width: 760px) 100vw, 40vw" loading="lazy" width="1448" height="1086" alt="Duas profissionais de salão organizando o dia juntas com um tablet" /></figure><div className="landing-team-operation landing-phone-stage">
           <div className="landing-team-operation-copy">
             <div className="landing-operation-tabs" role="group" aria-label="Gestão da equipe">
@@ -251,6 +272,6 @@ export const Landing = () => {
       <section className="landing-faq"><div className="landing-wrap wrap landing-faq-grid"><div><span className="landing-eyebrow">Antes de começar</span><h2>Uma boa escolha<br />começa com clareza.</h2><p>As respostas para você dar o próximo passo com tranquilidade.</p></div><div>{questions.map(([question, answer]) => <details key={question}><summary>{question}<span aria-hidden="true">+</span></summary><p>{answer}</p></details>)}</div></div></section>
       <section className="landing-close"><div className="landing-wrap wrap"><div><span className="landing-eyebrow">Seu talento merece esse cuidado</span><h2>Mais organização<br />nos bastidores.<br /><span>Mais presença<br />no atendimento.</span></h2></div><div className="landing-close-action"><p>Conheça o AgendiX na sua rotina.<br />Comece com uma conta grátis.</p><a className="landing-button landing-button-light" href={signupHref}>Crie sua conta grátis <ArrowRight size={18} aria-hidden="true" /></a><span><CreditCard size={15} aria-hidden="true" /> Sem cartão no cadastro</span></div></div></section>
     </main>
-    <footer className="landing-footer"><div className="landing-wrap wrap"><div className="landing-footer-top"><div><a className="landing-wordmark" href="/#/landing">AgendiX</a><p>Seu ofício merece uma boa gestão.</p></div><a href={buildWhatsAppLink('+351 927 688 674', 'PT')} target="_blank" rel="noopener noreferrer">Suporte no WhatsApp <ArrowRight size={16} aria-hidden="true" /></a></div><div className="landing-footer-bottom"><span>© {new Date().getFullYear()} AgendiX</span><a href="/#/termos">Termos de uso</a><a href="/#/privacidade">Privacidade</a></div></div></footer>
+    <footer className="landing-footer"><div className="landing-wrap wrap"><div className="landing-footer-top"><div><a className="landing-wordmark" href="/#/landing">AgendiX</a><p>Seu ofício merece uma boa gestão.</p></div><a href={buildWhatsAppLink('+351 927 688 674', 'PT')} target="_blank" rel="noopener noreferrer">Suporte no WhatsApp <ArrowRight size={16} aria-hidden="true" /></a></div><div className="landing-footer-bottom"><span>© {new Date().getFullYear()} AgendiX</span><a href="/#/termos">Termos de uso</a><a href="/#/privacidade">Privacidade</a><span>Fotos da demonstração: Pexels</span></div></div></footer>
   </div>;
 };

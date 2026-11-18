@@ -8,6 +8,45 @@ const unsupported = (name: string): never => { throw new Error(`Operação indis
 const copy = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
 const ok = (data: any) => ({ data: copy(data), error: null, count: Array.isArray(data) ? data.length : null });
 
+const comparable = (value: unknown) => typeof value === 'string' && /T\d/.test(value) ? new Date(value).getTime() : value;
+const compare = (left: unknown, op: string, right: unknown) => {
+  const a = comparable(left) as any;
+  const b = comparable(right) as any;
+  switch (op) {
+    case 'eq': return String(a) === String(b);
+    case 'neq': return String(a) !== String(b);
+    case 'gte': return a >= b;
+    case 'gt': return a > b;
+    case 'lte': return a <= b;
+    case 'lt': return a < b;
+    case 'is': return (a ?? null) === (b === 'null' ? null : b === 'true' ? true : b === 'false' ? false : b);
+    case 'in': return String(b).replace(/^\(|\)$/g, '').split(',').map(v => v.trim().replace(/^"|"$/g, '')).includes(String(a));
+    default: return unsupported(`operador ${op}`);
+  }
+};
+const splitTopLevel = (input: string) => {
+  const parts: string[] = [];
+  let depth = 0;
+  let current = '';
+  for (const char of input) {
+    if (char === '(') depth++;
+    if (char === ')') depth--;
+    if (char === ',' && depth === 0) { parts.push(current); current = ''; } else current += char;
+  }
+  if (current) parts.push(current);
+  return parts;
+};
+/** Avalia um filtro PostgREST `.or('a.eq.1,and(b.gte.x,c.is.null)')` sobre uma linha. */
+function matchesOrFilter(row: DemoRow, filter: string, mode: 'or' | 'and' = 'or'): boolean {
+  const results = splitTopLevel(filter).map(part => {
+    const group = part.match(/^(and|or)\((.*)\)$/);
+    if (group) return matchesOrFilter(row, group[2], group[1] as 'or' | 'and');
+    const [key, op, ...rest] = part.split('.');
+    return compare(row[key], op, rest.join('.'));
+  });
+  return mode === 'or' ? results.some(Boolean) : results.every(Boolean);
+}
+
 export function createDemoClient() {
   const tenants = { barber: createDemoSeed('barber'), beauty: createDemoSeed('beauty') };
   const tables = () => tenants[getDemoNiche()];
@@ -23,6 +62,7 @@ export function createDemoClient() {
     const query: Record<string, any> = {};
     const chain = (name: string, fn: (...args: any[]) => void) => { query[name] = (...args: any[]) => { fn(...args); return facade; }; };
     chain('select', () => undefined);
+    for (const op of ['overrideTypes', 'returns', 'throwOnError', 'abortSignal']) chain(op, () => undefined);
     chain('eq', (key, value) => { rows = rows.filter(r => r[key] === value); });
     chain('neq', (key, value) => { rows = rows.filter(r => r[key] !== value); });
     chain('in', (key, values) => { rows = rows.filter(r => values.includes(r[key])); });
@@ -32,6 +72,7 @@ export function createDemoClient() {
       const right = typeof value === 'string' && /T\d/.test(value) ? new Date(value).getTime() : value;
       return op === 'gte' ? left >= right : op === 'gt' ? left > right : op === 'lte' ? left <= right : left < right;
     }); });
+    chain('or', (filter: string) => { rows = rows.filter(r => matchesOrFilter(r, filter)); });
     chain('order', (key, options) => { rows.sort((a, b) => String(a[key] ?? '').localeCompare(String(b[key] ?? '')) * (options?.ascending === false ? -1 : 1)); });
     chain('limit', n => { rows = rows.slice(0, n); });
     chain('range', (start, end) => { rows = rows.slice(start, end + 1); });
@@ -61,13 +102,56 @@ export function createDemoClient() {
     const t = tables();
     let data: any;
     switch (name) {
-      case 'list_company_pending_public_bookings': data = t.public_bookings; break;
+      case 'list_company_pending_public_bookings': data = t.public_bookings.filter(b => b.status === 'pending'); break;
+      case 'accept_public_booking_v2':
+      case 'accept_public_booking': {
+        const booking = t.public_bookings.find(b => b.id === args.p_booking_id);
+        if (!booking) return unsupported('solicitação pública não encontrada');
+        booking.status = 'confirmed';
+        const serviceList = t.services.filter(s => (booking.service_ids ?? []).includes(s.id));
+        const serviceNames = serviceList.map(s => s.name).join(', ') || 'Serviço';
+        let client = t.clients.find(c => c.phone === booking.customer_phone || c.name === booking.customer_name);
+        if (!client) {
+          client = { id: crypto.randomUUID(), user_id: demoCompanyId(), company_id: demoCompanyId(), name: booking.customer_name, phone: booking.customer_phone ?? '', email: null, photo_url: null, is_active: true };
+          t.clients.push(client);
+        }
+        const appointment = {
+          id: crypto.randomUUID(),
+          user_id: demoCompanyId(),
+          company_id: demoCompanyId(),
+          client_id: client.id,
+          clients: client,
+          professional_id: booking.professional_id ?? t.team_members[0].id,
+          service: serviceNames,
+          price: booking.total_price ?? serviceList.reduce((sum, s) => sum + Number(s.price), 0),
+          duration_minutes: booking.duration_minutes ?? 30,
+          appointment_time: booking.appointment_time,
+          completed_at: null,
+          status: 'Confirmed',
+          origin: 'booking',
+          notes: booking.notes ?? '',
+          payment_method: null,
+          public_booking_id: booking.id,
+        };
+        t.appointments.push(appointment);
+        data = [{ appointment_id: appointment.id, service_names: serviceNames }];
+        break;
+      }
+      case 'reject_public_booking_v2':
+      case 'reject_public_booking': {
+        const booking = t.public_bookings.find(b => b.id === args.p_booking_id);
+        if (!booking) return unsupported('solicitação pública não encontrada');
+        booking.status = 'cancelled';
+        data = null;
+        break;
+      }
       case 'get_public_profile_by_slug': data = t.profiles[0]; break;
       case 'get_public_business_settings_json': data = t.business_settings[0]; break;
       case 'get_public_services_catalog': data = t.services; break;
       case 'get_public_categories_catalog': data = t.service_categories; break;
       case 'get_public_team_catalog': data = t.team_members; break;
-      case 'get_public_products_catalog': case 'get_public_gallery_catalog': case 'get_full_dates_v2': case 'get_full_dates': case 'get_active_booking_by_phone': case 'get_public_client_by_phone': case 'get_client_booking_cancellations': data = []; break;
+      case 'get_public_gallery_catalog': data = t.business_galleries; break;
+      case 'get_public_products_catalog': case 'get_full_dates_v2': case 'get_full_dates': case 'get_active_booking_by_phone': case 'get_public_client_by_phone': case 'get_client_booking_cancellations': data = []; break;
       case 'get_available_slots_v2': case 'get_available_slots': data = demoSlots(t, args); break;
       case 'get_first_available_professional': data = t.team_members[0].id; break;
       case 'create_secure_booking': {
@@ -86,7 +170,7 @@ export function createDemoClient() {
         t.public_bookings.push(row); data = [row]; break;
       }
       case 'get_finance_stats': {
-        const records = t.finance_records.filter(r => r.created_at >= args.p_start_date && r.created_at <= args.p_end_date && (!args.p_professional_id || r.professional_id === args.p_professional_id)).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        const records = t.finance_records.filter(r => { const day = getDateStringInTimeZone(r.created_at, 'America/Sao_Paulo'); return day >= String(args.p_start_date).slice(0, 10) && day <= String(args.p_end_date).slice(0, 10) && (!args.p_professional_id || r.professional_id === args.p_professional_id); }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         const revenue = records.reduce((sum, r) => sum + r.revenue, 0);
         const expenses = records.filter(r => r.type === 'expense').reduce((sum, r) => sum + r.expense, 0);
         const revenueByMethod = Object.fromEntries(['pix', 'dinheiro', 'cartao'].map(method => [method, records.filter(r => r.type === 'revenue' && r.payment_method === method).reduce((sum, r) => sum + r.revenue, 0)]));
@@ -116,8 +200,17 @@ export function createDemoClient() {
       }
       case 'get_staff_performance_v1': data = demoPerformance(t, args); break;
       case 'get_commission_cycle_v1': {
-        const today = new Date().toISOString().slice(0, 10);
-        data = { cycle: { start: today.slice(0, 8) + '01', end: today, open: true }, settlement_day: 5, tz: 'America/Sao_Paulo', currency: 'BRL', previous_end: today, next_end: today, members: t.team_members.map(member => ({ professional_id: member.id, name: member.name, photo_url: null, inactive: false, commission_rate: 40, a_pagar_ciclo: 0, saldo_acumulado: 0, saldo_anterior: 0, primeiro_nao_pago: null, servicos_ciclo: 0, produtos_ciclo: 0, pago_ciclo: 0, pago_ciclo_em: null, pago_calculado: 0, status: 'nada_a_pagar', ultimo_pagamento: null })), totals: { a_pagar_ciclo: 0, pendentes: 0, pago_ciclo: 0 } }; break;
+        const today = getDateStringInTimeZone(new Date(), 'America/Sao_Paulo');
+        const start = today.slice(0, 8) + '01';
+        const members = t.team_members.map(member => {
+          const pending = t.finance_records.filter(r => r.type === 'revenue' && r.professional_id === member.id && !r.commission_paid && r.commission_value > 0);
+          const inCycle = pending.filter(r => getDateStringInTimeZone(r.created_at, 'America/Sao_Paulo') >= start);
+          const previous = pending.filter(r => getDateStringInTimeZone(r.created_at, 'America/Sao_Paulo') < start);
+          const sum = (rows: DemoRow[]) => Math.round(rows.reduce((acc, r) => acc + Number(r.commission_value), 0) * 100) / 100;
+          const first = pending.map(r => getDateStringInTimeZone(r.created_at, 'America/Sao_Paulo')).sort()[0] ?? null;
+          return { professional_id: member.id, name: member.name, photo_url: null, inactive: false, commission_rate: member.is_owner ? 0 : 40, a_pagar_ciclo: sum(inCycle), saldo_acumulado: sum(pending), saldo_anterior: sum(previous), primeiro_nao_pago: first, servicos_ciclo: inCycle.length, produtos_ciclo: 0, pago_ciclo: 0, pago_ciclo_em: null, pago_calculado: 0, status: pending.length ? 'pendente' : 'nada_a_pagar', ultimo_pagamento: null };
+        });
+        data = { cycle: { start, end: today, open: true }, settlement_day: 5, tz: 'America/Sao_Paulo', currency: 'BRL', previous_end: start, next_end: today, members, totals: { a_pagar_ciclo: members.reduce((acc, m) => acc + m.a_pagar_ciclo, 0), pendentes: members.filter(m => m.status === 'pendente').length, pago_ciclo: 0 } }; break;
       }
       case 'get_checkout_products_v1': data = []; break;
       case 'update_queue_status': {
@@ -129,6 +222,7 @@ export function createDemoClient() {
         data = null; break;
       }
       case 'get_monthly_finance_history': data = []; break;
+      case 'log_error': case 'generate_commission_reminders_v1': data = null; break;
       case 'fetch_queue_settings': data = { queueMode: 'shared', allowLeave: true, lateMinutes: 5 }; break;
       default: return unsupported(`RPC ${name}`);
     }

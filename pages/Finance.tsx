@@ -21,7 +21,6 @@ import { ASSISTANT_ENABLED } from '../utils/featureFlags';
 import { logger } from '../utils/Logger';
 import { mapError, formatUserFacingError } from '../utils/mapError';
 import { filterStaffTransactions, mapFinanceTransaction } from '../services/finance';
-import { isDemoMode } from '../lib/demo/mode';
 import {
   financeDeleteConfirmMessage,
   mapFinanceDeleteError,
@@ -107,7 +106,6 @@ const [searchParams, setSearchParams] = useSearchParams();
   const [endDate, setEndDate] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'revenue' | 'expense'>('all');
   const [filterPaymentMethod, setFilterPaymentMethod] = useState<string>('all');
-  const [demoTransactionLimit, setDemoTransactionLimit] = useState(6);
   // Staff não vê aba de comissões nem histórico
   const isStaff = role === 'staff';
   const canDeleteTransactions = shouldShowFinanceDelete(role);
@@ -750,12 +748,10 @@ const [searchParams, setSearchParams] = useSearchParams();
                     />
                 <FinanceKpi
                   icon={<Wallet className="h-4 w-4" />}
-                  title={isDemoMode() ? 'Saldo do período' : 'Lucro'}
+                  title="Lucro"
                   value={formatCurrency(summary.profit || 0, currencyRegion)}
                   subtitle={
-                    isDemoMode()
-                      ? 'Antes de comissões pendentes'
-                      : summary.revenue > 0
+                    summary.revenue > 0
                       ? `${Math.round(((summary.profit || 0) / summary.revenue) * 100)}% margem`
                       : 'Sem receita no período'
                   }
@@ -839,7 +835,7 @@ const [searchParams, setSearchParams] = useSearchParams();
             <div className="p-3 md:p-4">
               <Table<Transaction>
                 columns={transactionColumns}
-                data={isDemoMode() ? transactions.slice(0, demoTransactionLimit) : transactions}
+                data={transactions}
                 rowKey={(t) => t.id}
                 stickyHeader
                 compact
@@ -890,11 +886,6 @@ const [searchParams, setSearchParams] = useSearchParams();
                   </button>
                 )}
               />
-              {isDemoMode() && transactions.length > demoTransactionLimit && (
-                <Button variant="ghost" onClick={() => setDemoTransactionLimit(limit => limit + 6)}>
-                  Mostrar mais transações
-                </Button>
-              )}
             </div>
           </Card>
           </>

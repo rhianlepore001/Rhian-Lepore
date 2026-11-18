@@ -212,7 +212,7 @@ export const PublicBooking: React.FC = () => {
         if (!business) return;
         const html = document.documentElement;
         html.setAttribute('data-theme', themeOverride);
-        html.setAttribute('data-mode', isDemoMode() || themeOverride === 'beauty' ? 'light' : 'dark');
+        html.setAttribute('data-mode', themeOverride === 'beauty' ? 'light' : 'dark');
     }, [business, themeOverride]);
 
     const accentTextOnAccent = isBeauty ? 'text-[var(--color-text)]' : 'text-[var(--color-on-accent)]';

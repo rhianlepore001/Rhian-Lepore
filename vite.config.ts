@@ -55,6 +55,7 @@ export default defineConfig(({ mode }) => {
           // Ponte de transição/segurança (public/sw-bridge.js): ver comentário no arquivo.
           importScripts: ['/sw-bridge.js'],
           globIgnores: ['sw-bridge.js'],
+          navigateFallbackDenylist: [/^\/demo-preview(?:\?|$)/],
           // Só o shell (JS/CSS/HTML) + ícones leves; os PNGs grandes antigos em /public ficam fora do precache.
           globPatterns: ['**/*.{js,css,html}', 'icons/*.png', 'img/logo-*.webp'],
         },

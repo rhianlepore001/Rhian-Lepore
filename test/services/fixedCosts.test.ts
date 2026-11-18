@@ -19,8 +19,26 @@ describe('custos fixos', () => {
 
     const result = await fixedCostsApi.list('empresa');
     expect(result.lowMargin).toBe(20);
+    expect(result.lowMarginSaved).toBe(false);
     expect(settingsSelect).toHaveBeenCalledWith('low_margin_pct');
     expect(settingsEq).toHaveBeenCalledWith('company_id', 'empresa');
+  });
+
+  it('lowMarginSaved true quando já existe linha em chair_hour_settings', async () => {
+    const maybeSingle = vi.fn().mockResolvedValue({ data: { low_margin_pct: 20 }, error: null });
+    const settingsEq = vi.fn().mockReturnValue({ maybeSingle });
+    const settingsSelect = vi.fn().mockReturnValue({ eq: settingsEq });
+    const genericResult = { data: [], error: null };
+    const query: { eq: ReturnType<typeof vi.fn>; order: ReturnType<typeof vi.fn>; then: Promise<typeof genericResult>['then'] } = {
+      eq: vi.fn(), order: vi.fn(), then: Promise.resolve(genericResult).then.bind(Promise.resolve(genericResult)),
+    };
+    query.eq.mockReturnValue(query);
+    query.order.mockResolvedValue(genericResult);
+    state.from.mockImplementation(table => table === 'chair_hour_settings' ? { select: settingsSelect } : { select: vi.fn().mockReturnValue(query) });
+
+    const result = await fixedCostsApi.list('empresa');
+    expect(result.lowMarginSaved).toBe(true);
+    expect(result.lowMargin).toBe(20);
   });
 
   it('salva o limite na configuração privada com identificação da empresa', async () => {

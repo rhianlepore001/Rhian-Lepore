@@ -750,10 +750,12 @@ const [searchParams, setSearchParams] = useSearchParams();
                     />
                 <FinanceKpi
                   icon={<Wallet className="h-4 w-4" />}
-                  title="Lucro"
+                  title={isDemoMode() ? 'Saldo do período' : 'Lucro'}
                   value={formatCurrency(summary.profit || 0, currencyRegion)}
                   subtitle={
-                    summary.revenue > 0
+                    isDemoMode()
+                      ? 'Antes de comissões pendentes'
+                      : summary.revenue > 0
                       ? `${Math.round(((summary.profit || 0) / summary.revenue) * 100)}% margem`
                       : 'Sem receita no período'
                   }

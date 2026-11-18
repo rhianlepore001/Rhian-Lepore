@@ -1,6 +1,6 @@
 import { syncSupabaseMode } from './lib/supabase';
 import { DemoPublicClientProvider } from './contexts/DemoPublicClientContext';
-import { isDemoMode } from './lib/demo/mode';
+import { isDemoMode, isDemoPreview } from './lib/demo/mode';
 import { MarketingConsent } from './components/MarketingConsent';
 import { UpdatePrompt } from './components/UpdatePrompt';
 import React, { Suspense } from 'react';
@@ -71,6 +71,7 @@ const DashboardCockpitDemo = React.lazy(() => import('./pages/DashboardCockpitDe
 const FinanceChartDemo = React.lazy(() => import('./pages/FinanceChartDemo').then(module => ({ default: module.FinanceChartDemo })));
 const Placeholder = React.lazy(() => import('./pages/Placeholder').then(module => ({ default: module.Placeholder })));
 const StaffInsights = React.lazy(() => import('./pages/StaffInsights').then(module => ({ default: module.StaffInsights })));
+const HourlyResults = React.lazy(() => import('./pages/HourlyResults').then(module => ({ default: module.HourlyResults })));
 const StaffPerformance = React.lazy(() => {
   void import('./hooks/useStaffPerformance').then((m) => m.prefetchStaffPerformanceFromLocation());
   return import('./pages/StaffPerformance').then((module) => ({ default: module.StaffPerformance }));
@@ -115,7 +116,6 @@ const RoutedOutlet = () => {
 // Wrapper for authenticated routes that need the Sidebar/Header
 const ProtectedLayout = () => {
   const { isAuthenticated, loading, tutorialCompleted, role } = useAuth();
-  const location = useLocation();
 
   if (loading) {
     if (typeof window !== 'undefined' && window.location.hash.includes('/financeiro/performance')) {
@@ -132,7 +132,6 @@ const ProtectedLayout = () => {
     if (window.location.hash.includes('update-password')) {
       return <Outlet />;
     }
-    if (location.pathname === '/') return <Landing />;
     return <Navigate to="/login" replace />;
   }
 
@@ -201,12 +200,15 @@ const ClientsRouteGuard = ({ children }: { children: React.ReactElement }) => {
 const AppRoutes: React.FC = () => {
   // Retorno do e-mail de redefinição de senha: capturado em lib/supabase.ts
   // (captureRecoveryCallback) antes do client ler a URL.
+  const { pathname } = useLocation();
+  if (isDemoPreview() && !/^\/demo(?:\/|$)/.test(pathname)) return <Navigate to="/demo/barber/agenda" replace />;
 
   return (
     <ErrorBoundary>
       <Suspense fallback={<LoadingFull />}>
       <Routes>
         {/* Public / Standalone Routes */}
+        <Route path="/landing" element={<Landing />} />
         <Route path="/demo/*" element={<Demo />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
@@ -276,6 +278,7 @@ const AppRoutes: React.FC = () => {
           <Route path="/financeiro/performance" element={<PerformanceAccessGuard><OwnerRouteGuard><Suspense fallback={<PerformancePageSkeleton />}><StaffPerformance /></Suspense></OwnerRouteGuard></PerformanceAccessGuard>} />
           <Route path="/insights" element={<OwnerRouteGuard><Reports /></OwnerRouteGuard>} />
           <Route path="/meus-insights" element={<StaffInsights />} />
+          <Route path="/resultados-por-hora" element={<HourlyResults />} />
 
           {/* Settings Routes */}
           <Route path="/configuracoes" element={<OwnerRouteGuard><Navigate to="/configuracoes/geral" replace /></OwnerRouteGuard>} />

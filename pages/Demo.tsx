@@ -1,9 +1,9 @@
 import { DemoNavigation, DemoScreenNavigation } from '../components/DemoNavigation';
-import React, { lazy, Suspense, useEffect, useState } from 'react';
+import React, { lazy, Suspense, useLayoutEffect, useState } from 'react';
 import { Link, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { UIProvider } from '../contexts/UIContext';
-import { getDemoNiche } from '../lib/demo/mode';
+import { getDemoNiche, isDemoPreview } from '../lib/demo/mode';
 import '../styles/demo.css';
 
 const Agenda = lazy(() => import('./Agenda').then(m => ({ default: m.Agenda })));
@@ -16,7 +16,7 @@ const Team = lazy(() => import('./settings/TeamSettings').then(m => ({ default: 
 const screens = [
   { path: 'agenda', label: 'Agenda', title: 'Uma agenda para o seu dia.', text: 'Toque em um atendimento para ver os detalhes ou em Novo atendimento para experimentar. Suas alterações ficam só nesta simulação.' },
   { path: 'book/simulacao', label: 'Agendamento online', title: 'Agora, o lado do cliente.', text: 'Escolha um serviço e um horário. Este é o mesmo agendamento público do AgendiX, com dados fictícios.' },
-  { path: 'financeiro', label: 'Financeiro', title: 'Veja o que entrou e o que sobrou.', text: 'Explore o fluxo de caixa e os lançamentos. Os valores são ilustrativos, calculados a partir dos atendimentos da simulação.' },
+  { path: 'financeiro', label: 'Financeiro', title: 'Entenda as entradas e as saídas.', text: 'Explore os lançamentos e o saldo de receitas menos despesas registradas. Comissões pendentes não são descontadas desse saldo. Os valores são ilustrativos.' },
   { path: 'financeiro/performance', label: 'Hora de cadeira', title: 'Entenda o tempo da sua equipe.', text: 'Compare atendimentos, comissões e faturamento por hora. Dados ilustrativos, sem informações de negócios reais.' },
   { path: 'fila', label: 'Fila', title: 'Organize quem chega sem marcar.', text: 'Acompanhe a espera e o atendimento. Esta demonstração não envia mensagens aos clientes.' },
   { path: 'configuracoes/equipe', label: 'Equipe', title: 'Cada profissional no seu lugar.', text: 'Conheça a gestão da equipe e das comissões. Convites e integrações externas ficam indisponíveis na simulação.' },
@@ -25,15 +25,17 @@ const screens = [
 export const Demo = () => {
   const niche = getDemoNiche();
   const base = `/demo/${niche}`;
+  const embedded = isDemoPreview();
   const location = useLocation();
+  const currentScreen = screens.find(screen => location.pathname === `${base}/${screen.path}`)?.path ?? 'agenda';
   const navigate = useNavigate();
   const [tour, setTour] = useState<number | null>(null);
   const [client] = useState(() => new QueryClient({ defaultOptions: { queries: { retry: false } } }));
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = document.documentElement;
     const previous = { theme: root.getAttribute('data-theme'), mode: root.getAttribute('data-mode') };
     root.setAttribute('data-theme', niche);
-    root.setAttribute('data-mode', 'light');
+    root.setAttribute('data-mode', niche === 'beauty' ? 'light' : 'dark');
     return () => {
       for (const [key, value] of Object.entries(previous)) {
         if (value) root.setAttribute(`data-${key}`, value); else root.removeAttribute(`data-${key}`);
@@ -45,12 +47,12 @@ export const Demo = () => {
     navigate(`${base}/${screens[step].path}`);
   };
   return <QueryClientProvider client={client}><UIProvider>
-    <div className="demo-shell">
-      <header className="demo-header">
-        <Link className="demo-brand" to="/">AgendiX</Link>
+    <div className="demo-shell" data-embedded={embedded || undefined}>
+      {!embedded && <><header className="demo-header">
+        <Link className="demo-brand" to="/landing">AgendiX</Link>
         <div className="demo-niches" aria-label="Tipo de negócio">
-          <Link aria-current={niche === 'barber' ? 'page' : undefined} to="/demo/barber/agenda">Barbearia</Link>
-          <Link aria-current={niche === 'beauty' ? 'page' : undefined} to="/demo/beauty/agenda">Salão</Link>
+          <Link aria-current={niche === 'barber' ? 'page' : undefined} to={`/demo/barber/${currentScreen}`}>Barbearia</Link>
+          <Link aria-current={niche === 'beauty' ? 'page' : undefined} to={`/demo/beauty/${currentScreen}`}>Salão</Link>
         </div>
         <a className="demo-signup" href={niche === 'beauty' ? '/#/register?type=beauty' : '/#/register'}>Crie sua conta grátis</a>
       </header>
@@ -62,8 +64,8 @@ export const Demo = () => {
       {tour !== null && <aside className="demo-tour" aria-label="Tour guiado" aria-live="polite">
         <div><span>Passo {tour + 1} de {screens.length}</span><h2>{screens[tour].title}</h2><p>{screens[tour].text}</p></div>
         <div className="demo-tour-actions">{tour > 0 && <button onClick={() => goTour(tour - 1)}>Anterior</button>}<button onClick={() => tour < screens.length - 1 ? goTour(tour + 1) : setTour(null)}>{tour < screens.length - 1 ? 'Próximo passo' : 'Concluir tour'}</button><button onClick={() => setTour(null)}>Fechar tour</button></div>
-      </aside>}
-      <DemoNavigation><main className="demo-content" data-demo-screen={screens.find(screen => location.pathname === `${base}/${screen.path}`)?.path ?? 'agenda'} key={niche} onClickCapture={event => {
+      </aside>}</>}
+      <DemoNavigation><main className="demo-content" data-demo-screen={currentScreen} key={niche} onClickCapture={event => {
         const anchor = (event.target as HTMLElement).closest('a');
         if (anchor && /wa\.me|whatsapp|mailto:/.test(anchor.href)) { event.preventDefault(); event.stopPropagation(); }
       }}>

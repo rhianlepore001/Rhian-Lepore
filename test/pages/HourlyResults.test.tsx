@@ -165,8 +165,7 @@ describe('HourlyResults — gestor', () => {
     wizardList.mockResolvedValue(wizardPayload(false));
     state.data = { month: '2026-11-01', role: 'owner', total: { ...metrics, available_minutes: 600, worked_minutes: 0 }, professionals: [] };
     const { container } = mount();
-    await waitFor(() => expect(wizardList).toHaveBeenCalledWith('c1'));
-    expect(screen.getByText(/Aqui você vê se cada hora aberta paga as contas/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Aqui você vê se cada hora aberta paga as contas/i)).toBeInTheDocument();
     expect(screen.getAllByText('Falta').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText(/Horários/i).length).toBeGreaterThan(0);
     expect(screen.queryByText(/Ainda não há atendimento fechado neste período/i)).not.toBeInTheDocument();
@@ -210,7 +209,7 @@ describe('HourlyResults — gestor', () => {
 
   it('links dos passos apontam para financeiro com query bloco=', async () => {
     mount();
-    await waitFor(() => expect(wizardList).toHaveBeenCalledWith('c1'));
+    await screen.findAllByText('Falta');
     const stepLinks = screen.getAllByRole('link').filter((el) => /contas do mês|horários|material|sobrar|sobra/i.test(el.textContent ?? ''));
     expect(stepLinks.length).toBeGreaterThanOrEqual(4);
     for (const link of stepLinks.slice(0, 4)) {
@@ -229,7 +228,7 @@ describe('HourlyResults — gestor', () => {
       lowMarginSaved: false,
     });
     mount();
-    await waitFor(() => expect(wizardList).toHaveBeenCalled());
+    await screen.findByText('Feito');
     const horariosRow = screen.getAllByText(/Horários/i).find((node) => node.closest('li'));
     expect(horariosRow).toBeTruthy();
     const row = horariosRow!.closest('li')!;

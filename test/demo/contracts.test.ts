@@ -72,5 +72,8 @@ it('apresenta dados fictícios coerentes na demonstração', async () => {
   expect(gallery).toHaveLength(12);
   expect(gallery.every((item: any) => typeof item.image_url === 'string' && item.image_url.startsWith('/demo/'))).toBe(true);
   const { data: queue } = await client.from('queue_entries').select('*');
-  expect(queue.every((entry: any) => Date.now() - new Date(entry.joined_at).getTime() < 60 * 60 * 1000)).toBe(true);
+  const activeQueue = queue.filter((entry: any) => entry.status !== 'completed');
+  expect(activeQueue.length).toBeGreaterThan(0);
+  expect(activeQueue.every((entry: any) => Date.now() - new Date(entry.joined_at).getTime() < 60 * 60 * 1000)).toBe(true);
+  expect(queue.filter((entry: any) => entry.status === 'completed').length).toBeGreaterThan(0);
 });

@@ -105,8 +105,19 @@ export function createDemoSeed(niche: 'barber' | 'beauty'): DemoTables {
     const weekday = new Date(`${day}T12:00:00-03:00`).getUTCDay();
     if (weekday === 0) continue;
     const isCurrentMonth = day.slice(0, 7) === today.slice(0, 7);
-    const baseVolume = isCurrentMonth ? (weekday === 6 ? 8 : 5 + Math.floor(rand() * 3)) : (Number(day.slice(8, 10)) <= currentDayOfMonth ? (weekday === 6 ? 6 : 3 + Math.floor(rand() * 3)) : 0);
-    for (let n = 0; n < baseVolume; n++) completed(activeClients[Math.floor(rand() * activeClients.length)], day, 9 + Math.floor(n * 1.4), n % 2 ? 30 : 0, Math.floor(rand() * services.length), n % team.length);
+    const baseVolume = isCurrentMonth
+      ? (weekday === 6 ? 7 : 5 + (offset % 2))
+      : (Number(day.slice(8, 10)) <= currentDayOfMonth ? (weekday === 6 ? 5 : 4) : 0);
+    for (let n = 0; n < baseVolume; n++) {
+      completed(
+        activeClients[(offset + n) % activeClients.length],
+        day,
+        9 + Math.floor(n * 1.4),
+        n % 2 ? 30 : 0,
+        (offset + n) % services.length,
+        n % team.length,
+      );
+    }
   }
 
   // O dia de hoje: atendimentos concluídos mais cedo (garante receita > 0 no início) e os próximos confirmados.
@@ -137,11 +148,22 @@ export function createDemoSeed(niche: 'barber' | 'beauty'): DemoTables {
   const profile = { ...common, id: company, business_name: data.business, full_name: team[0].name, user_type: niche, role: 'owner', region: 'BR', tutorial_completed: true, subscription_status: 'active', business_slug: `simulacao-${niche}`, public_booking_enabled: true, booking_lead_time_hours: 0, booking_lead_time_minutes: 0, logo_url: `/demo/${data.folder}/perfil.webp`, cover_photo_url: `/demo/${data.folder}/capa.webp`, address_street: null, phone: null, monthly_goal: beauty ? 18000 : 9000 };
   const gallery = Array.from({ length: 12 }, (_, i) => ({ ...common, id: id(niche, 200 + i), image_url: `/demo/${data.folder}/galeria-${String(i + 1).padStart(2, '0')}.webp`, display_order: i }));
   const queueMinutesAgo = (minutes: number) => new Date(now.getTime() - minutes * 60_000).toISOString();
-  const queue = [
+  const queueActive = [
     { client: clients[7], status: 'serving', waited: 26, serviceIndex: 2, member: team[1] },
     { client: clients[9], status: 'waiting', waited: 14, serviceIndex: 0, member: null },
     { client: clients[11], status: 'waiting', waited: 6, serviceIndex: 1, member: null },
   ].map((entry, i) => ({ ...common, id: id(niche, 150 + i), client_id: entry.client.id, client_name: entry.client.name, client_phone: entry.client.phone, customer_name: entry.client.name, status: entry.status, position: i + 1, joined_at: queueMinutesAgo(entry.waited), called_at: entry.status === 'serving' ? queueMinutesAgo(entry.waited - 8) : null, serving_at: entry.status === 'serving' ? queueMinutesAgo(entry.waited - 10) : null, service_ids: [services[entry.serviceIndex].id], service_name: services[entry.serviceIndex].name, estimated_duration: services[entry.serviceIndex].duration_minutes, professional_id: entry.member?.id ?? null, total_price: services[entry.serviceIndex].price, payment_status: 'unpaid', payment_method: null, created_at: queueMinutesAgo(entry.waited) }));
+  const queueServedCount = beauty ? 8 : 12;
+  const queueCompleted = Array.from({ length: queueServedCount }, (_, i) => {
+    const dayOffset = currentDayOfMonth > 1 ? 1 + (i % (currentDayOfMonth - 1)) : 0;
+    const day = shiftDay(today, -dayOffset);
+    const joinedAt = at(day, 10 + (i % 7), (i % 2) * 30);
+    const service = services[i % services.length];
+    const client = clients[activeClients[i % activeClients.length]];
+    const member = team[i % team.length];
+    return { ...common, id: id(niche, 160 + i), client_id: client.id, client_name: client.name, client_phone: client.phone, customer_name: client.name, status: 'completed', position: i + 1, joined_at: joinedAt, called_at: joinedAt, serving_at: joinedAt, completed_at: joinedAt, service_ids: [service.id], service_name: service.name, estimated_duration: service.duration_minutes, professional_id: member.id, total_price: service.price, payment_status: 'paid', payment_method: ['pix', 'cartao', 'dinheiro'][i % 3], created_at: joinedAt };
+  });
+  const queue = [...queueActive, ...queueCompleted];
   const publicBookings = [[1, 10, 5, 0], [1, 15, 6, 2]].map(([dayOffset, hour, clientIndex, memberIndex], i) => ({ ...common, id: id(niche, 170 + i), customer_name: clients[clientIndex].name, customer_phone: clients[clientIndex].phone, appointment_time: at(shiftDay(today, dayOffset), hour), professional_id: team[memberIndex].id, service_ids: [services[(clientIndex + 1) % services.length].id], total_price: services[(clientIndex + 1) % services.length].price, duration_minutes: services[(clientIndex + 1) % services.length].duration_minutes, status: 'pending', is_edit: false, created_at: queueMinutesAgo(40 + i * 25), notes: null }));
   return { profiles: [profile], business_settings: [settings], services, service_categories: [{ ...common, id: category, name: data.category }], team_members: team, clients, appointments, finance_records: [...finance, ...expenses], notifications: [], onboarding_progress: [{ company_id: company, is_completed: true }], agenda_blocks: [], public_bookings: publicBookings, public_clients: [], appointment_reschedules: [], products: [], appointment_products: [], product_sales: [], team_member_services: [], client_dependents: [], goal_settings: [], client_photos: [], commission_payments: [], business_galleries: gallery, queue_entries: queue };
 }

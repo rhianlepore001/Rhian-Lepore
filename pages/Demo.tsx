@@ -1,6 +1,6 @@
-import React, { lazy, Suspense, useLayoutEffect, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useLayoutEffect, useState } from 'react';
 import { Link, Route, Routes, useLocation } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Scissors, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Moon, Scissors, Sparkles, Sun } from 'lucide-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Layout } from '../components/Layout';
 import { DemoNavigation } from '../components/DemoNavigation';
@@ -42,18 +42,30 @@ export const Demo = () => {
   const location = useLocation();
   const inner = location.pathname.startsWith(`${base}/`) ? location.pathname.slice(base.length) : '/';
   const isBooking = inner.startsWith('/book/');
+  const [colorMode, setColorMode] = useState<'light' | 'dark'>('light');
   const [client] = useState(() => new QueryClient({ defaultOptions: { queries: { retry: false } } }));
   useLayoutEffect(() => {
     const root = document.documentElement;
     const previous = { theme: root.getAttribute('data-theme'), mode: root.getAttribute('data-mode') };
     root.setAttribute('data-theme', niche);
-    root.setAttribute('data-mode', niche === 'beauty' ? 'light' : 'dark');
+    root.setAttribute('data-mode', colorMode);
     return () => {
       for (const [key, value] of Object.entries(previous)) {
         if (value) root.setAttribute(`data-${key}`, value); else root.removeAttribute(`data-${key}`);
       }
     };
-  }, [niche]);
+  }, [niche, colorMode]);
+  useEffect(() => {
+    const root = document.documentElement;
+    const observer = new MutationObserver(() => {
+      const domMode = root.getAttribute('data-mode');
+      if (domMode === 'light' || domMode === 'dark') {
+        setColorMode(prev => (prev === domMode ? prev : domMode));
+      }
+    });
+    observer.observe(root, { attributes: true, attributeFilter: ['data-mode'] });
+    return () => observer.disconnect();
+  }, []);
   const fallback = <p className="demo-loading" role="status">Preparando a simulação…</p>;
   return <QueryClientProvider client={client}>
     <div className="demo-shell" data-embedded={embedded || undefined} style={{ '--safe-top': embedded ? '0px' : 'var(--demo-bar-height)' } as React.CSSProperties}>
@@ -67,6 +79,16 @@ export const Demo = () => {
           </nav>
           <span className="demo-bar-note">{DEMO_BUSINESS[niche]} · dados fictícios</span>
         </div>
+        <button
+          type="button"
+          className="demo-mode-toggle"
+          onClick={() => setColorMode(mode => (mode === 'light' ? 'dark' : 'light'))}
+          aria-pressed={colorMode === 'dark'}
+          aria-label={colorMode === 'light' ? 'Alternar para tema escuro' : 'Alternar para tema claro'}
+        >
+          {colorMode === 'light' ? <Moon size={14} aria-hidden="true" /> : <Sun size={14} aria-hidden="true" />}
+          <span>{colorMode === 'light' ? 'Escuro' : 'Claro'}</span>
+        </button>
         <a className="demo-signup" href={niche === 'beauty' ? '/#/register?type=beauty' : '/#/register'}>Crie sua conta grátis</a>
       </header>}
       <div className="demo-product" key={niche} onClickCapture={event => {

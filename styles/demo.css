@@ -14,6 +14,8 @@
 .demo-niches a:hover { color:#fff; }
 .demo-niches a[aria-current] { background:#fff; color:var(--demo-ink); }
 .demo-bar-note { color:var(--demo-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.demo-mode-toggle { display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:0 12px; border:1px solid var(--demo-line); border-radius:8px; background:var(--demo-ink-soft); color:var(--demo-text); font:600 13px/1 'Agendix Inter',Inter,sans-serif; cursor:pointer; white-space:nowrap; transition:background-color .15s ease,color .15s ease; }
+.demo-mode-toggle:hover { background:#39465a; color:#fff; }
 .demo-signup { display:inline-flex; align-items:center; min-height:36px; padding:0 14px; border-radius:8px; background:#fff; color:var(--demo-ink); font-weight:700; white-space:nowrap; transition:background-color .15s ease; }
 .demo-signup:hover { background:#e3e9ef; }
 
@@ -33,6 +35,7 @@
   .demo-bar-back span, .demo-badge, .demo-bar-note { display:none; }
   .demo-bar-back { min-width:40px; justify-content:center; padding:0; }
   .demo-niches a { padding:0 10px; font-size:12px; }
+  .demo-mode-toggle { padding:0 8px; font-size:12px; }
   .demo-signup { padding:0 10px; font-size:12px; }
 }
 @media (min-width:761px) and (max-width:1100px) { .demo-bar-note { display:none; } }

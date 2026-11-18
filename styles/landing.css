@@ -339,8 +339,8 @@ html[data-surface=marketing] { scroll-padding-top:112px; }
 .landing-product-stage:hover .landing-hero-screen-label { text-decoration:underline; text-underline-offset:4px; }
 
 .landing-phone {
-  --phone-bg:#12100e;
-  --phone-ink:#f5f2eb;
+  --phone-bg:#e5e5e5;
+  --phone-ink:#141414;
   position:relative;
   width:100%;
   min-width:0;

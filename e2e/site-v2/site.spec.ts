@@ -149,7 +149,8 @@ for (const width of [320, 390, 768, 1440]) {
     await page.goto('/#/landing');
     await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
     await expect(page.locator('.landing-hero .landing-button').first()).toBeInViewport();
-    await expect(page.locator('.landing-hero .landing-phone')).toBeInViewport();
+    await expect(page.locator('.landing-hero .landing-atlas-hero')).toBeInViewport();
+    await expect(page.locator('.landing-hero .landing-phone')).toHaveCount(0);
     await expect(page.locator('.landing img[src*="/phone-"]:not(.landing-phone img)')).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     expect(await page.locator('meta[name="viewport"]').getAttribute('content')).not.toContain('user-scalable=no');
@@ -230,7 +231,7 @@ test('explora a demonstração embutida mantendo segmento e tarefa sem integraç
   await expect(frame.getByRole('heading', { name: 'Escolha o profissional' })).toBeVisible();
   await page.getByRole('button', { name: 'Fechar a simulação' }).click();
   await expect(iframe).toHaveCount(0);
-  await expect(page.locator('.landing-demo-poster img')).toHaveAttribute('src', '/landing/phone-barber-booking.webp');
+  await expect(page.locator('.landing-demo-poster img')).toHaveAttribute('src', '/landing/atlas/agendamento-online-barbearia.webp');
   verify();
 });
 

@@ -53,12 +53,12 @@ describe('site oficial', () => {
     const { container } = render(<Landing />);
     const heroChoices = screen.getByRole('group', { name: 'Seu tipo de negócio' });
     await userEvent.click(within(heroChoices).getByRole('button', { name: 'Salão de beleza' }));
-    expect(container.querySelector('.landing-demo-poster img')).toHaveAttribute('src', '/landing/phone-beauty-dashboard.webp');
+    expect(container.querySelector('.landing-demo-poster img')).toHaveAttribute('src', '/landing/atlas/inicio-salao.webp');
     expect(container.querySelector('.landing-demo-conversion .landing-button')).toHaveAttribute('href', '/#/register?type=beauty');
     const views = screen.getByRole('group', { name: 'Tela da demonstração' });
     await userEvent.click(within(views).getByRole('button', { name: 'Financeiro' }));
     expect(container.querySelector('.landing-demo-task')).toHaveTextContent('movimento ilustrativo do período');
-    expect(container.querySelector('.landing-demo-poster img')).toHaveAttribute('src', '/landing/phone-beauty-finance.webp');
+    expect(container.querySelector('.landing-demo-poster img')).toHaveAttribute('src', '/landing/atlas/financeiro-salao.webp');
   });
   it('explica o cadastro sem cartão e mantém o prazo da oferta neutro', () => {
     const { container } = render(<Landing />);
@@ -79,6 +79,6 @@ describe('site oficial', () => {
     expect(screen.getByTitle('Simulação interativa do salão: Agendamento online')).toHaveAttribute('src', '/demo-preview#/demo/beauty/book/simulacao');
     await userEvent.click(screen.getByRole('button', { name: 'Fechar a simulação' }));
     expect(container.querySelector('iframe')).toBeNull();
-    expect(container.querySelector('.landing-demo-poster img')).toHaveAttribute('src', '/landing/phone-beauty-booking.webp');
+    expect(container.querySelector('.landing-demo-poster img')).toHaveAttribute('src', '/landing/atlas/agendamento-online-salao.webp');
   });
 });

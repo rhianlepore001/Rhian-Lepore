@@ -62,11 +62,11 @@ function ClientStatusChips({ client }: { client: EnrichedClient }) {
   if (chips.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap gap-1 justify-end">
+    <div className="flex flex-nowrap items-center gap-1 shrink-0">
       {chips.map((chip) => (
         <span
           key={chip.key}
-          className={`text-xs font-bold px-2 py-0.5 ${radius.button} ${chip.className}`}
+          className={`whitespace-nowrap text-xs font-bold px-2 py-0.5 ${radius.button} ${chip.className}`}
         >
           {chip.label}
         </span>
@@ -345,8 +345,8 @@ export const Clients: React.FC = () => {
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-2 mb-1">
-                        <h3 className={`text-base font-heading ${colors.text} truncate group-hover:text-theme-accent transition-colors`}>
+                      <div className="flex flex-wrap items-start justify-between gap-x-2 gap-y-1.5 mb-1">
+                        <h3 className={`min-w-0 text-base font-heading leading-snug break-words ${colors.text} group-hover:text-theme-accent transition-colors`}>
                           {client.name}
                         </h3>
                         {!isStaff && <ClientStatusChips client={client} />}

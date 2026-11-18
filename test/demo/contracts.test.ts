@@ -1,5 +1,6 @@
-import { beforeEach, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createDemoClient } from '../../lib/demo/client';
+import { createDemoSeed } from '../../lib/demo/seed';
 import { fetchAvailableSlots } from '../../services/publicBooking';
 import { demoCompanyId } from '../../lib/demo/mode';
 import { createAppointment } from '../../services/scheduling';
@@ -72,5 +73,41 @@ it('apresenta dados fictícios coerentes na demonstração', async () => {
   expect(gallery).toHaveLength(12);
   expect(gallery.every((item: any) => typeof item.image_url === 'string' && item.image_url.startsWith('/demo/'))).toBe(true);
   const { data: queue } = await client.from('queue_entries').select('*');
-  expect(queue.every((entry: any) => Date.now() - new Date(entry.joined_at).getTime() < 60 * 60 * 1000)).toBe(true);
+  const activeQueue = queue.filter((entry: any) => entry.status !== 'completed');
+  expect(activeQueue.length).toBeGreaterThan(0);
+  expect(activeQueue.every((entry: any) => Date.now() - new Date(entry.joined_at).getTime() < 60 * 60 * 1000)).toBe(true);
+  expect(queue.filter((entry: any) => entry.status === 'completed').length).toBeGreaterThan(0);
+});
+
+describe('comparação mensal e fila concluída ao longo do mês', () => {
+  it.each([1, 2, 7, 15, 28, 31])('mantém faturamento positivo vs mês anterior e fila sem futuro no dia %d', (day) => {
+    vi.useFakeTimers();
+    try {
+      const now = new Date(`2026-08-${String(day).padStart(2, '0')}T12:30:00Z`);
+      vi.setSystemTime(now);
+      const dayKey = (iso: string) => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date(iso));
+
+      for (const niche of ['barber', 'beauty'] as const) {
+        const seed = createDemoSeed(niche);
+        const currentRevenue = seed.finance_records
+          .filter(r => r.type === 'revenue' && dayKey(r.created_at).startsWith('2026-08'))
+          .reduce((sum, r) => sum + Number(r.revenue), 0);
+        const previousRevenue = seed.finance_records
+          .filter(r => r.type === 'revenue' && dayKey(r.created_at).startsWith('2026-07'))
+          .reduce((sum, r) => sum + Number(r.revenue), 0);
+
+        expect(currentRevenue, `${niche} dia ${day} mês atual`).toBeGreaterThan(0);
+        expect(previousRevenue, `${niche} dia ${day} mês anterior`).toBeGreaterThan(0);
+        expect(currentRevenue, `${niche} dia ${day} crescimento positivo`).toBeGreaterThan(previousRevenue);
+
+        const completedQueue = seed.queue_entries.filter(q => q.status === 'completed');
+        expect(completedQueue.length).toBeGreaterThan(0);
+        for (const entry of completedQueue) {
+          expect(new Date(entry.completed_at).getTime()).toBeLessThanOrEqual(now.getTime());
+        }
+      }
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

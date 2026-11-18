@@ -150,7 +150,8 @@ export function createDemoClient() {
       case 'get_public_services_catalog': data = t.services; break;
       case 'get_public_categories_catalog': data = t.service_categories; break;
       case 'get_public_team_catalog': data = t.team_members; break;
-      case 'get_public_products_catalog': case 'get_public_gallery_catalog': case 'get_full_dates_v2': case 'get_full_dates': case 'get_active_booking_by_phone': case 'get_public_client_by_phone': case 'get_client_booking_cancellations': data = []; break;
+      case 'get_public_gallery_catalog': data = t.business_galleries; break;
+      case 'get_public_products_catalog': case 'get_full_dates_v2': case 'get_full_dates': case 'get_active_booking_by_phone': case 'get_public_client_by_phone': case 'get_client_booking_cancellations': data = []; break;
       case 'get_available_slots_v2': case 'get_available_slots': data = demoSlots(t, args); break;
       case 'get_first_available_professional': data = t.team_members[0].id; break;
       case 'create_secure_booking': {

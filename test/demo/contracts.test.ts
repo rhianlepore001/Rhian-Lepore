@@ -67,7 +67,10 @@ it('apresenta dados fictícios coerentes na demonstração', async () => {
   const stats = await client.rpc('get_finance_stats', { p_start_date: `${today.slice(0, 7)}-01T00:00:00Z`, p_end_date: `${today.slice(0, 7)}-28T23:59:59Z` });
   expect(Object.values(stats.data.revenue_by_method).every(value => Number(value) > 0)).toBe(true);
   const { data: services } = await client.from('services').select('*');
-  expect(services.every((service: any) => service.image_url === null)).toBe(true);
+  expect(services.every((service: any) => typeof service.image_url === 'string' && service.image_url.startsWith('/demo/'))).toBe(true);
+  const { data: gallery } = await client.rpc('get_public_gallery_catalog', { p_business_id: demoCompanyId() });
+  expect(gallery).toHaveLength(12);
+  expect(gallery.every((item: any) => typeof item.image_url === 'string' && item.image_url.startsWith('/demo/'))).toBe(true);
   const { data: queue } = await client.from('queue_entries').select('*');
   expect(queue.every((entry: any) => Date.now() - new Date(entry.joined_at).getTime() < 60 * 60 * 1000)).toBe(true);
 });

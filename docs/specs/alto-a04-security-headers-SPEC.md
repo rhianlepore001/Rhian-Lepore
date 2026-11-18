@@ -2,7 +2,7 @@
 
 Adiciona em `vercel.json`:
 - `X-Content-Type-Options: nosniff`
-- `X-Frame-Options: DENY` (+ `frame-ancestors 'none'` no CSP-RO)
+- `X-Frame-Options: SAMEORIGIN` (+ `frame-ancestors 'self'` no CSP-RO) — desde 17/11/2026 a landing embute a simulação (/#/demo) num iframe da mesma origem; origens externas seguem bloqueadas
 - `Referrer-Policy: strict-origin-when-cross-origin`
 - `Permissions-Policy` restritiva
 - **CSP em Report-Only** (não bloqueia; observa violações)

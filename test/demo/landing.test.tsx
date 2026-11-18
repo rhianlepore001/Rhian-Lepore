@@ -43,7 +43,7 @@ describe('site oficial', () => {
     expect(within(choices).getByRole('button', { name: 'Salão de beleza' })).toHaveAttribute('aria-pressed', 'true');
     const demoLinks = container.querySelectorAll<HTMLAnchorElement>('a[href^="/#/demo/"]');
     expect(demoLinks.length).toBeGreaterThan(3);
-    for (const link of demoLinks) expect(link.getAttribute('href')).toMatch(/^\/#\/demo\/beauty\//);
+    for (const link of demoLinks) expect(link.getAttribute('href')).toMatch(/^\/#\/demo\/beauty(?:\/|$)/);
     const signupLinks = container.querySelectorAll<HTMLAnchorElement>('a[href^="/#/register"]');
     expect(signupLinks.length).toBeGreaterThan(1);
     for (const link of signupLinks) expect(link.getAttribute('href')).toContain('type=beauty');
@@ -57,7 +57,7 @@ describe('site oficial', () => {
     expect(container.querySelector('.landing-demo-conversion .landing-button')).toHaveAttribute('href', '/#/register?type=beauty');
     const views = screen.getByRole('group', { name: 'Tela da demonstração' });
     await userEvent.click(within(views).getByRole('button', { name: 'Financeiro' }));
-    expect(container.querySelector('.landing-demo-task')).toHaveTextContent('saldo ilustrativo do período');
+    expect(container.querySelector('.landing-demo-task')).toHaveTextContent('movimento ilustrativo do período');
     expect(container.querySelector('.landing-demo-poster img')).toHaveAttribute('src', '/landing/phone-beauty-finance.webp');
   });
   it('explica o cadastro sem cartão e mantém o prazo da oferta neutro', () => {

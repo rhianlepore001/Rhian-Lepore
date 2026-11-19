@@ -27,7 +27,7 @@ vi.mock('../../components/ui', () => ({
   Button: ({ children, icon: _icon, variant: _variant, size: _size, fullWidth: _fullWidth, loading: _loading, ...props }: any) => <button {...props}>{children}</button>,
   PageHeader: ({ title, action }: any) => <header><h1>{title}</h1>{action}</header>,
   Modal: ({ open, title, children }: any) => open ? <section role="dialog" aria-label={title}>{children}</section> : null,
-  EmptyState: ({ title, description, action }: any) => <div>{title}{description}{action}</div>,
+  EmptyState: ({ title, description, action }: any) => <div><p>{title}</p>{description && <p>{description}</p>}{action}</div>,
   SkeletonCard: () => null,
   ErrorState: () => <div>Erro</div>,
   Input: (props: any) => <input {...props} />,

@@ -116,8 +116,8 @@ export const HourlyResults: React.FC = () => {
                 </button>
               </p>
             )}
-            <p className="text-base leading-relaxed text-theme-text">Aqui você vê se cada hora aberta paga as contas e quanto sobra. Não é o caixa do dia.</p>
-            <p className="text-sm text-theme-textSecondary">Para ver seu primeiro resultado, complete os 4 passos em Ajustes:</p>
+            <p className="text-base leading-relaxed text-theme-text">Veja se o que você ganha por hora de agenda aberta cobre as contas e o material dos serviços.</p>
+            <p className="text-sm text-theme-textSecondary">Para ver seu primeiro resultado, complete os quatro ajustes abaixo.</p>
             <ol className="list-none space-y-2 text-sm leading-relaxed text-theme-text">
               {STEPS.map((step, index) => {
                 const done = blocks == null ? null : blocks[step.id];
@@ -135,7 +135,7 @@ export const HourlyResults: React.FC = () => {
                 );
               })}
             </ol>
-            <p className="text-sm leading-relaxed text-theme-text">Depois: fechar o primeiro atendimento na Agenda ou na Fila.</p>
+            <p className="text-sm leading-relaxed text-theme-text">Depois, finalize um atendimento na Agenda ou na Fila para calcular o resultado.</p>
             <Link
               to={settingsHref(continueStep.hash)}
               className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--color-accent-border)] px-4 text-sm font-semibold text-[var(--color-accent)] hover:bg-[var(--color-accent-dim)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]"
@@ -149,7 +149,7 @@ export const HourlyResults: React.FC = () => {
       {status === 'ready' && kind === 'no_attendance' && (
         <Card>
           <div className="space-y-3">
-            <p className="text-base leading-relaxed text-theme-text">Ainda não há atendimento fechado neste período. Feche o primeiro na Agenda ou na Fila para ver o rendimento da hora, ou escolha outro período.</p>
+            <p className="text-base leading-relaxed text-theme-text">Ainda não há atendimentos finalizados neste período. Finalize um atendimento na Agenda ou na Fila para ver o rendimento por hora.</p>
             <div className="flex flex-wrap gap-2">
               <Link to="/agenda" className="inline-flex min-h-11 items-center px-4 text-sm font-semibold text-[var(--color-accent)]">Abrir Agenda</Link>
               <Link to="/fila" className="inline-flex min-h-11 items-center px-4 text-sm font-semibold text-[var(--color-accent)]">Abrir Fila</Link>

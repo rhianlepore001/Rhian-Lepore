@@ -137,14 +137,13 @@ describe('HourlyResults — gestor', () => {
     const { container } = mount();
     await waitFor(() => expect(wizardList).toHaveBeenCalledWith('c1'));
     expect(screen.getByRole('heading', { name: 'Resultados por hora', level: 1 })).toBeInTheDocument();
-    expect(screen.getByText(/Aqui você vê se cada hora aberta paga as contas/)).toBeInTheDocument();
-    expect(screen.getByText(/Não é o caixa do dia/i)).toBeInTheDocument();
+    expect(screen.getByText(/Veja se o que você ganha por hora de agenda aberta cobre as contas/)).toBeInTheDocument();
     expect(screen.getAllByText(/contas do mês/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/horários/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/material dos serviços/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/defina quando avisar que sobrou pouco/i)).toBeInTheDocument();
     expect(screen.getByText(/de 4/i)).toBeInTheDocument();
-    expect(screen.getByText(/fechar o primeiro atendimento/i)).toBeInTheDocument();
+    expect(screen.getByText(/finalize um atendimento na Agenda ou na Fila/i)).toBeInTheDocument();
     expect(screen.getByText(/Nenhum número é inventado/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Voltar à performance da equipe/i })).toHaveAttribute('href', '/financeiro/performance');
     expect(screen.getByRole('link', { name: /ajustes|configurações|financeiro/i })).toHaveAttribute('href', expect.stringContaining('/configuracoes/financeiro'));
@@ -156,7 +155,7 @@ describe('HourlyResults — gestor', () => {
     state.data = { month: '2026-11-01', role: 'owner', total: { ...metrics, available_minutes: 600, worked_minutes: 0 }, professionals: [] };
     const { container } = mount();
     await waitFor(() => expect(wizardList).toHaveBeenCalledWith('c1'));
-    expect(screen.getByText(/Ainda não há atendimento fechado neste período/i)).toBeInTheDocument();
+    expect(screen.getByText(/Ainda não há atendimentos finalizados neste período/i)).toBeInTheDocument();
     expect(screen.queryByText(/contas do mês.*Falta|Falta.*contas do mês/i)).not.toBeInTheDocument();
     noZeroHero(container);
   });
@@ -165,10 +164,10 @@ describe('HourlyResults — gestor', () => {
     wizardList.mockResolvedValue(wizardPayload(false));
     state.data = { month: '2026-11-01', role: 'owner', total: { ...metrics, available_minutes: 600, worked_minutes: 0 }, professionals: [] };
     const { container } = mount();
-    expect(await screen.findByText(/Aqui você vê se cada hora aberta paga as contas/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Veja se o que você ganha por hora de agenda aberta cobre as contas/i)).toBeInTheDocument();
     expect(screen.getAllByText('Falta').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText(/Horários/i).length).toBeGreaterThan(0);
-    expect(screen.queryByText(/Ainda não há atendimento fechado neste período/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Ainda não há atendimentos finalizados neste período/i)).not.toBeInTheDocument();
     noZeroHero(container);
   });
 
@@ -196,7 +195,7 @@ describe('HourlyResults — gestor', () => {
     };
     mount();
     await waitFor(() => expect(wizardList).toHaveBeenCalled());
-    expect(screen.queryByText(/Não é o caixa do dia/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Veja se o que você ganha por hora de agenda aberta/i)).not.toBeInTheDocument();
     expect(screen.getByText('Cada hora aberta rendeu')).toBeInTheDocument();
   });
 

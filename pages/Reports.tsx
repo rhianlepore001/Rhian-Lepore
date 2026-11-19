@@ -1,4 +1,4 @@
-import { Card, PageHeader, Button } from '../components/ui';
+import { Card, PageHeader, Button, ErrorState } from '../components/ui';
 import { SkeletonCard } from '../components/ui/Skeleton';
 import React, { useMemo, useState, lazy, Suspense } from 'react';
 import { CriticalEmptySlotsCard } from '../components/dashboard/CriticalEmptySlotsCard';
@@ -63,7 +63,7 @@ export const Reports: React.FC = () => {
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
 
-  const { stats, clientInsights, performance, loading, performanceLoading } = useReportsData(
+  const { stats, clientInsights, performance, loading, performanceLoading, performanceUnavailable, refetch } = useReportsData(
     effectiveUserId,
     selectedMonth,
     selectedYear,
@@ -71,6 +71,7 @@ export const Reports: React.FC = () => {
   const {
     monthlyGoal,
     currentMonthRevenue,
+    statsReady,
     goalHistory,
     updateGoal,
     financialDoctor,
@@ -248,7 +249,7 @@ export const Reports: React.FC = () => {
         title="Análises"
         subtitle={
           <>
-            <span className="block">O que vende, quem performa e quem volta</span>
+            <span className="block">Serviços mais pedidos, vendas de produtos e retorno de clientes</span>
             <span className="block mt-0.5 first-letter:uppercase">{monthLabel}</span>
           </>
         }
@@ -274,10 +275,11 @@ export const Reports: React.FC = () => {
                   <Target className="h-5 w-5" />
                 </div>
                 <div className="min-w-0">
-                  <h2 className={`font-heading text-base font-bold ${colors.text}`}>Meta do mês</h2>
+                  <h2 className={`font-heading text-base font-bold ${colors.text}`}>Meta do mês atual</h2>
                   <p className={`mt-1 text-sm ${colors.textSecondary} text-pretty`}>
-                    {formatCurrency(currentMonthRevenue, currencyRegion)} de{' '}
-                    {formatCurrency(monthlyGoal, currencyRegion)}
+                    {statsReady
+                      ? `${formatCurrency(currentMonthRevenue, currencyRegion)} de ${formatCurrency(monthlyGoal, currencyRegion)}`
+                      : 'Receita do mês indisponível.'}
                   </p>
                 </div>
               </div>
@@ -285,16 +287,13 @@ export const Reports: React.FC = () => {
                 Ajustar
               </Button>
             </div>
-            <div className={`mt-4 h-2 overflow-hidden rounded-full ${colors.surface}`}>
-              <div
-                className={`h-full ${accent.bg} transition-all duration-700`}
-                style={{ width: `${monthlyGoalProgress}%` }}
-              />
-            </div>
-            <div className="mt-2 flex items-center justify-between">
-              <span className={`font-mono text-xs ${colors.textSecondary}`}>
-                {monthlyGoalProgress}% no mês
-              </span>
+            {statsReady && (
+              <div className={`mt-4 h-2 overflow-hidden rounded-full ${colors.surface}`}>
+                <div className={`h-full ${accent.bg} transition-all duration-700`} style={{ width: `${monthlyGoalProgress}%` }} />
+              </div>
+            )}
+            <div className="mt-2 flex items-center gap-2">
+              {statsReady && <span className={`mr-auto font-mono text-xs ${colors.textSecondary}`}>{monthlyGoalProgress}% no mês</span>}
               <button
                 type="button"
                 onClick={() => setShowGoalHistory(true)}
@@ -316,16 +315,17 @@ export const Reports: React.FC = () => {
                     Saúde do negócio
                   </h2>
                   <p className={`text-sm ${colors.textSecondary} text-pretty`}>
-                    Retorno, ticket e risco de perda.
+                    Retorno de clientes, gasto médio e clientes em risco.
                   </p>
                 </div>
               </div>
               <span className={`font-mono text-2xl font-black tabular-nums ${accent.text}`}>
-                {healthScore}
+                {statsReady ? healthScore : '—'}
               </span>
             </div>
             <div className="mt-4 space-y-2">
-              {healthSummary.slice(0, 3).map((item) => (
+              {!statsReady && <p className={`text-sm ${colors.textSecondary}`}>Indicadores gerais indisponíveis.</p>}
+              {statsReady && healthSummary.slice(0, 3).map((item) => (
                 <div
                   key={String(item)}
                   className={`flex items-start gap-3 rounded-2xl p-3 ${colors.surface}`}
@@ -342,7 +342,17 @@ export const Reports: React.FC = () => {
         </section>
       )}
 
-      {!hasMonthData ? (
+      {performanceUnavailable ? (
+        <ErrorState
+          title="Não foi possível carregar os resultados do mês selecionado"
+          onRetry={() => void refetch()}
+        />
+      ) : performanceLoading ? (
+        <div role="status" aria-busy="true">
+          <span className="sr-only">Carregando os resultados do mês selecionado…</span>
+          <SkeletonCard className="min-h-[200px]" />
+        </div>
+      ) : !hasMonthData ? (
         <div className="flex flex-col items-center justify-center my-16 text-center px-4 fade-in">
           <div className={`w-20 h-20 rounded-full ${accent.bgDim} ${accent.text} flex items-center justify-center mb-5`}>
             <TrendingUp className="w-10 h-10" />
@@ -383,19 +393,25 @@ export const Reports: React.FC = () => {
             </Card>
             <Card className="p-3.5 md:p-4">
               <p className={`text-xs ${colors.textMuted} uppercase ${font.mono} mb-1 flex items-center gap-1`}>
-                <Target className="w-3.5 h-3.5" /> Saúde
+                <Target className="w-3.5 h-3.5" /> Clientes
               </p>
-              <p className={`text-lg md:text-xl font-heading ${colors.text}`}>
-                {stats?.repeat_client_rate || 0}%
-                <span className={`text-xs ${colors.textMuted} font-sans font-normal ml-1`}>recorr.</span>
-              </p>
-              <p className={`text-xs ${colors.textMuted} mt-1 flex flex-wrap items-center gap-x-1 gap-y-0.5`}>
-                <AlertCircle className="w-3 h-3 shrink-0" />
-                <span>
-                  {(stats?.weekly_growth || 0) > 0 ? '+' : ''}
-                  {stats?.weekly_growth || 0}% sem. · {stats?.churn_risk_count || 0} risco
-                </span>
-              </p>
+              {stats ? (
+                <>
+                  <p className={`text-lg md:text-xl font-heading ${colors.text}`}>
+                    {stats.repeat_client_rate}%
+                    <span className={`text-xs ${colors.textMuted} font-sans font-normal ml-1`}>voltaram</span>
+                  </p>
+                  <p className={`text-xs ${colors.textSecondary} mt-1 flex items-start gap-1`}>
+                    <AlertCircle className="w-3 h-3 shrink-0" aria-hidden="true" />
+                    <span>
+                      {stats.churn_risk_count} em risco · dados gerais
+                    </span>
+                  </p>
+                  <p className={`text-xs ${colors.textSecondary} mt-1`}>
+                    Crescimento semanal {stats.weekly_growth > 0 ? '+' : ''}{stats.weekly_growth}%
+                  </p>
+                </>
+              ) : <p className={`text-sm ${colors.textSecondary}`}>Dados gerais indisponíveis.</p>}
             </Card>
           </div>
 
@@ -408,9 +424,6 @@ export const Reports: React.FC = () => {
                 </h2>
                 <p className={`text-xs ${colors.textMuted}`}>Top 5 por receita no mês</p>
               </div>
-              {performanceLoading && (
-                <span className={`text-xs ${colors.textMuted} ${font.mono} uppercase`}>Atualizando…</span>
-              )}
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <RankingList

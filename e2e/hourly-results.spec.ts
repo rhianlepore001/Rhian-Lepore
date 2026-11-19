@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
-const dir = '/opt/cursor/artifacts/hourly-results-v2';
+const dir = process.env.E2E_SHOTS_DIR || '/tmp/agendix-hourly-results';
 
 const metricsData = `const item = { id:'1',name:'Ana',available_minutes:600,worked_minutes:300,estimated_count:1,revenue_per_worked_hour:100,revenue_per_available_hour:50,occupancy:0.5,cost_per_hour:25,margin_per_hour:25,idle_cost:125 };
 export function useChairHour() {
@@ -89,7 +89,7 @@ for (const c of cases) {
     await page.goto(`/e2e/chair-hour-harness/?theme=${c.theme}&mode=${c.mode}&screen=${c.screen}`);
     if (c.state === 'empty') {
       await expect(page.getByRole('heading', { name: 'Resultados por hora', level: 1 })).toBeVisible();
-      await expect(page.getByText(/Não é o caixa do dia/i)).toBeVisible();
+      await expect(page.getByText(/Veja se o que você ganha por hora de agenda aberta cobre as contas/i)).toBeVisible();
       await expect(page.getByRole('link', { name: /Voltar à performance da equipe/i })).toBeVisible();
       await expect(page.locator('body')).not.toContainText(/R\$\s*0[,.]00/);
     } else if (c.state === 'data') {

@@ -259,7 +259,7 @@ export const Clients: React.FC = () => {
           />
         </div>
         <div
-          className="flex gap-2 overflow-x-auto pb-1 hide-scrollbar"
+          className="flex flex-wrap gap-1.5 pb-1"
           role="tablist"
           aria-label="Filtrar clientes"
         >
@@ -271,7 +271,7 @@ export const Clients: React.FC = () => {
               aria-selected={filterType === type}
               onClick={() => setFilterType(type)}
               className={[
-                'px-4 py-2 text-xs font-semibold transition-all whitespace-nowrap min-h-[44px]',
+                'px-3 py-2 text-sm font-semibold transition-all whitespace-nowrap min-h-[44px]',
                 radius.button,
                 filterType === type
                   ? `${accent.bg} text-[var(--color-on-accent)]`

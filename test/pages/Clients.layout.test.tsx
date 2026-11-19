@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { Clients } from '../../pages/Clients';
 
@@ -97,4 +97,18 @@ describe('Clients — layout de nome longo e selos', () => {
       expect(inactiveBadge.className).toContain('whitespace-nowrap');
     });
   });
+});
+
+
+it('permite recuperar uma busca vazia e acessar a ficha sem aninhar o botão do WhatsApp', async () => {
+  render(<MemoryRouter><Clients /></MemoryRouter>);
+
+  const link = await screen.findByRole('link', { name: 'Fernanda Carvalho' });
+  const whatsapp = screen.getByRole('button', { name: 'WhatsApp de Fernanda Carvalho' });
+  expect(link).not.toContainElement(whatsapp);
+
+  fireEvent.change(screen.getByRole('searchbox', { name: 'Buscar clientes' }), { target: { value: 'Inexistente' } });
+  expect(screen.queryByRole('link', { name: 'Fernanda Carvalho' })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Limpar filtros' }));
+  expect(screen.getByRole('link', { name: 'Fernanda Carvalho' })).toBeInTheDocument();
 });

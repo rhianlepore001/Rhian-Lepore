@@ -65,11 +65,11 @@ export const AgendaPublicLinkBar: React.FC<AgendaPublicLinkBarProps> = ({
         variant="secondary"
         icon={<LinkIcon />}
         onClick={goToBookingSettings}
-        className="flex-1 md:flex-none"
+        className="flex-1 md:flex-none max-md:min-h-12 max-md:flex-col max-md:!gap-1 max-md:!px-2 max-md:!text-xs"
         data-testid="agenda-public-link"
         aria-label="Configurar link de agendamento"
       >
-        <span className="hidden md:inline">Configurar link</span>
+        <span>Configurar link</span>
       </Button>
     );
   }
@@ -81,11 +81,11 @@ export const AgendaPublicLinkBar: React.FC<AgendaPublicLinkBarProps> = ({
         variant="secondary"
         icon={<LinkIcon />}
         onClick={goToBookingSettings}
-        className="flex-1 md:flex-none"
+        className="flex-1 md:flex-none max-md:min-h-12 max-md:flex-col max-md:!gap-1 max-md:!px-2 max-md:!text-xs"
         data-testid="agenda-public-link"
         aria-label="Ativar agendamento online"
       >
-        <span className="hidden md:inline">Ativar link</span>
+        <span>Ativar link</span>
       </Button>
     );
   }
@@ -95,11 +95,11 @@ export const AgendaPublicLinkBar: React.FC<AgendaPublicLinkBarProps> = ({
       variant="secondary"
       icon={copied ? <Check /> : <Copy />}
       onClick={() => { void handleCopy(); }}
-      className="flex-1 md:flex-none"
+      className="flex-1 md:flex-none max-md:min-h-12 max-md:flex-col max-md:!gap-1 max-md:!px-2 max-md:!text-xs"
       data-testid="agenda-public-link"
       aria-label={copied ? 'Link copiado' : 'Copiar link de agendamento público'}
     >
-      <span className="hidden md:inline">{copied ? 'Copiado!' : 'Copiar link'}</span>
+      <span>{copied ? 'Copiado!' : 'Copiar link'}</span>
     </Button>
   );
 };

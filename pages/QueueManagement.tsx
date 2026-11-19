@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Clock, History, Play, QrCode, Settings, UserPlus, Users, Receipt } from 'lucide-react';
-import { Button, Card, PageHeader, SkeletonCard, useToast } from '@/components/ui';
+import { Button, Card, ErrorState, PageHeader, SkeletonCard, useToast } from '@/components/ui';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { QueueCheckoutSheet } from '@/components/queue/QueueCheckoutSheet';
@@ -34,7 +34,7 @@ export const QueueManagement: React.FC = () => {
   const { showToast } = useToast();
   const tenantId = companyId ?? '';
 
-  const { data: rawEntries = [], isLoading: loadingEntries, refetch: refetchEntries } = useQueueEntries(tenantId);
+  const { data: rawEntries = [], isLoading: loadingEntries, isError: entriesError, refetch: refetchEntries } = useQueueEntries(tenantId);
   const { data: businessSlug } = useBusinessSlug(tenantId);
   const { data: teamMembers = [] } = useQueueTeamMembers(tenantId);
   const { data: settings, refetch: refetchSettings } = useQueueSettings();
@@ -189,6 +189,16 @@ export const QueueManagement: React.FC = () => {
         <SkeletonCard className="min-h-[96px]" />
         <SkeletonCard className="min-h-[160px]" />
       </div>
+    );
+  }
+
+  if (entriesError && rawEntries.length === 0) {
+    return (
+      <ErrorState
+        title="Não foi possível carregar a fila"
+        message="Confira a conexão e tente novamente para ver quem está aguardando."
+        onRetry={() => void refetchEntries()}
+      />
     );
   }
 

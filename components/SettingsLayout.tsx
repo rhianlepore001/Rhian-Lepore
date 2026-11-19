@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useRef } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Link, NavLink, useLocation } from 'react-router-dom';
+import { ArrowLeft, ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { SettingsItem, findActiveSettingsItem, isPathActive, settingsItemsForRole } from '../constants';
 import { useAppTour } from '../hooks/useAppTour';
@@ -95,67 +95,43 @@ const SidebarContent: React.FC<SidebarContentProps> = ({ menuItems, onNavigate, 
   );
 };
 
-const MobileSettingsRail: React.FC<{
+const MobileSettingsMenu: React.FC<{
   menuItems: SettingsItem[];
-  accent: ReturnType<typeof useBrutalTheme>['accent'];
-  colors: ReturnType<typeof useBrutalTheme>['colors'];
-}> = ({ menuItems, accent, colors }) => {
-  const location = useLocation();
-  const scrollerRef = useRef<HTMLDivElement>(null);
-  const activeRef = useRef<HTMLAnchorElement | null>(null);
-
-  useEffect(() => {
-    const el = activeRef.current;
-    const scroller = scrollerRef.current;
-    if (!el || !scroller) return;
-    const left = el.offsetLeft - scroller.clientWidth / 2 + el.offsetWidth / 2;
-    scroller.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
-  }, [location.pathname]);
-
+  activePath?: string;
+}> = ({ menuItems, activePath }) => {
   if (menuItems.length <= 1) return null;
 
   return (
-    <div className="relative border-b border-[var(--color-divider)]">
-      <div
-        ref={scrollerRef}
-        className="flex gap-2 overflow-x-auto px-4 py-3 snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-        role="tablist"
-        aria-label="Seções de configurações — deslize para ver mais"
-      >
-        {menuItems.map((item) => {
-          const isActive = isPathActive(location.pathname, item.path);
+    <details className="group px-4 pb-2">
+      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-2 text-sm font-semibold text-theme-accent [&::-webkit-details-marker]:hidden">
+        Ver todas as configurações
+        <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" aria-hidden="true" />
+      </summary>
+      <nav aria-label="Seções de configurações" className="max-h-[50dvh] overflow-y-auto overscroll-contain">
+        {GROUP_ORDER.map((group) => {
+          const items = menuItems.filter((item) => item.group === group);
+          if (!items.length) return null;
           return (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              ref={isActive ? activeRef : undefined}
-              role="tab"
-              aria-selected={isActive}
-              className={`
-                snap-start inline-flex items-center gap-1.5 shrink-0 px-3.5 py-2.5 min-h-[44px] rounded-full
-                text-xs font-semibold tracking-wide whitespace-nowrap transition-colors active:animate-haptic-click
-                border
-                ${isActive
-                  ? `${accent.bgDim} ${accent.text} ${accent.border}`
-                  : `${colors.card} ${colors.border} ${colors.textSecondary}`
-                }
-              `}
-            >
-              <item.icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-              <span className="truncate max-w-[9.5rem]">{item.label}</span>
-            </NavLink>
+            <div key={group} className="border-t border-[var(--color-divider)] py-2">
+              <p className="px-2 text-xs font-semibold text-theme-textSecondary">{group}</p>
+              {items.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  aria-current={item.path === activePath ? 'page' : undefined}
+                  className={`flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm ${item.path === activePath
+                    ? 'bg-[var(--color-accent-dim)] font-semibold text-theme-accent'
+                    : 'text-theme-text hover:bg-[var(--color-card-hover)]'}`}
+                >
+                  <item.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  {item.label}
+                </Link>
+              ))}
+            </div>
           );
         })}
-      </div>
-      <div
-        className="pointer-events-none absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-[var(--color-bg)] to-transparent opacity-80"
-        aria-hidden="true"
-      />
-      <div
-        className="pointer-events-none absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-[var(--color-bg)] to-transparent opacity-90"
-        aria-hidden="true"
-      />
-    </div>
+      </nav>
+    </details>
   );
 };
 
@@ -206,7 +182,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
               <ArrowLeft className="w-5 h-5" />
             </NavLink>
           </div>
-          <MobileSettingsRail menuItems={menuItems} accent={accent} colors={colors} />
+          <MobileSettingsMenu key={location.pathname} menuItems={menuItems} activePath={currentPage?.path} />
         </div>
 
         <div className="p-4 md:p-8 lg:px-10 flex-1 overflow-y-auto pb-28 md:pb-10 w-full">

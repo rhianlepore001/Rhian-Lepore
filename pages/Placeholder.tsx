@@ -1,25 +1,18 @@
-import { Card } from '../components/ui';
 import React from 'react';
-
-import { Construction } from 'lucide-react';
-import { useBrutalTheme } from '../hooks/useBrutalTheme';
+import { Bell } from 'lucide-react';
+import { SettingsLayout } from '../components/SettingsLayout';
+import { EmptyState } from '../components/ui';
 
 interface PlaceholderProps {
     title: string;
 }
 
-export const Placeholder: React.FC<PlaceholderProps> = ({ title }) => {
-    const { accent } = useBrutalTheme();
-
-    return (
-        <div className="h-[calc(100vh-10rem)] flex items-center justify-center">
-            <Card className="max-w-md w-full text-center p-10">
-                <Construction className={`w-16 h-16 mx-auto mb-6 ${accent.text}`} />
-                <h2 className="text-2xl font-heading text-[var(--color-text)] uppercase mb-4">{title}</h2>
-                <p className="text-text-secondary font-mono">
-                    Esta funcionalidade está em desenvolvimento e estará disponível em breve.
-                </p>
-            </Card>
-        </div>
-    );
-};
+export const Placeholder: React.FC<PlaceholderProps> = ({ title }) => (
+    <SettingsLayout>
+        <EmptyState
+            icon={Bell}
+            title={title}
+            description="Os ajustes de notificações ainda não estão disponíveis. Use o sino no topo do app para ver seus avisos."
+        />
+    </SettingsLayout>
+);

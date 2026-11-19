@@ -1,4 +1,9 @@
 {
+    "git": {
+        "deploymentEnabled": {
+            "ux/agendix-*": false
+        }
+    },
     "redirects": [
         {
             "source": "/landing",

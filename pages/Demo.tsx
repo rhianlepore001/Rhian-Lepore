@@ -14,6 +14,8 @@ const HourlyResults = lazy(() => import('./HourlyResults').then(m => ({ default:
 const Performance = lazy(() => import('./StaffPerformance').then(m => ({ default: m.StaffPerformance })));
 const Booking = lazy(() => import('./PublicBooking').then(m => ({ default: m.PublicBooking })));
 const Queue = lazy(() => import('./QueueManagement').then(m => ({ default: m.QueueManagement })));
+const QueueHistory = lazy(() => import('./QueueHistory').then(m => ({ default: m.QueueHistory })));
+const ClientCRM = lazy(() => import('./ClientCRM').then(m => ({ default: m.ClientCRM })));
 const Clients = lazy(() => import('./Clients').then(m => ({ default: m.Clients })));
 const Team = lazy(() => import('./settings/TeamSettings').then(m => ({ default: m.TeamSettings })));
 
@@ -24,6 +26,7 @@ const landingViews: Record<string, string> = {
   '/agenda': 'agenda',
   '/clientes': 'clientes',
   '/fila': 'fila',
+  '/fila/historico': 'fila',
   '/financeiro': 'finance',
   '/financeiro/performance': 'finance',
   '/resultados-por-hora': 'finance',
@@ -39,7 +42,9 @@ const Screens = () => <Routes>
   <Route path="/" element={<Dashboard />} />
   <Route path="/agenda" element={<Agenda />} />
   <Route path="/fila" element={<Queue />} />
+  <Route path="/fila/historico" element={<QueueHistory />} />
   <Route path="/clientes" element={<Clients />} />
+  <Route path="/clientes/:id" element={<ClientCRM />} />
   <Route path="/financeiro" element={<Finance />} />
   <Route path="/financeiro/performance" element={<Performance />} />
   <Route path="/resultados-por-hora" element={<HourlyResults />} />
@@ -54,9 +59,11 @@ export const Demo = () => {
   const location = useLocation();
   const inner = location.pathname.startsWith(`${base}/`) ? location.pathname.slice(base.length) : '/';
   const isBooking = inner.startsWith('/book/');
+  const isClientProfile = inner.startsWith('/clientes/');
+  const otherNichePath = isClientProfile ? '/clientes' : inner;
   const landingSearch = new URLSearchParams({
     tipo: niche,
-    tela: isBooking ? 'booking' : landingViews[inner] ?? 'agenda',
+    tela: isBooking ? 'booking' : (isClientProfile ? 'clientes' : landingViews[inner] ?? 'agenda'),
     origem: 'demo',
   });
   const [colorMode, setColorModeState] = useState<'light' | 'dark'>(() => getDemoColorMode());
@@ -102,8 +109,8 @@ export const Demo = () => {
         <div className="demo-bar-center">
           <span className="demo-badge">Simulação</span>
           <nav className="demo-niches" aria-label="Tipo de negócio">
-            <Link aria-current={niche === 'barber' ? 'page' : undefined} to={`/demo/barber${inner}`}><Scissors size={14} aria-hidden="true" /> Barbearia</Link>
-            <Link aria-current={niche === 'beauty' ? 'page' : undefined} to={`/demo/beauty${inner}`}><Sparkles size={14} aria-hidden="true" /> Salão</Link>
+            <Link aria-current={niche === 'barber' ? 'page' : undefined} to={`/demo/barber${niche === 'barber' ? inner : otherNichePath}`}><Scissors size={14} aria-hidden="true" /> Barbearia</Link>
+            <Link aria-current={niche === 'beauty' ? 'page' : undefined} to={`/demo/beauty${niche === 'beauty' ? inner : otherNichePath}`}><Sparkles size={14} aria-hidden="true" /> Salão</Link>
           </nav>
           <span className="demo-bar-note">{DEMO_BUSINESS[niche]} · dados fictícios</span>
         </div>

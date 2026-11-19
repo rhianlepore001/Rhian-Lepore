@@ -49,7 +49,7 @@ for (const width of [1440, 390]) {
     await expect(page.getByLabel('E-mail', { exact: true })).toBeVisible();
     await expect(page.getByLabel('Senha', { exact: true })).toBeVisible();
     await page.goto('/#/landing');
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('Agenda em dia.');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Mais que agenda.');
     await expect(page.getByRole('link', { name: 'AgendiX, início' })).toHaveAttribute('href', '/#/landing');
   });
   test(`demo isolada ${width}px`, async ({ page }) => {
@@ -120,7 +120,7 @@ for (const width of [1440, 390]) {
   test(`landing e capturas ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
     await page.goto('/#/landing');
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('Agenda em dia.');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Mais que agenda.');
     await expect(page.getByRole('link', { name: 'Entrar', exact: true })).toHaveAttribute('href', '/#/login');
     await expect(page.getByRole('link', { name: 'Crie sua conta grátis', exact: true }).first()).toHaveAttribute('href', '/#/register');
     if (width === 390) {
@@ -299,7 +299,7 @@ test('usa o tema claro padrão no agendamento da demo sem alterar o modo salvo',
   expect(await page.evaluate(() => localStorage.getItem('agendix_color_mode'))).toBe('dark');
   verify();
   await page.getByRole('link', { name: /AgendiX/i }).click();
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('Agenda em dia.');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Mais que agenda.');
   await expect(page.locator('html')).toHaveAttribute('data-mode', 'dark');
   expect(await page.evaluate(() => localStorage.getItem('agendix_color_mode'))).toBe('dark');
 });

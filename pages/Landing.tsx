@@ -5,34 +5,34 @@ import { buildWhatsAppLink } from '../utils/whatsappTemplates';
 import '../styles/landing.css';
 
 const questions = [
-  ['Como funciona o período de teste?', 'Você cria a conta sem cadastrar um cartão. O prazo e as condições do teste aparecem na sua conta, de acordo com a oferta disponível. Ao final, você escolhe um plano se quiser continuar.'],
-  ['Posso usar o AgendiX sozinho ou com uma equipe?', 'Sim. Você pode usar só a sua agenda ou cadastrar uma equipe. Cada profissional acessa o mesmo negócio com as permissões que você definir.'],
-  ['Meu cliente precisa baixar um aplicativo?', 'Não. Ele abre seu link no navegador, escolhe um serviço, um profissional e um horário. A confirmação segue as configurações do seu negócio.'],
-  ['Preciso instalar o AgendiX para usar no celular?', 'Não. Acesse pelo navegador do celular ou do computador com conexão à internet.'],
-  ['O que acontece com os dados que eu inserir na simulação?', 'As alterações ficam na memória do navegador e se perdem ao recarregar a simulação. Nenhuma mensagem é enviada.'],
+  ['Preciso colocar cartão para testar?', 'Não. Você cria sua conta sem cadastrar cartão. O prazo e as condições do teste aparecem dentro da conta, conforme a oferta vigente. Depois, você decide se quer assinar um plano.'],
+  ['Funciona para quem trabalha sozinho ou só para quem tem equipe?', 'Para os dois. Você pode começar usando só a sua agenda e o seu financeiro, ou cadastrar sua equipe com controle de horários e comissões por profissional.'],
+  ['Meu cliente precisa baixar algum aplicativo?', 'Não. Ele abre o seu link direto no navegador do celular, escolhe o serviço, o profissional e o horário. A confirmação segue as regras que você definir.'],
+  ['Consigo usar tudo pelo celular na correria do dia?', 'Sim. O AgendiX funciona direto no navegador do celular ou do computador, sem precisar instalar nada — feito para consultar entre um atendimento e outro.'],
+  ['Os dados que eu testar na demonstração ficam salvos?', 'Não. Tudo o que você mexer na simulação fica apenas na memória do seu navegador e some ao recarregar. Nenhuma mensagem real é enviada.'],
 ] as const;
 
 const demoViews = [
-  { id: 'booking', label: 'Agendamento online', icon: Smartphone, route: 'book/simulacao', task: 'Veja a página que seu cliente abre, escolha um serviço e peça um horário.', benefit: 'Compartilhe seu link no Instagram ou pelo WhatsApp. O cliente vê os horários e envia o pedido pelo navegador.' },
-  { id: 'agenda', label: 'Agenda', icon: CalendarDays, route: 'agenda', task: 'Encontre um horário livre e experimente criar um atendimento.', benefit: 'Veja os horários de cada profissional e encontre espaço para um encaixe.' },
-  { id: 'dashboard', label: 'Início', icon: LayoutDashboard, route: '', task: 'Veja o próximo atendimento, a receita do dia e a fila no painel inicial.', benefit: null },
-  { id: 'finance', label: 'Financeiro', icon: Wallet, route: 'financeiro', task: 'Confira as entradas, as despesas e o movimento ilustrativo do período.', benefit: 'Consulte entradas e despesas para entender o movimento do caixa.' },
-  { id: 'clientes', label: 'Clientes', icon: Users, route: 'clientes?filter=Inativo', task: 'Confira o histórico de visitas de quem está sem voltar há mais de 35 dias.', benefit: 'Encontre quem não voltou há mais de 35 dias e consulte o histórico antes de retomar o contato.' },
-  { id: 'fila', label: 'Fila', icon: Clock, route: 'fila', task: 'Organize quem chega sem marcar e acompanhe os atendimentos em andamento.', benefit: null },
+  { id: 'booking', label: 'Agendamento online', icon: Smartphone, route: 'book/simulacao', task: 'Veja como seu cliente escolhe o serviço, o profissional e pede um horário pelo link.', benefit: 'Mande seu link no Instagram ou WhatsApp. O cliente escolhe o horário sozinho, sem travar sua conversa.' },
+  { id: 'agenda', label: 'Agenda', icon: CalendarDays, route: 'agenda', task: 'Veja a agenda da equipe lado a lado, ache um horário livre e teste um encaixe.', benefit: 'Acompanhe cada profissional num só lugar e encaixe clientes sem perder o controle do dia.' },
+  { id: 'dashboard', label: 'Início', icon: LayoutDashboard, route: '', task: 'Bata o olho no próximo atendimento, no faturamento do dia e na fila em andamento.', benefit: null },
+  { id: 'finance', label: 'Financeiro', icon: Wallet, route: 'financeiro', task: 'Acompanhe receitas, despesas e o lucro real no movimento ilustrativo do período.', benefit: 'Veja o que entra, o que sai e o que realmente sobra — sem depender de caderno ou planilha.' },
+  { id: 'clientes', label: 'Clientes', icon: Users, route: 'clientes?filter=Inativo', task: 'Descubra quem não volta há mais de 35 dias e abra o histórico para puxar conversa.', benefit: 'Encontre clientes que sumiram há mais de 35 dias e chame de volta antes que esqueçam do seu espaço.' },
+  { id: 'fila', label: 'Fila', icon: Clock, route: 'fila', task: 'Organize quem chega sem hora marcada e acompanhe os atendimentos em andamento.', benefit: null },
 ] as const;
 
 const productViews = demoViews.filter(item => item.benefit);
 
 const teamViews = [
-  { label: 'Comissões', route: 'financeiro?tab=commissions', benefit: 'Acompanhe as comissões da equipe por ciclo.' },
-  { label: 'Fila de espera', route: 'fila', benefit: 'Organize quem chega sem agendamento.' },
-  { label: 'Resultados por hora', route: 'resultados-por-hora', benefit: 'Veja quanto rende cada hora aberta e a sobra estimada após os custos registrados.' },
+  { label: 'Comissões', route: 'financeiro?tab=commissions', benefit: 'Calcule e acompanhe o que pagar para cada profissional, sem erro nem conta no papel.' },
+  { label: 'Fila de espera', route: 'fila', benefit: 'Organize quem chega sem marcar direto no celular, sem bagunçar a recepção.' },
+  { label: 'Resultados por hora', route: 'resultados-por-hora', benefit: 'Descubra quanto rende cada hora trabalhada e quanto sobra de verdade depois dos custos.' },
 ] as const;
 
 const setupSteps = [
-  { title: 'Crie sua conta', text: 'Escolha o segmento e cadastre seu negócio.' },
-  { title: 'Prepare a agenda', text: 'Cadastre os serviços e defina os horários de atendimento.' },
-  { title: 'Compartilhe seu link', text: 'Envie o link aos clientes para receber pedidos de agendamento.' },
+  { title: 'Crie sua conta em minutos', text: 'Escolha barbearia ou salão e cadastre seu negócio direto do celular, sem cartão.' },
+  { title: 'Monte sua agenda e seus serviços', text: 'Coloque seus horários, preços e equipe. Seus atendimentos já alimentam o financeiro.' },
+  { title: 'Compartilhe o link e acompanhe o resultado', text: 'Envie seu link no WhatsApp e no Instagram. A cada atendimento, você enxerga o que entra e o que sobra.' },
 ] as const;
 
 const supportHref = buildWhatsAppLink('+351 927 688 674', 'PT');
@@ -105,7 +105,7 @@ export const Landing = () => {
     const viewport = document.querySelector('meta[name="viewport"]');
     const previous = viewport?.getAttribute('content');
     viewport?.setAttribute('content', 'width=device-width, initial-scale=1.0, viewport-fit=cover');
-    document.title = 'AgendiX — Agenda e gestão para barbearias e salões';
+    document.title = 'AgendiX — Crescimento, agenda e financeiro para barbearias e salões';
     return () => {
       if (previousSurface) root.dataset.surface = previousSurface;
       else delete root.dataset.surface;
@@ -183,11 +183,11 @@ export const Landing = () => {
         <section className="landing-hero" aria-labelledby="landing-title">
           <div className="landing-wrap wrap landing-hero-layout">
             <div className="landing-hero-copy">
-              <h1 id="landing-title">Agenda em dia. <span>Caixa à vista.</span></h1>
-              <p>Seus clientes escolhem um horário pelo seu link. Você acompanha a agenda da equipe e o caixa da sua barbearia ou salão pelo celular.</p>
+              <h1 id="landing-title">Mais que agenda. <span>Cresça com clareza.</span></h1>
+              <p>A agenda online traz o cliente. O AgendiX mostra o que entra, o que sai, o que sobra de verdade e quem sumiu — tudo no celular.</p>
               <div className="landing-hero-actions">
                 <a href={signupHref} className="landing-button" aria-describedby="landing-trial-terms">Crie sua conta grátis <ArrowRight size={18} aria-hidden="true" /></a>
-                <button type="button" className="landing-text-link landing-demo-jump" onClick={() => scrollTo('demonstracao')}>Ver demonstração <ArrowDown size={16} aria-hidden="true" /></button>
+                <button type="button" className="landing-text-link landing-demo-jump" onClick={() => scrollTo('demonstracao')}>Testar demonstração <ArrowDown size={16} aria-hidden="true" /></button>
                 <span className="landing-no-card" id="landing-trial-terms"><Check size={15} aria-hidden="true" /> {trialTerms}</span>
               </div>
             </div>
@@ -210,8 +210,8 @@ export const Landing = () => {
           <div className="landing-wrap wrap">
             <div className="landing-demo-stage">
               <div className="landing-demo-controls">
-                <h2 id="landing-demo-title">Experimente o AgendiX.</h2>
-                <p>Use uma barbearia ou um salão de exemplo. A simulação abre sem cadastro e usa dados fictícios.</p>
+                <h2 id="landing-demo-title">Teste sem criar conta.</h2>
+                <p>Escolha barbearia ou salão e navegue pelas telas reais com dados de exemplo. Sem cadastro e sem compromisso.</p>
                 <BusinessSelector niche={niche} label="Negócio da demonstração" onChange={chooseNiche} />
                 <div className="landing-demo-view-tabs" role="group" aria-label="Tela da demonstração">
                   {demoViews.map(({ id, label, icon: Icon }) => (
@@ -242,7 +242,7 @@ export const Landing = () => {
               </figure>
             </div>
             <div className="landing-demo-conversion">
-              <p>Use seus serviços e horários durante o teste.</p>
+              <p>Curtiu? Coloque seus serviços, horários e números reais em poucos minutos.</p>
               <a className="landing-text-link" href={signupHref}>Crie sua conta grátis <ArrowRight size={18} aria-hidden="true" /></a>
             </div>
           </div>
@@ -252,8 +252,8 @@ export const Landing = () => {
           <div className="landing-wrap wrap">
             <div className="landing-product-grid">
               <div>
-                <h2 id="landing-product-title">Do agendamento ao caixa.</h2>
-                <p className="landing-product-intro">Escolha um recurso para abrir na demonstração.</p>
+                <h2 id="landing-product-title">Mais do que marcar horários.</h2>
+                <p className="landing-product-intro">A agenda organiza o dia, mas o crescimento vem de enxergar o negócio inteiro. Clique em qualquer tela para testar na demo.</p>
                 <ul className="landing-product-list">
                   {productViews.map(({ id, label, route, benefit }) => (
                     <li key={id}>
@@ -268,7 +268,7 @@ export const Landing = () => {
               <img className="landing-team-photo" src="/landing/team-salon-800.webp" srcSet="/landing/team-salon-800.webp 800w, /landing/team-salon-1448.webp 1448w" sizes="(max-width: 760px) 100vw, 40vw" loading="lazy" width="1448" height="1086" alt="Duas profissionais de salão organizam o dia com um tablet." />
             </div>
             <div className="landing-team">
-              <h3>Para a rotina da equipe</h3>
+              <h3>Equipe, fila e o valor da sua hora</h3>
               <ul className="landing-product-list landing-team-list">
                 {teamViews.map(({ label, route, benefit }) => (
                   <li key={route}>
@@ -291,9 +291,9 @@ export const Landing = () => {
             </figure>
             <div className="landing-story-copy">
               <h2 id="landing-story-title">Por que o AgendiX nasceu</h2>
-              <p>Rhian Lepore cresceu entre barbearias e salões. Acompanhando a rotina da família, viu como era difícil atender os clientes e cuidar das contas ao mesmo tempo.</p>
+              <p>Rhian Lepore cresceu entre barbearias e salões. Viu de perto o que acontece quando o dono passa o dia inteiro atendendo: a agenda gira, o dinheiro entra, mas falta tempo — e clareza — para olhar os números.</p>
               <blockquote className="landing-story-quote">
-                <p>“Vi meus pais trabalhando para o negócio, sem que o negócio também trabalhasse para eles. Percebi que ter clientes e dinheiro entrando não era suficiente. Era preciso entender os custos, organizar as contas e saber o que realmente sobrava. Foi por isso que criei o AgendiX.”</p>
+                <p>“Vi meus pais trabalhando para o negócio, sem que o negócio trabalhasse para eles. Ter clientes e dinheiro entrando não bastava. Era preciso entender os custos, organizar as contas e saber o que realmente sobrava. Foi por isso que criei o AgendiX.”</p>
                 <footer>Rhian Lepore, criador do AgendiX</footer>
               </blockquote>
               <p className="landing-story-slogan">Você cresce. O AgendiX acompanha você e ajuda seu negócio a ir além.</p>
@@ -303,7 +303,7 @@ export const Landing = () => {
 
         <section className="landing-onboarding" aria-labelledby="landing-setup-title">
           <div className="landing-wrap wrap landing-onboarding-grid">
-            <h2 id="landing-setup-title">Como começar</h2>
+            <h2 id="landing-setup-title">Comece sem travar o seu dia</h2>
             <ol className="landing-steps">
               {setupSteps.map(({ title, text }) => (
                 <li key={title}>
@@ -319,7 +319,7 @@ export const Landing = () => {
           <div className="landing-wrap wrap landing-faq-grid">
             <div>
               <h2 id="landing-faq-title">Perguntas frequentes</h2>
-              <a className="landing-text-link" href={supportHref} target="_blank" rel="noopener noreferrer">Falar com o suporte <ArrowRight size={16} aria-hidden="true" /></a>
+              <a className="landing-text-link" href={supportHref} target="_blank" rel="noopener noreferrer">Tirar dúvida no WhatsApp <ArrowRight size={16} aria-hidden="true" /></a>
             </div>
             <div className="landing-questions">
               {questions.map(([question, answer]) => (
@@ -334,7 +334,7 @@ export const Landing = () => {
 
         <section className="landing-close" aria-labelledby="landing-close-title">
           <div className="landing-wrap wrap">
-            <h2 id="landing-close-title">Coloque sua agenda online.</h2>
+            <h2 id="landing-close-title">Faça o negócio trabalhar para você.</h2>
             <div className="landing-close-action">
               <a className="landing-button landing-button-light" href={signupHref}>Crie sua conta grátis <ArrowRight size={18} aria-hidden="true" /></a>
               <span className="landing-no-card"><Check size={15} aria-hidden="true" /> {trialTerms}</span>

@@ -24,14 +24,14 @@ it('direciona a raiz para o login quando o visitante não tem sessão', async ()
   render(<App />);
   expect(await screen.findByRole('heading', { name: 'Acesso ao AgendiX' })).toBeVisible();
   expect(screen.queryByTestId('original-layout')).toBeNull();
-  expect(screen.queryByText('Agenda em dia.')).toBeNull();
+  expect(screen.queryByText('Mais que agenda.')).toBeNull();
   expect(window.location.hash).toBe('#/login');
 });
 it.each([false, true])('mantém a landing separada em /landing, com sessão=%s', async (authenticated) => {
   auth.authenticated = authenticated;
   window.history.replaceState(null, '', '/#/landing');
   render(<App />);
-  expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('Agenda em dia.');
+  expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('Mais que agenda.');
   expect(screen.queryByTestId('original-layout')).toBeNull();
   expect(window.location.hash).toBe('#/landing');
 });

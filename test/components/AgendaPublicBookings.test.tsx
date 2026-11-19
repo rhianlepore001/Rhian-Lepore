@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AgendaPublicBookings } from '../../components/agenda/AgendaPublicBookings';
 
@@ -25,6 +25,10 @@ const services = [
   { id: 's2', name: 'Barba' },
 ];
 
+function expandRequests() {
+  fireEvent.click(screen.getByTestId('agenda-online-requests-toggle'));
+}
+
 describe('AgendaPublicBookings', () => {
   it('não recorta a lista com max-height e mostra a mensagem inteira', () => {
     render(
@@ -38,6 +42,11 @@ describe('AgendaPublicBookings', () => {
       />,
     );
 
+    const toggle = screen.getByTestId('agenda-online-requests-toggle');
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('button', { name: 'Aceitar' })).not.toBeInTheDocument();
+    expandRequests();
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
     const section = screen.getByTestId('agenda-public-bookings');
     expect(section.className).not.toMatch(/max-h-/);
     expect(section.className).not.toMatch(/overflow-y-auto/);
@@ -60,6 +69,7 @@ describe('AgendaPublicBookings', () => {
       />,
     );
 
+    expandRequests();
     await userEvent.click(screen.getByRole('button', { name: /Aceitar/ }));
     expect(onAccept).toHaveBeenCalledWith(booking);
     await userEvent.click(screen.getByRole('button', { name: /Recusar/ }));
@@ -78,6 +88,7 @@ describe('AgendaPublicBookings', () => {
       />,
     );
 
+    expandRequests();
     expect(screen.getByRole('button', { name: /Aceitar/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Recusar/ })).toBeInTheDocument();
   });
@@ -95,6 +106,7 @@ describe('AgendaPublicBookings', () => {
       />,
     );
 
+    expandRequests();
     expect(screen.queryByRole('button', { name: /Aceitar/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Recusar/ })).not.toBeInTheDocument();
     expect(screen.getByText('Maria Silva')).toBeInTheDocument();
@@ -119,6 +131,7 @@ describe('AgendaPublicBookings', () => {
         onReject={vi.fn()}
       />,
     );
+    expandRequests();
     expect(screen.getByTestId('agenda-booking-alteracao')).toHaveTextContent(
       'Alteração: de 04/10 · 10:00 para 04/10 · 12:00',
     );
@@ -140,6 +153,7 @@ describe('AgendaPublicBookings', () => {
         canActOnBooking={(item) => item.professional_id === 'm1'}
       />,
     );
+    expandRequests();
     expect(screen.getByText('1 solicitação online')).toBeInTheDocument();
     expect(screen.getByText('Feitos pelo link público — aceite ou recuse.')).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /Aceitar/ })).toHaveLength(1);
@@ -166,6 +180,7 @@ describe('AgendaPublicBookings', () => {
         onReject={vi.fn()}
       />,
     );
+    expandRequests();
     expect(screen.getByText('2 solicitações online')).toBeInTheDocument();
     expect(screen.getByText('1 pedido novo e 1 alteração')).toBeInTheDocument();
   });
@@ -202,6 +217,7 @@ describe('AgendaPublicBookings', () => {
           onReject={vi.fn()}
         />,
       );
+      expandRequests();
       expect(screen.getByText('Mariana Exemplo')).toBeInTheDocument();
       expect(screen.getByText('Ana Exemplo (responsável: Mariana Exemplo)')).toBeInTheDocument();
       expect(screen.getByText('Bia Exemplo (responsável: Mariana Exemplo)')).toBeInTheDocument();
@@ -219,6 +235,7 @@ describe('AgendaPublicBookings', () => {
           onReject={vi.fn()}
         />,
       );
+      expandRequests();
       expect(screen.getByText('Maria Silva')).toBeInTheDocument();
     });
   });

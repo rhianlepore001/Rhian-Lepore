@@ -101,14 +101,14 @@ export const QueueStaffCard: React.FC<QueueStaffCardProps> = ({
 
   return (
     <article
-      className={`rounded-2xl border p-4 space-y-3 transition-all duration-200 ${
+      className={`rounded-xl border p-3.5 space-y-3 transition-colors duration-150 ${
         highlighted
-          ? 'border-[var(--color-accent)] bg-[var(--color-accent-dim)] shadow-[var(--shadow-card-accent)]'
+          ? 'border-[var(--color-accent)] bg-[var(--color-accent-dim)]'
           : isCalling
-            ? 'border-[var(--color-warning-border)] bg-[var(--color-warning-bg)] shadow-[var(--shadow-card)]'
+            ? 'border-[var(--color-warning-border)] bg-[var(--color-warning-bg)]'
             : isServing
-              ? 'border-[var(--color-info-border)] bg-[var(--color-info-bg)] shadow-[var(--shadow-card)]'
-              : 'border-theme-border bg-theme-card shadow-[var(--shadow-card)]'
+              ? 'border-[var(--color-info-border)] bg-[var(--color-info-bg)]'
+              : 'border-theme-border bg-theme-card'
       }`}
     >
       <div className="flex items-start gap-3 min-w-0">

@@ -162,6 +162,7 @@ for (const enabled of [true, false]) {
     const mock = await installMocks(page, 'beauty', 'owner', true);
     mock.templates.push({ message_key: 'booking_accepted', enabled, body: 'Confirmado, {cliente}! Até breve em {estabelecimento}.' });
     await page.goto('/#/agenda');
+    await page.getByTestId('agenda-online-requests-toggle').click();
     await page.getByRole('button', { name: 'Aceitar', exact: true }).click();
     if (enabled) {
       await page.getByRole('button', { name: 'Enviar no WhatsApp', exact: true }).click();

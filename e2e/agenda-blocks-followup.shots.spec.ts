@@ -55,6 +55,7 @@ test.describe('follow-up bloqueio — copy M2 e bloqueio no passado', () => {
         });
         await login(page, role);
         await page.goto('/#/agenda');
+        await page.getByTestId('agenda-online-requests-toggle').click();
         const accept = page.getByRole('button', { name: 'Aceitar' }).first();
         await expect(accept).toBeVisible({ timeout: 20000 });
         await shot(page, `${role}-${width}-1-pedido.png`);

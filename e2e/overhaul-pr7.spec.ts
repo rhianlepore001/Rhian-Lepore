@@ -403,6 +403,7 @@ test.describe('PR-7 notificações de pedido', () => {
       await stubApp(page, 'staff-y', { notifications: [], pending: [X_REQUEST], scope: 'none' });
       await page.goto(`${BASE}/#/agenda`, { waitUntil: 'domcontentloaded' });
       await expect(page.getByTestId('agenda-public-bookings')).toBeVisible({ timeout: 30_000 });
+      await page.getByTestId('agenda-online-requests-toggle').click();
       await expect(page.getByText('Zé Cliente')).toBeVisible();
       await expect(page.getByRole('button', { name: /^Aceitar$/ })).toHaveCount(0);
       await expect(page.getByRole('button', { name: /^Recusar$/ })).toHaveCount(0);

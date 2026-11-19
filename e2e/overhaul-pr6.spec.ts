@@ -425,6 +425,7 @@ test.describe('PR-6 pedido de alteração', () => {
       await stubOwner(page);
       await page.goto(`${BASE}/#/agenda`, { waitUntil: 'domcontentloaded' });
       await expect(page.getByTestId('agenda-public-bookings')).toBeVisible({ timeout: 30_000 });
+      await page.getByTestId('agenda-online-requests-toggle').click();
       await expect(page.getByTestId('agenda-booking-alteracao')).toHaveText(ALTERACAO);
       await expect(page.getByText('1 alteração aguardando aprovação')).toBeVisible();
       await shot(page, `agenda-request-alteracao-${vp.name}`, '[data-testid="agenda-public-bookings"]');

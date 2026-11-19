@@ -326,8 +326,6 @@ export const Agenda: React.FC = () => {
             return;
         }
         setHighlightedBookingId(focusBookingId);
-        const el = document.querySelector(`[data-testid="agenda-public-booking-${CSS.escape(focusBookingId)}"]`);
-        el?.scrollIntoView({ block: 'center', behavior: 'auto' });
         const clearTimer = window.setTimeout(() => setHighlightedBookingId(null), 2500);
         return () => {
             window.clearTimeout(clearTimer);

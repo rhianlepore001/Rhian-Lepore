@@ -150,7 +150,7 @@ export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose })
       aria-label="Menu de navegação"
     >
       <div
-        className="absolute inset-0 bg-[var(--color-bg)]/40 backdrop-blur-sm transition-opacity"
+        className="absolute inset-0 bg-[var(--color-overlay)] backdrop-blur-[2px] transition-opacity"
         onClick={handleClose}
         aria-hidden="true"
       />
@@ -160,7 +160,7 @@ export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose })
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className={`relative h-full w-[85vw] max-w-[320px] pt-[var(--safe-top)] pb-[var(--safe-bottom)] shadow-2xl flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${colors.bg} border-l ${colors.divider}`}
+        className={`relative h-full w-[min(92vw,360px)] pt-[var(--safe-top)] pb-[var(--safe-bottom)] shadow-[var(--shadow-modal)] flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${colors.bg} border-l ${colors.divider}`}
         style={{
           transform: isVisible ? 'translateX(0)' : 'translateX(100%)',
           willChange: 'transform',
@@ -190,7 +190,7 @@ export const MoreOptionsDrawer: React.FC<MoreOptionsDrawerProps> = ({ onClose })
           </div>
           <button
             onClick={handleClose}
-            className={`p-2.5 rounded-full border transition-all active:scale-90 shrink-0 ${colors.border} ${colors.textSecondary} ${colors.card} hover:text-theme-text hover:border-[var(--color-accent-border)]`}
+            className={`inline-flex h-11 w-11 items-center justify-center rounded-xl border transition-all active:scale-90 shrink-0 ${colors.border} ${colors.textSecondary} ${colors.card} hover:text-theme-text hover:border-[var(--color-accent-border)]`}
             aria-label="Fechar menu"
             title="Fechar"
           >

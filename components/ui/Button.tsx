@@ -18,9 +18,9 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 // Touch target mínimo 44px no mobile em todos os tamanhos (WCAG 2.5.8, DS Lock §1.3).
 // Desktop pode comprimir o sm para reduzir densidade de cliques.
 const SIZE_CLASSES: Record<ButtonSize, string> = {
-  sm: 'text-xs px-3 py-2.5 min-h-[44px] md:min-h-[36px] md:h-9 md:py-1.5 gap-1.5',
-  md: 'text-sm px-5 py-2.5 h-11 min-h-[44px] gap-2',
-  lg: 'text-base px-6 py-3 h-[52px] min-h-[52px] gap-2.5',
+  sm: 'text-sm md:text-xs px-3 py-2 min-h-[44px] md:min-h-9 md:py-1.5 gap-1.5',
+  md: 'text-sm px-4 md:px-5 py-2.5 min-h-12 md:min-h-11 gap-2',
+  lg: 'text-base px-5 md:px-6 py-3 min-h-[52px] gap-2.5',
 };
 
 export const Button: React.FC<ButtonProps> = ({
@@ -55,13 +55,13 @@ export const Button: React.FC<ButtonProps> = ({
       type={type}
       className={[
         'relative inline-flex items-center justify-center font-semibold select-none',
-        'transition-all duration-200 ease-out',
-        'focus:outline-none focus:ring-2 focus:ring-offset-1',
+        'transition-colors duration-150 ease-out motion-reduce:transition-none',
+        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus-ring)]',
         radius.button,
         variantMap[variant],
         SIZE_CLASSES[size],
         fullWidth ? 'w-full' : '',
-        isDisabled ? 'opacity-50 pointer-events-none' : 'active:scale-[0.97]',
+        isDisabled ? 'opacity-50 pointer-events-none' : 'motion-safe:active:scale-[0.98]',
         className,
       ].filter(Boolean).join(' ')}
       disabled={isDisabled}
@@ -81,7 +81,7 @@ export const Button: React.FC<ButtonProps> = ({
         <span className="inline-flex items-center gap-1.5 min-w-0 max-w-full [&_svg]:shrink-0">
           {React.Children.map(children, (child) =>
             typeof child === 'string' || typeof child === 'number' ? (
-              <span key={String(child)} className="truncate">
+              <span key={String(child)} className="min-w-0 break-words leading-snug text-center">
                 {child}
               </span>
             ) : (

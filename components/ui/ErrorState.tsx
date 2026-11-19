@@ -23,23 +23,23 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
 
   return (
     <div
-      className={`flex flex-col items-center justify-center text-center py-12 px-6 ${className}`}
+      className={`flex flex-col items-center justify-center text-center px-4 py-8 sm:px-6 sm:py-10 ${className}`}
       role="alert"
     >
-      <div className={`p-3.5 rounded-2xl ${status.dangerBg} mb-4`}>
-        <AlertTriangle className={`w-6 h-6 ${status.danger}`} aria-hidden="true" />
+      <div className={`inline-flex h-11 w-11 items-center justify-center rounded-xl ${status.dangerBg} mb-3`}>
+        <AlertTriangle className={`w-5 h-5 ${status.danger}`} aria-hidden="true" />
       </div>
-      <p className={`text-sm font-semibold ${colors.text} mb-1`}>{title}</p>
-      <p className={`text-xs ${colors.textMuted} mb-4 max-w-[32ch] leading-relaxed`}>{message}</p>
+      <p className={`text-base font-semibold ${colors.text}`}>{title}</p>
+      <p className={`mt-1.5 text-sm ${colors.textSecondary} max-w-[38ch] leading-relaxed text-pretty`}>{message}</p>
       {onRetry && (
         <button
           type="button"
           onClick={onRetry}
           className={[
-            'inline-flex items-center gap-1.5 text-xs font-medium px-4 py-2 rounded-xl',
+            'mt-4 inline-flex min-h-12 items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl',
             'border transition-colors duration-150',
-            `${status.danger} ${status.dangerBorder} ${status.dangerBg}`,
-            'hover:brightness-110',
+            `${colors.text} ${colors.border} ${colors.card}`,
+            'hover:bg-[var(--color-card-hover)]',
           ].join(' ')}
         >
           <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />

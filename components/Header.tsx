@@ -75,11 +75,11 @@ export const Header: React.FC = () => {
   return (
     <>
       <header className={`fixed left-0 ${!isSettingsRoute ? 'md:left-64' : ''} right-0 z-30 transition-all duration-300
-        ${colors.bg} backdrop-blur-xl border-b ${colors.divider}
+        ${colors.card} border-b ${colors.divider}
       `}
         style={{ top: 'var(--header-top, 0)' }}
       >
-        <div className="h-14 md:min-h-20 md:h-auto py-0 flex items-center justify-between gap-1.5 md:gap-2 px-4 md:px-8">
+        <div className="h-14 md:min-h-20 md:h-auto py-0 flex items-center justify-between gap-1.5 md:gap-2 px-3 sm:px-4 md:px-8">
 
           <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1 overflow-hidden">
             {isSettingsRoute ? (
@@ -112,19 +112,14 @@ export const Header: React.FC = () => {
                 )}
                 <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
                   <div className="flex items-center gap-1.5 min-w-0 w-full max-w-full">
-                    <h1
+                    <p
                       className={`min-w-0 flex-1 font-heading text-sm sm:text-lg md:text-2xl ${colors.text} tracking-normal md:tracking-wide leading-none truncate whitespace-nowrap`}
                       title={businessName || 'GESTÃO'}
                     >
                       {businessName || 'GESTÃO'}
-                    </h1>
-                    <span
-                      className="w-1.5 h-1.5 bg-[var(--color-success)] rounded-full animate-pulse shrink-0"
-                      aria-label="Online"
-                      title="Negócio ativo"
-                    />
+                    </p>
                   </div>
-                  <p className={`text-xs font-mono mt-0.5 opacity-50 uppercase tracking-wide ${colors.textSecondary} truncate`}>
+                  <p className={`text-xs mt-0.5 ${colors.textSecondary} truncate`}>
                     {segmentLabel}
                   </p>
                 </div>
@@ -179,13 +174,15 @@ export const Header: React.FC = () => {
                 onClick={() => setShowNotifications(!showNotifications)}
                 className="relative p-1.5 h-11 w-11 inline-flex items-center justify-center hover:bg-theme-surface rounded-lg border border-transparent hover:border-[var(--color-divider)] transition-colors"
                 aria-label={unreadCount > 0 ? `Abrir notificações, ${unreadLabel}` : 'Abrir notificações'}
+                aria-expanded={showNotifications}
                 title="Notificações"
               >
                 <Bell className={`w-4 h-4 md:w-6 md:h-6 ${colors.text}`} />
                 {unreadCount > 0 && (
                   <span
                     data-testid="notification-badge"
-                    className={`absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 ${accent.bg} rounded-full border-2 border-[var(--color-bg)] animate-pulse flex items-center justify-center text-xs font-mono font-bold text-[var(--color-on-accent)] leading-none`}
+                    aria-hidden="true"
+                    className={`absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 ${accent.bg} rounded-full border-2 border-[var(--color-card)] flex items-center justify-center text-xs font-mono font-bold text-[var(--color-on-accent)] leading-none`}
                   >
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
@@ -217,6 +214,7 @@ export const Header: React.FC = () => {
                 id="header-profile-btn"
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
                 aria-label="Abrir menu do perfil"
+                aria-expanded={showProfileMenu}
                 className={`inline-flex items-center justify-center gap-3 h-11 w-11 md:h-auto md:w-auto md:min-h-[44px] pl-0 md:pl-6 md:border-l-2 ${colors.divider} hover:opacity-80 transition-opacity`}
               >
                 <div className="text-right hidden sm:block">
@@ -225,7 +223,7 @@ export const Header: React.FC = () => {
                 </div>
                 <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full ${colors.surface} border-2 ${colors.border} flex items-center justify-center overflow-hidden`}>
                   {avatarUrl ? (
-                    <img src={avatarUrl} alt="User" className="w-full h-full object-cover" />
+                    <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <div className={`w-full h-full flex items-center justify-center font-heading font-bold text-sm md:text-base ${accent.bgDim} ${accent.text}`}>
                       {(fullName || 'U').charAt(0).toUpperCase()}

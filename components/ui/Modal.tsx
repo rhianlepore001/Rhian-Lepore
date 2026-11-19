@@ -139,7 +139,7 @@ export const Modal: React.FC<ModalProps> = ({
             classes.modalContainer,
             isFull
               ? 'flex flex-col pt-[var(--safe-top)] pb-[var(--safe-bottom)]'
-              : 'max-h-[92dvh] md:max-h-[90vh] flex flex-col max-md:max-w-none max-md:rounded-b-none max-md:rounded-t-2xl max-md:motion-safe:animate-slide-up max-md:pb-[var(--safe-bottom)]',
+              : 'max-h-[min(92dvh,calc(100dvh-var(--safe-top)))] md:max-h-[90dvh] flex flex-col max-md:max-w-none max-md:rounded-b-none max-md:rounded-t-2xl max-md:motion-safe:animate-slide-up max-md:pb-[var(--safe-bottom)]',
             'focus:outline-none',
             className,
           ].filter(Boolean).join(' ')}
@@ -152,7 +152,7 @@ export const Modal: React.FC<ModalProps> = ({
                     ref={titleRef}
                     id={titleDomId}
                     tabIndex={-1}
-                    className={`text-base md:text-lg font-bold tracking-tight ${colors.text} outline-none truncate`}
+                    className={`text-base md:text-lg font-bold tracking-tight ${colors.text} outline-none break-words leading-snug`}
                   >
                     {title}
                   </h2>

@@ -184,7 +184,7 @@ export const Landing = () => {
           <div className="landing-wrap wrap landing-hero-layout">
             <div className="landing-hero-copy">
               <h1 id="landing-title">Mais que agenda. <span>Cresça com clareza.</span></h1>
-              <p>A agenda online traz o cliente. O AgendiX mostra o que entra, o que sai, o que sobra de verdade e quem sumiu — tudo no celular.</p>
+              <p>Receba agendamentos e acompanhe quanto entrou, quanto saiu e quanto sobrou. Veja quais clientes deixaram de voltar.</p>
               <div className="landing-hero-actions">
                 <a href={signupHref} className="landing-button" aria-describedby="landing-trial-terms">Crie sua conta grátis <ArrowRight size={18} aria-hidden="true" /></a>
                 <button type="button" className="landing-text-link landing-demo-jump" onClick={() => scrollTo('demonstracao')}>Testar demonstração <ArrowDown size={16} aria-hidden="true" /></button>

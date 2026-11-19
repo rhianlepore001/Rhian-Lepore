@@ -115,7 +115,7 @@ export const ForgotPassword: React.FC = () => {
               required
             />
             <Button type="submit" variant="primary" size="lg" fullWidth loading={loading} data-testid="forgot-submit">
-              {loading ? 'Enviando link…' : 'Enviar link de redefinição'}
+              {loading ? 'Enviando link…' : 'Enviar link por e-mail'}
             </Button>
           </form>
 

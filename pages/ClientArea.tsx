@@ -379,16 +379,17 @@ export const ClientArea: React.FC = () => {
                                         </h2>
                                         <p className={`text-xs mt-1 ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`}>
                                             {queueFirst
-                                                ? 'Informe o WhatsApp usado ao entrar na fila para recuperar sua senha'
-                                                : 'Use o mesmo número do seu agendamento'}
+                                                ? 'Use o WhatsApp informado ao entrar na fila para ver sua posição.'
+                                                : 'Use o mesmo número de telefone que você informou ao agendar.'}
                                         </p>
                                     </div>
 
                                     <div>
-                                        <label className={`text-xs font-medium block mb-2 ${isBeauty ? 'text-[var(--color-text-muted)]' : 'text-theme-textSecondary'}`}>
+                                        <label htmlFor="client-area-phone" className={`text-xs font-medium block mb-2 ${isBeauty ? 'text-[var(--color-text-muted)]' : 'text-theme-textSecondary'}`}>
                                             Seu WhatsApp / Telefone
                                         </label>
                                         <PhoneInput
+                                            id="client-area-phone"
                                             value={phone}
                                             onChange={v => { setPhone(v); setGateError(''); }}
                                             placeholder="Telefone"

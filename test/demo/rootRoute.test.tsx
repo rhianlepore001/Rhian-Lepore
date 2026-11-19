@@ -20,12 +20,11 @@ vi.mock('../../components/DevBugButton', () => ({ DevBugButton: () => null }));
 import App from '../../App';
 
 beforeEach(() => { window.history.replaceState(null, '', '/#/'); auth.authenticated = false; });
-it('direciona a raiz para o login quando o visitante não tem sessão', async () => {
+it('direciona a raiz para a landing quando o visitante não tem sessão', async () => {
   render(<App />);
-  expect(await screen.findByRole('heading', { name: 'Acesso ao AgendiX' })).toBeVisible();
+  expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('Mais que agenda.');
   expect(screen.queryByTestId('original-layout')).toBeNull();
-  expect(screen.queryByText('Mais que agenda.')).toBeNull();
-  expect(window.location.hash).toBe('#/login');
+  expect(window.location.hash).toBe('#/landing');
 });
 it.each([false, true])('mantém a landing separada em /landing, com sessão=%s', async (authenticated) => {
   auth.authenticated = authenticated;

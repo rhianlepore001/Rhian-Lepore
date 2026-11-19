@@ -87,3 +87,7 @@ Fontes PNG, provas e script reproduzível: `/workspace/artifacts/site-v2/polish-
 ## Revisão da experiência — 17/11/2026
 
 `booking-1440`, `booking-mobile`, `finance-1440`, `finance-mobile`, `agenda-mobile` e `hero-agenda-mobile` foram recapturados diretamente da demonstração local após a revisão de legibilidade. O financeiro apresenta “Saldo do período” antes de comissões pendentes; os cartões da agenda têm fundos opacos. O recorte do agendamento privilegia a escolha de serviços. Arquivos WebP gerados pelo próprio Chromium (CDP `Page.captureScreenshot`), sem retoque de nomes, valores ou pixels; continuam sendo dados fictícios, sem representar clientes reais.
+
+## Escolha de serviços na demonstração — 19/11/2026
+
+As imagens `phone-barber-booking.webp` e `phone-beauty-booking.webp` foram recapturadas da tela de escolha de serviços da demonstração em Chromium a 390 × 794 CSS px, com resolução de 780 × 1588 px. A versão do salão mostra o filtro Unhas e a manicure. Os valores vêm dos dados fictícios da aplicação. Os créditos das fotos cadastradas na demonstração estão em [CREDITS.md](../demo/CREDITS.md).

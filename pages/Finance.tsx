@@ -578,12 +578,17 @@ const [searchParams, setSearchParams] = useSearchParams();
       : []),
   ], [accent.text, canDeleteTransactions, colors, currencyRegion, status.danger, status.success]);
 
-  // "⋯" do celular: só Filtrar/Exportar na Visão geral; sem itens, sem botão.
   const moreItems = [
     ...(activeTab === 'overview'
       ? [
         { id: 'filter', label: 'Filtrar', icon: <Filter className="h-4 w-4" />, onSelect: () => setShowFilterModal(true) },
         { id: 'export', label: 'Exportar', icon: <Download className="h-4 w-4" />, onSelect: handleExport },
+        ...(!isStaff ? [{
+          id: 'performance',
+          label: 'Performance da equipe',
+          icon: <BarChart3 className="h-4 w-4" />,
+          onSelect: () => navigate('/financeiro/performance'),
+        }] : []),
       ]
       : []),
     ...(ASSISTANT_ENABLED

@@ -51,6 +51,7 @@ export function useReportsData(
     },
     loading: statsQuery.isLoading || insightsQuery.isLoading || performanceQuery.isLoading,
     performanceLoading: performanceQuery.isLoading,
+    performanceUnavailable: performanceQuery.isError && !performanceQuery.data,
     refetch: () =>
       Promise.all([statsQuery.refetch(), insightsQuery.refetch(), performanceQuery.refetch()]),
   };

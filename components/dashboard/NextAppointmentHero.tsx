@@ -26,7 +26,7 @@ export const NextAppointmentHero: React.FC<NextAppointmentHeroProps> = ({
   onOpenAgenda,
   emptyCtaLabel = 'Agendar',
 }) => {
-  const { accent, colors, status } = useBrutalTheme();
+  const { accent, colors } = useBrutalTheme();
 
   if (loading) {
     return (
@@ -51,11 +51,8 @@ export const NextAppointmentHero: React.FC<NextAppointmentHeroProps> = ({
             </div>
             <div className="min-w-0">
               <h2 className={`font-heading text-lg font-bold ${colors.text}`}>
-                Nenhum agendamento hoje
+                Nenhum próximo atendimento
               </h2>
-              <p className={`mt-1 text-sm ${colors.textSecondary} text-pretty`}>
-                Sua agenda de hoje está livre. Que tal preencher um horário?
-              </p>
             </div>
           </div>
           <Button variant="primary" onClick={onOpenAgenda} icon={<CalendarClock className="h-4 w-4" />}>
@@ -126,9 +123,6 @@ export const NextAppointmentHero: React.FC<NextAppointmentHeroProps> = ({
         </div>
       )}
 
-      {!upcoming.length && (
-        <p className={`mt-4 text-xs ${status.success}`}>Próximo e último da fila por enquanto.</p>
-      )}
     </Card>
   );
 };

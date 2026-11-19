@@ -9,7 +9,7 @@ import {
     useDeleteMembershipPlan,
 } from '../../hooks/useMemberships';
 import { MembershipPlan, MembershipBadgeColor } from '../../services/memberships';
-import { Button, Modal, ConfirmModal } from '../../components/ui';
+import { Button, Modal, ConfirmModal, ErrorState } from '../../components/ui';
 import { PlanCard } from '../../components/membership/PlanCard';
 import { ClubOwnerNav } from '../../components/membership/ClubOwnerNav';
 import { useAuth } from '../../contexts/AuthContext';
@@ -55,7 +55,7 @@ export const MembershipPlansSettings: React.FC = () => {
         clubPlansSubtitle,
     } = useBusinessCopy();
     const { currencySymbol } = useTenantLocale();
-    const { data: plans, isLoading } = useMembershipPlans();
+    const { data: plans, isLoading, isError, refetch } = useMembershipPlans();
     const upsertMutation = useUpsertMembershipPlan();
     const deleteMutation = useDeleteMembershipPlan();
     const [services, setServices] = useState<Array<{ id: string; name: string; price: number; duration_minutes: number }>>([]);
@@ -176,7 +176,9 @@ export const MembershipPlansSettings: React.FC = () => {
                 <ClubOwnerNav />
 
                 {isLoading ? (
-                    <div className={`${colors.textSecondary} p-8`}>Carregando planos...</div>
+                    <div role="status" className={`${colors.textSecondary} p-8`}>Carregando planos…</div>
+                ) : isError && !plans ? (
+                    <ErrorState title="Não foi possível carregar os planos" onRetry={() => void refetch()} />
                 ) : plans && plans.length > 0 ? (
                     <div className="grid grid-cols-1 gap-2">
                         {plans.map(plan => (

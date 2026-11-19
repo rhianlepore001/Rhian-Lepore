@@ -35,7 +35,7 @@ export function DurationField({ id, value, estimate, adjusted, disabled, error, 
     <div className="flex items-stretch gap-2">
       <button type="button" aria-label="Diminuir 10 minutos" disabled={disabled} onClick={() => onChange(String(Math.max(1, (current || 1) - 10)))} className={step}>−10</button>
       <div className="relative min-w-0 flex-1">
-        <input id={id} type="number" min="1" max="1440" step="1" inputMode="numeric" disabled={disabled} value={value} onChange={event => onChange(event.target.value)} aria-invalid={!!error} aria-describedby={`${id}-help`}
+        <input id={id} type="number" min="1" max="1440" step="1" inputMode="numeric" disabled={disabled} value={value} onChange={event => onChange(event.target.value)} aria-invalid={!!error} aria-describedby={error ? `${id}-help ${id}-error` : `${id}-help`}
           className="h-full min-h-12 w-full rounded-xl border border-[var(--color-input-border)] bg-[var(--color-input-bg)] pl-3 pr-12 text-center text-xl font-bold tabular-nums text-theme-text focus:border-[var(--color-input-focus)] focus:outline-none focus:ring-1 focus:ring-[var(--color-input-focus)] disabled:opacity-50" />
         <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-theme-textSecondary">min</span>
       </div>
@@ -43,6 +43,6 @@ export function DurationField({ id, value, estimate, adjusted, disabled, error, 
     </div>
     <p id={`${id}-help`} className="text-sm text-theme-textSecondary">{help}{note && !adjusted ? ` ${note}` : ''}</p>
     {adjusted && hasEstimate && <button type="button" disabled={disabled} onClick={onRestore} className="inline-flex min-h-11 items-center text-sm font-semibold text-[var(--color-accent)] underline-offset-4 hover:underline">Voltar para {estimate} min {source === 'agenda' ? 'da agenda' : 'do serviço'}</button>}
-    {error && <p role="alert" className="text-sm text-[var(--color-danger)]">{error}</p>}
+    {error && <p id={`${id}-error`} role="alert" className="text-sm text-[var(--color-danger)]">{error}</p>}
   </div>;
 }

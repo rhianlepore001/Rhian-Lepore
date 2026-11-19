@@ -8,7 +8,7 @@ vi.mock('../../contexts/AuthContext', () => ({
 }));
 
 describe('TodayKpiStrip', () => {
-  it('renderiza valores até R$ 99.999,99 sem quebra e rótulos sem truncamento ou padding duplo', () => {
+  it('permite leitura de valores extensos e rótulos sem truncamento ou padding duplo', () => {
     const { container } = render(
       <TodayKpiStrip
         items={[
@@ -21,7 +21,8 @@ describe('TodayKpiStrip', () => {
     );
 
     const valueEl = screen.getByText('R$ 99.999,99');
-    expect(valueEl.className).toContain('whitespace-nowrap');
+    expect(valueEl.className).toContain('overflow-wrap:anywhere');
+    expect(valueEl.className).not.toContain('truncate');
 
     const hintEl = screen.getByText('13 agendamentos');
     expect(hintEl.className).not.toContain('truncate');

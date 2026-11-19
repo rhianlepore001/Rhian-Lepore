@@ -92,7 +92,7 @@ test.describe('Fin PR-F layout', () => {
     const menu = page.getByRole('menu', { name: 'Mais ações do financeiro' });
     await expect(menu).toBeVisible();
     // PR-G: assistente desligado (ASSISTANT_ENABLED=false).
-    await expect(menu.getByRole('menuitem')).toHaveText(['Filtrar', 'Exportar']);
+    await expect(menu.getByRole('menuitem')).toHaveText(['Filtrar', 'Exportar', 'Performance da equipe']);
     await expect(menu.getByRole('menuitem').first()).toBeFocused();
     await page.keyboard.press('ArrowDown');
     await expect(menu.getByRole('menuitem', { name: 'Exportar' })).toBeFocused();

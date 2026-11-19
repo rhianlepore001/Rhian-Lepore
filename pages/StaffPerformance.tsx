@@ -148,7 +148,7 @@ export const StaffPerformance: React.FC = () => {
     return (
         <div className={`flex flex-col ${PAGE_PB} max-w-[1120px]`}>
             <div className="flex flex-col gap-2 lg:gap-3">
-                <Link to="/financeiro?tab=commissions" className={`hidden lg:inline-flex items-center gap-1.5 min-h-[44px] text-sm ${colors.textSecondary} hover:text-theme-text`}>
+                <Link to="/financeiro?tab=commissions" className={`inline-flex self-start items-center gap-1.5 min-h-[44px] text-sm ${colors.textSecondary} hover:text-theme-text`}>
                     <ArrowLeft className="w-4 h-4" aria-hidden="true" /> Financeiro
                 </Link>
                 <PageHeader title="Performance da equipe" subtitle={subtitle} className="!pb-0 !gap-1" />
@@ -172,7 +172,7 @@ export const StaffPerformance: React.FC = () => {
 
             <HourlyResultsEntry
               to={`/resultados-por-hora?${filtersToSearch(filters)}`}
-              subtitle="Quanto cada hora aberta rendeu neste período. Veja se a hora paga as contas."
+              subtitle="Veja quanto cada hora de trabalho rendeu e se o valor cobre os custos."
               period={compactPeriodLine(filters.start, filters.end, null, false)}
             />
 

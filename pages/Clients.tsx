@@ -259,7 +259,7 @@ export const Clients: React.FC = () => {
           />
         </div>
         <div
-          className="flex gap-2 overflow-x-auto pb-1 hide-scrollbar"
+          className="flex flex-wrap gap-1.5 pb-1"
           role="tablist"
           aria-label="Filtrar clientes"
         >
@@ -271,7 +271,7 @@ export const Clients: React.FC = () => {
               aria-selected={filterType === type}
               onClick={() => setFilterType(type)}
               className={[
-                'px-4 py-2 text-xs font-semibold transition-all whitespace-nowrap min-h-[44px]',
+                'px-3 py-2 text-sm font-semibold transition-all whitespace-nowrap min-h-[44px]',
                 radius.button,
                 filterType === type
                   ? `${accent.bg} text-[var(--color-on-accent)]`
@@ -304,18 +304,17 @@ export const Clients: React.FC = () => {
           <div className="col-span-full">
             <EmptyState
               icon={Users}
-              title={
-                searchTerm || filterType !== 'Todos'
-                  ? 'Nenhum cliente neste filtro'
-                  : 'Seus clientes aparecem aqui. Cadastre o primeiro ou espere o agendamento online.'
-              }
-              action={
-                !isStaff && filterType === 'Todos' && !searchTerm ? (
-                  <Button variant="primary" size="md" icon={<Plus />} onClick={() => setShowModal(true)}>
-                    Adicionar cliente
-                  </Button>
-                ) : undefined
-              }
+              title={searchTerm || filterType !== 'Todos' ? 'Nenhum cliente encontrado' : 'Nenhum cliente cadastrado'}
+              description={searchTerm || filterType !== 'Todos'
+                ? 'Altere a busca ou limpe os filtros para ver todos os clientes.'
+                : isStaff
+                  ? 'Os clientes cadastrados pelo negócio aparecem aqui.'
+                  : 'Use Adicionar cliente para cadastrar uma pessoa ou importar contatos.'}
+              action={searchTerm || filterType !== 'Todos' ? (
+                <Button variant="secondary" onClick={() => { setSearchTerm(''); setFilterType('Todos'); }}>
+                  Limpar filtros
+                </Button>
+              ) : undefined}
             />
           </div>
         ) : (
@@ -324,81 +323,78 @@ export const Clients: React.FC = () => {
             const lastLabel = formatVisitAgo(client.lastVisitAt);
 
             return (
-              <Link key={client.id} to={`/clientes/${client.id}`} className="block group">
-                <Card
-                  variant="outlined"
-                  className="hover:bg-[var(--color-card-hover)] transition-colors cursor-pointer h-full"
-                >
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={[
-                        'w-12 h-12 rounded-full border flex items-center justify-center overflow-hidden shrink-0',
-                        accent.border,
-                        colors.inputBg,
-                      ].join(' ')}
-                    >
-                      {client.photo_url ? (
-                        <img src={client.photo_url} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <User className={accent.text} aria-hidden="true" />
-                      )}
+              <Card
+                key={client.id}
+                variant="outlined"
+                className="relative group hover:bg-[var(--color-card-hover)] transition-colors cursor-pointer h-full focus-within:ring-2 focus-within:ring-[var(--color-accent)]"
+              >
+                <div className="flex items-start gap-3">
+                  <div
+                    className={[
+                      'w-12 h-12 rounded-full border flex items-center justify-center overflow-hidden shrink-0',
+                      accent.border,
+                      colors.inputBg,
+                    ].join(' ')}
+                  >
+                    {client.photo_url ? (
+                      <img src={client.photo_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <User className={accent.text} aria-hidden="true" />
+                    )}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-start justify-between gap-x-2 gap-y-1.5 mb-1">
+                      <h3 className={`min-w-0 text-base font-heading leading-snug break-words ${colors.text} group-hover:text-theme-accent transition-colors`}>
+                        <Link to={`/clientes/${client.id}`} className="after:absolute after:inset-0">
+                          {client.name}
+                        </Link>
+                      </h3>
+                      {!isStaff && <ClientStatusChips client={client} />}
                     </div>
 
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-start justify-between gap-x-2 gap-y-1.5 mb-1">
-                        <h3 className={`min-w-0 text-base font-heading leading-snug break-words ${colors.text} group-hover:text-theme-accent transition-colors`}>
-                          {client.name}
-                        </h3>
-                        {!isStaff && <ClientStatusChips client={client} />}
-                      </div>
+                    <p className={`text-sm ${colors.textSecondary} font-mono flex items-center gap-2 mb-2`}>
+                      <span className="truncate">
+                        {client.phone ? formatPhone(client.phone, region as 'BR' | 'PT') : 'Sem telefone'}
+                      </span>
+                      {client.phone && (
+                        <button
+                          type="button"
+                          onClick={() => openWhatsApp(buildWhatsAppLink(client.phone!, region === 'PT' ? 'PT' : 'BR'))}
+                          className="relative z-10 p-1 rounded-full hover:bg-[var(--color-success-bg)] transition-colors text-[var(--color-success)] min-h-[44px] min-w-[44px] inline-flex items-center justify-center -my-2"
+                          title="WhatsApp"
+                          aria-label={`WhatsApp de ${client.name}`}
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                        </button>
+                      )}
+                    </p>
 
-                      <p className={`text-sm ${colors.textSecondary} font-mono flex items-center gap-2 mb-2`}>
-                        <span className="truncate">
-                          {client.phone ? formatPhone(client.phone, region as 'BR' | 'PT') : 'Sem telefone'}
-                        </span>
-                        {client.phone && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              openWhatsApp(buildWhatsAppLink(client.phone!, region === 'PT' ? 'PT' : 'BR'));
-                            }}
-                            className="p-1 rounded-full hover:bg-[var(--color-success-bg)] transition-colors text-[var(--color-success)] min-h-[44px] min-w-[44px] inline-flex items-center justify-center -my-2"
-                            title="WhatsApp"
-                            aria-label={`WhatsApp de ${client.name}`}
+                    <div className={`flex items-center justify-between gap-2 text-xs font-mono ${colors.textMuted}`}>
+                      {!isStaff && <span>
+                        {totalVisits} visita{totalVisits !== 1 ? 's' : ''}
+                        <span className="mx-1.5 opacity-40">·</span>
+                        {lastLabel === 'Nunca' ? 'Ainda não veio' : `Última: ${lastLabel}`}
+                      </span>}
+                      <span className="inline-flex items-center gap-2 shrink-0">
+                        {client.birthdaySoon && (
+                          <span
+                            className={`${accent.text} inline-flex items-center gap-1`}
+                            title="Aniversário nos próximos 7 dias"
                           >
-                            <MessageCircle className="w-4 h-4" />
-                          </button>
+                            <Cake className="w-3.5 h-3.5" aria-hidden="true" />
+                            <span className="sr-only">Aniversário próximo</span>
+                          </span>
                         )}
-                      </p>
-
-                      <div className={`flex items-center justify-between gap-2 text-xs font-mono ${colors.textMuted}`}>
-                        {!isStaff && <span>
-                          {totalVisits} visita{totalVisits !== 1 ? 's' : ''}
-                          <span className="mx-1.5 opacity-40">·</span>
-                          {lastLabel === 'Nunca' ? 'Ainda não veio' : `Última: ${lastLabel}`}
-                        </span>}
-                        <span className="inline-flex items-center gap-2 shrink-0">
-                          {client.birthdaySoon && (
-                            <span
-                              className={`${accent.text} inline-flex items-center gap-1`}
-                              title="Aniversário nos próximos 7 dias"
-                            >
-                              <Cake className="w-3.5 h-3.5" aria-hidden="true" />
-                              <span className="sr-only">Aniversário próximo</span>
-                            </span>
-                          )}
-                          <ChevronRight
-                            className={`w-4 h-4 ${colors.textMuted} group-hover:text-theme-accent group-hover:translate-x-0.5 transition-all`}
-                            aria-hidden="true"
-                          />
-                        </span>
-                      </div>
+                        <ChevronRight
+                          className={`w-4 h-4 ${colors.textMuted} group-hover:text-theme-accent group-hover:translate-x-0.5 transition-all`}
+                          aria-hidden="true"
+                        />
+                      </span>
                     </div>
                   </div>
-                </Card>
-              </Link>
+                </div>
+              </Card>
             );
           })
         )}
@@ -433,6 +429,7 @@ export const Clients: React.FC = () => {
               Telefone
             </label>
             <PhoneInput
+              id="client-phone"
               value={phone}
               onChange={setPhone}
               defaultRegion={region as 'BR' | 'PT'}

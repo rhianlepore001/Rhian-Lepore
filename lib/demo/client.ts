@@ -102,6 +102,19 @@ export function createDemoClient() {
     const t = tables();
     let data: any;
     switch (name) {
+      case 'get_client_profile': {
+        const client = t.clients.find(row => row.id === args.p_client_id);
+        if (!client) return { single: async () => ok(null) };
+        const history = t.appointments
+          .filter(row => row.client_id === client.id && row.status === 'Completed')
+          .sort((a, b) => b.appointment_time.localeCompare(a.appointment_time))
+          .map((row): DemoRow => ({
+            ...row,
+            professional_name: t.team_members.find(person => person.id === row.professional_id)?.name,
+          }));
+        const ltv = history.reduce((total, row) => total + (Number(row.price) || 0), 0);
+        return { single: async () => ok({ client, ltv, appointments_history: history }) };
+      }
       case 'list_company_pending_public_bookings': data = t.public_bookings.filter(b => b.status === 'pending'); break;
       case 'accept_public_booking_v2':
       case 'accept_public_booking': {

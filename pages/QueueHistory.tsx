@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Clock, History, User } from 'lucide-react';
-import { Badge, Button, Card, PageHeader, SkeletonCard } from '@/components/ui';
+import { Badge, Button, Card, ErrorState, PageHeader, SkeletonCard } from '@/components/ui';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQueueHistory, useQueueTeamMembers } from '@/hooks/useQueue';
@@ -9,6 +9,7 @@ import { useQueueRealtime } from '@/hooks/useQueueRealtime';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchServices } from '@/services/serviceSettings';
 import { summarizeQueueHistory } from '@/services/queue';
+import { formatLocalDateString } from '@/utils/date';
 import { formatPhone } from '@/utils/formatters';
 import {
   formatQueueClock,
@@ -45,7 +46,7 @@ export const QueueHistory: React.FC = () => {
     return today;
   });
 
-  const { data: entries = [], isLoading, refetch } = useQueueHistory(tenantId, day);
+  const { data: entries = [], isLoading, isError, refetch } = useQueueHistory(tenantId, day);
   const { data: teamMembers = [] } = useQueueTeamMembers(tenantId, true);
   const { data: services = [] } = useQuery({
     queryKey: ['queue', 'services', tenantId],
@@ -95,9 +96,18 @@ export const QueueHistory: React.FC = () => {
             <Button variant="secondary" size="sm" onClick={() => setDay((current) => shiftDay(current, -1))} aria-label="Dia anterior">
               <ChevronLeft className="w-4 h-4" />
             </Button>
-            <p className="min-w-[7.5rem] text-center text-sm font-semibold text-theme-text capitalize">
-              {formatDayLabel(day)}
-            </p>
+            <input
+              type="date"
+              aria-label="Escolher data do histórico da fila"
+              value={formatLocalDateString(day)}
+              max={formatLocalDateString(new Date())}
+              onChange={(event) => {
+                const date = event.currentTarget.value;
+                if (date && date <= formatLocalDateString(new Date())) setDay(new Date(`${date}T00:00:00`));
+              }}
+              className="min-w-0 min-h-11 rounded-xl border border-theme-border bg-theme-card px-2 text-sm text-theme-text"
+            />
+            <span className="sr-only" aria-live="polite">{formatDayLabel(day)}</span>
             <Button
               variant="secondary"
               size="sm"
@@ -111,88 +121,94 @@ export const QueueHistory: React.FC = () => {
         )}
       />
 
-      {isLoading ? (
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <SkeletonCard className="min-h-[88px]" />
-          <SkeletonCard className="min-h-[88px]" />
-          <SkeletonCard className="min-h-[88px]" />
-          <SkeletonCard className="min-h-[88px]" />
-        </div>
+      {isError && entries.length === 0 ? (
+        <ErrorState title="Não foi possível carregar o histórico deste dia" onRetry={() => void refetch()} />
       ) : (
-        <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          {[
-            { label: 'Entraram', value: summary.entered },
-            { label: 'Atendidos', value: summary.completed },
-            { label: 'Não compareceu', value: summary.noShow },
-            { label: 'Saiu da fila', value: summary.cancelled },
-          ].map((item) => (
-            <Card key={item.label} variant="outlined" className="p-4">
-              <p className="text-xs font-bold uppercase tracking-wide text-theme-textMuted">{item.label}</p>
-              <p className="mt-1 font-mono text-2xl font-black tabular-nums text-theme-text">{item.value}</p>
-            </Card>
-          ))}
-        </section>
-      )}
+        <>
+          {isLoading ? (
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              <SkeletonCard className="min-h-[88px]" />
+              <SkeletonCard className="min-h-[88px]" />
+              <SkeletonCard className="min-h-[88px]" />
+              <SkeletonCard className="min-h-[88px]" />
+            </div>
+          ) : (
+            <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              {[
+                { label: 'Entraram', value: summary.entered },
+                { label: 'Atendidos', value: summary.completed },
+                { label: 'Não compareceu', value: summary.noShow },
+                { label: 'Saiu da fila', value: summary.cancelled },
+              ].map((item) => (
+                <Card key={item.label} variant="outlined" className="p-4">
+                  <p className="text-xs font-bold uppercase tracking-wide text-theme-textMuted">{item.label}</p>
+                  <p className="mt-1 font-mono text-2xl font-black tabular-nums text-theme-text">{item.value}</p>
+                </Card>
+              ))}
+            </section>
+          )}
 
-      <section className="space-y-3">
-        <h2 className="text-lg font-bold text-theme-text flex items-center gap-2">
-          <Clock className="w-5 h-5 text-theme-accent" />
-          Movimento do dia
-        </h2>
-        {isLoading ? (
-          <SkeletonCard className="min-h-[160px]" />
-        ) : entries.length === 0 ? (
-          <EmptyState
-            bordered
-            icon={History}
-            title="Nenhuma senha neste dia"
-            description="Quando um cliente entrar na fila, o registro aparece aqui."
-            action={(
-              <Button variant="secondary" size="sm" onClick={() => { void refetch(); }}>
-                Atualizar
-              </Button>
-            )}
-          />
-        ) : (
-          <div className="space-y-3">
-            {(entries as QueueRecord[]).map((entry) => {
-              const professionalName = entry.professional_id
-                ? professionalNames.get(entry.professional_id) ?? '—'
-                : 'Profissional não informado';
-              const serviceName = entry.service_id ? serviceNames.get(entry.service_id) ?? 'Serviço' : 'Serviço';
-              return (
-                <article key={entry.id} className="rounded-2xl border border-theme-border bg-theme-card p-4 space-y-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <h3 className="font-bold text-theme-text truncate">{entry.client_name}</h3>
-                      <p className="text-xs text-theme-textSecondary font-mono mt-0.5">
-                        {formatPhone(entry.client_phone, localeRegion)}
+          <section className="space-y-3">
+            <h2 className="text-lg font-bold text-theme-text flex items-center gap-2">
+              <Clock className="w-5 h-5 text-theme-accent" />
+              Movimento do dia
+            </h2>
+            {isLoading ? (
+              <SkeletonCard className="min-h-[160px]" />
+            ) : entries.length === 0 ? (
+              <EmptyState
+                bordered
+                icon={History}
+                title="Nenhuma senha neste dia"
+                description="Escolha outra data para consultar a movimentação da fila."
+                action={(
+                  <Button variant="secondary" size="sm" onClick={() => { void refetch(); }}>
+                    Atualizar
+                  </Button>
+                )}
+              />
+            ) : (
+              <div className="space-y-3">
+                {(entries as QueueRecord[]).map((entry) => {
+                  const professionalName = entry.professional_id
+                    ? professionalNames.get(entry.professional_id) ?? '—'
+                    : 'Profissional não informado';
+                  const serviceName = entry.service_id ? serviceNames.get(entry.service_id) ?? 'Serviço' : 'Serviço';
+                  return (
+                    <article key={entry.id} className="rounded-2xl border border-theme-border bg-theme-card p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <h3 className="font-bold text-theme-text truncate">{entry.client_name}</h3>
+                          <p className="text-xs text-theme-textSecondary font-mono mt-0.5">
+                            {formatPhone(entry.client_phone, localeRegion)}
+                          </p>
+                        </div>
+                        <Badge variant={queueHistoryStatusTone(entry.status)} className="shrink-0">
+                          {queueHistoryStatusLabel(entry.status)}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-theme-text">
+                        {serviceName}
+                        {entry.duration_minutes ? ` · ${entry.duration_minutes} min` : ''}
                       </p>
-                    </div>
-                    <Badge variant={queueHistoryStatusTone(entry.status)} className="shrink-0">
-                      {queueHistoryStatusLabel(entry.status)}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-theme-text">
-                    {serviceName}
-                    {entry.duration_minutes ? ` · ${entry.duration_minutes} min` : ''}
-                  </p>
-                  <div className="flex items-center gap-2 text-xs text-theme-textSecondary">
-                    <User className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate">Atendeu: {professionalName}</span>
-                  </div>
-                  <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-theme-textMuted">
-                    <div>Entrou {formatQueueClock(entry.joined_at)}</div>
-                    <div>Chamou {formatQueueClock(entry.called_at)}</div>
-                    <div>Iniciou {formatQueueClock(entry.serving_at)}</div>
-                    <div>Encerrou {formatQueueClock(entry.closed_at)}</div>
-                  </dl>
-                </article>
-              );
-            })}
-          </div>
-        )}
-      </section>
+                      <div className="flex items-center gap-2 text-xs text-theme-textSecondary">
+                        <User className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">Atendeu: {professionalName}</span>
+                      </div>
+                      <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-theme-textMuted">
+                        <div>Entrou {formatQueueClock(entry.joined_at)}</div>
+                        <div>Chamou {formatQueueClock(entry.called_at)}</div>
+                        <div>Iniciou {formatQueueClock(entry.serving_at)}</div>
+                        <div>Encerrou {formatQueueClock(entry.closed_at)}</div>
+                      </dl>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        </>
+      )}
     </div>
   );
 };

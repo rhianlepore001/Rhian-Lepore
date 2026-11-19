@@ -333,9 +333,9 @@ export const QueueJoin: React.FC = () => {
 
   return (
     <div className={`min-h-screen ${colors.bg} ${colors.text}`}>
-      <div className="mx-auto w-full max-w-lg md:max-w-xl px-4 py-8 md:py-14 pb-12">
-        <header className="space-y-3 mb-8">
-          <h1 className={`text-[1.75rem] md:text-4xl font-bold tracking-tight leading-[1.15] ${font.heading}`}>
+      <div className="mx-auto w-full max-w-lg md:max-w-xl px-4 py-6 md:py-12 pb-12">
+        <header className="space-y-2.5 mb-5 md:mb-7">
+          <h1 className={`text-[clamp(1.5rem,6vw,2.25rem)] font-bold tracking-tight leading-tight break-words ${font.heading}`}>
             {business.business_name}
           </h1>
           <p className={`text-sm md:text-base leading-relaxed ${colors.textSecondary}`}>
@@ -343,18 +343,18 @@ export const QueueJoin: React.FC = () => {
               ? `Fila de ${lockedProName}. Escolha o serviço e acompanhe sua vez pelo celular.`
               : 'Escolha o serviço, entre na fila e acompanhe sua vez pelo celular.'}
           </p>
-          <ol className="flex items-center gap-2 pt-1" aria-label="Passos para entrar na fila">
+          <ol className={`grid grid-cols-3 gap-2 rounded-xl border p-2.5 ${colors.card} ${colors.border}`} aria-label="Passos para entrar na fila">
             {STEPS.map((item, index) => {
               const current = index === stepIndex;
               const done = index < stepIndex;
               return (
-                <li key={item.id} className="flex-1 min-w-0">
+                <li key={item.id} aria-current={current ? 'step' : undefined} className="flex-1 min-w-0">
                   <span
                     className={`block h-1 rounded-full ${
-                      current || done ? accent.bg : 'bg-[var(--color-divider)]'
+                      current || done ? accent.bg : 'bg-[var(--color-border-strong)]'
                     }`}
                   />
-                  <span className={`mt-2 block text-xs font-medium ${current ? colors.text : colors.textMuted}`}>
+                  <span className={`mt-2 block text-xs font-medium ${current ? accent.text : colors.textSecondary}`}>
                     {item.label}
                   </span>
                 </li>
@@ -388,15 +388,15 @@ export const QueueJoin: React.FC = () => {
                 Seus dados
               </h2>
               <p className={`text-sm mt-1.5 leading-relaxed ${colors.textMuted}`}>
-                Usamos seu WhatsApp para identificar sua senha. Se já for cliente, basta o número.
+                Informe seu WhatsApp para entrar na fila e consultar sua posição depois. Se já for cliente, use o mesmo número.
               </p>
             </div>
             <div className={`p-4 md:p-5 space-y-4 ${radius.card} border ${colors.card} ${colors.border}`}>
               <div className="space-y-1.5">
-                <label className={`text-sm font-medium ${colors.textSecondary}`}>
+                <label htmlFor="queue-phone" className={`text-sm font-medium ${colors.textSecondary}`}>
                   WhatsApp
                 </label>
-                <PhoneInput value={phone} onChange={setPhone} defaultRegion={region} forceTheme={themeOverride} />
+                <PhoneInput id="queue-phone" value={phone} onChange={setPhone} defaultRegion={region} forceTheme={themeOverride} />
               </div>
               <Input
                 label="Nome"

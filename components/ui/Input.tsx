@@ -13,8 +13,8 @@ interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, '
 }
 
 const SIZE_MAP = {
-  sm: 'h-9 text-xs px-3',
-  md: 'h-11 text-base sm:text-sm px-4',
+  sm: 'h-11 md:h-9 text-base md:text-xs px-3',
+  md: 'h-12 md:h-11 text-base md:text-sm px-4',
   lg: 'h-[52px] text-base px-4',
 } as const;
 
@@ -49,7 +49,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={id}
-            className={[classes.label, 'block mb-1.5'].join(' ')}
+            className={[classes.label, 'block mb-1.5 leading-snug text-sm'].join(' ')}
           >
             {label}
           </label>
@@ -78,13 +78,13 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
                 .join(' ') || undefined
             }
             className={[
-              'w-full',
+              'w-full min-w-0',
               radius.input,
               SIZE_MAP[size],
               colors.text,
               colors.inputBg,
               `border ${hasError ? 'border-[var(--color-danger)]' : colors.inputBorder}`,
-              'placeholder:text-[var(--color-text-muted)]',
+              'placeholder:text-theme-textMuted placeholder:opacity-100',
               'focus:outline-none focus:border-[var(--color-input-focus)] focus:ring-1 focus:ring-[var(--color-input-focus)]',
               'transition-colors duration-200',
               disabled ? 'opacity-50 cursor-not-allowed' : '',
@@ -112,7 +112,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           <p
             id={errorId}
             role="alert"
-            className={`mt-1.5 text-xs text-[var(--color-danger)] ${font.body}`}
+            className={`mt-1.5 text-sm leading-snug text-[var(--color-danger)] ${font.body}`}
           >
             {error}
           </p>
@@ -120,7 +120,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         {hint && !hasError && (
           <p
             id={hintId}
-            className={`mt-1.5 text-xs ${colors.textMuted}`}
+            className={`mt-1.5 text-sm leading-snug ${colors.textMuted}`}
           >
             {hint}
           </p>

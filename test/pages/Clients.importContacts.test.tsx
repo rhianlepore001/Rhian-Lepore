@@ -27,7 +27,7 @@ vi.mock('../../components/ui', () => ({
   Button: ({ children, icon: _icon, variant: _variant, size: _size, fullWidth: _fullWidth, loading: _loading, ...props }: any) => <button {...props}>{children}</button>,
   PageHeader: ({ title, action }: any) => <header><h1>{title}</h1>{action}</header>,
   Modal: ({ open, title, children }: any) => open ? <section role="dialog" aria-label={title}>{children}</section> : null,
-  EmptyState: ({ title, action }: any) => <div>{title}{action}</div>,
+  EmptyState: ({ title, description, action }: any) => <div><p>{title}</p>{description && <p>{description}</p>}{action}</div>,
   SkeletonCard: () => null,
   ErrorState: () => <div>Erro</div>,
   Input: (props: any) => <input {...props} />,
@@ -62,7 +62,7 @@ describe('importação pela página de clientes', () => {
   it('não mostra a opção de importação para profissionais da equipe', async () => {
     auth.role = 'staff';
     mount();
-    await screen.findByText(/Seus clientes aparecem aqui/);
+    expect(await screen.findByText('Os clientes cadastrados pelo negócio aparecem aqui.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Adicionar cliente' })).toBeNull();
     expect(screen.queryByRole('link', { name: /Importar dos contatos/i })).toBeNull();
   });

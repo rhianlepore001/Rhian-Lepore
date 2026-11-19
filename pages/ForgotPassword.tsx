@@ -115,7 +115,7 @@ export const ForgotPassword: React.FC = () => {
               required
             />
             <Button type="submit" variant="primary" size="lg" fullWidth loading={loading} data-testid="forgot-submit">
-              {loading ? 'Enviando link…' : 'Enviar link de redefinição'}
+              {loading ? 'Enviando link…' : 'Enviar link por e-mail'}
             </Button>
           </form>
 
@@ -137,14 +137,14 @@ export const ForgotPassword: React.FC = () => {
               {sentTo}
             </p>
 
-            <ol className="mt-6 space-y-3 text-sm text-[var(--color-text-secondary)]">
+            <ol className="mt-5 space-y-2.5 text-sm text-[var(--color-text-secondary)]">
               {[
                 'Abra o e-mail no celular ou no computador.',
                 'Toque em “Criar nova senha”. O link funciona uma única vez.',
                 'Não chegou? Confira as pastas de spam e promoções.',
               ].map((step, i) => (
                 <li key={step} className="flex gap-3">
-                  <span className="font-mono text-xs leading-5 text-[var(--color-accent)] tabular-nums">0{i + 1}</span>
+                  <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--color-accent-dim)] text-xs font-semibold text-theme-accent" aria-hidden="true">{i + 1}</span>
                   <span className="leading-5">{step}</span>
                 </li>
               ))}

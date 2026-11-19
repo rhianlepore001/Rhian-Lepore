@@ -630,9 +630,10 @@ html[data-surface=marketing] {
   .landing-nav .landing-brand { width: 92px; }
   .landing-nav-row, .landing-nav-actions { gap: 4px; }
   .landing-nav .landing-button { padding-inline: 8px; }
-  .landing-hero { padding-top: 24px; }
-  .landing-hero h1 { font-size: clamp(2.375rem, 11vw, 2.75rem); }
-  .landing-hero-actions { grid-template-columns: minmax(0, 1fr); row-gap: 4px; }
+  .landing-hero { padding-top: 16px; }
+  .landing-hero-layout { gap: 16px; }
+  .landing-hero h1 { font-size: clamp(2.125rem, 11vw, 2.625rem); }
+  .landing-hero-actions { grid-template-columns: minmax(0, 1fr); row-gap: 4px; margin-top: 12px; }
   .landing-hero-actions .landing-no-card { grid-row: 2; }
   .landing-hero-actions .landing-demo-jump { justify-self: start; }
   .landing-demo-view-tabs { gap: 4px; }

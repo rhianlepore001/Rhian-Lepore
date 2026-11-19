@@ -81,6 +81,7 @@ for (const width of [1440, 390]) {
       }
     }
     // Aceite de solicitação online sem erro
+    await page.getByTestId('agenda-online-requests-toggle').click();
     const acceptButton = page.getByRole('button', { name: 'Aceitar' }).first();
     await expect(acceptButton).toBeVisible();
     await acceptButton.click();
@@ -240,7 +241,7 @@ test('explora a demonstração embutida mantendo segmento e tarefa sem integraç
   await views.getByRole('button', { name: 'Agendamento online', exact: true }).click();
   await expect(iframe).toHaveAttribute('src', '/demo-preview#/demo/beauty/book/simulacao');
   await expect(frame.getByText('Escolha seus serviços', { exact: true })).toBeVisible();
-  await expect(frame.getByRole('heading', { name: /Studio Aurora/ }).first()).toBeVisible();
+  await expect(frame.getByRole('heading', { name: 'Studio Aurora', exact: true })).toBeVisible();
   const nailsFilter = frame.getByRole('button', { name: /^Unhas$/i });
   await nailsFilter.click();
   await expect(nailsFilter).toHaveAttribute('aria-pressed', 'true');
@@ -302,4 +303,26 @@ test('usa o tema claro padrão no agendamento da demo sem alterar o modo salvo',
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Mais que agenda.');
   await expect(page.locator('html')).toHaveAttribute('data-mode', 'dark');
   expect(await page.evaluate(() => localStorage.getItem('agendix_color_mode'))).toBe('dark');
+});
+
+
+test('a demo abre o histórico da fila e a ficha do cliente dentro da simulação', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const verify = await isolate(page);
+
+  await page.goto('/#/demo/beauty/fila');
+  await page.getByRole('button', { name: 'Histórico', exact: true }).click();
+  await expect(page).toHaveURL(/#\/demo\/beauty\/fila\/historico$/);
+  await expect(page.getByRole('heading', { name: 'Histórico da fila' })).toBeVisible();
+
+  await page.goto('/#/demo/barber/clientes');
+  const profile = page.getByRole('heading', { name: 'Pedro Souza', exact: true });
+  await profile.click();
+  await expect(page).toHaveURL(/#\/demo\/barber\/clientes\/[^/]+$/);
+  await expect(page.getByRole('heading', { name: 'Pedro Souza', exact: true })).toBeVisible();
+
+  await page.locator('.demo-niches').getByRole('link', { name: 'Salão' }).click();
+  await expect(page).toHaveURL(/#\/demo\/beauty\/clientes$/);
+  await expect(page.getByRole('heading', { name: 'Beatriz Souza', exact: true })).toBeVisible();
+  verify();
 });

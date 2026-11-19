@@ -220,9 +220,9 @@ export const Dashboard: React.FC = () => {
       },
       {
         id: 'pending',
-        label: 'Pendentes',
+        label: 'A realizar',
         value: String(pendingToday),
-        hint: 'Ainda na agenda',
+        hint: 'Na sua agenda de hoje',
         onClick: () => navigate('/agenda'),
       },
       {
@@ -265,7 +265,7 @@ export const Dashboard: React.FC = () => {
             <Button
               variant="primary"
               icon={<Calendar className="h-4 w-4" />}
-              onClick={openAgenda}
+              onClick={() => navigate('/agenda?new=true')}
             >
               Agendar
             </Button>
@@ -293,7 +293,8 @@ export const Dashboard: React.FC = () => {
           next && !isStaff ? formatCurrency(next.price, currencyRegion) : undefined
         }
         onPrimaryAction={openAgenda}
-        onOpenAgenda={openAgenda}
+        onOpenAgenda={isStaff ? openAgenda : () => navigate('/agenda?new=true')}
+        emptyCtaLabel={isStaff ? 'Abrir agenda' : 'Agendar'}
       />
 
       <TodayKpiStrip items={isStaff ? staffKpis : ownerKpis} loading={loadingStrip} />
@@ -350,7 +351,7 @@ export const Dashboard: React.FC = () => {
                   </div>
                   <div className="min-w-0">
                     <p className={`text-xs ${colors.textMuted} ${font.mono} uppercase`}>
-                      MRR
+                      Mensalidades
                     </p>
                     <p
                       className={`mt-0.5 font-mono text-sm sm:text-xl font-black tabular-nums leading-tight ${accent.text}`}

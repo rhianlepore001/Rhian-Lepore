@@ -288,7 +288,7 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                       </span>
                     )}
                     <span
-                      className={`text-xs font-bold uppercase md:tracking-wide truncate leading-none max-w-full px-0.5 ${
+                      className={`text-xs font-semibold truncate leading-tight max-w-full px-0.5 ${
                         isMemberSelected ? accent.text : colors.textMuted
                       }`}
                     >
@@ -504,7 +504,7 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                           top: `calc(var(--agenda-slot-h) * ${startIdx} + 2px)`,
                           height: `calc(var(--agenda-slot-h) * ${span} - 4px)`,
                         }}
-                        className={`agenda-event-chip absolute ${layout} ${apt.id === highlightAppointmentId ? 'agenda-card-highlight' : ''} overflow-hidden text-left rounded-md border ${cardTokens} px-1 py-0.5 md:px-1.5 md:py-1 min-h-0 flex flex-col justify-center gap-0.5 transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-accent`}
+                        className={`agenda-event-chip absolute ${layout} ${apt.id === highlightAppointmentId ? 'agenda-card-highlight' : ''} overflow-hidden text-left rounded-md border ${cardTokens} px-1 py-0.5 md:px-1.5 md:py-1 min-h-0 flex flex-col justify-center gap-0.5 transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-focus-ring)]`}
                       >
                         <div className="flex items-start justify-between gap-1 min-w-0">
                           <h4 className={`text-xs font-bold truncate leading-tight ${colors.text}`}>
@@ -512,9 +512,9 @@ export const AgendaResourceGrid: React.FC<AgendaResourceGridProps> = ({
                             <span className="hidden md:inline">{attendeeLabel(apt)}</span>
                             {apt.attendee_name && (apt.dependent_id || apt.attendee_name !== apt.clientName) && <span className="md:hidden block text-xs">{apt.dependent_id ? 'dep. de' : 'responsável:'} {apt.clientName}</span>}
                           </h4>
-                          <div className="hidden md:flex items-center gap-0.5 flex-shrink-0">
+                          <div className="flex items-center gap-0.5 shrink-0">
                             {apt.edited_at && (
-                              <Edit2 className={`w-2.5 h-2.5 ${colors.textMuted}`} aria-label="Editado" />
+                              <Edit2 className={`hidden h-2.5 w-2.5 md:block ${colors.textMuted}`} aria-label="Editado" />
                             )}
                             {apt.notes && (
                               <MessageCircle

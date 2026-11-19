@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Clock, History, Play, QrCode, Settings, UserPlus, Users, Receipt } from 'lucide-react';
-import { Button, Card, PageHeader, SkeletonCard, useToast } from '@/components/ui';
+import { Button, Card, ErrorState, PageHeader, SkeletonCard, useToast } from '@/components/ui';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { QueueCheckoutSheet } from '@/components/queue/QueueCheckoutSheet';
@@ -34,7 +34,7 @@ export const QueueManagement: React.FC = () => {
   const { showToast } = useToast();
   const tenantId = companyId ?? '';
 
-  const { data: rawEntries = [], isLoading: loadingEntries, refetch: refetchEntries } = useQueueEntries(tenantId);
+  const { data: rawEntries = [], isLoading: loadingEntries, isError: entriesError, refetch: refetchEntries } = useQueueEntries(tenantId);
   const { data: businessSlug } = useBusinessSlug(tenantId);
   const { data: teamMembers = [] } = useQueueTeamMembers(tenantId);
   const { data: settings, refetch: refetchSettings } = useQueueSettings();
@@ -192,6 +192,16 @@ export const QueueManagement: React.FC = () => {
     );
   }
 
+  if (entriesError && rawEntries.length === 0) {
+    return (
+      <ErrorState
+        title="Não foi possível carregar a fila"
+        message="Confira a conexão e tente novamente para ver quem está aguardando."
+        onRetry={() => void refetchEntries()}
+      />
+    );
+  }
+
   const busy = updateStatus.isPending || confirmPay.isPending || cancelPay.isPending;
 
   const renderCard = (entry: QueueRecord, highlighted = false, position?: number) => (
@@ -224,7 +234,7 @@ export const QueueManagement: React.FC = () => {
         title="Fila Digital"
         subtitle="Acompanhe quem está esperando, chame e feche as comandas."
         meta={!isStaff ? (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-1.5">
             <Button variant="secondary" size="sm" icon={<QrCode className="w-4 h-4" />} onClick={() => setShowQr(true)}>
               QR Code
             </Button>
@@ -248,13 +258,13 @@ export const QueueManagement: React.FC = () => {
       />
 
       <section className="grid grid-cols-2 gap-3">
-        <Card variant="outlined" className="p-4">
+        <Card variant="outlined" noPadding className="p-3 md:p-4">
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-theme-accent" />
-            <p className="text-xs font-semibold uppercase tracking-wide text-theme-textMuted">Na fila</p>
+            <p className="text-sm font-semibold leading-tight text-theme-textSecondary">Na fila</p>
           </div>
-          <p className="mt-2 font-mono text-3xl font-black tabular-nums text-theme-text">{waiting.length}</p>
-          <p className="mt-1 text-xs text-theme-textSecondary">
+          <p className="mt-1.5 font-mono text-2xl font-bold tabular-nums text-theme-text">{waiting.length}</p>
+          <p className="mt-1 text-xs leading-snug text-theme-textSecondary">
             {waiting.length === 0
               ? 'Ninguém aguardando'
               : callingCount > 0
@@ -262,13 +272,13 @@ export const QueueManagement: React.FC = () => {
                 : waiting.length === 1 ? '1 cliente aguardando' : `${waiting.length} clientes aguardando`}
           </p>
         </Card>
-        <Card variant="outlined" className="p-4">
+        <Card variant="outlined" noPadding className="p-3 md:p-4">
           <div className="flex items-center gap-2">
             <Play className="w-4 h-4 text-[var(--color-info)]" />
-            <p className="text-xs font-semibold uppercase tracking-wide text-theme-textMuted">Em atendimento</p>
+            <p className="text-sm font-semibold leading-tight text-theme-textSecondary">Em atendimento</p>
           </div>
-          <p className="mt-2 font-mono text-3xl font-black tabular-nums text-theme-text">{serving.length}</p>
-          <p className="mt-1 text-xs text-theme-textSecondary">
+          <p className="mt-1.5 font-mono text-2xl font-bold tabular-nums text-theme-text">{serving.length}</p>
+          <p className="mt-1 text-xs leading-snug text-theme-textSecondary">
             {serving.length === 0 ? 'Nenhum atendimento agora' : serving.length === 1 ? '1 cliente sendo atendido' : `${serving.length} clientes sendo atendidos`}
           </p>
         </Card>

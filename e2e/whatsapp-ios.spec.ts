@@ -86,6 +86,7 @@ test('Safari iPhone: aceitar pedido → "Enviar no WhatsApp" abre dentro do toqu
   const mock = await installMocks(page, 'beauty', 'owner', true, { stubOpen: false });
   mock.templates.push({ message_key: 'booking_accepted', enabled: true, body: 'Confirmado, {cliente}!' });
   await page.goto('/#/agenda');
+  await page.getByTestId('agenda-online-requests-toggle').tap();
   await page.getByRole('button', { name: 'Aceitar', exact: true }).tap();
   const [popup] = await Promise.all([
     page.waitForEvent('popup'),
@@ -117,6 +118,7 @@ test('App na tela inicial (standalone) com nova aba bloqueada: cai para a própr
   const mock = await installMocks(page, 'barber', 'owner', true, { stubOpen: false });
   mock.templates.push({ message_key: 'booking_accepted', enabled: true, body: 'Confirmado, {cliente}!' });
   await page.goto('/#/agenda');
+  await page.getByTestId('agenda-online-requests-toggle').tap();
   await page.getByRole('button', { name: 'Aceitar', exact: true }).tap();
   await page.getByRole('button', { name: 'Enviar no WhatsApp', exact: true }).tap();
   await page.waitForURL(/^https:\/\/wa\.me\//);

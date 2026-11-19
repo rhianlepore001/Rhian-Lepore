@@ -148,8 +148,19 @@
   --color-theme-accentHover: var(--color-accent-hover);
   --color-theme-text: var(--color-text);
   --color-theme-textSecondary: var(--color-text-secondary);
+  --color-theme-textMuted: var(--color-text-muted);
   --color-theme-border: var(--color-border);
   --color-theme-input: var(--color-input-bg);
+}
+
+@layer base {
+  :where([data-mode="light"]) { color-scheme: light; }
+  :where([data-mode="dark"]) { color-scheme: dark; }
+
+  :where(button, a, select, summary, [role="button"], [role="tab"]):focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 3px;
+  }
 }
 
 /* Paleta legada text-text-* como utilities explícitas: definir

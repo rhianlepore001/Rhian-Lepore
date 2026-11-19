@@ -326,8 +326,6 @@ export const Agenda: React.FC = () => {
             return;
         }
         setHighlightedBookingId(focusBookingId);
-        const el = document.querySelector(`[data-testid="agenda-public-booking-${CSS.escape(focusBookingId)}"]`);
-        el?.scrollIntoView({ block: 'center', behavior: 'auto' });
         const clearTimer = window.setTimeout(() => setHighlightedBookingId(null), 2500);
         return () => {
             window.clearTimeout(clearTimer);
@@ -1331,13 +1329,30 @@ export const Agenda: React.FC = () => {
                     action={
                         <div className="flex flex-wrap gap-2 w-full md:flex-nowrap md:gap-3 md:w-auto">
                             <Button
+                                id="btn-new-appointment"
+                                variant="primary"
+                                icon={<Plus />}
+                                className="w-full md:w-auto max-md:min-h-12"
+                                onClick={() => {
+                                    setWizardPrefill(null);
+                                    if (canOpenBlockFromPlus) {
+                                        setChoiceFromSlot(false);
+                                        setShowCreateChoice(true);
+                                    } else {
+                                        setShowNewAppointmentModal(true);
+                                    }
+                                }}
+                            >
+                                Novo Agendamento
+                            </Button>
+                            <Button
                                 variant="secondary"
                                 icon={<History />}
                                 onClick={() => setShowHistoryModal(true)}
-                                className="flex-1 md:flex-none"
+                                className="flex-1 md:flex-none max-md:min-h-12 max-md:flex-col max-md:!gap-1 max-md:!px-2 max-md:!text-xs"
                                 aria-label="Histórico"
                             >
-                                <span className="hidden md:inline">Histórico</span>
+                                Histórico
                             </Button>
                             <AgendaPublicLinkBar
                                 businessSlug={businessSlug}
@@ -1348,30 +1363,11 @@ export const Agenda: React.FC = () => {
                                 variant="secondary"
                                 icon={<Calendar />}
                                 onClick={() => setShowAllAppointmentsModal(true)}
-                                className="flex-1 md:flex-none"
+                                className="flex-1 md:flex-none max-md:min-h-12 max-md:flex-col max-md:!gap-1 max-md:!px-2 max-md:!text-xs"
                                 aria-label="Todos os agendamentos"
                             >
-                                <span className="hidden md:inline">Todos Agendamentos</span>
+                                Agendamentos
                             </Button>
-                            <div className="contents">
-                                <Button
-                                    id="btn-new-appointment"
-                                    variant="primary"
-                                    icon={<Plus />}
-                                    className="flex-1 md:flex-none"
-                                    onClick={() => {
-                                        setWizardPrefill(null);
-                                        if (canOpenBlockFromPlus) {
-                                            setChoiceFromSlot(false);
-                                            setShowCreateChoice(true);
-                                        } else {
-                                            setShowNewAppointmentModal(true);
-                                        }
-                                    }}
-                                >
-                                    Novo Agendamento
-                                </Button>
-                            </div>
                         </div>
                     }
                 />

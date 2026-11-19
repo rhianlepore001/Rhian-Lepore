@@ -20,18 +20,18 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 
   return (
     <div
-      className={`flex flex-col items-center justify-center text-center py-12 px-6 ${
-        bordered ? `${radius.card} border-2 border-dashed border-[var(--color-divider)]` : ''
+      className={`flex flex-col items-center justify-center text-center px-4 py-8 sm:px-6 sm:py-10 ${
+        bordered ? `${radius.card} border border-dashed border-[var(--color-border-strong)]` : ''
       } ${className}`}
     >
-      <div className={`p-3.5 rounded-2xl ${accent.bgDim} mb-4`}>
-        <Icon className={`w-6 h-6 ${accent.text} opacity-70`} aria-hidden="true" />
+      <div className={`inline-flex h-11 w-11 items-center justify-center ${radius.button} ${accent.bgDim} mb-3`}>
+        <Icon className={`w-5 h-5 ${accent.text}`} aria-hidden="true" />
       </div>
-      <p className={`text-sm font-semibold ${colors.text} mb-1 max-w-[32ch]`}>{title}</p>
+      <p className={`text-base font-semibold ${colors.text} max-w-[32ch] text-balance`}>{title}</p>
       {description && (
-        <p className={`text-xs ${colors.textMuted} mb-4 max-w-[28ch] leading-relaxed`}>{description}</p>
+        <p className={`mt-1.5 text-sm ${colors.textSecondary} max-w-[38ch] leading-relaxed text-pretty`}>{description}</p>
       )}
-      {action && <div className="mt-2">{action}</div>}
+      {action && <div className="mt-4">{action}</div>}
     </div>
   );
 };

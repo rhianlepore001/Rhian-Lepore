@@ -101,7 +101,7 @@
    BARBER DARK (Default)
    ============================================ */
 :root,
-html[data-theme="barber"][data-mode="dark"] {
+[data-theme="barber"][data-mode="dark"] {
   --color-bg: #12100E;
   --color-card: #1A1816;
   --color-card-elevated: #21201C;
@@ -118,21 +118,21 @@ html[data-theme="barber"][data-mode="dark"] {
   --color-modal-border: rgba(201, 162, 74, 0.15);
   --color-text: #F0EBE0;
   --color-text-secondary: #A89A82;
-  --color-text-muted: #8F8574; /* AA fix (era #6B6252 — 3.0:1) */
+  --color-text-muted: #A19682;
   --color-border: rgba(255, 245, 230, 0.08);
   --color-border-strong: rgba(255, 245, 230, 0.14);
   --color-input-bg: rgba(20, 16, 10, 0.5);
-  --color-input-border: rgba(255, 255, 255, 0.06);
-  --color-input-focus: rgba(201, 162, 74, 0.6);
-  --color-focus-ring: rgba(201, 162, 74, 0.25);
-  --color-danger: #EF4444;
+  --color-input-border: #756B59;
+  --color-input-focus: #DFC066;
+  --color-focus-ring: #DFC066;
+  --color-danger: #FF8585;
   --color-danger-bg: rgba(239, 68, 68, 0.08);
   --color-danger-border: rgba(239, 68, 68, 0.3);
   --color-success: #10B981;
   --color-success-bg: rgba(16, 185, 129, 0.08);
   --color-success-border: rgba(16, 185, 129, 0.2);
-  --color-on-success: #FFFFFF;
-  --color-on-danger: #FFFFFF;
+  --color-on-success: #12241D;
+  --color-on-danger: #271313;
   --color-warning: #F59E0B;
   --color-warning-bg: rgba(245, 158, 11, 0.08);
   --color-warning-border: rgba(245, 158, 11, 0.2);
@@ -140,12 +140,12 @@ html[data-theme="barber"][data-mode="dark"] {
   --color-info-bg: rgba(59, 130, 246, 0.10);
   --color-info-border: rgba(59, 130, 246, 0.25);
 
-  --shadow-card: 0 12px 40px -12px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255, 245, 230, 0.12);
+  --shadow-card: 0 6px 20px -10px rgba(0, 0, 0, 0.62);
   --shadow-card-mobile: 0 4px 12px rgba(0, 0, 0, 0.5);
   --shadow-card-hover: 0 8px 24px rgba(194, 155, 64, 0.08), 0 4px 8px rgba(0, 0, 0, 0.4);
   --shadow-card-accent: 0 0 10px rgba(194, 155, 64, 0.4), 0 0 20px rgba(194, 155, 64, 0.2);
   --shadow-card-glow: 0 16px 36px -12px rgba(0,0,0,0.6), 0 8px 16px -8px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(194, 155, 64, 0.15);
-  --shadow-btn-primary: 0 4px 20px rgba(194, 155, 64, 0.25);
+  --shadow-btn-primary: 0 3px 8px -4px var(--color-accent);
   --shadow-modal: 0 12px 40px -12px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255, 245, 230, 0.12);
 
   /* Elevação com régua (v1.1) */
@@ -168,12 +168,12 @@ html[data-theme="barber"][data-mode="dark"] {
 /* ============================================
    BARBER LIGHT
    ============================================ */
-html[data-theme="barber"][data-mode="light"] {
-  --color-bg: #E5E5E5;
+[data-theme="barber"][data-mode="light"] {
+  --color-bg: #EDE7DB;
   --color-card: #FFFFFF;
-  --color-card-elevated: #F4F4F4;
+  --color-card-elevated: #F6F2E9;
   --color-card-hover: rgba(0, 0, 0, 0.05);
-  --color-surface: #D8D8D8;
+  --color-surface: #E1D9CA;
   --color-divider: rgba(0, 0, 0, 0.10);
   --color-overlay: rgba(20, 20, 20, 0.72); /* CONHECIDO-015: alinhado ao dark / DESIGN.md */
   --color-accent: #6B5010; /* AA texto sobre branco (≥4,5:1; era #8B6914 ~3,5:1) */
@@ -185,34 +185,34 @@ html[data-theme="barber"][data-mode="light"] {
   --color-modal-border: rgba(0, 0, 0, 0.08);
   --color-text: #1A1610;
   --color-text-secondary: #55524C;
-  --color-text-muted: #6E6B64; /* AA fix (era #7A7A75 — 4.2:1) */
+  --color-text-muted: #5B574F;
   --color-border: rgba(0, 0, 0, 0.10);
   --color-border-strong: rgba(0, 0, 0, 0.16);
   --color-input-bg: rgba(0, 0, 0, 0.04);
-  --color-input-border: rgba(0, 0, 0, 0.14);
-  --color-input-focus: rgba(139, 105, 20, 0.45);
-  --color-focus-ring: rgba(139, 105, 20, 0.45);
-  --color-danger: #DC2626;
+  --color-input-border: #8C8273;
+  --color-input-focus: #6B5010;
+  --color-focus-ring: #6B5010;
+  --color-danger: #B91C1C;
   --color-danger-bg: rgba(220, 38, 38, 0.08);
   --color-danger-border: rgba(220, 38, 38, 0.2);
-  --color-success: #047857; /* AA texto sobre branco (era #059669) */
+  --color-success: #065F46;
   --color-success-bg: rgba(4, 120, 87, 0.16);
   --color-success-border: rgba(4, 120, 87, 0.32);
   --color-on-success: #FFFFFF;
   --color-on-danger: #FFFFFF;
-  --color-warning: #B45309;
+  --color-warning: #92400E;
   --color-warning-bg: rgba(217, 119, 6, 0.08);
   --color-warning-border: rgba(217, 119, 6, 0.15);
-  --color-info: #2563EB;
+  --color-info: #1D4ED8;
   --color-info-bg: rgba(37, 99, 235, 0.07);
   --color-info-border: rgba(37, 99, 235, 0.22);
 
-  --shadow-card: 0 8px 24px -8px rgba(100, 80, 30, 0.14), 0 2px 6px rgba(0, 0, 0, 0.06);
+  --shadow-card: 0 6px 20px -12px rgba(40, 28, 25, 0.27);
   --shadow-card-mobile: 0 4px 12px rgba(100, 80, 30, 0.12);
   --shadow-card-hover: 0 8px 24px rgba(107, 80, 16, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
   --shadow-card-accent: 0 6px 24px rgba(107, 80, 16, 0.20), 0 2px 8px rgba(0, 0, 0, 0.06);
   --shadow-card-glow: 0 12px 32px rgba(107, 80, 16, 0.18), 0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-btn-primary: 0 4px 16px rgba(107, 80, 16, 0.25);
+  --shadow-btn-primary: 0 3px 8px -4px var(--color-accent);
   --shadow-modal: 0 24px 64px -16px rgba(100, 80, 30, 0.18), 0 8px 20px rgba(0, 0, 0, 0.08);
 
   --elevation-0: none;
@@ -233,7 +233,7 @@ html[data-theme="barber"][data-mode="light"] {
 /* ============================================
    BEAUTY DARK
    ============================================ */
-html[data-theme="beauty"][data-mode="dark"] {
+[data-theme="beauty"][data-mode="dark"] {
   --color-bg: #17132A;
   --color-card: #221F35;
   --color-card-elevated: #2A2740;
@@ -250,21 +250,21 @@ html[data-theme="beauty"][data-mode="dark"] {
   --color-modal-border: rgba(167, 139, 250, 0.15);
   --color-text: #EEE8FF;
   --color-text-secondary: #B5A9D0;
-  --color-text-muted: #9C90BC; /* AA fix (era #8A7DA8 — 3.9:1) */
+  --color-text-muted: #AEA2CA;
   --color-border: rgba(200, 180, 255, 0.10);
   --color-border-strong: rgba(200, 180, 255, 0.16);
   --color-input-bg: rgba(167, 139, 250, 0.06);
-  --color-input-border: rgba(255, 255, 255, 0.1);
-  --color-input-focus: rgba(183, 148, 246, 0.5);
-  --color-focus-ring: rgba(183, 148, 246, 0.25);
-  --color-danger: #EF4444;
+  --color-input-border: #8275A0;
+  --color-input-focus: #C4B5FD;
+  --color-focus-ring: #C4B5FD;
+  --color-danger: #FF8585;
   --color-danger-bg: rgba(239, 68, 68, 0.1);
   --color-danger-border: rgba(239, 68, 68, 0.2);
   --color-success: #10B981;
   --color-success-bg: rgba(16, 185, 129, 0.1);
   --color-success-border: rgba(16, 185, 129, 0.2);
-  --color-on-success: #FFFFFF;
-  --color-on-danger: #FFFFFF;
+  --color-on-success: #12241D;
+  --color-on-danger: #271313;
   --color-warning: #F59E0B;
   --color-warning-bg: rgba(245, 158, 11, 0.1);
   --color-warning-border: rgba(245, 158, 11, 0.2);
@@ -272,12 +272,12 @@ html[data-theme="beauty"][data-mode="dark"] {
   --color-info-bg: rgba(59, 130, 246, 0.10);
   --color-info-border: rgba(59, 130, 246, 0.25);
 
-  --shadow-card: 0 12px 40px -12px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(200, 180, 255, 0.14);
+  --shadow-card: 0 6px 20px -10px rgba(0, 0, 0, 0.62);
   --shadow-card-mobile: 0 4px 12px rgba(0, 0, 0, 0.5);
   --shadow-card-hover: 0 0 12px rgba(167, 139, 250, 0.12), 0 8px 24px rgba(0, 0, 0, 0.4);
   --shadow-card-accent: 0 0 10px rgba(183, 148, 246, 0.5), 0 0 20px rgba(183, 148, 246, 0.3);
   --shadow-card-glow: 0 16px 36px -12px rgba(0,0,0,0.6), 0 8px 16px -8px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(167, 139, 250, 0.15);
-  --shadow-btn-primary: 0 4px 20px rgba(183, 148, 246, 0.3);
+  --shadow-btn-primary: 0 3px 8px -4px var(--color-accent);
   --shadow-modal: 0 12px 40px -12px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(200, 180, 255, 0.14);
 
   --elevation-0: none;
@@ -298,7 +298,7 @@ html[data-theme="beauty"][data-mode="dark"] {
 /* ============================================
    BEAUTY LIGHT
    ============================================ */
-html[data-theme="beauty"][data-mode="light"] {
+[data-theme="beauty"][data-mode="light"] {
   --color-bg: #EBE5F5;
   --color-card: #FFFFFF;
   --color-card-elevated: #F3F0FA;
@@ -315,34 +315,34 @@ html[data-theme="beauty"][data-mode="light"] {
   --color-modal-border: rgba(124, 58, 237, 0.12);
   --color-text: #1A1225;
   --color-text-secondary: #4A3D65;
-  --color-text-muted: #6B5E86; /* AA fix (era #7B6E95 — 4.3:1) */
+  --color-text-muted: #5A4D75;
   --color-border: rgba(124, 58, 237, 0.16);
   --color-border-strong: rgba(124, 58, 237, 0.24);
   --color-input-bg: rgba(124, 58, 237, 0.05);
-  --color-input-border: rgba(124, 58, 237, 0.18);
-  --color-input-focus: rgba(124, 58, 237, 0.40);
-  --color-focus-ring: rgba(124, 58, 237, 0.40);
-  --color-danger: #DC2626;
+  --color-input-border: #8879A4;
+  --color-input-focus: #6B21A8;
+  --color-focus-ring: #6B21A8;
+  --color-danger: #B91C1C;
   --color-danger-bg: rgba(220, 38, 38, 0.08);
   --color-danger-border: rgba(220, 38, 38, 0.15);
-  --color-success: #047857;
+  --color-success: #065F46;
   --color-success-bg: rgba(4, 120, 87, 0.16);
   --color-success-border: rgba(4, 120, 87, 0.32);
   --color-on-success: #FFFFFF;
   --color-on-danger: #FFFFFF;
-  --color-warning: #B45309;
+  --color-warning: #92400E;
   --color-warning-bg: rgba(217, 119, 6, 0.08);
   --color-warning-border: rgba(217, 119, 6, 0.12);
-  --color-info: #2563EB;
+  --color-info: #1D4ED8;
   --color-info-bg: rgba(37, 99, 235, 0.07);
   --color-info-border: rgba(37, 99, 235, 0.22);
 
-  --shadow-card: 0 8px 24px -8px rgba(91, 33, 182, 0.12), 0 2px 6px rgba(0, 0, 0, 0.05);
+  --shadow-card: 0 6px 20px -12px rgba(40, 28, 25, 0.27);
   --shadow-card-mobile: 0 4px 12px rgba(91, 33, 182, 0.10);
   --shadow-card-hover: 0 8px 24px rgba(91, 33, 182, 0.14), 0 4px 8px rgba(0, 0, 0, 0.05);
   --shadow-card-accent: 0 6px 24px rgba(91, 33, 182, 0.22), 0 2px 8px rgba(0, 0, 0, 0.06);
   --shadow-card-glow: 0 12px 32px rgba(91, 33, 182, 0.18), 0 4px 12px rgba(0, 0, 0, 0.06);
-  --shadow-btn-primary: 0 4px 16px rgba(91, 33, 182, 0.28);
+  --shadow-btn-primary: 0 3px 8px -4px var(--color-accent);
   --shadow-modal: 0 24px 64px -16px rgba(91, 33, 182, 0.15), 0 8px 20px rgba(0, 0, 0, 0.06);
 
   --elevation-0: none;

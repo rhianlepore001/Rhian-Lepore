@@ -3,6 +3,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { useBusinessProfileBySlug } from '../hooks/usePublicBooking';
 import { usePublicClient } from '../contexts/PublicClientContext';
 import { useBrutalTheme, ThemeVariant } from '../hooks/useBrutalTheme';
+import { ErrorState } from '../components/ui';
 import { PublicClubFlow } from '../components/membership/PublicClubFlow';
 import { Region } from '../utils/formatters';
 
@@ -11,7 +12,7 @@ export const JoinClub: React.FC = () => {
     const [searchParams] = useSearchParams();
     const slug = slugParam || searchParams.get('slug') || '';
     const { client, hydrateFromStorage } = usePublicClient();
-    const { data: businessProfile, isLoading: profileLoading } = useBusinessProfileBySlug(slug);
+    const { data: businessProfile, isLoading: profileLoading, isError, refetch } = useBusinessProfileBySlug(slug);
     const businessId = (businessProfile as { id?: string } | null)?.id ?? null;
     const region = ((businessProfile as { region?: string } | null)?.region === 'PT' ? 'PT' : 'BR') as Region;
     const themeOverride: ThemeVariant = (businessProfile as { user_type?: string } | null)?.user_type === 'beauty' ? 'beauty' : 'barber';
@@ -43,8 +44,14 @@ export const JoinClub: React.FC = () => {
     return (
         <div className={`min-h-screen p-4 md:p-8 ${colors.bg}`}>
             <div className="max-w-lg mx-auto">
-                {profileLoading || !businessId ? (
-                    <p className={`${colors.textSecondary} text-sm py-12 text-center`}>Carregando...</p>
+                {profileLoading ? (
+                    <p role="status" className={`${colors.textSecondary} text-sm py-12 text-center`}>Carregando o clube…</p>
+                ) : isError || !businessId ? (
+                    <ErrorState
+                        title="Não foi possível abrir o clube"
+                        message="Confira a conexão e tente novamente. Se o problema continuar, peça um novo link ao estabelecimento."
+                        onRetry={() => void refetch()}
+                    />
                 ) : (
                     <PublicClubFlow
                         slug={slug}

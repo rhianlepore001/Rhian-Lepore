@@ -70,13 +70,13 @@ export const StaffOnboarding: React.FC = () => {
           </h1>
 
           {businessName ? (
-            <p className="text-sm leading-relaxed text-muted-foreground max-w-[280px] mx-auto">
+            <p className="text-sm leading-relaxed text-theme-textSecondary max-w-[280px] mx-auto">
               Você foi adicionado à equipe da{' '}
               <span className={`${accent.text} font-semibold`}>{businessName}</span>.
               Tudo pronto para começar.
             </p>
           ) : (
-            <p className="text-sm text-muted-foreground max-w-[280px] mx-auto">
+            <p className="text-sm text-theme-textSecondary max-w-[280px] mx-auto">
               Sua conta foi criada. Tudo pronto para começar.
             </p>
           )}
@@ -90,8 +90,8 @@ export const StaffOnboarding: React.FC = () => {
             </div>
             <div>
               <p className="text-sm font-semibold">Sua Agenda</p>
-              <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                Atendimentos do dia, horários e clientes
+              <p className="text-sm text-theme-textSecondary mt-0.5 leading-relaxed">
+                Consulte seus horários e os atendimentos do dia
               </p>
             </div>
           </div>
@@ -102,7 +102,7 @@ export const StaffOnboarding: React.FC = () => {
             </div>
             <div>
               <p className="text-sm font-semibold">Sua Equipe</p>
-              <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+              <p className="text-sm text-theme-textSecondary mt-0.5 leading-relaxed">
                 Acesso compartilhado com o restante da equipe
               </p>
             </div>
@@ -130,7 +130,7 @@ export const StaffOnboarding: React.FC = () => {
       </div>
 
       {/* Footer fora do card */}
-      <p className="absolute bottom-5 left-0 right-0 text-center text-xs text-muted-foreground/40 uppercase tracking-widest">
+      <p className="absolute bottom-5 left-0 right-0 text-center text-xs text-theme-textSecondary/40 uppercase tracking-widest">
         © {new Date().getFullYear()} AgendiX
       </p>
 

@@ -379,16 +379,17 @@ export const ClientArea: React.FC = () => {
                                         </h2>
                                         <p className={`text-xs mt-1 ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`}>
                                             {queueFirst
-                                                ? 'Informe o WhatsApp usado ao entrar na fila para recuperar sua senha'
-                                                : 'Use o mesmo número do seu agendamento'}
+                                                ? 'Use o WhatsApp informado ao entrar na fila para ver sua posição.'
+                                                : 'Use o mesmo número de telefone que você informou ao agendar.'}
                                         </p>
                                     </div>
 
                                     <div>
-                                        <label className={`text-xs font-medium block mb-2 ${isBeauty ? 'text-[var(--color-text-muted)]' : 'text-theme-textSecondary'}`}>
+                                        <label htmlFor="client-area-phone" className={`text-xs font-medium block mb-2 ${isBeauty ? 'text-[var(--color-text-muted)]' : 'text-theme-textSecondary'}`}>
                                             Seu WhatsApp / Telefone
                                         </label>
                                         <PhoneInput
+                                            id="client-area-phone"
                                             value={phone}
                                             onChange={v => { setPhone(v); setGateError(''); }}
                                             placeholder="Telefone"
@@ -503,10 +504,11 @@ export const ClientArea: React.FC = () => {
                         </span>
                         <button
                             onClick={() => logout(business.id)}
+                            aria-label="Sair da área do cliente"
                             title="Sair"
-                            className={`p-1.5 rounded-lg transition-colors text-[var(--color-text-muted)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)]`}
+                            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg transition-colors text-theme-textMuted hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)]"
                         >
-                            <LogOut className="w-4 h-4" />
+                            <LogOut className="w-4 h-4" aria-hidden="true" />
                         </button>
                     </div>
                 </div>
@@ -558,7 +560,7 @@ export const ClientArea: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="flex gap-1 p-1 rounded-xl overflow-x-auto bg-theme-surface border border-theme-border">
+                <div role="group" aria-label="Seções da área do cliente" className="flex flex-wrap gap-1 rounded-xl border border-theme-border bg-theme-surface p-1">
                     {((queueFirst
                         ? [
                             { id: 'queue', label: 'Fila', icon: <Clock className="w-3.5 h-3.5" /> },
@@ -576,17 +578,19 @@ export const ClientArea: React.FC = () => {
                         ]) as { id: Tab; label: string; icon: React.ReactNode }[]).map(tab => (
                         <button
                             key={tab.id}
+                            type="button"
+                            aria-pressed={activeTab === tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`
-                                shrink-0 flex items-center justify-center gap-1.5 py-2 px-3 min-h-[44px] rounded-lg text-xs font-semibold
+                                flex grow items-center justify-center gap-1.5 min-h-11 rounded-lg border px-2 py-2 text-xs font-semibold
                                 ${activeTab === tab.id
-                                    ? 'bg-theme-card text-theme-text shadow-sm'
-                                    : 'text-[var(--color-text-muted)]'
+                                    ? 'border-theme-border bg-theme-card text-theme-text'
+                                    : 'border-transparent text-theme-textSecondary'
                                 }
                             `}
                         >
-                            {tab.icon}
-                            <span className="truncate">{tab.label}</span>
+                            <span aria-hidden="true">{tab.icon}</span>
+                            <span>{tab.label}</span>
                             {tab.id === 'upcoming' && activeUpcomingBookings.length > 0 && (
                                 <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-xs font-black ${isBeauty ? 'bg-theme-surface text-theme-text' : 'bg-theme-accent text-[var(--color-on-accent)]'}`}>
                                     {activeUpcomingBookings.length}

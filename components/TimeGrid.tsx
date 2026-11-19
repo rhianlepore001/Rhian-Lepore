@@ -92,13 +92,14 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
             <button
                 key={time}
                 type="button"
+                aria-pressed={isSelected}
                 onClick={() => onTimeSelect(time)}
                 className={[
-                    'px-4 rounded-lg font-mono text-sm transition-all border min-h-[44px]',
+                    'px-2 rounded-lg font-mono text-sm tabular-nums transition-colors border min-h-12',
                     slotPadding,
                     isSelected
-                        ? `${accent.bg} ${selectedText} font-bold scale-105 shadow-lg`
-                        : `${colors.text} ${colors.border} ${hoverBg} hover:scale-105`,
+                        ? `${accent.bg} ${selectedText} font-bold border-[var(--color-accent)]`
+                        : `${colors.text} ${colors.border} ${hoverBg}`,
                 ].join(' ')}
             >
                 {time}

@@ -348,7 +348,7 @@ export const QueueJoin: React.FC = () => {
               const current = index === stepIndex;
               const done = index < stepIndex;
               return (
-                <li key={item.id} className="flex-1 min-w-0">
+                <li key={item.id} aria-current={current ? 'step' : undefined} className="flex-1 min-w-0">
                   <span
                     className={`block h-1 rounded-full ${
                       current || done ? accent.bg : 'bg-[var(--color-divider)]'
@@ -388,15 +388,15 @@ export const QueueJoin: React.FC = () => {
                 Seus dados
               </h2>
               <p className={`text-sm mt-1.5 leading-relaxed ${colors.textMuted}`}>
-                Usamos seu WhatsApp para identificar sua senha. Se já for cliente, basta o número.
+                Informe seu WhatsApp para entrar na fila e consultar sua posição depois. Se já for cliente, use o mesmo número.
               </p>
             </div>
             <div className={`p-4 md:p-5 space-y-4 ${radius.card} border ${colors.card} ${colors.border}`}>
               <div className="space-y-1.5">
-                <label className={`text-sm font-medium ${colors.textSecondary}`}>
+                <label htmlFor="queue-phone" className={`text-sm font-medium ${colors.textSecondary}`}>
                   WhatsApp
                 </label>
-                <PhoneInput value={phone} onChange={setPhone} defaultRegion={region} forceTheme={themeOverride} />
+                <PhoneInput id="queue-phone" value={phone} onChange={setPhone} defaultRegion={region} forceTheme={themeOverride} />
               </div>
               <Input
                 label="Nome"

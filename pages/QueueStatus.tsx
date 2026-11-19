@@ -10,7 +10,12 @@ export const QueueStatus: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 text-center text-theme-text">
-      Para ver sua posição, abra Minha Área pelo QR da casa.
+      <div className="max-w-sm space-y-2">
+        <h1 className="text-xl font-bold">Acompanhe sua posição na fila</h1>
+        <p className="text-sm text-theme-textSecondary">
+          Abra o link da fila ou escaneie o QR Code do estabelecimento. Entre com o WhatsApp que você informou ao pegar a senha.
+        </p>
+      </div>
     </div>
   );
 };

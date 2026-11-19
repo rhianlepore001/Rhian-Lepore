@@ -56,6 +56,7 @@ export const TodayKpiStrip: React.FC<TodayKpiStripProps> = ({ items, loading = f
             <div
               className={`mt-2 h-1.5 w-full overflow-hidden rounded-full ${colors.surface}`}
               role="progressbar"
+              aria-label="Progresso da meta de receita de hoje"
               aria-valuenow={item.progress}
               aria-valuemin={0}
               aria-valuemax={100}

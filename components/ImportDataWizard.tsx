@@ -289,7 +289,7 @@ export function ImportDataWizard({ companyId, userId, region, api = importApi, o
   };
 
   return <div className={`space-y-5 ${colors.text}`}>
-    <div><h2 className="text-lg font-bold">Importar dados</h2><p className={`mt-1 text-sm leading-relaxed ${colors.textMuted}`}>Traga clientes e serviços e confira as informações antes de concluir.</p></div>
+    <div><h2 className="text-lg font-bold">Importar dados</h2><p className={`mt-1 text-sm leading-relaxed ${colors.textMuted}`}>Confira os cadastros antes de confirmar a importação de clientes e serviços.</p></div>
     {message && <p role="alert" className="text-sm">{message}</p>}
     {onClose && phase !== 'preview' && phase !== 'report' && <Button variant="ghost" disabled={busy} onClick={onClose}>Fechar</Button>}
     {phase === 'source' && <div className="space-y-4">
@@ -301,7 +301,7 @@ export function ImportDataWizard({ companyId, userId, region, api = importApi, o
       <div><h3 className="text-base font-bold">{getImportSource(source).label}</h3><p className={`mt-1 text-sm leading-relaxed ${colors.textMuted}`}>{source === 'contacts' && contactPicker && typeof contactPicker.select === 'function' ? 'Escolha como deseja trazer seus contatos.' : getImportSource(source).instructions}</p></div>
       {source === 'contacts' && contactPicker && typeof contactPicker.select === 'function' && <>
         <section className={`space-y-4 border p-4 sm:p-5 ${radius?.card} ${colors.card} ${colors.border}`}>
-          <div className="flex items-start gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--color-accent-dim)] text-[var(--color-accent)]"><Smartphone className="h-5 w-5" aria-hidden="true" /></span><div className="min-w-0"><h4 className="font-bold">Selecionar no celular</h4><p className={`mt-1 text-sm leading-relaxed ${colors.textMuted}`}>Escolha os contatos que deseja trazer para o Agendix.</p></div></div>
+          <div className="flex items-start gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--color-accent-dim)] text-[var(--color-accent)]"><Smartphone className="h-5 w-5" aria-hidden="true" /></span><div className="min-w-0"><h4 className="font-bold">Selecionar no celular</h4><p className={`mt-1 text-sm leading-relaxed ${colors.textMuted}`}>Escolha quais contatos da agenda do celular deseja importar.</p></div></div>
           <Button fullWidth disabled={busy} icon={<Smartphone />} onClick={() => void selectContacts()}>Selecionar contatos do celular</Button>
         </section>
         <div className={`flex items-center gap-3 text-xs font-semibold ${colors.textMuted}`}><span className={`h-px flex-1 border-t ${colors.border}`} />ou importe um arquivo<span className={`h-px flex-1 border-t ${colors.border}`} /></div>

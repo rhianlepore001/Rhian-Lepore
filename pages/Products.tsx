@@ -441,7 +441,7 @@ export const Products: React.FC = () => {
     <div className="space-y-4 md:space-y-6">
       <PageHeader
         title="Produtos"
-        subtitle="Catálogo e vendas avulsas"
+        subtitle="Consulte o estoque e registre vendas de produtos."
         action={
           isOwner ? (
             <Button
@@ -460,6 +460,7 @@ export const Products: React.FC = () => {
       <div className="flex flex-col gap-3 sm:flex-row">
         <Input
           placeholder="Buscar por nome"
+          aria-label="Buscar produtos pelo nome"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           icon={<Search className="w-4 h-4" />}
@@ -471,6 +472,7 @@ export const Products: React.FC = () => {
             { value: 'low', label: 'Estoque baixo' },
           ]}
           value={stockFilter}
+          aria-label="Filtrar produtos por estoque"
           onChange={(e) => setStockFilter(e.target.value as StockFilter)}
           size="md"
           fullWidth={false}
@@ -522,7 +524,9 @@ export const Products: React.FC = () => {
         <EmptyState
           icon={Package}
           title="Nenhum produto cadastrado"
-          description="Cadastre seu primeiro produto para vender no balcão."
+          description={isOwner
+            ? 'Cadastre seu primeiro produto para vender no balcão.'
+            : 'Os produtos cadastrados pelo negócio aparecem aqui.'}
           action={
             isOwner ? (
               <Button variant="primary" size="md" onClick={openCreateModal}>
@@ -537,7 +541,12 @@ export const Products: React.FC = () => {
         <EmptyState
           icon={Search}
           title="Nenhum produto encontrado"
-          description="Tente outro termo ou limpe o filtro."
+          description="Altere a busca ou volte a ver todos os produtos."
+          action={
+            <Button variant="secondary" onClick={() => { setSearchQuery(''); setStockFilter('all'); }}>
+              Limpar filtros
+            </Button>
+          }
         />
       )}
 

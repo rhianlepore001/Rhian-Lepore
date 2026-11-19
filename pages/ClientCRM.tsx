@@ -1,7 +1,7 @@
 import { useDraftFields } from '../hooks/useDraftFields';
 import { invalidateAgendaStaticData } from '@/lib/agendaStaticInvalidation';
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
   Cake,
@@ -275,11 +275,18 @@ export const ClientCRM: React.FC = () => {
   };
 
   if (loading) {
-    return <div className={`${colors.text} text-center p-10`}>Carregando cliente...</div>;
+    return <div className={`${colors.text} text-center p-10`} role="status">Carregando cliente…</div>;
   }
 
   if (!client) {
-    return <div className={`${colors.text} text-center p-10`}>Cliente não encontrado.</div>;
+    return (
+      <EmptyState
+        icon={User}
+        title="Não foi possível abrir a ficha do cliente"
+        description="Volte à lista para buscar o cliente novamente."
+        action={<Link to="/clientes" className="inline-flex min-h-11 items-center font-semibold text-theme-accent">Voltar a clientes</Link>}
+      />
+    );
   }
 
   const statusChips: { label: string; className: string }[] = [];
@@ -339,7 +346,7 @@ export const ClientCRM: React.FC = () => {
               )}
             </div>
 
-            <h1 className={`text-xl sm:text-2xl font-heading font-bold ${colors.text} leading-tight truncate`}>
+            <h1 className={`text-xl sm:text-2xl font-heading font-bold ${colors.text} leading-tight break-words`}>
               {client.name}
             </h1>
 

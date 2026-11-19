@@ -146,8 +146,8 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
         paymentMethod === 'in_person'
           ? 'Solicitação criada! Pague no balcão na próxima visita.'
           : paymentMethod === 'mbway'
-            ? 'Solicitação criada! Envie o MB WAY para ativar.'
-            : 'Solicitação criada! Pague o Pix para ativar.',
+            ? 'Solicitação enviada. Envie o MB WAY e aguarde a confirmação.'
+            : 'Solicitação enviada. Pague o Pix e aguarde a confirmação.',
         'success',
       );
     } catch (err) {
@@ -297,7 +297,7 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
                     {digitalReady
                       ? digitalMethod === 'mbway'
                         ? 'Envie o valor pelo MB WAY.'
-                        : 'Paga e confirma em segundos.'
+                        : 'Pague pelo app do banco e aguarde a confirmação do estabelecimento.'
                       : digitalMethod === 'mbway'
                         ? 'MB WAY ainda não configurado.'
                         : 'Pix ainda não configurado.'}
@@ -373,7 +373,7 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
               <Check className="w-6 h-6 text-[var(--color-warning)]" />
             </div>
             <h2 className={`text-lg font-semibold ${colors.text}`}>
-              {paymentMethod === 'in_person' ? 'Solicitação enviada' : 'Agora pague para ativar'}
+              {paymentMethod === 'in_person' ? 'Solicitação enviada' : 'Solicitação enviada. Falta pagar'}
             </h2>
             <p className={`${colors.textSecondary} text-sm leading-snug`}>{confirmationCopy}</p>
             {slug && !embedded && (

@@ -116,6 +116,7 @@ const RoutedOutlet = () => {
 // Wrapper for authenticated routes that need the Sidebar/Header
 const ProtectedLayout = () => {
   const { isAuthenticated, loading, tutorialCompleted, role } = useAuth();
+  const { pathname } = useLocation();
 
   if (loading) {
     if (typeof window !== 'undefined' && window.location.hash.includes('/financeiro/performance')) {
@@ -132,7 +133,7 @@ const ProtectedLayout = () => {
     if (window.location.hash.includes('update-password')) {
       return <Outlet />;
     }
-    return <Navigate to="/login" replace />;
+    return <Navigate to={pathname === '/' ? '/landing' : '/login'} replace />;
   }
 
   // Redireciona para onboarding se não completou o setup inicial

@@ -38,13 +38,15 @@ async function isolate(page: Page, requireNoExternal = true) {
 }
 
 for (const width of [1440, 390]) {
-  test(`entrada pública abre o login e mantém a landing separada ${width}px`, async ({ page }) => {
+  test(`entrada pública abre a landing e permite acessar o login ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/');
+    await expect(page).toHaveURL(/#\/landing$/);
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Mais que agenda.');
+    await page.getByRole('link', { name: 'Entrar', exact: true }).click();
     await expect(page).toHaveURL(/#\/login$/);
     await expect(page.getByTestId('category-barber')).toBeVisible();
     await expect(page.getByTestId('category-beauty')).toBeVisible();
-    await expect(page.locator('.landing')).toHaveCount(0);
     await page.getByTestId('category-barber').click();
     await expect(page.getByLabel('E-mail', { exact: true })).toBeVisible();
     await expect(page.getByLabel('Senha', { exact: true })).toBeVisible();

@@ -1,5 +1,5 @@
-import React from 'react';
-import { AlertTriangle, Check, X } from 'lucide-react';
+import React, { useEffect, useId, useRef, useState } from 'react';
+import { CalendarClock, Check, ChevronDown, X } from 'lucide-react';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { attendeeLabel } from '../../utils/appointmentAttendees';
 import { formatCurrency, formatPhone, type Region } from '../../utils/formatters';
@@ -81,6 +81,20 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
   highlightedBookingId = null,
 }) => {
   const { colors, accent, classes } = useBrutalTheme();
+  const [expanded, setExpanded] = useState(Boolean(highlightedBookingId || acceptError));
+  const listId = useId();
+  const highlightedRef = useRef<HTMLLIElement>(null);
+
+  useEffect(() => {
+    if (highlightedBookingId || acceptError) setExpanded(true);
+  }, [highlightedBookingId, acceptError]);
+
+  useEffect(() => {
+    if (expanded && highlightedBookingId) {
+      highlightedRef.current?.scrollIntoView?.({ block: 'center', behavior: 'auto' });
+    }
+  }, [expanded, highlightedBookingId]);
+
 
   if (bookings.length === 0) return null;
 
@@ -92,21 +106,27 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
 
   return (
     <section data-testid="agenda-public-bookings" className="shrink-0 space-y-2">
-      <div className={`rounded-xl border px-3 py-2 ${accent.border} ${accent.bgDim}`}>
-        <div className="flex items-start gap-2 min-w-0">
-          <AlertTriangle className={`w-4 h-4 mt-0.5 shrink-0 ${accent.text}`} aria-hidden />
-          <div className="min-w-0">
-            <h3 className={`${colors.text} font-bold text-sm leading-snug`}>
-              {banner.title}
-            </h3>
-            <p className={`${colors.textSecondary} text-xs leading-snug break-words`}>
-              {banner.summary}
-            </p>
-          </div>
-        </div>
-      </div>
+      <button
+        type="button"
+        data-testid="agenda-online-requests-toggle"
+        aria-expanded={expanded}
+        aria-controls={listId}
+        onClick={() => setExpanded((open) => !open)}
+        className={`flex min-h-12 w-full items-center gap-3 rounded-xl border p-2.5 text-left transition-colors hover:bg-[var(--color-card-hover)] ${colors.card} ${colors.border}`}
+      >
+        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${accent.bgDim} ${accent.text}`}>
+          <CalendarClock className="h-4 w-4" aria-hidden="true" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className={`block text-sm font-semibold leading-snug ${colors.text}`}>{banner.title}</span>
+          {expanded && (
+            <span className={`mt-0.5 block text-xs leading-snug ${colors.textSecondary}`}>{banner.summary}</span>
+          )}
+        </span>
+        <ChevronDown className={`h-4 w-4 shrink-0 ${accent.text} motion-safe:transition-transform ${expanded ? 'rotate-180' : ''}`} aria-hidden="true" />
+      </button>
 
-      <ul className="space-y-2">
+      <ul id={listId} hidden={!expanded} className="space-y-2">
         {bookings.map((booking) => {
           const professional = teamMembers.find((m) => m.id === booking.professional_id);
           const bookingDate = new Date(booking.appointment_time);
@@ -119,9 +139,10 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
           return (
             <li
               key={booking.id}
+              ref={highlightedBookingId === booking.id ? highlightedRef : undefined}
               data-testid={`agenda-public-booking-${booking.id}`}
               data-highlighted={highlightedBookingId === booking.id ? 'true' : 'false'}
-              className={`${colors.card} ${colors.border} rounded-xl px-3 py-2.5 scroll-mt-24 ${
+              className={`${colors.card} ${colors.border} border rounded-xl px-3 py-3 scroll-mt-24 ${
                 highlightedBookingId === booking.id ? `ring-2 ${accent.border} ${accent.bgDim}` : ''
               }`}
             >
@@ -135,28 +156,6 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
                 >
                   {when}
                 </span>
-                <div className="flex flex-wrap gap-1.5">
-                  {canAct && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => onAccept(booking)}
-                        className={`px-4 min-h-[48px] py-2 rounded-lg text-sm font-bold inline-flex items-center gap-1 ${classes.buttonSuccess}`}
-                        title="Aceitar"
-                      >
-                        <Check className="w-3.5 h-3.5" aria-hidden /> Aceitar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onReject(booking.id)}
-                        className={`px-4 min-h-[48px] py-2 rounded-lg text-sm font-bold inline-flex items-center gap-1 ${classes.buttonDanger}`}
-                        title="Recusar"
-                      >
-                        <X className="w-3.5 h-3.5" aria-hidden /> Recusar
-                      </button>
-                    </>
-                  )}
-                </div>
               </div>
 
               {pendingEdit && (
@@ -180,7 +179,7 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
               <p className={`${colors.textSecondary} text-xs font-mono break-all`}>
                 {formatPhone(booking.customer_phone, currencyRegion)}
               </p>
-              <p className={`${colors.textSecondary} text-xs leading-snug break-words mt-1`}>
+              <p className={`${colors.textSecondary} text-sm leading-snug break-words mt-1`}>
                 {bookingServiceLabel(booking, services)}
                 {' · '}
                 <span className={`${colors.text} font-semibold`}>
@@ -202,6 +201,26 @@ export const AgendaPublicBookings: React.FC<AgendaPublicBookingsProps> = ({
                 >
                   {acceptError.message}
                 </p>
+              )}
+              {canAct && (
+                <div className="mt-3 flex flex-wrap gap-2 border-t border-[var(--color-divider)] pt-2.5">
+                  <button
+                    type="button"
+                    onClick={() => onAccept(booking)}
+                    className={`inline-flex min-h-12 items-center justify-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold ${classes.buttonSuccess}`}
+                    title="Aceitar"
+                  >
+                    <Check className="w-3.5 h-3.5" aria-hidden /> Aceitar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onReject(booking.id)}
+                    className={`inline-flex min-h-12 items-center justify-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold ${classes.buttonSecondary}`}
+                    title="Recusar"
+                  >
+                    <X className="w-3.5 h-3.5" aria-hidden /> Recusar
+                  </button>
+                </div>
               )}
             </li>
           );

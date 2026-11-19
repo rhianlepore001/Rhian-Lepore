@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { formatTime } from '@/utils/formatters';
 import {
   recognizedInRangeFilter,
   revenueRecognizedAt,
@@ -187,7 +188,7 @@ export async function fetchUpcomingAppointments(effectiveUserId: string, limit =
     id: apt.id,
     clientName: apt.clients?.name || 'Cliente Desconhecido',
     service: apt.service || 'Serviço Padrão',
-    time: new Date(apt.appointment_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    time: formatTime(apt.appointment_time),
     date: new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
     rawDate: new Date(apt.appointment_time).toISOString().split('T')[0],
     status: apt.status,
@@ -253,7 +254,7 @@ function mapAppointmentRow(apt: any): DashboardAppointment {
     id: apt.id,
     clientName: apt.clients?.name || 'Cliente Desconhecido',
     service: apt.service || 'Serviço Padrão',
-    time: new Date(apt.appointment_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    time: formatTime(apt.appointment_time),
     date: new Date(apt.appointment_time).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
     rawDate: new Date(apt.appointment_time).toISOString().split('T')[0],
     status: apt.status,

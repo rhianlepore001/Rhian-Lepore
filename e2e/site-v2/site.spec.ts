@@ -81,6 +81,7 @@ for (const width of [1440, 390]) {
       }
     }
     // Aceite de solicitação online sem erro
+    await page.getByTestId('agenda-online-requests-toggle').click();
     const acceptButton = page.getByRole('button', { name: 'Aceitar' }).first();
     await expect(acceptButton).toBeVisible();
     await acceptButton.click();
@@ -240,7 +241,7 @@ test('explora a demonstração embutida mantendo segmento e tarefa sem integraç
   await views.getByRole('button', { name: 'Agendamento online', exact: true }).click();
   await expect(iframe).toHaveAttribute('src', '/demo-preview#/demo/beauty/book/simulacao');
   await expect(frame.getByText('Escolha seus serviços', { exact: true })).toBeVisible();
-  await expect(frame.getByRole('heading', { name: /Studio Aurora/ }).first()).toBeVisible();
+  await expect(frame.getByRole('heading', { name: 'Studio Aurora', exact: true })).toBeVisible();
   const nailsFilter = frame.getByRole('button', { name: /^Unhas$/i });
   await nailsFilter.click();
   await expect(nailsFilter).toHaveAttribute('aria-pressed', 'true');

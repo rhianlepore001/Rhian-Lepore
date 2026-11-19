@@ -43,10 +43,10 @@ export const TodayKpiStrip: React.FC<TodayKpiStripProps> = ({ items, loading = f
           className="p-3 sm:p-4"
           onClick={item.onClick}
         >
-          <p className={`text-xs font-semibold uppercase tracking-wide ${colors.textMuted}`}>
+          <p className={`text-xs font-semibold ${colors.textMuted}`}>
             {item.label}
           </p>
-          <p className={`mt-1 whitespace-nowrap font-mono text-[clamp(1rem,4.4vw,1.25rem)] font-black tabular-nums sm:text-xl md:text-2xl ${colors.text}`}>
+          <p className={`mt-1 min-w-0 [overflow-wrap:anywhere] font-mono text-[clamp(0.9375rem,4.2vw,1.25rem)] font-black tabular-nums sm:text-xl md:text-2xl ${colors.text}`}>
             {item.value}
           </p>
           {item.hint && (

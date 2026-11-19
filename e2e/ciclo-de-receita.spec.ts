@@ -178,8 +178,9 @@ test.describe('Ciclo de receita', () => {
 
             // Painel "Solicitações Pendentes" — aceita SÓ a deste run (a conta de teste é
             // compartilhada; aceitar tudo aprovaria solicitações que não são deste teste)
+            await owner.getByTestId('agenda-online-requests-toggle').click();
             const cardPendente = owner
-                .locator('div')
+                .locator('[data-testid^=agenda-public-booking-]')
                 .filter({ hasText: CLIENT_NAME })
                 .filter({ has: owner.getByRole('button', { name: /^Aceitar$/i }) })
                 .last(); // .last() = o container mais interno que tem nome + botão

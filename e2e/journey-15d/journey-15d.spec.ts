@@ -103,6 +103,7 @@ test('D1–D15 — cenários mock e smoke de superfícies', async ({ page, conte
       await page.goto(agendaUrl(BASE, 7));
       const panel = page.getByTestId('agenda-public-bookings');
       await expect(panel).toBeVisible();
+      await panel.getByTestId('agenda-online-requests-toggle').click();
       await expect(panel.getByText('Pedido Journey', { exact: true })).toBeVisible();
       await expect(panel).toContainText('Hoje');
     });

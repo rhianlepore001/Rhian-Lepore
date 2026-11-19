@@ -388,6 +388,7 @@ test.describe('PR-3 status ao vivo', () => {
         }));
       }, OWNER_REQUEST);
 
+      await page.getByTestId('agenda-online-requests-toggle').click();
       await expect(page.getByTestId(`agenda-public-booking-${OWNER_REQUEST.id}`)).toBeVisible({ timeout: 3_000 });
       await expect(page.getByText('Carla Online')).toBeVisible();
       await expect(page.getByText(/1 solicitação online/)).toBeVisible();

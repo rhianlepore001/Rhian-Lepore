@@ -115,6 +115,7 @@ for (const theme of ['beauty', 'barber'] as const) {
     await page.goto('/#/agenda?date=2026-11-03');
     const box = page.getByTestId('agenda-public-bookings');
     await expect(box).toBeVisible();
+    await box.getByTestId('agenda-online-requests-toggle').click();
     await expect(box.getByText('Mariana Exemplo', { exact: true })).toHaveCount(1);
     await expect(box.getByText('Ana Exemplo (responsável: Mariana Exemplo)')).toBeVisible();
     await expect(box.getByText('Bia Exemplo (responsável: Mariana Exemplo)')).toBeVisible();

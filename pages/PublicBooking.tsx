@@ -894,7 +894,7 @@ export const PublicBooking: React.FC = () => {
         { key: 'services' as const, label: 'Serviços' },
         { key: 'professional' as const, label: 'Profissional' },
         { key: 'datetime' as const, label: 'Data e Hora' },
-        { key: 'contact' as const, label: 'Confirmar' },
+        { key: 'contact' as const, label: 'Revisão' },
     ];
     const currentQuickStepIndex = quickSteps.findIndex(s => s.key === quickStep);
 
@@ -982,11 +982,14 @@ export const PublicBooking: React.FC = () => {
                 <div className="container mx-auto px-3 md:px-6 max-w-4xl lg:max-w-5xl relative z-10 pt-4 md:pt-8 pb-40">
                     {/* Quick Stepper */}
                     <div className={`sticky top-0 z-[60] w-full border-b ${colors.divider} ${colors.bg}/95 backdrop-blur-md mb-6 md:mb-8`}>
-                        <div className="py-3 flex items-center gap-0">
+                        <ol className="py-3 flex items-start gap-0" aria-label="Etapas do agendamento">
                             {quickSteps.map((qs, idx) => (
-                                <React.Fragment key={qs.key}>
-                                    <div className="flex flex-col items-center gap-1">
-                                        <div className={`w-7 h-7 flex items-center justify-center rounded-full text-xs font-black transition-all duration-200 ${idx < currentQuickStepIndex
+                                <li
+                                    key={qs.key}
+                                    aria-current={idx === currentQuickStepIndex ? 'step' : undefined}
+                                    className="relative flex flex-1 flex-col items-center gap-1"
+                                >
+                                        <div aria-hidden="true" className={`w-7 h-7 flex items-center justify-center rounded-full text-xs font-black transition-all duration-200 ${idx < currentQuickStepIndex
                                                 ? `${accent.bg} ${accentTextOnAccent}`
                                                 : idx === currentQuickStepIndex
                                                     ? `${accent.bg} ${accentTextOnAccent} scale-110 ${shadow.glow}`
@@ -994,14 +997,10 @@ export const PublicBooking: React.FC = () => {
                                             }`}>
                                             {idx < currentQuickStepIndex ? <Check className="w-3.5 h-3.5" /> : idx + 1}
                                         </div>
-                                        <span className={`hidden sm:block text-xs font-semibold uppercase tracking-wide transition-colors ${idx === currentQuickStepIndex ? accent.text : colors.textMuted}`}>{qs.label}</span>
-                                    </div>
-                                    {idx < quickSteps.length - 1 && (
-                                        <div className={`flex-1 h-px mx-2 transition-all duration-300 ${idx < currentQuickStepIndex ? `${accent.bg} opacity-50` : colors.divider}`} />
-                                    )}
-                                </React.Fragment>
+                                        <span className={`text-center text-xs font-semibold ${idx === currentQuickStepIndex ? accent.text : colors.textMuted}`}>{qs.label}</span>
+                                </li>
                             ))}
-                        </div>
+                        </ol>
                     </div>
 
                     {/* Step 1: Services */}
@@ -1287,8 +1286,14 @@ export const PublicBooking: React.FC = () => {
                     {quickStep === 'contact' && (
                         <div className="space-y-6 md:space-y-8 animate-reveal-fragment max-w-2xl mx-auto w-full">
                             <div>
-                                <h2 className={`text-xl md:text-3xl font-bold tracking-tight mb-1.5 ${colors.text}`}>Confirme seu agendamento</h2>
-                                <p className={`${colors.textMuted} text-sm`}>Revise os detalhes e informe seus dados.</p>
+                                <h2 className={`text-xl md:text-3xl font-bold tracking-tight mb-1.5 ${colors.text}`}>Revise seu agendamento</h2>
+                                <p className={`${colors.textSecondary} text-sm`}>
+                                    {editingBookingId
+                                        ? 'Confira os detalhes antes de enviar a alteração.'
+                                        : autoConfirm
+                                            ? 'Confira os detalhes e informe seus dados para confirmar o horário.'
+                                            : 'Confira os detalhes e envie o pedido. O horário fica confirmado após a aprovação do estabelecimento.'}
+                                </p>
                             </div>
 
                             {/* Summary Card */}
@@ -1341,16 +1346,16 @@ export const PublicBooking: React.FC = () => {
                                 ) : (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                                         <div className="space-y-1.5 sm:col-span-2">
-                                            <label className={`${colors.textMuted} text-xs font-semibold uppercase tracking-wide block`}>Nome completo</label>
-                                            <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)}
+                                            <label htmlFor="booking-quick-name" className={`${colors.textMuted} text-xs font-semibold uppercase tracking-wide block`}>Nome completo</label>
+                                            <input id="booking-quick-name" type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)}
                                                 className={`w-full py-3 px-4 outline-none transition-all ${classes.input}`}
                                                 placeholder="Como devemos te chamar?"
                                                 autoComplete="name"
                                             />
                                         </div>
                                         <div className="space-y-1.5 sm:col-span-2">
-                                            <label className={`${colors.textMuted} text-xs font-semibold uppercase tracking-wide block`}>WhatsApp</label>
-                                            <PhoneInput value={customerPhone} onChange={setCustomerPhone} defaultRegion={currencyRegion as 'BR' | 'PT'} />
+                                            <label htmlFor="booking-quick-phone" className={`${colors.textMuted} text-xs font-semibold uppercase tracking-wide block`}>WhatsApp</label>
+                                            <PhoneInput id="booking-quick-phone" value={customerPhone} onChange={setCustomerPhone} defaultRegion={currencyRegion as 'BR' | 'PT'} />
                                         </div>
                                     </div>
                                 )}
@@ -1906,14 +1911,14 @@ export const PublicBooking: React.FC = () => {
                             ) : (
                                 <div className="grid grid-cols-1 gap-4">
                                     <div className="space-y-2">
-                                        <label className={`${colors.textMuted} ${font.label} text-xs uppercase tracking-widest block font-bold`}>Nome Completo</label>
-                                        <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)}
+                                        <label htmlFor="booking-chat-name" className={`${colors.textMuted} ${font.label} text-xs uppercase tracking-widest block font-bold`}>Nome Completo</label>
+                                        <input id="booking-chat-name" type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)}
                                             className={`w-full py-4 px-5 outline-none transition-all ${classes.input}`}
                                             placeholder="Como devemos te chamar?" />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className={`${colors.textMuted} ${font.label} text-xs uppercase tracking-widest block font-bold`}>WhatsApp</label>
-                                        <PhoneInput value={customerPhone} onChange={setCustomerPhone} defaultRegion={currencyRegion as 'BR' | 'PT'} />
+                                        <label htmlFor="booking-chat-phone" className={`${colors.textMuted} ${font.label} text-xs uppercase tracking-widest block font-bold`}>WhatsApp</label>
+                                        <PhoneInput id="booking-chat-phone" value={customerPhone} onChange={setCustomerPhone} defaultRegion={currencyRegion as 'BR' | 'PT'} />
                                     </div>
                                 </div>
                             )}

@@ -91,7 +91,7 @@ export const StaffOnboarding: React.FC = () => {
             <div>
               <p className="text-sm font-semibold">Sua Agenda</p>
               <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                Atendimentos do dia, horários e clientes
+                Consulte seus horários e os atendimentos do dia
               </p>
             </div>
           </div>

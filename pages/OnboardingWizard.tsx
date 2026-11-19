@@ -98,7 +98,7 @@ export const OnboardingWizard: React.FC = () => {
         },
         {
             title: 'Seus Serviços',
-            description: 'Cadastre pelo menos um serviço com preço para ativar seu financeiro.',
+            description: 'Cadastre pelo menos um serviço com preço para usar nos agendamentos.',
             component: (
                 <StepServices
                     key={importGeneration}

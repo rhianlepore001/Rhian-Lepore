@@ -60,14 +60,16 @@ export const Card: React.FC<CardProps> = ({
       colors.border,
       'border',
       radius.card,
-      'overflow-hidden select-none',
+      'overflow-hidden min-w-0',
       'transition-[box-shadow,transform] duration-200 ease-out',
     ].join(' '),
     elevated: [
       colors.card,
       radius.card,
-      'overflow-hidden select-none',
+      'overflow-hidden min-w-0',
       shadow.card,
+      colors.border,
+      'border',
       'transition-[box-shadow,transform] duration-200 ease-out',
     ].join(' '),
   };
@@ -77,7 +79,7 @@ export const Card: React.FC<CardProps> = ({
     variant === 'default' ? classes.card : containerByVariant[normalized];
 
   const interactiveClass = onClick
-    ? 'cursor-pointer hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1'
+    ? 'cursor-pointer hover:bg-[var(--color-card-hover)] motion-safe:active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-[var(--color-focus-ring)]'
     : '';
 
   const handleKeyDown = onClick
@@ -102,7 +104,7 @@ export const Card: React.FC<CardProps> = ({
       {(title || action) && (
         <div
           className={[
-            'flex items-center justify-between',
+            'flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5',
             density.cardPadding,
             `border-b ${colors.divider}`,
           ].join(' ')}
@@ -118,7 +120,7 @@ export const Card: React.FC<CardProps> = ({
               )}
             </div>
           )}
-          {action && <div className="ml-3 shrink-0">{action}</div>}
+          {action && <div className="min-w-0 max-w-full">{action}</div>}
         </div>
       )}
       <div className={noPadding ? '' : density.cardPadding}>

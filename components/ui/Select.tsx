@@ -20,8 +20,8 @@ interface SelectProps extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>
 }
 
 const SIZE_MAP = {
-  sm: 'h-9 text-xs px-3 pr-8',
-  md: 'h-11 text-sm px-4 pr-9',
+  sm: 'h-11 md:h-9 text-base md:text-xs px-3 pr-8',
+  md: 'h-12 md:h-11 text-base md:text-sm px-4 pr-9',
   lg: 'h-[52px] text-base px-4 pr-10',
 } as const;
 
@@ -56,7 +56,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         {label && (
           <label
             htmlFor={id}
-            className={[classes.label, 'block mb-1.5'].join(' ')}
+            className={[classes.label, 'block mb-1.5 leading-snug text-sm'].join(' ')}
           >
             {label}
           </label>
@@ -73,7 +73,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
                 .join(' ') || undefined
             }
             className={[
-              'w-full appearance-none cursor-pointer',
+              'w-full min-w-0 appearance-none cursor-pointer',
               radius.input,
               SIZE_MAP[size],
               colors.text,
@@ -110,7 +110,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           <p
             id={errorId}
             role="alert"
-            className={`mt-1.5 text-xs text-[var(--color-danger)] ${font.body}`}
+            className={`mt-1.5 text-sm leading-snug text-[var(--color-danger)] ${font.body}`}
           >
             {error}
           </p>
@@ -118,7 +118,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         {hint && !hasError && (
           <p
             id={hintId}
-            className={`mt-1.5 text-xs ${colors.textMuted}`}
+            className={`mt-1.5 text-sm leading-snug ${colors.textMuted}`}
           >
             {hint}
           </p>

@@ -103,16 +103,16 @@ const MobileSettingsMenu: React.FC<{
 
   return (
     <details className="group px-4 pb-2">
-      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-2 text-sm font-semibold text-theme-accent [&::-webkit-details-marker]:hidden">
+      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 rounded-lg border border-theme-border bg-theme-card px-3 text-sm font-semibold text-theme-accent [&::-webkit-details-marker]:hidden">
         Ver todas as configurações
         <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" aria-hidden="true" />
       </summary>
-      <nav aria-label="Seções de configurações" className="max-h-[50dvh] overflow-y-auto overscroll-contain">
+      <nav aria-label="Seções de configurações" className="mt-1.5 max-h-[50dvh] overflow-y-auto overscroll-contain rounded-lg border border-theme-border bg-theme-card p-2">
         {GROUP_ORDER.map((group) => {
           const items = menuItems.filter((item) => item.group === group);
           if (!items.length) return null;
           return (
-            <div key={group} className="border-t border-[var(--color-divider)] py-2">
+            <div key={group} className="border-t border-[var(--color-divider)] py-2 first:border-t-0 first:pt-0 last:pb-0">
               <p className="px-2 text-xs font-semibold text-theme-textSecondary">{group}</p>
               {items.map((item) => (
                 <Link
@@ -160,8 +160,8 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
         <SidebarContent menuItems={menuItems} accent={accent} colors={colors} />
       </aside>
 
-      <main className="flex-1 min-w-0 min-h-screen flex flex-col w-full max-w-[100vw]">
-        <div className={`md:hidden sticky top-[calc(var(--header-top,0px)+3.5rem)] z-30 bg-[var(--color-bg)]/95 backdrop-blur-md border-b ${colors.divider}`}>
+      <div className="flex-1 min-w-0 min-h-screen flex flex-col w-full max-w-[100vw]">
+        <div className={`md:hidden sticky top-[calc(var(--header-top,0px)+3.5rem)] z-30 bg-theme-bg border-b ${colors.divider}`}>
           <div className="flex items-center justify-between gap-3 px-4 pt-3 pb-2">
             <div className="min-w-0">
               {currentGroup && (
@@ -190,7 +190,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
             {children}
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 };

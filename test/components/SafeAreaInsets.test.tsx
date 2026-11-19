@@ -43,8 +43,8 @@ describe('iOS safe areas (PWA instalado)', () => {
       </MemoryRouter>
     );
     const nav = screen.getByRole('navigation', { name: 'Navegação principal' });
-    expect(nav.className).toContain('h-[calc(64px+var(--safe-bottom))]');
-    expect(nav.className).toContain('pb-[calc(0.35rem+var(--safe-bottom))]');
+    expect(nav.className).toContain('min-h-[calc(66px+var(--safe-bottom))]');
+    expect(nav.className).toContain('pb-[calc(0.25rem+var(--safe-bottom))]');
     // Altura fixa sem safe area era a causa do corte dos labels no iPhone.
     expect(nav.className).not.toMatch(/(^|\s)h-\[64px\](\s|$)/);
   });
@@ -61,7 +61,7 @@ describe('iOS safe areas (PWA instalado)', () => {
     expect(root.style.getPropertyValue('--header-top')).toBe('var(--safe-top)');
     const main = container.querySelector('main') as HTMLElement;
     expect(main.className).toContain('pt-[calc(var(--safe-top)+3.5rem)]');
-    expect(main.className).toContain('pb-[calc(7rem+var(--safe-bottom))]');
+    expect(main.className).toContain('pb-[calc(5.5rem+var(--safe-bottom))]');
   });
 
   it('em período de teste não há banner no topo: header e conteúdo só descontam a status bar', () => {

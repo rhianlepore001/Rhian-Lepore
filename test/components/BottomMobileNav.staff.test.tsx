@@ -25,6 +25,6 @@ describe('BottomMobileNav — staff (375)', () => {
         expect(label?.className).toMatch(/whitespace-nowrap/);
         expect(label?.className).toMatch(/text-xs/);
         expect(label?.className).not.toMatch(/text-\[(?:9|10|11)px\]/);
-        expect(item.className).toMatch(/flex-\[1\.[3-9]/);
+        expect(screen.getByRole('navigation', { name: 'Navegação principal' }).className).toContain('minmax(0,1.8fr)');
     });
 });

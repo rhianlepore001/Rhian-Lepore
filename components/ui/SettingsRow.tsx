@@ -28,7 +28,7 @@ export const SettingsRow: React.FC<SettingsRowProps> = ({
   const { colors, accent } = useBrutalTheme();
 
   return (
-    <div data-testid={testId} className={`flex items-center justify-between gap-4 py-4 first:pt-0 last:pb-0 ${className}`}>
+    <div data-testid={testId} className={`flex items-center justify-between gap-3 py-3.5 md:gap-4 md:py-4 first:pt-0 last:pb-0 ${className}`}>
       <div className="flex items-start gap-3 min-w-0">
         {Icon && (
           <div className={`p-2 rounded-lg ${accent.bgDim} ${accent.text} shrink-0`}>
@@ -38,11 +38,11 @@ export const SettingsRow: React.FC<SettingsRowProps> = ({
         <div className="min-w-0">
           <p className={`text-sm font-semibold ${colors.text}`}>{label}</p>
           {help && (
-            <p className={`text-xs ${colors.textMuted} mt-0.5 leading-relaxed`}>{help}</p>
+            <p className={`text-sm ${colors.textSecondary} mt-0.5 leading-relaxed`}>{help}</p>
           )}
         </div>
       </div>
-      {children && <div className="shrink-0">{children}</div>}
+      {children && <div className="shrink-0 max-w-[45%]">{children}</div>}
     </div>
   );
 };

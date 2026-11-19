@@ -21,22 +21,16 @@ export const BottomMobileNav: React.FC = () => {
     };
 
     const navItemBase =
-        'flex flex-col items-center justify-center w-full min-h-[44px] space-y-1 transition-all active:animate-haptic-click';
+        'flex flex-col items-center justify-center gap-0.5 min-h-12 rounded-xl motion-safe:active:scale-[0.98]';
 
     const secondaryPath = isStaff ? '/fila' : '/clientes';
     const secondaryActive = isActive(secondaryPath);
 
     return (
         <>
-            {/* Scrim sólido sob a nav — evita texto da página “vazar” atrás do chrome */}
-            <div
-                className="md:hidden fixed bottom-0 left-0 right-0 z-30 h-[calc(4rem+var(--safe-bottom))] pointer-events-none bg-gradient-to-t from-[var(--color-bg)] from-70% via-[var(--color-bg)]/80 to-transparent"
-                aria-hidden="true"
-            />
             <nav
                 aria-label="Navegação principal"
-                className={`md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-end justify-between gap-0.5 px-1.5 pb-[calc(0.35rem+var(--safe-bottom))] pt-1.5 h-[calc(64px+var(--safe-bottom))] transition-all duration-300 rounded-none rounded-t-2xl border-x-0 border-b-0 border-t ${colors.divider}
-                bg-[var(--color-bg)]`}
+                className={`md:hidden fixed bottom-0 left-0 right-0 z-40 grid ${isStaff ? 'grid-cols-[repeat(3,minmax(0,1fr))_minmax(0,1.8fr)_minmax(0,1fr)]' : 'grid-cols-5'} items-stretch gap-0.5 px-1.5 pb-[calc(0.25rem+var(--safe-bottom))] pt-1 min-h-[calc(66px+var(--safe-bottom))] border-t ${colors.divider} ${colors.card}`}
             >
                 {/* Owner: Agenda, Clientes, FAB, Financeiro, Mais.
                     Staff: Agenda, Fila, FAB, Insights, Mais — CRM é domínio do gestor. */}
@@ -46,12 +40,12 @@ export const BottomMobileNav: React.FC = () => {
                     onClick={() => navigate('/agenda')}
                     aria-label="Agenda"
                     aria-current={isActive('/agenda') ? 'page' : undefined}
-                    className={`${navItemBase} flex-1 min-w-0 h-full ${isActive('/agenda') ? accent.text : colors.textSecondary}`}
+                    className={`${navItemBase} min-w-0 ${isActive('/agenda') ? accent.text : colors.textSecondary}`}
                 >
-                    <div className={`p-1.5 rounded-xl transition-all ${isActive('/agenda') ? 'bg-[var(--color-card-hover)]' : ''}`}>
+                    <div className={`min-w-9 h-7 flex items-center justify-center rounded-lg transition-colors ${isActive('/agenda') ? accent.bgDim : ''}`}>
                         <Calendar className="w-5 h-5" strokeWidth={isActive('/agenda') ? 2.5 : 2} aria-hidden="true" />
                     </div>
-                    <span className="text-xs font-bold tracking-tight truncate max-w-full">Agenda</span>
+                    <span className="text-[0.6875rem] font-semibold leading-tight px-0.5 max-w-full text-center">Agenda</span>
                 </button>
 
                 {/* 2. Clientes (dono) / Fila (colaborador) */}
@@ -60,20 +54,30 @@ export const BottomMobileNav: React.FC = () => {
                     onClick={() => navigate(secondaryPath)}
                     aria-label={isStaff ? 'Fila' : 'Clientes'}
                     aria-current={secondaryActive ? 'page' : undefined}
-                    className={`${navItemBase} flex-1 min-w-0 h-full ${secondaryActive ? accent.text : colors.textSecondary}`}
+                    className={`${navItemBase} min-w-0 ${secondaryActive ? accent.text : colors.textSecondary}`}
                 >
-                    <div className={`p-1.5 rounded-xl transition-all ${secondaryActive ? 'bg-[var(--color-card-hover)]' : ''}`}>
+                    <div className={`min-w-9 h-7 flex items-center justify-center rounded-lg transition-colors ${secondaryActive ? accent.bgDim : ''}`}>
                         {isStaff ? (
                             <Clock className="w-5 h-5" strokeWidth={secondaryActive ? 2.5 : 2} aria-hidden="true" />
                         ) : (
                             <Users className="w-5 h-5" strokeWidth={secondaryActive ? 2.5 : 2} aria-hidden="true" />
                         )}
                     </div>
-                    <span className="text-xs font-bold tracking-tight truncate max-w-full">{isStaff ? 'Fila' : 'Clientes'}</span>
+                    <span className="text-[0.6875rem] font-semibold leading-tight px-0.5 max-w-full text-center">{isStaff ? 'Fila' : 'Clientes'}</span>
                 </button>
 
-                {/* 3. Espaço do FAB — o botão fica absolute para não cobrir os labels */}
-                <div className="shrink-0 basis-14 px-1" aria-hidden="true" />
+                <button
+                    type="button"
+                    onClick={() => setShowQuickActions(true)}
+                    aria-label="Ações rápidas"
+                    aria-expanded={showQuickActions}
+                    className={`${navItemBase} min-w-0 ${accent.text}`}
+                >
+                    <span className={`flex h-9 w-10 items-center justify-center rounded-xl ${accent.bg} text-[var(--color-on-accent)]`}>
+                        <Plus className="w-5 h-5" strokeWidth={2.5} aria-hidden="true" />
+                    </span>
+                    <span className="text-[0.6875rem] font-semibold leading-tight">Ações</span>
+                </button>
 
                 {/* 4. Financeiro / Insights */}
                 {!isStaff ? (
@@ -82,12 +86,12 @@ export const BottomMobileNav: React.FC = () => {
                         onClick={() => navigate('/financeiro')}
                         aria-label="Financeiro"
                         aria-current={isActive('/financeiro') ? 'page' : undefined}
-                        className={`${navItemBase} flex-1 min-w-0 h-full ${isActive('/financeiro') ? accent.text : colors.textSecondary}`}
+                        className={`${navItemBase} min-w-0 ${isActive('/financeiro') ? accent.text : colors.textSecondary}`}
                     >
-                        <div className={`p-1.5 rounded-xl transition-all ${isActive('/financeiro') ? 'bg-[var(--color-card-hover)]' : ''}`}>
+                        <div className={`min-w-9 h-7 flex items-center justify-center rounded-lg transition-colors ${isActive('/financeiro') ? accent.bgDim : ''}`}>
                             <DollarSign className="w-5 h-5" strokeWidth={isActive('/financeiro') ? 2.5 : 2} aria-hidden="true" />
                         </div>
-                        <span className="text-xs font-bold tracking-tight truncate max-w-full">Financeiro</span>
+                        <span className="text-[0.6875rem] font-semibold leading-tight px-0.5 max-w-full text-center">Financeiro</span>
                     </button>
                 ) : (
                     <button
@@ -95,12 +99,12 @@ export const BottomMobileNav: React.FC = () => {
                         onClick={() => navigate('/meus-insights')}
                         aria-label="Meus resultados"
                         aria-current={isActive('/meus-insights') ? 'page' : undefined}
-                        className={`${navItemBase} flex-[1.55] min-w-0 h-full ${isActive('/meus-insights') ? accent.text : colors.textSecondary}`}
+                        className={`${navItemBase} min-w-0 ${isActive('/meus-insights') ? accent.text : colors.textSecondary}`}
                     >
-                        <div className={`p-1.5 rounded-xl transition-all ${isActive('/meus-insights') ? 'bg-[var(--color-card-hover)]' : ''}`}>
+                        <div className={`min-w-9 h-7 flex items-center justify-center rounded-lg transition-colors ${isActive('/meus-insights') ? accent.bgDim : ''}`}>
                             <TrendingUp className="w-5 h-5" strokeWidth={isActive('/meus-insights') ? 2.5 : 2} aria-hidden="true" />
                         </div>
-                        <span className="text-xs font-bold tracking-tighter whitespace-nowrap text-center max-w-full">Meus resultados</span>
+                        <span className="text-xs font-semibold leading-tight tracking-tight whitespace-nowrap text-center max-w-full">Meus resultados</span>
                     </button>
                 )}
 
@@ -110,27 +114,14 @@ export const BottomMobileNav: React.FC = () => {
                     onClick={() => setShowMoreMenu(true)}
                     aria-label="Mais opções"
                     aria-expanded={showMoreMenu}
-                    className={`${navItemBase} flex-1 min-w-0 h-full ${showMoreMenu ? accent.text : colors.textSecondary}`}
+                    className={`${navItemBase} min-w-0 ${showMoreMenu ? accent.text : colors.textSecondary}`}
                 >
-                    <div className={`p-1.5 rounded-xl transition-all ${showMoreMenu ? 'bg-[var(--color-card-hover)]' : ''}`}>
+                    <div className={`min-w-9 h-7 flex items-center justify-center rounded-lg transition-colors ${showMoreMenu ? accent.bgDim : ''}`}>
                         <Menu className="w-5 h-5" strokeWidth={2} aria-hidden="true" />
                     </div>
-                    <span className="text-xs font-bold tracking-tight truncate max-w-full">Mais</span>
+                    <span className="text-[0.6875rem] font-semibold leading-tight px-0.5 max-w-full text-center">Mais</span>
                 </button>
 
-                <div className="absolute left-1/2 -translate-x-1/2 -top-5 z-50">
-                    <button
-                        type="button"
-                        onClick={() => setShowQuickActions(true)}
-                        className={`w-12 h-12 min-h-[44px] min-w-[44px] rounded-2xl flex items-center justify-center shadow-[var(--shadow-btn-primary)] transform transition-all active:scale-95 group relative overflow-hidden
-                        ${accent.bg} text-[var(--color-on-accent)]`}
-                        aria-label="Ações rápidas"
-                        title="Ações rápidas"
-                    >
-                        <div className="absolute inset-0 bg-[var(--color-card-hover)] opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <Plus className="w-6 h-6 relative z-10" strokeWidth={2.75} aria-hidden="true" />
-                    </button>
-                </div>
             </nav>
 
             {showQuickActions && (

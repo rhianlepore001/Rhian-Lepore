@@ -318,7 +318,7 @@ export function useBrutalTheme(options?: UseBrutalThemeOptions): BrutalThemeToke
         : `bg-[var(--color-success-bg)] text-[var(--color-success)] border border-[var(--color-success-border)] ${radius.button} hover:brightness-110 transition-all duration-150 ease-out`,
       buttonOutline: `bg-transparent border text-[var(--color-accent)] [border-color:color-mix(in_srgb,var(--color-accent)_50%,transparent)] hover:bg-[var(--color-accent-dim)] hover:[border-color:color-mix(in_srgb,var(--color-accent)_75%,transparent)] hover:text-[var(--color-accent)] ${radius.button} transition-all duration-150 ease-out`,
 
-      input: `w-full px-4 py-3 ${radius.input} text-sm text-theme-text bg-[var(--color-input-bg)] border border-[var(--color-input-border)] focus:outline-none focus:border-theme-accent focus:bg-[var(--color-card-hover)] transition-all`,
+      input: `w-full min-h-12 px-4 py-3 ${radius.input} text-base md:text-sm text-theme-text placeholder:text-theme-textMuted placeholder:opacity-100 bg-[var(--color-input-bg)] border border-[var(--color-input-border)] focus:outline-none focus:border-theme-accent focus:ring-1 focus:ring-theme-accent transition-colors`,
       inputFocus: `focus:outline-none focus:border-theme-accent focus:ring-0`,
       label: `text-xs font-semibold text-theme-textSecondary ${font.label}`,
       error: `p-3.5 ${radius.input} text-xs bg-[var(--color-danger-bg)] text-[var(--color-danger)] border border-[var(--color-danger-border)] font-mono`,
@@ -339,9 +339,9 @@ export function useBrutalTheme(options?: UseBrutalThemeOptions): BrutalThemeToke
       sidebarItemActive: `bg-[var(--color-accent-dim)] text-theme-accent border border-[var(--color-accent-border)]`,
       sidebarItemInactive: `text-theme-textSecondary hover:text-theme-text hover:bg-[var(--color-card-hover)]`,
 
-      modalOverlay: `bg-[var(--color-overlay)] backdrop-blur-md transition-opacity duration-200`,
+      modalOverlay: `bg-[var(--color-overlay)] backdrop-blur-[2px] transition-opacity duration-200`,
       modalContainer: `bg-[var(--color-modal-bg)] border-[var(--color-modal-border)] border ${radius.modal} shadow-[var(--shadow-modal)] transition-[opacity,transform] duration-200 ease-out`,
-      modalHeader: `flex items-center justify-between border-b border-[var(--color-divider)] px-6 py-4`,
+      modalHeader: `flex items-center justify-between border-b border-[var(--color-divider)] px-4 py-3 sm:px-6 sm:py-4`,
       focusRing: `focus:outline-none focus:ring-2 focus:ring-[var(--color-input-focus)] focus:ring-offset-2 focus:ring-offset-theme-card transition-shadow`,
     };
   }, [theme, mode, accent, colors, font, radius, density, shadow, focus, isBeauty]);

@@ -32,30 +32,30 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
     <header
       className={[
         'w-full flex flex-col gap-3 md:flex-row md:items-end md:justify-between md:gap-6',
-        'pb-4 md:pb-5',
+        'pb-3 md:pb-4',
         className,
       ].join(' ')}
     >
-      <div className="flex-1 min-w-0 flex flex-col gap-1">
+      <div className="flex-1 min-w-0 flex flex-col gap-1.5">
         <h1
           className={[
             font.heading,
-            'text-2xl md:text-3xl font-bold tracking-tight',
+            'text-[clamp(1.5rem,5.3vw,2rem)] font-bold tracking-tight',
             colors.text,
-            'leading-tight md:whitespace-nowrap md:truncate',
+            'leading-tight break-words text-balance',
           ].join(' ')}
         >
           {title}
         </h1>
         {subtitle && (
-          <div className={`text-sm ${colors.textSecondary} text-pretty break-words`}>
+          <div className={`text-sm leading-relaxed ${colors.textSecondary} text-pretty break-words`}>
             {subtitle}
           </div>
         )}
         {meta && <div className="mt-2 flex flex-wrap gap-2">{meta}</div>}
       </div>
       {action && (
-        <div className={`${hideActionOnMobile ? 'hidden md:flex' : 'flex'} w-full md:w-auto items-center md:justify-end gap-2 [&>*]:w-full md:[&>*]:w-auto`}>
+        <div className={`${hideActionOnMobile ? 'hidden md:flex' : 'flex'} w-full md:w-auto md:max-w-[65%] min-w-0 items-center md:justify-end gap-2 [&>*]:w-full md:[&>*]:w-auto`}>
           {action}
         </div>
       )}

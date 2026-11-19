@@ -58,7 +58,7 @@ export const RecoveryShell: React.FC<RecoveryShellProps> = ({ children, testId }
         </Link>
       </header>
 
-      <main className="flex-1 w-full flex justify-center px-5 pt-4 pb-12 md:pt-[8vh]">
+      <main className="flex-1 w-full flex justify-center px-4 pt-3 pb-10 md:pt-[8vh]">
         <div className="w-full max-w-[420px]">{children}</div>
       </main>
 
@@ -74,7 +74,7 @@ export const RecoveryShell: React.FC<RecoveryShellProps> = ({ children, testId }
 /** Cartão com régua de acento no topo (mesma linguagem do painel de login). */
 export const RecoveryCard: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
   <section
-    className={`relative overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-[var(--elevation-2)] px-6 py-7 sm:px-8 sm:py-8 ${className}`}
+    className={`relative overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-5 sm:px-7 sm:py-7 ${className}`}
   >
     <div aria-hidden="true" className="absolute inset-x-0 top-0 h-[2px] bg-[var(--color-accent)]/60" />
     {children}
@@ -89,7 +89,7 @@ const EYEBROW_TONE = {
 
 /** Rótulo de etapa em mono; o ponto colorido sinaliza o estado sem ícone gigante. */
 export const RecoveryEyebrow: React.FC<{ children: React.ReactNode; tone?: keyof typeof EYEBROW_TONE }> = ({ children, tone = 'neutral' }) => (
-  <p className="mb-3 flex items-center gap-2 font-mono text-xs uppercase tracking-[0.16em] text-[var(--color-text-secondary)]">
+  <p className="mb-2.5 flex items-center gap-2 text-sm font-semibold text-[var(--color-text-secondary)]">
     <span aria-hidden="true" className={`h-1.5 w-1.5 rounded-full ${EYEBROW_TONE[tone]}`} />
     {children}
   </p>

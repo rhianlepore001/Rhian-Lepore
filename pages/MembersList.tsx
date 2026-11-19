@@ -109,7 +109,7 @@ export const MembersList: React.FC = () => {
     };
 
     return (
-        <div className="max-w-6xl mx-auto px-4 py-8 space-y-6 pb-24">
+        <div className="max-w-6xl mx-auto py-2 md:py-5 space-y-4 md:space-y-6 pb-24">
             <PageHeader
                 title="Assinantes"
                 subtitle="Veja quem já assinou e confirme os pagamentos recebidos."
@@ -119,20 +119,20 @@ export const MembersList: React.FC = () => {
             {stats && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <Card>
-                        <p className={`text-xs ${colors.textMuted} uppercase tracking-widest`}>Ativos</p>
-                        <p className="text-3xl font-bold text-[var(--color-success)] mt-1">{stats.totalActive}</p>
+                        <p className={`text-xs ${colors.textMuted} font-semibold`}>Ativos</p>
+                        <p className="text-2xl font-bold tabular-nums text-[var(--color-success)] mt-1">{stats.totalActive}</p>
                     </Card>
                     <Card>
-                        <p className={`text-xs ${colors.textMuted} uppercase tracking-widest`}>Pendentes</p>
-                        <p className="text-3xl font-bold text-[var(--color-warning)] mt-1">{stats.totalPending}</p>
+                        <p className={`text-xs ${colors.textMuted} font-semibold`}>Pendentes</p>
+                        <p className="text-2xl font-bold tabular-nums text-[var(--color-warning)] mt-1">{stats.totalPending}</p>
                     </Card>
                     <Card>
-                        <p className={`text-xs ${colors.textMuted} uppercase tracking-widest`}>Atrasados</p>
-                        <p className="text-3xl font-bold text-[var(--color-danger)] mt-1">{stats.totalOverdue}</p>
+                        <p className={`text-xs ${colors.textMuted} font-semibold`}>Atrasados</p>
+                        <p className="text-2xl font-bold tabular-nums text-[var(--color-danger)] mt-1">{stats.totalOverdue}</p>
                     </Card>
                     <Card>
-                        <p className={`text-xs ${colors.textMuted} uppercase tracking-widest`}>Receita/mês (MRR)</p>
-                        <p className={`text-3xl font-bold ${colors.text} mt-1`}>
+                        <p className={`text-xs ${colors.textMuted} font-semibold`}>Receita/mês (MRR)</p>
+                        <p className={`text-[clamp(0.875rem,4vw,1.5rem)] font-bold tabular-nums [overflow-wrap:anywhere] ${colors.text} mt-1`}>
                             {formatCurrency(stats.monthlyRecurringRevenueCents / 100, region)}
                         </p>
                     </Card>
@@ -140,16 +140,17 @@ export const MembersList: React.FC = () => {
             )}
 
             <div className="flex flex-col md:flex-row gap-3 md:items-center">
-                <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 flex-1">
+                <div className="flex flex-wrap gap-1.5 flex-1" role="group" aria-label="Filtrar assinantes">
                     {TABS.map(t => (
                         <button
                             key={t.value}
                             type="button"
                             onClick={() => setTab(t.value)}
+                            aria-pressed={tab === t.value}
                             className={[
-                                'px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all',
+                                'min-h-11 px-3 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors',
                                 tab === t.value
-                                    ? `${accent.bg} text-[var(--color-bg)]`
+                                    ? `${accent.bg} text-[var(--color-on-accent)]`
                                     : `${colors.inputBg} ${colors.border} ${colors.textMuted} border hover:text-theme-textSecondary`,
                             ].join(' ')}
                         >
@@ -165,7 +166,7 @@ export const MembersList: React.FC = () => {
                         onChange={e => setSearch(e.target.value)}
                         placeholder="Buscar por nome, telefone ou plano"
                         aria-label="Buscar assinantes por nome, telefone ou plano"
-                        className={`pl-9 pr-3 py-2 ${classes.input} w-full md:w-72`}
+                        className={`min-h-12 pl-9 pr-3 py-2 ${classes.input} w-full md:w-72`}
                     />
                 </div>
             </div>

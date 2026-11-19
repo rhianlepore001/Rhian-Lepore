@@ -10,6 +10,7 @@ import '../styles/demo.css';
 const Dashboard = lazy(() => import('./Dashboard').then(m => ({ default: m.Dashboard })));
 const Agenda = lazy(() => import('./Agenda').then(m => ({ default: m.Agenda })));
 const Finance = lazy(() => import('./Finance').then(m => ({ default: m.Finance })));
+const HourlyResults = lazy(() => import('./HourlyResults').then(m => ({ default: m.HourlyResults })));
 const Performance = lazy(() => import('./StaffPerformance').then(m => ({ default: m.StaffPerformance })));
 const Booking = lazy(() => import('./PublicBooking').then(m => ({ default: m.PublicBooking })));
 const Queue = lazy(() => import('./QueueManagement').then(m => ({ default: m.QueueManagement })));
@@ -17,6 +18,16 @@ const Clients = lazy(() => import('./Clients').then(m => ({ default: m.Clients }
 const Team = lazy(() => import('./settings/TeamSettings').then(m => ({ default: m.TeamSettings })));
 
 export const DEMO_BUSINESS = { barber: 'Barbearia Corte Fino', beauty: 'Studio Aurora' } as const;
+
+const landingViews: Record<string, string> = {
+  '/': 'dashboard',
+  '/agenda': 'agenda',
+  '/clientes': 'clientes',
+  '/fila': 'fila',
+  '/financeiro': 'finance',
+  '/financeiro/performance': 'finance',
+  '/resultados-por-hora': 'finance',
+};
 
 const Unavailable = () => <section className="demo-unavailable" aria-labelledby="demo-unavailable-title">
   <h2 id="demo-unavailable-title">Esta tela não faz parte da simulação.</h2>
@@ -31,6 +42,7 @@ const Screens = () => <Routes>
   <Route path="/clientes" element={<Clients />} />
   <Route path="/financeiro" element={<Finance />} />
   <Route path="/financeiro/performance" element={<Performance />} />
+  <Route path="/resultados-por-hora" element={<HourlyResults />} />
   <Route path="/configuracoes/equipe" element={<Team />} />
   <Route path="*" element={<Unavailable />} />
 </Routes>;
@@ -42,6 +54,11 @@ export const Demo = () => {
   const location = useLocation();
   const inner = location.pathname.startsWith(`${base}/`) ? location.pathname.slice(base.length) : '/';
   const isBooking = inner.startsWith('/book/');
+  const landingSearch = new URLSearchParams({
+    tipo: niche,
+    tela: isBooking ? 'booking' : landingViews[inner] ?? 'agenda',
+    origem: 'demo',
+  });
   const [colorMode, setColorModeState] = useState<'light' | 'dark'>(() => getDemoColorMode());
   const setColorMode = (next: 'light' | 'dark' | ((prev: 'light' | 'dark') => 'light' | 'dark')) => {
     setColorModeState(prev => {
@@ -65,6 +82,7 @@ export const Demo = () => {
     root.setAttribute('data-theme', niche);
     root.setAttribute('data-mode', colorMode);
   }, [niche, colorMode]);
+  useLayoutEffect(() => { window.scrollTo(0, 0); }, [location.pathname]);
   useEffect(() => {
     const root = document.documentElement;
     const observer = new MutationObserver(() => {
@@ -80,7 +98,7 @@ export const Demo = () => {
   return <QueryClientProvider client={client}>
     <div className="demo-shell" data-embedded={embedded || undefined} style={{ '--safe-top': embedded ? '0px' : 'var(--demo-bar-height)' } as React.CSSProperties}>
       {!embedded && <header className="demo-bar">
-        <Link className="demo-bar-back" to="/landing" aria-label="Voltar ao site do AgendiX"><ArrowLeft size={16} aria-hidden="true" /><span>AgendiX</span></Link>
+        <Link className="demo-bar-back" to={{ pathname: '/landing', search: landingSearch.toString() }} aria-label="Voltar ao site do AgendiX"><ArrowLeft size={16} aria-hidden="true" /><span>AgendiX</span></Link>
         <div className="demo-bar-center">
           <span className="demo-badge">Simulação</span>
           <nav className="demo-niches" aria-label="Tipo de negócio">

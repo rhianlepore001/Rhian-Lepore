@@ -28,6 +28,21 @@ it('valida hora de cadeira com o mesmo schema do produto', async () => {
   const { data } = await createDemoClient().rpc('get_staff_performance_v1', { p_start: '2026-11-01', p_end: '2026-11-30' });
   expect(staffPerformanceResultSchema.safeParse(data).success).toBe(true);
 });
+it('classifica os serviços da demonstração do salão por categoria', async () => {
+  window.location.hash = '#/demo/beauty';
+  const client = createDemoClient();
+  const { data: categories } = await client.rpc('get_public_categories_catalog');
+  const { data: services } = await client.rpc('get_public_services_catalog');
+  const categoryIds = new Map(categories.map(({ name, id }: { name: string; id: string }) => [name, id]));
+  expect(services).toEqual(expect.arrayContaining([
+    expect.objectContaining({ name: 'Corte feminino', category_id: categoryIds.get('Cabelo') }),
+    expect.objectContaining({ name: 'Manicure', category_id: categoryIds.get('Unhas') }),
+    expect.objectContaining({ name: 'Design de sobrancelha', category_id: categoryIds.get('Sobrancelhas e cílios') }),
+    expect.objectContaining({ name: 'Maquiagem', category_id: categoryIds.get('Maquiagem') }),
+  ]));
+  expect(categories).toHaveLength(4);
+});
+
 it('oferece hora de cadeira no contrato consultado pela tela real', async () => {
   const { data } = await createDemoClient().rpc('get_chair_hour_v1', { p_month: new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date()).slice(0, 7) + '-01' });
   expect(data.professionals).toHaveLength(3);

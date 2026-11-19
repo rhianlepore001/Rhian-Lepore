@@ -2,6 +2,7 @@ import { demoCompanyId } from './mode';
 
 export type DemoRow = Record<string, any>;
 export type DemoTables = Record<string, DemoRow[]>;
+type CatalogService = readonly [name: string, price: number, durationMinutes: number, image: string, category?: string];
 const id = (niche: string, n: number) => `d0000000-0000-4000-${niche === 'beauty' ? '8002' : '8001'}-${String(n).padStart(12, '0')}`;
 export const DEMO_TIME_ZONE = 'America/Sao_Paulo';
 
@@ -45,11 +46,11 @@ const catalog = {
       ['Coloração', 220, 90, 'servico-coloracao.webp'],
       ['Mechas / Luzes', 320, 120, 'servico-mechas-luzes.webp'],
       ['Hidratação', 90, 45, 'servico-hidratacao.webp'],
-      ['Manicure', 55, 45, 'servico-manicure.webp'],
-      ['Pedicure', 65, 45, 'servico-pedicure.webp'],
-      ['Design de sobrancelha', 50, 30, 'servico-design-de-sobrancelha.webp'],
-      ['Extensão de cílios', 180, 90, 'servico-extensao-de-cilios.webp'],
-      ['Maquiagem', 190, 60, 'servico-maquiagem.webp'],
+      ['Manicure', 55, 45, 'servico-manicure.webp', 'Unhas'],
+      ['Pedicure', 65, 45, 'servico-pedicure.webp', 'Unhas'],
+      ['Design de sobrancelha', 50, 30, 'servico-design-de-sobrancelha.webp', 'Sobrancelhas e cílios'],
+      ['Extensão de cílios', 180, 90, 'servico-extensao-de-cilios.webp', 'Sobrancelhas e cílios'],
+      ['Maquiagem', 190, 60, 'servico-maquiagem.webp', 'Maquiagem'],
     ],
     team: ['Marina Costa', 'Luiza Martins', 'Ana Ribeiro'],
     clients: ['Beatriz Souza', 'Clara Ferreira', 'Juliana Alves', 'Camila Santos', 'Helena Lima', 'Isabela Rocha', 'Larissa Oliveira', 'Fernanda Carvalho', 'Mariana Nunes', 'Patrícia Martins', 'Renata Araújo', 'Sofia Dias', 'Amanda Barros', 'Letícia Pires'],
@@ -64,8 +65,14 @@ export function createDemoSeed(niche: 'barber' | 'beauty'): DemoTables {
   const today = dayString(now);
   const rand = random(beauty ? 7 : 3);
   const common = { user_id: company, company_id: company, business_id: company };
-  const category = id(niche, 10);
-  const services = data.services.map(([name, price, duration_minutes, image], i) => ({ ...common, id: id(niche, 20 + i), name, price, duration_minutes, category_id: category, active: true, description: null, image_url: `/demo/${data.folder}/${image}` }));
+  const catalogServices: readonly CatalogService[] = data.services;
+  const categoryNames = [...new Set(catalogServices.map(service => service[4] ?? data.category))];
+  const categories = categoryNames.map((name, index) => ({ ...common, id: id(niche, 10 + index), name, display_order: index }));
+  const categoryIds = new Map(categories.map(({ id, name }) => [name, id]));
+  const services = catalogServices.map(([name, price, duration_minutes, image, category = data.category], i) => ({
+    ...common, id: id(niche, 20 + i), name, price, duration_minutes, category_id: categoryIds.get(category),
+    active: true, description: null, image_url: `/demo/${data.folder}/${image}`,
+  }));
   const team = data.team.map((name, i) => ({ ...common, id: id(niche, 30 + i), name, active: true, is_owner: i === 0, commission_rate: 40, photo_url: null, staff_user_id: i === 0 ? company : null, specialties: [], work_schedule: null, deleted_at: null, email: null, phone: null, display_order: i }));
   // Telefones claramente fictícios para a simulação.
   const phone = (i: number) => `11 90000-${String(i + 1).padStart(4, '0')}`;
@@ -199,5 +206,5 @@ export function createDemoSeed(niche: 'barber' | 'beauty'): DemoTables {
   });
   const queue = [...queueActive, ...queueCompleted];
   const publicBookings = [[1, 10, 5, 0], [1, 15, 6, 2]].map(([dayOffset, hour, clientIndex, memberIndex], i) => ({ ...common, id: id(niche, 170 + i), customer_name: clients[clientIndex].name, customer_phone: clients[clientIndex].phone, appointment_time: at(shiftDay(today, dayOffset), hour), professional_id: team[memberIndex].id, service_ids: [services[(clientIndex + 1) % services.length].id], total_price: services[(clientIndex + 1) % services.length].price, duration_minutes: services[(clientIndex + 1) % services.length].duration_minutes, status: 'pending', is_edit: false, created_at: queueMinutesAgo(40 + i * 25), notes: null }));
-  return { profiles: [profile], business_settings: [settings], services, service_categories: [{ ...common, id: category, name: data.category }], team_members: team, clients, appointments, finance_records: [...finance, ...expenses], notifications: [], onboarding_progress: [{ company_id: company, is_completed: true }], agenda_blocks: [], public_bookings: publicBookings, public_clients: [], appointment_reschedules: [], products: [], appointment_products: [], product_sales: [], team_member_services: [], client_dependents: [], goal_settings: [], client_photos: [], commission_payments: [], business_galleries: gallery, queue_entries: queue };
+  return { profiles: [profile], business_settings: [settings], services, service_categories: categories, team_members: team, clients, appointments, finance_records: [...finance, ...expenses], notifications: [], onboarding_progress: [{ company_id: company, is_completed: true }], agenda_blocks: [], public_bookings: publicBookings, public_clients: [], appointment_reschedules: [], products: [], appointment_products: [], product_sales: [], team_member_services: [], client_dependents: [], goal_settings: [], client_photos: [], commission_payments: [], business_galleries: gallery, queue_entries: queue };
 }

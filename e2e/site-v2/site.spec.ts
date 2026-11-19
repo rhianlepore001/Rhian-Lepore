@@ -49,7 +49,7 @@ for (const width of [1440, 390]) {
     await expect(page.getByLabel('E-mail', { exact: true })).toBeVisible();
     await expect(page.getByLabel('Senha', { exact: true })).toBeVisible();
     await page.goto('/#/landing');
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('Seu talento cuida dos clientes.');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Agenda em dia.');
     await expect(page.getByRole('link', { name: 'AgendiX, início' })).toHaveAttribute('href', '/#/landing');
   });
   test(`demo isolada ${width}px`, async ({ page }) => {
@@ -120,7 +120,7 @@ for (const width of [1440, 390]) {
   test(`landing e capturas ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
     await page.goto('/#/landing');
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('Seu talento cuida dos clientes.');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Agenda em dia.');
     await expect(page.getByRole('link', { name: 'Entrar', exact: true })).toHaveAttribute('href', '/#/login');
     await expect(page.getByRole('link', { name: 'Crie sua conta grátis', exact: true }).first()).toHaveAttribute('href', '/#/register');
     if (width === 390) {
@@ -137,6 +137,17 @@ for (const width of [1440, 390]) {
     await prepareLandingCapture(page);
     mkdirSync(path.join(artifactsDir, 'landing-shots'), { recursive: true });
     await page.screenshot({ path: path.join(artifactsDir, `landing-shots/landing-${width}.png`), fullPage: true });
+    const resultsLink = page.locator('#produto').getByRole('link', { name: /^Resultados por hora/ });
+    const resultsTitle = page.getByRole('heading', { name: 'Resultados por hora', level: 1 });
+    await resultsLink.click();
+    await expect(page).toHaveURL('/#/demo/barber/resultados-por-hora');
+    await expect(resultsTitle).toBeInViewport();
+    await page.locator('.demo-niches').getByRole('link', { name: 'Salão', exact: true }).click();
+    await expect(page).toHaveURL('/#/demo/beauty/resultados-por-hora');
+    await expect(resultsTitle).toBeInViewport();
+    await page.getByRole('link', { name: 'Voltar ao site do AgendiX' }).click();
+    await resultsLink.click();
+    await expect(resultsTitle).toBeInViewport();
   });
 }
 
@@ -150,7 +161,7 @@ for (const width of [320, 390, 768, 1440]) {
     await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
     await expect(page.locator('.landing-hero .landing-button').first()).toBeInViewport();
     await expect(page.locator('.landing-hero .landing-phone')).toBeInViewport();
-    await expect(page.locator('.landing img[src*="/phone-"]:not(.landing-phone img)')).toHaveCount(0);
+    await expect(page.locator('.landing-demo-poster img')).toHaveAttribute('src', '/landing/phone-barber-booking.webp');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     expect(await page.locator('meta[name="viewport"]').getAttribute('content')).not.toContain('user-scalable=no');
 
@@ -163,6 +174,10 @@ for (const width of [320, 390, 768, 1440]) {
 
     const menu = page.getByRole('button', { name: 'Abrir menu' });
     if (await menu.isVisible()) {
+      const box = await menu.boundingBox();
+      expect(box?.width).toBeGreaterThanOrEqual(48);
+      expect(box?.height).toBeGreaterThanOrEqual(48);
+      expect(box && box.x + box.width).toBeLessThanOrEqual(width);
       await menu.focus();
       await page.keyboard.press('Enter');
       await expect(page.getByRole('button', { name: 'Fechar menu' })).toHaveAttribute('aria-expanded', 'true');
@@ -194,6 +209,11 @@ for (const width of [320, 390, 768, 1440]) {
       await expect(page).toHaveURL(/#\/demo\/beauty\/financeiro$/);
       await expect(page.locator('html')).toHaveAttribute('data-theme', 'beauty');
       await expect(page.getByText('Lucro', { exact: true })).toBeVisible();
+      await page.getByRole('link', { name: 'Voltar ao site do AgendiX' }).click();
+      await expect(page.locator('#demonstracao')).toBeFocused();
+      await expect(business.getByRole('button', { name: 'Salão de beleza', exact: true })).toHaveAttribute('aria-pressed', 'true');
+      await expect(views.getByRole('button', { name: 'Financeiro', exact: true })).toHaveAttribute('aria-pressed', 'true');
+      await expect(page.locator('.landing-hero .landing-button')).toHaveAttribute('href', '/#/register?type=beauty');
     }
     expect(runtimeErrors).toEqual([]);
   });
@@ -221,6 +241,17 @@ test('explora a demonstração embutida mantendo segmento e tarefa sem integraç
   await expect(iframe).toHaveAttribute('src', '/demo-preview#/demo/beauty/book/simulacao');
   await expect(frame.getByText('Escolha seus serviços', { exact: true })).toBeVisible();
   await expect(frame.getByRole('heading', { name: /Studio Aurora/ }).first()).toBeVisible();
+  const nailsFilter = frame.getByRole('button', { name: /^Unhas$/i });
+  await nailsFilter.click();
+  await expect(nailsFilter).toHaveAttribute('aria-pressed', 'true');
+  await expect(nailsFilter).toHaveCSS('color', 'rgb(255, 255, 255)');
+  const manicure = frame.getByRole('button', { name: /Manicure/i });
+  await expect(manicure).toBeVisible();
+  await expect(frame.getByText('Corte feminino', { exact: true })).toHaveCount(0);
+  await manicure.press('Space');
+  await expect(manicure).toHaveAttribute('aria-pressed', 'true');
+  await frame.getByRole('button', { name: /Continuar/ }).first().press('Enter');
+  await expect(frame.getByRole('heading', { name: 'Escolha o profissional' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Abrir em tela cheia', exact: true })).toHaveAttribute('href', '/#/demo/beauty/book/simulacao');
   await business.getByRole('button', { name: 'Barbearia', exact: true }).click();
   await expect(frame.locator('html')).toHaveAttribute('data-theme', 'barber');
@@ -268,7 +299,7 @@ test('usa o tema claro padrão no agendamento da demo sem alterar o modo salvo',
   expect(await page.evaluate(() => localStorage.getItem('agendix_color_mode'))).toBe('dark');
   verify();
   await page.getByRole('link', { name: /AgendiX/i }).click();
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('Seu talento cuida dos clientes.');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Agenda em dia.');
   await expect(page.locator('html')).toHaveAttribute('data-mode', 'dark');
   expect(await page.evaluate(() => localStorage.getItem('agendix_color_mode'))).toBe('dark');
 });

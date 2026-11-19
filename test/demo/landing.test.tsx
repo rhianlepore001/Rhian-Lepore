@@ -1,14 +1,17 @@
 import React from 'react';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { Landing } from '../../pages/Landing';
 
+const renderLanding = () => render(<MemoryRouter><Landing /></MemoryRouter>);
+
 describe('site oficial', () => {
   it('aponta para os fluxos reais de entrada e cadastro', () => {
-    render(<Landing />);
+    renderLanding();
     expect(screen.getByRole('img', { name: 'AgendiX' })).toHaveAttribute('src', '/landing/agendix-logo-header.webp');
     expect(screen.getByRole('link', { name: 'Entrar' })).toHaveAttribute('href', '/#/login');
     expect(screen.getAllByRole('link', { name: /Crie sua conta grátis/ })[0]).toHaveAttribute('href', '/#/register');
@@ -27,7 +30,7 @@ describe('site oficial', () => {
     viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
     document.head.append(viewport);
     const previous = viewport.content;
-    const { unmount } = render(<Landing />);
+    const { unmount } = renderLanding();
     expect(viewport.content).not.toContain('user-scalable=no');
     expect(viewport.content).not.toContain('maximum-scale=1.0');
     expect(document.documentElement).toHaveAttribute('data-surface', 'marketing');
@@ -37,7 +40,7 @@ describe('site oficial', () => {
     viewport.remove();
   });
   it('mantém o salão escolhido nos convites de cadastro e demonstração', async () => {
-    const { container } = render(<Landing />);
+    const { container } = renderLanding();
     const choices = screen.getByRole('group', { name: 'Negócio da demonstração' });
     await userEvent.click(within(choices).getByRole('button', { name: 'Salão de beleza' }));
     expect(within(choices).getByRole('button', { name: 'Salão de beleza' })).toHaveAttribute('aria-pressed', 'true');
@@ -50,23 +53,23 @@ describe('site oficial', () => {
     expect(screen.getByRole('link', { name: 'Entrar' })).toHaveAttribute('href', '/#/login');
   });
   it('personaliza a experiência desde o primeiro bloco e preserva o cadastro após a demo', async () => {
-    const { container } = render(<Landing />);
+    const { container } = renderLanding();
     const heroChoices = screen.getByRole('group', { name: 'Seu tipo de negócio' });
     await userEvent.click(within(heroChoices).getByRole('button', { name: 'Salão de beleza' }));
-    expect(container.querySelector('.landing-demo-poster img')).toHaveAttribute('src', '/landing/phone-beauty-dashboard.webp');
-    expect(container.querySelector('.landing-demo-conversion .landing-button')).toHaveAttribute('href', '/#/register?type=beauty');
+    expect(container.querySelector('.landing-demo-poster img')).toHaveAttribute('src', '/landing/phone-beauty-booking.webp');
+    expect(container.querySelector('.landing-demo-conversion a')).toHaveAttribute('href', '/#/register?type=beauty');
     const views = screen.getByRole('group', { name: 'Tela da demonstração' });
     await userEvent.click(within(views).getByRole('button', { name: 'Financeiro' }));
     expect(container.querySelector('.landing-demo-task')).toHaveTextContent('movimento ilustrativo do período');
     expect(container.querySelector('.landing-demo-poster img')).toHaveAttribute('src', '/landing/phone-beauty-finance.webp');
   });
   it('explica o cadastro sem cartão e mantém o prazo da oferta neutro', () => {
-    const { container } = render(<Landing />);
-    expect(container).toHaveTextContent(/Sem cartão no cadastro/i);
+    const { container } = renderLanding();
+    expect(container).toHaveTextContent(/Teste sem cartão. Depois, você decide se quer assinar./i);
     expect(container.textContent).not.toMatch(/\d+\s*dias\s*(grátis|de teste|de período)|teste grátis/i);
   });
   it('carrega a simulação apenas sob demanda e respeita a tela escolhida', async () => {
-    const { container } = render(<Landing />);
+    const { container } = renderLanding();
     const business = screen.getByRole('group', { name: 'Negócio da demonstração' });
     const views = screen.getByRole('group', { name: 'Tela da demonstração' });
     await userEvent.click(within(business).getByRole('button', { name: 'Salão de beleza' }));

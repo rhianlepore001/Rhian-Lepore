@@ -217,7 +217,7 @@ export const PublicBooking: React.FC = () => {
         }
     }, [business, themeOverride]);
 
-    const accentTextOnAccent = isBeauty ? 'text-[var(--color-text)]' : 'text-[var(--color-on-accent)]';
+    const accentTextOnAccent = 'text-[var(--color-on-accent)]';
     // Classes literais estáticas (variante interpolada não gera CSS no build estático do Tailwind)
     const selectionClasses = isBeauty
         ? 'selection:bg-theme-accent selection:text-[#fff]'
@@ -1036,7 +1036,7 @@ export const PublicBooking: React.FC = () => {
                             {(categories.length > 0 || publicProducts.length > 0) && (
                                 <div className={`p-1.5 ${colors.card} ${colors.border} border rounded-2xl backdrop-blur-xl`}>
                                     <div className="w-full flex gap-2 overflow-x-auto pb-2 pt-1 px-1 scrollbar-thin">
-                                        <button onClick={() => setActiveCategory('all')}
+                                        <button type="button" aria-pressed={activeCategory === 'all'} onClick={() => setActiveCategory('all')}
                                             className={`px-5 md:px-8 py-2.5 rounded-xl text-xs font-black uppercase tracking-[0.15em] transition-all duration-200 ${activeCategory === 'all'
                                                     ? `${accent.bg} ${accentTextOnAccent} scale-105 ${shadow.button}`
                                                     : `${colors.textMuted} hover:bg-[var(--color-card-hover)]`
@@ -1044,7 +1044,7 @@ export const PublicBooking: React.FC = () => {
                                             Todos
                                         </button>
                                         {categories.map(cat => (
-                                            <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
+                                            <button key={cat.id} type="button" aria-pressed={activeCategory === cat.id} onClick={() => setActiveCategory(cat.id)}
                                                 className={`px-5 md:px-8 py-2.5 rounded-xl border text-xs font-black uppercase tracking-[0.15em] transition-all duration-200 ${activeCategory === cat.id
                                                         ? `${accent.bg} ${accentTextOnAccent} scale-105 ${shadow.button}`
                                                         : `${colors.textMuted} ${colors.border} hover:bg-[var(--color-card-hover)]`
@@ -1054,6 +1054,8 @@ export const PublicBooking: React.FC = () => {
                                         ))}
                                         {publicProducts.length > 0 && (
                                             <button
+                                                type="button"
+                                                aria-pressed={activeCategory === '__products__'}
                                                 onClick={() => setActiveCategory('__products__')}
                                                 className={`px-5 md:px-8 py-2.5 rounded-xl border text-xs font-black uppercase tracking-[0.15em] transition-all duration-200 ${activeCategory === '__products__'
                                                         ? `${accent.bg} ${accentTextOnAccent} scale-105 ${shadow.button}`
@@ -1124,59 +1126,59 @@ export const PublicBooking: React.FC = () => {
                                 }).map((service, sIdx) => {
                                     const isSelected = selectedServices.includes(service.id);
                                     return (
-                                        <div key={service.id}
+                                        <button key={service.id} type="button" aria-pressed={isSelected}
                                             onClick={() => toggleService(service.id)}
                                             className={`
-                                                relative overflow-hidden cursor-pointer transition-all duration-300 animate-reveal-fragment group
+                                                relative overflow-hidden cursor-pointer text-left transition-all duration-300 animate-reveal-fragment group focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]
                                                 rounded-2xl
                                                 ${isSelected
                                                     ? `md:scale-[1.02] ${shadow.glow} ring-2 ${accent.ring}`
                                                     : `${colors.card} ${colors.border} border ${shadow.card} hover:-translate-y-1`
                                                 }
                                             `}>
-                                            <div className="h-36 sm:h-44 md:h-48 relative overflow-hidden bg-[var(--color-card)]">
+                                            <span className="block h-36 sm:h-44 md:h-48 relative overflow-hidden bg-[var(--color-card)]">
                                                 {service.image_url ? (
-                                                    <img src={service.image_url} alt={service.name} loading="lazy" decoding="async" width={400} height={300} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.03]" />
+                                                    <img src={service.image_url} alt="" loading="lazy" decoding="async" width={400} height={300} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.03]" />
                                                 ) : (
-                                                    <div className={`w-full h-full flex items-center justify-center ${colors.surface}`}>
+                                                    <span className={`w-full h-full flex items-center justify-center ${colors.surface}`}>
                                                         <Sparkles className={`w-12 h-12 opacity-10 ${accent.text}`} />
-                                                    </div>
+                                                    </span>
                                                 )}
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                                                <div className={`absolute top-4 left-4 px-3 py-1 backdrop-blur-md border rounded-full text-xs font-black uppercase tracking-[0.1em] ${colors.card} ${colors.border} ${colors.textSecondary}`}>
+                                                <span className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                                                <span className={`absolute top-4 left-4 px-3 py-1 backdrop-blur-md border rounded-full text-xs font-black uppercase tracking-[0.1em] ${colors.card} ${colors.border} ${colors.textSecondary}`}>
                                                     {categories.find(c => c.id === service.category_id)?.name || 'Serviço'}
-                                                </div>
-                                                <div className={`absolute top-4 right-4 w-10 h-10 flex items-center justify-center border-2 transition-all duration-200 rounded-full ${isSelected ? `${accent.bg} ${colors.border} ${accentTextOnAccent}` : 'bg-[var(--color-bg)]/20 border-[var(--color-border-strong)] text-transparent'}`}>
-                                                    <Check className="w-6 h-6" />
-                                                </div>
-                                            </div>
-                                            <div className="p-6">
-                                                <div className="flex justify-between items-end">
-                                                    <div className="flex-1 space-y-3">
-                                                        <h4 className={`text-xl font-black tracking-tight ${colors.text} group-hover:text-theme-accent transition-colors duration-200`}>
+                                                </span>
+                                                <span className={`absolute top-4 right-4 w-10 h-10 flex items-center justify-center border-2 transition-all duration-200 rounded-full ${isSelected ? `${accent.bg} ${colors.border} ${accentTextOnAccent}` : 'bg-[var(--color-bg)]/20 border-[var(--color-border-strong)] text-transparent'}`}>
+                                                    <Check className="w-6 h-6" aria-hidden="true" />
+                                                </span>
+                                            </span>
+                                            <span className="block p-6">
+                                                <span className="flex justify-between items-end">
+                                                    <span className="block flex-1 space-y-3">
+                                                        <span className={`block text-xl font-black tracking-tight ${colors.text} group-hover:text-theme-accent transition-colors duration-200`}>
                                                             {service.name}
-                                                        </h4>
+                                                        </span>
                                                         {service.description && (
-                                                            <p className={`text-xs line-clamp-1 opacity-50 ${colors.textSecondary}`}>
+                                                            <span className={`text-xs line-clamp-1 opacity-50 ${colors.textSecondary}`}>
                                                                 {service.description}
-                                                            </p>
+                                                            </span>
                                                         )}
-                                                        <div className="flex items-center gap-4">
+                                                        <span className="flex items-center gap-4">
                                                             <span className={`text-base font-black tracking-tight ${accent.text}`}>
                                                                 {formatCurrency(service.price, currencyRegion)}
                                                             </span>
-                                                            <div className={`w-1 h-1 rounded-full ${colors.textMuted}`} />
+                                                            <span className={`w-1 h-1 rounded-full ${colors.textMuted}`} />
                                                             <span className={`text-xs font-bold ${colors.textMuted} flex items-center gap-1.5`}>
                                                                 <Clock className="w-3.5 h-3.5" /> {service.duration_minutes} min
                                                             </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                                        </span>
+                                                    </span>
+                                                </span>
+                                            </span>
                                             {isSelected && (
-                                                <div className={`absolute bottom-0 left-0 right-0 h-1 ${accent.bg} animate-shimmer`} />
+                                                <span className={`absolute bottom-0 left-0 right-0 h-1 ${accent.bg} animate-shimmer`} />
                                             )}
-                                        </div>
+                                        </button>
                                     );
                                 })}
                             </div>
@@ -1221,12 +1223,12 @@ export const PublicBooking: React.FC = () => {
 
                             {professionalCategories.length > 0 && (
                                 <div className="flex flex-wrap gap-2">
-                                    <button onClick={() => setActiveProfessionalCategory('all')}
+                                    <button type="button" aria-pressed={activeProfessionalCategory === 'all'} onClick={() => setActiveProfessionalCategory('all')}
                                         className={`px-4 py-2 text-xs font-black uppercase tracking-[0.15em] transition-all rounded-lg ${activeProfessionalCategory === 'all' ? `${accent.bg} ${accentTextOnAccent}` : `${colors.surface} ${colors.textMuted} ${colors.border} border`}`}>
                                         Todos
                                     </button>
                                     {professionalCategories.map((cat) => (
-                                        <button key={cat} onClick={() => setActiveProfessionalCategory(cat)}
+                                        <button key={cat} type="button" aria-pressed={activeProfessionalCategory === cat} onClick={() => setActiveProfessionalCategory(cat)}
                                             className={`px-4 py-2 text-xs font-black uppercase tracking-[0.15em] transition-all rounded-lg ${activeProfessionalCategory === cat ? `${accent.bg} ${accentTextOnAccent}` : `${colors.surface} ${colors.textMuted} ${colors.border} border`}`}>
                                             {cat}
                                         </button>
@@ -1540,7 +1542,7 @@ export const PublicBooking: React.FC = () => {
                                                     <div className="animate-reveal-fragment duration-700">
                                                         <div className={`p-1.5 ${colors.card} ${colors.border} border rounded-2xl backdrop-blur-xl`}>
                                                             <div className="w-full flex gap-2 overflow-x-auto pb-2 pt-1 px-1 scrollbar-thin">
-                                                                <button onClick={() => setActiveCategory('all')}
+                                                                <button type="button" aria-pressed={activeCategory === 'all'} onClick={() => setActiveCategory('all')}
                                                                     className={`px-5 md:px-8 py-2.5 rounded-xl text-xs font-black uppercase tracking-[0.15em] transition-all duration-200 ${activeCategory === 'all'
                                                                             ? `${accent.bg} ${accentTextOnAccent} ${shadow.button} scale-105`
                                                                             : `${colors.textMuted} hover:bg-[var(--color-card-hover)]`
@@ -1548,7 +1550,7 @@ export const PublicBooking: React.FC = () => {
                                                                     Todos
                                                                 </button>
                                                                 {categories.map(cat => (
-                                                                    <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
+                                                                    <button key={cat.id} type="button" aria-pressed={activeCategory === cat.id} onClick={() => setActiveCategory(cat.id)}
                                                                         className={`px-5 md:px-8 py-2.5 rounded-xl border text-xs font-black uppercase tracking-[0.15em] transition-all duration-200 ${activeCategory === cat.id
                                                                                 ? `${accent.bg} ${accentTextOnAccent} ${shadow.button} scale-105`
                                                                                 : `${colors.textMuted} ${colors.border} hover:bg-[var(--color-card-hover)]`
@@ -1588,55 +1590,55 @@ export const PublicBooking: React.FC = () => {
                                                         }).map((service, sIdx) => {
                                                             const isSelected = selectedServices.includes(service.id);
                                                             return (
-                                                                <div key={service.id}
+                                                                <button key={service.id} type="button" aria-pressed={isSelected}
                                                                     onClick={() => toggleService(service.id)}
-                                                                    className={`relative overflow-hidden cursor-pointer transition-all duration-300 animate-reveal-fragment group rounded-2xl ${isSelected
+                                                                    className={`relative overflow-hidden cursor-pointer text-left transition-all duration-300 animate-reveal-fragment group focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] rounded-2xl ${isSelected
                                                                             ? `md:scale-[1.03] ${shadow.glow} ring-2 ${accent.ring}`
                                                                             : `${colors.card} ${colors.border} border ${shadow.card} hover:-translate-y-1`
                                                                         }`}>
-                                                                    <div className="h-36 sm:h-44 md:h-48 relative overflow-hidden bg-[var(--color-card)]">
+                                                                    <span className="block h-36 sm:h-44 md:h-48 relative overflow-hidden bg-[var(--color-card)]">
                                                                         {service.image_url ? (
-                                                                            <img src={service.image_url} alt={service.name} loading="lazy" decoding="async" width={400} height={300} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.03]" />
+                                                                            <img src={service.image_url} alt="" loading="lazy" decoding="async" width={400} height={300} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.03]" />
                                                                         ) : (
-                                                                            <div className={`w-full h-full flex items-center justify-center ${colors.surface}`}>
+                                                                            <span className={`w-full h-full flex items-center justify-center ${colors.surface}`}>
                                                                                 <Sparkles className={`w-12 h-12 opacity-10 ${accent.text}`} />
-                                                                            </div>
+                                                                            </span>
                                                                         )}
-                                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                                                                        <div className={`absolute top-4 left-4 px-3 py-1 backdrop-blur-md border rounded-full text-xs font-black uppercase tracking-[0.1em] ${colors.card} ${colors.border} ${colors.textSecondary}`}>
+                                                                        <span className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                                                                        <span className={`absolute top-4 left-4 px-3 py-1 backdrop-blur-md border rounded-full text-xs font-black uppercase tracking-[0.1em] ${colors.card} ${colors.border} ${colors.textSecondary}`}>
                                                                             {categories.find(c => c.id === service.category_id)?.name || 'Serviço'}
-                                                                        </div>
-                                                                        <div className={`absolute top-4 right-4 w-10 h-10 flex items-center justify-center border-2 transition-all duration-200 rounded-full ${isSelected ? `${accent.bg} ${colors.border} ${accentTextOnAccent}` : 'bg-[var(--color-bg)]/20 border-[var(--color-border-strong)] text-transparent'}`}>
-                                                                            <Check className="w-6 h-6" />
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className="p-6">
-                                                                        <div className="flex justify-between items-end">
-                                                                            <div className="flex-1 space-y-3">
-                                                                                <h4 className={`text-2xl font-black tracking-tight ${colors.text} group-hover:text-theme-accent transition-colors duration-200`}>
+                                                                        </span>
+                                                                        <span className={`absolute top-4 right-4 w-10 h-10 flex items-center justify-center border-2 transition-all duration-200 rounded-full ${isSelected ? `${accent.bg} ${colors.border} ${accentTextOnAccent}` : 'bg-[var(--color-bg)]/20 border-[var(--color-border-strong)] text-transparent'}`}>
+                                                                            <Check className="w-6 h-6" aria-hidden="true" />
+                                                                        </span>
+                                                                    </span>
+                                                                    <span className="block p-6">
+                                                                        <span className="flex justify-between items-end">
+                                                                            <span className="block flex-1 space-y-3">
+                                                                                <span className={`block text-2xl font-black tracking-tight ${colors.text} group-hover:text-theme-accent transition-colors duration-200`}>
                                                                                     {service.name}
-                                                                                </h4>
+                                                                                </span>
                                                                                 {service.description && (
-                                                                                    <p className={`text-xs line-clamp-1 opacity-50 ${colors.textSecondary}`}>
+                                                                                    <span className={`text-xs line-clamp-1 opacity-50 ${colors.textSecondary}`}>
                                                                                         {service.description}
-                                                                                    </p>
+                                                                                    </span>
                                                                                 )}
-                                                                                <div className="flex items-center gap-4">
+                                                                                <span className="flex items-center gap-4">
                                                                                     <span className={`text-base font-black tracking-tight ${accent.text}`}>
                                                                                         {formatCurrency(service.price, currencyRegion)}
                                                                                     </span>
-                                                                                    <div className={`w-1 h-1 rounded-full ${colors.textMuted}`} />
+                                                                                    <span className={`w-1 h-1 rounded-full ${colors.textMuted}`} />
                                                                                     <span className={`text-xs font-bold ${colors.textMuted} flex items-center gap-1.5`}>
                                                                                         <Clock className="w-3.5 h-3.5" /> {service.duration_minutes} min
                                                                                     </span>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
+                                                                                </span>
+                                                                            </span>
+                                                                        </span>
+                                                                    </span>
                                                                     {isSelected && (
-                                                                        <div className={`absolute bottom-0 left-0 right-0 h-1 ${accent.bg} animate-shimmer`} />
+                                                                        <span className={`absolute bottom-0 left-0 right-0 h-1 ${accent.bg} animate-shimmer`} />
                                                                     )}
-                                                                </div>
+                                                                </button>
                                                             );
                                                         })}
                                                     </div>
@@ -1647,12 +1649,12 @@ export const PublicBooking: React.FC = () => {
                                                 <div className="w-full space-y-6">
                                                     {professionalCategories.length > 0 && (
                                                         <div className="flex flex-wrap gap-2">
-                                                            <button onClick={() => setActiveProfessionalCategory('all')}
+                                                            <button type="button" aria-pressed={activeProfessionalCategory === 'all'} onClick={() => setActiveProfessionalCategory('all')}
                                                                 className={`px-4 py-2 text-xs font-black uppercase tracking-[0.15em] transition-all rounded-lg ${activeProfessionalCategory === 'all' ? `${accent.bg} ${accentTextOnAccent}` : `${colors.surface} ${colors.textMuted} ${colors.border} border`}`}>
                                                                 Todos
                                                             </button>
                                                             {professionalCategories.map((cat) => (
-                                                                <button key={cat} onClick={() => setActiveProfessionalCategory(cat)}
+                                                                <button key={cat} type="button" aria-pressed={activeProfessionalCategory === cat} onClick={() => setActiveProfessionalCategory(cat)}
                                                                     className={`px-4 py-2 text-xs font-black uppercase tracking-[0.15em] transition-all rounded-lg ${activeProfessionalCategory === cat ? `${accent.bg} ${accentTextOnAccent}` : `${colors.surface} ${colors.textMuted} ${colors.border} border`}`}>
                                                                     {cat}
                                                                 </button>

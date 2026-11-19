@@ -21,7 +21,7 @@ export const FinanceKpi: React.FC<FinanceKpiProps> = ({ title, value, subtitle, 
           {icon}
         </span>
         <p data-kpi-label className={`text-sm font-semibold leading-snug ${colors.textSecondary}`}>{title}</p>
-        <p data-kpi-value className={`col-span-2 font-mono text-[clamp(0.875rem,4vw,1.375rem)] font-bold tracking-tight tabular-nums [overflow-wrap:anywhere] ${colors.text}`}>{value}</p>
+        <p data-kpi-value className={`col-span-2 font-mono text-[clamp(1.125rem,4vw,1.375rem)] font-bold tracking-tight tabular-nums [overflow-wrap:anywhere] ${colors.text}`}>{value}</p>
         <p className={`col-span-2 text-xs leading-snug ${colors.textSecondary}`}>{subtitle}</p>
       </div>
     </div>

@@ -68,43 +68,27 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
     return (
         <div className={`relative w-full overflow-hidden ${colors.bg}`}>
             {/* Cover / Hero — Mobile-first height */}
-            <div className="relative h-[28vh] min-h-[180px] max-h-[240px] md:h-[42vh] md:max-h-none md:min-h-[280px] w-full overflow-hidden">
+            <div className="relative h-[clamp(9rem,23svh,12rem)] md:h-[34vh] md:min-h-[230px] w-full overflow-hidden">
                 {coverPhotoUrl ? (
                     <img
                         src={coverPhotoUrl}
                         decoding="async"
                         alt={businessName}
-                        className="w-full h-full object-cover scale-105 transition-transform duration-[8000ms] hover:scale-100"
+                        className="w-full h-full object-cover object-center"
                     />
                 ) : (
                     <div className={`w-full h-full ${isBeauty
                         ? 'bg-gradient-to-br from-[var(--color-bg)] via-[var(--color-card)] to-[var(--color-surface)]'
                         : 'bg-gradient-to-br from-neutral-900 via-neutral-800 to-black'
                         }`}>
-                        {/* Padrão decorativo no fallback */}
-                        <div className="absolute inset-0 opacity-10"
-                            style={{
-                                backgroundImage: `repeating-linear-gradient(45deg, ${isBeauty ? 'var(--color-accent)' : 'var(--color-accent)'} 0, ${isBeauty ? 'var(--color-accent)' : 'var(--color-accent)'} 1px, transparent 0, transparent 50%)`,
-                                backgroundSize: '20px 20px'
-                            }} />
                     </div>
                 )}
 
-                {/* Gradiente triplo */}
-                <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/20 to-black/85" />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-transparent hidden md:block" />
-
-                {/* Nome gigante no fundo (detalhe brutalista) */}
-                <div className="absolute -bottom-4 -left-4 opacity-[0.06] select-none hidden lg:block pointer-events-none overflow-hidden">
-                    <span className="font-black text-[var(--color-text)] whitespace-nowrap"
-                        style={{ fontSize: '9rem', fontFamily: 'Chivo, sans-serif', textTransform: 'uppercase', letterSpacing: '-0.04em', lineHeight: 1 }}>
-                        {businessName}
-                    </span>
-                </div>
+                <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/55" />
 
                 {/* Badge de segmento + toggle dark/light */}
-                <div className="absolute top-[calc(1.25rem+var(--safe-top))] left-5 z-20 flex items-center gap-2">
-                    <div className={`flex items-center gap-2 px-4 py-1.5 backdrop-blur-xl rounded-full border text-xs font-bold uppercase tracking-[0.18em] ${colors.card} ${colors.border} ${colors.textSecondary}`}>
+                <div className="absolute top-[calc(0.75rem+var(--safe-top))] left-3 sm:left-5 z-20 flex items-center gap-2">
+                    <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-full border text-xs font-semibold ${colors.card} ${colors.border} ${colors.textSecondary}`}>
                         <SegmentIcon className="w-3 h-3" />
                         {segmentLabel}
                     </div>
@@ -112,7 +96,7 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
                         onClick={toggleMode}
                         aria-label={mode === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'}
                         title={mode === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
-                        className={`p-2 backdrop-blur-xl rounded-full border transition-all duration-300 ${colors.card} ${colors.border} ${colors.text} hover:brightness-110`}
+                        className={`inline-flex h-11 w-11 items-center justify-center rounded-full border transition-colors ${colors.card} ${colors.border} ${colors.text} hover:brightness-110`}
                     >
                         <span
                             style={{
@@ -130,16 +114,16 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
 
                 {/* Sessão do Cliente (Canto Superior Direito) */}
                 {clientSession && businessSlug && (
-                    <div className="fixed top-[calc(1.25rem+var(--safe-top))] right-5 z-50">
-                        <a href={`/#/minha-area/${businessSlug}`}
-                            className={`group flex items-center gap-3 px-4 py-2 backdrop-blur-xl rounded-full border transition-all shadow-lg ${colors.card} ${colors.border} cursor-pointer hover:brightness-110`}>
-                            <div className="flex flex-col items-end">
+                    <div className="fixed top-[calc(0.75rem+var(--safe-top))] right-3 sm:right-5 z-50">
+                        <a href={`/#/minha-area/${businessSlug}`} aria-label="Abrir Minha Área"
+                            className={`group flex min-h-11 items-center gap-1.5 px-2 rounded-full border transition-colors ${colors.card} ${colors.border} cursor-pointer hover:brightness-110`}>
+                            <div className="hidden sm:flex flex-col items-end">
                                 <span className={`text-xs uppercase font-black tracking-widest ${colors.textMuted}`}>Sessão Ativa</span>
                                 <span className={`text-xs font-bold truncate max-w-[100px] ${colors.text}`}>{clientSession.name.split(' ')[0]}</span>
                             </div>
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center overflow-hidden border ${colors.surface} ${colors.border} ${colors.text}`}>
                                 {clientSession.photo_url ? (
-                                    <img src={clientSession.photo_url} alt="User" className="w-full h-full object-cover" />
+                                    <img src={clientSession.photo_url} alt="" className="w-full h-full object-cover" />
                                 ) : (
                                     <span className="font-bold text-sm tracking-tighter">{clientSession.name.charAt(0).toUpperCase()}</span>
                                 )}
@@ -150,12 +134,12 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
             </div>
 
             {/* Info Section */}
-            <div className="container mx-auto px-4 md:px-8 -mt-20 sm:-mt-24 md:-mt-36 relative z-20 pb-4 md:pb-10">
-                <div className="flex flex-col md:flex-row items-end gap-5 md:gap-12">
+            <div className="container mx-auto px-4 md:px-8 -mt-10 sm:-mt-12 md:-mt-20 relative z-20 pb-4 md:pb-6">
+                <div className="flex flex-col md:flex-row items-start md:items-end gap-3 md:gap-6">
 
                     {/* Logo */}
                     <div className="relative group flex-shrink-0">
-                        <div className={`w-28 h-28 md:w-44 md:h-44 rounded-2xl overflow-hidden ${colors.card} ${colors.border} border-4 ${shadow.elevated} transition-all duration-700 group-hover:scale-105 group-hover:-rotate-1 relative`}>
+                        <div className={`w-20 h-20 md:w-28 md:h-28 rounded-2xl overflow-hidden ${colors.card} ${colors.border} border-2 ${shadow.elevated} relative`}>
                             {logoUrl ? (
                                 <img src={logoUrl} alt={businessName} className="w-full h-full object-cover" />
                             ) : (
@@ -167,17 +151,12 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
                                 </div>
                             )}
                         </div>
-                        {/* Fragmento decorativo atrás do logo */}
-                        {!isBeauty && (
-                            <div className={`absolute -bottom-3 -right-3 w-full h-full ${accent.bg} opacity-20 -z-10 rotate-2 transition-transform group-hover:rotate-4 rounded-none`} />
-                        )}
                     </div>
 
                     {/* Informações */}
                     <div className="flex-1 flex flex-col items-start pb-0 md:pb-4 w-full min-w-0">
                         {/* Nome do estabelecimento */}
-                        <h1 className={`${colors.text} text-3xl md:text-5xl lg:text-6xl mb-2 leading-none font-black tracking-tight`}
-                            style={{ fontFamily: 'Chivo, sans-serif' }}>
+                        <h1 className={`${font.heading} ${colors.text} text-[clamp(1.625rem,6vw,3rem)] mb-1.5 leading-tight font-bold tracking-tight text-balance break-words`}>
                             {businessName}
                         </h1>
 
@@ -187,7 +166,7 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
                                 <Star className="w-3.5 h-3.5 text-[var(--color-warning)] fill-amber-400" />
                                 <span className="text-sm font-black tracking-tight">{rating.value}</span>
                                 <div className="w-px h-3 bg-current opacity-20" />
-                                <span className="text-xs uppercase font-bold tracking-[0.1em] opacity-60">
+                                <span className="text-xs uppercase font-medium">
                                     {rating.countLabel}
                                 </span>
                             </div>
@@ -197,31 +176,31 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
                         {address && (
                             <p className={`text-xs font-medium mb-3 flex items-center gap-1.5 ${colors.textMuted}`}>
                                 <MapPin className="w-3 h-3 flex-shrink-0" />
-                                <span className="truncate max-w-full sm:max-w-xs">{address}</span>
+                                <span className="break-words max-w-full">{address}</span>
                             </p>
                         )}
 
                         {/* Links sociais */}
-                        <div className="flex items-center gap-3 mt-1 flex-wrap">
+                        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                             {instagramLink && (
                                 <a href={instagramLink} target="_blank" rel="noopener noreferrer"
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-300 group ${colors.card} ${colors.border} ${colors.textSecondary} hover:bg-gradient-to-tr hover:from-purple-500 hover:to-pink-500 hover:text-[var(--color-text)] hover:border-transparent`}>
+                                    className={`inline-flex min-h-11 items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-colors ${colors.card} ${colors.border} ${colors.textSecondary} hover:bg-[var(--color-card-hover)] hover:text-theme-text`}>
                                     <Instagram className="w-4 h-4" />
-                                    <span className="text-xs font-bold uppercase tracking-widest hidden sm:block">Instagram</span>
+                                    <span className="text-xs font-semibold">Instagram</span>
                                 </a>
                             )}
                             {whatsappLink && (
                                 <a href={whatsappLink} target="_blank" rel="noopener noreferrer"
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-300 group ${colors.card} ${colors.border} ${colors.textSecondary} hover:bg-[var(--color-success)] hover:text-[var(--color-text)] hover:border-transparent`}>
+                                    className={`inline-flex min-h-11 items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-colors ${colors.card} ${colors.border} ${colors.textSecondary} hover:bg-[var(--color-card-hover)] hover:text-theme-text`}>
                                     <Phone className="w-4 h-4" />
-                                    <span className="text-xs font-bold uppercase tracking-widest hidden sm:block">WhatsApp</span>
+                                    <span className="text-xs font-semibold">WhatsApp</span>
                                 </a>
                             )}
                             {mapsLink && (
                                 <a href={mapsLink} target="_blank" rel="noopener noreferrer"
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-300 group ${colors.card} ${colors.border} ${colors.textSecondary} hover:bg-[var(--color-info)] hover:text-[var(--color-text)] hover:border-transparent`}>
+                                    className={`inline-flex min-h-11 items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-colors ${colors.card} ${colors.border} ${colors.textSecondary} hover:bg-[var(--color-card-hover)] hover:text-theme-text`}>
                                     <MapPin className="w-4 h-4" />
-                                    <span className="text-xs font-bold uppercase tracking-widest hidden sm:block">Como chegar</span>
+                                    <span className="text-xs font-semibold">Como chegar</span>
                                 </a>
                             )}
                         </div>
@@ -247,14 +226,14 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
                             type="button"
                             aria-label="Fotos anteriores do portfólio"
                             onClick={() => scrollGallery('left')}
-                            className={`absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center shadow-lg transition-all ${colors.card} ${colors.border} ${colors.text} rounded-full hover:brightness-110`}>
+                            className={`absolute left-2 top-1/2 -translate-y-1/2 z-10 w-11 h-11 flex items-center justify-center shadow-[var(--elevation-1)] transition-colors ${colors.card} ${colors.border} ${colors.text} rounded-full hover:brightness-110`}>
                             <ChevronLeft className="w-4 h-4" />
                         </button>
                         <button
                             type="button"
                             aria-label="Próximas fotos do portfólio"
                             onClick={() => scrollGallery('right')}
-                            className={`absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center shadow-lg transition-all ${colors.card} ${colors.border} ${colors.text} rounded-full hover:brightness-110`}>
+                            className={`absolute right-2 top-1/2 -translate-y-1/2 z-10 w-11 h-11 flex items-center justify-center shadow-[var(--elevation-1)] transition-colors ${colors.card} ${colors.border} ${colors.text} rounded-full hover:brightness-110`}>
                             <ChevronRight className="w-4 h-4" />
                         </button>
 
@@ -266,7 +245,7 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
                             {gallery.map((item) => (
                                 <div
                                     key={item.id}
-                                    className={`flex-shrink-0 w-[140px] md:w-[200px] h-[90px] md:h-[130px] overflow-hidden rounded-lg cursor-pointer group`}
+                                    className={`flex-shrink-0 w-[140px] md:w-[200px] h-[90px] md:h-[130px] overflow-hidden rounded-lg `}
                                     style={{ scrollSnapAlign: 'start' }}>
                                     <img
                                         src={item.image_url}
@@ -275,7 +254,7 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
                                         width={400}
                                         height={400}
                                         alt="Portfólio"
-                                        className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700"
+                                        className="w-full h-full object-cover"
                                     />
                                 </div>
                             ))}

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useWhatsAppTemplates } from '../hooks/useWhatsAppTemplates';
 import { Users, Check, X, MessageCircle, Search, Crown, Calendar, ChevronRight, Zap } from 'lucide-react';
-import { Card, Modal, Button, ConfirmModal, PageHeader } from '../components/ui';
+import { Card, Modal, Button, ConfirmModal, ErrorState, PageHeader } from '../components/ui';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
 import { useToast } from '../components/ui/Toast';
 import { useAuth } from '../contexts/AuthContext';
@@ -49,7 +49,7 @@ export const MembersList: React.FC = () => {
     const [confirmMethod, setConfirmMethod] = useState<'pix' | 'cash' | 'card' | 'mbway'>('pix');
     const [cancelling, setCancelling] = useState<MembershipWithPlan | null>(null);
     const statusFilter = tab === 'all' ? undefined : tab;
-    const { data: memberships, isLoading } = useClientMemberships(statusFilter);
+    const { data: memberships, isLoading, isError, refetch } = useClientMemberships(statusFilter);
     const confirmMutation = useConfirmMembershipPayment();
     const cancelMutation = useCancelMembership();
     const { data: stats } = useMembershipStats();
@@ -112,7 +112,7 @@ export const MembersList: React.FC = () => {
         <div className="max-w-6xl mx-auto px-4 py-8 space-y-6 pb-24">
             <PageHeader
                 title="Assinantes"
-                subtitle="Gerencie os membros do clube de assinatura."
+                subtitle="Veja quem já assinou e confirme os pagamentos recebidos."
             />
             <ClubOwnerNav />
 
@@ -163,14 +163,17 @@ export const MembersList: React.FC = () => {
                         type="text"
                         value={search}
                         onChange={e => setSearch(e.target.value)}
-                        placeholder="Buscar por nome, telefone ou plano..."
+                        placeholder="Buscar por nome, telefone ou plano"
+                        aria-label="Buscar assinantes por nome, telefone ou plano"
                         className={`pl-9 pr-3 py-2 ${classes.input} w-full md:w-72`}
                     />
                 </div>
             </div>
 
             {isLoading ? (
-                <div className={`${colors.textSecondary} p-8 text-center`}>Carregando...</div>
+                <div role="status" className={`${colors.textSecondary} p-8 text-center`}>Carregando assinantes…</div>
+            ) : isError && !memberships ? (
+                <ErrorState title="Não foi possível carregar os assinantes" onRetry={() => void refetch()} />
             ) : filtered.length === 0 ? (
                 <Card>
                     <div className="text-center py-12 space-y-3">

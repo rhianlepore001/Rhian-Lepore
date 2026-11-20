@@ -581,6 +581,23 @@ export async function fetchPublicProfessionals(businessId: string) {
   return data ?? [];
 }
 
+interface PublicProfessionalPortfolio {
+  id: string;
+  name: string;
+  role: string | null;
+  bio: string | null;
+  photo_url: string | null;
+  business_name: string | null;
+  business_slug: string | null;
+  user_type: string | null;
+}
+
+export async function fetchPublicProfessionalPortfolio(slug: string): Promise<PublicProfessionalPortfolio | null> {
+  const { data, error } = await supabase.rpc('get_public_professional_portfolio', { p_slug: slug });
+  if (error) throw error;
+  return data ?? null;
+}
+
 export async function fetchPublicGallery(businessId: string) {
   const { data, error } = await supabase.rpc('get_public_gallery_catalog', {
     p_business_id: businessId,

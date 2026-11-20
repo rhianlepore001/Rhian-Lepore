@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Protetor Térmico">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f5f3ff"/>
+      <stop offset="100%" stop-color="#ede9fe"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)"/>
+  <circle cx="200" cy="205" r="136" fill="#7c3aed" opacity="0.09"/>
+  <rect x="174" y="76" width="52" height="34" rx="10" fill="#7c3aed"/>
+  <rect x="136" y="114" width="128" height="210" rx="26" fill="#ffffff" stroke="#8b5cf6" stroke-width="3"/>
+  <rect x="150" y="166" width="100" height="106" rx="12" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="200" y="210" text-anchor="middle" fill="#4c1d95" font-family="system-ui,sans-serif" font-size="14" font-weight="700" letter-spacing="1.2">PROTETOR</text>
+  <text x="200" y="232" text-anchor="middle" fill="#5b21b6" font-family="system-ui,sans-serif" font-size="12" font-weight="600">TÉRMICO</text>
+  <text x="200" y="252" text-anchor="middle" fill="#6d28d9" font-family="system-ui,sans-serif" font-size="10">200ML</text>
+</svg>

@@ -49,14 +49,16 @@ function matchesOrFilter(row: DemoRow, filter: string, mode: 'or' | 'and' = 'or'
 
 export function createDemoClient() {
   const tenants = { barber: createDemoSeed('barber'), beauty: createDemoSeed('beauty') };
+  const productImages = new Map<string, string>();
   const tables = () => tenants[getDemoNiche()];
   function from(table: string): any {
     if (!(table in tables())) return unsupported(`tabela ${table}`);
     const source = tables()[table];
     let rows = [...source];
     let singular = false;
-    let mutation: 'insert' | 'update' | 'delete' | null = null;
+    let mutation: 'insert' | 'update' | 'upsert' | 'delete' | null = null;
     let payload: DemoRow[] = [];
+    let upsertConflictKey: string | null = null;
     let executed = false;
     let result: ReturnType<typeof ok>;
     const query: Record<string, any> = {};
@@ -80,6 +82,11 @@ export function createDemoClient() {
     chain('maybeSingle', () => { singular = true; });
     chain('insert', value => { mutation = 'insert'; payload = Array.isArray(value) ? value : [value]; });
     chain('update', value => { mutation = 'update'; payload = [value]; });
+    chain('upsert', (value, options) => {
+      mutation = 'upsert';
+      payload = Array.isArray(value) ? value : [value];
+      upsertConflictKey = typeof options?.onConflict === 'string' ? options.onConflict : 'id';
+    });
     chain('delete', () => { mutation = 'delete'; });
     query.then = (resolve: (value: any) => any, reject?: (reason: unknown) => any) => {
       try {
@@ -89,6 +96,19 @@ export function createDemoClient() {
             rows = payload.map(row => ({ ...row, id: row.id ?? crypto.randomUUID(), user_id: demoCompanyId(), company_id: demoCompanyId(), created_at: new Date().toISOString() }));
             source.push(...rows);
           } else if (mutation === 'update') rows.forEach(row => Object.assign(row, payload[0]));
+          else if (mutation === 'upsert') {
+            const key = upsertConflictKey ?? 'id';
+            rows = payload.map(item => {
+              const existing = source.find(row => row[key] !== undefined && row[key] === item[key]);
+              if (existing) {
+                Object.assign(existing, item);
+                return existing;
+              }
+              const created = { ...item, id: item.id ?? crypto.randomUUID(), user_id: demoCompanyId(), company_id: demoCompanyId(), created_at: new Date().toISOString() };
+              source.push(created);
+              return created;
+            });
+          }
           else if (mutation === 'delete') tables()[table] = source.filter(row => !rows.includes(row));
           result = ok(singular ? rows[0] ?? null : rows);
         }
@@ -164,7 +184,23 @@ export function createDemoClient() {
       case 'get_public_categories_catalog': data = t.service_categories; break;
       case 'get_public_team_catalog': data = t.team_members; break;
       case 'get_public_gallery_catalog': data = t.business_galleries; break;
-      case 'get_public_products_catalog': case 'get_full_dates_v2': case 'get_full_dates': case 'get_active_booking_by_phone': case 'get_public_client_by_phone': case 'get_client_booking_cancellations': data = []; break;
+      case 'get_public_products_catalog': {
+        const enabled = Boolean(t.business_settings[0]?.public_products_enabled);
+        data = enabled
+          ? t.products
+            .filter(p => p.is_active && p.show_in_public !== false && Number(p.stock_quantity) > 0)
+            .sort((a, b) => String(a.name).localeCompare(String(b.name)))
+            .map(p => ({
+              id: p.id,
+              name: p.name,
+              description: p.description ?? null,
+              sale_price: p.sale_price,
+              image_url: p.image_url ?? null,
+            }))
+          : [];
+        break;
+      }
+      case 'get_full_dates_v2': case 'get_full_dates': case 'get_active_booking_by_phone': case 'get_public_client_by_phone': case 'get_client_booking_cancellations': data = []; break;
       case 'get_available_slots_v2': case 'get_available_slots': data = demoSlots(t, args); break;
       case 'get_first_available_professional': data = t.team_members[0].id; break;
       case 'create_secure_booking': {
@@ -225,7 +261,68 @@ export function createDemoClient() {
         });
         data = { cycle: { start, end: today, open: true }, settlement_day: 5, tz: 'America/Sao_Paulo', currency: 'BRL', previous_end: start, next_end: today, members, totals: { a_pagar_ciclo: members.reduce((acc, m) => acc + m.a_pagar_ciclo, 0), pendentes: members.filter(m => m.status === 'pendente').length, pago_ciclo: 0 } }; break;
       }
-      case 'get_checkout_products_v1': data = []; break;
+      case 'get_checkout_products_v1': {
+        const includeInactive = Boolean(args.p_include_inactive);
+        data = t.products
+          .filter(p => includeInactive || p.is_active)
+          .sort((a, b) => String(a.name).localeCompare(String(b.name)));
+        break;
+      }
+      case 'sell_product': {
+        const product = t.products.find(p => p.id === args.p_product_id && p.is_active);
+        const qty = Number(args.p_quantity ?? 0);
+        if (!product) return Promise.resolve({ data: null, error: { message: 'product_not_found' } });
+        if (qty <= 0 || Number(product.stock_quantity) < qty) {
+          return Promise.resolve({ data: null, error: { message: 'insufficient_stock' } });
+        }
+        product.stock_quantity = Number(product.stock_quantity) - qty;
+        const totalRevenue = Number(product.sale_price) * qty;
+        const totalCost = Number(product.cost_price ?? 0) * qty;
+        const commissionPercent = Number(product.commission_percent ?? 0);
+        const commissionValue = commissionPercent > 0 ? (totalRevenue * commissionPercent) / 100 : 0;
+        const nowIso = new Date().toISOString();
+        const financeRecord = {
+          id: crypto.randomUUID(),
+          user_id: demoCompanyId(),
+          company_id: demoCompanyId(),
+          type: 'revenue',
+          revenue: totalRevenue,
+          amount: totalRevenue,
+          expense: 0,
+          commission_value: commissionValue,
+          commission_paid: false,
+          status: 'paid',
+          payment_method: args.p_payment_method ?? 'pix',
+          description: `Venda de produto: ${product.name}`,
+          service_name: product.name,
+          barber_name: t.team_members[0]?.name ?? 'Equipe',
+          professional_id: args.p_professional_id ?? null,
+          appointment_id: args.p_appointment_id ?? null,
+          created_at: nowIso,
+        };
+        t.finance_records.push(financeRecord);
+        const sale = {
+          id: crypto.randomUUID(),
+          company_id: demoCompanyId(),
+          product_id: product.id,
+          appointment_id: args.p_appointment_id ?? null,
+          finance_record_id: financeRecord.id,
+          sold_by: demoCompanyId(),
+          professional_id: args.p_professional_id ?? null,
+          client_id: args.p_client_id ?? null,
+          quantity: qty,
+          unit_sale_price: Number(product.sale_price),
+          unit_cost_price: Number(product.cost_price ?? 0),
+          total_revenue: totalRevenue,
+          total_cost: totalCost,
+          commission_percent: commissionPercent,
+          commission_value: commissionValue,
+          created_at: nowIso,
+        };
+        t.product_sales.push(sale);
+        data = sale;
+        break;
+      }
       case 'update_queue_status': {
         const row = t.queue_entries.find(entry => entry.id === args.p_entry_id);
         if (!row) return unsupported('cliente da fila não encontrado');
@@ -243,7 +340,35 @@ export function createDemoClient() {
   }
   const channel = () => { const c = { on: () => c, subscribe: () => c, unsubscribe: () => Promise.resolve() }; return c; };
   const auth = new Proxy({ getSession: async () => ({ data: { session: null }, error: null }), getUser: async () => ({ data: { user: { id: demoCompanyId() } }, error: null }), onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => undefined } } }) }, { get(target, key) { return key in target ? target[key as keyof typeof target] : unsupported(`auth.${String(key)}`); } });
-  const storage = { from: (_bucket: string) => new Proxy({}, { get: (_target, key) => unsupported(`storage.${String(key)}`) }) };
+  const storage = {
+    from: (bucket: string): any => {
+      if (bucket !== 'product_images') {
+        return new Proxy({}, { get: (_target, key) => unsupported(`storage.${String(key)}`) });
+      }
+      return {
+        upload: async (path: string, file: Blob) => {
+          const url = typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function'
+            ? URL.createObjectURL(file)
+            : `demo://product_images/${path}`;
+          productImages.set(path, url);
+          return { data: { path }, error: null };
+        },
+        getPublicUrl: (path: string) => ({
+          data: { publicUrl: productImages.get(path) ?? `/demo/product_images/${path}` },
+        }),
+        remove: async (paths: string[]) => {
+          for (const path of paths) {
+            const existing = productImages.get(path);
+            if (existing?.startsWith('blob:') && typeof URL !== 'undefined' && typeof URL.revokeObjectURL === 'function') {
+              URL.revokeObjectURL(existing);
+            }
+            productImages.delete(path);
+          }
+          return { data: paths.map(name => ({ name })), error: null };
+        },
+      };
+    },
+  };
   const client = { from, rpc, auth, storage, channel, removeChannel: async () => 'ok', removeAllChannels: async () => [] };
   return new Proxy(client, { get(target, key) { return key in target ? target[key as keyof typeof target] : unsupported(String(key)); } });
 }

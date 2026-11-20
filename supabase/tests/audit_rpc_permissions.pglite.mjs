@@ -27,6 +27,14 @@ await db.exec(`
     company_id uuid
   );
   CREATE TABLE public.profiles (id uuid, full_name text);
+  CREATE TABLE public.team_members (id uuid, deleted_at timestamptz);
+  CREATE TABLE public.appointments (id uuid, deleted_at timestamptz);
+  CREATE TABLE public.clients (id uuid, deleted_at timestamptz);
+  CREATE TABLE public.financial_records (id uuid, deleted_at timestamptz);
+  CREATE TABLE public.services (id uuid, deleted_at timestamptz);
+  CREATE FUNCTION public.cleanup_old_deleted_items()
+    RETURNS TABLE (resource_type varchar, deleted_count integer)
+    LANGUAGE sql SECURITY DEFINER AS $$ SELECT 'synthetic'::varchar, 0 WHERE false $$;
   CREATE FUNCTION public.cleanup_old_audit_logs() RETURNS integer
     LANGUAGE sql SECURITY DEFINER AS $$ SELECT 0 $$;
   CREATE FUNCTION public.create_audit_log(varchar, varchar, uuid, jsonb, jsonb, jsonb) RETURNS uuid
@@ -52,6 +60,7 @@ await db.exec(`
   -- Match the latest checked-in security baseline: these legacy SECURITY DEFINER
   -- RPCs were outside the public allowlist and had PUBLIC/anon revoked.
   REVOKE ALL ON FUNCTION public.cleanup_old_audit_logs() FROM PUBLIC, anon;
+  REVOKE ALL ON FUNCTION public.cleanup_old_deleted_items() FROM PUBLIC, anon;
   REVOKE ALL ON FUNCTION public.create_audit_log(varchar,varchar,uuid,jsonb,jsonb,jsonb) FROM PUBLIC, anon;
   REVOKE ALL ON FUNCTION public.get_audit_logs(integer,integer,varchar,varchar,timestamptz,timestamptz) FROM PUBLIC, anon;
 `);
@@ -62,6 +71,9 @@ const rollbackDb = await db.query(`
   SELECT has_function_privilege('anon', 'public.cleanup_old_audit_logs()', 'EXECUTE') AS anon_cleanup,
     has_function_privilege('authenticated', 'public.cleanup_old_audit_logs()', 'EXECUTE') AS auth_cleanup,
     has_function_privilege('service_role', 'public.cleanup_old_audit_logs()', 'EXECUTE') AS service_cleanup,
+    has_function_privilege('anon', 'public.cleanup_old_deleted_items()', 'EXECUTE') AS anon_deleted_cleanup,
+    has_function_privilege('authenticated', 'public.cleanup_old_deleted_items()', 'EXECUTE') AS auth_deleted_cleanup,
+    has_function_privilege('service_role', 'public.cleanup_old_deleted_items()', 'EXECUTE') AS service_deleted_cleanup,
     has_function_privilege('authenticated', 'public.create_audit_log(character varying,character varying,uuid,jsonb,jsonb,jsonb)', 'EXECUTE') AS auth_create,
     has_function_privilege('service_role', 'public.create_audit_log(character varying,character varying,uuid,jsonb,jsonb,jsonb)', 'EXECUTE') AS service_create,
     has_function_privilege('authenticated', 'public.get_audit_logs(integer,integer,character varying,character varying,timestamp with time zone,timestamp with time zone)', 'EXECUTE') AS auth_get,
@@ -71,6 +83,9 @@ assert.deepEqual(rollbackDb.rows[0], {
   anon_cleanup: false,
   auth_cleanup: false,
   service_cleanup: true,
+  anon_deleted_cleanup: false,
+  auth_deleted_cleanup: false,
+  service_deleted_cleanup: true,
   auth_create: false,
   service_create: true,
   auth_get: true,
@@ -79,12 +94,14 @@ assert.deepEqual(rollbackDb.rows[0], {
 await db.exec(rollback);
 const restored = await db.query(`
   SELECT has_function_privilege('anon', 'public.cleanup_old_audit_logs()', 'EXECUTE') AS anon_cleanup,
+    has_function_privilege('service_role', 'public.cleanup_old_deleted_items()', 'EXECUTE') AS service_deleted_cleanup,
     has_function_privilege('authenticated', 'public.get_audit_logs(integer,integer,character varying,character varying,timestamp with time zone,timestamp with time zone)', 'EXECUTE') AS auth_get,
     has_function_privilege('service_role', 'public.get_audit_logs(integer,integer,character varying,character varying,timestamp with time zone,timestamp with time zone)', 'EXECUTE') AS service_get,
     (SELECT reloptions FROM pg_class WHERE oid='public.audit_daily_summary'::regclass) AS daily_options
 `);
 assert.deepEqual(restored.rows[0], {
   anon_cleanup: false,
+  service_deleted_cleanup: false,
   auth_get: false,
   service_get: false,
   daily_options: null,

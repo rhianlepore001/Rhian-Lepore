@@ -6,6 +6,13 @@ DECLARE
   v_function regprocedure;
   v_view regclass;
 BEGIN
+  v_function := to_regprocedure('public.cleanup_old_deleted_items()');
+  IF v_function IS NOT NULL THEN
+    EXECUTE format('REVOKE ALL ON FUNCTION %s FROM PUBLIC, anon, authenticated', v_function);
+    EXECUTE format('GRANT EXECUTE ON FUNCTION %s TO service_role', v_function);
+    EXECUTE format('ALTER FUNCTION %s SET search_path = pg_catalog, public, pg_temp', v_function);
+  END IF;
+
   v_function := to_regprocedure('public.cleanup_old_audit_logs()');
   IF v_function IS NOT NULL THEN
     EXECUTE format('REVOKE ALL ON FUNCTION %s FROM PUBLIC, anon, authenticated', v_function);

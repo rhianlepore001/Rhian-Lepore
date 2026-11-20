@@ -3,6 +3,7 @@
 DO $$
 DECLARE
   v_view record;
+  v_configured_functions integer;
 BEGIN
   IF has_function_privilege('anon', 'public.cleanup_old_audit_logs()', 'EXECUTE')
      OR has_function_privilege('authenticated', 'public.cleanup_old_audit_logs()', 'EXECUTE') THEN
@@ -10,6 +11,11 @@ BEGIN
   END IF;
   IF NOT has_function_privilege('service_role', 'public.cleanup_old_audit_logs()', 'EXECUTE') THEN
     RAISE EXCEPTION 'audit cleanup must remain callable by service_role';
+  END IF;
+  IF has_function_privilege('anon', 'public.cleanup_old_deleted_items()', 'EXECUTE')
+     OR has_function_privilege('authenticated', 'public.cleanup_old_deleted_items()', 'EXECUTE')
+     OR NOT has_function_privilege('service_role', 'public.cleanup_old_deleted_items()', 'EXECUTE') THEN
+    RAISE EXCEPTION 'soft-delete cleanup must be backend-only';
   END IF;
 
   IF has_function_privilege('anon', 'public.create_audit_log(character varying, character varying, uuid, jsonb, jsonb, jsonb)', 'EXECUTE')
@@ -24,6 +30,20 @@ BEGIN
      OR NOT has_function_privilege('authenticated', 'public.get_audit_logs(integer, integer, character varying, character varying, timestamptz, timestamptz)', 'EXECUTE')
      OR NOT has_function_privilege('service_role', 'public.get_audit_logs(integer, integer, character varying, character varying, timestamptz, timestamptz)', 'EXECUTE') THEN
     RAISE EXCEPTION 'audit log reads must be authenticated/service_role only';
+  END IF;
+
+  SELECT count(*) INTO v_configured_functions
+  FROM pg_proc
+  WHERE oid IN (
+    'public.cleanup_old_audit_logs()'::regprocedure,
+    'public.cleanup_old_deleted_items()'::regprocedure,
+    'public.create_audit_log(character varying,character varying,uuid,jsonb,jsonb,jsonb)'::regprocedure,
+    'public.get_audit_logs(integer,integer,character varying,character varying,timestamptz,timestamptz)'::regprocedure
+  )
+    AND prosecdef
+    AND proconfig @> ARRAY['search_path=pg_catalog, public, pg_temp'];
+  IF v_configured_functions <> 4 THEN
+    RAISE EXCEPTION 'audit SECURITY DEFINER functions must pin search_path';
   END IF;
 
   FOR v_view IN

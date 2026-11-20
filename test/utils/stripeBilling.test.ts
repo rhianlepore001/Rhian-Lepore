@@ -108,6 +108,19 @@ describe('billingUpdateFromEvent', () => {
     expect(u.patch.subscription_status).toBe('past_due');
   });
 
+  it('reads the account binding from a current Stripe invoice', () => {
+    const event = load('invoice.payment_failed.json');
+    delete event.data.object.subscription;
+    event.data.object.parent = {
+      subscription_details: {
+        subscription: 'sub_TEST123',
+        metadata: { supabase_user_id: '00000000-0000-4000-8000-000000000001' },
+      },
+    };
+    const result = billingUpdateFromEvent(event, planOf);
+    expect(result).toMatchObject({ kind: 'update', match: { by: 'id', value: '00000000-0000-4000-8000-000000000001' } });
+  });
+
   it('ignores unrelated events and non-subscription checkouts', () => {
     expect(billingUpdateFromEvent({ id: 'evt_x', type: 'charge.refunded', created: 1, data: { object: {} } }, planOf).kind).toBe('ignore');
     const evt = load('checkout.session.completed.json');

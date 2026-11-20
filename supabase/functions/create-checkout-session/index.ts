@@ -37,11 +37,17 @@ serve(async (req) => {
     if (req.method === "OPTIONS") {
         return new Response("ok", { headers: corsHeaders });
     }
+    if (req.method !== "POST") {
+        return new Response(JSON.stringify({ error: "method_not_allowed" }), {
+            status: 405,
+            headers: { ...corsHeaders, "Content-Type": "application/json", Allow: "POST, OPTIONS" },
+        });
+    }
 
     try {
         const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
         if (!stripeKey) {
-            throw new HttpError(500, "Server configuration error: Stripe key missing");
+            throw new Error("Stripe key missing");
         }
         const stripe = new Stripe(stripeKey, {
             apiVersion: "2023-10-16",
@@ -77,7 +83,7 @@ serve(async (req) => {
         const priceId = resolvePlanPriceId(planId, currency, envGet);
         if (!priceId) {
             console.error(`Missing/invalid secret ${priceEnvKey(planId, currency)}`);
-            throw new HttpError(500, "Server configuration error: plan price not configured");
+            throw new Error("Plan price not configured");
         }
 
         const allowedOrigins = collectAllowedOrigins(Deno.env.get("CHECKOUT_ALLOWED_ORIGINS"));
@@ -85,30 +91,31 @@ serve(async (req) => {
         if (!isAllowedReturnUrl(cancelUrl, allowedOrigins)) throw new HttpError(400, "cancelUrl not allowed");
         if (!isAllowedCheckoutMode(mode)) throw new HttpError(400, "Checkout mode not allowed");
 
-        const { data: profile } = await supabaseClient
+        const { data: profile, error: profileError } = await supabaseClient
             .from("profiles")
-            .select("stripe_customer_id, subscription_status, trial_ends_at")
+            .select("role, stripe_customer_id, subscription_status, trial_ends_at")
             .eq("id", user.id)
-            .single();
+            .maybeSingle();
+        if (profileError) throw profileError;
+        if (profile?.role !== "owner") throw new HttpError(403, "Owner access required");
 
-        const { customerId, persist } = await resolveCheckoutCustomer(
-            profile?.stripe_customer_id,
+        const customerId = await resolveCheckoutCustomer(
+            profile.stripe_customer_id,
             user.email ?? "",
             user.id,
             {
-                retrieve: (id) => stripe.customers.retrieve(id) as Promise<{ id: string; deleted?: boolean }>,
-                listByEmail: async (email) => email ? (await stripe.customers.list({ email, limit: 1 })).data : [],
-                create: (email, uid) => stripe.customers.create({ email, metadata: { supabase_user_id: uid } }),
+                retrieve: async (id) => {
+                    const customer = await stripe.customers.retrieve(id);
+                    return customer.deleted ? null : customer;
+                },
+                listByEmail: async (email) => (await stripe.customers.list({ email, limit: 100 })).data,
+                create: (email, uid, idempotencyKey) => stripe.customers.create(
+                    { email, metadata: { supabase_user_id: uid } },
+                    { idempotencyKey },
+                ),
             },
         );
-        if (persist) {
-            const { error: stripeIdError } = await supabaseClient.rpc("set_stripe_customer_id_for_caller", {
-                p_customer_id: customerId,
-            });
-            if (stripeIdError) throw stripeIdError;
-        }
-
-        const trialEnd = checkoutTrialEnd(profile?.subscription_status, profile?.trial_ends_at);
+        const trialEnd = checkoutTrialEnd(profile.subscription_status, profile.trial_ends_at);
         const params = buildCheckoutSessionParams({
             customerId,
             userId: user.id,
@@ -131,9 +138,9 @@ serve(async (req) => {
             status: 200,
         });
     } catch (error) {
-        console.error("Error:", error);
-        const status = error instanceof HttpError ? error.status : 400;
-        const message = error instanceof Error ? error.message : "Unexpected error";
+        if (!(error instanceof HttpError || error instanceof SyntaxError)) console.error("checkout_failed");
+        const status = error instanceof HttpError ? error.status : error instanceof SyntaxError ? 400 : 500;
+        const message = error instanceof HttpError ? error.message : status === 400 ? "Invalid JSON" : "Checkout unavailable";
         return new Response(JSON.stringify({ error: message }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
             status,

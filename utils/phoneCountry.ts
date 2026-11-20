@@ -89,11 +89,13 @@ export function isValidPhone(value: string, country: PhoneCountry): boolean {
 }
 
 export function getPhoneCountry(value: string): PhoneCountry | undefined {
-  const digits = value.replace(/\D/g, '');
+  const input = value.trim();
+  const digits = input.replace(/\D/g, '');
   return (Object.keys(PHONE_COUNTRIES) as PhoneCountry[]).find(country => {
-    const config = PHONE_COUNTRIES[country];
-    return value.trim().startsWith('+' + config.dialCode)
-      || (digits.startsWith(config.dialCode) && digits.length > config.nationalLength.max);
+    const { dialCode, nationalLength } = PHONE_COUNTRIES[country];
+    if (input.startsWith('+')) return input.startsWith('+' + dialCode);
+    const length = digits.length - dialCode.length;
+    return digits.startsWith(dialCode) && length >= nationalLength.min && length <= nationalLength.max;
   });
 }
 

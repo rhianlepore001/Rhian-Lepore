@@ -8,6 +8,8 @@
  * - Formatação de datas
  */
 
+import { getPhoneCountry } from './phoneCountry';
+
 export type Region = 'BR' | 'PT';
 export { buildWhatsAppLink } from './whatsappTemplates';
 
@@ -97,8 +99,9 @@ export const formatPhone = (phone: string, region: Region = 'BR'): string => {
 
     // Remove tudo que não for número
     let numbers = phone.replace(/\D/g, '');
+    const country = getPhoneCountry(phone) ?? region;
 
-    if (region === 'PT') {
+    if (country === 'PT') {
         // Portugal: +351 9XX XXX XXX
         // Limpa TODOS os 351 extras que possam ter sido salvos por erro
         while (numbers.startsWith('351') && numbers.length >= 12) {
@@ -127,7 +130,7 @@ export const formatPhone = (phone: string, region: Region = 'BR'): string => {
             const ddd = numbers.slice(0, 2);
             const firstPart = numbers.slice(2, numbers.length - 4);
             const lastPart = numbers.slice(-4);
-            return `(${ddd}) ${firstPart}-${lastPart}`;
+            return `${region === 'PT' ? '+55 ' : ''}(${ddd}) ${firstPart}-${lastPart}`;
         }
         return `+55 ${numbers}`; // Caso não se encaixe, mostra com +55
     }

@@ -30,6 +30,8 @@ const fixtureApi = {
   saveLowMargin: async () => undefined,
   saveWorkingHours: async () => undefined,
   saveMaterial: async () => undefined,
+  saveMaterialLines: async () => undefined,
+  updateMaterialPrice: async () => undefined,
 } as unknown as React.ComponentProps<typeof FixedCostsSettings>['api'];
 
 const emptySettingsApi = {
@@ -46,6 +48,8 @@ const emptySettingsApi = {
   saveLowMargin: async () => undefined,
   saveWorkingHours: async () => undefined,
   saveMaterial: async () => undefined,
+  saveMaterialLines: async () => undefined,
+  updateMaterialPrice: async () => undefined,
 } as unknown as React.ComponentProps<typeof FixedCostsSettings>['api'];
 
 const configuringSettingsApi = {
@@ -62,6 +66,8 @@ const configuringSettingsApi = {
   saveLowMargin: async () => undefined,
   saveWorkingHours: async () => undefined,
   saveMaterial: async () => undefined,
+  saveMaterialLines: async () => undefined,
+  updateMaterialPrice: async () => undefined,
 } as unknown as React.ComponentProps<typeof FixedCostsSettings>['api'];
 
 const params = new URLSearchParams(location.search);

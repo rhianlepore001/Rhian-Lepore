@@ -1,14 +1,14 @@
-﻿import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
+﻿import React, { useState, useEffect, useMemo, useCallback, useRef, lazy, Suspense } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { prefetchStaffPerformanceFromLocation } from '../hooks/useStaffPerformance';
 import { FinanceKpi } from '../components/finance/FinanceKpi';
 import { TeamPerformanceCard } from '../components/finance/TeamPerformanceCard';
 import { Card } from '../components/ui/Card';
-import { Button, Modal, Table, Badge, ConfirmModal, useToast, ErrorState, SkeletonCard } from '@/components/ui';
+import { Button, Input, Modal, Table, Badge, ConfirmModal, useToast, ErrorState, SkeletonCard } from '@/components/ui';
 import type { TableColumn } from '@/components/ui';
 import { useAuth } from '../contexts/AuthContext';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
-import { Wallet, TrendingUp, TrendingDown, Calendar, Download, Filter, Users, History, Trash2, Plus, Check, Smartphone, Banknote, CreditCard, User, Clock, Scissors, BarChart3, Bot } from 'lucide-react';
+import { Wallet, TrendingUp, TrendingDown, Calendar, Download, Filter, Search, ChevronDown, ChevronUp, Users, History, Trash2, Plus, Check, Smartphone, Banknote, CreditCard, User, Clock, Scissors, BarChart3, Bot } from 'lucide-react';
 import { FinanceCashflowChart } from '../components/finance/FinanceCashflowChart';
 import { CommissionsManagement } from '../components/CommissionsManagement';
 import { MonthStepper } from '../components/finance/MonthStepper';
@@ -87,6 +87,18 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
   membership: 'Clube',
 };
 
+const PAYMENT_FILTERS = {
+  all: { label: 'Todas', methods: [] },
+  cash: { label: 'Dinheiro', methods: ['cash', 'dinheiro'] },
+  pix: { label: 'Pix', methods: ['pix'] },
+  mbway: { label: 'MBWay', methods: ['mbway'] },
+  card: { label: 'Cartão', methods: ['credit', 'debit', 'cartao'] },
+};
+
+function normalizeTransactionSearch(value: string): string {
+  return value.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase('pt-BR').trim();
+}
+
 interface MonthlyHistoryItem {
   month: string;
   year: number;
@@ -101,11 +113,15 @@ export const Finance: React.FC = () => {
 const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const [showFilterModal, setShowFilterModal] = useState(false);
+  const [transactionsExpanded, setTransactionsExpanded] = useState(true);
+  const [showTransactionSearch, setShowTransactionSearch] = useState(false);
+  const [transactionQuery, setTransactionQuery] = useState('');
+  const transactionSearchRef = useRef<HTMLInputElement>(null);
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'revenue' | 'expense'>('all');
-  const [filterPaymentMethod, setFilterPaymentMethod] = useState<string>('all');
+  const [filterPaymentMethod, setFilterPaymentMethod] = useState<keyof typeof PAYMENT_FILTERS>('all');
   // Staff não vê aba de comissões nem histórico
   const isStaff = role === 'staff';
   const canDeleteTransactions = shouldShowFinanceDelete(role);
@@ -226,6 +242,9 @@ const [searchParams, setSearchParams] = useSearchParams();
     void import('./StaffPerformance');
   }, []);
 
+  useEffect(() => {
+    if (transactionsExpanded && showTransactionSearch) transactionSearchRef.current?.focus();
+  }, [transactionsExpanded, showTransactionSearch]);
 
   useEffect(() => {
     const isNewQuery = searchParams.get('new') === 'true';
@@ -295,7 +314,8 @@ const [searchParams, setSearchParams] = useSearchParams();
 
     const filtered = inMonth.filter((t) => {
       const matchesType = filterType === 'all' || (filterType === 'revenue' ? t.type === 'revenue' : t.type === 'expense');
-      const matchesPayment = filterPaymentMethod === 'all' || t.payment_method === filterPaymentMethod;
+      const matchesPayment = filterPaymentMethod === 'all'
+        || PAYMENT_FILTERS[filterPaymentMethod].methods.includes(t.payment_method?.toLowerCase() ?? '');
       return matchesType && matchesPayment;
     });
 
@@ -332,6 +352,14 @@ const [searchParams, setSearchParams] = useSearchParams();
   ]);
 
   const transactions = derived.transactions;
+  const searchTerm = normalizeTransactionSearch(transactionQuery);
+  const visibleTransactions = useMemo(() => {
+    if (!searchTerm) return transactions;
+    return transactions.filter((transaction) =>
+      [transaction.serviceName, transaction.description, transaction.clientName, transaction.professionalName]
+        .some((value) => normalizeTransactionSearch(value ?? '').includes(searchTerm)),
+    );
+  }, [transactions, searchTerm]);
   const summary = derived.summary;
   const loading = overviewPending && !overview;
   const fetchError = overviewError
@@ -386,6 +414,7 @@ const [searchParams, setSearchParams] = useSearchParams();
   };
 
   const handleApplyFilter = () => {
+    setTransactionsExpanded(true);
     setShowFilterModal(false);
   };
 
@@ -394,6 +423,7 @@ const [searchParams, setSearchParams] = useSearchParams();
     setEndDate('');
     setFilterType('all');
     setFilterPaymentMethod('all');
+    setTransactionsExpanded(true);
     setShowFilterModal(false);
   };
 
@@ -581,7 +611,6 @@ const [searchParams, setSearchParams] = useSearchParams();
   const moreItems = [
     ...(activeTab === 'overview'
       ? [
-        { id: 'filter', label: 'Filtrar', icon: <Filter className="h-4 w-4" />, onSelect: () => setShowFilterModal(true) },
         { id: 'export', label: 'Exportar', icon: <Download className="h-4 w-4" />, onSelect: handleExport },
         ...(!isStaff ? [{
           id: 'performance',
@@ -598,7 +627,7 @@ const [searchParams, setSearchParams] = useSearchParams();
 
   return (
     <div className="space-y-4 md:space-y-6">
-      {/* Topo (PR-F #9). Celular: título + mês (‹ ›) + "⋯" numa linha; Filtrar/Exportar no "⋯" (assistente desligado, PR-G)
+      {/* Topo (PR-F #9). Celular: título + mês (‹ ›) + "⋯" numa linha; Exportar no "⋯" (assistente desligado, PR-G)
           e "Registrar receita" no "+". Computador: mês ao lado do título, ações visíveis. */}
       <header className="flex flex-col gap-3 pb-1 md:flex-row md:items-start md:justify-between md:gap-6 md:pb-2">
         <div className="min-w-0 flex-1">
@@ -628,14 +657,9 @@ const [searchParams, setSearchParams] = useSearchParams();
           </div>
           <div className="mt-3 hidden md:flex flex-wrap items-center gap-2">
             {activeTab === 'overview' && (
-              <>
-                <Button variant="outline" size="sm" icon={<Filter className="h-4 w-4" />} onClick={() => setShowFilterModal(true)}>
-                  Filtrar
-                </Button>
-                <Button variant="ghost" size="sm" icon={<Download className="h-4 w-4" />} onClick={handleExport}>
-                  Exportar
-                </Button>
-              </>
+              <Button variant="ghost" size="sm" icon={<Download className="h-4 w-4" />} onClick={handleExport}>
+                Exportar
+              </Button>
             )}
             {ASSISTANT_ENABLED && (
               <Button
@@ -705,6 +729,8 @@ const [searchParams, setSearchParams] = useSearchParams();
 
       {activeTab === 'overview' && (
         <>
+          {!isStaff && <TeamPerformanceCard monthName={months[selectedMonth]} className="md:hidden" />}
+
           {loading ? (
             <>
               <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -783,8 +809,6 @@ const [searchParams, setSearchParams] = useSearchParams();
             />
           </section>
 
-          {!isStaff && <TeamPerformanceCard monthName={months[selectedMonth]} className="md:hidden" />}
-
           {!isStaff && (
             <section className="grid grid-cols-3 gap-2">
               {[
@@ -836,11 +860,68 @@ const [searchParams, setSearchParams] = useSearchParams();
             </div>
           </Card>
 
-          <Card title="Transações recentes" noPadding>
-            <div className="p-3 md:p-4">
+          <Card
+            title="Transações recentes"
+            noPadding
+            action={(
+              <div className="flex gap-1 sm:gap-2">
+                <Button
+                  variant={filterType !== 'all' || filterPaymentMethod !== 'all' ? 'secondary' : 'outline'}
+                  size="sm"
+                  className="min-w-[44px]"
+                  icon={<Filter className="h-4 w-4" />}
+                  aria-label="Filtrar"
+                  title="Filtrar transações"
+                  aria-haspopup="dialog"
+                  onClick={() => setShowFilterModal(true)}
+                >
+                  <span className="hidden min-[480px]:inline">Filtrar</span>
+                </Button>
+                <Button
+                  variant={transactionsExpanded && showTransactionSearch ? 'secondary' : 'outline'}
+                  size="sm"
+                  className="min-w-[44px]"
+                  icon={<Search className="h-4 w-4" />}
+                  aria-label="Pesquisar"
+                  title="Pesquisar transações"
+                  aria-expanded={transactionsExpanded && showTransactionSearch}
+                  aria-controls="finance-transaction-search"
+                  onClick={() => {
+                    const searchVisible = transactionsExpanded && showTransactionSearch;
+                    setTransactionsExpanded(true);
+                    setShowTransactionSearch(!searchVisible);
+                    if (searchVisible) setTransactionQuery('');
+                  }}
+                >
+                  <span className="hidden min-[480px]:inline">Pesquisar</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="min-w-[44px]"
+                  icon={transactionsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  aria-label={transactionsExpanded ? 'Recolher transações recentes' : 'Expandir transações recentes'}
+                  aria-expanded={transactionsExpanded}
+                  aria-controls="finance-recent-transactions"
+                  onClick={() => setTransactionsExpanded((expanded) => !expanded)}
+                />
+              </div>
+            )}
+          >
+            <div id="finance-recent-transactions" hidden={!transactionsExpanded} className="p-3 md:p-4">
+              <div id="finance-transaction-search" hidden={!showTransactionSearch} className="mb-3">
+                <Input
+                  ref={transactionSearchRef}
+                  type="search"
+                  aria-label="Pesquisar transações"
+                  placeholder="Serviço, descrição, cliente ou profissional"
+                  value={transactionQuery}
+                  onChange={(event) => setTransactionQuery(event.target.value)}
+                />
+              </div>
               <Table<Transaction>
                 columns={transactionColumns}
-                data={transactions}
+                data={visibleTransactions}
                 rowKey={(t) => t.id}
                 stickyHeader
                 compact
@@ -850,8 +931,15 @@ const [searchParams, setSearchParams] = useSearchParams();
                 emptyState={{
                   icon: History,
                   title: 'Nenhuma transação encontrada',
-                  description: 'Registre uma nova transação ou mude o filtro.',
-                  action: (
+                  description: searchTerm ? 'Tente outro termo ou mude o filtro.' : 'Registre uma nova transação ou mude o filtro.',
+                  action: searchTerm ? (
+                    <Button variant="outline" size="sm" onClick={() => {
+                      setTransactionQuery('');
+                      transactionSearchRef.current?.focus();
+                    }}>
+                      Limpar pesquisa
+                    </Button>
+                  ) : (
                     <Button variant="primary" size="sm" icon={<Plus className="h-4 w-4" />} onClick={handleOpenNewTransaction}>
                       Registrar receita
                     </Button>
@@ -1137,7 +1225,7 @@ const [searchParams, setSearchParams] = useSearchParams();
               <div>
                 <label className={`${classes.label} uppercase mb-2 block`}>Forma de Pagamento</label>
                 <div className="flex flex-wrap gap-2">
-                  {['all', 'Dinheiro', ...(region === 'PT' ? ['MBWay'] : ['Pix']), 'Cartão'].map((method) => (
+                  {(['all', 'cash', region === 'PT' ? 'mbway' : 'pix', 'card'] as const).map((method) => (
                     <button
                       key={method}
                       onClick={() => setFilterPaymentMethod(method)}
@@ -1146,7 +1234,7 @@ const [searchParams, setSearchParams] = useSearchParams();
                           ? `${accent.bg} text-[var(--color-bg)]`
                           : 'bg-theme-surface text-theme-textSecondary hover:bg-[var(--color-card-hover)]'}`}
                     >
-                      {method === 'all' ? 'Todas' : method}
+                      {PAYMENT_FILTERS[method].label}
                     </button>
                   ))}
                 </div>

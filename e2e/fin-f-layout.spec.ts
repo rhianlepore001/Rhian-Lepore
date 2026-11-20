@@ -63,7 +63,8 @@ async function titleLine(page: Page) {
 test.describe('Fin PR-F layout', () => {
   test.setTimeout(150_000);
 
-  test('#9 Financeiro 390: título + mês na mesma linha + "⋯" (Filtrar, Exportar)', async ({ page }) => {
+  test('#9 Financeiro 390: mês e exportação no topo, filtro e pesquisa nas transações', async ({ page }) => {
+    await page.clock.setFixedTime(new Date('2026-10-04T12:00:00Z'));
     const guard = await installProdWriteGuard(page);
     await stubApp(page, guard, 'light');
     await page.setViewportSize({ width: 390, height: 844 });
@@ -75,8 +76,11 @@ test.describe('Fin PR-F layout', () => {
     await expect(page.getByText(/mês atual/i)).toHaveCount(0); // sem o cartão grande de mês
     await expect(page.getByRole('button', { name: 'Próximo mês' })).toBeDisabled();
 
-    // Filtrar / Exportar / Assistente saem do topo e vão para o "⋯".
-    await expect(page.getByRole('button', { name: 'Filtrar' })).toHaveCount(0);
+    const transactions = page.getByRole('heading', { name: 'Transações recentes' }).locator('../..');
+    const filter = transactions.getByRole('button', { name: 'Filtrar' });
+    const search = transactions.getByRole('button', { name: 'Pesquisar' });
+    await expect(filter).toBeVisible();
+    await expect(search).toBeVisible();
     await expect(page.getByRole('button', { name: 'Exportar' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Abrir assistente IA' })).toHaveCount(0);
     const more = page.getByRole('button', { name: 'Mais ações do financeiro' });
@@ -92,19 +96,43 @@ test.describe('Fin PR-F layout', () => {
     const menu = page.getByRole('menu', { name: 'Mais ações do financeiro' });
     await expect(menu).toBeVisible();
     // PR-G: assistente desligado (ASSISTANT_ENABLED=false).
-    await expect(menu.getByRole('menuitem')).toHaveText(['Filtrar', 'Exportar', 'Performance da equipe']);
-    await expect(menu.getByRole('menuitem').first()).toBeFocused();
-    await page.keyboard.press('ArrowDown');
+    await expect(menu.getByRole('menuitem')).toHaveText(['Exportar', 'Performance da equipe']);
     await expect(menu.getByRole('menuitem', { name: 'Exportar' })).toBeFocused();
     await snap(page, 'financeiro-390-light-menu', false);
     await page.keyboard.press('Escape');
     await expect(menu).toHaveCount(0);
     await expect(more).toBeFocused();
 
-    await more.click();
-    await page.getByRole('menuitem', { name: 'Filtrar' }).click();
-    await expect(page.getByRole('dialog', { name: 'Filtrar transações' })).toBeVisible();
-    await page.keyboard.press('Escape');
+    await filter.click();
+    const filterDialog = page.getByRole('dialog', { name: 'Filtrar transações' });
+    await expect(filterDialog).toBeVisible();
+    await filterDialog.getByRole('button', { name: 'Saídas' }).click();
+    await filterDialog.getByRole('button', { name: 'Aplicar' }).click();
+    const cards = page.getByTestId('finance-tx-card');
+    await expect(cards).toHaveCount(2);
+    await search.click();
+    const searchInput = page.getByRole('searchbox', { name: 'Pesquisar transações' });
+    await expect(searchInput).toBeFocused();
+    await searchInput.fill(' CORTE ');
+    await expect(cards).toHaveCount(0);
+    await searchInput.fill(' maria silva ');
+    await expect(cards).toHaveCount(2);
+    const collapse = transactions.getByRole('button', { name: 'Recolher transações recentes' });
+    await collapse.press('Enter');
+    const expand = transactions.getByRole('button', { name: 'Expandir transações recentes' });
+    await expect(expand).toHaveAttribute('aria-expanded', 'false');
+    await expect(searchInput).toBeHidden();
+    await expect(cards.first()).toBeHidden();
+    await expand.click();
+    await expect(collapse).toHaveAttribute('aria-expanded', 'true');
+    await expect(searchInput).toHaveValue(' maria silva ');
+    await expect(cards.first()).toBeVisible();
+    await search.click();
+    await expect(searchInput).toBeHidden();
+    await filter.click();
+    await filterDialog.getByRole('button', { name: 'Limpar' }).click();
+    await expect(cards).toHaveCount(12);
+    await more.scrollIntoViewIfNeeded();
 
     // Seta de mês continua funcionando no topo.
     await page.getByRole('button', { name: 'Mês anterior' }).click();
@@ -132,14 +160,17 @@ test.describe('Fin PR-F layout', () => {
     guard.assertNoLeak();
   });
 
-  test('#9 Financeiro 1440: mês ao lado do título; Filtrar/Exportar visíveis, sem "⋯"', async ({ page }) => {
+  test('#9 Financeiro 1440: mês ao lado do título e ações nas transações', async ({ page }) => {
+    await page.clock.setFixedTime(new Date('2026-10-04T12:00:00Z'));
     const guard = await installProdWriteGuard(page);
     await stubApp(page, guard, 'light');
     await page.setViewportSize({ width: 1440, height: 900 });
     await openFinance(page);
     await titleLine(page);
     await expect(page.getByText(/mês atual/i)).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Filtrar' })).toBeVisible();
+    const transactions = page.getByRole('heading', { name: 'Transações recentes' }).locator('../..');
+    await expect(transactions.getByRole('button', { name: 'Filtrar' })).toBeVisible();
+    await expect(transactions.getByRole('button', { name: 'Pesquisar' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Exportar' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Abrir assistente IA' })).toHaveCount(0); // PR-G
     await expect(page.getByRole('button', { name: 'Mais ações do financeiro' })).toHaveCount(0);

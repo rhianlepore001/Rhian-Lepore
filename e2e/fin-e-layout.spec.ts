@@ -50,6 +50,7 @@ test.describe('Fin PR-E layout', () => {
   test.setTimeout(150_000);
 
   test('Financeiro 390: abas, performance, sem Registrar receita, assistente e FAB', async ({ page }) => {
+    await page.clock.setFixedTime(new Date('2026-10-04T12:00:00Z'));
     const guard = await installProdWriteGuard(page);
     await stubApp(page, guard, 'light');
     await page.setViewportSize({ width: 390, height: 844 });
@@ -59,12 +60,10 @@ test.describe('Fin PR-E layout', () => {
     await expectTabsOneRow(page);
     await expect(page.getByRole('button', { name: 'Registrar receita' })).toHaveCount(0);
 
-    // PR-F: no celular, Filtrar/Exportar/Assistente ficam no "⋯" (ver fin-f-layout).
     await expect(page.getByRole('button', { name: 'Mais ações do financeiro' })).toBeVisible();
 
-    // Performance da equipe: cartão logo abaixo dos números do mês.
     const perf = page.getByTestId('finance-performance-card');
-    await expect(perf).toBeVisible();
+    await expect(perf).toBeInViewport({ ratio: 1 });
     await expect(perf).toContainText('Performance da equipe');
     await expect(perf).toContainText(/Como cada colaborador foi em setembro|Como cada colaborador foi em outubro/);
     await snap(page, 'financeiro-390-light', false);
@@ -114,11 +113,13 @@ test.describe('Fin PR-E layout', () => {
   });
 
   test('Financeiro 1440: Registrar receita e Performance no topo', async ({ page }) => {
+    await page.clock.setFixedTime(new Date('2026-10-04T12:00:00Z'));
     const guard = await installProdWriteGuard(page);
     await stubApp(page, guard, 'light');
     await page.setViewportSize({ width: 1440, height: 900 });
     await openFinance(page);
-    await expect(page.getByRole('button', { name: 'Registrar receita' })).toBeVisible({ timeout: 15_000 });
+    const financeHeader = page.getByTestId('finance-month-stepper').locator('xpath=ancestor::header');
+    await expect(financeHeader.getByRole('button', { name: 'Registrar receita' })).toBeVisible({ timeout: 15_000 });
     const perfBtn = page.getByTestId('finance-performance-button');
     await expect(perfBtn).toBeVisible();
     await expect(perfBtn).toHaveText(/Performance da equipe/);

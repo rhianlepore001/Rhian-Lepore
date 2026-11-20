@@ -67,3 +67,36 @@ it('encerra conexões reais ao entrar na demo por pushState', async () => {
   syncSupabaseMode();
   expect(real.auth.startAutoRefresh).toHaveBeenCalledOnce();
 });
+
+describe('vitrine de produtos na demonstração', () => {
+  it('retorna apenas produtos ativos e com estoque sem expor custo nem estoque exato', async () => {
+    const client = createDemoClient();
+    const { data: allProducts } = await client.rpc('get_checkout_products_v1', { p_include_inactive: true });
+    expect(allProducts.length).toBeGreaterThanOrEqual(6);
+    expect(allProducts.some((p: any) => p.stock_quantity === 0)).toBe(true);
+    expect(allProducts.some((p: any) => p.is_active === false)).toBe(true);
+
+    const { data: publicCatalog } = await client.rpc('get_public_products_catalog', { p_business_id: 'any' });
+    expect(publicCatalog.length).toBe(4);
+    for (const item of publicCatalog) {
+      expect(Object.keys(item).sort()).toEqual(['description', 'id', 'image_url', 'name', 'sale_price']);
+      expect(item.image_url).toMatch(/^\/demo\/barbearia\/produto-/);
+    }
+
+    await client.from('business_settings').upsert({ user_id: allProducts[0].company_id, public_products_enabled: false }, { onConflict: 'user_id' });
+    const { data: disabledCatalog } = await client.rpc('get_public_products_catalog', { p_business_id: 'any' });
+    expect(disabledCatalog).toEqual([]);
+  });
+
+  it('suporta upload e remoção em memória no bucket product_images mantendo outros buckets bloqueados', async () => {
+    const client = createDemoClient();
+    const bucket = client.storage.from('product_images');
+    const blob = new Blob(['demo'], { type: 'image/webp' });
+    const uploaded = await bucket.upload('company-1/foto.webp', blob);
+    expect(uploaded.error).toBeNull();
+    const { data } = bucket.getPublicUrl('company-1/foto.webp');
+    expect(data.publicUrl).toBeTruthy();
+    const removed = await bucket.remove(['company-1/foto.webp']);
+    expect(removed.error).toBeNull();
+  });
+});

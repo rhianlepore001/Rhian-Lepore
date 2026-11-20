@@ -1,13 +1,13 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
-  Check,
+  Camera,
   Minus,
   MoreVertical,
   Package,
   Plus,
   Search,
-  X,
+  Trash2,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBrutalTheme } from '@/hooks/useBrutalTheme';
@@ -18,6 +18,11 @@ import {
   useUpdateProduct,
 } from '@/hooks/useCatalog';
 import { useTenantLocale } from '@/hooks/useTenantLocale';
+import { deleteProductImage, uploadProductImage } from '@/services/catalog';
+import {
+  MAX_PRODUCT_DESCRIPTION_LENGTH,
+  validateProductImageFile,
+} from '@/utils/productImage';
 import type { Product } from '@/types/catalog';
 import {
   Badge,
@@ -39,6 +44,7 @@ type StockFilter = 'all' | 'low';
 
 interface ProductFormState {
   name: string;
+  description: string;
   salePrice: string;
   costPrice: string;
   stockQuantity: string;
@@ -47,14 +53,17 @@ interface ProductFormState {
 
 interface FormErrors {
   name?: string;
+  description?: string;
   salePrice?: string;
   costPrice?: string;
   stockQuantity?: string;
   minStockQuantity?: string;
+  image?: string;
 }
 
 const EMPTY_FORM: ProductFormState = {
   name: '',
+  description: '',
   salePrice: '',
   costPrice: '',
   stockQuantity: '0',
@@ -81,6 +90,9 @@ function parseSellError(error: unknown): 'insufficient_stock' | 'product_not_fou
 function validateForm(form: ProductFormState): FormErrors {
   const errors: FormErrors = {};
   if (!form.name.trim()) errors.name = 'Informe o nome';
+  if (form.description.trim().length > MAX_PRODUCT_DESCRIPTION_LENGTH) {
+    errors.description = `Máximo de ${MAX_PRODUCT_DESCRIPTION_LENGTH} caracteres`;
+  }
   const salePrice = parseFloat(form.salePrice);
   if (form.salePrice === '' || isNaN(salePrice) || salePrice < 0) {
     errors.salePrice = 'Informe um preço válido';
@@ -103,6 +115,7 @@ function validateForm(form: ProductFormState): FormErrors {
 function productToForm(product: Product): ProductFormState {
   return {
     name: product.name,
+    description: product.description ?? '',
     salePrice: String(product.sale_price),
     costPrice: String(product.cost_price ?? 0),
     stockQuantity: String(product.stock_quantity),
@@ -112,7 +125,7 @@ function productToForm(product: Product): ProductFormState {
 
 export const Products: React.FC = () => {
   const { companyId, role } = useAuth();
-  const { colors } = useBrutalTheme();
+  const { colors, classes } = useBrutalTheme();
   const { currencySymbol, formatMoney } = useTenantLocale();
   const isOwner = role === 'owner';
 
@@ -122,12 +135,27 @@ export const Products: React.FC = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [form, setForm] = useState<ProductFormState>(EMPTY_FORM);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [imageRemoved, setImageRemoved] = useState(false);
+  const [isSavingProduct, setIsSavingProduct] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const objectUrlRef = useRef<string | null>(null);
   const [sellProduct, setSellProduct] = useState<Product | null>(null);
   const [sellQuantity, setSellQuantity] = useState(1);
   const [sellError, setSellError] = useState<string | null>(null);
   const [deactivateTarget, setDeactivateTarget] = useState<Product | null>(null);
   const [moreMenuProduct, setMoreMenuProduct] = useState<Product | null>(null);
   const { showToast } = useToast();
+
+  const revokePreviewObjectUrl = () => {
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
+    }
+  };
+
+  useEffect(() => revokePreviewObjectUrl, []);
 
   const {
     data: products = [],
@@ -158,16 +186,24 @@ export const Products: React.FC = () => {
   }, [products, searchQuery, stockFilter]);
 
   const openCreateModal = () => {
+    revokePreviewObjectUrl();
     setEditingProduct(null);
     setForm(EMPTY_FORM);
     setFormErrors({});
+    setImageFile(null);
+    setImagePreviewUrl(null);
+    setImageRemoved(false);
     setFormOpen(true);
   };
 
   const openEditModal = (product: Product) => {
+    revokePreviewObjectUrl();
     setEditingProduct(product);
     setForm(productToForm(product));
     setFormErrors({});
+    setImageFile(null);
+    setImagePreviewUrl(product.image_url ?? null);
+    setImageRemoved(false);
     setFormOpen(true);
     setMoreMenuProduct(null);
   };
@@ -179,10 +215,48 @@ export const Products: React.FC = () => {
   };
 
   const closeFormModal = () => {
+    revokePreviewObjectUrl();
     setFormOpen(false);
     setEditingProduct(null);
     setForm(EMPTY_FORM);
     setFormErrors({});
+    setImageFile(null);
+    setImagePreviewUrl(null);
+    setImageRemoved(false);
+    if (imageInputRef.current) {
+      imageInputRef.current.value = '';
+    }
+  };
+
+  const handleImageFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    const validationError = validateProductImageFile(file);
+    if (validationError) {
+      setFormErrors(prev => ({ ...prev, image: validationError }));
+      return;
+    }
+
+    revokePreviewObjectUrl();
+    const nextUrl = URL.createObjectURL(file);
+    objectUrlRef.current = nextUrl;
+    setImageFile(file);
+    setImagePreviewUrl(nextUrl);
+    setImageRemoved(false);
+    setFormErrors(prev => ({ ...prev, image: undefined }));
+  };
+
+  const handleRemoveImage = () => {
+    revokePreviewObjectUrl();
+    setImageFile(null);
+    setImagePreviewUrl(null);
+    setImageRemoved(true);
+    setFormErrors(prev => ({ ...prev, image: undefined }));
+    if (imageInputRef.current) {
+      imageInputRef.current.value = '';
+    }
   };
 
   const handleSaveProduct = async () => {
@@ -191,31 +265,57 @@ export const Products: React.FC = () => {
       setFormErrors(errors);
       return;
     }
-    if (!companyId) return;
+    if (!companyId || isSavingProduct) return;
 
-    const payload = {
-      companyId,
-      name: form.name.trim(),
-      salePrice: parseFloat(form.salePrice),
-      costPrice: parseFloat(form.costPrice),
-      stockQuantity: parseInt(form.stockQuantity, 10),
-      minStockQuantity: parseInt(form.minStockQuantity, 10),
-    };
+    setIsSavingProduct(true);
+    let uploadedImageUrl: string | null = null;
+    const previousImageUrl = editingProduct?.image_url ?? null;
 
     try {
+      if (imageFile) {
+        uploadedImageUrl = await uploadProductImage(companyId, imageFile);
+      }
+
+      const trimmedDescription = form.description.trim();
+      const resolvedImageUrl = uploadedImageUrl
+        ?? (imageRemoved ? null : previousImageUrl);
+
+      const payload = {
+        companyId,
+        name: form.name.trim(),
+        description: trimmedDescription || null,
+        imageUrl: resolvedImageUrl,
+        salePrice: parseFloat(form.salePrice),
+        costPrice: parseFloat(form.costPrice),
+        stockQuantity: parseInt(form.stockQuantity, 10),
+        minStockQuantity: parseInt(form.minStockQuantity, 10),
+      };
+
       if (editingProduct) {
         await updateMutation.mutateAsync({
           ...payload,
           productId: editingProduct.id,
         });
-        showToast('Produto salvo', 'success');
       } else {
         await createMutation.mutateAsync(payload);
-        showToast('Produto salvo', 'success');
       }
+
+      if (previousImageUrl && previousImageUrl !== resolvedImageUrl) {
+        await deleteProductImage(companyId, previousImageUrl).catch(() => undefined);
+      }
+
+      showToast('Produto salvo', 'success');
       closeFormModal();
-    } catch {
-      showToast('Não foi possível salvar o produto', 'error');
+    } catch (error) {
+      if (uploadedImageUrl) {
+        await deleteProductImage(companyId, uploadedImageUrl).catch(() => undefined);
+      }
+      const message = error instanceof Error && error.message && /imagem|foto|JPG|PNG|WebP|MB/i.test(error.message)
+        ? error.message
+        : 'Não foi possível salvar o produto';
+      showToast(message, 'error');
+    } finally {
+      setIsSavingProduct(false);
     }
   };
 
@@ -302,6 +402,24 @@ export const Products: React.FC = () => {
     </div>
   );
 
+  const renderProductThumb = (product: Product, sizeClass: string) => (
+    <div
+      className={`${sizeClass} aspect-square shrink-0 overflow-hidden rounded-xl border ${colors.border} ${colors.surface} flex items-center justify-center`}
+    >
+      {product.image_url ? (
+        <img
+          src={product.image_url}
+          alt={product.name}
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <Package className={`h-5 w-5 ${colors.textMuted}`} aria-hidden="true" />
+      )}
+    </div>
+  );
+
   const renderMobileCard = (product: Product) => {
     const margin = product.cost_price == null ? null : product.sale_price - product.cost_price;
     const marginPct = margin != null && product.sale_price > 0 ? Math.round((margin / product.sale_price) * 100) : 0;
@@ -312,13 +430,23 @@ export const Products: React.FC = () => {
         key={product.id}
         className={`${outOfStock ? 'opacity-70' : ''}`}
       >
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <h3 className={`text-sm font-semibold ${colors.text}`}>{product.name}</h3>
-          {renderStockBadge(product)}
+        <div className="flex items-start gap-3 mb-3">
+          {renderProductThumb(product, 'w-14 h-14')}
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2">
+              <h3 className={`text-sm font-semibold break-words ${colors.text}`}>{product.name}</h3>
+              {renderStockBadge(product)}
+            </div>
+            {product.description && (
+              <p className={`text-xs line-clamp-2 mt-0.5 ${colors.textSecondary}`}>
+                {product.description}
+              </p>
+            )}
+            <p className={`font-mono text-base font-bold tabular-nums ${colors.text} mt-1.5`}>
+              {formatPrice(product.sale_price)}
+            </p>
+          </div>
         </div>
-        <p className={`font-mono text-base font-bold tabular-nums ${colors.text} mb-2`}>
-          {formatPrice(product.sale_price)}
-        </p>
         <p className={`text-xs ${colors.textSecondary} mb-1`}>
           Estoque: {product.stock_quantity} un.
           {isOwner && <> · mín. {product.min_stock_quantity}</>}
@@ -341,9 +469,19 @@ export const Products: React.FC = () => {
         key: 'name',
         header: 'Produto',
         render: (row) => (
-          <div className="flex items-center gap-2">
-            <span className="font-medium">{row.name}</span>
-            {renderStockBadge(row)}
+          <div className="flex items-center gap-3 min-w-0">
+            {renderProductThumb(row, 'w-10 h-10')}
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="font-medium truncate">{row.name}</span>
+                {renderStockBadge(row)}
+              </div>
+              {row.description && (
+                <p className={`text-xs truncate max-w-xs ${colors.textSecondary}`}>
+                  {row.description}
+                </p>
+              )}
+            </div>
           </div>
         ),
       },
@@ -594,7 +732,7 @@ export const Products: React.FC = () => {
             <Button
               variant="primary"
               size="md"
-              loading={createMutation.isPending || updateMutation.isPending}
+              loading={isSavingProduct || createMutation.isPending || updateMutation.isPending}
               onClick={handleSaveProduct}
             >
               Salvar
@@ -603,12 +741,96 @@ export const Products: React.FC = () => {
         }
       >
         <div className="space-y-4">
+          <div className="space-y-2">
+            <span className={classes.label}>Foto do produto (opcional)</span>
+            <div className="flex items-center gap-4">
+              <div
+                data-testid="product-image-preview"
+                className={`w-24 h-24 aspect-square shrink-0 overflow-hidden rounded-2xl border ${colors.border} ${colors.surface} flex items-center justify-center`}
+              >
+                {imagePreviewUrl ? (
+                  <img
+                    src={imagePreviewUrl}
+                    alt={form.name.trim() || 'Prévia da foto do produto'}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <Package className={`h-8 w-8 ${colors.textMuted}`} aria-hidden="true" />
+                )}
+              </div>
+              <div className="min-w-0 flex-1 space-y-2">
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    icon={<Camera className="w-4 h-4" />}
+                    onClick={() => imageInputRef.current?.click()}
+                  >
+                    {imagePreviewUrl ? 'Trocar foto' : 'Adicionar foto'}
+                  </Button>
+                  {imagePreviewUrl && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      icon={<Trash2 className="w-4 h-4" />}
+                      onClick={handleRemoveImage}
+                    >
+                      Remover foto
+                    </Button>
+                  )}
+                </div>
+                <p className={`text-xs leading-relaxed ${colors.textMuted}`}>
+                  JPG, PNG ou WebP. Ajustada automaticamente em formato quadrado para ficar leve no celular.
+                </p>
+                {formErrors.image && (
+                  <p className="text-xs text-[var(--color-danger)]" role="alert">
+                    {formErrors.image}
+                  </p>
+                )}
+              </div>
+            </div>
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              aria-label="Foto do produto"
+              className="hidden"
+              onChange={handleImageFileChange}
+            />
+          </div>
+
           <Input
             label="Nome"
             value={form.name}
             onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value }))}
             error={formErrors.name}
           />
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <label htmlFor="product-description" className={classes.label}>
+                Descrição (opcional)
+              </label>
+              <span className={`text-xs tabular-nums ${colors.textMuted}`}>
+                {form.description.length}/{MAX_PRODUCT_DESCRIPTION_LENGTH}
+              </span>
+            </div>
+            <textarea
+              id="product-description"
+              rows={2}
+              maxLength={MAX_PRODUCT_DESCRIPTION_LENGTH}
+              value={form.description}
+              onChange={(e) => setForm(prev => ({ ...prev, description: e.target.value.slice(0, MAX_PRODUCT_DESCRIPTION_LENGTH) }))}
+              placeholder="Ex.: Fixação média com efeito fosco, 150g."
+              className={classes.input}
+            />
+            {formErrors.description && (
+              <p className="text-xs text-[var(--color-danger)]" role="alert">
+                {formErrors.description}
+              </p>
+            )}
+          </div>
           <Input
             label="Preço de venda"
             type="number"

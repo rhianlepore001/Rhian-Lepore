@@ -17,6 +17,8 @@ const Queue = lazy(() => import('./QueueManagement').then(m => ({ default: m.Que
 const QueueHistory = lazy(() => import('./QueueHistory').then(m => ({ default: m.QueueHistory })));
 const ClientCRM = lazy(() => import('./ClientCRM').then(m => ({ default: m.ClientCRM })));
 const Clients = lazy(() => import('./Clients').then(m => ({ default: m.Clients })));
+const Products = lazy(() => import('./Products').then(m => ({ default: m.Products })));
+const PublicBookingSettings = lazy(() => import('./settings/PublicBookingSettings').then(m => ({ default: m.PublicBookingSettings })));
 const Team = lazy(() => import('./settings/TeamSettings').then(m => ({ default: m.TeamSettings })));
 
 export const DEMO_BUSINESS = { barber: 'Barbearia Corte Fino', beauty: 'Studio Aurora' } as const;
@@ -48,6 +50,8 @@ const Screens = () => <Routes>
   <Route path="/financeiro" element={<Finance />} />
   <Route path="/financeiro/performance" element={<Performance />} />
   <Route path="/resultados-por-hora" element={<HourlyResults />} />
+  <Route path="/produtos" element={<Products />} />
+  <Route path="/configuracoes/agendamento" element={<PublicBookingSettings />} />
   <Route path="/configuracoes/equipe" element={<Team />} />
   <Route path="*" element={<Unavailable />} />
 </Routes>;

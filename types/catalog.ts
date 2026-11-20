@@ -6,6 +6,8 @@ export const productSchema = z.object({
   id: uuidSchema,
   company_id: uuidSchema,
   name: z.string().min(1),
+  description: z.string().nullable().optional().default(null),
+  image_url: z.string().nullable().optional().default(null),
   sale_price: z.coerce.number().finite().nonnegative(),
   cost_price: z.coerce.number().finite().nonnegative().nullable().default(null),
   stock_quantity: z.coerce.number().int().min(0),
@@ -49,8 +51,9 @@ export const appointmentProductLineSchema = z.object({
 export const publicProductCatalogItemSchema = z.object({
   id: uuidSchema,
   name: z.string().min(1),
+  description: z.string().nullable().optional().default(null),
   sale_price: moneyAmountSchema,
-  stock_quantity: z.number().int().min(0),
+  image_url: z.string().nullable().optional().default(null),
 });
 
 export const productLineInputSchema = z.object({
@@ -66,6 +69,8 @@ export const listProductsInputSchema = z.object({
 export const createProductInputSchema = z.object({
   companyId: uuidSchema,
   name: z.string().trim().min(1),
+  description: z.string().trim().max(240).nullable().optional(),
+  imageUrl: z.string().trim().min(1).nullable().optional(),
   salePrice: moneyAmountSchema,
   costPrice: moneyAmountSchema,
   stockQuantity: z.number().int().min(0),

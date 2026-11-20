@@ -1,5 +1,10 @@
 import { supabase } from '@/lib/supabase';
 import {
+  extractProductImagePath,
+  prepareProductImage,
+  PRODUCT_IMAGES_BUCKET,
+} from '@/utils/productImage';
+import {
   appointmentProductLineSchema,
   createProductInputSchema,
   listProductsInputSchema,
@@ -33,21 +38,54 @@ export async function listProducts(input: ListProductsInput): Promise<Product[]>
   });
 }
 
+export async function uploadProductImage(companyId: string, file: File): Promise<string> {
+  const prepared = await prepareProductImage(file);
+  const randomSuffix = Math.random().toString(36).slice(2, 8);
+  const filePath = `${companyId}/${Date.now()}-${randomSuffix}.${prepared.extension}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(PRODUCT_IMAGES_BUCKET)
+    .upload(filePath, prepared.blob, {
+      contentType: prepared.contentType,
+      cacheControl: '3600',
+      upsert: false,
+    });
+
+  if (uploadError) throw uploadError;
+
+  const { data } = supabase.storage.from(PRODUCT_IMAGES_BUCKET).getPublicUrl(filePath);
+  return data.publicUrl;
+}
+
+export async function deleteProductImage(companyId: string, imageUrl: string): Promise<void> {
+  const path = extractProductImagePath(imageUrl, companyId);
+  if (!path) return;
+  await supabase.storage.from(PRODUCT_IMAGES_BUCKET).remove([path]);
+}
+
 export async function createProduct(input: CreateProductInput): Promise<Product> {
   const parsed = createProductInputSchema.parse(input);
+  const row: Record<string, unknown> = {
+    company_id: parsed.companyId,
+    name: parsed.name,
+    sale_price: parsed.salePrice,
+    cost_price: parsed.costPrice,
+    stock_quantity: parsed.stockQuantity,
+    min_stock_quantity: parsed.minStockQuantity,
+    commission_percent: parsed.commissionPercent ?? 0,
+    show_in_public: parsed.showInPublic ?? true,
+    is_active: true,
+  };
+  if (parsed.description !== undefined) {
+    row.description = parsed.description || null;
+  }
+  if (parsed.imageUrl !== undefined) {
+    row.image_url = parsed.imageUrl || null;
+  }
+
   const { data, error } = await supabase
     .from('products')
-    .insert({
-      company_id: parsed.companyId,
-      name: parsed.name,
-      sale_price: parsed.salePrice,
-      cost_price: parsed.costPrice,
-      stock_quantity: parsed.stockQuantity,
-      min_stock_quantity: parsed.minStockQuantity,
-      commission_percent: parsed.commissionPercent ?? 0,
-      show_in_public: parsed.showInPublic ?? true,
-      is_active: true,
-    })
+    .insert(row)
     .select()
     .single();
 
@@ -60,6 +98,8 @@ export async function updateProduct(input: UpdateProductInput): Promise<Product>
   const changes: Record<string, unknown> = {};
 
   if (parsed.name !== undefined) changes.name = parsed.name;
+  if (parsed.description !== undefined) changes.description = parsed.description || null;
+  if (parsed.imageUrl !== undefined) changes.image_url = parsed.imageUrl || null;
   if (parsed.salePrice !== undefined) changes.sale_price = parsed.salePrice;
   if (parsed.costPrice !== undefined) changes.cost_price = parsed.costPrice;
   if (parsed.stockQuantity !== undefined) changes.stock_quantity = parsed.stockQuantity;

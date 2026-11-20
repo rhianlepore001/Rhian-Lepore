@@ -44,6 +44,11 @@ const mocks = vi.hoisted(() => {
   const companyEqMock = vi.fn(() => ({ order: orderMock, eq: activeEqMock }));
   const selectMock = vi.fn(() => ({ eq: companyEqMock }));
   const rpcMock = vi.fn().mockResolvedValue({ data: sale, error: null });
+  const storageUploadMock = vi.fn().mockResolvedValue({ data: { path: 'x' }, error: null });
+  const storageGetPublicUrlMock = vi.fn((path: string) => ({
+    data: { publicUrl: `https://example.supabase.co/storage/v1/object/public/product_images/${path}` },
+  }));
+  const storageRemoveMock = vi.fn().mockResolvedValue({ data: [], error: null });
 
   return {
     product,
@@ -58,6 +63,9 @@ const mocks = vi.hoisted(() => {
     companyEqMock,
     selectMock,
     rpcMock,
+    storageUploadMock,
+    storageGetPublicUrlMock,
+    storageRemoveMock,
   };
 });
 
@@ -69,10 +77,25 @@ vi.mock('@/lib/supabase', () => ({
       update: mocks.updateMock,
     })),
     rpc: mocks.rpcMock,
+    storage: {
+      from: vi.fn(() => ({
+        upload: mocks.storageUploadMock,
+        getPublicUrl: mocks.storageGetPublicUrlMock,
+        remove: mocks.storageRemoveMock,
+      })),
+    },
   },
 }));
 
-import { createProduct, listProducts, sellProduct, updateProduct } from '@/services/catalog';
+import {
+  createProduct,
+  deleteProductImage,
+  fetchPublicProductsCatalog,
+  listProducts,
+  sellProduct,
+  updateProduct,
+  uploadProductImage,
+} from '@/services/catalog';
 import { supabase } from '@/lib/supabase';
 
 const { product, sale } = mocks;
@@ -164,5 +187,60 @@ describe('catalog service', () => {
       p_professional_id: sale.professional_id,
       p_payment_method: null,
     });
+  });
+
+  it('envia foto para product_images/{companyId}/... e remove apenas foto da própria empresa', async () => {
+    const file = new File([new Uint8Array(128)], 'pomada.webp', { type: 'image/webp' });
+    const url = await uploadProductImage(product.company_id, file);
+
+    expect(supabase.storage.from).toHaveBeenCalledWith('product_images');
+    expect(mocks.storageUploadMock).toHaveBeenCalledWith(
+      expect.stringMatching(new RegExp(`^${product.company_id}/\\d+-[a-z0-9]+\\.webp$`)),
+      expect.any(Blob),
+      expect.objectContaining({ contentType: 'image/webp', upsert: false }),
+    );
+    expect(url).toContain(`/product_images/${product.company_id}/`);
+
+    await deleteProductImage(product.company_id, url);
+    expect(mocks.storageRemoveMock).toHaveBeenCalledWith([
+      expect.stringMatching(new RegExp(`^${product.company_id}/`)),
+    ]);
+
+    mocks.storageRemoveMock.mockClear();
+    await deleteProductImage(
+      product.company_id,
+      'https://example.supabase.co/storage/v1/object/public/product_images/99999999-9999-4999-8999-999999999999/other.webp',
+    );
+    expect(mocks.storageRemoveMock).not.toHaveBeenCalled();
+  });
+
+  it('fetchPublicProductsCatalog projeta apenas campos públicos e descarta estoque/custo', async () => {
+    mocks.rpcMock.mockResolvedValueOnce({
+      data: [
+        {
+          id: product.id,
+          name: 'Pomada Matte',
+          description: 'Efeito fosco',
+          sale_price: 55,
+          image_url: 'https://cdn.example.com/pomada.webp',
+          stock_quantity: 12,
+          cost_price: 20,
+        },
+      ],
+      error: null,
+    });
+
+    const items = await fetchPublicProductsCatalog(product.company_id);
+    expect(items).toEqual([
+      {
+        id: product.id,
+        name: 'Pomada Matte',
+        description: 'Efeito fosco',
+        sale_price: 55,
+        image_url: 'https://cdn.example.com/pomada.webp',
+      },
+    ]);
+    expect(items[0]).not.toHaveProperty('stock_quantity');
+    expect(items[0]).not.toHaveProperty('cost_price');
   });
 });

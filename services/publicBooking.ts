@@ -12,6 +12,10 @@ import {
   type SubmitPublicBookingInput,
   type SubmitPublicGroupBookingInput,
 } from '@/types/publicBooking';
+import {
+  publicProductCatalogItemSchema,
+  type PublicProductCatalogItem,
+} from '@/types/catalog';
 import { filterBookableServices } from '@/utils/filterBookableServices';
 import { isPricedService } from '@/utils/groupBooking';
 import { addDaysToDateString } from '@/utils/businessTimezone';
@@ -525,12 +529,18 @@ export async function fetchBusinessSettings(businessId: string) {
   return data ?? null;
 }
 
-export async function fetchPublicProductsCatalog(businessId: string) {
+export async function fetchPublicProductsCatalog(
+  businessId: string,
+): Promise<PublicProductCatalogItem[]> {
   const { data, error } = await supabase.rpc('get_public_products_catalog', {
     p_business_id: businessId,
   });
   if (error) throw error;
-  return Array.isArray(data) ? data : [];
+  const rows = Array.isArray(data) ? data : [];
+  return rows.flatMap((item) => {
+    const parsed = publicProductCatalogItemSchema.safeParse(item);
+    return parsed.success ? [parsed.data] : [];
+  });
 }
 
 export async function fetchPublicServices(businessId: string) {

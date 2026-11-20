@@ -3,6 +3,16 @@ import { demoCompanyId } from './mode';
 export type DemoRow = Record<string, any>;
 export type DemoTables = Record<string, DemoRow[]>;
 type CatalogService = readonly [name: string, price: number, durationMinutes: number, image: string, category?: string];
+type CatalogProduct = readonly [
+  name: string,
+  description: string,
+  salePrice: number,
+  costPrice: number,
+  stockQuantity: number,
+  minStockQuantity: number,
+  image: string | null,
+  isActive?: boolean,
+];
 const id = (niche: string, n: number) => `d0000000-0000-4000-${niche === 'beauty' ? '8002' : '8001'}-${String(n).padStart(12, '0')}`;
 export const DEMO_TIME_ZONE = 'America/Sao_Paulo';
 
@@ -35,6 +45,14 @@ const catalog = {
     ],
     team: ['Rafael Costa', 'Lucas Mendes', 'André Lima'],
     clients: ['Pedro Souza', 'Gabriel Ferreira', 'João Alves', 'Bruno Santos', 'Felipe Lima', 'Diego Rocha', 'Matheus Oliveira', 'Thiago Carvalho', 'Rodrigo Nunes', 'Caio Martins', 'Vinícius Araújo', 'Leonardo Dias', 'Henrique Barros', 'Eduardo Pires'],
+    products: [
+      ['Pomada Modeladora Matte', 'Fixação média com acabamento fosco natural, 150g.', 58, 26, 12, 3, 'produto-pomada.svg', true],
+      ['Óleo para Barba Amadeirado', 'Hidrata e alinha os fios sem deixar oleoso, 30ml.', 49, 21, 8, 2, 'produto-oleo-barba.svg', true],
+      ['Balm Hidratante para Barba', 'Controla o volume e acalma a pele após o barbear, 140ml.', 54, 24, 6, 2, 'produto-balm.svg', true],
+      ['Shampoo 3 em 1', 'Limpeza refrescante para cabelo, barba e corpo, 250ml.', 42, 18, 2, 3, 'produto-shampoo.svg', true],
+      ['Cera Efeito Seco (esgotada)', 'Alta fixação para penteados estruturados, 80g.', 52, 22, 0, 2, null, true],
+      ['Tônico Antigo (inativo)', 'Fórmula descontinuada no salão.', 39, 15, 5, 1, null, false],
+    ] as readonly CatalogProduct[],
   },
   beauty: {
     business: 'Studio Aurora',
@@ -54,6 +72,14 @@ const catalog = {
     ],
     team: ['Marina Costa', 'Luiza Martins', 'Ana Ribeiro'],
     clients: ['Beatriz Souza', 'Clara Ferreira', 'Juliana Alves', 'Camila Santos', 'Helena Lima', 'Isabela Rocha', 'Larissa Oliveira', 'Fernanda Carvalho', 'Mariana Nunes', 'Patrícia Martins', 'Renata Araújo', 'Sofia Dias', 'Amanda Barros', 'Letícia Pires'],
+    products: [
+      ['Sérum Reparador de Pontas', 'Sela as cutículas e reduz o frizz com toque leve, 60ml.', 89, 42, 10, 3, 'produto-serum.svg', true],
+      ['Máscara de Hidratação Intensa', 'Nutrição profunda para fios ressecados ou com química, 300g.', 115, 54, 7, 2, 'produto-mascara.svg', true],
+      ['Óleo Capilar Iluminador', 'Brilho imediato e maciez sem pesar nos fios, 100ml.', 96, 45, 5, 2, 'produto-oleo-capilar.svg', true],
+      ['Protetor Térmico Leave-in', 'Proteção até 230°C para secador e chapinha, 200ml.', 74, 34, 2, 3, 'produto-protetor-termico.svg', true],
+      ['Spray Fixador Suave (esgotado)', 'Fixação flexível para penteados, 250ml.', 68, 30, 0, 2, null, true],
+      ['Ampola Edição Anterior (inativa)', 'Linha substituída pela máscara atual.', 45, 20, 4, 1, null, false],
+    ] as readonly CatalogProduct[],
   },
 } as const;
 
@@ -184,7 +210,23 @@ export function createDemoSeed(niche: 'barber' | 'beauty'): DemoTables {
   }
 
   const expenses = [['Aluguel', 1800], ['Produtos', 620], ['Energia', 310], ['Internet', 120]].flatMap(([name, value], i) => [monthStart, `${previousMonth}-01`].map((day, m) => ({ ...common, id: id(niche, 1400 + i * 2 + m), type: 'expense', revenue: 0, amount: 0, commission_value: 0, expense: value, professional_id: null, barber_name: null, client_name: null, service_name: name, description: name, created_at: at(shiftDay(day, 4 + i), 12), commission_paid: true, status: 'paid', payment_method: null })));
-  const settings = { ...common, id: id(niche, 1), business_hours: Object.fromEntries(Array.from({ length: 7 }, (_, d) => [['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][d], d === 0 ? { isOpen: false, blocks: [] } : { isOpen: true, blocks: [{ start: '09:00', end: '20:00' }] }])), timezone: DEMO_TIME_ZONE, onboarding_completed: true, onboarding_step: 5, commission_settlement_day_of_month: 5, payment_day: 5, machine_fee_enabled: false, debit_fee_percent: 0, credit_fee_percent: 0, public_products_enabled: false, enable_self_rescheduling: true, online_booking_requires_approval: true, staff_appointment_edit_scope: 'own', staff_agenda_block_scope: 'own', client_cancel_cutoff_hours: 2 };
+  const settings = { ...common, id: id(niche, 1), business_hours: Object.fromEntries(Array.from({ length: 7 }, (_, d) => [['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][d], d === 0 ? { isOpen: false, blocks: [] } : { isOpen: true, blocks: [{ start: '09:00', end: '20:00' }] }])), timezone: DEMO_TIME_ZONE, onboarding_completed: true, onboarding_step: 5, commission_settlement_day_of_month: 5, payment_day: 5, machine_fee_enabled: false, debit_fee_percent: 0, credit_fee_percent: 0, public_products_enabled: true, enable_self_rescheduling: true, online_booking_requires_approval: true, staff_appointment_edit_scope: 'own', staff_agenda_block_scope: 'own', client_cancel_cutoff_hours: 2 };
+  const products = data.products.map(([name, description, sale_price, cost_price, stock_quantity, min_stock_quantity, image, is_active = true], i) => ({
+    ...common,
+    id: id(niche, 300 + i),
+    name,
+    description,
+    image_url: image ? `/demo/${data.folder}/${image}` : null,
+    sale_price,
+    cost_price,
+    stock_quantity,
+    min_stock_quantity,
+    commission_percent: 10,
+    show_in_public: true,
+    is_active,
+    created_at: at(shiftDay(today, -30 + i), 10),
+    updated_at: null,
+  }));
   const profile = { ...common, id: company, business_name: data.business, full_name: team[0].name, user_type: niche, role: 'owner', region: 'BR', tutorial_completed: true, subscription_status: 'active', business_slug: `simulacao-${niche}`, public_booking_enabled: true, booking_lead_time_hours: 0, booking_lead_time_minutes: 0, logo_url: `/demo/${data.folder}/perfil.webp`, cover_photo_url: `/demo/${data.folder}/capa.webp`, address_street: null, phone: null, monthly_goal: beauty ? 18000 : 9000 };
   const gallery = Array.from({ length: 12 }, (_, i) => ({ ...common, id: id(niche, 200 + i), image_url: `/demo/${data.folder}/galeria-${String(i + 1).padStart(2, '0')}.webp`, display_order: i }));
   const queueMinutesAgo = (minutes: number) => new Date(now.getTime() - minutes * 60_000).toISOString();
@@ -206,5 +248,5 @@ export function createDemoSeed(niche: 'barber' | 'beauty'): DemoTables {
   });
   const queue = [...queueActive, ...queueCompleted];
   const publicBookings = [[1, 10, 5, 0], [1, 15, 6, 2]].map(([dayOffset, hour, clientIndex, memberIndex], i) => ({ ...common, id: id(niche, 170 + i), customer_name: clients[clientIndex].name, customer_phone: clients[clientIndex].phone, appointment_time: at(shiftDay(today, dayOffset), hour), professional_id: team[memberIndex].id, service_ids: [services[(clientIndex + 1) % services.length].id], total_price: services[(clientIndex + 1) % services.length].price, duration_minutes: services[(clientIndex + 1) % services.length].duration_minutes, status: 'pending', is_edit: false, created_at: queueMinutesAgo(40 + i * 25), notes: null }));
-  return { profiles: [profile], business_settings: [settings], services, service_categories: categories, team_members: team, clients, appointments, finance_records: [...finance, ...expenses], notifications: [], onboarding_progress: [{ company_id: company, is_completed: true }], agenda_blocks: [], public_bookings: publicBookings, public_clients: [], appointment_reschedules: [], products: [], appointment_products: [], product_sales: [], team_member_services: [], client_dependents: [], goal_settings: [], client_photos: [], commission_payments: [], business_galleries: gallery, queue_entries: queue };
+  return { profiles: [profile], business_settings: [settings], services, service_categories: categories, team_members: team, clients, appointments, finance_records: [...finance, ...expenses], notifications: [], onboarding_progress: [{ company_id: company, is_completed: true }], agenda_blocks: [], public_bookings: publicBookings, public_clients: [], appointment_reschedules: [], products, appointment_products: [], product_sales: [], team_member_services: [], client_dependents: [], goal_settings: [], client_photos: [], commission_payments: [], business_galleries: gallery, queue_entries: queue };
 }

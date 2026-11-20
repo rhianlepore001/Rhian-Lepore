@@ -1,3 +1,4 @@
+import { webcrypto } from 'node:crypto';
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
@@ -36,12 +37,13 @@ function installPicker(select: ReturnType<typeof vi.fn>) {
 
 beforeEach(() => vi.clearAllMocks());
 afterEach(() => {
+  vi.unstubAllGlobals();
   Reflect.deleteProperty(navigator, 'contacts');
   Reflect.deleteProperty(window, 'ContactsManager');
 });
 
 describe('seleção dos contatos do celular', () => {
-  it('seleciona múltiplos contatos e preserva os nomes e telefones antes de preparar o lote', async () => {
+  it('prepara automaticamente o lote com nomes e telefones dos contatos selecionados', async () => {
     const select = vi.fn().mockResolvedValue([
       { name: ['Ana Fictícia'], tel: ['(11) 98765-4321', '+55 11 97654-3210'] },
       { name: ['Bruno Fictício'], tel: ['+55 21 98888-7777'] },
@@ -50,10 +52,6 @@ describe('seleção dos contatos do celular', () => {
     openContacts();
     fireEvent.click(screen.getByRole('button', { name: 'Selecionar contatos do celular' }));
     expect(select).toHaveBeenCalledWith(['name', 'tel'], { multiple: true });
-    await screen.findByRole('button', { name: 'Preparar revisão' });
-    expect(api.createImportBatch).not.toHaveBeenCalled();
-    expect(api.commitImportBatch).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: 'Preparar revisão' }));
     await waitFor(() => expect(api.createImportBatch).toHaveBeenCalledTimes(1));
     const batch = api.createImportBatch.mock.calls[0][0] as { companyId: string; rows: { normalized: { name: string; phones: string[] } }[] };
     expect(batch.companyId).toBe('empresa-ficticia');
@@ -73,11 +71,21 @@ describe('seleção dos contatos do celular', () => {
     expect(api.commitImportBatch).not.toHaveBeenCalled();
   });
 
-  it('mantém a importação por arquivo disponível quando o navegador não oferece o seletor', async () => {
+  it('orienta a exportação e importa um VCF quando o navegador não oferece o seletor', async () => {
     openContacts();
-    await act(async () => {});
-    expect(screen.getByLabelText('Escolher arquivos')).toBeTruthy();
-    expect(api.createImportBatch).not.toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: 'Selecionar contatos do celular' })).toBeNull();
+    expect(screen.getByText(/Este navegador não oferece seleção direta.*Exportar/)).toBeVisible();
+    vi.stubGlobal('crypto', webcrypto);
+    const contents = 'BEGIN:VCARD\nVERSION:3.0\nFN:Ana Fictícia\nTEL:+55 11 98765-4321\nEND:VCARD';
+    const vcard = new File([contents], 'contatos.vcf', { type: 'text/vcard' });
+    Object.defineProperty(vcard, 'arrayBuffer', { value: async () => new TextEncoder().encode(contents).buffer });
+    fireEvent.change(screen.getByLabelText('Escolher arquivos'), { target: { files: [vcard] } });
+    fireEvent.click(screen.getByRole('button', { name: 'Analisar arquivos' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Preparar revisão' }));
+    await waitFor(() => expect(api.createImportBatch).toHaveBeenCalledWith(expect.objectContaining({
+      source: 'contacts',
+      rows: [expect.objectContaining({ normalized: expect.objectContaining({ name: 'Ana Fictícia', phones: ['+5511987654321'] }), issues: [] })],
+    })));
   });
 
   it('mantém a importação por arquivo quando o seletor falha', async () => {
@@ -93,12 +101,11 @@ describe('seleção dos contatos do celular', () => {
     installPicker(vi.fn().mockResolvedValue([{ name: ['Contato sem número'], tel: [] }]));
     openContacts();
     fireEvent.click(screen.getByRole('button', { name: 'Selecionar contatos do celular' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Preparar revisão' }));
     await waitFor(() => expect(api.createImportBatch).toHaveBeenCalledTimes(1));
     const batch = api.createImportBatch.mock.calls[0][0] as { rows: { normalized: { name: string; phones: string[] }; reason?: string; issues: string[] }[] };
     expect(batch.rows[0].normalized.name).toBe('Contato sem número');
     expect(batch.rows[0].normalized.phones).toEqual([]);
-    expect(batch.rows[0].issues).toContain('Confira o telefone.');
+    expect(batch.rows[0].issues).toContain('Confira o telefone. Nenhum número foi informado.');
   });
 
   it('apresenta o contato na revisão e apenas confirma o cadastro após o usuário autorizar', async () => {
@@ -107,7 +114,6 @@ describe('seleção dos contatos do celular', () => {
     installPicker(vi.fn().mockResolvedValue([{ name: ['Ana Fictícia'], tel: ['11987654321'] }]));
     openContacts();
     fireEvent.click(screen.getByRole('button', { name: 'Selecionar contatos do celular' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Preparar revisão' }));
     const confirm = await screen.findByRole('button', { name: 'Confirmar importação' });
     expect(screen.getByText(/Ana Fictícia.*\+5511987654321/)).toBeTruthy();
     expect(api.commitImportBatch).not.toHaveBeenCalled();
@@ -119,12 +125,10 @@ describe('seleção dos contatos do celular', () => {
     installPicker(vi.fn().mockResolvedValue([{ name: ['Ana Fictícia'], tel: ['11987654321'] }]));
     openContacts();
     fireEvent.click(screen.getByRole('button', { name: 'Selecionar contatos do celular' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Preparar revisão' }));
     await waitFor(() => expect(api.discardImportBatch).toHaveBeenCalledTimes(1));
     cleanup();
     openContacts();
     fireEvent.click(screen.getByRole('button', { name: 'Selecionar contatos do celular' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Preparar revisão' }));
     await waitFor(() => expect(api.discardImportBatch).toHaveBeenCalledTimes(2));
     const scope = (index: number) => (api.createImportBatch.mock.calls[index][0] as { rows: { normalized: { source_scope: string } }[] }).rows[0].normalized.source_scope;
     expect(scope(0)).toMatch(/^picker-/);
@@ -155,11 +159,10 @@ describe('seleção dos contatos do celular', () => {
     installPicker(vi.fn().mockResolvedValue([{ name: [], tel: [] }]));
     openContacts();
     fireEvent.click(screen.getByRole('button', { name: 'Selecionar contatos do celular' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Preparar revisão' }));
     await waitFor(() => expect(api.createImportBatch).toHaveBeenCalledTimes(1));
     const batch = api.createImportBatch.mock.calls[0][0] as { rows: { issues: string[] }[] };
     expect(batch.rows).toHaveLength(1);
-    expect(batch.rows[0].issues).toEqual(expect.arrayContaining(['Confira o nome.', 'Confira o telefone.']));
+    expect(batch.rows[0].issues).toEqual(expect.arrayContaining(['Confira o nome.', 'Confira o telefone. Nenhum número foi informado.']));
   });
 
   it('preserva mais de 20 telefones sem salvar o mapeamento automático', async () => {
@@ -167,7 +170,6 @@ describe('seleção dos contatos do celular', () => {
     installPicker(vi.fn().mockResolvedValue([{ name: ['Contato Fictício'], tel: phones }]));
     openContacts();
     fireEvent.click(screen.getByRole('button', { name: 'Selecionar contatos do celular' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Preparar revisão' }));
     await waitFor(() => expect(api.discardImportBatch).toHaveBeenCalled());
     const batch = api.createImportBatch.mock.calls[0][0] as { rows: { normalized: { phones: string[] } }[] };
     expect(batch.rows[0].normalized.phones).toEqual(phones.map(phone => `+55${phone}`));
@@ -176,15 +178,15 @@ describe('seleção dos contatos do celular', () => {
 });
 
 describe('abertura direta pelos contatos', () => {
-  it('abre já na opção de contatos do celular quando vem do cadastro de cliente', () => {
-    render(<ImportDataWizard companyId="empresa-ficticia" userId="usuario-ficticio" region="BR" api={api} initialSource="contacts" />);
+  it('abre já na opção de contatos do celular quando vem do cadastro de cliente', async () => {
+    await act(async () => render(<ImportDataWizard companyId="empresa-ficticia" userId="usuario-ficticio" region="BR" api={api} initialSource="contacts" />));
     expect(screen.queryByText('De onde vêm seus dados?')).toBeNull();
     expect(screen.getByRole('heading', { name: 'Contatos do celular' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Voltar' })).toBeTruthy();
   });
 
-  it('sem origem definida continua mostrando a escolha de origem', () => {
-    render(<ImportDataWizard companyId="empresa-ficticia" userId="usuario-ficticio" region="BR" api={api} />);
+  it('sem origem definida continua mostrando a escolha de origem', async () => {
+    await act(async () => render(<ImportDataWizard companyId="empresa-ficticia" userId="usuario-ficticio" region="BR" api={api} />));
     expect(screen.getByText('De onde vêm seus dados?')).toBeTruthy();
   });
 });

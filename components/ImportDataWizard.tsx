@@ -19,10 +19,11 @@ interface Props {
   region: 'BR' | 'PT';
   api?: ImportWizardApi;
   onClose?: () => void;
+  onViewClients?: () => void;
   initialSource?: ImportSource;
 }
 interface DocumentChoice { sheet: ImportSheet; kind: ImportKind; mapping: ImportColumns }
-interface Work { batchId: string; name: string; kind: ImportKind; rows: StoredImportRow[]; candidates: ImportCandidate[]; categories: ImportCategory[]; report?: ImportReport; status?: string; incomplete?: boolean }
+interface Work { batchId: string; name: string; source: ImportSource; kind: ImportKind; rows: StoredImportRow[]; candidates: ImportCandidate[]; categories: ImportCategory[]; report?: ImportReport; status?: string; incomplete?: boolean }
 interface PickedContact { name?: string[]; tel?: string[] }
 interface ContactsNavigator extends Navigator { contacts?: { select: (properties: string[], options: { multiple: boolean }) => Promise<PickedContact[]> } }
 type Phase = 'source' | 'files' | 'mapping' | 'preview' | 'report';
@@ -35,6 +36,26 @@ const FIELDS: Record<ImportKind, { key: ImportField; label: string }[]> = {
 const PHONE_EXISTS = 'Este telefone já está cadastrado em outro cliente. Vincule ao cadastro existente ou ignore esta linha.';
 const PHONE_REPEATED = 'Este telefone aparece mais de uma vez neste arquivo. Ajuste o telefone ou ignore esta linha.';
 const SIMILAR = 'Há um cadastro parecido. Escolha como continuar.';
+const MISSING_PHONE = 'Confira o telefone. Nenhum número foi informado.';
+
+function isContactWork(work: Work): boolean {
+  return work.source === 'contacts' && work.kind === 'client';
+}
+
+function ContactReport({ work }: { work: Work }) {
+  if (!work.report) return null;
+  const { imported, updated, ignored, pending, error } = work.report;
+  const excluded = ignored + pending + error;
+  return <>
+    <p><strong>{plural(imported, 'novo cliente', 'novos clientes')}</strong> · {plural(excluded, 'contato ficou de fora', 'contatos ficaram de fora')}{updated > 0 && ` · ${plural(updated, 'cadastro atualizado', 'cadastros atualizados')}`}</p>
+    {excluded > 0 && <details open>
+      <summary className="cursor-pointer">{plural(ignored, 'ignorado', 'ignorados')} · {plural(pending + error, 'pendente', 'pendentes')}</summary>
+      <ul className="max-h-64 overflow-y-auto mt-2 space-y-1">{work.rows.filter(row => row.outcome === 'ignored' || row.outcome === 'pending' || row.outcome === 'error').map(row =>
+        <li key={row.id}>Contato {row.row_number}: {String(row.normalized_data?.name || row.display_name || 'Sem nome')} · {row.reason || 'Confira os dados deste contato.'}</li>
+      )}</ul>
+    </details>}
+  </>;
+}
 function plural(count: number, one: string, many: string): string { return `${count} ${count === 1 ? one : many}`; }
 function matches(row: Record<string, unknown>, candidates: ImportCandidate[], kind: ImportKind) { return findImportMatches(row, candidates, kind); }
 
@@ -48,8 +69,10 @@ function validateRow(data: Record<string, unknown>, kind: ImportKind, region: 'B
     const rawPhones = typeof next.phoneText === 'string' ? next.phoneText.split(/[;,/|]+/).map(value => value.trim()).filter(Boolean) : Array.isArray(next.phones) ? next.phones.map(String) : [];
     const phones = rawPhones.map(phone => normalizePhone(phone, region));
     if (phones.some(phone => !phone)) issues.push('Confira os telefones.');
-    if (String(next.source_scope || '').startsWith('picker-') && !phones.length) issues.push('Confira o telefone.');
-    next.phones = phones.filter((phone): phone is string => phone !== null);
+    const validPhones = phones.filter((phone): phone is string => phone !== null);
+    const fromPicker = String(next.source_scope || '').startsWith('picker-');
+    if (fromPicker && !rawPhones.length) issues.push(MISSING_PHONE);
+    next.phones = fromPicker ? [...new Set(validPhones)] : validPhones;
     delete next.phoneText;
     const email = String(next.email || '').trim();
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) issues.push('Confira o e-mail.');
@@ -75,7 +98,7 @@ function pendingCsv(work: Work): void {
   const link = document.createElement('a'); link.href = url; link.download = 'pendencias-importacao.csv'; document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
 }
 
-export function ImportDataWizard({ companyId, userId, region, api = importApi, onClose, initialSource }: Props) {
+export function ImportDataWizard({ companyId, userId, region, api = importApi, onClose, onViewClients, initialSource }: Props) {
   const { colors, radius } = useBrutalTheme();
   const [phase, setPhase] = useState<Phase>(initialSource ? 'files' : 'source');
   const [source, setSource] = useState<ImportSource>(initialSource ?? 'spreadsheet');
@@ -94,32 +117,40 @@ export function ImportDataWizard({ companyId, userId, region, api = importApi, o
   const refreshHistory = useCallback(async () => { try { setHistory(await api.loadImportBatches(companyId)); setHistoryError(false); } catch { setHistoryError(true); } }, [api, companyId]);
   useEffect(() => { void refreshHistory(); }, [refreshHistory]);
   useEffect(() => { void api.purgeExpiredImportData(); }, [api]);
-  const readyCount = useMemo(() => works.reduce((sum, work) => sum + work.rows.filter(row => row.outcome === 'pending' && !row.reason).length, 0), [works]);
+  const readyCount = useMemo(() => works.reduce((sum, work) => sum + work.rows.filter(row => row.outcome === 'pending' && !row.reason && row.normalized_data?.decision !== 'skip').length, 0), [works]);
   const issueCount = useMemo(() => works.reduce((sum, work) => sum + work.rows.filter(row => (row.outcome === 'pending' && !!row.reason) || row.outcome === 'error').length, 0), [works]);
   const inputClass = `w-full border px-3 py-2 text-sm bg-[var(--color-input-bg)] ${radius?.input} ${colors.border} ${colors.text}`;
   const contactPicker = (navigator as ContactsNavigator).contacts;
+  const canSelectContacts = typeof contactPicker?.select === 'function';
+  const reviewingContacts = works.length > 0 && works.every(isContactWork);
 
   const selectContacts = async () => {
-    if (!contactPicker || typeof contactPicker.select !== 'function') return;
+    if (!canSelectContacts) return;
     setMessage('');
     setBusy(true);
     try {
       const contacts = await contactPicker.select(['name', 'tel'], { multiple: true });
       if (!contacts.length) return;
-      if (contacts.length > 10000) throw new Error('A seleção excede o limite de contatos ou telefones.');
-      const maxPhones = contacts.reduce((max, contact) => Math.max(max, contact.tel?.length || 0), 1);
-      if (maxPhones > 100) throw new Error('A seleção excede o limite de contatos ou telefones.');
-      const headers = ['Nome', ...Array.from({ length: maxPhones }, (_, index) => `Telefone ${index + 1}`)];
+      const maxPhones = contacts.reduce((max, contact) => Math.max(max, contact.tel?.length ?? 0), 1);
+      if (contacts.length > 10000 || maxPhones > 100) {
+        setMessage('Selecione até 10.000 contatos, com até 100 telefones por contato.');
+        return;
+      }
+      const phoneColumns = Array.from({ length: maxPhones }, (_, index) => `Telefone ${index + 1}`);
+      const headers = ['Nome', ...phoneColumns];
       const sheet: ImportSheet = {
         name: 'Contatos selecionados', identity: `picker-${crypto.randomUUID()}:0`, headers,
-        rows: contacts.map((contact, index) => ({ line: index + 1, values: [contact.name?.join(' ') || '', ...Array.from({ length: maxPhones }, (_, i) => contact.tel?.[i] || '')] })),
+        rows: contacts.map((contact, index) => ({
+          line: index + 1,
+          values: [contact.name?.map(name => name.trim()).filter(Boolean).join(' ') ?? '', ...phoneColumns.map((_, i) => contact.tel?.[i] ?? '')],
+        })),
         warnings: [], isContacts: true,
       };
-      setDocuments([{ sheet, kind: 'client', mapping: inferImportColumns(headers, 'contacts', 'client') }]);
-      setPhase('mapping');
+      await prepare([{ sheet, kind: 'client', mapping: inferImportColumns(headers, 'contacts', 'client') }]);
     } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') return;
-      setMessage('Não foi possível abrir os contatos. Tente novamente ou escolha um arquivo de contatos.');
+      if (!(error instanceof DOMException && error.name === 'AbortError')) {
+        setMessage('Não foi possível abrir os contatos. Tente novamente ou escolha um arquivo de contatos.');
+      }
     } finally { setBusy(false); }
   };
 
@@ -147,7 +178,7 @@ export function ImportDataWizard({ companyId, userId, region, api = importApi, o
     setDocuments(current => current.map((doc, index) => index === docIndex ? { ...doc, mapping: { ...doc.mapping, [field]: indexes } } : doc));
   };
 
-  const prepare = async () => {
+  const prepare = async (documents: DocumentChoice[]) => {
     setBusy(true); setMessage('');
     const created: string[] = [];
     try {
@@ -156,9 +187,13 @@ export function ImportDataWizard({ companyId, userId, region, api = importApi, o
         if (!doc.mapping.name?.length || (doc.kind === 'service' && (!doc.mapping.price?.length || !doc.mapping.duration?.length))) throw new Error('Escolha as colunas obrigatórias em cada arquivo.');
         const candidates = await api.loadImportCandidates(companyId, doc.kind);
         const categories = doc.kind === 'service' ? await api.loadImportCategories(companyId) : [];
-        const prepared = prepareImportRows(doc.sheet.headers, doc.sheet.originals || doc.sheet.identity.startsWith('picker-') ? doc.sheet.rows : dropEmptyImportRows(doc.sheet.rows), doc.mapping, doc.kind, region, doc.sheet.identity);
-        if (doc.sheet.identity.startsWith('picker-')) for (const row of prepared) {
-          if (!Array.isArray(row.normalized.phones) || !row.normalized.phones.length) row.issues.push('Confira o telefone.');
+        const fromPicker = doc.sheet.identity.startsWith('picker-');
+        const records = doc.sheet.originals || fromPicker ? doc.sheet.rows : dropEmptyImportRows(doc.sheet.rows);
+        const prepared = prepareImportRows(doc.sheet.headers, records, doc.mapping, doc.kind, region, doc.sheet.identity);
+        if (fromPicker) for (const row of prepared) {
+          const phones = Array.isArray(row.normalized.phones) ? row.normalized.phones : [];
+          row.normalized.phones = [...new Set(phones)];
+          if (!phones.length && !row.normalized.phoneText) row.issues.push(MISSING_PHONE);
         }
         const repeated = doc.kind === 'client' ? repeatedPhoneRows(prepared.map((row, index) => ({ id: String(index), phones: row.normalized.phones }))) : new Set<string>();
         const rows = prepared.map((row, index) => ({
@@ -174,11 +209,13 @@ export function ImportDataWizard({ companyId, userId, region, api = importApi, o
         if (!rows.length) continue;
         const batchId = await api.createImportBatch({ companyId, userId, source, kind: doc.kind, fileName: doc.sheet.name, rows });
         created.push(batchId);
-        const mapping = Object.fromEntries(Object.entries(doc.mapping).map(([field, indexes]) => [field, (indexes || []).map(index => doc.sheet.headers[index])]));
-        if (!doc.sheet.identity.startsWith('picker-')) await api.saveImportMapping(companyId, source, doc.kind, mapping);
+        if (!fromPicker) {
+          const mapping = Object.fromEntries(Object.entries(doc.mapping).map(([field, indexes]) => [field, (indexes || []).map(index => doc.sheet.headers[index])]));
+          await api.saveImportMapping(companyId, source, doc.kind, mapping);
+        }
         const storedRows = await api.loadImportRows(companyId, batchId);
         if (storedRows.length !== rows.length) throw new Error('A preparação ficou incompleta. Tente novamente.');
-        result.push({ batchId, name: doc.sheet.name, kind: doc.kind, rows: storedRows, candidates, categories });
+        result.push({ batchId, name: doc.sheet.name, source, kind: doc.kind, rows: storedRows, candidates, categories });
       }
       if (!result.length) throw new Error('Os arquivos não contêm linhas para analisar.');
       setWorks(result); setPhase('preview');
@@ -232,7 +269,7 @@ export function ImportDataWizard({ companyId, userId, region, api = importApi, o
       const candidates = await api.loadImportCandidates(companyId, batch.kind);
       const categories = batch.kind === 'service' ? await api.loadImportCategories(companyId) : [];
       const report: ImportReport = { total:rows.length, imported:rows.filter(row => row.outcome === 'imported').length, updated:rows.filter(row => row.outcome === 'updated').length, ignored:rows.filter(row => row.outcome === 'ignored').length, pending:rows.filter(row => row.outcome === 'pending').length, error:rows.filter(row => row.outcome === 'error').length, remaining:0 };
-      setWorks([{ batchId:batch.id, name:batch.file_name || getImportSource(batch.source).label, kind:batch.kind, rows, candidates, categories, report, status:batch.status, incomplete:batch.expected_rows == null || batch.expected_rows !== rows.length }]); setPhase(batch.status === 'preparing' || batch.status === 'review' ? 'preview' : 'report');
+      setWorks([{ batchId:batch.id, name:batch.file_name || getImportSource(batch.source).label, source:batch.source, kind:batch.kind, rows, candidates, categories, report, status:batch.status, incomplete:batch.expected_rows == null || batch.expected_rows !== rows.length }]); setPhase(batch.status === 'preparing' || batch.status === 'review' ? 'preview' : 'report');
     } catch (error) { setMessage(error instanceof Error ? error.message : 'Não foi possível carregar a importação.'); }
     finally { setBusy(false); }
   };
@@ -288,6 +325,9 @@ export function ImportDataWizard({ companyId, userId, region, api = importApi, o
     setWorks([]); setDocuments([]); setFiles([]); setEdits({}); setOutcome(''); setMessage(''); setPhase('source');
   };
 
+  const viewClients = works.some(isContactWork) ? onViewClients : undefined;
+  const previewActions = <div className="flex flex-wrap gap-2"><Button variant="secondary" disabled={busy} onClick={() => void restart()}>Cancelar</Button><Button loading={busy} disabled={works.some(work => work.incomplete)} onClick={() => void confirm()}>Confirmar importação</Button></div>;
+
   return <div className={`space-y-5 ${colors.text}`}>
     <div><h2 className="text-lg font-bold">Importar dados</h2><p className={`mt-1 text-sm leading-relaxed ${colors.textMuted}`}>Confira os cadastros antes de confirmar a importação de clientes e serviços.</p></div>
     {message && <p role="alert" className="text-sm">{message}</p>}
@@ -298,11 +338,12 @@ export function ImportDataWizard({ companyId, userId, region, api = importApi, o
       {history.length > 0 && <div className="space-y-2"><h3 className="font-semibold">Importações anteriores</h3>{history.map(batch => <div key={batch.id}><button className="underline" onClick={() => void openHistory(batch)}>{batch.file_name || getImportSource(batch.source).label} · {new Date(batch.created_at).toLocaleDateString('pt-BR')} · {batch.status === 'undone' ? 'Desfeita' : batch.status === 'completed' ? 'Concluída' : 'Em preparação'}</button></div>)}</div>}
     </div>}
     {phase === 'files' && <div className="space-y-4">
-      <div><h3 className="text-base font-bold">{getImportSource(source).label}</h3><p className={`mt-1 text-sm leading-relaxed ${colors.textMuted}`}>{source === 'contacts' && contactPicker && typeof contactPicker.select === 'function' ? 'Escolha como deseja trazer seus contatos.' : getImportSource(source).instructions}</p></div>
-      {source === 'contacts' && contactPicker && typeof contactPicker.select === 'function' && <>
+      <div><h3 className="text-base font-bold">{getImportSource(source).label}</h3><p className={`mt-1 text-sm leading-relaxed ${colors.textMuted}`}>{source === 'contacts' && canSelectContacts ? 'Escolha como deseja trazer seus contatos.' : getImportSource(source).instructions}</p></div>
+      {source === 'contacts' && !canSelectContacts && <p className={`text-sm ${colors.textMuted}`}>Este navegador não oferece seleção direta de contatos. No iPhone, abra Contatos, toque em Listas, mantenha a lista pressionada e toque em Exportar. Salve o arquivo no app Arquivos e use Escolher arquivos abaixo para importar o VCF.</p>}
+      {source === 'contacts' && canSelectContacts && <>
         <section className={`space-y-4 border p-4 sm:p-5 ${radius?.card} ${colors.card} ${colors.border}`}>
           <div className="flex items-start gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--color-accent-dim)] text-[var(--color-accent)]"><Smartphone className="h-5 w-5" aria-hidden="true" /></span><div className="min-w-0"><h4 className="font-bold">Selecionar no celular</h4><p className={`mt-1 text-sm leading-relaxed ${colors.textMuted}`}>Escolha quais contatos da agenda do celular deseja importar.</p></div></div>
-          <Button fullWidth disabled={busy} icon={<Smartphone />} onClick={() => void selectContacts()}>Selecionar contatos do celular</Button>
+          <Button fullWidth disabled={busy} loading={busy} icon={<Smartphone />} onClick={() => void selectContacts()}>Selecionar contatos do celular</Button>
         </section>
         <div className={`flex items-center gap-3 text-xs font-semibold ${colors.textMuted}`}><span className={`h-px flex-1 border-t ${colors.border}`} />ou importe um arquivo<span className={`h-px flex-1 border-t ${colors.border}`} /></div>
       </>}
@@ -323,15 +364,17 @@ export function ImportDataWizard({ companyId, userId, region, api = importApi, o
         <h3 className="font-semibold break-words">{doc.sheet.name}</h3>
         {doc.sheet.warnings.map(warning => <p key={warning}>{warning}</p>)}
         <label className="block">Tipo de dados<select className={inputClass} value={doc.kind} disabled={doc.sheet.isContacts} onChange={event => { const kind = event.target.value as ImportKind; setDocuments(current => current.map((item, i) => i === index ? { ...item, kind, mapping:inferImportColumns(item.sheet.headers, source, kind) } : item)); }}><option value="client">Clientes</option><option value="service">Serviços</option></select></label>
-        <p className={`text-sm ${colors.textMuted}`}>{plural((doc.sheet.originals || doc.sheet.identity.startsWith('picker-') ? doc.sheet.rows : dropEmptyImportRows(doc.sheet.rows)).length, 'linha', 'linhas')}. Colunas não usadas serão preservadas junto aos dados de origem.</p>
+        <p className={`text-sm ${colors.textMuted}`}>{plural((doc.sheet.originals ? doc.sheet.rows : dropEmptyImportRows(doc.sheet.rows)).length, 'linha', 'linhas')}. Colunas não usadas serão preservadas junto aos dados de origem.</p>
         <details open={!doc.mapping.name?.length || (doc.kind === 'service' && (!doc.mapping.price?.length || !doc.mapping.duration?.length))}><summary className="cursor-pointer font-semibold">Conferir as colunas</summary><div className="grid gap-3 sm:grid-cols-2 mt-3">{FIELDS[doc.kind].map(field => <label key={field.key} className="block text-sm">{field.label}{field.key === 'phone' ? <select className={inputClass} multiple value={(doc.mapping.phone || []).map(String)} onChange={event => changeMapping(index, 'phone', Array.from(event.target.selectedOptions, option => Number(option.value)))}>{doc.sheet.headers.map((header, column) => <option key={column} value={column}>{header || `Coluna ${column + 1}`}</option>)}</select> : <select className={inputClass} value={doc.mapping[field.key]?.[0] ?? ''} onChange={event => changeMapping(index, field.key, event.target.value === '' ? [] : [Number(event.target.value)])}><option value="">Não informado</option>{doc.sheet.headers.map((header, column) => <option key={column} value={column}>{header || `Coluna ${column + 1}`}</option>)}</select>}</label>)}</div></details>
       </section>)}
-      <div className="flex flex-wrap gap-2"><Button variant="secondary" onClick={() => setPhase('files')}>Voltar</Button><Button loading={busy} onClick={() => void prepare()}>Preparar revisão</Button></div>
+      <div className="flex flex-wrap gap-2"><Button variant="secondary" onClick={() => setPhase('files')}>Voltar</Button><Button loading={busy} onClick={() => void prepare(documents)}>Preparar revisão</Button></div>
     </div>}
     {phase === 'preview' && <div className="space-y-4">
       {works.some(work => work.incomplete) && <p role="alert">Esta preparação ficou incompleta. Cancele e selecione os arquivos novamente.</p>}
-      <p><strong>{readyCount} {readyCount === 1 ? 'linha pronta' : 'linhas prontas'}</strong> · {issueCount} {issueCount === 1 ? 'precisa' : 'precisam'} de atenção.</p>
+      <p><strong>{reviewingContacts ? plural(readyCount, 'contato pronto', 'contatos prontos') : plural(readyCount, 'linha pronta', 'linhas prontas')}</strong> · {issueCount} {issueCount === 1 ? 'precisa' : 'precisam'} de atenção.</p>
+      {reviewingContacts && issueCount > 0 && <p className={`text-sm ${colors.textMuted}`}>Salve as correções que fizer abaixo. Ao confirmar, os contatos com pendências ficam para revisão.</p>}
       <p className={`text-sm ${colors.textMuted}`}>Nenhum cadastro será criado antes da confirmação. A importação não envia mensagens nem autoriza campanhas.</p>
+      {reviewingContacts && previewActions}
       {works.map((work, workIndex) => <section key={work.batchId} className={`space-y-3 p-4 border ${radius?.card} ${colors.card} ${colors.border}`}><h3 className="font-semibold">{work.name}</h3>
         <details><summary className="cursor-pointer">Ver todas as linhas</summary><ul className="max-h-64 overflow-y-auto mt-2 space-y-1">{work.rows.map(row => <li key={row.id}>Linha {row.row_number}: {String(row.normalized_data?.name || row.display_name || 'Sem nome')}{Array.isArray(row.normalized_data?.phones) && row.normalized_data.phones.length > 0 ? ` · ${row.normalized_data.phones.join(', ')}` : ''} · {row.reason || 'Pronto para importar'}</li>)}</ul></details>
         {work.rows.filter(row => (row.outcome === 'pending' && !!row.reason) || row.outcome === 'error').map(row => {
@@ -347,18 +390,18 @@ export function ImportDataWizard({ companyId, userId, region, api = importApi, o
           </div>;
         })}
       </section>)}
-      <div className="flex flex-wrap gap-2"><Button variant="secondary" disabled={busy} onClick={() => void restart()}>Cancelar</Button><Button loading={busy} disabled={works.some(work => work.incomplete)} onClick={() => void confirm()}>Confirmar importação</Button></div>
+      {!reviewingContacts && previewActions}
     </div>}
     {phase === 'report' && <div className="space-y-4">
       <h3 className="font-semibold">Resultado da importação</h3>{outcome && <p role="status">{outcome}</p>}
-      {works.map(work => <section key={work.batchId} className={`space-y-2 p-4 border ${radius?.card} ${colors.card} ${colors.border}`}><h4 className="font-semibold">{work.name}</h4><p>{plural(work.report?.total || 0, 'linha', 'linhas')} · {plural(work.report?.imported || 0, 'importado', 'importados')} · {plural(work.report?.updated || 0, 'atualizado', 'atualizados')} · {plural(work.report?.ignored || 0, 'ignorado', 'ignorados')} · {plural((work.report?.pending || 0) + (work.report?.error || 0), 'pendente', 'pendentes')}</p>
+      {works.map(work => <section key={work.batchId} className={`space-y-2 p-4 border ${radius?.card} ${colors.card} ${colors.border}`}><h4 className="font-semibold">{work.name}</h4>{isContactWork(work) ? <ContactReport work={work} /> : <p>{plural(work.report?.total || 0, 'linha', 'linhas')} · {plural(work.report?.imported || 0, 'importado', 'importados')} · {plural(work.report?.updated || 0, 'atualizado', 'atualizados')} · {plural(work.report?.ignored || 0, 'ignorado', 'ignorados')} · {plural((work.report?.pending || 0) + (work.report?.error || 0), 'pendente', 'pendentes')}</p>}
         <details><summary className="cursor-pointer">Ver resultado de cada linha</summary><ul className="max-h-64 overflow-y-auto mt-2 space-y-1">{work.rows.map(row => <li key={row.id}>Linha {row.row_number}: {row.display_name || String(row.normalized_data?.name || 'Sem nome')} · {row.reason || 'Pendente de revisão.'}</li>)}</ul></details>
         {work.rows.some(row => row.outcome === 'pending' || row.outcome === 'error') && <div className="space-y-2"><p className={`text-sm ${colors.textMuted}`}>As pendências ficam salvas para revisão até você removê-las.</p><div className="flex flex-wrap gap-2"><Button variant="secondary" onClick={() => pendingCsv(work)}>Baixar pendências</Button>{work.status !== 'undone' && <Button variant="secondary" onClick={() => setPhase('preview')}>Revisar pendências</Button>}{pendingClear !== work.batchId && <Button variant="secondary" onClick={() => setPendingClear(work.batchId)}>Remover pendências</Button>}</div>{pendingClear === work.batchId && <div className="space-y-2"><p>Deseja remover os dados das pendências? Baixe uma cópia antes, se precisar.</p><div className="flex gap-2"><Button variant="secondary" onClick={() => setPendingClear(null)}>Voltar</Button><Button variant="danger" loading={busy} onClick={() => void clearPending(work)}>Confirmar remoção</Button></div></div>}</div>}
         <p className={`text-sm ${colors.textMuted}`}>Os dados adicionais de origem ficam disponíveis apenas para o responsável. Você pode baixá-los ou removê-los.</p>
         <div className="flex flex-wrap gap-2"><Button variant="secondary" loading={busy} onClick={() => void downloadSource(work)}>Baixar dados de origem</Button>{pendingSourceClear !== work.batchId && <Button variant="secondary" onClick={() => setPendingSourceClear(work.batchId)}>Remover dados de origem</Button>}</div>
         {pendingSourceClear === work.batchId && <div className="space-y-2"><p>Deseja remover os dados adicionais de origem? Baixe uma cópia antes, se precisar. Os cadastros importados serão mantidos.</p><div className="flex gap-2"><Button variant="secondary" onClick={() => setPendingSourceClear(null)}>Voltar</Button><Button variant="danger" loading={busy} onClick={() => void clearSource(work)}>Confirmar remoção dos dados de origem</Button></div></div>}
         {work.status !== 'undone' && (pendingUndo === work.batchId ? <div className="space-y-2"><p>Deseja desfazer? Cadastros alterados ou utilizados depois serão preservados.</p><div className="flex flex-wrap gap-2"><Button variant="secondary" disabled={busy} onClick={() => setPendingUndo(null)}>Voltar</Button><Button variant="danger" loading={busy} onClick={() => void undo(work)}>Confirmar desfazer</Button></div></div> : <Button variant="secondary" loading={busy} onClick={() => setPendingUndo(work.batchId)}>Desfazer esta importação</Button>)}</section>)}
-      <Button variant="secondary" onClick={() => { if (onClose) onClose(); else void restart(); }}>Concluir</Button>
+      <Button variant="secondary" disabled={busy} onClick={viewClients ?? onClose ?? (() => void restart())}>{viewClients ? 'Ver clientes' : 'Concluir'}</Button>
     </div>}
   </div>;
 }

@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { fetchTeamRoster } from './team';
 import {
   getDayKey,
   parseTimeToMinutes,
@@ -39,17 +40,13 @@ export async function fetchCriticalEmptySlots(
   daysAhead = 7,
   now: Date = new Date(),
 ): Promise<CriticalEmptySlotsResult> {
-  const [settingsRes, teamRes, apptsRes] = await Promise.all([
+  const [settingsRes, team, apptsRes] = await Promise.all([
     supabase
       .from('business_settings')
       .select('business_hours')
       .eq('user_id', companyId)
       .maybeSingle(),
-    supabase
-      .from('team_members')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', companyId)
-      .eq('active', true),
+    fetchTeamRoster(companyId),
     supabase
       .from('appointments')
       .select('appointment_time, duration_minutes, status')
@@ -58,11 +55,10 @@ export async function fetchCriticalEmptySlots(
   ]);
 
   if (settingsRes.error) throw settingsRes.error;
-  if (teamRes.error) throw teamRes.error;
   if (apptsRes.error) throw apptsRes.error;
 
   const businessHours = (settingsRes.data?.business_hours as BusinessHours) || null;
-  const teamCount = Math.max(1, teamRes.count ?? 1);
+  const teamCount = Math.max(1, team.length);
   const appointments = apptsRes.data || [];
 
   return analyzeEmptySlots(businessHours, teamCount, appointments, now, daysAhead);

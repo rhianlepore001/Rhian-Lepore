@@ -1,6 +1,7 @@
 import { attendeeLabel } from '@/utils/appointmentAttendees';
 import { supabase } from '@/lib/supabase';
 import { isMissingRpcError } from '@/utils/supabaseRpc';
+import { fetchTeamRoster } from '@/services/team';
 import {
   assignProfessionalInputSchema,
   cancelAppointmentInputSchema,
@@ -184,17 +185,6 @@ export async function fetchAgendaClients(companyId: string) {
   return data;
 }
 
-export async function fetchAgendaTeamMembers(companyId: string) {
-  const { data, error } = await supabase
-    .from('team_members')
-    .select('id, name, photo_url')
-    .eq('user_id', companyId)
-    .eq('active', true)
-    .order('name');
-  if (error) throw error;
-  return data;
-}
-
 export async function fetchAgendaCategories(companyId: string) {
   const { data, error } = await supabase
     .from('service_categories')
@@ -224,16 +214,7 @@ export async function fetchBusinessName(companyId: string): Promise<string> {
   return data?.business_name || 'Seu Estabelecimento';
 }
 
-export async function fetchCheckoutTeamMembers(companyId: string) {
-  const { data, error } = await supabase
-    .from('team_members')
-    .select('id, name, active')
-    .eq('user_id', companyId)
-    .eq('active', true)
-    .order('name');
-  if (error) throw error;
-  return data;
-}
+export { fetchTeamRoster as fetchAgendaTeamMembers, fetchTeamRoster as fetchCheckoutTeamMembers };
 
 export async function fetchCheckoutSettings(companyId: string) {
   const { data, error } = await supabase

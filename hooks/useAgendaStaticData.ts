@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { agendaStaticKeys } from '@/lib/agendaStaticKeys';
 import { invalidateAgendaStaticData } from '@/lib/agendaStaticInvalidation';
+import { fetchTeamRoster } from '@/services/team';
 
 /**
  * Dados "fixos" da Agenda (não mudam ao trocar de dia): equipe, clientes,
@@ -22,7 +23,7 @@ export interface AgendaTeamMember {
   name: string;
   photo_url?: string | null;
   staff_user_id?: string | null;
-  active?: boolean;
+  active?: boolean | null;
 }
 
 export interface AgendaServiceRow {
@@ -57,12 +58,7 @@ export function useAgendaStaticData(companyId: string | null | undefined) {
   const team = useQuery({
     ...common,
     queryKey: agendaStaticKeys.team(id),
-    queryFn: async () => (await unwrap<AgendaTeamMember[]>(supabase
-      .from('team_members')
-      .select('id, name, photo_url, staff_user_id, active')
-      .eq('user_id', id)
-      .eq('active', true)
-      .order('name') as any)) ?? [],
+    queryFn: () => fetchTeamRoster(id),
   });
 
   // Todos os serviços (inclui inativos): a lista "agendável" é filtrada no

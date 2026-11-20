@@ -39,7 +39,7 @@ const snapshot = () => ({
   services: count('services'),
   clients: count('clients'),
   service_categories: count('service_categories'),
-  team_members: count('team_members'),
+  team_roster: rpcCalls.filter(name => name === 'get_team_roster_v1').length,
   profiles: count('profiles'),
   business_settings: count('business_settings'),
   pending_public_bookings: rpcCalls.filter(n => n === 'list_company_pending_public_bookings').length,
@@ -52,23 +52,28 @@ describe('Agenda: requisições na montagem e na troca de dia', () => {
     rpcCalls.length = 0;
     vi.mocked(supabase.from).mockImplementation(((table: string) => {
       calls.push(table);
-      const data = table === 'team_members' ? [{ id: 'pro-fictional', name: 'Profissional Fictício', active: true }] : [];
       const query: any = {
-        then: (resolve: (value: unknown) => unknown) => Promise.resolve({ data, error: null }).then(resolve),
+        then: (resolve: (value: unknown) => unknown) => Promise.resolve({ data: [], error: null }).then(resolve),
         single: () => Promise.resolve({ data: { business_name: 'Empresa Fictícia' }, error: null }),
         maybeSingle: () => Promise.resolve({ data: null, error: null }),
       };
       for (const m of ['select', 'eq', 'neq', 'gte', 'lte', 'lt', 'gt', 'in', 'order', 'not', 'limit', 'is']) query[m] = () => query;
       return query;
     }) as any);
-    vi.mocked(supabase.rpc).mockImplementation(((name: string) => { rpcCalls.push(name); return Promise.resolve({ data: [], error: null }); }) as any);
+    vi.mocked(supabase.rpc).mockImplementation(((name: string) => {
+      rpcCalls.push(name);
+      const data = name === 'get_team_roster_v1'
+        ? [{ id: 'pro-fictional', name: 'Profissional Fictício', active: true }]
+        : [];
+      return Promise.resolve({ data, error: null });
+    }) as any);
   });
 
   it('abre o fechamento com duração agendada ao faturar um atendimento atrasado', async () => {
     const overdue = { id: 'atrasado-1', client_id: 'client-1', clients: { name: 'Cliente Exemplo', phone: '11999999999' }, service: 'Corte', appointment_time: '2025-01-01T12:00:00Z', duration_minutes: 45, price: 50, status: 'Confirmed', professional_id: 'pro-fictional' };
     vi.mocked(supabase.from).mockImplementation(((table: string) => {
       let isOverdue = false;
-      const result = () => ({ data: table === 'appointments' && isOverdue ? [overdue] : table === 'team_members' ? [{ id: 'pro-fictional', name: 'Profissional', active: true }] : [], error: null });
+      const result = () => ({ data: table === 'appointments' && isOverdue ? [overdue] : [], error: null });
       const query: any = {
         then: (resolve: (value: unknown) => unknown) => Promise.resolve(result()).then(resolve),
         single: () => Promise.resolve({ data: { business_name: 'Empresa Fictícia' }, error: null }),
@@ -93,9 +98,13 @@ describe('Agenda: requisições na montagem e na troca de dia', () => {
 
     expect(snapshot()).toEqual({
       appointments: 1, services: 1, clients: 1, service_categories: 1,
-      team_members: 1, profiles: 1, business_settings: 0, pending_public_bookings: 1,
+      team_roster: 1, profiles: 1, business_settings: 0, pending_public_bookings: 1,
     });
 
+    expect(count('team_members')).toBe(0);
+    expect(supabase.rpc).toHaveBeenCalledWith('get_team_roster_v1', {
+      p_company_id: 'fictional-company', p_include_inactive: false,
+    });
     const before = snapshot();
     fireEvent.click(screen.getByRole('button', { name: 'Próximo dia' }));
     await waitFor(() => expect(count('appointments')).toBe(before.appointments + 1));
@@ -106,11 +115,11 @@ describe('Agenda: requisições na montagem e na troca de dia', () => {
       services: after.services - before.services,
       clients: after.clients - before.clients,
       service_categories: after.service_categories - before.service_categories,
-      team_members: after.team_members - before.team_members,
+      team_roster: after.team_roster - before.team_roster,
       profiles: after.profiles - before.profiles,
       business_settings: after.business_settings - before.business_settings,
       pending_public_bookings: after.pending_public_bookings - before.pending_public_bookings,
-    }).toEqual({ appointments: 1, services: 0, clients: 0, service_categories: 0, team_members: 0, profiles: 0, business_settings: 0, pending_public_bookings: 0 });
+    }).toEqual({ appointments: 1, services: 0, clients: 0, service_categories: 0, team_roster: 0, profiles: 0, business_settings: 0, pending_public_bookings: 0 });
   });
 
   it('cadastrar cliente pela Agenda invalida só a lista de clientes; concluir o wizard recarrega o dia', async () => {
@@ -125,7 +134,7 @@ describe('Agenda: requisições na montagem e na troca de dia', () => {
     wizardProps.current.onRefreshClients();
     await waitFor(() => expect(count('clients')).toBe(before.clients + 1));
     expect(count('services')).toBe(before.services);
-    expect(count('team_members')).toBe(before.team_members);
+    expect(snapshot().team_roster).toBe(before.team_roster);
 
     const mid = snapshot();
     await wizardProps.current.onSuccess(new Date(2026, 11, 15, 10, 0), { id: 'apt-1', professionalId: 'pro-fictional' });
@@ -137,14 +146,14 @@ describe('Agenda: requisições na montagem e na troca de dia', () => {
     appQueryClient.clear();
     render(<QueryClientProvider client={appQueryClient}><MemoryRouter initialEntries={['/agenda?date=2026-12-15']}><Agenda /></MemoryRouter></QueryClientProvider>);
     await waitFor(() => expect(screen.queryByText('Carregando agenda...')).not.toBeInTheDocument());
-    const cases: Array<[Parameters<typeof invalidateAgendaStaticData>[1], string]> = [
+    const cases: Array<[Parameters<typeof invalidateAgendaStaticData>[1], keyof ReturnType<typeof snapshot>]> = [
       ['clients', 'clients'], ['dependents', 'clients'], ['services', 'services'],
-      ['categories', 'service_categories'], ['team', 'team_members'],
+      ['categories', 'service_categories'], ['team', 'team_roster'],
     ];
-    for (const [entity, table] of cases) {
+    for (const [entity, request] of cases) {
       const before = snapshot();
       await invalidateAgendaStaticData('fictional-company', entity);
-      await waitFor(() => expect(count(table)).toBe(before[table as keyof typeof before] + 1));
+      await waitFor(() => expect(snapshot()[request]).toBe(before[request] + 1));
       expect(count('appointments')).toBe(before.appointments);
     }
     // Outra empresa não afeta esta Agenda.

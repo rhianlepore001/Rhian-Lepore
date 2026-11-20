@@ -1,6 +1,7 @@
 import { ZodError } from 'zod';
 import { supabase } from '@/lib/supabase';
 import { calcQueueEtaMinutes, type QueueEtaPerson } from '@/services/queueEta';
+import { fetchTeamRoster } from '@/services/team';
 import {
   finishQueueEntryInputSchema,
   joinQueueInputSchema,
@@ -740,18 +741,7 @@ export async function fetchQueueTeamMembers(
   businessId: string,
   options?: { includeInactive?: boolean },
 ) {
-  let query = supabase
-    .from('team_members')
-    .select('id, name, commission_rate, active')
-    .eq('user_id', businessId);
-
-  if (!options?.includeInactive) {
-    query = query.eq('active', true);
-  }
-
-  const { data, error } = await query;
-  if (error) throw error;
-  return data as { id: string; name: string; commission_rate?: number; active?: boolean }[];
+  return fetchTeamRoster(businessId, options?.includeInactive);
 }
 
 export async function fetchServiceById(serviceId: string, businessId: string) {

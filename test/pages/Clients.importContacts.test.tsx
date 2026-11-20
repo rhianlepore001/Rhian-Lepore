@@ -150,8 +150,8 @@ describe('importação pela página de clientes', () => {
 
     expect(await screen.findByText(/2 novos clientes/)).toBeTruthy();
     expect(screen.getByText(/2 contatos ficaram de fora/)).toBeTruthy();
-    expect(screen.getByText(/Ignorado a pedido/)).toBeTruthy();
-    expect(screen.getByText(/Sem telefone.*Confira o telefone/)).toBeTruthy();
+    expect(screen.getByText(/^Contato 3: Número inválido.*Ignorado a pedido/)).toBeVisible();
+    expect(screen.getByText(/^Contato 4: Sem telefone.*Confira o telefone/)).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Ver clientes' }));
     expect(await screen.findByText('Ana Silva')).toBeTruthy();
     expect(screen.getByText('Bruno Santos')).toBeTruthy();

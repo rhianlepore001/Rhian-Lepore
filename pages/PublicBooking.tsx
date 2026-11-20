@@ -1,3 +1,4 @@
+import { useBookingStatusLive } from '../hooks/useBookingStatusLive';
 import { isDemoMode } from '../lib/demo/mode';
 import { matchesServiceSearch } from '../utils/serviceSearch';
 import React, { useState, useEffect, useMemo } from 'react';
@@ -324,36 +325,17 @@ export const PublicBooking: React.FC = () => {
         }
     };
 
+    const activeBookingId = activeBooking?.id;
+    const refreshActiveStatus = () => {
+        if (activeBookingId) void fetchFreshActiveBooking(activeBookingId);
+    };
+    useBookingStatusLive(activeBookingId ? [activeBookingId] : [], refreshActiveStatus, refreshActiveStatus);
+
     useEffect(() => {
-        if (!activeBooking?.id) return;
-        const channel = supabase
-            .channel(`booking_status_${activeBooking.id}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'public_bookings',
-                    filter: `id=eq.${activeBooking.id}`
-                },
-                (payload) => {
-                    logger.info('Booking update received', { payload });
-                    fetchFreshActiveBooking(activeBooking.id);
-                }
-            )
-            .subscribe();
-
-        const interval = setInterval(() => {
-            if (activeBooking.status === 'pending') {
-                fetchFreshActiveBooking(activeBooking.id);
-            }
-        }, 5000);
-
-        return () => {
-            supabase.removeChannel(channel);
-            clearInterval(interval);
-        };
-    }, [activeBooking?.id, activeBooking?.status]);
+        if (!activeBookingId || activeBooking?.status !== 'pending') return;
+        const interval = setInterval(() => void fetchFreshActiveBooking(activeBookingId), 5000);
+        return () => clearInterval(interval);
+    }, [activeBookingId, activeBooking?.status, businessId, client?.phone, customerPhone, activeBooking?.customer_phone]);
 
     useEffect(() => {
         // Mesmo cuidado dos horários: fuso muda quando os settings chegam;

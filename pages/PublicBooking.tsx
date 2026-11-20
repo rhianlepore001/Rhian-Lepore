@@ -5,7 +5,7 @@ import { useWhatsAppTemplates } from '../hooks/useWhatsAppTemplates';
 import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
-import { Star, Calendar, Clock, MapPin, Instagram, Scissors, Sparkles, User, ArrowRight, Check, ChevronLeft, ChevronRight, Phone, Users, Loader2, X, AlertTriangle, Send, MessageSquare, LayoutDashboard, Package, Minus, Plus } from 'lucide-react';
+import { Star, Calendar, Clock, MapPin, Instagram, Scissors, Sparkles, User, ArrowRight, Check, ChevronLeft, ChevronRight, Phone, Users, Loader2, X, AlertTriangle, Send, MessageSquare, LayoutDashboard, Plus } from 'lucide-react';
 import { PhoneInput } from '../components/PhoneInput';
 import { CalendarPicker } from '../components/CalendarPicker';
 import {
@@ -23,6 +23,7 @@ import { TimeGrid } from '../components/TimeGrid';
 import { ClientAuthModal } from '../components/ClientAuthModal';
 import { usePublicClient } from '../contexts/PublicClientContext';
 import { PublicBusinessHeader } from '../components/PublicBusinessHeader';
+import { PublicProductsShowcase } from '../components/booking/PublicProductsShowcase';
 import { ChatBubble } from '../components/ChatBubble';
 import { GoogleReviewPrompt } from '../components/GoogleReviewPrompt';
 import { useCancelPublicBooking, useFindActivePublicBooking, useSubmitPublicBooking, useBusinessProfileBySlug, useBusinessSettings, usePublicServices, usePublicCategories, usePublicProfessionals, usePublicGallery, usePublicProducts } from '../hooks/usePublicBooking';
@@ -148,7 +149,6 @@ export const PublicBooking: React.FC = () => {
     const [activeProfessionalCategory, setActiveProfessionalCategory] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [selectedServices, setSelectedServices] = useState<string[]>([]);
-    const [selectedProductLines, setSelectedProductLines] = useState<Array<{ product_id: string; quantity: number }>>([]);
     
     const [step, setStep] = useState<'edit_options' | 'services' | 'datetime' | 'contact' | 'edit_confirm' | 'success'>('services');
     const [messages, setMessages] = useState<Message[]>([]);
@@ -511,22 +511,8 @@ export const PublicBooking: React.FC = () => {
         );
     };
 
-    const setProductQty = (productId: string, quantity: number, max: number) => {
-        const nextQty = Math.max(0, Math.min(max, quantity));
-        setSelectedProductLines(prev => {
-            const others = prev.filter(l => l.product_id !== productId);
-            if (nextQty <= 0) return others;
-            return [...others, { product_id: productId, quantity: nextQty }];
-        });
-    };
-
-    const productsTotal = selectedProductLines.reduce((sum, line) => {
-        const product = (publicProducts as Array<{ id: string; sale_price: number }>).find(p => p.id === line.product_id);
-        return sum + (product ? Number(product.sale_price) * line.quantity : 0);
-    }, 0);
-
     const calculateTotal = () =>
-        services.filter(s => selectedServices.includes(s.id)).reduce((sum, s) => sum + s.price, 0) + productsTotal;
+        services.filter(s => selectedServices.includes(s.id)).reduce((sum, s) => sum + s.price, 0);
     const calculateDuration = () => capBookingDuration(services.filter(s => selectedServices.includes(s.id)).reduce((sum, s) => sum + s.duration_minutes, 0));
 
     const selectedDateStr = selectedDate
@@ -766,7 +752,7 @@ export const PublicBooking: React.FC = () => {
                 durationMinutes: duration,
                 editingBookingId,
                 originalAppointmentTime: originalTimeISO,
-                productLines: selectedProductLines,
+                productLines: [],
             });
 
             setActiveBooking(booking);
@@ -1029,7 +1015,14 @@ export const PublicBooking: React.FC = () => {
                                 </button>
                             )}
 
-                            <input type="search" aria-label="Buscar serviço" placeholder="Buscar serviço..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className={classes.input} />
+                            <input
+                                type="search"
+                                aria-label={publicProducts.length > 0 ? 'Buscar serviço ou produto' : 'Buscar serviço'}
+                                placeholder={publicProducts.length > 0 ? 'Buscar serviço ou produto...' : 'Buscar serviço...'}
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                className={classes.input}
+                            />
 
                             {/* Category Filters */}
                             {(categories.length > 0 || publicProducts.length > 0) && (
@@ -1068,50 +1061,15 @@ export const PublicBooking: React.FC = () => {
                                 </div>
                             )}
 
-                            {/* Products catalog */}
+                            {/* Products showcase tab */}
                             {activeCategory === '__products__' && (
-                                <div className="space-y-3">
-                                    {(publicProducts as Array<{ id: string; name: string; sale_price: number; stock_quantity: number }>).map(product => {
-                                        const qty = selectedProductLines.find(l => l.product_id === product.id)?.quantity ?? 0;
-                                        return (
-                                            <div
-                                                key={product.id}
-                                                className={`flex items-center justify-between gap-3 p-4 rounded-2xl border ${colors.card} ${colors.border}`}
-                                            >
-                                                <div className="min-w-0 flex items-start gap-3">
-                                                    <Package className={`w-5 h-5 shrink-0 mt-0.5 ${accent.text}`} />
-                                                    <div className="min-w-0">
-                                                        <p className={`text-sm font-bold truncate ${colors.text}`}>{product.name}</p>
-                                                        <p className={`text-xs font-mono tabular-nums ${colors.textMuted}`}>
-                                                            {formatCurrency(Number(product.sale_price), currencyRegion)} · {product.stock_quantity} un.
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-2 shrink-0">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setProductQty(product.id, qty - 1, product.stock_quantity)}
-                                                        disabled={qty <= 0}
-                                                        className={`w-10 h-10 rounded-xl border flex items-center justify-center ${colors.border} ${colors.text}`}
-                                                        aria-label={`Diminuir ${product.name}`}
-                                                    >
-                                                        <Minus className="w-4 h-4" />
-                                                    </button>
-                                                    <span className={`font-mono tabular-nums w-6 text-center ${colors.text}`}>{qty}</span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setProductQty(product.id, qty + 1, product.stock_quantity)}
-                                                        disabled={qty >= product.stock_quantity}
-                                                        className={`w-10 h-10 rounded-xl border flex items-center justify-center ${colors.border} ${colors.text}`}
-                                                        aria-label={`Aumentar ${product.name}`}
-                                                    >
-                                                        <Plus className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
+                                <PublicProductsShowcase
+                                    products={publicProducts}
+                                    currencyRegion={currencyRegion}
+                                    searchQuery={searchQuery}
+                                    mode="tab"
+                                    onClearSearch={() => setSearchQuery('')}
+                                />
                             )}
 
                             {/* Service Grid */}
@@ -1181,6 +1139,15 @@ export const PublicBooking: React.FC = () => {
                                         </a>
                                     )}
                                 </div>
+                            )}
+
+                            {activeCategory === 'all' && publicProducts.length > 0 && (
+                                <PublicProductsShowcase
+                                    products={publicProducts}
+                                    currencyRegion={currencyRegion}
+                                    searchQuery={searchQuery}
+                                    mode="section"
+                                />
                             )}
 
                             {activeCategory !== '__products__' && (

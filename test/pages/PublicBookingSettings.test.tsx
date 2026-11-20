@@ -68,4 +68,10 @@ describe('PublicBookingSettings — PR-1 copy do toggle de edição do cliente',
     expect(screen.getByLabelText('Trocar só o serviço sem aprovação')).not.toBeChecked();
     expect(screen.getByTestId('service-only-edit-skip-row')).toBeInTheDocument();
   });
+
+  it('toggle Produtos no link público vem desligado por padrão', () => {
+    render(<PublicBookingSettings />);
+    expect(screen.getByTestId('public-products-section')).toBeInTheDocument();
+    expect(screen.getByLabelText('Produtos no link público')).not.toBeChecked();
+  });
 });

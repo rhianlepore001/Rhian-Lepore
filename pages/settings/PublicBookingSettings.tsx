@@ -466,6 +466,7 @@ export const PublicBookingSettings: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                    <div data-testid="public-products-section">
                     <SettingsSection
                         title={
                             <div className="flex items-center gap-2">
@@ -476,16 +477,19 @@ export const PublicBookingSettings: React.FC = () => {
                     >
                         <div className="space-y-4">
                             <p className={`${colors.textMuted} text-xs leading-relaxed`}>
-                                Exibe a seção Produtos no agendamento online. O estoque só baixa quando o atendimento for cobrado.
+                                Exibe uma vitrine com seus produtos ativos e em estoque no agendamento online (foto, nome, preço e descrição). Padrão desligado.
                             </p>
                             <div className="flex justify-end pt-2">
                                 <SettingsSwitch
+                                    id="public-products-enabled"
+                                    ariaLabel="Produtos no link público"
                                     checked={publicProductsEnabled}
                                     onChange={setPublicProductsEnabled}
                                 />
                             </div>
                         </div>
                     </SettingsSection>
+                    </div>
 
                     <SettingsSection
                         title={

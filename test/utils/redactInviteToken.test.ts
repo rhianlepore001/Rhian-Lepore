@@ -4,8 +4,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { redactInviteToken } from '@/utils/redactUrl';
 import { captureContext } from '@/lib/bugReport';
-import { supabase } from '@/lib/supabase';
-import { logger } from '@/utils/Logger';
 
 const TOKEN = 'ab'.repeat(32);
 const INVITE_URL = `https://app.example.com/#/register?company=c1&member=m1&invite=${TOKEN}`;
@@ -28,7 +26,7 @@ describe('redactInviteToken', () => {
     });
 });
 
-describe('logs e relato de bug sem o token', () => {
+describe('relato de bug sem o token', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         window.history.replaceState(null, '', `/?invite=${TOKEN}#/register?company=c1&member=m1&invite=${TOKEN}`);
@@ -40,16 +38,5 @@ describe('logs e relato de bug sem o token', () => {
         expect(all).not.toContain(TOKEN);
         expect(ctx.url).toContain('invite=[redacted]');
         expect(ctx.hash).toContain('member=m1');
-    });
-
-    it('Logger.error envia a url redigida', async () => {
-        const rpc = supabase.rpc as unknown as ReturnType<typeof vi.fn>;
-        rpc.mockResolvedValue({ data: null, error: null });
-        vi.spyOn(console, 'error').mockImplementation(() => {});
-        await logger.error('falhou', new Error('x'));
-        const call = rpc.mock.calls.find((c) => c[0] === 'log_error');
-        expect(call).toBeTruthy();
-        expect(JSON.stringify(call![1])).not.toContain(TOKEN);
-        expect(call![1].p_context.url).toContain('invite=[redacted]');
     });
 });

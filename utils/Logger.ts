@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 import { supabase } from '../lib/supabase';
-import { redactInviteToken } from './redactUrl';
+import { errorRouteCategory, safeErrorMetadata } from './errorTelemetry';
 
 // Níveis de Log
 export type LogLevel = 'info' | 'warning' | 'error' | 'critical';
@@ -35,44 +35,33 @@ class LoggerService {
     /**
      * Loga erro (Error) e envia para o backend
      */
-    async error(message: string, error?: any, context?: LogContext) {
-        // 1. Console local
-        console.error(`[ERROR] ${message}`, error || '', context || '');
-
-        // 2. Enviar para Supabase (System Errors)
-        try {
-            const errorData = {
-                p_message: message,
-                p_stack: error?.stack || null,
-                p_component_stack: context?.componentStack || null,
-                p_severity: 'error',
-                p_context: {
-                    url: redactInviteToken(window.location.href),
-                    userAgent: navigator.userAgent,
-                    ...context,
-                    rawError: error?.toString()
-                }
-            };
-
-            // Fire and forget (não aguardar para não bloquear UI)
-            supabase.rpc('log_error', errorData).then(({ error: dbError }) => {
-                if (dbError) console.error('Falha ao enviar log para o banco:', dbError);
-            });
-
-        } catch (loggingError) {
-            console.error('Erro crítico no logger:', loggingError);
-        }
-
-        // 3. Integração Futura com Sentry
-        // if (Sentry) Sentry.captureException(error);
+    async error(message: string, error?: unknown, context?: LogContext) {
+        if (this.isDevelopment) console.error(`[ERROR] ${message}`, error, context);
+        await this.report('error', error);
     }
 
     /**
      * Loga erro crítico (Critical) - sistema inoperante
      */
-    async critical(message: string, error?: any, context?: LogContext) {
-        console.error(`[CRITICAL] ${message}`, error || '', context || '');
-        await this.error(message, error, { ...context, severity: 'critical' });
+    async critical(message: string, error?: unknown, context?: LogContext) {
+        if (this.isDevelopment) console.error(`[CRITICAL] ${message}`, error, context);
+        await this.report('critical', error);
+    }
+
+    private async report(severity: 'error' | 'critical', error: unknown) {
+        try {
+            const { error: dbError } = await supabase.rpc('log_error', {
+                p_message: 'client_error',
+                p_severity: severity,
+                p_context: {
+                    route: typeof window === 'undefined' ? 'other' : errorRouteCategory(window.location),
+                    ...safeErrorMetadata(error),
+                },
+            });
+            if (dbError && this.isDevelopment) console.error('Falha ao enviar log para o banco');
+        } catch {
+            if (this.isDevelopment) console.error('Falha ao enviar log para o banco');
+        }
     }
 }
 

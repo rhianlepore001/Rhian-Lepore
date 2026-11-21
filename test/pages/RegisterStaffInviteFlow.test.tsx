@@ -127,7 +127,7 @@ describe('Convite de colaborador — cadastro confiável', () => {
     expect(alert).toHaveTextContent(/novo link/);
   }, 15000);
 
-  it('AC3: erro realmente inesperado → mostra referência e registra com detalhes (sem e-mail completo)', async () => {
+  it('AC3: erro realmente inesperado → mostra referência e registra metadados permitidos', async () => {
     auth.signUp.mockResolvedValue({ data: { user: null, session: null }, error: { code: 'unexpected_failure', status: 500, name: 'AuthApiError', message: 'Database error saving new user' } });
     rpcHandlers.log_signup_error = () => ({ data: 'log-1', error: null });
 
@@ -141,15 +141,12 @@ describe('Convite de colaborador — cadastro confiável', () => {
 
     await waitFor(() => expect(rpc).toHaveBeenCalledWith('log_signup_error', expect.anything()));
     const [, payload] = rpc.mock.calls.find((c) => c[0] === 'log_signup_error')!;
-    expect(payload.p_details).toMatchObject({
+    expect(payload.p_details).toEqual({
       ref,
       flow: 'staff_invite',
-      email: 'no***@gmail.com',
-      company_id: COMPANY,
-      member_id: MEMBER,
+      error_name: 'AuthApiError',
       error_code: 'unexpected_failure',
       error_status: 500,
-      error_message: 'Database error saving new user',
     });
   }, 15000);
 

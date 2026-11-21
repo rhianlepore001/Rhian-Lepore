@@ -37,7 +37,7 @@ export function autoMapColumns(columns: string[], kind: ImportKind): {
 }
 
 export function normalizePhone(value: string, country: 'BR' | 'PT'): string | null {
-  const input = value.trim();
+  const input = value.trim().replace(/^00\s*(?=\d{2})/, '+');
   if (!/^[+()\d\s.-]+$/.test(input) || (input.includes('+') && !input.startsWith('+'))) return null;
   const detected = getPhoneCountry(input);
   if (input.startsWith('+') && !detected) return null;

@@ -92,6 +92,13 @@ describe('normalizeRegion', () => {
             expect(formatPhone('351912345678', 'PT')).toBe('+351 912 345 678');
         });
 
+        it('respeita o DDI do telefone quando difere da região da conta', () => {
+            expect(formatPhone('+351912345678', 'BR')).toBe('+351 912 345 678');
+            expect(formatPhone('351912345678', 'BR')).toBe('+351 912 345 678');
+            expect(formatPhone('+5511999998888', 'PT')).toBe('+55 (11) 99999-8888');
+            expect(formatPhone('(35) 1234-5678', 'BR')).toBe('(35) 1234-5678');
+        });
+
         it('should handle partial phone numbers', () => {
             expect(formatPhone('11', 'BR')).toBe('(11');
             expect(formatPhone('1199999', 'BR')).toBe('(11) 99999');

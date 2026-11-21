@@ -124,7 +124,7 @@ describe('importação pela página de clientes', () => {
     vi.stubGlobal('navigator', Object.assign(Object.create(navigator), {
       contacts: { select: vi.fn().mockResolvedValue([
         { name: [' Ana ', ' Silva '], tel: ['+55 (11) 98765-4321', '5511987654321', '(11) 3333-4444'] },
-        { tel: ['(21) 98888-7777'] },
+        { tel: ['+351 912 345 678'] },
         { name: ['Número inválido'], tel: ['abc'] },
         { name: ['Sem telefone'] },
       ]) },
@@ -137,6 +137,7 @@ describe('importação pela página de clientes', () => {
     const confirm = await screen.findByRole('button', { name: 'Confirmar importação' });
     expect(staging.createImportBatch).toHaveBeenCalledWith(expect.objectContaining({ companyId: 'empresa', source: 'contacts' }));
     expect(rows[0].normalized_data).toMatchObject({ name: 'Ana Silva', phones: ['+5511987654321', '+551133334444'] });
+    expect(rows[1].normalized_data).toMatchObject({ phones: ['+351912345678'] });
     expect(staging.commitImportBatch).not.toHaveBeenCalled();
 
     fireEvent.change(screen.getAllByLabelText('Nome')[0], { target: { value: 'Bruno Santos' } });
@@ -155,6 +156,8 @@ describe('importação pela página de clientes', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Ver clientes' }));
     expect(await screen.findByText('Ana Silva')).toBeTruthy();
     expect(screen.getByText('Bruno Santos')).toBeTruthy();
+    expect(screen.getByText('+351 912 345 678')).toBeVisible();
+    expect(screen.getByText('(11) 98765-4321')).toBeVisible();
 
     await openFromClients();
     fireEvent.click(screen.getByRole('button', { name: 'Voltar' }));

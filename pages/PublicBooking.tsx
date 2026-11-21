@@ -34,7 +34,7 @@ import { logger } from '../utils/Logger';
 import { useZonedAvailableSlots } from '../hooks/useZonedAvailableSlots';
 import { mergeFreshPublicBooking } from '../utils/publicBookingFresh';
 import { fetchEditBooking, fetchPublicClientByPhone, fetchClientByPhone, fetchPublicBookingById, fetchFullDates, findNextDateWithSlots, getFirstAvailableProfessional, uploadClientPhoto, upsertPublicClientSession } from '../services/publicBooking';
-import { shouldLandOnClientArea } from '../utils/publicBookingLanding';
+import { getPublicBookingSection, shouldLandOnClientArea } from '../utils/publicBookingLanding';
 import { getPublicBookingAwaitingWhatsAppText, getPublicGroupBookingWhatsAppText, getPublicBookingSubmitLabel, getPublicBookingSuccessCopy } from '../utils/publicBookingCopy';
 import { isPublicBookingAutoConfirm } from '../utils/onlineBookingApproval';
 import { resolveCancellationPolicyParts } from '../utils/cancellationPolicyCopy';
@@ -115,7 +115,7 @@ export const PublicBooking: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
     const whatsapp = useWhatsAppTemplates(slug ?? '');
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
     const proIdParam = searchParams.get('pro');
     const rebookParam = searchParams.get('rebook');
     const editParam = searchParams.get('edit');
@@ -150,18 +150,14 @@ export const PublicBooking: React.FC = () => {
     const { data: publicProducts = [], isLoading: productsLoading, isError: productsError, refetch: refetchProducts } = usePublicProducts(businessId);
     const { data: clubPlans = [] } = usePublicMembershipPlans(businessId);
 
-    const [bookingSection, setBookingSection] = useState<'services' | 'products' | 'club'>(() => {
-        const section = searchParams.get('secao');
-        if (section === 'produtos') return 'products';
-        if (section === 'clube') return 'club';
-        return 'services';
-    });
+    const bookingSection = getPublicBookingSection(searchParams);
     const catalogNavRef = React.useRef<HTMLElement>(null);
     const quickFlowRef = React.useRef<HTMLElement>(null);
 
     const [activeCategory, setActiveCategory] = useState<string>('all');
     const [activeProfessionalCategory, setActiveProfessionalCategory] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState<string>('');
+    const [productSearch, setProductSearch] = useState('');
     const [selectedServices, setSelectedServices] = useState<string[]>([]);
     
     const [step, setStep] = useState<'edit_options' | 'services' | 'datetime' | 'contact' | 'edit_confirm' | 'success'>('services');
@@ -547,7 +543,16 @@ export const PublicBooking: React.FC = () => {
         : 'services';
 
     const openBookingSection = (section: typeof bookingSection, focusNav = false) => {
-        setBookingSection(section);
+        if (section !== bookingSection) {
+            const next = new URLSearchParams(searchParams);
+            if (section === 'services') {
+                next.delete('secao');
+                next.set('agendar', '1');
+            } else {
+                next.set('secao', section === 'products' ? 'produtos' : 'clube');
+            }
+            setSearchParams(next);
+        }
         if (focusNav) {
             const button = catalogNavRef.current?.querySelector<HTMLButtonElement>(`[data-section="${section}"]`);
             button?.focus();
@@ -1068,16 +1073,16 @@ export const PublicBooking: React.FC = () => {
                                         type="search"
                                         aria-label="Buscar produto"
                                         placeholder="Buscar produto"
-                                        value={searchQuery}
-                                        onChange={e => setSearchQuery(e.target.value)}
+                                        value={productSearch}
+                                        onChange={e => setProductSearch(e.target.value)}
                                         className={classes.input}
                                     />
                                     <PublicProductsShowcase
                                         products={publicProducts}
                                         currencyRegion={currencyRegion}
-                                        searchQuery={searchQuery}
+                                        searchQuery={productSearch}
                                         mode="tab"
-                                        onClearSearch={() => setSearchQuery('')}
+                                        onClearSearch={() => setProductSearch('')}
                                     />
                                 </div>
                             ) : (

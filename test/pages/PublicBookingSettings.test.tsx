@@ -2,11 +2,12 @@ import React from 'react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
+let savedPublicProductsEnabled = false;
 const updateLeadMinutes = vi.fn().mockResolvedValue('saved');
 const updatePolicyText = vi.fn().mockResolvedValue('saved');
 
 vi.mock('../../hooks/useSettings', () => ({
-  useBusinessSettings: () => ({ data: { enable_self_rescheduling: true, public_products_enabled: false, client_cancel_cutoff_hours: 2 } }),
+  useBusinessSettings: () => ({ data: { enable_self_rescheduling: true, public_products_enabled: savedPublicProductsEnabled, client_cancel_cutoff_hours: 2 } }),
   useUpdateBusinessSettings: () => ({ mutateAsync: vi.fn() }),
   useProfileFields: () => ({ data: { business_slug: 'bob', public_booking_enabled: true } }),
   useUpdateProfileFields: () => ({ mutateAsync: vi.fn() }),
@@ -49,6 +50,7 @@ import { PublicBookingSettings } from '../../pages/settings/PublicBookingSetting
 describe('PublicBookingSettings — PR-1 copy do toggle de edição do cliente', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    savedPublicProductsEnabled = false;
   });
 
   it('diz o que o toggle faz de verdade, sem prometer e-mail', () => {
@@ -73,5 +75,13 @@ describe('PublicBookingSettings — PR-1 copy do toggle de edição do cliente',
     render(<PublicBookingSettings />);
     expect(screen.getByTestId('public-products-section')).toBeInTheDocument();
     expect(screen.getByLabelText('Produtos no link público')).not.toBeChecked();
+    expect(screen.queryByRole('link', { name: 'Ver vitrine pública' })).not.toBeInTheDocument();
+  });
+
+  it('abre a aba Produtos pelo atalho quando a vitrine está publicada', () => {
+    savedPublicProductsEnabled = true;
+    render(<PublicBookingSettings />);
+    expect(screen.getByRole('link', { name: 'Ver vitrine pública' }))
+      .toHaveAttribute('href', '/#/book/bob?secao=produtos');
   });
 });

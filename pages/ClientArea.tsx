@@ -32,6 +32,7 @@ import { CancellationPolicyText } from '../components/CancellationPolicyText';
 import { readCancelCutoffHours } from '../utils/clientCancelCutoff';
 import { isPublicBookingAutoConfirm } from '../utils/onlineBookingApproval';
 import { getCustomerReviewReceipt } from '../utils/customerReviewReceipt';
+import { publicBookingProductsPath } from '../utils/publicBookingLanding';
 
 interface BusinessProfile {
     id: string;
@@ -138,7 +139,7 @@ export const ClientArea: React.FC = () => {
     const { data: products = [], isError: productsError, refetch: refetchProducts } = usePublicProducts(businessId);
     const clubOffered = clubPlans.length > 0;
     const hasMembership = Boolean(membership && membership.effective_status !== 'cancelled');
-    const productBookingHref = `/book/${slug}?agendar=1&secao=produtos`;
+    const productBookingHref = publicBookingProductsPath(slug ?? '');
     const isClubMember = membership?.effective_status === 'active';
     const openClubTab = () => {
         setActiveTab('club');

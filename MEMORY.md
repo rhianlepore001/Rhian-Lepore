@@ -9,6 +9,10 @@
 
 ---
 
+## Acesso à vitrine do agendamento (21 Nov 2026)
+
+A aba Produtos tem link direto para visitantes e clientes com sessão. A busca da aba é independente da busca de serviços. Em Configurações → Agendamento, a vitrine publicada tem um atalho para conferir o que o cliente vê. A configuração de visibilidade e a disponibilidade em estoque controlam os itens exibidos.
+
 ## Fotos do espaço e avaliações verificadas (21 Nov 2026)
 
 A galeria do agendamento abre expandida. A média, a contagem e os comentários do cabeçalho vêm das avaliações do Agendix. O cliente pode avaliar uma vez após o atendimento concluído no Histórico quando fez a reserva no mesmo navegador. A Agenda permite compartilhar um convite individual para atendimentos elegíveis, inclusive os anteriores à mudança. O formulário aceita nota de 1 a 5 e comentário opcional, com publicação sem nome ou telefone do cadastro. Migração de avaliações incluída em `20261121083646_verified_booking_reviews.sql`. A avaliação independente de UX deu 9,6/10. O validador técnico aprovou 57 verificações no banco isolado.

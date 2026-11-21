@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, useToast } from '../../components/ui';
 import { SettingsLayout } from '../../components/SettingsLayout';
-import { Save, HelpCircle } from 'lucide-react';
+import { Save, HelpCircle, ExternalLink } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { useBusinessSettings, useUpdateBusinessSettings, useProfileFields, useUpdateProfileFields, useUpdateOnlineBookingRequiresApproval, useUpdateBookingLeadTimeMinutes, useUpdateClientCancelPolicyText } from '../../hooks/useSettings';
@@ -10,6 +10,7 @@ import { PublicLinkCard } from '../../components/PublicLinkCard';
 import { SettingsSection } from '../../components/SettingsSection';
 import { SettingsSwitch } from '../../components/SettingsSwitch';
 import { SettingsRow } from '../../components/ui/SettingsRow';
+import { publicBookingProductsPath } from '../../utils/publicBookingLanding';
 import {
     LEAD_TIME_PRESETS,
     LEAD_TIME_CUSTOM_MINUTES_RANGE_HINT,
@@ -467,28 +468,32 @@ export const PublicBookingSettings: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <div data-testid="public-products-section">
-                    <SettingsSection
-                        title={
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm">Produtos no link público</span>
-                                <HelpCircle className="w-4 h-4 text-[var(--color-text-muted)]" />
+                        <SettingsSection title="Produtos no link público">
+                            <div className="space-y-4">
+                                <p className={`${colors.textSecondary} text-sm leading-relaxed`}>
+                                    A aba Produtos do agendamento online mostra os itens ativos, em estoque e marcados para exibição pública.
+                                </p>
+                                <div className="flex flex-wrap items-center justify-end gap-3">
+                                    {businessSlug && settings?.public_products_enabled && publicProductsEnabled && publicBookingEnabled && profile?.public_booking_enabled !== false && (
+                                        <a
+                                            href={`/#${publicBookingProductsPath(businessSlug)}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className={`mr-auto inline-flex min-h-11 items-center gap-1.5 rounded-lg text-sm font-semibold ${accent.text} hover:underline`}
+                                        >
+                                            <ExternalLink className="size-4" aria-hidden="true" />
+                                            Ver vitrine pública
+                                        </a>
+                                    )}
+                                    <SettingsSwitch
+                                        id="public-products-enabled"
+                                        ariaLabel="Produtos no link público"
+                                        checked={publicProductsEnabled}
+                                        onChange={setPublicProductsEnabled}
+                                    />
+                                </div>
                             </div>
-                        }
-                    >
-                        <div className="space-y-4">
-                            <p className={`${colors.textMuted} text-xs leading-relaxed`}>
-                                Exibe uma vitrine com seus produtos ativos e em estoque no agendamento online (foto, nome, preço e descrição). Padrão desligado.
-                            </p>
-                            <div className="flex justify-end pt-2">
-                                <SettingsSwitch
-                                    id="public-products-enabled"
-                                    ariaLabel="Produtos no link público"
-                                    checked={publicProductsEnabled}
-                                    onChange={setPublicProductsEnabled}
-                                />
-                            </div>
-                        </div>
-                    </SettingsSection>
+                        </SettingsSection>
                     </div>
 
                     <SettingsSection

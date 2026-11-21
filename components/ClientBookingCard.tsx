@@ -41,6 +41,7 @@ import {
     CLIENT_EDIT_PENDING_STATUS_LABEL,
 } from '../utils/clientEditRequest';
 import { openWhatsApp } from '../utils/openWhatsApp';
+import { BookingReviewAction } from './reviews/BookingReviewAction';
 
 export interface ClientBooking {
     id: string;
@@ -61,6 +62,7 @@ export interface ClientBooking {
 
 interface ClientBookingCardProps {
     booking: ClientBooking;
+    reviewToken?: string | null;
     isBeauty: boolean;
     businessPhone: string | null;
     businessSlug: string;
@@ -100,13 +102,13 @@ const STATUS_CONFIG: Record<string, { label: string; className: string; icon: Re
     },
     confirmed: {
         label: 'Confirmado',
-        className: 'bg-[var(--color-success-bg)] text-[var(--color-success)] border border-[var(--color-success-border)]',
-        icon: <CheckCircle className="w-3 h-3" />,
+        className: 'bg-[var(--color-success-bg)] text-theme-text border border-[var(--color-success-border)]',
+        icon: <CheckCircle className="w-3 h-3 text-[var(--color-success)]" />,
     },
     completed: {
         label: 'Finalizado',
-        className: 'bg-[var(--color-success-bg)] text-[var(--color-success)] border border-[var(--color-success-border)]',
-        icon: <CheckCircle className="w-3 h-3" />,
+        className: 'bg-[var(--color-success-bg)] text-theme-text border border-[var(--color-success-border)]',
+        icon: <CheckCircle className="w-3 h-3 text-[var(--color-success)]" />,
     },
     cancelled: {
         label: 'Cancelado',
@@ -132,6 +134,7 @@ const STATUS_CONFIG: Record<string, { label: string; className: string; icon: Re
 
 export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
     booking,
+    reviewToken,
     isBeauty,
     businessPhone,
     businessSlug,
@@ -401,7 +404,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                             <button
                                 type="button"
                                 onClick={handleConfirmWhatsApp}
-                                className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl text-xs font-semibold col-span-2 bg-theme-accent hover:opacity-90 transition-opacity ${isBeauty ? 'text-[var(--color-text)]' : 'text-[var(--color-on-accent)]'}`}
+                                className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl text-xs font-semibold col-span-2 bg-theme-accent hover:opacity-90 transition-opacity text-[var(--color-on-accent)]`}
                             >
                                 <MessageSquare className="w-3.5 h-3.5 shrink-0" />
                                 Pedir confirmação
@@ -411,7 +414,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                             <button
                                 type="button"
                                 onClick={handleWhatsApp}
-                                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl text-xs font-semibold col-span-2 bg-[var(--color-success-bg)] text-[var(--color-success)] border border-[var(--color-success-border)]"
+                                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl text-xs font-semibold col-span-2 bg-[var(--color-success-bg)] text-theme-text border border-[var(--color-success-border)]"
                             >
                                 <MessageSquare className="w-3.5 h-3.5 shrink-0" />
                                 WhatsApp
@@ -469,7 +472,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                         <button
                             type="button"
                             onClick={handleRebook}
-                            className={`w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold bg-theme-accent hover:opacity-90 transition-opacity ${isBeauty ? 'text-[var(--color-text)]' : 'text-[var(--color-on-accent)]'}`}
+                            className={`w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold bg-theme-accent hover:opacity-90 transition-opacity text-[var(--color-on-accent)]`}
                             data-testid="client-booking-reschedule"
                         >
                             <Calendar className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
@@ -504,12 +507,13 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                 {isCompleted && (
                     <div className="space-y-2 pt-1" data-testid="client-booking-completed">
                         <p
-                            className="flex items-start gap-2 px-3 py-2 rounded-xl text-xs leading-snug break-words bg-[var(--color-success-bg)] text-[var(--color-success)] border border-[var(--color-success-border)]"
+                            className="flex items-start gap-2 px-3 py-2 rounded-xl text-xs leading-snug break-words bg-[var(--color-success-bg)] text-theme-text border border-[var(--color-success-border)]"
                             data-testid="client-booking-completed-note"
                         >
-                            <CheckCircle className="w-3.5 h-3.5 shrink-0 mt-px" aria-hidden="true" />
+                            <CheckCircle className="w-3.5 h-3.5 shrink-0 mt-px text-[var(--color-success)]" aria-hidden="true" />
                             {completedThankYou(clientName)}
                         </p>
+                        {reviewToken && <BookingReviewAction token={reviewToken} />}
                         {clubNote}
                         <button
                             type="button"
@@ -517,7 +521,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                             className={`w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold ${
                                 completedCta === SLOT_CTA
                                     ? 'bg-theme-surface text-theme-text border border-theme-border hover:bg-[var(--color-card-hover)]'
-                                    : `bg-theme-accent hover:opacity-90 transition-opacity ${isBeauty ? 'text-[var(--color-text)]' : 'text-[var(--color-on-accent)]'}`
+                                    : `bg-theme-accent hover:opacity-90 transition-opacity text-[var(--color-on-accent)]`
                             }`}
                             data-testid="client-booking-next-slot"
                         >
@@ -537,7 +541,7 @@ export const ClientBookingCard: React.FC<ClientBookingCardProps> = ({
                         <button
                             type="button"
                             onClick={handleRebook}
-                            className={`w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold bg-theme-accent hover:opacity-90 transition-opacity ${isBeauty ? 'text-[var(--color-text)]' : 'text-[var(--color-on-accent)]'}`}
+                            className={`w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold bg-theme-accent hover:opacity-90 transition-opacity text-[var(--color-on-accent)]`}
                             data-testid="client-booking-reschedule"
                         >
                             <Calendar className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />

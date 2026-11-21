@@ -6,7 +6,7 @@
   <meta charset="UTF-8" />
   <meta name="google" content="notranslate" />
   <meta name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>AgendiX — Agenda e gestão para barbearias e salões</title>
   <meta name="description" content="Agenda, agendamento online, financeiro e equipe para barbearias e salões. Conheça o AgendiX em uma simulação interativa e crie sua conta grátis.">
   <meta name="theme-color" content="#121212">
@@ -865,7 +865,7 @@
       (function () {
         var hash = window.location.hash;
         // Rotas públicas usam HashRouter: #/book/, #/queue/, #/pro/, #/minha-area/
-        if (/^#\/(book|queue|queue-status|pro|minha-area)\//.test(hash)) {
+        if (/^#\/(book|queue|queue-status|pro|minha-area|avaliar)\//.test(hash)) {
           document.documentElement.setAttribute('data-public-theme', 'obsidian');
           document.documentElement.style.backgroundColor = '#12100E';
           document.body && (document.body.style.backgroundColor = '#12100E');

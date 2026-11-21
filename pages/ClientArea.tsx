@@ -4,7 +4,7 @@ import { ClientQueuePanel } from '../components/queue/ClientQueuePanel';
 import { findNameToOpenPublicArea, hasQueueQrVisit } from '../services/queue';
 import { supabase } from '../lib/supabase';
 import { usePublicClient } from '../contexts/PublicClientContext';
-import { useBusinessProfileBySlug, useBusinessSettings } from '../hooks/usePublicBooking';
+import { useBusinessProfileBySlug, useBusinessSettings, usePublicProducts } from '../hooks/usePublicBooking';
 import { ClientBookingCard, ClientBooking } from '../components/ClientBookingCard';
 import { fetchClientBookingCancellations } from '../services/publicBooking';
 import { pendingAwaitingBanner, splitClientBookings, withCancellationInfo } from '../utils/clientBookings';
@@ -15,20 +15,23 @@ import { PhoneInput } from '../components/PhoneInput';
 import {
     Calendar, History, User, LogOut, ArrowRight,
     Loader2, CalendarX, Sparkles, Mail, Phone,
-    Edit2, Check, X, ChevronLeft, Clock, Crown
+    Edit2, Check, X, ChevronLeft, Clock, Crown, Package
 } from 'lucide-react';
 import { ClientMembershipPanel } from '../components/membership/ClientMembershipPanel';
 import { PublicClubFlow } from '../components/membership/PublicClubFlow';
+import { ClubPromotion } from '../components/membership/ClubPromotion';
+import { PublicProductsShowcase } from '../components/booking/PublicProductsShowcase';
 import { useCancelPublicClientMembership, usePublicClientMembership, usePublicMembershipPlans } from '../hooks/useMemberships';
 import { useToast } from '../components/ui/Toast';
 import { validityHeadline } from '../utils/membershipValidity';
-import { formatFirstName } from '../utils/formatters';
+import { formatFirstName, normalizeRegion } from '../utils/formatters';
 import { resolveBusinessTimezone } from '../utils/businessTimezone';
 import { useScrollToError } from '../hooks/useScrollToError';
 import { resolveCancellationPolicyParts } from '../utils/cancellationPolicyCopy';
 import { CancellationPolicyText } from '../components/CancellationPolicyText';
 import { readCancelCutoffHours } from '../utils/clientCancelCutoff';
 import { isPublicBookingAutoConfirm } from '../utils/onlineBookingApproval';
+import { getCustomerReviewReceipt } from '../utils/customerReviewReceipt';
 
 interface BusinessProfile {
     id: string;
@@ -41,7 +44,7 @@ interface BusinessProfile {
     allow_client_rescheduling?: boolean;
 }
 
-type Tab = 'upcoming' | 'history' | 'club' | 'queue' | 'profile';
+type Tab = 'upcoming' | 'history' | 'products' | 'club' | 'queue' | 'profile';
 
 const ITEMS_PER_PAGE = 8;
 
@@ -105,12 +108,18 @@ export const ClientArea: React.FC = () => {
 
     // UI
     const queueFirst = searchParams.get('tab') === 'fila';
-    const [activeTab, setActiveTab] = useState<Tab>(queueFirst ? 'queue' : 'upcoming');
+    const [activeTab, setActiveTab] = useState<Tab>(() => {
+        if (queueFirst) return 'queue';
+        if (searchParams.get('tab') === 'clube') return 'club';
+        if (searchParams.get('tab') === 'historico') return 'history';
+        return 'upcoming';
+    });
+    const navRef = React.useRef<HTMLElement>(null);
 
     useEffect(() => {
-        if (searchParams.get('tab') === 'fila') {
-            setActiveTab('queue');
-        }
+        if (searchParams.get('tab') === 'fila') setActiveTab('queue');
+        if (searchParams.get('tab') === 'clube') setActiveTab('club');
+        if (searchParams.get('tab') === 'historico') setActiveTab('history');
     }, [searchParams]);
     const [historyPage, setHistoryPage] = useState(1);
 
@@ -125,10 +134,29 @@ export const ClientArea: React.FC = () => {
         sessionClient?.business_id ?? business?.id ?? null,
         sessionClient?.phone ?? null
     );
-    const { data: clubPlans } = usePublicMembershipPlans(businessId);
-    const clubOffered = (clubPlans?.length ?? 0) > 0;
+    const { data: clubPlans = [] } = usePublicMembershipPlans(businessId);
+    const { data: products = [], isError: productsError, refetch: refetchProducts } = usePublicProducts(businessId);
+    const clubOffered = clubPlans.length > 0;
+    const hasMembership = Boolean(membership && membership.effective_status !== 'cancelled');
+    const productBookingHref = `/book/${slug}?agendar=1&secao=produtos`;
     const isClubMember = membership?.effective_status === 'active';
-    const openClubTab = () => setActiveTab('club');
+    const openClubTab = () => {
+        setActiveTab('club');
+        const button = navRef.current?.querySelector<HTMLButtonElement>('[data-area-tab="club"]');
+        button?.focus();
+        button?.scrollIntoView?.({ block: 'nearest' });
+    };
+
+    const queueTab = { id: 'queue', label: 'Fila', icon: Clock } as const;
+    const tabs = [
+        ...(queueFirst ? [queueTab] : []),
+        { id: 'upcoming', label: 'Agendamentos', icon: Calendar },
+        { id: 'history', label: 'Histórico', icon: History },
+        ...(products.length > 0 || activeTab === 'products' ? [{ id: 'products', label: 'Produtos', icon: Package } as const] : []),
+        ...(clubOffered || hasMembership || activeTab === 'club' ? [{ id: 'club', label: 'Clube', icon: Crown } as const] : []),
+        ...(!queueFirst ? [queueTab] : []),
+        { id: 'profile', label: 'Perfil', icon: User },
+    ] as const;
     const cancelMembership = useCancelPublicClientMembership(
         sessionClient?.business_id ?? business?.id ?? null,
         sessionClient?.phone ?? null
@@ -145,7 +173,7 @@ export const ClientArea: React.FC = () => {
 
     const isBeauty = business?.user_type === 'beauty';
     const { businessNoun } = usePublicBusinessCopy(business?.user_type);
-    const region = (business?.region as 'BR' | 'PT') ?? 'BR';
+    const region = normalizeRegion(business?.region);
     const businessTimezone = resolveBusinessTimezone({
         timezone: (businessSettings as { timezone?: string | null } | null | undefined)?.timezone,
         region: business?.region,
@@ -385,11 +413,12 @@ export const ClientArea: React.FC = () => {
                                     </div>
 
                                     <div>
-                                        <label htmlFor="client-area-phone" className={`text-xs font-medium block mb-2 ${isBeauty ? 'text-[var(--color-text-muted)]' : 'text-theme-textSecondary'}`}>
+                                        <label htmlFor="client-area-phone" className={`text-sm font-medium block mb-2 ${isBeauty ? 'text-[var(--color-text-muted)]' : 'text-theme-textSecondary'}`}>
                                             Seu WhatsApp / Telefone
                                         </label>
                                         <PhoneInput
                                             id="client-area-phone"
+                                            defaultRegion={region}
                                             value={phone}
                                             onChange={v => { setPhone(v); setGateError(''); }}
                                             placeholder="Telefone"
@@ -446,6 +475,8 @@ export const ClientArea: React.FC = () => {
                                         <User className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`} />
                                         <input
                                             type="text"
+                                            aria-label="Nome completo"
+                                            autoComplete="name"
                                             placeholder="Nome completo"
                                             value={gateName}
                                             onChange={e => setGateName(e.target.value)}
@@ -479,12 +510,20 @@ export const ClientArea: React.FC = () => {
                             )}
                         </div>
 
-                        <p className={`text-center text-xs ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`}>
-                            Quer agendar?{' '}
-                            <Link to={`/book/${slug}`} className={`font-semibold underline ${isBeauty ? 'text-[var(--color-text-muted)]' : 'text-theme-textSecondary'}`}>
-                                Ir para o agendamento
-                            </Link>
-                        </p>
+                        {(products.length > 0 || clubOffered) && (
+                            <nav aria-label="Explore o estabelecimento" className="flex flex-wrap justify-center gap-2">
+                                {products.length > 0 && (
+                                    <Link to={productBookingHref} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-theme-border bg-theme-card px-3 text-sm font-semibold text-theme-text">
+                                        <Package className="size-4" aria-hidden="true" /> Ver produtos
+                                    </Link>
+                                )}
+                                {clubOffered && (
+                                    <Link to={`/clube/${slug}`} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-theme-border bg-theme-card px-3 text-sm font-semibold text-theme-text">
+                                        <Crown className="size-4 text-theme-accent" aria-hidden="true" /> Conhecer o Clube
+                                    </Link>
+                                )}
+                            </nav>
+                        )}
                     </div>
                 </div>
             </div>
@@ -493,119 +532,103 @@ export const ClientArea: React.FC = () => {
 
     return (
         <div className={`min-h-screen flex flex-col ${isBeauty ? 'bg-theme-bg' : 'bg-theme-bg'}`}>
-            <header className="sticky top-0 z-30 px-4 md:px-8 py-3 border-b border-theme-border bg-theme-bg">
-                <div className="max-w-2xl mx-auto flex items-center justify-between gap-2 min-w-0">
-                    <span className="text-sm font-semibold text-theme-text truncate min-w-0">
-                        {business.business_name}
-                    </span>
-                    <div className="flex items-center gap-3">
-                        <span className={`text-sm font-semibold ${isBeauty ? 'text-theme-text' : 'text-theme-text'}`}>
-                            {formatFirstName(sessionClient.name)}
-                        </span>
-                        <button
-                            onClick={() => logout(business.id)}
-                            aria-label="Sair da área do cliente"
-                            title="Sair"
-                            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg transition-colors text-theme-textMuted hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)]"
-                        >
-                            <LogOut className="w-4 h-4" aria-hidden="true" />
-                        </button>
+            <header className="sticky top-0 z-30 border-b border-theme-border bg-theme-bg px-4 py-2 md:px-8">
+                <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-2.5">
+                        {business.logo_url ? (
+                            <img src={business.logo_url} alt="" className="size-8 shrink-0 rounded-lg object-cover" />
+                        ) : (
+                            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-theme-surface text-theme-accent">
+                                <Sparkles className="size-4" aria-hidden="true" />
+                            </span>
+                        )}
+                        <span className="truncate text-sm font-semibold text-theme-text">{business.business_name}</span>
                     </div>
+                    <button
+                        type="button"
+                        onClick={() => logout(business.id)}
+                        className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-theme-textSecondary hover:bg-theme-surface"
+                    >
+                        <LogOut className="size-4" aria-hidden="true" />
+                        Sair
+                    </button>
                 </div>
             </header>
 
-            <main className="flex-1 max-w-2xl mx-auto w-full min-w-0 px-4 md:px-8 py-5 space-y-4 overflow-x-hidden">
-                <div className="relative overflow-hidden min-w-0 rounded-2xl p-4 bg-theme-surface border border-theme-border">
-                    <div className="flex flex-col gap-3 min-w-0">
+            <main className="mx-auto w-full max-w-3xl min-w-0 flex-1 space-y-4 px-4 py-5 md:px-8 md:py-7">
+                <section aria-labelledby="client-area-title" className="rounded-2xl border border-theme-border bg-theme-card p-4 sm:p-5">
+                    <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <div className="min-w-0">
-                            <p className="text-xs font-semibold text-theme-textSecondary truncate">
-                                {business.business_name}
-                            </p>
-                            <h1 className="text-xl font-bold text-theme-text leading-tight break-words">
-                                Olá, {formatFirstName(sessionClient.name)}!
+                            <h1 id="client-area-title" className="text-2xl font-bold tracking-tight text-theme-text">
+                                Minha Área
                             </h1>
-                            <p className="text-xs mt-1 text-theme-textSecondary leading-snug">
-                                {activeTab === 'queue'
-                                    ? 'Acompanhe sua senha por aqui.'
-                                    : activeUpcomingBookings.length > 0
-                                        ? `Você tem ${activeUpcomingBookings.length} agendamento${activeUpcomingBookings.length > 1 ? 's' : ''} próximo${activeUpcomingBookings.length > 1 ? 's' : ''}`
-                                        : 'Nenhum agendamento futuro'}
+                            <p className="mt-1 break-words text-sm leading-relaxed text-theme-textSecondary">
+                                Olá, {formatFirstName(sessionClient.name)}!
+                                {activeTab === 'queue' ? ' Acompanhe sua senha por aqui.' : ''}
                             </p>
-                            {membership && membership.effective_status !== 'cancelled' && (
-                                <button
-                                    type="button"
-                                    onClick={() => setActiveTab('club')}
-                                    className="mt-2 text-left text-xs leading-snug text-theme-textSecondary"
-                                    data-testid="club-hero-chip"
-                                >
-                                    <span className="font-semibold">Clube · {membership.plan_name}</span>
-                                    <span className="block mt-0.5">
-                                        {validityHeadline(
-                                            membership.effective_status,
-                                            membership.current_period_end || membership.next_billing_at
-                                        )}
-                                    </span>
-                                </button>
-                            )}
                         </div>
                         {activeTab !== 'queue' && (
                             <Link
                                 to={`/book/${slug}?agendar=1`}
-                                className={`w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-bold ${isBeauty ? 'bg-theme-card text-theme-text border border-theme-border' : 'bg-theme-accent text-[var(--color-on-accent)]'}`}
+                                className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-theme-accent px-4 text-sm font-semibold text-[var(--color-on-accent)]"
                             >
-                                <Calendar className="w-3.5 h-3.5" />
+                                <Calendar className="size-4" aria-hidden="true" />
                                 Novo agendamento
                             </Link>
                         )}
                     </div>
-                </div>
+                </section>
 
-                <div role="group" aria-label="Seções da área do cliente" className="flex flex-wrap gap-1 rounded-xl border border-theme-border bg-theme-surface p-1">
-                    {((queueFirst
-                        ? [
-                            { id: 'queue', label: 'Fila', icon: <Clock className="w-3.5 h-3.5" /> },
-                            { id: 'upcoming', label: 'Próximos', icon: <Calendar className="w-3.5 h-3.5" /> },
-                            { id: 'history', label: 'Histórico', icon: <History className="w-3.5 h-3.5" /> },
-                            { id: 'club', label: 'Clube', icon: <Crown className="w-3.5 h-3.5" /> },
-                            { id: 'profile', label: 'Perfil', icon: <User className="w-3.5 h-3.5" /> },
-                        ]
-                        : [
-                            { id: 'upcoming', label: 'Próximos', icon: <Calendar className="w-3.5 h-3.5" /> },
-                            { id: 'history', label: 'Histórico', icon: <History className="w-3.5 h-3.5" /> },
-                            { id: 'club', label: 'Clube', icon: <Crown className="w-3.5 h-3.5" /> },
-                            { id: 'queue', label: 'Fila', icon: <Clock className="w-3.5 h-3.5" /> },
-                            { id: 'profile', label: 'Perfil', icon: <User className="w-3.5 h-3.5" /> },
-                        ]) as { id: Tab; label: string; icon: React.ReactNode }[]).map(tab => (
+                <nav ref={navRef} aria-label="Seções da Minha Área" className={`grid gap-1 rounded-2xl border border-theme-border bg-theme-surface p-1 sm:flex sm:flex-wrap ${tabs.length === 4 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+                    {tabs.map(({ id, label, icon: Icon }) => (
                         <button
-                            key={tab.id}
+                            key={id}
                             type="button"
-                            aria-pressed={activeTab === tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`
-                                flex grow items-center justify-center gap-1.5 min-h-11 rounded-lg border px-2 py-2 text-xs font-semibold
-                                ${activeTab === tab.id
-                                    ? 'border-theme-border bg-theme-card text-theme-text'
-                                    : 'border-transparent text-theme-textSecondary'
-                                }
+                            data-area-tab={id}
+                            aria-current={activeTab === id ? 'true' : undefined}
+                            onClick={() => setActiveTab(id)}
+                            className={`relative flex min-h-12 min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1.5 py-1.5 text-xs font-semibold sm:flex-auto sm:flex-row sm:gap-1.5 sm:px-2.5 sm:text-sm
+                                ${activeTab === id
+                                    ? 'bg-theme-accent text-[var(--color-on-accent)]'
+                                    : 'text-theme-textSecondary hover:bg-theme-card'}
                             `}
                         >
-                            <span aria-hidden="true">{tab.icon}</span>
-                            <span>{tab.label}</span>
-                            {tab.id === 'upcoming' && activeUpcomingBookings.length > 0 && (
-                                <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-xs font-black ${isBeauty ? 'bg-theme-surface text-theme-text' : 'bg-theme-accent text-[var(--color-on-accent)]'}`}>
-                                    {activeUpcomingBookings.length}
-                                </span>
-                            )}
-                            {tab.id === 'club' && membership && (membership.effective_status === 'pending' || membership.effective_status === 'overdue') && (
-                                <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-warning)]" aria-hidden="true" />
+                            <Icon className="size-4 shrink-0" aria-hidden="true" />
+                            <span>{label}</span>
+                            {id === 'club' && membership && (membership.effective_status === 'pending' || membership.effective_status === 'overdue') && (
+                                <span className={`absolute right-2 top-2 size-1.5 rounded-full sm:static ${activeTab === id ? 'bg-[var(--color-on-accent)]' : 'bg-[var(--color-warning)]'}`} aria-hidden="true" />
                             )}
                         </button>
                     ))}
-                </div>
+                </nav>
 
-                {bookingsLoading ? (
-                    <div className="py-16 flex justify-center">
-                        <Loader2 className={`w-6 h-6 animate-spin ${isBeauty ? 'text-theme-textSecondary' : 'text-[var(--color-text-muted)]'}`} />
+                {activeTab === 'upcoming' && (
+                    membership && hasMembership ? (
+                        <button
+                            type="button"
+                            onClick={openClubTab}
+                            className="flex w-full min-w-0 items-center gap-3 rounded-2xl border border-theme-border bg-theme-card p-3 text-left hover:border-theme-accent"
+                            data-testid="club-hero-chip"
+                        >
+                            <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-theme-surface text-theme-accent">
+                                <Crown className="size-5" aria-hidden="true" />
+                            </span>
+                            <span className="min-w-0 flex-1">
+                                <span className="block break-words text-sm font-semibold text-theme-text">Meu Clube · {membership.plan_name}</span>
+                                <span className="mt-1 block text-sm text-theme-textSecondary">
+                                    {validityHeadline(membership.effective_status, membership.current_period_end || membership.next_billing_at)}
+                                </span>
+                            </span>
+                            <span className="shrink-0 text-sm font-semibold text-theme-accent">Ver assinatura</span>
+                        </button>
+                    ) : clubOffered && !membershipLoading ? (
+                        <ClubPromotion plans={clubPlans} region={region} onOpen={openClubTab} />
+                    ) : null
+                )}
+
+                {bookingsLoading && (activeTab === 'upcoming' || activeTab === 'history') ? (
+                    <div role="status" aria-label="Carregando agendamentos" className="flex justify-center py-16">
+                        <Loader2 className="size-6 animate-spin text-theme-textSecondary" aria-hidden="true" />
                     </div>
                 ) : (
                     <>
@@ -685,6 +708,7 @@ export const ClientArea: React.FC = () => {
                                             <ClientBookingCard
                                                 key={b.id}
                                                 booking={b}
+                                                reviewToken={getCustomerReviewReceipt(business.id, b.id)}
                                                 isBeauty={isBeauty}
                                                 businessPhone={business.phone}
                                                 businessSlug={slug ?? ''}
@@ -712,6 +736,23 @@ export const ClientArea: React.FC = () => {
                                     </>
                                 )}
                             </div>
+                        )}
+
+                        {activeTab === 'products' && (
+                            productsError && products.length === 0 ? (
+                                <div className="space-y-2">
+                                    <p role="alert" className="text-sm text-theme-textSecondary">Não foi possível carregar os produtos.</p>
+                                    <button type="button" onClick={() => void refetchProducts()} className="min-h-11 text-sm font-semibold text-theme-accent">Tentar novamente</button>
+                                </div>
+                            ) : (
+                                products.length > 0 ? (
+                                    <PublicProductsShowcase products={products} currencyRegion={region} mode="tab" />
+                                ) : (
+                                    <p className="rounded-xl border border-theme-border bg-theme-card p-4 text-sm text-theme-textSecondary">
+                                        Nenhum produto disponível no momento.
+                                    </p>
+                                )
+                            )
                         )}
 
                         {activeTab === 'queue' && (

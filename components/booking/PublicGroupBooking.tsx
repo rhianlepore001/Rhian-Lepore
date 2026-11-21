@@ -214,6 +214,7 @@ export const PublicGroupBooking: React.FC<Props> = ({
     try {
       const rows = await submit.mutateAsync({
         businessId,
+        reviewTokens: typeof globalThis.crypto?.randomUUID === 'function' ? people.map(() => crypto.randomUUID()) : undefined,
         customerName: customerName.trim(),
         customerPhone,
         appointmentTime: zonedDateTimeToIso(dateStr, selectedTime, timezone),

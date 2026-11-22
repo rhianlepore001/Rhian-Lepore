@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { queuePaymentBadge, queueStaffActions } from '@/utils/queueStaffActions';
 
 describe('queueStaffActions', () => {
-  it('waiting: iniciar atendimento é primário, chamar é secundário e pode marcar não compareceu', () => {
+  it('waiting: chamar é primário, iniciar atendimento é secundário e pode marcar não compareceu', () => {
     const actions = queueStaffActions({ status: 'waiting', paymentStatus: 'unpaid' });
-    expect(actions.primary).toEqual({ id: 'start', label: 'Iniciar atendimento' });
-    expect(actions.secondary).toEqual({ id: 'call', label: 'Chamar cliente' });
+    expect(actions.primary).toEqual({ id: 'call', label: 'Chamar cliente' });
+    expect(actions.secondary).toEqual({ id: 'start', label: 'Iniciar atendimento' });
     expect(actions.tertiary.map((action) => action.id)).toEqual(['no_show']);
     expect(actions.showConfirmPay).toBe(false);
   });

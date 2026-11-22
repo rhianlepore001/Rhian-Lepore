@@ -633,7 +633,7 @@ const ConfirmStep: React.FC<ConfirmStepProps> = ({
           label={
             <>
               Confirmo o compromisso de todos e aceito a{' '}
-              <button type="button" onClick={event => { event.preventDefault(); onOpenPolicy(); }} className={`font-semibold underline underline-offset-2 ${accent.text}`}>política de cancelamento</button>.
+              <button type="button" onClick={event => { event.preventDefault(); onOpenPolicy(); }} className={`font-semibold underline underline-offset-2 ${accent.text}`}>política de agendamento</button>.
             </>
           }
         />

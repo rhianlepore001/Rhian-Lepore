@@ -750,7 +750,7 @@ export const PublicBooking: React.FC = () => {
 
     const handleSubmit = async () => {
         if (!businessId || !customerName || !customerPhone || !selectedDate || !selectedTime || !acceptedPolicy) {
-            showToast('Por favor, preencha todos os campos e aceite a política de cancelamento.', 'warning');
+            showToast('Por favor, preencha todos os campos e aceite a política de agendamento.', 'warning');
             return;
         }
         setIsSubmitting(true);
@@ -880,7 +880,7 @@ export const PublicBooking: React.FC = () => {
             className={`rounded-xl border px-4 py-3 ${colors.surface} ${colors.border}`}
             data-testid="public-cancellation-policy-inline"
         >
-            <p className={`mb-1.5 text-sm font-semibold ${colors.text}`}>Política de cancelamento</p>
+            <p className={`mb-1.5 text-sm font-semibold ${colors.text}`}>Política de agendamento</p>
             <CancellationPolicyText
                 parts={cancellationPolicyParts}
                 className={`text-sm leading-relaxed ${colors.textSecondary}`}
@@ -1396,7 +1396,7 @@ export const PublicBooking: React.FC = () => {
                                                     onClick={(e) => { e.preventDefault(); setShowPolicyModal(true); }}
                                                     className={`font-semibold underline underline-offset-2 ${accent.text}`}
                                                 >
-                                                    política de cancelamento
+                                                    política de agendamento
                                                 </button>
                                                 .
                                             </>
@@ -1958,7 +1958,7 @@ export const PublicBooking: React.FC = () => {
                                     className="shrink-0"
                                 />
                                 <label htmlFor="privacy" className={`text-sm cursor-pointer ${colors.textSecondary} leading-snug`}>
-                                    Confirmo meu compromisso e aceito a <button type="button" onClick={(e) => { e.preventDefault(); setShowPolicyModal(true); }} className={`font-bold underline ${accent.text} hover:text-theme-text`}>política de cancelamento</button>.
+                                    Confirmo meu compromisso e aceito a <button type="button" onClick={(e) => { e.preventDefault(); setShowPolicyModal(true); }} className={`font-bold underline ${accent.text} hover:text-theme-text`}>política de agendamento</button>.
                                 </label>
                             </div>
 
@@ -2208,22 +2208,27 @@ export const PublicBooking: React.FC = () => {
                     style={{ zIndex: 'var(--z-modal)' }}
                     onClick={() => setShowPolicyModal(false)}
                 >
-                    <FocusTrap active focusTrapOptions={{ escapeDeactivates: false, allowOutsideClick: true, initialFocus: false, fallbackFocus: '[data-policy-dialog]' }}>
+                    <FocusTrap active focusTrapOptions={{ escapeDeactivates: false, allowOutsideClick: true, initialFocus: '[data-policy-dialog]', fallbackFocus: '[data-policy-dialog]' }}>
                     <div
                         data-policy-dialog
                         role="dialog"
                         aria-modal="true"
-                        aria-label="Política de cancelamento"
+                        aria-label="Política de agendamento"
                         tabIndex={-1}
                         onKeyDown={(e) => { if (e.key === 'Escape') setShowPolicyModal(false); }}
                         onClick={(e) => e.stopPropagation()}
                         className={`${colors.card} ${colors.border} border max-w-xl w-full p-6 md:p-8 relative shadow-promax-depth overflow-hidden rounded-3xl`}>
-                        <button onClick={() => setShowPolicyModal(false)} aria-label="Fechar" className={`absolute top-4 right-4 ${colors.textMuted} hover:text-theme-text transition-colors z-30`}><X className="w-6 h-6" /></button>
+                        <button onClick={() => setShowPolicyModal(false)} aria-label="Fechar" className={`absolute right-2 top-2 z-30 grid size-11 place-items-center rounded-xl ${colors.textMuted} hover:bg-theme-surface hover:text-theme-text`}><X className="size-5" aria-hidden="true" /></button>
                         <div className="relative z-10 space-y-5">
-                            <h3 className={`text-xl md:text-2xl font-semibold tracking-tight ${colors.text}`}>
-                                Política de cancelamento
+                            <h3 className={`pr-7 text-xl md:text-2xl font-semibold tracking-tight ${colors.text}`}>
+                                Política de agendamento
                             </h3>
-                            <div className={`leading-relaxed text-sm md:text-base ${colors.textSecondary} max-h-[50vh] overflow-y-auto pr-1 md:pr-2 custom-scrollbar`}>
+                            <div
+                                role="region"
+                                aria-label="Texto da política de agendamento"
+                                tabIndex={0}
+                                className={`max-h-[50vh] overflow-y-auto rounded-lg pr-1 text-sm leading-relaxed focus-visible:outline focus-visible:outline-2 focus-visible:outline-theme-accent md:pr-2 md:text-base custom-scrollbar ${colors.textSecondary}`}
+                            >
                                 <CancellationPolicyText
                                     parts={cancellationPolicyParts}
                                     data-testid="public-cancellation-policy"

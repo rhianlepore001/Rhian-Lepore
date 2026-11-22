@@ -377,7 +377,7 @@ async function walkPublicQuickToPolicy(page: Page) {
   await slot.click();
   await page.getByRole('button', { name: /^Continuar$/ }).click();
 
-  await expect(page.getByRole('button', { name: /política de cancelamento/i })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('button', { name: /política de agendamento/i })).toBeVisible({ timeout: 15_000 });
 }
 
 test.describe('PR-1 overhaul copy/cards', () => {
@@ -451,7 +451,7 @@ test.describe('PR-1 overhaul copy/cards', () => {
       await page.setViewportSize({ width: vp.width, height: vp.height });
       await mockSupabase(page, 'anon', { seedPublicClient: false });
       await walkPublicQuickToPolicy(page);
-      await page.getByRole('button', { name: /política de cancelamento/i }).click();
+      await page.getByRole('button', { name: /política de agendamento/i }).click();
       await expect(page.getByTestId('public-cancellation-policy')).toHaveText(GENERATED_POLICY);
       await expect(page.getByText('flexible', { exact: true })).toHaveCount(0);
       await expect(page.getByText(/cobrança de 50%/i)).toHaveCount(0);

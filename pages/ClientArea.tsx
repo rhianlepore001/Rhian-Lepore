@@ -557,16 +557,17 @@ export const ClientArea: React.FC = () => {
             </header>
 
             <main className="mx-auto w-full max-w-3xl min-w-0 flex-1 space-y-4 px-4 py-5 md:px-8 md:py-7">
-                <section aria-labelledby="client-area-title" className="rounded-2xl border border-theme-border bg-theme-card p-4 sm:p-5">
+                <section aria-labelledby="client-area-title" className={activeTab === 'queue' ? 'px-1' : 'rounded-2xl border border-theme-border bg-theme-card p-4 sm:p-5'}>
                     <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <div className="min-w-0">
                             <h1 id="client-area-title" className="text-2xl font-bold tracking-tight text-theme-text">
-                                Minha Área
+                                {activeTab === 'queue' ? 'Fila digital' : 'Minha Área'}
                             </h1>
-                            <p className="mt-1 break-words text-sm leading-relaxed text-theme-textSecondary">
-                                Olá, {formatFirstName(sessionClient.name)}!
-                                {activeTab === 'queue' ? ' Acompanhe sua senha por aqui.' : ''}
-                            </p>
+                            {activeTab !== 'queue' && (
+                                <p className="mt-1 break-words text-sm leading-relaxed text-theme-textSecondary">
+                                    Olá, {formatFirstName(sessionClient.name)}!
+                                </p>
+                            )}
                         </div>
                         {activeTab !== 'queue' && (
                             <Link
@@ -651,7 +652,7 @@ export const ClientArea: React.FC = () => {
                                     data-testid="client-cancellation-policy"
                                 >
                                     <p className="text-xs font-semibold uppercase tracking-[0.14em] text-theme-textSecondary mb-1">
-                                        Política de cancelamento
+                                        Política de agendamento
                                     </p>
                                     <CancellationPolicyText
                                         parts={policyParts}

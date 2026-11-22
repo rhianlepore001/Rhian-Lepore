@@ -47,20 +47,21 @@ export const QueueServiceStep: React.FC<QueueServiceStepProps> = ({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className={`text-xl md:text-[22px] font-semibold tracking-tight ${font.heading} ${colors.text}`}>
+        <h2 tabIndex={-1} className={`text-xl md:text-[22px] font-semibold tracking-tight ${font.heading} ${colors.text}`}>
           Qual serviço você quer hoje?
         </h2>
         <p className={`text-sm mt-1.5 leading-relaxed ${colors.textMuted}`}>
-          O tempo de espera é calculado com base na duração dos serviços.
+          Depois de entrar, acompanhe sua vez pelo celular.
         </p>
       </div>
 
       {categories.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+        <div role="group" aria-label="Categorias de serviços" className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => setCategoryId('all')}
-            className={`min-h-[44px] px-4 ${radius.badge} text-sm font-semibold whitespace-nowrap transition-colors ${
+            aria-pressed={categoryId === 'all'}
+            className={`min-h-[44px] px-4 ${radius.badge} text-sm font-semibold break-words max-w-full transition-colors ${
               categoryId === 'all'
                 ? `${accent.bg} text-[var(--color-on-accent)]`
                 : `${colors.card} ${colors.border} border ${colors.textSecondary}`
@@ -73,7 +74,8 @@ export const QueueServiceStep: React.FC<QueueServiceStepProps> = ({
               key={category.id}
               type="button"
               onClick={() => setCategoryId(category.id)}
-              className={`min-h-[44px] px-4 ${radius.badge} text-sm font-semibold whitespace-nowrap transition-colors ${
+              aria-pressed={categoryId === category.id}
+              className={`min-h-[44px] px-4 ${radius.badge} text-sm font-semibold break-words max-w-full transition-colors ${
                 categoryId === category.id
                   ? `${accent.bg} text-[var(--color-on-accent)]`
                   : `${colors.card} ${colors.border} border ${colors.textSecondary}`
@@ -109,7 +111,7 @@ export const QueueServiceStep: React.FC<QueueServiceStepProps> = ({
               >
                 <div className="flex items-center gap-3">
                   <div className="min-w-0 flex-1">
-                    <p className={`font-semibold tracking-tight ${colors.text}`}>{service.name}</p>
+                    <p className={`break-words font-semibold tracking-tight ${colors.text}`}>{service.name}</p>
                     <p className={`text-sm mt-1 flex items-center gap-2 ${colors.textMuted}`}>
                       <Clock className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                       <span>{formatDuration(service.duration_minutes)}</span>

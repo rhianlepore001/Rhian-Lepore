@@ -1,12 +1,16 @@
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { invalidateAgendaStaticData } from '@/lib/agendaStaticInvalidation';
 import { supabase } from '../lib/supabase';
 import { Modal } from './ui/Modal';
 import { useToast } from './ui/Toast';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Settings, Upload, User as UserIcon } from 'lucide-react';
+import { KeyRound, Settings, Upload, User as UserIcon } from 'lucide-react';
 import { useBrutalTheme } from '../hooks/useBrutalTheme';
+import { isDemoMode } from '../lib/demo/mode';
+import { hasEmailPasswordIdentity } from '../services/profilePassword';
+import { ProfilePasswordForm } from './auth/ProfilePasswordForm';
+import { Button } from './ui/Button';
 
 interface ProfileModalProps {
     onClose: () => void;
@@ -19,6 +23,18 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
     const [newBusinessName, setNewBusinessName] = useState(businessName);
     const [newFullName, setNewFullName] = useState(fullName);
     const [loading, setLoading] = useState(false);
+    const [editingPassword, setEditingPassword] = useState(false);
+    const [savingPassword, setSavingPassword] = useState(false);
+    const passwordButtonRef = useRef<HTMLDivElement>(null);
+    const restorePasswordFocus = useRef(false);
+    const canChangePassword = hasEmailPasswordIdentity(user);
+
+    useEffect(() => {
+        if (!editingPassword && restorePasswordFocus.current) {
+            passwordButtonRef.current?.querySelector('button')?.focus();
+            restorePasswordFocus.current = false;
+        }
+    }, [editingPassword]);
 
     const [photoFile, setPhotoFile] = useState<File | null>(null);
     const [photoPreview, setPhotoPreview] = useState<string | null>(avatarUrl);
@@ -119,7 +135,17 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
     };
 
     return (
-        <Modal open onClose={onClose} title="Meu Perfil" size="md">
+        <Modal open onClose={onClose} title={editingPassword ? 'Alterar senha' : 'Meu Perfil'} size="md" preventClose={savingPassword}>
+            {editingPassword ? (
+                <ProfilePasswordForm
+                    key={user?.id}
+                    onSavingChange={setSavingPassword}
+                    onBack={() => {
+                        restorePasswordFocus.current = true;
+                        setEditingPassword(false);
+                    }}
+                />
+            ) : <>
                 <div className="flex justify-center mb-6">
                     <div
                         className={`relative w-24 h-24 rounded-full ${colors.surface} border-2 border-dashed ${photoPreview ? 'border-transparent' : 'border-[var(--color-border-strong)]'} flex items-center justify-center cursor-pointer hover:border-[var(--color-accent-border)] overflow-hidden group transition-colors`}
@@ -211,6 +237,21 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                     </button>
                 </form>
 
+                {!isDemoMode() && user && (
+                    <section className={`mt-5 space-y-2 border-t pt-4 ${colors.divider}`}>
+                        <h3 className={`text-sm font-semibold ${colors.text}`}>Segurança da conta</h3>
+                        {canChangePassword ? (
+                            <div ref={passwordButtonRef}>
+                                <Button variant="secondary" fullWidth icon={<KeyRound />} disabled={loading} onClick={() => setEditingPassword(true)}>
+                                    Alterar senha
+                                </Button>
+                            </div>
+                        ) : (
+                            <p className={`text-sm ${colors.textMuted}`}>Gerencie sua senha com o provedor que você usa para entrar.</p>
+                        )}
+                    </section>
+                )}
+
                 {!isStaff && (
                 <div className={`mt-4 pt-4 border-t ${colors.divider}`}>
                     <button
@@ -226,6 +267,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                     </button>
                 </div>
                 )}
+            </>}
         </Modal>
     );
 };

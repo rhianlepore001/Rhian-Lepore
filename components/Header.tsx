@@ -30,6 +30,12 @@ export const Header: React.FC = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const notificationsRef = useRef<HTMLDivElement>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+  const profileButtonRef = useRef<HTMLButtonElement>(null);
+
+  const closeProfile = () => {
+    setShowProfileModal(false);
+    requestAnimationFrame(() => profileButtonRef.current?.focus());
+  };
 
   const isSettingsRoute = pathname.startsWith('/configuracoes');
   const { accent, colors, status, isBeauty, isLight } = useBrutalTheme();
@@ -212,6 +218,7 @@ export const Header: React.FC = () => {
             <div className="relative" ref={profileMenuRef}>
               <button
                 id="header-profile-btn"
+                ref={profileButtonRef}
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
                 aria-expanded={showProfileMenu}
                 className={`inline-flex items-center justify-center gap-3 h-11 w-11 md:h-auto md:w-auto md:min-h-[44px] pl-0 md:pl-6 md:border-l-2 ${colors.divider} hover:opacity-80 transition-opacity`}
@@ -264,7 +271,7 @@ export const Header: React.FC = () => {
         </div>
       </header>
 
-      {showProfileModal && <ProfileModal onClose={() => setShowProfileModal(false)} />}
+      {showProfileModal && <ProfileModal onClose={closeProfile} />}
     </>
   );
 };

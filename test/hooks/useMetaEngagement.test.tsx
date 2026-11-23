@@ -1,12 +1,13 @@
 import React from 'react';
 import { act, fireEvent, render, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { useMetaLandingEngagement, useMetaOnboardingStep, useMetaRegistrationStart } from '@/hooks/useMetaEngagement';
+import { useMetaLandingEngagement, useMetaOnboardingStep, useMetaRegistrationStart, useMetaSectionViews } from '@/hooks/useMetaEngagement';
 import { metaTracker } from '@/lib/metaTracking';
 
 vi.mock('@/lib/metaTracking', () => ({
   metaTracker: {
     viewContent: vi.fn(() => true), landingEngagement: vi.fn(() => true),
+    sectionView: vi.fn(() => true),
     startRegistration: vi.fn(() => true), onboardingStep: vi.fn(() => true),
   },
 }));
@@ -26,16 +27,21 @@ describe('useMetaLandingEngagement', () => {
     expect(metaTracker.viewContent).not.toHaveBeenCalled();
   });
 
-  it('sends ViewContent for the niche and TimeOnPage30s after 30 visible seconds, only once', () => {
+  it('sends ViewContent and dwell marks after visible seconds, only once each', () => {
     accept();
     renderHook(() => useMetaLandingEngagement('beauty'));
     expect(metaTracker.viewContent).toHaveBeenCalledWith('beauty');
-    act(() => { vi.advanceTimersByTime(29_000); });
+    act(() => { vi.advanceTimersByTime(14_000); });
     expect(metaTracker.landingEngagement).not.toHaveBeenCalled();
     act(() => { vi.advanceTimersByTime(1_000); });
+    expect(metaTracker.landingEngagement).toHaveBeenCalledWith('TimeOnPage15s', 'beauty');
+    act(() => { vi.advanceTimersByTime(15_000); });
     expect(metaTracker.landingEngagement).toHaveBeenCalledWith('TimeOnPage30s', 'beauty');
     act(() => { vi.advanceTimersByTime(30_000); });
-    expect(metaTracker.landingEngagement).toHaveBeenCalledTimes(1);
+    expect(metaTracker.landingEngagement).toHaveBeenCalledWith('TimeOnPage60s', 'beauty');
+    act(() => { vi.advanceTimersByTime(60_000); });
+    expect(metaTracker.landingEngagement).toHaveBeenCalledWith('TimeOnPage120s', 'beauty');
+    expect(metaTracker.landingEngagement).toHaveBeenCalledTimes(4);
   });
 
   it('does not count time while the tab is hidden', () => {
@@ -47,7 +53,7 @@ describe('useMetaLandingEngagement', () => {
     state.mockRestore();
   });
 
-  it('sends Scroll75 only when the page is scrollable and 75% was reached', () => {
+  it('sends Scroll25/50/75/90 only when the page is scrollable and thresholds are reached', () => {
     accept();
     const root = document.documentElement;
     const define = (name: string, value: number) => Object.defineProperty(root, name, { configurable: true, value });
@@ -56,13 +62,61 @@ describe('useMetaLandingEngagement', () => {
     define('scrollHeight', 800); define('scrollTop', 0);
     act(() => { window.dispatchEvent(new Event('scroll')); });
     expect(metaTracker.landingEngagement).not.toHaveBeenCalled();
-    define('scrollHeight', 4000); define('scrollTop', 1000);
+    define('scrollHeight', 4000); define('scrollTop', 200);
     act(() => { window.dispatchEvent(new Event('scroll')); });
-    expect(metaTracker.landingEngagement).not.toHaveBeenCalled();
+    expect(metaTracker.landingEngagement).toHaveBeenCalledWith('Scroll25', 'barber');
+    define('scrollTop', 1200);
+    act(() => { window.dispatchEvent(new Event('scroll')); });
+    expect(metaTracker.landingEngagement).toHaveBeenCalledWith('Scroll50', 'barber');
     define('scrollTop', 2300);
     act(() => { window.dispatchEvent(new Event('scroll')); window.dispatchEvent(new Event('scroll')); });
-    expect(metaTracker.landingEngagement).toHaveBeenCalledTimes(1);
     expect(metaTracker.landingEngagement).toHaveBeenCalledWith('Scroll75', 'barber');
+    define('scrollTop', 2900);
+    act(() => { window.dispatchEvent(new Event('scroll')); });
+    expect(metaTracker.landingEngagement).toHaveBeenCalledWith('Scroll90', 'barber');
+    expect(metaTracker.landingEngagement).toHaveBeenCalledTimes(4);
+  });
+});
+
+describe('useMetaSectionViews', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+    vi.useFakeTimers();
+    document.body.innerHTML = '<div class="landing"><section data-meta-section="hero">Hero</section></div>';
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    document.body.innerHTML = '';
+  });
+
+  it('fires SectionView after 1s at ≥50% visibility and only once', () => {
+    accept();
+    type Cb = IntersectionObserverCallback;
+    let callback: Cb = () => undefined;
+    const observe = vi.fn();
+    const unobserve = vi.fn();
+    vi.stubGlobal('IntersectionObserver', class {
+      constructor(cb: Cb) { callback = cb; }
+      observe = observe;
+      unobserve = unobserve;
+      disconnect = vi.fn();
+    });
+    renderHook(() => useMetaSectionViews('barber'));
+    expect(observe).toHaveBeenCalled();
+    const target = document.querySelector('[data-meta-section="hero"]')!;
+    act(() => {
+      callback([{ isIntersecting: true, intersectionRatio: 0.6, target } as IntersectionObserverEntry], {} as IntersectionObserver);
+    });
+    act(() => { vi.advanceTimersByTime(999); });
+    expect(metaTracker.sectionView).not.toHaveBeenCalled();
+    act(() => { vi.advanceTimersByTime(1); });
+    expect(metaTracker.sectionView).toHaveBeenCalledWith('hero', 'barber');
+    act(() => {
+      callback([{ isIntersecting: true, intersectionRatio: 0.9, target } as IntersectionObserverEntry], {} as IntersectionObserver);
+      vi.advanceTimersByTime(2000);
+    });
+    expect(metaTracker.sectionView).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -76,7 +130,7 @@ describe('useMetaRegistrationStart', () => {
     const input = getByLabelText('nome');
     const allowed = fireEvent.focusIn(input);
     fireEvent.input(input, { target: { value: 'a' } });
-    expect(allowed).toBe(true); // o listener é passivo: não cancela nada
+    expect(allowed).toBe(true);
     expect(metaTracker.startRegistration).not.toHaveBeenCalled();
   });
 

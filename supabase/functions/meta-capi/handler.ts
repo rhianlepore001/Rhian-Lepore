@@ -10,16 +10,32 @@ interface Config {
 }
 
 // Allow-list de eventos e da rota (hash) em que cada um pode ocorrer. Espelha lib/metaTracking.ts.
-// Landing = #/login. Rotas públicas dos clientes dos salões (#/book, #/queue...) nunca entram.
+// Landing de marketing = #/landing; #/login permanece para PageView/ViewContent/CTA do gateway.
+// Rotas públicas dos clientes dos salões (#/book, #/queue...) nunca entram.
 // OnboardingStep é o único evento de rota autenticada (o endpoint não exige login, como Lead).
+const LANDING = ['#/landing'] as const;
+const LANDING_OR_LOGIN = ['#/landing', '#/login'] as const;
 const EVENT_ROUTES: Record<string, string[]> = {
-  PageView: ['#/login', '#/register', '#/termos', '#/privacidade'],
+  PageView: ['#/landing', '#/login', '#/register', '#/termos', '#/privacidade'],
   Lead: ['#/register'],
   CompleteRegistration: ['#/register'],
-  ViewContent: ['#/login'],
-  CTAClick: ['#/login'],
-  Scroll75: ['#/login'],
-  TimeOnPage30s: ['#/login'],
+  ViewContent: [...LANDING_OR_LOGIN],
+  CTAClick: [...LANDING_OR_LOGIN],
+  Scroll25: [...LANDING],
+  Scroll50: [...LANDING],
+  Scroll75: [...LANDING],
+  Scroll90: [...LANDING],
+  TimeOnPage15s: [...LANDING],
+  TimeOnPage30s: [...LANDING],
+  TimeOnPage60s: [...LANDING],
+  TimeOnPage120s: [...LANDING],
+  SectionView: [...LANDING],
+  DemoStart: [...LANDING],
+  DemoScreenView: [...LANDING],
+  DemoComplete: [...LANDING],
+  NichoSwitch: [...LANDING],
+  FAQOpen: [...LANDING],
+  WhatsAppClick: [...LANDING],
   StartRegistration: ['#/register'],
   OnboardingStep: ['#/onboarding-wizard'],
 };
@@ -40,7 +56,10 @@ function validPayload(value: unknown, origin: string, now: number): value is {
     email?: string; phone?: string; external_id?: string; fbp?: string; fbc?: string;
     first_name?: string; last_name?: string; city?: string; country?: string;
   };
-  custom_data?: { content_category?: string; content_name?: string; cta_id?: string; step?: number; total_steps?: number };
+  custom_data?: {
+    content_category?: string; content_name?: string; cta_id?: string; cta_position?: string;
+    section?: string; screen?: string; faq_id?: string; step?: number; total_steps?: number;
+  };
 } {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const v = value as Record<string, unknown>;
@@ -57,8 +76,9 @@ function validPayload(value: unknown, origin: string, now: number): value is {
   if (v.custom_data !== undefined) {
     if (!v.custom_data || typeof v.custom_data !== 'object' || Array.isArray(v.custom_data)) return false;
     const custom = v.custom_data as Record<string, unknown>;
-    if (Object.keys(custom).some(key => !['content_category', 'content_name', 'cta_id', 'step', 'total_steps'].includes(key))) return false;
-    for (const key of ['content_category', 'content_name', 'cta_id'] as const) {
+    const allowed = ['content_category', 'content_name', 'cta_id', 'cta_position', 'section', 'screen', 'faq_id', 'step', 'total_steps'];
+    if (Object.keys(custom).some(key => !allowed.includes(key))) return false;
+    for (const key of ['content_category', 'content_name', 'cta_id', 'cta_position', 'section', 'screen', 'faq_id'] as const) {
       if (custom[key] !== undefined && (typeof custom[key] !== 'string' || !SAFE_TOKEN.test(custom[key] as string))) return false;
     }
     for (const key of ['step', 'total_steps'] as const) {

@@ -15,7 +15,7 @@ export const ATTRIBUTION_KEY = 'agendix:signup-attribution:v1';
 const MAX_AGE_MS = 90 * 24 * 60 * 60 * 1000;
 const VALUE_MAX = 100;
 const FBCLID_MAX = 256;
-const ACQUISITION_PATHS = ['/', '/login', '/register', '/termos', '/privacidade'];
+const ACQUISITION_PATHS = ['/', '/landing', '/login', '/register', '/termos', '/privacidade'];
 const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'] as const;
 type UtmKey = (typeof UTM_KEYS)[number];
 

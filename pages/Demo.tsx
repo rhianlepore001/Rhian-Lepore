@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Layout } from '../components/Layout';
 import { DemoNavigation } from '../components/DemoNavigation';
 import { getDemoColorMode, getDemoNiche, isDemoPreview, setDemoColorMode } from '../lib/demo/mode';
+import { demoPathToScreen, postMetaDemoToParent } from '../lib/metaDemoBridge';
 import '../styles/demo.css';
 
 const Dashboard = lazy(() => import('./Dashboard').then(m => ({ default: m.Dashboard })));
@@ -105,6 +106,16 @@ export const Demo = () => {
     observer.observe(root, { attributes: true, attributeFilter: ['data-mode'] });
     return () => observer.disconnect();
   }, []);
+  // Pixel só na landing-pai: no iframe /demo-preview avisamos por postMessage (origem checada).
+  useEffect(() => {
+    if (!embedded) return;
+    postMetaDemoToParent({ action: 'start' });
+  }, [embedded]);
+  useEffect(() => {
+    if (!embedded) return;
+    const screen = demoPathToScreen(inner, location.search);
+    if (screen) postMetaDemoToParent({ action: 'screen', screen });
+  }, [embedded, inner, location.search]);
   const fallback = <p className="demo-loading" role="status">Preparando a simulação…</p>;
   return <QueryClientProvider client={client}>
     <div className="demo-shell" data-embedded={embedded || undefined} style={{ '--safe-top': embedded ? '0px' : 'var(--demo-bar-height)' } as React.CSSProperties}>

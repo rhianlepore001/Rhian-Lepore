@@ -24,11 +24,35 @@ export interface PixPayment {
     updated_at: string;
 }
 
+export const MEMBERSHIP_PHOTO_BUCKET = 'membership_plan_photos';
+export const MEMBERSHIP_PHOTO_MAX_BYTES = 5 * 1024 * 1024;
+const MEMBERSHIP_PHOTO_EXTENSIONS: Record<string, string> = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+};
+export const MEMBERSHIP_PHOTO_TYPES = Object.keys(MEMBERSHIP_PHOTO_EXTENSIONS).join(',');
+
+export async function uploadMembershipPlanPhoto(companyId: string, file: File): Promise<string> {
+    const extension = MEMBERSHIP_PHOTO_EXTENSIONS[file.type];
+    if (!extension || !file.size || file.size > MEMBERSHIP_PHOTO_MAX_BYTES) {
+        throw new Error('invalid_plan_photo');
+    }
+    const path = `${companyId}/${crypto.randomUUID()}.${extension}`;
+    const { error } = await supabase.storage.from(MEMBERSHIP_PHOTO_BUCKET).upload(path, file, {
+        contentType: file.type,
+        cacheControl: '86400',
+    });
+    if (error) throw error;
+    return path;
+}
+
 export interface MembershipPlan {
     id: string;
     user_id: string;
     name: string;
     description: string | null;
+    photo_path?: string | null;
     price_cents: number;
     service_ids: string[];
     usage_limit_per_month: number | null;
@@ -255,6 +279,7 @@ export interface UpsertMembershipPlanInput {
     id?: string;
     name: string;
     description?: string | null;
+    photo_path?: string | null;
     price_cents: number;
     service_ids: string[];
     usage_limit_per_month?: number | null;
@@ -268,6 +293,7 @@ export async function upsertMembershipPlan(companyId: string, input: UpsertMembe
         user_id: companyId,
         name: input.name,
         description: input.description ?? null,
+        ...(input.photo_path !== undefined ? { photo_path: input.photo_path } : {}),
         price_cents: input.price_cents,
         service_ids: input.service_ids,
         usage_limit_per_month: input.usage_limit_per_month ?? null,

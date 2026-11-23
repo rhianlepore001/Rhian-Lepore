@@ -3,7 +3,11 @@ import { hashMatching, type MetaIdentity, type MetaMatching } from './metaMatchi
 
 export type MetaEventName =
   | 'PageView' | 'Lead' | 'CompleteRegistration' | 'ViewContent'
-  | 'CTAClick' | 'Scroll75' | 'TimeOnPage30s' | 'StartRegistration' | 'OnboardingStep';
+  | 'CTAClick' | 'Scroll25' | 'Scroll50' | 'Scroll75' | 'Scroll90'
+  | 'TimeOnPage15s' | 'TimeOnPage30s' | 'TimeOnPage60s' | 'TimeOnPage120s'
+  | 'SectionView' | 'DemoStart' | 'DemoScreenView' | 'DemoComplete'
+  | 'NichoSwitch' | 'FAQOpen' | 'WhatsAppClick'
+  | 'StartRegistration' | 'OnboardingStep';
 // Eventos padrão da Meta usam trackSingle; os demais são personalizados (trackSingleCustom).
 const STANDARD_EVENTS: ReadonlySet<MetaEventName> = new Set(['PageView', 'Lead', 'CompleteRegistration', 'ViewContent']);
 // Parâmetros próprios (nunca texto livre nem dado pessoal): nomes curtos em minúsculas e números.
@@ -11,9 +15,16 @@ export interface MetaCustomData {
   content_category?: string;
   content_name?: string;
   cta_id?: string;
+  cta_position?: string;
+  section?: string;
+  screen?: string;
+  faq_id?: string;
   step?: number;
   total_steps?: number;
 }
+export type MetaScrollEvent = 'Scroll25' | 'Scroll50' | 'Scroll75' | 'Scroll90';
+export type MetaDwellEvent = 'TimeOnPage15s' | 'TimeOnPage30s' | 'TimeOnPage60s' | 'TimeOnPage120s';
+export type MetaCtaPosition = 'hero' | 'demo' | 'meio' | 'final' | 'header';
 type Identity = MetaIdentity & { fbp?: string; fbc?: string };
 export interface MetaEvent {
   consent: true;
@@ -38,21 +49,27 @@ interface TrackerOptions {
   getAbortSignal?: () => AbortSignal;
 }
 
-// Rotas públicas de aquisição. "/" redireciona para /login (a landing é o login) e rotas
-// públicas de clientes dos salões (/book, /queue, /pro, /minha-area, /clube) ficam de fora:
-// carregam slugs/ids de terceiros. Rotas autenticadas e /update-password também.
-export const META_PUBLIC_PATHS = ['/login', '/register', '/termos', '/privacidade'] as const;
-// Landing = /login. Os eventos de engajamento só valem nela e em /register; o passo do
-// onboarding é a única exceção autenticada e só dispara sem abrir o escopo da rota.
-export const META_LANDING_PATH = '/login';
+// Rotas públicas de aquisição. A landing de marketing é /landing; /login permanece
+// (PageView + CTA do gateway). Rotas públicas de clientes dos salões (/book, /queue,
+// /pro, /minha-area, /clube) ficam de fora: carregam slugs/ids de terceiros.
+export const META_PUBLIC_PATHS = ['/landing', '/login', '/register', '/termos', '/privacidade'] as const;
+// Engajamento profundo (scroll, tempo, seções, demo, FAQ…) só na landing de marketing.
+// ViewContent/CTAClick também podem sair de /login (gateway legado).
+export const META_LANDING_PATH = '/landing';
+export const META_LOGIN_PATH = '/login';
 export const META_ONBOARDING_PATH = '/onboarding-wizard';
 const TRANSIENT_EVENTS: ReadonlySet<MetaEventName> = new Set(['CompleteRegistration', 'OnboardingStep']);
+const LANDING_ONLY = new Set<string>([META_LANDING_PATH]);
+const LANDING_OR_LOGIN = new Set<string>([META_LANDING_PATH, META_LOGIN_PATH]);
 
 const SAFE_TOKEN = /^[a-z][a-z0-9_-]{0,31}$/;
+const CUSTOM_STRING_KEYS = [
+  'content_category', 'content_name', 'cta_id', 'cta_position', 'section', 'screen', 'faq_id',
+] as const;
 function cleanCustomData(data: MetaCustomData | undefined): MetaCustomData {
   const clean: MetaCustomData = {};
   if (!data) return clean;
-  for (const key of ['content_category', 'content_name', 'cta_id'] as const) {
+  for (const key of CUSTOM_STRING_KEYS) {
     const value = data[key];
     if (typeof value === 'string' && SAFE_TOKEN.test(value)) clean[key] = value;
   }
@@ -184,30 +201,74 @@ export function createMetaTracker(options: TrackerOptions) {
   // Eventos passivos de engajamento. Retornam true quando o evento foi enviado agora ou já
   // tinha sido nesta visita (quem chama pode parar de tentar); false quando não valia agora.
   const engage = (
-    name: MetaEventName, route: string, key: string, data?: MetaCustomData, identity?: Identity,
+    name: MetaEventName, routes: ReadonlySet<string>, key: string, data?: MetaCustomData, identity?: Identity,
   ): boolean => {
-    if (!eligible || path !== route || !enabled(source)) return false;
+    if (!eligible || !routes.has(path) || !enabled(source)) return false;
     if (once.has(key)) return true;
     once.add(key);
     emit(name, source, undefined, identity, cleanCustomData(data));
     return true;
   };
+  const nicheData = (niche?: string | null): MetaCustomData => ({
+    content_name: 'landing',
+    ...(niche ? { content_category: niche } : {}),
+  });
+  const demoScreens = new Set<string>();
+  const markDemoScreen = (screen: string, niche?: string | null): boolean => {
+    const key = 'DemoScreenView:' + screen;
+    const ok = engage('DemoScreenView', LANDING_ONLY, key, { ...nicheData(niche), screen });
+    if (!ok) return false;
+    demoScreens.add(screen);
+    if (demoScreens.size >= 4 || screen === 'hora_cadeira') {
+      engage('DemoComplete', LANDING_ONLY, 'DemoComplete', nicheData(niche));
+    }
+    return true;
+  };
   return {
-    /** Landing: visualização de conteúdo com o nicho da página (uma vez por nicho e visita). */
+    /** Landing (e gateway /login): visualização de conteúdo com o nicho (uma vez por nicho e visita). */
     viewContent(niche: string): boolean {
-      return engage('ViewContent', META_LANDING_PATH, 'ViewContent:' + niche, { content_category: niche, content_name: 'landing' });
+      return engage('ViewContent', LANDING_OR_LOGIN, 'ViewContent:' + niche, { content_category: niche, content_name: 'landing' });
     },
-    /** Landing: 75% de rolagem ou 30 s de permanência (uma vez por visita). */
-    landingEngagement(kind: 'Scroll75' | 'TimeOnPage30s', niche?: string | null): boolean {
-      return engage(kind, META_LANDING_PATH, kind, { content_name: 'landing', ...(niche ? { content_category: niche } : {}) });
+    /** Landing: marcos de rolagem ou permanência (uma vez por marco e visita). */
+    landingEngagement(kind: MetaScrollEvent | MetaDwellEvent, niche?: string | null): boolean {
+      return engage(kind, LANDING_ONLY, kind, nicheData(niche));
     },
-    /** Landing: clique no CTA do teste grátis (uma vez por CTA e visita). */
-    ctaClick(ctaId: string, niche?: string | null): boolean {
-      return engage('CTAClick', META_LANDING_PATH, 'CTAClick:' + ctaId, { cta_id: ctaId, content_name: 'landing', ...(niche ? { content_category: niche } : {}) });
+    /** Landing: seção ≥50% visível por 1 s (uma vez por seção e visita). */
+    sectionView(section: string, niche?: string | null): boolean {
+      return engage('SectionView', LANDING_ONLY, 'SectionView:' + section, { ...nicheData(niche), section });
+    },
+    /** Landing/login: clique no CTA (uma vez por cta_id+posição e visita). */
+    ctaClick(ctaId: string, niche?: string | null, position?: MetaCtaPosition | null): boolean {
+      const key = 'CTAClick:' + ctaId + (position ? ':' + position : '');
+      return engage('CTAClick', LANDING_OR_LOGIN, key, {
+        cta_id: ctaId, content_name: 'landing',
+        ...(niche ? { content_category: niche } : {}),
+        ...(position ? { cta_position: position } : {}),
+      });
+    },
+    /** Landing: troca barbearia ↔ salão (uma vez por nicho destino e visita). */
+    nichoSwitch(niche: string): boolean {
+      return engage('NichoSwitch', LANDING_ONLY, 'NichoSwitch:' + niche, { content_category: niche, content_name: 'landing' });
+    },
+    /** Landing: abertura de pergunta do FAQ (uma vez por faq_id e visita). */
+    faqOpen(faqId: string, niche?: string | null): boolean {
+      return engage('FAQOpen', LANDING_ONLY, 'FAQOpen:' + faqId, { ...nicheData(niche), faq_id: faqId });
+    },
+    /** Landing: clique em link WhatsApp (uma vez por visita). */
+    whatsAppClick(niche?: string | null): boolean {
+      return engage('WhatsAppClick', LANDING_ONLY, 'WhatsAppClick', nicheData(niche));
+    },
+    /** Landing: primeira interação com a demo embutida (uma vez por visita). */
+    demoStart(niche?: string | null): boolean {
+      return engage('DemoStart', LANDING_ONLY, 'DemoStart', nicheData(niche));
+    },
+    /** Landing: tela da demo vista (uma vez por tela). DemoComplete aos 4+ ou na última (hora_cadeira). */
+    demoScreenView(screen: string, niche?: string | null): boolean {
+      return markDemoScreen(screen, niche);
     },
     /** /register: primeiro foco ou digitação no formulário (uma vez por visita). */
     startRegistration(niche?: string | null): boolean {
-      return engage('StartRegistration', '/register', 'StartRegistration', { content_name: 'register', ...(niche ? { content_category: niche } : {}) });
+      return engage('StartRegistration', new Set(['/register']), 'StartRegistration', { content_name: 'register', ...(niche ? { content_category: niche } : {}) });
     },
     /** Onboarding autenticado: passo alcançado (uma vez por passo e visita). Escopo transitório. */
     onboardingStep(step: number, totalSteps: number, identity?: Identity): boolean {

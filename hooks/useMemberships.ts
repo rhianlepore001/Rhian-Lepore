@@ -39,6 +39,7 @@ import {
 
 const KEYS = {
     plans: (companyId: string) => ['membership-plans', companyId] as const,
+    publicPlans: (businessId: string | null) => ['public-membership-plans', businessId] as const,
     activePlans: (companyId: string) => ['membership-plans', 'active', companyId] as const,
     memberships: (companyId: string) => ['client-memberships', companyId] as const,
     clientMembership: (companyId: string, clientId: string) => ['client-membership', companyId, clientId] as const,
@@ -74,6 +75,7 @@ export function useUpsertMembershipPlan() {
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: KEYS.plans(companyId!) });
             qc.invalidateQueries({ queryKey: KEYS.activePlans(companyId!) });
+            qc.invalidateQueries({ queryKey: KEYS.publicPlans(companyId!) });
             qc.invalidateQueries({ queryKey: KEYS.stats(companyId!) });
         },
     });
@@ -87,6 +89,7 @@ export function useDeleteMembershipPlan() {
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: KEYS.plans(companyId!) });
             qc.invalidateQueries({ queryKey: KEYS.activePlans(companyId!) });
+            qc.invalidateQueries({ queryKey: KEYS.publicPlans(companyId!) });
         },
     });
 }
@@ -192,7 +195,7 @@ export function useMembershipStats() {
 
 export function usePublicMembershipPlans(businessId: string | null) {
     return useQuery({
-        queryKey: ['public-membership-plans', businessId],
+        queryKey: KEYS.publicPlans(businessId),
         queryFn: () => fetchPublicMembershipPlans(businessId!),
         enabled: !!businessId,
         staleTime: 5 * 60 * 1000,

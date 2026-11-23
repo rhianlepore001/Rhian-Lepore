@@ -12,7 +12,7 @@ describe('publicRatingBadge', () => {
     expect(publicRatingBadge(undefined, 10)).toBeNull();
   });
   it('mostra nota e contagem quando há avaliações reais', () => {
-    expect(publicRatingBadge(4.72, 12)).toEqual({ value: '4.7', countLabel: '12 avaliações' });
-    expect(publicRatingBadge(5, 1)).toEqual({ value: '5.0', countLabel: '1 avaliação' });
+    expect(publicRatingBadge(4.72, 12)).toEqual({ value: '4,7', countLabel: '12 avaliações' });
+    expect(publicRatingBadge(5, 1)).toEqual({ value: '5,0', countLabel: '1 avaliação' });
   });
 });

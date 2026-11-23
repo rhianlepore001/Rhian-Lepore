@@ -45,6 +45,7 @@ export const submitPublicBookingInputSchema = z.object({
   editingBookingId: z.string().min(1).nullish(),
   originalAppointmentTime: z.string().nullish(),
   productLines: z.array(publicBookingProductLineSchema).optional().default([]),
+  reviewToken: z.string().uuid().optional(),
 });
 
 export const submitPublicGroupBookingInputSchema = z.object({
@@ -52,6 +53,7 @@ export const submitPublicGroupBookingInputSchema = z.object({
   customerName: z.string().trim().min(1),
   customerPhone: z.string().trim().min(1),
   appointmentTime: z.string().min(1),
+  reviewTokens: z.array(z.string().uuid()).optional(),
   people: z.array(z.object({
     attendeeName: z.string().trim().min(1).max(80).nullable(),
     professionalId: z.string().min(1),

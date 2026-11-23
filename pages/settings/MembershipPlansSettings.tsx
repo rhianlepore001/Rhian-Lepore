@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Users, Crown, Sparkles, Check } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Plus, Users, Crown, Sparkles, Check, ImagePlus } from 'lucide-react';
 import { SettingsLayout } from '../../components/SettingsLayout';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { useToast } from '../../components/ui/Toast';
@@ -8,7 +8,12 @@ import {
     useUpsertMembershipPlan,
     useDeleteMembershipPlan,
 } from '../../hooks/useMemberships';
-import { MembershipPlan, MembershipBadgeColor } from '../../services/memberships';
+import {
+    MembershipPlan, MembershipBadgeColor, MEMBERSHIP_PHOTO_BUCKET, MEMBERSHIP_PHOTO_MAX_BYTES,
+    MEMBERSHIP_PHOTO_TYPES, uploadMembershipPlanPhoto,
+} from '../../services/memberships';
+import { deleteFile } from '../../lib/supabaseStorage';
+import { MembershipPlanPhoto } from '../../components/membership/MembershipPlanPhoto';
 import { Button, Modal, ConfirmModal, ErrorState } from '../../components/ui';
 import { PlanCard } from '../../components/membership/PlanCard';
 import { ClubOwnerNav } from '../../components/membership/ClubOwnerNav';
@@ -28,6 +33,7 @@ interface PlanFormState {
     id?: string;
     name: string;
     description: string;
+    photoPath?: string | null;
     priceReais: string;
     serviceIds: string[];
     usageLimit: string;
@@ -79,7 +85,61 @@ export const MembershipPlansSettings: React.FC = () => {
     const [form, setForm] = useState<PlanFormState>(emptyForm);
     const [pendingDeletePlan, setPendingDeletePlan] = useState<MembershipPlan | null>(null);
 
+    const [photoFile, setPhotoFile] = useState<File | null>(null);
+    const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+    const [photoError, setPhotoError] = useState('');
+    const [removePhoto, setRemovePhoto] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const saving = uploading || upsertMutation.isPending;
+    const saveInProgress = useRef(false);
+    const uploadedPhoto = useRef<string | null>(null);
+    const newPlanId = useRef<string | undefined>(undefined);
+
+    useEffect(() => {
+        if (!photoFile) {
+            setPhotoPreview(null);
+            return;
+        }
+        const url = URL.createObjectURL(photoFile);
+        setPhotoPreview(url);
+        return () => URL.revokeObjectURL(url);
+    }, [photoFile]);
+
+    const discardUpload = () => {
+        if (!uploadedPhoto.current) return;
+        void deleteFile(MEMBERSHIP_PHOTO_BUCKET, uploadedPhoto.current).catch(() => undefined);
+        uploadedPhoto.current = null;
+    };
+
+    const resetPhoto = () => {
+        discardUpload();
+        setPhotoFile(null);
+        setPhotoError('');
+        setRemovePhoto(false);
+    };
+
+    const closeForm = () => {
+        if (saveInProgress.current) return;
+        resetPhoto();
+        setShowForm(false);
+    };
+
+    const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.currentTarget.files?.[0];
+        event.currentTarget.value = '';
+        if (!file) return;
+        if (!MEMBERSHIP_PHOTO_TYPES.split(',').includes(file.type) || !file.size || file.size > MEMBERSHIP_PHOTO_MAX_BYTES) {
+            setPhotoError('Escolha uma foto JPG, PNG ou WebP de até 5 MB.');
+            return;
+        }
+        discardUpload();
+        setPhotoError('');
+        setPhotoFile(file);
+        setRemovePhoto(false);
+    };
+
     const handleNew = () => {
+        newPlanId.current = crypto.randomUUID();
         setForm(emptyForm);
         setShowForm(true);
     };
@@ -89,6 +149,7 @@ export const MembershipPlansSettings: React.FC = () => {
             id: plan.id,
             name: plan.name,
             description: plan.description ?? '',
+            photoPath: plan.photo_path,
             priceReais: (plan.price_cents / 100).toFixed(2).replace('.', ','),
             serviceIds: plan.service_ids,
             usageLimit: plan.usage_limit_per_month?.toString() ?? '',
@@ -99,6 +160,7 @@ export const MembershipPlansSettings: React.FC = () => {
     };
 
     const handleSave = async () => {
+        if (saveInProgress.current || !companyId) return;
         if (!form.name.trim()) {
             showToast('Informe o nome do plano.', 'error');
             return;
@@ -113,9 +175,22 @@ export const MembershipPlansSettings: React.FC = () => {
             showToast('Limite de uso inválido.', 'error');
             return;
         }
+        saveInProgress.current = true;
+        setUploading(true);
         try {
+            if (photoFile && !uploadedPhoto.current) {
+                try {
+                    uploadedPhoto.current = await uploadMembershipPlanPhoto(companyId, photoFile);
+                } catch {
+                    setPhotoError('Não foi possível enviar a foto. Tente salvar novamente.');
+                    return;
+                }
+            }
+
+            const photoPath = photoFile ? uploadedPhoto.current : removePhoto ? null : undefined;
             await upsertMutation.mutateAsync({
-                id: form.id,
+                id: form.id ?? newPlanId.current,
+                photo_path: photoPath,
                 name: form.name.trim(),
                 description: form.description.trim() || null,
                 price_cents: Math.round(priceNumber * 100),
@@ -125,10 +200,18 @@ export const MembershipPlansSettings: React.FC = () => {
                 active: form.active,
             });
             showToast(form.id ? 'Plano atualizado!' : 'Plano criado!', 'success');
+            uploadedPhoto.current = null;
+            if (photoPath !== undefined && form.photoPath && form.photoPath !== photoPath) {
+                void deleteFile(MEMBERSHIP_PHOTO_BUCKET, form.photoPath).catch(() => undefined);
+            }
+            resetPhoto();
             setShowForm(false);
             setForm(emptyForm);
-        } catch (err) {
+        } catch {
             showToast('Não foi possível salvar o plano. Tente novamente.', 'error');
+        } finally {
+            saveInProgress.current = false;
+            setUploading(false);
         }
     };
 
@@ -140,6 +223,9 @@ export const MembershipPlansSettings: React.FC = () => {
         if (!pendingDeletePlan) return;
         try {
             await deleteMutation.mutateAsync(pendingDeletePlan.id);
+            if (pendingDeletePlan.photo_path) {
+                void deleteFile(MEMBERSHIP_PHOTO_BUCKET, pendingDeletePlan.photo_path).catch(() => undefined);
+            }
             showToast('Plano excluído.', 'success');
         } catch (err) {
             showToast('Não foi possível excluir o plano. Tente novamente.', 'error');
@@ -207,16 +293,16 @@ export const MembershipPlansSettings: React.FC = () => {
 
                 <Modal
                     open={showForm}
-                    onClose={() => setShowForm(false)}
+                    onClose={closeForm}
                     title={form.id ? 'Editar plano' : 'Novo plano'}
                     size="lg"
-                    preventClose={upsertMutation.isPending}
+                    preventClose={saving}
                     footer={
                         <div className="flex gap-3 w-full">
-                            <Button variant="ghost" onClick={() => setShowForm(false)} fullWidth forceTheme={isBeauty ? 'beauty' : 'barber'}>
+                            <Button variant="ghost" onClick={closeForm} disabled={saving} fullWidth forceTheme={isBeauty ? 'beauty' : 'barber'}>
                                 Cancelar
                             </Button>
-                            <Button variant="primary" onClick={handleSave} loading={upsertMutation.isPending} fullWidth forceTheme={isBeauty ? 'beauty' : 'barber'}>
+                            <Button variant="primary" onClick={handleSave} loading={saving} fullWidth forceTheme={isBeauty ? 'beauty' : 'barber'}>
                                 Salvar
                             </Button>
                         </div>
@@ -224,9 +310,10 @@ export const MembershipPlansSettings: React.FC = () => {
                 >
                     <div className="space-y-4">
                             <div>
-                                <label className={`${classes.label} block mb-1.5`}>Nome do plano</label>
+                                <label htmlFor="club-plan-name" className={`${classes.label} block mb-1.5`}>Nome do plano</label>
                                 <input
                                     type="text"
+                                    id="club-plan-name"
                                     value={form.name}
                                     onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                                     placeholder={clubPlanNamePlaceholder}
@@ -236,8 +323,9 @@ export const MembershipPlansSettings: React.FC = () => {
                             </div>
 
                             <div>
-                                <label className={`${classes.label} block mb-1.5`}>Descrição (opcional)</label>
+                                <label htmlFor="club-plan-description" className={`${classes.label} block mb-1.5`}>Descrição (opcional)</label>
                                 <textarea
+                                    id="club-plan-description"
                                     value={form.description}
                                     onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                                     placeholder={clubPlanDescriptionPlaceholder}
@@ -246,12 +334,63 @@ export const MembershipPlansSettings: React.FC = () => {
                                 />
                             </div>
 
+                            <fieldset disabled={saving} className="space-y-2">
+                                <legend className={`${classes.label} mb-1.5`}>Foto do plano <span className={colors.textSecondary}>(opcional)</span></legend>
+                                <p id="club-photo-help" className={`text-sm ${colors.textSecondary}`}>
+                                    A foto aparece no catálogo público do Clube. Use uma imagem horizontal em JPG, PNG ou WebP de até 5 MB.
+                                </p>
+                                {(photoPreview || (form.photoPath && !removePhoto)) && (
+                                    photoPreview ? (
+                                        <img
+                                            src={photoPreview}
+                                            alt="Prévia da foto do plano"
+                                            className="aspect-[2/1] w-full rounded-xl object-cover"
+                                            onError={() => {
+                                                setPhotoFile(null);
+                                                setPhotoError('Não foi possível abrir esta foto. Escolha outro arquivo.');
+                                            }}
+                                        />
+                                    ) : form.photoPath && (
+                                        <MembershipPlanPhoto path={form.photoPath} className="aspect-[2/1] w-full rounded-xl" />
+                                    )
+                                )}
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <label className={`inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3 text-sm font-semibold focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-theme-accent ${colors.border} ${colors.text}`}>
+                                        <ImagePlus className="size-4" aria-hidden="true" />
+                                        {photoFile || (form.photoPath && !removePhoto) ? 'Trocar foto' : 'Adicionar foto'}
+                                        <input
+                                            type="file"
+                                            accept={MEMBERSHIP_PHOTO_TYPES}
+                                            aria-describedby={photoError ? 'club-photo-help club-photo-error' : 'club-photo-help'}
+                                            className="sr-only"
+                                            onChange={handlePhotoChange}
+                                        />
+                                    </label>
+                                    {(photoFile || (form.photoPath && !removePhoto)) && (
+                                        <button
+                                            type="button"
+                                            className={`min-h-11 rounded-xl px-3 text-sm font-semibold ${colors.textSecondary} hover:bg-theme-surface`}
+                                            onClick={() => {
+                                                discardUpload();
+                                                setPhotoFile(null);
+                                                setPhotoError('');
+                                                setRemovePhoto(true);
+                                            }}
+                                        >
+                                            Remover foto
+                                        </button>
+                                    )}
+                                </div>
+                                {photoError && <p id="club-photo-error" role="alert" className="text-sm text-[var(--color-danger)]">{photoError}</p>}
+                            </fieldset>
+
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className={`${classes.label} block mb-1.5`}>Preço mensal ({currencySymbol})</label>
+                                    <label htmlFor="club-plan-price" className={`${classes.label} block mb-1.5`}>Preço mensal ({currencySymbol})</label>
                                     <input
                                         type="text"
                                         inputMode="decimal"
+                                        id="club-plan-price"
                                         value={form.priceReais}
                                         onChange={e => setForm(f => ({ ...f, priceReais: e.target.value }))}
                                         placeholder="90,00"
@@ -259,10 +398,11 @@ export const MembershipPlansSettings: React.FC = () => {
                                     />
                                 </div>
                                 <div>
-                                    <label className={`${classes.label} block mb-1.5`}>Limite / mês (vazio = ilimitado)</label>
+                                    <label htmlFor="club-plan-limit" className={`${classes.label} block mb-1.5`}>Limite / mês (vazio = ilimitado)</label>
                                     <input
                                         type="number"
                                         min="1"
+                                        id="club-plan-limit"
                                         value={form.usageLimit}
                                         onChange={e => setForm(f => ({ ...f, usageLimit: e.target.value }))}
                                         placeholder="∞"
@@ -278,11 +418,12 @@ export const MembershipPlansSettings: React.FC = () => {
                                         <button
                                             key={b.value}
                                             type="button"
+                                            aria-pressed={form.badgeColor === b.value}
                                             onClick={() => setForm(f => ({ ...f, badgeColor: b.value }))}
                                             className={[
                                                 'py-3 px-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 border',
                                                 form.badgeColor === b.value
-                                                    ? `${accent.bg} text-[var(--color-bg)] border-transparent ${accent.shadow}`
+                                                    ? `${accent.bg} text-[var(--color-on-accent)] border-transparent ${accent.shadow}`
                                                     : `${colors.inputBg} ${colors.border} ${colors.textMuted} hover:text-theme-textSecondary`,
                                             ].join(' ')}
                                         >

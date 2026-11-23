@@ -21,7 +21,7 @@ interface QueueCheckoutSheetProps {
   /** Equipe ativa; usado para atribuir o atendimento quando a senha não tem profissional (fila única). */
   teamMembers?: Array<{ id: string; name: string }>;
   onClose: () => void;
-  onDone: () => void;
+  onDone: (outcome: 'saved' | 'settled') => void;
 }
 
 interface TicketLine {
@@ -128,7 +128,7 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
       const payload = buildQueueClosePayload(entry.id, { extraServices: extras, productLines: products });
       await closeQueueTicket(payload.entryId, payload.items);
       showToast('Comanda salva. Finalize quando o cliente for pagar.', 'success');
-      onDone();
+      onDone('saved');
     } catch {
       showToast('Não foi possível salvar a comanda. Tente de novo.', 'error');
     } finally {
@@ -173,7 +173,7 @@ export const QueueCheckoutSheet: React.FC<QueueCheckoutSheetProps> = ({
         products: products.map(line => ({ productId: line.id, quantity: 1 })),
       });
       showToast(`Atendimento de ${entry.client_name} finalizado.`, 'success');
-      onDone();
+      onDone('settled');
     } catch {
       showToast(
         'Não foi possível finalizar a comanda. Tente de novo.',

@@ -61,7 +61,7 @@ describe('meta-capi', () => {
     expect((await s.handler(s.request({ ...payload(), ...patch }))).status).toBe(400);
     expect(s.fetcher).not.toHaveBeenCalled();
   });
-  it.each(['#/login', '#/termos', '#/privacidade'])('accepts a PageView from public route %s only without query', async hash => {
+  it.each(['#/landing', '#/login', '#/termos', '#/privacidade'])('accepts a PageView from public route %s only without query', async hash => {
     const s = setup();
     const ok = { ...payload(), event_name: 'PageView', event_source_url: origin + '/' + hash };
     expect((await s.handler(s.request(ok))).status).toBe(200);

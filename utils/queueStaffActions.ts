@@ -1,7 +1,7 @@
 import type { QueuePaymentStatus, QueueStatus } from '@/types/queue';
 
-export type QueueStaffPrimaryId = 'start' | 'close';
-export type QueueStaffSecondaryId = 'call';
+export type QueueStaffPrimaryId = 'call' | 'start' | 'close';
+export type QueueStaffSecondaryId = 'start';
 export type QueueStaffTertiaryId = 'no_show' | 'requeue';
 
 export interface QueueStaffAction {
@@ -37,8 +37,8 @@ export function queueStaffActions(input: {
   const noShow: QueueStaffAction = { id: 'no_show', label: 'Não compareceu' };
   if (input.status === 'waiting') {
     return {
-      primary: { id: 'start', label: 'Iniciar atendimento' },
-      secondary: { id: 'call', label: 'Chamar cliente' },
+      primary: { id: 'call', label: 'Chamar cliente' },
+      secondary: { id: 'start', label: 'Iniciar atendimento' },
       tertiary: [noShow],
       showConfirmPay: awaitingPay,
       showCancelPay: awaitingPay,

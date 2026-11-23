@@ -7,6 +7,7 @@ import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { useBusinessCopy } from '../../hooks/useBusinessCopy';
 import { useBusinessSettings, useUpdateBusinessSettings, useUpdateBusinessTimezone } from '../../hooks/useSettings';
 import { useProfileFields, useUpdateProfileFields } from '../../hooks/useSettings';
+import { CancellationPolicyText } from '../../components/CancellationPolicyText';
 import { BusinessHoursEditor } from '../../components/BusinessHoursEditor';
 import { BrandIdentitySection } from '../../components/BrandIdentitySection';
 import { BusinessGalleryManager } from '../../components/BusinessGalleryManager';
@@ -27,7 +28,7 @@ import {
     CANCELLATION_POLICY_NOTES_HINT,
     MAX_CLIENT_CANCEL_POLICY_TEXT_LENGTH,
     cancellationPolicyNotesForDisplay,
-    generatedCancellationPolicyText,
+    resolveCancellationPolicyParts,
     normalizeCustomCancellationPolicyText,
 } from '../../utils/cancellationPolicyCopy';
 import {
@@ -88,6 +89,7 @@ export const GeneralSettings: React.FC = () => {
     const timezoneDirty = timezoneOverride !== null && timezoneOverride !== savedTimezone;
 
     const loading = !settings && !profile;
+    const savedPolicyText = normalizeCustomCancellationPolicyText(settings?.client_cancel_policy_text);
 
     const initialValuesRef = React.useRef<{
         businessName: string;
@@ -116,9 +118,12 @@ export const GeneralSettings: React.FC = () => {
     }, [profile]);
 
     React.useEffect(() => {
+        setCancelPolicyText(savedPolicyText);
+    }, [companyId, savedPolicyText]);
+
+    React.useEffect(() => {
         if (settings) {
             setCancelCutoffHours(clampClientCancelCutoffHours(settings.client_cancel_cutoff_hours ?? DEFAULT_CLIENT_CANCEL_CUTOFF_HOURS));
-            setCancelPolicyText(normalizeCustomCancellationPolicyText(settings.client_cancel_policy_text));
             setCancellationPolicy(cancellationPolicyNotesForDisplay(
                 settings.client_cancel_note,
                 settings.cancellation_policy,
@@ -501,15 +506,18 @@ export const GeneralSettings: React.FC = () => {
                 </SettingsSection>
 
                 <div data-testid="cancellation-policy-section">
-                <SettingsSection title="Política de Cancelamento">
-                    <label className={classes.label} htmlFor="cancel-cutoff">Cliente pode cancelar até</label>
+                <SettingsSection title="Política de agendamento">
+                    <label className={`${classes.label} block`} htmlFor="cancel-policy-text">Texto da sua política</label>
+                    <p id="general-policy-help" className={`${colors.textSecondary} mb-2 text-sm`}>Escreva as regras que o cliente lê antes de agendar. Deixe em branco para usar o texto padrão.</p>
+                    <textarea id="cancel-policy-text" data-testid="cancellation-policy-generated" disabled={saveStatus === 'saving'} value={cancelPolicyText ?? ''} maxLength={MAX_CLIENT_CANCEL_POLICY_TEXT_LENGTH} onChange={e => setCancelPolicyText(e.target.value)} rows={4} aria-describedby="general-policy-help" placeholder="Ex.: chegue 10 minutos antes do horário." className={classes.input} />
+                    <div className="flex min-h-[44px] flex-wrap items-center justify-between gap-3">
+                        {cancelPolicyText && <button type="button" disabled={saveStatus === 'saving'} onClick={() => setCancelPolicyText(null)} className={`min-h-[44px] text-sm underline ${accent.text}`}>Usar texto padrão</button>}
+                        <span className={`ml-auto text-xs tabular-nums ${colors.textMuted}`}>{(cancelPolicyText ?? '').length}/{MAX_CLIENT_CANCEL_POLICY_TEXT_LENGTH}</span>
+                    </div>
+                    <label className={classes.label} htmlFor="cancel-cutoff">Prazo para cancelar pela Minha Área</label>
                     <select id="cancel-cutoff" data-testid="cancel-cutoff" value={cancelCutoffHours} onChange={e => setCancelCutoffHours(Number(e.target.value))} className={classes.input}>
                         {CLIENT_CANCEL_CUTOFF_PRESETS.map(hours => <option key={hours} value={hours}>{cancelCutoffPresetLabel(hours)}</option>)}
                     </select>
-                    <label className={`${classes.label} mt-4 block`} htmlFor="cancel-policy-text">O que o cliente lê</label>
-                    <textarea id="cancel-policy-text" data-testid="cancellation-policy-generated" value={cancelPolicyText ?? generatedCancellationPolicyText(cancelCutoffHours, businessName || profile?.business_name)} maxLength={MAX_CLIENT_CANCEL_POLICY_TEXT_LENGTH} onChange={e => setCancelPolicyText(e.target.value)} rows={3} className={classes.input} />
-                    <button type="button" onClick={() => setCancelPolicyText(null)} className={`mt-2 text-sm underline ${accent.text}`}>Restaurar texto padrão</button>
-                    <p className={`${colors.textMuted} text-xs mt-2`}>Se alterar o prazo, confira se o texto personalizado corresponde à regra escolhida.</p>
                     <label className={`${classes.label} mt-4 block`} htmlFor="cancellation-policy-notes">
                         Observações (opcional)
                     </label>
@@ -526,6 +534,18 @@ export const GeneralSettings: React.FC = () => {
                     <p className={`${colors.textMuted} text-xs mt-2 leading-relaxed`} data-testid="cancellation-policy-notes-hint">
                         {CANCELLATION_POLICY_NOTES_HINT}
                     </p>
+                    <div className="mt-4 space-y-2 rounded-2xl border border-theme-border bg-theme-surface px-4 py-3.5">
+                        <p className={`text-xs font-semibold ${colors.textMuted}`}>Prévia para o cliente</p>
+                        <CancellationPolicyText
+                            parts={resolveCancellationPolicyParts({
+                                cutoffHours: cancelCutoffHours,
+                                businessName: businessName || profile?.business_name,
+                                clientCancelPolicyText: cancelPolicyText,
+                                clientCancelNote: cancellationPolicy,
+                            })}
+                            className={`text-sm leading-relaxed ${colors.text}`}
+                        />
+                    </div>
                 </SettingsSection>
                 </div>
 

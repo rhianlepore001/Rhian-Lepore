@@ -79,7 +79,9 @@ export function ProfilePasswordForm({ onBack, onSavingChange }: ProfilePasswordF
   const feedbackRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    formRef.current?.querySelector<HTMLInputElement>('[name="currentPassword"]')?.focus();
+    const form = formRef.current;
+    if (form?.parentElement) form.parentElement.scrollTop = 0;
+    form?.querySelector<HTMLInputElement>('[name="currentPassword"]')?.focus({ preventScroll: true });
   }, []);
 
   useEffect(() => {
@@ -161,7 +163,7 @@ export function ProfilePasswordForm({ onBack, onSavingChange }: ProfilePasswordF
   return (
     <form ref={formRef} className="space-y-4" onSubmit={handleSubmit} noValidate aria-busy={saving}>
       <p className={`text-sm leading-relaxed ${colors.textSecondary}`}>
-        Confirme sua senha atual para proteger sua conta. Após a troca, você precisará entrar de novo nos outros dispositivos.
+        Após a troca, você precisará entrar de novo nos outros dispositivos.
       </p>
       {error && !error.field && !error.mfaOptions && (
         <div ref={feedbackRef} tabIndex={-1} role="alert" className="rounded-lg border border-[var(--color-danger)] bg-[var(--color-danger-bg)] p-3 text-sm text-theme-text">

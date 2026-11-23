@@ -35,6 +35,7 @@ const Login = React.lazy(() => import('./pages/Login').then(module => ({ default
 const Legal = React.lazy(() => import('./pages/Legal').then(module => ({ default: module.Legal })));
 const Agenda = React.lazy(() => import('./pages/Agenda').then(module => ({ default: module.Agenda })));
 const Clients = React.lazy(() => import('./pages/Clients').then(module => ({ default: module.Clients })));
+const PublicReview = React.lazy(() => import('./pages/PublicReview').then(module => ({ default: module.PublicReview })));
 const PublicBooking = React.lazy(() => import('./pages/PublicBooking').then(module => ({ default: module.PublicBooking })));
 const ImportDataSettings = React.lazy(() => import('./pages/settings/ImportDataSettings').then(module => ({ default: module.ImportDataSettings })));
 const FinancialSettings = React.lazy(() => import('./pages/settings/FinancialSettings').then(module => ({ default: module.FinancialSettings })));
@@ -246,6 +247,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/dashboard-cockpit-demo" element={<DashboardCockpitDemo />} />
         <Route path="/finance-chart-demo" element={<FinanceChartDemo />} />
         <Route path="/book/:slug" element={<PublicBooking />} />
+        <Route path="/avaliar/:token" element={<PublicReview />} />
         <Route path="/queue/:slug" element={<QueueJoin />} />
         <Route path="/queue-status/:id" element={<QueueStatus />} />
         <Route path="/pro/:slug" element={<ProfessionalPortfolio />} />

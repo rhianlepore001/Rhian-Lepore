@@ -13,6 +13,7 @@ import { normalizeRegion } from '../utils/formatters';
 import { isEmailTakenError } from '../utils/mapError';
 import { classifySignupError, signupError } from '../utils/signupErrors';
 import { splitFullName } from '../lib/metaMatching';
+import { changeProfilePassword, type ProfilePasswords, type ProfilePasswordVerification } from '../services/profilePassword';
 
 export type UserType = 'barber' | 'beauty';
 export type Region = 'BR' | 'PT';
@@ -39,6 +40,7 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<{ error: any }>;
   logout: () => Promise<void>;
+  changePassword: (passwords: ProfilePasswords, secondFactor?: ProfilePasswordVerification) => ReturnType<typeof changeProfilePassword>;
   markTutorialCompleted: () => Promise<{ error: Error | null }>;
   register: (data: {
     email: string;
@@ -585,6 +587,14 @@ const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children })
     setRegion(normalizeRegion(next));
   }, []);
 
+  const accountId = session?.user.id;
+  const changePassword = useCallback(async (passwords: ProfilePasswords, secondFactor?: ProfilePasswordVerification) => {
+    if (!accountId || accountId !== currentUserIdRef.current) {
+      return { message: 'Sua sessão mudou ou expirou. Entre na sua conta e tente novamente.' };
+    }
+    return changeProfilePassword(accountId, passwords, secondFactor);
+  }, [accountId]);
+
   const activeUserType = (isDev && devUserType) ? devUserType : userType;
 
   const stableUserRef = useRef<User | null>(null);
@@ -620,6 +630,7 @@ const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children })
     loading,
     login,
     logout,
+    changePassword,
     markTutorialCompleted,
     register
   }), [
@@ -641,6 +652,7 @@ const RealAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children })
     devUserType,
     loading,
     updateRegion,
+    changePassword,
   ]);
 
   return (
@@ -662,7 +674,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode; demoRoute?: str
     tutorialCompleted: true, subscriptionStatus: 'active', trialEndsAt: null, isSubscriptionActive: true,
     role: 'owner', companyId: demoCompanyId(), teamMemberId: null, isDev: false, aiosEnabled: false,
     setDevUserType: () => undefined, updateRegion: () => undefined, loading: false,
-    login: unavailable, logout: unavailable, register: unavailable, markTutorialCompleted: async () => ({ error: null }),
+    login: unavailable, logout: unavailable, changePassword: unavailable, register: unavailable, markTutorialCompleted: async () => ({ error: null }),
   };
   return <AuthContext.Provider key={demoRoute?.split('/')[2] || niche} value={value}>{children}</AuthContext.Provider>;
 };

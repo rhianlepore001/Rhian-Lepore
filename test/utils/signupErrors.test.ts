@@ -70,25 +70,22 @@ describe('reportUnexpectedSignupError', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
-  it('grava via log_signup_error (anon) com ref, códigos e e-mail mascarado', async () => {
+  it('grava via log_signup_error (anon) com referência e metadados permitidos', async () => {
     rpc.mockResolvedValue({ data: 'log-1', error: null });
     await reportUnexpectedSignupError(
-      { name: 'AuthApiError', code: 'unexpected_failure', status: 500, message: 'Database error saving new user' },
-      { flow: 'staff_invite', email: 'TalesFurtado3@Gmail.com', companyId: 'c-1', memberId: 'm-1' },
+      { name: 'AuthApiError', code: 'unexpected_failure', status: 500, message: 'Erro para cliente@example.invalid' },
+      { flow: 'staff_invite', email: 'cliente@example.invalid', companyId: 'fixture-company', memberId: 'fixture-member' },
       'ABC234',
     );
     expect(rpc).toHaveBeenCalledTimes(1);
     expect(rpc).toHaveBeenCalledWith('log_signup_error', {
-      p_details: expect.objectContaining({
+      p_details: {
         ref: 'ABC234',
         flow: 'staff_invite',
-        email: 'ta***@gmail.com',
-        company_id: 'c-1',
-        member_id: 'm-1',
         error_name: 'AuthApiError',
         error_code: 'unexpected_failure',
         error_status: 500,
-      }),
+      },
     });
   });
 
@@ -100,7 +97,7 @@ describe('reportUnexpectedSignupError', () => {
       reportUnexpectedSignupError(new Error('boom'), { flow: 'owner' }, 'XYZ789'),
     ).resolves.toBeUndefined();
     expect(rpc).toHaveBeenNthCalledWith(2, 'log_error', expect.objectContaining({
-      p_message: 'signup_unexpected_error XYZ789',
+      p_message: 'signup_unexpected_error',
       p_context: expect.objectContaining({ ref: 'XYZ789', flow: 'owner' }),
     }));
   });

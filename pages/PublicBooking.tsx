@@ -6,7 +6,7 @@ import { useWhatsAppTemplates } from '../hooks/useWhatsAppTemplates';
 import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
-import { Star, Calendar, Clock, MapPin, Instagram, Scissors, Sparkles, User, ArrowRight, Check, ChevronLeft, ChevronRight, Phone, Users, Loader2, X, AlertTriangle, Send, MessageSquare, LayoutDashboard, Plus } from 'lucide-react';
+import { Star, Calendar, Clock, MapPin, Instagram, Scissors, Sparkles, User, ArrowRight, Check, ChevronLeft, ChevronRight, Phone, Users, Loader2, X, AlertTriangle, Send, MessageSquare, LayoutDashboard, Package, Crown } from 'lucide-react';
 import { PhoneInput } from '../components/PhoneInput';
 import { CalendarPicker } from '../components/CalendarPicker';
 import {
@@ -26,17 +26,16 @@ import { usePublicClient } from '../contexts/PublicClientContext';
 import { PublicBusinessHeader } from '../components/PublicBusinessHeader';
 import { PublicProductsShowcase } from '../components/booking/PublicProductsShowcase';
 import { ChatBubble } from '../components/ChatBubble';
-import { GoogleReviewPrompt } from '../components/GoogleReviewPrompt';
 import { useCancelPublicBooking, useFindActivePublicBooking, useSubmitPublicBooking, useBusinessProfileBySlug, useBusinessSettings, usePublicServices, usePublicCategories, usePublicProfessionals, usePublicGallery, usePublicProducts } from '../hooks/usePublicBooking';
 import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
-import { formatCurrency, formatDuration, Region } from '../utils/formatters';
+import { formatCurrency, formatDuration, normalizeRegion } from '../utils/formatters';
 import { buildWhatsAppLink } from '../utils/whatsappTemplates';
 import { capBookingDuration } from '../utils/serviceDuration';
 import { logger } from '../utils/Logger';
 import { useZonedAvailableSlots } from '../hooks/useZonedAvailableSlots';
 import { mergeFreshPublicBooking } from '../utils/publicBookingFresh';
 import { fetchEditBooking, fetchPublicClientByPhone, fetchClientByPhone, fetchPublicBookingById, fetchFullDates, findNextDateWithSlots, getFirstAvailableProfessional, uploadClientPhoto, upsertPublicClientSession } from '../services/publicBooking';
-import { shouldLandOnClientArea } from '../utils/publicBookingLanding';
+import { getPublicBookingSection, shouldLandOnClientArea } from '../utils/publicBookingLanding';
 import { getPublicBookingAwaitingWhatsAppText, getPublicGroupBookingWhatsAppText, getPublicBookingSubmitLabel, getPublicBookingSuccessCopy } from '../utils/publicBookingCopy';
 import { isPublicBookingAutoConfirm } from '../utils/onlineBookingApproval';
 import { resolveCancellationPolicyParts } from '../utils/cancellationPolicyCopy';
@@ -58,6 +57,10 @@ import {
 import { Checkbox, ConfirmModal, Button, useToast } from '@/components/ui';
 import { PublicGroupBooking } from '@/components/booking/PublicGroupBooking';
 import { PublicBookingMemberships } from '@/components/membership/PublicBookingMemberships';
+import { ClubPromotion } from '@/components/membership/ClubPromotion';
+import { usePublicMembershipPlans } from '@/hooks/useMemberships';
+import { PublicCustomerReviews } from '@/components/reviews/PublicCustomerReviews';
+import { usePublicCustomerReviews } from '@/hooks/useCustomerReviews';
 import FocusTrap from 'focus-trap-react';
 import { openWhatsApp } from '../utils/openWhatsApp';
 
@@ -98,8 +101,7 @@ interface BusinessProfile {
     id: string;
     business_name: string;
     user_type: string;
-    google_rating: number;
-    total_reviews: number;
+
     phone: string;
     enable_upsells: boolean;
     enable_professional_selection: boolean;
@@ -114,7 +116,7 @@ export const PublicBooking: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
     const whatsapp = useWhatsAppTemplates(slug ?? '');
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
     const proIdParam = searchParams.get('pro');
     const rebookParam = searchParams.get('rebook');
     const editParam = searchParams.get('edit');
@@ -129,6 +131,8 @@ export const PublicBooking: React.FC = () => {
     const { data: businessProfile, isLoading: loadingProfile, isError: profileError } = useBusinessProfileBySlug(slug ?? '');
     const business = useMemo(() => businessProfile as BusinessProfile | null ?? null, [businessProfile]);
     const businessId = business?.id ?? null;
+    const customerReviews = usePublicCustomerReviews(businessId);
+    const [reviewsOpen, setReviewsOpen] = useState(() => searchParams.get('avaliacoes') === '1');
     const { data: businessSettings, isFetched: businessSettingsFetched } = useBusinessSettings(businessId);
     // Fuso fixo do negócio (nunca o do navegador). Antes da migration
     // business_settings.timezone, a chave não existe e caímos na região.
@@ -144,11 +148,17 @@ export const PublicBooking: React.FC = () => {
     const { data: categoriesData = [] } = usePublicCategories(businessId);
     const { data: professionalsData = [] } = usePublicProfessionals(businessId);
     const { data: galleryData = [] } = usePublicGallery(businessId);
-    const { data: publicProducts = [] } = usePublicProducts(businessId);
+    const { data: publicProducts = [], isLoading: productsLoading, isError: productsError, refetch: refetchProducts } = usePublicProducts(businessId);
+    const { data: clubPlans = [] } = usePublicMembershipPlans(businessId);
+
+    const bookingSection = getPublicBookingSection(searchParams);
+    const catalogNavRef = React.useRef<HTMLElement>(null);
+    const quickFlowRef = React.useRef<HTMLElement>(null);
 
     const [activeCategory, setActiveCategory] = useState<string>('all');
     const [activeProfessionalCategory, setActiveProfessionalCategory] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState<string>('');
+    const [productSearch, setProductSearch] = useState('');
     const [selectedServices, setSelectedServices] = useState<string[]>([]);
     
     const [step, setStep] = useState<'edit_options' | 'services' | 'datetime' | 'contact' | 'edit_confirm' | 'success'>('services');
@@ -453,6 +463,18 @@ export const PublicBooking: React.FC = () => {
 
     const chatEndRef = React.useRef<HTMLDivElement>(null);
     const successRef = React.useRef<HTMLDivElement>(null);
+    const previousQuickStep = React.useRef(quickStep);
+    useEffect(() => {
+        if (previousQuickStep.current === quickStep) return;
+        previousQuickStep.current = quickStep;
+        const heading = quickFlowRef.current?.querySelector('h2');
+        if (heading) {
+            heading.tabIndex = -1;
+            heading.focus({ preventScroll: true });
+        }
+        quickFlowRef.current?.scrollIntoView?.({ block: 'start' });
+    }, [quickStep]);
+
     const showingSuccess = step === 'success' && Boolean(activeBooking);
     useEffect(() => {
         if (showingSuccess) successRef.current?.scrollIntoView?.({ block: 'start' });
@@ -491,6 +513,33 @@ export const PublicBooking: React.FC = () => {
                 ? prev.filter(id => id !== serviceId)
                 : [...prev, serviceId]
         );
+    };
+
+    const bookingSections = [
+        { id: 'services', label: 'Serviços', icon: Scissors },
+        ...(publicProducts.length > 0 || bookingSection === 'products' ? [{ id: 'products', label: 'Produtos', icon: Package } as const] : []),
+        ...(!editingBookingId && clubPlans.length > 0 ? [{ id: 'club', label: 'Clube', icon: Crown } as const] : []),
+    ] as const;
+    const browseSection = quickStep === 'services' && (bookingSection !== 'club' || (!editingBookingId && clubPlans.length > 0))
+        ? bookingSection
+        : 'services';
+
+    const openBookingSection = (section: typeof bookingSection, focusNav = false) => {
+        if (section !== bookingSection) {
+            const next = new URLSearchParams(searchParams);
+            if (section === 'services') {
+                next.delete('secao');
+                next.set('agendar', '1');
+            } else {
+                next.set('secao', section === 'products' ? 'produtos' : 'clube');
+            }
+            setSearchParams(next);
+        }
+        if (focusNav) {
+            const button = catalogNavRef.current?.querySelector<HTMLButtonElement>(`[data-section="${section}"]`);
+            button?.focus();
+            button?.scrollIntoView?.({ block: 'nearest' });
+        }
     };
 
     const calculateTotal = () =>
@@ -554,6 +603,11 @@ export const PublicBooking: React.FC = () => {
     ) : undefined;
 
     const professionalCategories = Array.from(new Set((professionals || []).flatMap((p: any) => p.specialties || []))).filter(Boolean);
+    const filteredBookingServices = services.filter(service =>
+        (activeCategory === 'all' || (activeCategory === 'no-category' && !service.category_id) || service.category_id === activeCategory)
+        && matchesServiceSearch(service, searchQuery),
+    );
+
     const filteredProfessionals = activeProfessionalCategory === 'all'
         ? professionals
         : professionals.filter((p: any) => (p.specialties || []).includes(activeProfessionalCategory));
@@ -678,7 +732,7 @@ export const PublicBooking: React.FC = () => {
 
     const handleSubmit = async () => {
         if (!businessId || !customerName || !customerPhone || !selectedDate || !selectedTime || !acceptedPolicy) {
-            showToast('Por favor, preencha todos os campos e aceite a política de cancelamento.', 'warning');
+            showToast('Por favor, preencha todos os campos e aceite a política de agendamento.', 'warning');
             return;
         }
         setIsSubmitting(true);
@@ -735,6 +789,7 @@ export const PublicBooking: React.FC = () => {
                 editingBookingId,
                 originalAppointmentTime: originalTimeISO,
                 productLines: [],
+                reviewToken: !editingBookingId && !isDemoMode() ? globalThis.crypto?.randomUUID?.() : undefined,
             });
 
             setActiveBooking(booking);
@@ -766,7 +821,7 @@ export const PublicBooking: React.FC = () => {
         }
     };
 
-    const currencyRegion = (business?.region as Region) || (businessSettings?.currency_symbol === '€' ? 'PT' : 'BR');
+    const currencyRegion = normalizeRegion(business?.region || businessSettings?.currency_symbol);
     const whatsappLink = business?.phone
         ? buildWhatsAppLink(business.phone, currencyRegion)
         : null;
@@ -807,7 +862,7 @@ export const PublicBooking: React.FC = () => {
             className={`rounded-xl border px-4 py-3 ${colors.surface} ${colors.border}`}
             data-testid="public-cancellation-policy-inline"
         >
-            <p className={`${colors.textMuted} text-xs font-semibold uppercase tracking-wide mb-1.5`}>Política de cancelamento</p>
+            <p className={`mb-1.5 text-sm font-semibold ${colors.text}`}>Política de agendamento</p>
             <CancellationPolicyText
                 parts={cancellationPolicyParts}
                 className={`text-sm leading-relaxed ${colors.textSecondary}`}
@@ -937,132 +992,153 @@ export const PublicBooking: React.FC = () => {
                 phone={business.phone}
                 region={currencyRegion}
                 address={business.address_street}
-                googleRating={business.google_rating}
-                totalReviews={business.total_reviews}
+                reviewSummary={customerReviews.data?.pages[0]}
+                onOpenReviews={() => setReviewsOpen(true)}
                 userType={business.user_type}
                 gallery={gallery}
                 clientSession={client}
                 businessSlug={slug}
             />
+            {reviewsOpen && <PublicCustomerReviews open={reviewsOpen} onClose={() => setReviewsOpen(false)} query={customerReviews} />}
 
             {/* QUICK DIRECT FLOW */}
             {bookingMode === 'quick' && quickStep !== 'success' && !groupMode && (
-                <div className="container mx-auto px-4 md:px-6 max-w-4xl lg:max-w-5xl relative z-10 pt-4 md:pt-8 pb-40">
-                    {/* Quick Stepper */}
-                    <div className={`sticky top-[var(--safe-top)] z-[var(--z-sticky)] w-full rounded-xl border ${colors.border} ${colors.card} mb-5 md:mb-8`}>
-                        <ol className="grid grid-cols-4 items-start gap-1 p-2.5" aria-label="Etapas do agendamento">
-                            {quickSteps.map((qs, idx) => (
-                                <li
-                                    key={qs.key}
-                                    aria-current={idx === currentQuickStepIndex ? 'step' : undefined}
-                                    className="relative flex min-w-0 flex-col items-center gap-1.5"
+                <main ref={quickFlowRef} className="container relative z-10 mx-auto max-w-5xl px-3 pb-40 pt-4 md:px-6 md:pt-7">
+                    {quickStep === 'services' && bookingSections.length > 1 && (
+                        <nav ref={catalogNavRef} aria-label="Explore o estabelecimento" className={`mb-5 flex gap-1 rounded-2xl border p-1 ${colors.card} ${colors.border}`}>
+                            {bookingSections.map(({ id, label, icon: Icon }) => (
+                                <button
+                                    key={id}
+                                    type="button"
+                                    data-section={id}
+                                    aria-current={browseSection === id ? 'true' : undefined}
+                                    onClick={() => openBookingSection(id)}
+                                    className={`flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl px-2 text-sm font-semibold transition-colors ${browseSection === id
+                                        ? `${accent.bg} ${accentTextOnAccent}`
+                                        : `${colors.textSecondary} hover:bg-theme-surface`}`}
                                 >
-                                        <div aria-hidden="true" className={`w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold tabular-nums ${idx < currentQuickStepIndex
-                                                ? `${accent.bgDim} ${accent.text}`
-                                                : idx === currentQuickStepIndex
-                                                    ? `${accent.bg} ${accentTextOnAccent}`
-                                                    : `${colors.surface} ${colors.textMuted}`
-                                            }`}>
-                                            {idx < currentQuickStepIndex ? <Check className="w-3.5 h-3.5" /> : idx + 1}
-                                        </div>
-                                        <span className={`text-center text-xs font-semibold ${idx === currentQuickStepIndex ? accent.text : colors.textMuted}`}>{qs.label}</span>
+                                    <Icon className="size-4 shrink-0" aria-hidden="true" />
+                                    {label}
+                                </button>
+                            ))}
+                        </nav>
+                    )}
+
+                    {browseSection === 'services' && (
+                        <ol aria-label="Etapas do agendamento" className={`mb-6 flex items-center gap-2 rounded-2xl border px-3 py-2.5 sm:px-4 ${colors.border} ${colors.card}`}>
+                            {quickSteps.map((qs, idx) => (
+                                <li key={qs.key} aria-current={idx === currentQuickStepIndex ? 'step' : undefined} className="flex min-w-0 flex-1 flex-col items-center gap-1.5 sm:flex-row sm:gap-2">
+                                    <span aria-hidden="true" className={`flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${idx <= currentQuickStepIndex
+                                        ? `${accent.bg} ${accentTextOnAccent}`
+                                        : `${colors.surface} ${colors.textMuted}`}`}>
+                                        {idx < currentQuickStepIndex ? <Check className="size-3.5" /> : idx + 1}
+                                    </span>
+                                    <span className={`text-center text-xs font-semibold leading-tight ${idx === currentQuickStepIndex ? colors.text : colors.textMuted}`}>{qs.label}</span>
+                                    {idx < quickSteps.length - 1 && <span className={`ml-0.5 hidden h-px flex-1 border-t ${colors.border} sm:block`} aria-hidden="true" />}
                                 </li>
                             ))}
                         </ol>
-                    </div>
+                    )}
 
-                    {/* Step 1: Services */}
-                    {quickStep === 'services' && (
-                        <div className="space-y-4 md:space-y-6">
+                    {quickStep === 'services' && browseSection === 'products' && (
+                        productsLoading ? (
+                            <p role="status" className={colors.textSecondary}>Carregando produtos…</p>
+                        ) : productsError && publicProducts.length === 0 ? (
+                            <div className="space-y-2">
+                                <p role="alert" className={colors.textSecondary}>Não foi possível carregar os produtos.</p>
+                                <button type="button" onClick={() => void refetchProducts()} className={`min-h-11 text-sm font-semibold ${accent.text}`}>Tentar novamente</button>
+                            </div>
+                        ) : (
+                            publicProducts.length > 0 ? (
+                                <div className="space-y-4">
+                                    <input
+                                        type="search"
+                                        aria-label="Buscar produto"
+                                        placeholder="Buscar produto"
+                                        value={productSearch}
+                                        onChange={e => setProductSearch(e.target.value)}
+                                        className={classes.input}
+                                    />
+                                    <PublicProductsShowcase
+                                        products={publicProducts}
+                                        currencyRegion={currencyRegion}
+                                        searchQuery={productSearch}
+                                        mode="tab"
+                                        onClearSearch={() => setProductSearch('')}
+                                    />
+                                </div>
+                            ) : (
+                                <p className="rounded-xl border border-theme-border bg-theme-card p-4 text-sm text-theme-textSecondary">
+                                    Nenhum produto disponível no momento.
+                                </p>
+                            )
+                        )
+                    )}
+
+                    {quickStep === 'services' && !editingBookingId && browseSection === 'club' && (
+                        <PublicBookingMemberships
+                            businessId={businessId}
+                            slug={slug ?? ''}
+                            region={currencyRegion}
+                            themeOverride={themeOverride}
+                            services={services}
+                        />
+                    )}
+
+                    {quickStep === 'services' && browseSection === 'services' && (
+                        <div className="space-y-5 animate-reveal-fragment md:space-y-6">
                             <div>
-                                <h2 className={`font-heading text-2xl md:text-3xl font-bold tracking-tight mb-1.5 ${colors.text}`}>Escolha seus serviços</h2>
+                                <h2 className={`mb-1 text-2xl font-bold tracking-tight md:text-3xl ${colors.text}`}>Escolha seus serviços</h2>
                                 <p className={`${colors.textMuted} text-sm`}>Selecione um ou mais serviços para seu atendimento.</p>
                             </div>
 
-                            {!editingBookingId && professionals.length > 0 && services.length > 0 && (
-                                <button
-                                    type="button"
-                                    data-testid="group-booking-entry"
-                                    onClick={() => setGroupMode(true)}
-                                    className={`w-full min-h-12 flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left ${colors.card} ${colors.border} hover:bg-[var(--color-card-hover)]`}
-                                >
-                                    <span className={`shrink-0 w-9 h-9 rounded-lg flex items-center justify-center ${accent.bgDim} ${accent.text}`}>
-                                        <Users className="w-5 h-5" />
-                                    </span>
-                                    <span className="flex-1 min-w-0">
-                                        <span className={`block text-sm font-semibold leading-snug ${colors.text}`}>Agendar para mais de uma pessoa</span>
-                                        <span className={`block text-xs ${colors.textMuted}`}>Cada pessoa escolhe seus serviços e o profissional.</span>
-                                    </span>
-                                    <ArrowRight className={`w-5 h-5 shrink-0 ${colors.textMuted}`} />
-                                </button>
+                            {!editingBookingId && clubPlans.length > 0 && (
+                                <ClubPromotion plans={clubPlans} region={currencyRegion} onOpen={() => openBookingSection('club', true)} />
                             )}
 
-                            <input
-                                type="search"
-                                aria-label={publicProducts.length > 0 ? 'Buscar serviço ou produto' : 'Buscar serviço'}
-                                placeholder={publicProducts.length > 0 ? 'Buscar serviço ou produto...' : 'Buscar serviço...'}
-                                value={searchQuery}
-                                onChange={e => setSearchQuery(e.target.value)}
-                                className={classes.input}
-                            />
+                            <div className="flex items-center gap-2">
+                                <div className="min-w-0 flex-1">
+                                    <input type="search" aria-label={publicProducts.length ? 'Buscar serviço ou produto' : 'Buscar serviço'} placeholder={publicProducts.length ? 'Buscar serviço ou produto' : 'Buscar serviço'} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className={classes.input} />
+                                </div>
+                                {!editingBookingId && professionals.length > 0 && services.length > 0 && (
+                                    <button
+                                        type="button"
+                                        data-testid="group-booking-entry"
+                                        onClick={() => setGroupMode(true)}
+                                        className={`inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl border px-2.5 text-sm font-semibold ${colors.card} ${colors.border} ${colors.text} hover:bg-theme-surface sm:px-3`}
+                                    >
+                                        <Users className={`size-4 shrink-0 ${accent.text}`} aria-hidden="true" />
+                                        Agendar em grupo
+                                    </button>
+                                )}
+                            </div>
 
                             {/* Category Filters */}
-                            {(categories.length > 0 || publicProducts.length > 0) && (
-                                <div className={`p-1.5 ${colors.card} ${colors.border} border rounded-xl`}>
-                                    <div className="w-full flex gap-1.5 overflow-x-auto p-1 scrollbar-thin">
+                            {categories.length > 0 && (
+                                <div className={`p-1.5 ${colors.card} ${colors.border} border rounded-2xl backdrop-blur-xl`}>
+                                    <div className="w-full flex gap-2 overflow-x-auto pb-2 pt-1 px-1 scrollbar-thin">
                                         <button type="button" aria-pressed={activeCategory === 'all'} onClick={() => setActiveCategory('all')}
-                                            className={`min-h-11 shrink-0 px-3 rounded-lg text-sm font-semibold transition-colors ${activeCategory === 'all'
-                                                    ? `${accent.bg} ${accentTextOnAccent} `
+                                            className={`px-5 md:px-8 py-2.5 rounded-xl text-xs font-black uppercase tracking-[0.15em] transition-all duration-200 ${activeCategory === 'all'
+                                                    ? `${accent.bg} ${accentTextOnAccent} scale-105 ${shadow.button}`
                                                     : `${colors.textMuted} hover:bg-[var(--color-card-hover)]`
                                                 }`}>
                                             Todos
                                         </button>
                                         {categories.map(cat => (
                                             <button key={cat.id} type="button" aria-pressed={activeCategory === cat.id} onClick={() => setActiveCategory(cat.id)}
-                                                className={`min-h-11 shrink-0 px-3 rounded-lg border text-sm font-semibold transition-colors ${activeCategory === cat.id
-                                                        ? `${accent.bg} ${accentTextOnAccent} `
+                                                className={`px-5 md:px-8 py-2.5 rounded-xl border text-xs font-black uppercase tracking-[0.15em] transition-all duration-200 ${activeCategory === cat.id
+                                                        ? `${accent.bg} ${accentTextOnAccent} scale-105 ${shadow.button}`
                                                         : `${colors.textMuted} ${colors.border} hover:bg-[var(--color-card-hover)]`
                                                     }`}>
                                                 {cat.name}
                                             </button>
                                         ))}
-                                        {publicProducts.length > 0 && (
-                                            <button
-                                                type="button"
-                                                aria-pressed={activeCategory === '__products__'}
-                                                onClick={() => setActiveCategory('__products__')}
-                                                className={`min-h-11 shrink-0 px-3 rounded-lg border text-sm font-semibold transition-colors ${activeCategory === '__products__'
-                                                        ? `${accent.bg} ${accentTextOnAccent} `
-                                                        : `${colors.textMuted} ${colors.border} hover:bg-[var(--color-card-hover)]`
-                                                    }`}
-                                            >
-                                                Produtos
-                                            </button>
-                                        )}
                                     </div>
                                 </div>
                             )}
 
-                            {/* Products showcase tab */}
-                            {activeCategory === '__products__' && (
-                                <PublicProductsShowcase
-                                    products={publicProducts}
-                                    currencyRegion={currencyRegion}
-                                    searchQuery={searchQuery}
-                                    mode="tab"
-                                    onClearSearch={() => setSearchQuery('')}
-                                />
-                            )}
-
-                            {/* Service Grid */}
-                            <div className={`grid grid-cols-1 md:grid-cols-2 gap-2.5 md:gap-5 ${activeCategory === '__products__' ? 'hidden' : ''}`}>
-                                {services.filter(s => {
-                                    const matchesCategory = activeCategory === 'all'
-                                        || (activeCategory === 'no-category' && !s.category_id)
-                                        || s.category_id === activeCategory;
-                                    const matchesSearch = matchesServiceSearch(s, searchQuery);
-                                    return matchesCategory && matchesSearch;
-                                }).map((service) => {
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
+                                {filteredBookingServices.map(service => {
                                     const isSelected = selectedServices.includes(service.id);
                                     const category = categories.find(c => c.id === service.category_id)?.name;
                                     return (
@@ -1071,39 +1147,44 @@ export const PublicBooking: React.FC = () => {
                                             type="button"
                                             aria-pressed={isSelected}
                                             onClick={() => toggleService(service.id)}
-                                            className={`relative grid min-h-[102px] min-w-0 grid-cols-[4.25rem_minmax(0,1fr)] items-center gap-3 rounded-xl border p-2.5 text-left transition-colors md:block md:overflow-hidden md:p-0 ${colors.card} ${isSelected
-                                                ? `border-[var(--color-accent)] ring-1 ring-[var(--color-accent)]`
-                                                : `${colors.border} hover:border-[var(--color-accent-border)]`}`}
+                                            className={`group flex min-w-0 items-stretch gap-3 rounded-2xl border p-3 text-left transition-colors sm:gap-4 sm:p-4
+                                                ${colors.card} ${isSelected ? 'border-theme-accent ring-1 ring-theme-accent' : `${colors.border} hover:border-theme-accent`}`}
                                         >
-                                            <span className={`flex aspect-square min-w-0 items-center justify-center overflow-hidden rounded-lg md:aspect-auto md:h-44 md:rounded-none ${colors.surface}`}>
+                                            <span className={`relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl sm:size-20 ${colors.surface}`}>
                                                 {service.image_url ? (
-                                                    <img src={service.image_url} alt="" loading="lazy" decoding="async" width={400} height={300} className="h-full w-full object-cover" />
+                                                    <img src={service.image_url} alt="" loading="lazy" decoding="async" className="absolute inset-0 size-full object-cover" />
                                                 ) : (
-                                                    <Sparkles className={`h-6 w-6 ${accent.text}`} aria-hidden="true" />
+                                                    <Scissors className={`size-5 ${colors.textSecondary}`} aria-hidden="true" />
                                                 )}
                                             </span>
-                                            <span className="block min-w-0 pr-7 md:p-4">
-                                                {category && <span className={`block text-xs leading-none ${colors.textSecondary}`}>{category}</span>}
-                                                <span className={`mt-1 block break-words text-[0.9375rem] font-bold leading-tight md:text-lg ${colors.text}`}>{service.name}</span>
+                                            <span className="flex min-w-0 flex-1 flex-col gap-1.5">
+                                                <span className={`break-words text-base font-bold leading-snug ${colors.text}`}>{service.name}</span>
                                                 {service.description && (
-                                                    <span className={`mt-1 block line-clamp-2 text-xs leading-snug ${colors.textSecondary}`}>{service.description}</span>
+                                                    <span className={`line-clamp-2 text-sm leading-snug ${colors.textSecondary}`}>{service.description}</span>
                                                 )}
-                                                <span className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                                                    <span className={`text-sm font-bold tabular-nums ${accent.text}`}>{formatCurrency(service.price, currencyRegion)}</span>
-                                                    <span className={`inline-flex items-center gap-1 text-xs ${colors.textSecondary}`}>
-                                                        <Clock className="h-3.5 w-3.5" aria-hidden="true" /> {service.duration_minutes} min
-                                                    </span>
+                                                <span className={`mt-auto flex flex-wrap items-center gap-x-2 gap-y-1 text-sm ${colors.textSecondary}`}>
+                                                    <span className={`font-semibold tabular-nums ${colors.text}`}>{formatCurrency(service.price, currencyRegion)}</span>
+                                                    <span aria-hidden="true">·</span>
+                                                    <span>{service.duration_minutes} min</span>
                                                 </span>
                                             </span>
-                                            <span className={`absolute right-2.5 top-2.5 flex h-6 w-6 items-center justify-center rounded-full border md:h-8 md:w-8 ${isSelected
-                                                ? `${accent.bg} ${accentTextOnAccent} border-transparent`
-                                                : `${colors.card} ${colors.textSecondary} border-[var(--color-input-border)]`}`} aria-hidden="true">
-                                                {isSelected ? <Check className="h-4 w-4" /> : <Plus className="h-3.5 w-3.5" />}
+                                            <span aria-hidden="true" className={`flex size-6 shrink-0 items-center justify-center rounded-full border
+                                                ${isSelected ? `${accent.bg} ${accentTextOnAccent} border-transparent` : colors.border}`}>
+                                                {isSelected && <Check className="size-4" />}
                                             </span>
                                         </button>
                                     );
                                 })}
                             </div>
+
+                            {services.length > 0 && filteredBookingServices.length === 0 && (
+                                <div className={`rounded-2xl border p-4 ${colors.card} ${colors.border}`}>
+                                    <p className={`text-sm ${colors.textSecondary}`}>Nenhum serviço corresponde à sua busca.</p>
+                                    <button type="button" onClick={() => { setSearchQuery(''); setActiveCategory('all'); }} className={`min-h-11 text-sm font-semibold ${accent.text}`}>
+                                        Limpar filtros
+                                    </button>
+                                </div>
+                            )}
 
                             {services.length === 0 && (
                                 <div className="flex flex-col items-center justify-center py-20 gap-6 text-center">
@@ -1129,16 +1210,6 @@ export const PublicBooking: React.FC = () => {
                                     currencyRegion={currencyRegion}
                                     searchQuery={searchQuery}
                                     mode="section"
-                                />
-                            )}
-
-                            {activeCategory !== '__products__' && (
-                                <PublicBookingMemberships
-                                    businessId={businessId}
-                                    slug={slug ?? ''}
-                                    region={currencyRegion}
-                                    themeOverride={themeOverride}
-                                    services={services}
                                 />
                             )}
                         </div>
@@ -1167,33 +1238,28 @@ export const PublicBooking: React.FC = () => {
                                 </div>
                             )}
 
-                            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4 md:gap-4">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                                 <button type="button" aria-pressed={selectedProfessional === 'any'} onClick={() => setSelectedProfessional('any')}
-                                    className={`relative flex min-w-0 flex-col items-center gap-2 rounded-xl border p-3 transition-colors ${selectedProfessional === 'any'
-                                        ? `${accent.bgDim} border-[var(--color-accent)]`
-                                        : `${colors.card} ${colors.border} hover:border-[var(--color-accent-border)]`}`}>
-                                    {selectedProfessional === 'any' && <Check className={`absolute right-2 top-2 h-4 w-4 ${accent.text}`} aria-hidden="true" />}
-                                    <div className={`w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center border-2 rounded-full ${colors.surface} ${colors.border} ${colors.textMuted}`}>
-                                        <Users className="w-6 h-6" aria-hidden="true" />
+                                    className={`flex min-w-0 flex-col items-center gap-3 rounded-2xl border p-4 transition-colors sm:p-5
+                                        ${selectedProfessional === 'any' ? `${accent.bg} ${accentTextOnAccent} border-transparent` : `${colors.card} ${colors.border} hover:border-theme-accent`}`}>
+                                    <div className={`w-16 h-16 flex items-center justify-center border-2 rounded-full ${colors.surface} ${colors.border} ${colors.textMuted}`}>
+                                        <Users className="w-8 h-8" />
                                     </div>
-                                    <span className={`text-sm font-semibold text-center leading-snug ${colors.text}`}>Qualquer profissional</span>
+                                    <span className={`text-center text-sm font-semibold ${selectedProfessional === 'any' ? accentTextOnAccent : colors.text}`}>Qualquer profissional</span>
                                 </button>
 
-                                {filteredProfessionals.map((pro) => (
+                                {filteredProfessionals.map(pro => (
                                     <button key={pro.id} type="button" aria-pressed={selectedProfessional === pro.id}
                                         onClick={() => setSelectedProfessional(pro.id)}
-                                        className={`relative flex min-w-0 flex-col items-center gap-2 rounded-xl border p-3 transition-colors ${selectedProfessional === pro.id
-                                            ? `${accent.bgDim} border-[var(--color-accent)]`
-                                            : `${colors.card} ${colors.border} hover:border-[var(--color-accent-border)]`}`}>
-                                        {selectedProfessional === pro.id && <Check className={`absolute right-2 top-2 h-4 w-4 ${accent.text}`} aria-hidden="true" />}
-                                        <div className={`w-12 h-12 sm:w-16 sm:h-16 overflow-hidden border-2 rounded-full ${colors.surface} ${colors.border}`}>
+                                        className={`flex min-w-0 flex-col items-center gap-3 rounded-2xl border p-4 transition-colors sm:p-5 ${selectedProfessional === pro.id ? `${accent.bg} ${accentTextOnAccent} border-transparent` : `${colors.card} ${colors.border} hover:border-theme-accent`}`}>
+                                        <div className={`w-16 h-16 overflow-hidden border-2 rounded-full ${colors.surface} ${colors.border}`}>
                                             {pro.photo_url ? (
                                                 <img src={pro.photo_url} alt="" loading="lazy" decoding="async" width={96} height={96} className="w-full h-full object-cover" />
                                             ) : (
-                                                <div className={`w-full h-full flex items-center justify-center ${colors.surface} ${colors.text}`}>{pro.name.charAt(0)}</div>
+                                                <div className={`w-full h-full flex items-center justify-center ${colors.surface} ${colors.text}`} aria-hidden="true">{pro.name.charAt(0)}</div>
                                             )}
                                         </div>
-                                        <span className={`text-sm font-semibold text-center leading-snug break-words ${colors.text}`}>
+                                        <span className={`max-w-full break-words text-center text-sm font-semibold leading-tight ${selectedProfessional === pro.id ? accentTextOnAccent : colors.text}`}>
                                             {pro.name}
                                         </span>
                                     </button>
@@ -1284,16 +1350,16 @@ export const PublicBooking: React.FC = () => {
                                 ) : (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                                         <div className="space-y-1.5 sm:col-span-2">
-                                            <label htmlFor="booking-quick-name" className={`${colors.textMuted} text-xs font-semibold uppercase tracking-wide block`}>Nome completo</label>
-                                            <input id="booking-quick-name" type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)}
+                                            <label htmlFor="public-booking-name" className={`block text-sm font-semibold ${colors.textSecondary}`}>Nome completo</label>
+                                            <input id="public-booking-name" type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)}
                                                 className={`w-full py-3 px-4 outline-none transition-all ${classes.input}`}
                                                 placeholder="Como devemos te chamar?"
                                                 autoComplete="name"
                                             />
                                         </div>
                                         <div className="space-y-1.5 sm:col-span-2">
-                                            <label htmlFor="booking-quick-phone" className={`${colors.textMuted} text-xs font-semibold uppercase tracking-wide block`}>WhatsApp</label>
-                                            <PhoneInput id="booking-quick-phone" value={customerPhone} onChange={setCustomerPhone} defaultRegion={currencyRegion as 'BR' | 'PT'} />
+                                            <label htmlFor="public-booking-phone" className={`block text-sm font-semibold ${colors.textSecondary}`}>WhatsApp</label>
+                                            <PhoneInput id="public-booking-phone" value={customerPhone} onChange={setCustomerPhone} defaultRegion={currencyRegion} />
                                         </div>
                                     </div>
                                 )}
@@ -1312,7 +1378,7 @@ export const PublicBooking: React.FC = () => {
                                                     onClick={(e) => { e.preventDefault(); setShowPolicyModal(true); }}
                                                     className={`font-semibold underline underline-offset-2 ${accent.text}`}
                                                 >
-                                                    política de cancelamento
+                                                    política de agendamento
                                                 </button>
                                                 .
                                             </>
@@ -1328,12 +1394,12 @@ export const PublicBooking: React.FC = () => {
                             </div>
                         </div>
                     )}
-                </div>
+                </main>
             )}
 
             {/* Quick Flow Bottom Navigation — uma CTA por passo (no confirm = submit) */}
-            {bookingMode === 'quick' && quickStep !== 'success' && !groupMode && (
-                <div className="fixed bottom-0 left-0 right-0 w-full" style={{ zIndex: 'var(--z-drawer)' }}>
+            {bookingMode === 'quick' && quickStep !== 'success' && !groupMode && browseSection !== 'club' && (
+                <div className="fixed bottom-0 left-0 right-0 w-full" style={{ zIndex: 'var(--z-modal)' }}>
                     <div
                         className={`${colors.card} border-t ${colors.divider} px-4 pt-2.5`}
                         style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}
@@ -1348,34 +1414,40 @@ export const PublicBooking: React.FC = () => {
                                     Voltar
                                 </button>
                             )}
-                            <button
-                                type="button"
-                                onClick={quickStep === 'contact' && editWindowClosed ? handleTalkEdit : (quickStep === 'contact' ? handleSubmit : handleQuickNext)}
-                                disabled={quickStep === 'contact' && editWindowClosed
-                                    ? false
-                                    : (!canQuickProceed() || (quickStep === 'contact' && isSubmitting))}
-                                className={`min-w-0 flex-1 px-2.5 py-3 min-h-12 flex items-center justify-center gap-2 text-sm transition-colors ${classes.buttonPrimary} disabled:opacity-50 disabled:cursor-not-allowed`}
-                                data-testid={quickStep === 'contact' && editWindowClosed ? 'client-edit-talk' : undefined}
-                            >
-                                {quickStep === 'contact' && editWindowClosed ? (
-                                    <>
-                                        <MessageSquare className="w-5 h-5" />
-                                        <span className="font-semibold">{talkEditLabel}</span>
-                                    </>
-                                ) : quickStep === 'contact' && isSubmitting ? (
-                                    <Loader2 className="w-5 h-5 animate-spin" />
-                                ) : quickStep === 'contact' ? (
-                                    <>
-                                        <span className="font-semibold" data-testid="public-booking-submit-label">{submitLabel}</span>
-                                        <Check className="w-5 h-5" />
-                                    </>
-                                ) : (
-                                    <>
-                                        <span className="font-semibold">Continuar</span>
-                                        <ArrowRight className="w-5 h-5" />
-                                    </>
-                                )}
-                            </button>
+                            {browseSection === 'products' ? (
+                                <button type="button" onClick={() => openBookingSection('services', true)} className={`flex-1 min-h-12 ${classes.buttonPrimary}`}>
+                                    Voltar aos serviços
+                                </button>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={quickStep === 'contact' && editWindowClosed ? handleTalkEdit : (quickStep === 'contact' ? handleSubmit : handleQuickNext)}
+                                    disabled={quickStep === 'contact' && editWindowClosed
+                                        ? false
+                                        : (!canQuickProceed() || (quickStep === 'contact' && isSubmitting))}
+                                    className={`flex-1 py-3.5 min-h-12 flex items-center justify-center gap-2 transition-all ${classes.buttonPrimary} disabled:opacity-50 disabled:cursor-not-allowed`}
+                                    data-testid={quickStep === 'contact' && editWindowClosed ? 'client-edit-talk' : undefined}
+                                >
+                                    {quickStep === 'contact' && editWindowClosed ? (
+                                        <>
+                                            <MessageSquare className="w-5 h-5" />
+                                            <span className="font-semibold">{talkEditLabel}</span>
+                                        </>
+                                    ) : quickStep === 'contact' && isSubmitting ? (
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                    ) : quickStep === 'contact' ? (
+                                        <>
+                                            <span className="font-semibold" data-testid="public-booking-submit-label">{submitLabel}</span>
+                                            <Check className="w-5 h-5" />
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className="font-semibold">Continuar</span>
+                                            <ArrowRight className="w-5 h-5" />
+                                        </>
+                                    )}
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -1787,9 +1859,6 @@ export const PublicBooking: React.FC = () => {
                                         </button>
                                     </div>
 
-                                    <div className="mt-16 opacity-0 animate-fade-in [animation-delay:1500ms]">
-                                        <GoogleReviewPrompt businessName={business.business_name} isBeauty={isBeauty} googlePlaceId={businessSettings?.google_place_id} />
-                                    </div>
                                 </div>
                             )}
                             <div ref={chatEndRef} />
@@ -1855,8 +1924,8 @@ export const PublicBooking: React.FC = () => {
                                             placeholder="Como devemos te chamar?" />
                                     </div>
                                     <div className="space-y-2">
-                                        <label htmlFor="booking-chat-phone" className={`${colors.textMuted} ${font.label} text-xs uppercase tracking-widest block font-bold`}>WhatsApp</label>
-                                        <PhoneInput id="booking-chat-phone" value={customerPhone} onChange={setCustomerPhone} defaultRegion={currencyRegion as 'BR' | 'PT'} />
+                                        <label className={`${colors.textMuted} ${font.label} text-xs uppercase tracking-widest block font-bold`}>WhatsApp</label>
+                                        <PhoneInput value={customerPhone} onChange={setCustomerPhone} defaultRegion={currencyRegion} />
                                     </div>
                                 </div>
                             )}
@@ -1871,7 +1940,7 @@ export const PublicBooking: React.FC = () => {
                                     className="shrink-0"
                                 />
                                 <label htmlFor="privacy" className={`text-sm cursor-pointer ${colors.textSecondary} leading-snug`}>
-                                    Confirmo meu compromisso e aceito a <button type="button" onClick={(e) => { e.preventDefault(); setShowPolicyModal(true); }} className={`font-bold underline ${accent.text} hover:text-theme-text`}>política de cancelamento</button>.
+                                    Confirmo meu compromisso e aceito a <button type="button" onClick={(e) => { e.preventDefault(); setShowPolicyModal(true); }} className={`font-bold underline ${accent.text} hover:text-theme-text`}>política de agendamento</button>.
                                 </label>
                             </div>
 
@@ -2072,9 +2141,6 @@ export const PublicBooking: React.FC = () => {
                         </button>
                     </div>
 
-                    <div className="mt-16 opacity-0 animate-fade-in [animation-delay:1500ms]">
-                        <GoogleReviewPrompt businessName={business.business_name} isBeauty={isBeauty} googlePlaceId={businessSettings?.google_place_id} />
-                    </div>
                 </div>
             )}
 
@@ -2124,22 +2190,27 @@ export const PublicBooking: React.FC = () => {
                     style={{ zIndex: 'var(--z-modal)' }}
                     onClick={() => setShowPolicyModal(false)}
                 >
-                    <FocusTrap active focusTrapOptions={{ escapeDeactivates: false, allowOutsideClick: true, initialFocus: false, fallbackFocus: '[data-policy-dialog]' }}>
+                    <FocusTrap active focusTrapOptions={{ escapeDeactivates: false, allowOutsideClick: true, initialFocus: '[data-policy-dialog]', fallbackFocus: '[data-policy-dialog]' }}>
                     <div
                         data-policy-dialog
                         role="dialog"
                         aria-modal="true"
-                        aria-label="Política de cancelamento"
+                        aria-label="Política de agendamento"
                         tabIndex={-1}
                         onKeyDown={(e) => { if (e.key === 'Escape') setShowPolicyModal(false); }}
                         onClick={(e) => e.stopPropagation()}
                         className={`${colors.card} ${colors.border} border max-w-xl w-full p-6 md:p-8 relative shadow-promax-depth overflow-hidden rounded-3xl`}>
-                        <button onClick={() => setShowPolicyModal(false)} aria-label="Fechar" className={`absolute top-4 right-4 ${colors.textMuted} hover:text-theme-text transition-colors z-30`}><X className="w-6 h-6" /></button>
+                        <button onClick={() => setShowPolicyModal(false)} aria-label="Fechar" className={`absolute right-2 top-2 z-30 grid size-11 place-items-center rounded-xl ${colors.textMuted} hover:bg-theme-surface hover:text-theme-text`}><X className="size-5" aria-hidden="true" /></button>
                         <div className="relative z-10 space-y-5">
-                            <h3 className={`text-xl md:text-2xl font-semibold tracking-tight ${colors.text}`}>
-                                Política de cancelamento
+                            <h3 className={`pr-7 text-xl md:text-2xl font-semibold tracking-tight ${colors.text}`}>
+                                Política de agendamento
                             </h3>
-                            <div className={`leading-relaxed text-sm md:text-base ${colors.textSecondary} max-h-[50vh] overflow-y-auto pr-1 md:pr-2 custom-scrollbar`}>
+                            <div
+                                role="region"
+                                aria-label="Texto da política de agendamento"
+                                tabIndex={0}
+                                className={`max-h-[50vh] overflow-y-auto rounded-lg pr-1 text-sm leading-relaxed focus-visible:outline focus-visible:outline-2 focus-visible:outline-theme-accent md:pr-2 md:text-base custom-scrollbar ${colors.textSecondary}`}
+                            >
                                 <CancellationPolicyText
                                     parts={cancellationPolicyParts}
                                     data-testid="public-cancellation-policy"

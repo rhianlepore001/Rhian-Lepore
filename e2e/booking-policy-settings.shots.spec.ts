@@ -19,7 +19,7 @@ const BUSINESSES = {
   barbearia: { userType: 'barber', name: 'Barbearia São João', slug: 'barbearia-sao-joao' },
   salao: { userType: 'beauty', name: 'Studio Aurora', slug: 'studio-aurora' },
 } as const;
-const POLICY = 'Cancele ou remarque com até 3h de antecedência pela Minha Área. Depois disso, fale com a gente pelo WhatsApp.';
+const POLICY = 'Para remarcar, fale com a equipe pelo WhatsApp. Se precisar de acessibilidade, avise com antecedência.';
 const NOTE = 'Chegue 5 minutos antes. Atrasos acima de 15 minutos podem precisar ser remarcados.';
 const VIEWPORTS = [
   { name: 'mobile375', width: 375, height: 812 },
@@ -134,7 +134,7 @@ test.describe('booking settings + política pública (prints)', () => {
           await expect(page.getByTestId('booking-lead-time-custom-minutes')).toHaveValue('30');
           await expect(page.getByTestId('lead-time-example-text')).toHaveText('Com 1h30: se agora são 14h, o cliente só vê horários a partir das 15h30.');
           await elementShot(page, 'lead-time-section', `settings-antecedencia-${bizKey}-${vp.name}-${mode}.png`);
-          await expect(page.getByRole('heading', { name: 'Política de cancelamento' })).toBeVisible();
+          await expect(page.getByRole('heading', { name: 'Política de agendamento' })).toBeVisible();
           await expect(page.getByTestId('client-cancel-policy-text')).toHaveValue(POLICY);
           await expect(page.getByTestId('cancel-policy-preview')).toContainText(`Observações: ${NOTE}`);
           await elementShot(page, 'cancel-cutoff-section', `settings-politica-${bizKey}-${vp.name}-${mode}.png`);
@@ -164,13 +164,15 @@ test.describe('booking settings + política pública (prints)', () => {
         const inline = page.getByTestId('public-cancellation-policy-inline').first();
         await expect(inline).toBeVisible({ timeout: 15_000 });
         await expect(inline).toContainText(POLICY);
+        await expect(inline).toContainText('Regra de cancelamento da Minha Área');
         await expect(inline).toContainText(`Observações: ${NOTE}`);
         fs.mkdirSync(OUT, { recursive: true });
         await inline.scrollIntoViewIfNeeded();
         await settle(page);
         await page.screenshot({ path: path.join(OUT, `publico-checkout-${bizKey}-${vp.name}.png`) });
-        await page.getByRole('button', { name: /política de cancelamento/i }).first().click();
+        await page.getByRole('button', { name: /política de agendamento/i }).first().click();
         await expect(page.getByTestId('public-cancellation-policy-notes')).toHaveText(`Observações: ${NOTE}`);
+        await expect(page.getByTestId('public-cancellation-policy')).toContainText('Regra de cancelamento da Minha Área');
         await settle(page);
         await page.screenshot({ path: path.join(OUT, `publico-modal-${bizKey}-${vp.name}.png`) });
       });

@@ -646,7 +646,8 @@ export async function fetchQueueEntries(businessId: string) {
     .eq('business_id', businessId)
     .in('status', ['waiting', 'calling', 'serving', 'completed'])
     .gte('joined_at', new Date(new Date().setHours(0, 0, 0, 0)).toISOString())
-    .order('joined_at', { ascending: true });
+    .order('joined_at', { ascending: true })
+    .order('id', { ascending: true });
 
   if (error) throw error;
   return data as QueueRecord[];

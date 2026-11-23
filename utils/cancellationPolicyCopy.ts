@@ -135,14 +135,17 @@ export interface CancellationPolicyParts {
   /** Observações (sem prefixo); '' quando não há. */
   notes: string;
   isCustom: boolean;
+  onlineCancellation?: string;
 }
 
 export function resolveCancellationPolicyParts(input: CancellationPolicyDisplayInput): CancellationPolicyParts {
   const custom = normalizeCustomCancellationPolicyText(input.clientCancelPolicyText);
+  const onlineCancellation = generatedCancellationPolicyText(input.cutoffHours, input.businessName);
   return {
-    policy: custom ?? generatedCancellationPolicyText(input.cutoffHours, input.businessName),
+    policy: custom ?? onlineCancellation,
     notes: cancellationPolicyNotesForDisplay(input.clientCancelNote, input.legacyPolicy),
     isCustom: custom != null,
+    ...(custom != null && custom !== onlineCancellation ? { onlineCancellation } : {}),
   };
 }
 

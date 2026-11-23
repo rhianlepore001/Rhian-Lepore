@@ -87,7 +87,7 @@ describe('Meta remarketing events', () => {
 
   it('sends ViewContent with the page niche once, with the same event_id in Pixel and CAPI', async () => {
     const s = setup();
-    s.tracker.pageView('/login', '', false);
+    s.tracker.pageView('/landing', '', false);
     expect(s.tracker.viewContent('beauty')).toBe(true);
     expect(s.tracker.viewContent('beauty')).toBe(true);
     s.tracker.viewContent('barber');
@@ -97,44 +97,101 @@ describe('Meta remarketing events', () => {
       { content_category: 'beauty', content_name: 'landing' }, { content_category: 'barber', content_name: 'landing' },
     ]);
     expect(s.pixel).toHaveBeenCalledWith('ViewContent', events[0].event_id, { custom: events[0].custom_data });
-    expect(events[0].event_source_url).toMatch(/#\/login$/);
+    expect(events[0].event_source_url).toMatch(/#\/landing$/);
   });
 
   it('rejects free-text or unsafe parameters instead of forwarding them', async () => {
     const s = setup();
-    s.tracker.pageView('/login', '', false);
+    s.tracker.pageView('/landing', '', false);
     s.tracker.viewContent('Rua Tal, 12 (cliente João)');
-    s.tracker.ctaClick('free_trial_gateway', 'a@b.com');
+    s.tracker.ctaClick('free_trial_gateway', 'a@b.com', 'hero');
     await flush();
     const events = s.send.mock.calls.map(([event]) => event);
     expect(events.find(event => event.event_name === 'ViewContent')?.custom_data).toEqual({ content_name: 'landing' });
-    expect(events.find(event => event.event_name === 'CTAClick')?.custom_data).toEqual({ cta_id: 'free_trial_gateway', content_name: 'landing' });
+    expect(events.find(event => event.event_name === 'CTAClick')?.custom_data).toEqual({
+      cta_id: 'free_trial_gateway', content_name: 'landing', cta_position: 'hero',
+    });
   });
 
-  it('sends scroll, dwell time and CTA once per visit and only on the landing', async () => {
+  it('does not send Scroll/TimeOnPage from /login (CAPI only allows #/landing)', async () => {
     const s = setup();
     s.tracker.pageView('/login', '', false);
-    expect(s.tracker.landingEngagement('Scroll75', 'barber')).toBe(true);
-    s.tracker.landingEngagement('Scroll75', 'barber');
-    s.tracker.landingEngagement('TimeOnPage30s');
-    s.tracker.landingEngagement('TimeOnPage30s');
-    s.tracker.ctaClick('free_trial_gateway');
-    s.tracker.ctaClick('free_trial_gateway');
-    s.tracker.ctaClick('free_trial_login', 'barber');
+    expect(s.tracker.viewContent('barber')).toBe(true);
+    expect(s.tracker.landingEngagement('Scroll75', 'barber')).toBe(false);
+    expect(s.tracker.landingEngagement('TimeOnPage30s', 'barber')).toBe(false);
+    expect(s.tracker.landingEngagement('Scroll25')).toBe(false);
+    expect(s.tracker.ctaClick('free_trial_login', 'barber')).toBe(true);
     await flush();
-    expect(names(s)).toEqual(['PageView', 'Scroll75', 'TimeOnPage30s', 'CTAClick', 'CTAClick']);
+    expect(names(s)).toEqual(['PageView', 'ViewContent', 'CTAClick']);
+  });
+
+  it('sends scroll, dwell, CTA, section, FAQ and niche once per visit and only on the landing', async () => {
+    const s = setup();
+    s.tracker.pageView('/landing', '', false);
+    expect(s.tracker.landingEngagement('Scroll25', 'barber')).toBe(true);
+    s.tracker.landingEngagement('Scroll50', 'barber');
+    s.tracker.landingEngagement('Scroll75', 'barber');
+    s.tracker.landingEngagement('Scroll75', 'barber');
+    s.tracker.landingEngagement('Scroll90', 'barber');
+    s.tracker.landingEngagement('TimeOnPage15s');
+    s.tracker.landingEngagement('TimeOnPage30s');
+    s.tracker.landingEngagement('TimeOnPage30s');
+    s.tracker.landingEngagement('TimeOnPage60s');
+    s.tracker.landingEngagement('TimeOnPage120s');
+    s.tracker.ctaClick('free_trial_hero', 'barber', 'hero');
+    s.tracker.ctaClick('free_trial_hero', 'barber', 'hero');
+    s.tracker.ctaClick('free_trial_final', 'barber', 'final');
+    s.tracker.sectionView('hero', 'barber');
+    s.tracker.sectionView('hero', 'barber');
+    s.tracker.faqOpen('faq_card', 'barber');
+    s.tracker.faqOpen('faq_card', 'barber');
+    s.tracker.nichoSwitch('beauty');
+    s.tracker.nichoSwitch('beauty');
+    s.tracker.whatsAppClick('barber');
+    s.tracker.whatsAppClick('barber');
+    await flush();
+    expect(names(s)).toEqual([
+      'PageView', 'Scroll25', 'Scroll50', 'Scroll75', 'Scroll90',
+      'TimeOnPage15s', 'TimeOnPage30s', 'TimeOnPage60s', 'TimeOnPage120s',
+      'CTAClick', 'CTAClick', 'SectionView', 'FAQOpen', 'NichoSwitch', 'WhatsAppClick',
+    ]);
     s.send.mockClear();
-    for (const path of ['/register', '/termos', '/privacidade', '/agenda']) {
+    for (const path of ['/register', '/termos', '/privacidade', '/agenda', '/login']) {
       s.tracker.pageView(path, '', path === '/agenda');
       expect(s.tracker.landingEngagement('Scroll75')).toBe(false);
-      expect(s.tracker.ctaClick('x')).toBe(false);
-      expect(s.tracker.viewContent('barber')).toBe(false);
+      expect(s.tracker.sectionView('hero')).toBe(false);
+      if (path !== '/login') {
+        expect(s.tracker.ctaClick('x')).toBe(false);
+        expect(s.tracker.viewContent('barber')).toBe(false);
+      }
     }
+  });
+
+  it('tracks demo screens once and completes after 4 screens or hora_cadeira', async () => {
+    const s = setup();
+    s.tracker.pageView('/landing', '', false);
+    expect(s.tracker.demoStart('barber')).toBe(true);
+    s.tracker.demoStart('barber');
+    for (const screen of ['inicio', 'agenda', 'fila'] as const) {
+      expect(s.tracker.demoScreenView(screen, 'barber')).toBe(true);
+      s.tracker.demoScreenView(screen, 'barber');
+    }
+    await flush();
+    expect(names(s).filter(name => name === 'DemoComplete')).toHaveLength(0);
+    s.tracker.demoScreenView('financeiro', 'barber');
+    await flush();
+    expect(names(s).filter(name => name === 'DemoComplete')).toHaveLength(1);
+    s.send.mockClear();
+    const other = setup();
+    other.tracker.pageView('/landing', '', false);
+    other.tracker.demoScreenView('hora_cadeira', 'beauty');
+    await flush();
+    expect(names(other)).toEqual(['PageView', 'DemoScreenView', 'DemoComplete']);
   });
 
   it('sends StartRegistration once per visit and only on /register', async () => {
     const s = setup();
-    s.tracker.pageView('/login', '', false);
+    s.tracker.pageView('/landing', '', false);
     expect(s.tracker.startRegistration('barber')).toBe(false);
     s.tracker.pageView('/register', '?type=beauty', false);
     expect(s.tracker.startRegistration('beauty')).toBe(true);
@@ -183,11 +240,11 @@ describe('Meta remarketing events', () => {
 
   it('sends nothing without consent and does not mark the event as sent', async () => {
     const s = setup(false);
-    s.tracker.pageView('/login', '', false);
+    s.tracker.pageView('/landing', '', false);
     expect(s.tracker.viewContent('barber')).toBe(false);
     expect(s.tracker.landingEngagement('Scroll75')).toBe(false);
     s.grant();
-    s.tracker.pageView('/login', '', false);
+    s.tracker.pageView('/landing', '', false);
     expect(s.tracker.viewContent('barber')).toBe(true);
     await flush();
     expect(names(s)).toContain('ViewContent');
@@ -212,14 +269,25 @@ describe('meta-capi remarketing allow-list', () => {
   };
 
   it.each([
-    ['ViewContent', '#/login'], ['CTAClick', '#/login'], ['Scroll75', '#/login'], ['TimeOnPage30s', '#/login'],
+    ['ViewContent', '#/landing'], ['CTAClick', '#/landing'], ['Scroll25', '#/landing'], ['Scroll50', '#/landing'],
+    ['Scroll75', '#/landing'], ['Scroll90', '#/landing'], ['TimeOnPage15s', '#/landing'], ['TimeOnPage30s', '#/landing'],
+    ['TimeOnPage60s', '#/landing'], ['TimeOnPage120s', '#/landing'], ['SectionView', '#/landing'],
+    ['DemoStart', '#/landing'], ['DemoScreenView', '#/landing'], ['DemoComplete', '#/landing'],
+    ['NichoSwitch', '#/landing'], ['FAQOpen', '#/landing'], ['WhatsAppClick', '#/landing'],
+    ['ViewContent', '#/login'], ['CTAClick', '#/login'], ['PageView', '#/landing'],
     ['StartRegistration', '#/register'], ['OnboardingStep', '#/onboarding-wizard'], ['PageView', '#/privacidade'],
   ])('accepts %s from %s', async (name, hash) => {
-    expect((await run(payload(name, hash, { custom_data: { content_category: 'barber', step: 1 } }))).status).toBe(200);
+    expect((await run(payload(name, hash, {
+      custom_data: {
+        content_category: 'barber', content_name: 'landing', cta_id: 'free_trial_hero', cta_position: 'hero',
+        section: 'hero', screen: 'inicio', faq_id: 'faq_card', step: 1,
+      },
+    }))).status).toBe(200);
   });
 
   it.each([
-    ['ViewContent', '#/register'], ['CTAClick', '#/termos'], ['Scroll75', '#/register'],
+    ['ViewContent', '#/register'], ['CTAClick', '#/termos'], ['Scroll75', '#/register'], ['Scroll75', '#/login'],
+    ['SectionView', '#/login'], ['DemoStart', '#/login'], ['FAQOpen', '#/register'],
     ['StartRegistration', '#/login'], ['OnboardingStep', '#/login'], ['OnboardingStep', '#/agenda'],
     ['ViewContent', '#/book/demo'], ['PageView', '#/onboarding-wizard'], ['Lead', '#/onboarding-wizard'],
     ['Purchase', '#/login'], ['InitiateCheckout', '#/register'],
@@ -231,11 +299,12 @@ describe('meta-capi remarketing allow-list', () => {
 
   it.each([
     { custom_data: { content_category: 'Rua do João' } }, { custom_data: { email: 'a@b.co' } },
+    { custom_data: { section: 'Hero Principal' } }, { custom_data: { faq_id: 'Pergunta?' } },
     { custom_data: { step: 0 } }, { custom_data: { step: 1.5 } }, { custom_data: { step: '1' } }, { custom_data: [] },
     { user_data: { first_name: '--' } }, { user_data: { first_name: 'x'.repeat(101) } },
     { user_data: { country: 'BRA' } }, { user_data: { city: 42 } }, { user_data: { zip: '1000' } },
   ])('rejects malformed custom_data/user_data %j', async extra => {
-    const result = await run(payload('ViewContent', '#/login', extra));
+    const result = await run(payload('ViewContent', '#/landing', extra));
     expect(result.status).toBe(400);
     expect(result.fetcher).not.toHaveBeenCalled();
   });

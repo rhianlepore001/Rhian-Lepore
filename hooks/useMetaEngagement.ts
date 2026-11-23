@@ -1,18 +1,49 @@
 import { useEffect, useSyncExternalStore } from 'react';
-import { metaTracker } from '../lib/metaTracking';
+import {
+  META_LANDING_PATH,
+  metaTracker,
+  type MetaCtaPosition,
+  type MetaDwellEvent,
+  type MetaScrollEvent,
+} from '../lib/metaTracking';
 import { splitFullName } from '../lib/metaMatching';
 import { readConsent, subscribeConsent } from '../lib/marketingConsent';
+import { demoPathToScreen, isMetaDemoMessage, type MetaDemoScreen } from '../lib/metaDemoBridge';
 
 // Disparos passivos de engajamento (Meta). Nenhum hook altera a tela, o formulário ou a
 // navegação: só observam. Tudo é descartado pelo tracker sem consentimento, fora da rota
 // permitida ou depois do primeiro disparo da visita.
 
-const SCROLL_THRESHOLD = 0.75;
-const DWELL_SECONDS = 30;
+const SCROLL_MARKS: ReadonlyArray<{ ratio: number; event: MetaScrollEvent }> = [
+  { ratio: 0.25, event: 'Scroll25' },
+  { ratio: 0.5, event: 'Scroll50' },
+  { ratio: 0.75, event: 'Scroll75' },
+  { ratio: 0.9, event: 'Scroll90' },
+];
 
-/** Landing (/login): ViewContent do nicho, 75% de rolagem e 30 s de permanência. */
+const DWELL_MARKS: ReadonlyArray<{ seconds: number; event: MetaDwellEvent }> = [
+  { seconds: 15, event: 'TimeOnPage15s' },
+  { seconds: 30, event: 'TimeOnPage30s' },
+  { seconds: 60, event: 'TimeOnPage60s' },
+  { seconds: 120, event: 'TimeOnPage120s' },
+];
+
+const SECTION_VISIBLE_RATIO = 0.5;
+const SECTION_DWELL_MS = 1000;
+
+/** HashRouter: rota atual sem query (ex.: /landing). Scroll/tempo só nesta rota. */
+export function isMetaLandingHashRoute(hash = window.location.hash): boolean {
+  if (!hash.startsWith('#/')) return false;
+  const route = hash.slice(1);
+  if (route.includes('#')) return false;
+  const path = route.split('?')[0] || '';
+  return path === META_LANDING_PATH;
+}
+
+/** Landing (/landing): ViewContent, scrolls, tempos e seções (IntersectionObserver).
+ *  Em /login (gateway) só ViewContent — Scroll e TimeOnPage ficam bloqueados por rota
+ *  aqui e em metaTracker.landingEngagement (LANDING_ONLY). */
 export function useMetaLandingEngagement(niche: string | null): void {
-  // Reavalia quando o consentimento muda (quem aceita o banner depois de escolher o nicho).
   const consent = useSyncExternalStore(subscribeConsent, readConsent, () => null);
 
   useEffect(() => {
@@ -20,15 +51,17 @@ export function useMetaLandingEngagement(niche: string | null): void {
   }, [consent, niche]);
 
   useEffect(() => {
-    if (consent !== 'accepted') return undefined;
-    let done = false;
+    if (consent !== 'accepted' || !isMetaLandingHashRoute()) return undefined;
+    const pending = new Set(SCROLL_MARKS.map(mark => mark.event));
     const onScroll = () => {
-      if (done) return;
+      if (!pending.size || !isMetaLandingHashRoute()) return;
       const root = document.scrollingElement || document.documentElement;
       const scrollable = root.scrollHeight - window.innerHeight;
       if (scrollable <= 0) return;
-      if ((root.scrollTop + window.innerHeight) / root.scrollHeight >= SCROLL_THRESHOLD) {
-        done = metaTracker.landingEngagement('Scroll75', niche);
+      const progress = (root.scrollTop + window.innerHeight) / root.scrollHeight;
+      for (const mark of SCROLL_MARKS) {
+        if (!pending.has(mark.event) || progress < mark.ratio) continue;
+        if (metaTracker.landingEngagement(mark.event, niche)) pending.delete(mark.event);
       }
     };
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -36,17 +69,110 @@ export function useMetaLandingEngagement(niche: string | null): void {
   }, [consent, niche]);
 
   useEffect(() => {
-    if (consent !== 'accepted') return undefined;
+    if (consent !== 'accepted' || !isMetaLandingHashRoute()) return undefined;
     let seconds = 0;
+    const pending = new Set(DWELL_MARKS.map(mark => mark.event));
     const timer = window.setInterval(() => {
-      if (document.visibilityState !== 'visible') return;
+      if (document.visibilityState !== 'visible' || !pending.size || !isMetaLandingHashRoute()) return;
       seconds += 1;
-      if (seconds >= DWELL_SECONDS && metaTracker.landingEngagement('TimeOnPage30s', niche)) {
-        window.clearInterval(timer);
+      for (const mark of DWELL_MARKS) {
+        if (!pending.has(mark.event) || seconds < mark.seconds) continue;
+        if (metaTracker.landingEngagement(mark.event, niche)) pending.delete(mark.event);
       }
+      if (!pending.size) window.clearInterval(timer);
     }, 1000);
     return () => window.clearInterval(timer);
   }, [consent, niche]);
+}
+
+/**
+ * Landing: SectionView quando um nó `[data-meta-section]` fica ≥50% visível por 1 s.
+ * O valor do atributo é o token enviado (já sanitizado pelo tracker).
+ */
+export function useMetaSectionViews(niche: string | null, rootSelector = '.landing'): void {
+  const consent = useSyncExternalStore(subscribeConsent, readConsent, () => null);
+
+  useEffect(() => {
+    if (consent !== 'accepted' || typeof IntersectionObserver === 'undefined') return undefined;
+    const root = document.querySelector(rootSelector);
+    if (!root) return undefined;
+    const timers = new Map<Element, number>();
+    const seen = new Set<string>();
+    const observer = new IntersectionObserver(entries => {
+      for (const entry of entries) {
+        const section = (entry.target as HTMLElement).dataset.metaSection;
+        if (!section || seen.has(section)) continue;
+        const existing = timers.get(entry.target);
+        if (entry.isIntersecting && entry.intersectionRatio >= SECTION_VISIBLE_RATIO) {
+          if (existing) continue;
+          timers.set(entry.target, window.setTimeout(() => {
+            timers.delete(entry.target);
+            if (metaTracker.sectionView(section, niche)) {
+              seen.add(section);
+              observer.unobserve(entry.target);
+            }
+          }, SECTION_DWELL_MS));
+        } else if (existing) {
+          window.clearTimeout(existing);
+          timers.delete(entry.target);
+        }
+      }
+    }, { threshold: [0, SECTION_VISIBLE_RATIO, 1] });
+
+    root.querySelectorAll<HTMLElement>('[data-meta-section]').forEach(node => observer.observe(node));
+
+    return () => {
+      observer.disconnect();
+      for (const timer of timers.values()) window.clearTimeout(timer);
+      timers.clear();
+    };
+  }, [consent, niche, rootSelector]);
+}
+
+/** Landing: escuta postMessage seguro da demo embutida (mesma origem). */
+export function useMetaDemoBridge(niche: string | null, enabled: boolean): void {
+  const consent = useSyncExternalStore(subscribeConsent, readConsent, () => null);
+
+  useEffect(() => {
+    if (!enabled || consent !== 'accepted') return undefined;
+    const onMessage = (event: MessageEvent) => {
+      if (!isMetaDemoMessage(event.data, event.origin, window.location.origin)) return;
+      if (event.data.action === 'start') {
+        metaTracker.demoStart(niche);
+        return;
+      }
+      // screen ≠ start: DemoStart só chega via action 'start' (interação real no iframe).
+      metaTracker.demoScreenView(event.data.screen, niche);
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, [consent, niche, enabled]);
+}
+
+/** Converte a tela da landing (tabs / rota) para token Meta, se aplicável. */
+export function landingViewToDemoScreen(viewId: string): MetaDemoScreen | null {
+  switch (viewId) {
+    case 'dashboard': return 'inicio';
+    case 'agenda': return 'agenda';
+    case 'fila': return 'fila';
+    case 'finance': return 'financeiro';
+    case 'clientes': return 'clientes';
+    default: return null;
+  }
+}
+
+export function trackLandingDemoScreen(viewIdOrRoute: string, niche: string | null, search = ''): void {
+  const fromTabs = landingViewToDemoScreen(viewIdOrRoute);
+  const screen = fromTabs ?? demoPathToScreen(viewIdOrRoute.startsWith('/') ? viewIdOrRoute : '/' + viewIdOrRoute, search);
+  if (screen) metaTracker.demoScreenView(screen, niche);
+}
+
+export function trackLandingCta(
+  ctaId: string,
+  niche: string | null,
+  position: MetaCtaPosition,
+): void {
+  metaTracker.ctaClick(ctaId, niche, position);
 }
 
 const FORM_FIELDS = 'INPUT,SELECT,TEXTAREA';

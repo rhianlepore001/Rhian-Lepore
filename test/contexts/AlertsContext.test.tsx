@@ -80,10 +80,10 @@ describe('AlertsContext — canais somente com sessão e empresa prontas', () =>
         expect(supabase.channel).toHaveBeenCalledTimes(3);
         expect(supabase.channel).toHaveBeenCalledWith('public_bookings_alerts');
         expect(supabase.channel).toHaveBeenCalledWith('public_bookings_updates');
-        expect(supabase.channel).toHaveBeenCalledWith('notifications_bell');
+        expect(supabase.channel).toHaveBeenCalledWith('alerts:owner-1', { config: { private: true } });
         expect(channel.subscribe).toHaveBeenCalledTimes(3);
         expect(channel.on).toHaveBeenCalledWith('postgres_changes', expect.objectContaining({ filter: 'business_id=eq.owner-1' }), expect.any(Function));
-        expect(channel.on).toHaveBeenCalledWith('postgres_changes', expect.objectContaining({ filter: 'user_id=eq.owner-1' }), expect.any(Function));
+        expect(channel.on).toHaveBeenCalledWith('broadcast', { event: 'changed' }, expect.any(Function));
     });
 
     it('remove os três canais ao sair e não reabre canais para o visitante', async () => {

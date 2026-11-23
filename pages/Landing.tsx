@@ -172,11 +172,8 @@ export const Landing = () => {
     if (next !== niche || !nicheChosen) metaTracker.nichoSwitch(next);
     updateChoice('tipo', next);
   };
-  const startEmbeddedDemo = () => {
-    metaTracker.demoStart(trackingNiche);
-    trackLandingDemoScreen(view, trackingNiche);
-    setInteractive(true);
-  };
+  // Só abre o iframe: DemoStart/ScreenView vêm da 1ª interação real dentro da demo.
+  const startEmbeddedDemo = () => { setInteractive(true); };
   const onDemoTab = (id: (typeof demoViews)[number]['id']) => {
     metaTracker.demoStart(trackingNiche);
     trackLandingDemoScreen(id, trackingNiche);

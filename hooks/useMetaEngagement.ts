@@ -124,7 +124,7 @@ export function useMetaDemoBridge(niche: string | null, enabled: boolean): void 
         metaTracker.demoStart(niche);
         return;
       }
-      metaTracker.demoStart(niche);
+      // screen ≠ start: DemoStart só chega via action 'start' (interação real no iframe).
       metaTracker.demoScreenView(event.data.screen, niche);
     };
     window.addEventListener('message', onMessage);

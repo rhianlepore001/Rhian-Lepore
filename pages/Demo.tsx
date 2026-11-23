@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useEffect, useLayoutEffect, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, Route, Routes, useLocation } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Moon, Scissors, Sparkles, Sun } from 'lucide-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -106,15 +106,43 @@ export const Demo = () => {
     observer.observe(root, { attributes: true, attributeFilter: ['data-mode'] });
     return () => observer.disconnect();
   }, []);
-  // Pixel só na landing-pai: no iframe /demo-preview avisamos por postMessage (origem checada).
+  // Pixel só na landing-pai. DemoStart só na 1ª interação real (pointer/key) ou na 1ª
+  // navegação de tela pelo usuário — nunca no mount do iframe.
+  const demoStarted = useRef(false);
+  const demoPathKey = useRef<string | null>(null);
+  const routeRef = useRef({ inner, search: location.search });
+  routeRef.current = { inner, search: location.search };
+  const emitDemoInteraction = () => {
+    if (!demoStarted.current) {
+      demoStarted.current = true;
+      postMetaDemoToParent({ action: 'start' });
+    }
+    const screen = demoPathToScreen(routeRef.current.inner, routeRef.current.search);
+    if (screen) postMetaDemoToParent({ action: 'screen', screen });
+  };
   useEffect(() => {
-    if (!embedded) return;
-    postMetaDemoToParent({ action: 'start' });
+    if (!embedded) return undefined;
+    const onInteract = (event: Event) => {
+      if (!event.isTrusted || demoStarted.current) return;
+      emitDemoInteraction();
+    };
+    document.addEventListener('pointerdown', onInteract, true);
+    document.addEventListener('keydown', onInteract, true);
+    return () => {
+      document.removeEventListener('pointerdown', onInteract, true);
+      document.removeEventListener('keydown', onInteract, true);
+    };
   }, [embedded]);
   useEffect(() => {
     if (!embedded) return;
-    const screen = demoPathToScreen(inner, location.search);
-    if (screen) postMetaDemoToParent({ action: 'screen', screen });
+    const key = `${inner}|${location.search}`;
+    if (demoPathKey.current === null) {
+      demoPathKey.current = key;
+      return;
+    }
+    if (demoPathKey.current === key) return;
+    demoPathKey.current = key;
+    emitDemoInteraction();
   }, [embedded, inner, location.search]);
   const fallback = <p className="demo-loading" role="status">Preparando a simulação…</p>;
   return <QueryClientProvider client={client}>

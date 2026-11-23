@@ -1,13 +1,14 @@
 import React from 'react';
 import { act, fireEvent, render, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { useMetaLandingEngagement, useMetaOnboardingStep, useMetaRegistrationStart, useMetaSectionViews } from '@/hooks/useMetaEngagement';
+import { useMetaDemoBridge, useMetaLandingEngagement, useMetaOnboardingStep, useMetaRegistrationStart, useMetaSectionViews } from '@/hooks/useMetaEngagement';
+import { META_DEMO_MESSAGE_TYPE } from '@/lib/metaDemoBridge';
 import { metaTracker } from '@/lib/metaTracking';
 
 vi.mock('@/lib/metaTracking', () => ({
   metaTracker: {
     viewContent: vi.fn(() => true), landingEngagement: vi.fn(() => true),
-    sectionView: vi.fn(() => true),
+    sectionView: vi.fn(() => true), demoStart: vi.fn(() => true), demoScreenView: vi.fn(() => true),
     startRegistration: vi.fn(() => true), onboardingStep: vi.fn(() => true),
   },
 }));
@@ -117,6 +118,36 @@ describe('useMetaSectionViews', () => {
       vi.advanceTimersByTime(2000);
     });
     expect(metaTracker.sectionView).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('useMetaDemoBridge', () => {
+  beforeEach(() => { vi.clearAllMocks(); localStorage.clear(); });
+
+  it('fires DemoStart only on action start, not on screen alone', () => {
+    accept();
+    renderHook(() => useMetaDemoBridge('barber', true));
+    window.dispatchEvent(new MessageEvent('message', {
+      origin: window.location.origin,
+      data: { type: META_DEMO_MESSAGE_TYPE, action: 'screen', screen: 'agenda' },
+    }));
+    expect(metaTracker.demoStart).not.toHaveBeenCalled();
+    expect(metaTracker.demoScreenView).toHaveBeenCalledWith('agenda', 'barber');
+    window.dispatchEvent(new MessageEvent('message', {
+      origin: window.location.origin,
+      data: { type: META_DEMO_MESSAGE_TYPE, action: 'start' },
+    }));
+    expect(metaTracker.demoStart).toHaveBeenCalledWith('barber');
+  });
+
+  it('ignores messages from other origins', () => {
+    accept();
+    renderHook(() => useMetaDemoBridge('barber', true));
+    window.dispatchEvent(new MessageEvent('message', {
+      origin: 'https://evil.example',
+      data: { type: META_DEMO_MESSAGE_TYPE, action: 'start' },
+    }));
+    expect(metaTracker.demoStart).not.toHaveBeenCalled();
   });
 });
 

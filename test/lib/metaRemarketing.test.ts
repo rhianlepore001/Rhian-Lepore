@@ -113,6 +113,18 @@ describe('Meta remarketing events', () => {
     });
   });
 
+  it('does not send Scroll/TimeOnPage from /login (CAPI only allows #/landing)', async () => {
+    const s = setup();
+    s.tracker.pageView('/login', '', false);
+    expect(s.tracker.viewContent('barber')).toBe(true);
+    expect(s.tracker.landingEngagement('Scroll75', 'barber')).toBe(false);
+    expect(s.tracker.landingEngagement('TimeOnPage30s', 'barber')).toBe(false);
+    expect(s.tracker.landingEngagement('Scroll25')).toBe(false);
+    expect(s.tracker.ctaClick('free_trial_login', 'barber')).toBe(true);
+    await flush();
+    expect(names(s)).toEqual(['PageView', 'ViewContent', 'CTAClick']);
+  });
+
   it('sends scroll, dwell, CTA, section, FAQ and niche once per visit and only on the landing', async () => {
     const s = setup();
     s.tracker.pageView('/landing', '', false);

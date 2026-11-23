@@ -91,7 +91,7 @@ não alteram telas, formulários, navegação nem o banco. A landing de marketin
 | `/#/landing` | `SectionView` | custom | `section` = `hero`\|`demo`\|`feature_*`\|`offer`\|`faq`\|`cta_final`; ≥50% visível por 1 s |
 | `/#/landing` | `Scroll25` / `Scroll50` / `Scroll75` / `Scroll90` | custom | marcos de rolagem; `content_category` = nicho |
 | `/#/landing` | `TimeOnPage15s` / `30s` / `60s` / `120s` | custom | permanência com aba visível; `content_category` = nicho |
-| `/#/landing` | `DemoStart` | custom | primeira interação com a demo embutida |
+| `/#/landing` | `DemoStart` | custom | 1ª interação real na demo (pointer/key no iframe, troca de tela pelo usuário, ou tabs/links da landing) — **não** no mount do iframe |
 | `/#/landing` | `DemoScreenView` | custom | `screen` = `inicio`\|`agenda`\|`fila`\|`financeiro`\|`comissoes`\|`clientes`\|`hora_cadeira` |
 | `/#/landing` | `DemoComplete` | custom | ≥4 telas vistas **ou** `hora_cadeira` |
 | `/#/landing` | `NichoSwitch` | custom | `content_category` = nicho destino |
@@ -110,7 +110,9 @@ não alteram telas, formulários, navegação nem o banco. A landing de marketin
   (evento de otimização recomendado). `OnboardingStep` mede ativação.
 - `InitiateCheckout` não é usado (não há checkout no cadastro).
 - Demo embutida (`/demo-preview` em iframe): a demo **não** carrega o Pixel; avisa a landing via
-  `postMessage` (`agendix:meta-demo`) com checagem de origem. A landing dispara os eventos Meta.
+  `postMessage` (`agendix:meta-demo`) com checagem de origem. `action: start` só após interação
+  real; `action: screen` não implica DemoStart. A landing dispara os eventos Meta.
+- `/#/login` não dispara `Scroll*` nem `TimeOnPage*` (CAPI só aceita esses em `#/landing`).
 - Sem tabela de preços na landing: a seção de setup/trial usa `section=offer`.
 - `cta_position=meio` está na allow-list; hoje não há CTA no meio da página (reservado).
 - `OnboardingStep` usa o mesmo escopo transitório de `CompleteRegistration`: com consentimento,

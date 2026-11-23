@@ -112,7 +112,9 @@ não alteram telas, formulários, navegação nem o banco. A landing de marketin
 - Demo embutida (`/demo-preview` em iframe): a demo **não** carrega o Pixel; avisa a landing via
   `postMessage` (`agendix:meta-demo`) com checagem de origem. `action: start` só após interação
   real; `action: screen` não implica DemoStart. A landing dispara os eventos Meta.
-- `/#/login` não dispara `Scroll*` nem `TimeOnPage*` (CAPI só aceita esses em `#/landing`).
+- `/#/login` pode chamar `useMetaLandingEngagement` (ViewContent do nicho), mas `Scroll*` /
+  `TimeOnPage*` ficam bloqueados por rota no hook e em `metaTracker.landingEngagement`
+  (`LANDING_ONLY`); a CAPI só aceita esses eventos em `#/landing`.
 - Sem tabela de preços na landing: a seção de setup/trial usa `section=offer`.
 - `cta_position=meio` está na allow-list; hoje não há CTA no meio da página (reservado).
 - `OnboardingStep` usa o mesmo escopo transitório de `CompleteRegistration`: com consentimento,

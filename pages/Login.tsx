@@ -14,6 +14,7 @@ import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { applyPublicAuthTheme } from '../utils/publicAuthTheme';
 import { metaTracker } from '../lib/metaTracking';
+import { useMetaLandingEngagement } from '../hooks/useMetaEngagement';
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
@@ -79,11 +80,9 @@ export const Login: React.FC = () => {
         document.documentElement.setAttribute('data-mode', 'dark');
     };
 
-    // Meta: só ViewContent do nicho no gateway→login. Scroll/tempo ficam na landing (/#/landing);
-    // a CAPI rejeitaria Scroll*/TimeOnPage* com event_source_url #/login.
-    useEffect(() => {
-        if (!showGateway) metaTracker.viewContent(loginTheme);
-    }, [showGateway, loginTheme]);
+    // Meta (passivo, só com consentimento): nicho da tela, rolagem e permanência. O nicho só é
+    // conhecido depois que o visitante escolhe; no gateway não há content_category.
+    useMetaLandingEngagement(showGateway ? null : loginTheme);
 
     // ─── GATEWAY ─────────────────────────────────────────────────────────────
     if (showGateway) {

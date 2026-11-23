@@ -1,5 +1,11 @@
 import { useEffect, useSyncExternalStore } from 'react';
-import { metaTracker, type MetaCtaPosition, type MetaDwellEvent, type MetaScrollEvent } from '../lib/metaTracking';
+import {
+  META_LANDING_PATH,
+  metaTracker,
+  type MetaCtaPosition,
+  type MetaDwellEvent,
+  type MetaScrollEvent,
+} from '../lib/metaTracking';
 import { splitFullName } from '../lib/metaMatching';
 import { readConsent, subscribeConsent } from '../lib/marketingConsent';
 import { demoPathToScreen, isMetaDemoMessage, type MetaDemoScreen } from '../lib/metaDemoBridge';
@@ -25,7 +31,18 @@ const DWELL_MARKS: ReadonlyArray<{ seconds: number; event: MetaDwellEvent }> = [
 const SECTION_VISIBLE_RATIO = 0.5;
 const SECTION_DWELL_MS = 1000;
 
-/** Landing (/landing): ViewContent, scrolls, tempos e seções (IntersectionObserver). */
+/** HashRouter: rota atual sem query (ex.: /landing). Scroll/tempo só nesta rota. */
+export function isMetaLandingHashRoute(hash = window.location.hash): boolean {
+  if (!hash.startsWith('#/')) return false;
+  const route = hash.slice(1);
+  if (route.includes('#')) return false;
+  const path = route.split('?')[0] || '';
+  return path === META_LANDING_PATH;
+}
+
+/** Landing (/landing): ViewContent, scrolls, tempos e seções (IntersectionObserver).
+ *  Em /login (gateway) só ViewContent — Scroll e TimeOnPage ficam bloqueados por rota
+ *  aqui e em metaTracker.landingEngagement (LANDING_ONLY). */
 export function useMetaLandingEngagement(niche: string | null): void {
   const consent = useSyncExternalStore(subscribeConsent, readConsent, () => null);
 
@@ -34,10 +51,10 @@ export function useMetaLandingEngagement(niche: string | null): void {
   }, [consent, niche]);
 
   useEffect(() => {
-    if (consent !== 'accepted') return undefined;
+    if (consent !== 'accepted' || !isMetaLandingHashRoute()) return undefined;
     const pending = new Set(SCROLL_MARKS.map(mark => mark.event));
     const onScroll = () => {
-      if (!pending.size) return;
+      if (!pending.size || !isMetaLandingHashRoute()) return;
       const root = document.scrollingElement || document.documentElement;
       const scrollable = root.scrollHeight - window.innerHeight;
       if (scrollable <= 0) return;
@@ -52,11 +69,11 @@ export function useMetaLandingEngagement(niche: string | null): void {
   }, [consent, niche]);
 
   useEffect(() => {
-    if (consent !== 'accepted') return undefined;
+    if (consent !== 'accepted' || !isMetaLandingHashRoute()) return undefined;
     let seconds = 0;
     const pending = new Set(DWELL_MARKS.map(mark => mark.event));
     const timer = window.setInterval(() => {
-      if (document.visibilityState !== 'visible' || !pending.size) return;
+      if (document.visibilityState !== 'visible' || !pending.size || !isMetaLandingHashRoute()) return;
       seconds += 1;
       for (const mark of DWELL_MARKS) {
         if (!pending.has(mark.event) || seconds < mark.seconds) continue;

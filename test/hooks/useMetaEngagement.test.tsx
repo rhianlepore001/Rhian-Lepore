@@ -1,24 +1,53 @@
 import React from 'react';
 import { act, fireEvent, render, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { useMetaDemoBridge, useMetaLandingEngagement, useMetaOnboardingStep, useMetaRegistrationStart, useMetaSectionViews } from '@/hooks/useMetaEngagement';
+import {
+  isMetaLandingHashRoute,
+  useMetaDemoBridge,
+  useMetaLandingEngagement,
+  useMetaOnboardingStep,
+  useMetaRegistrationStart,
+  useMetaSectionViews,
+} from '@/hooks/useMetaEngagement';
 import { META_DEMO_MESSAGE_TYPE } from '@/lib/metaDemoBridge';
 import { metaTracker } from '@/lib/metaTracking';
 
-vi.mock('@/lib/metaTracking', () => ({
-  metaTracker: {
-    viewContent: vi.fn(() => true), landingEngagement: vi.fn(() => true),
-    sectionView: vi.fn(() => true), demoStart: vi.fn(() => true), demoScreenView: vi.fn(() => true),
-    startRegistration: vi.fn(() => true), onboardingStep: vi.fn(() => true),
-  },
-}));
+vi.mock('@/lib/metaTracking', async importOriginal => {
+  const actual = await importOriginal<typeof import('@/lib/metaTracking')>();
+  return {
+    ...actual,
+    metaTracker: {
+      viewContent: vi.fn(() => true), landingEngagement: vi.fn(() => true),
+      sectionView: vi.fn(() => true), demoStart: vi.fn(() => true), demoScreenView: vi.fn(() => true),
+      startRegistration: vi.fn(() => true), onboardingStep: vi.fn(() => true),
+    },
+  };
+});
 
 const accept = () => localStorage.setItem('agendix:marketing-consent:v1', JSON.stringify({
   choice: 'accepted', version: 1, savedAt: Date.now(),
 }));
 
+const setHash = (hash: string) => {
+  window.history.replaceState(null, '', '/' + hash);
+};
+
+describe('isMetaLandingHashRoute', () => {
+  it('accepts only #/landing', () => {
+    expect(isMetaLandingHashRoute('#/landing')).toBe(true);
+    expect(isMetaLandingHashRoute('#/landing?tipo=beauty')).toBe(true);
+    expect(isMetaLandingHashRoute('#/login')).toBe(false);
+    expect(isMetaLandingHashRoute('#/register')).toBe(false);
+  });
+});
+
 describe('useMetaLandingEngagement', () => {
-  beforeEach(() => { vi.clearAllMocks(); localStorage.clear(); vi.useFakeTimers(); });
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+    vi.useFakeTimers();
+    setHash('#/landing');
+  });
   afterEach(() => vi.useRealTimers());
 
   it('does nothing without consent or without a chosen niche', () => {
@@ -43,6 +72,21 @@ describe('useMetaLandingEngagement', () => {
     act(() => { vi.advanceTimersByTime(60_000); });
     expect(metaTracker.landingEngagement).toHaveBeenCalledWith('TimeOnPage120s', 'beauty');
     expect(metaTracker.landingEngagement).toHaveBeenCalledTimes(4);
+  });
+
+  it('does not attach scroll/dwell listeners on /login', () => {
+    accept();
+    setHash('#/login');
+    const add = vi.spyOn(window, 'addEventListener');
+    const setIntervalSpy = vi.spyOn(window, 'setInterval');
+    renderHook(() => useMetaLandingEngagement('barber'));
+    expect(metaTracker.viewContent).toHaveBeenCalledWith('barber');
+    expect(add).not.toHaveBeenCalledWith('scroll', expect.anything(), expect.anything());
+    expect(setIntervalSpy).not.toHaveBeenCalled();
+    act(() => { vi.advanceTimersByTime(40_000); window.dispatchEvent(new Event('scroll')); });
+    expect(metaTracker.landingEngagement).not.toHaveBeenCalled();
+    add.mockRestore();
+    setIntervalSpy.mockRestore();
   });
 
   it('does not count time while the tab is hidden', () => {

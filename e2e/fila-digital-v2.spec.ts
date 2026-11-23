@@ -56,6 +56,9 @@ interface MockOptions {
   entryStatus?: 'waiting' | 'calling' | 'completed';
   calledAt?: string | null;
   lateMinutes?: number;
+  allowLeave?: boolean;
+  position?: number | null;
+  existingEntry?: boolean;
   paymentStatus?: string;
 }
 
@@ -121,7 +124,7 @@ async function mockQueuePublicApis(page: Page, options: MockOptions = {}) {
       if (entryStatus === 'completed') {
         return fulfillRpc(route, []);
       }
-      if (entryStatus === 'calling') {
+      if (entryStatus === 'calling' || options.existingEntry) {
         return fulfillRpc(route, [entry]);
       }
       if (!calls.join_queue_entry) {
@@ -139,10 +142,10 @@ async function mockQueuePublicApis(page: Page, options: MockOptions = {}) {
         status: entryStatus,
         paymentStatus,
         serviceName: 'Corte',
-        position: entryStatus === 'waiting' ? 1 : null,
+        position: 'position' in options ? options.position : entryStatus === 'waiting' ? 1 : null,
         etaMinutes: entryStatus === 'waiting' ? 0 : null,
         people: entryStatus === 'waiting' ? [{ position: 1, firstName: 'Joao', isYou: true }] : [],
-        settings: { allowLeave: true, lateMinutes },
+        settings: { allowLeave: options.allowLeave ?? true, lateMinutes },
         calledAt,
       });
     }
@@ -174,7 +177,8 @@ test.describe('Fila digital v2 — smoke mobile', () => {
     await mockQueuePublicApis(page);
 
     await page.goto(`${BASE}/#/queue/barbearia-qa`, { waitUntil: 'domcontentloaded' });
-    await expect(page.getByRole('heading', { name: PROFILE.business_name })).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole('heading', { name: 'Fila digital' })).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText(PROFILE.business_name, { exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Qual serviço você quer hoje?' })).toBeVisible();
     await expect(page.getByText('recepção', { exact: false })).toHaveCount(0);
 
@@ -216,7 +220,8 @@ test.describe('Fila digital v2 — smoke mobile', () => {
     });
 
     await page.goto(`${BASE}/#/queue/barbearia-qa`, { waitUntil: 'domcontentloaded' });
-    await expect(page.getByRole('heading', { name: PROFILE.business_name })).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole('heading', { name: 'Fila digital' })).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText(PROFILE.business_name, { exact: true })).toBeVisible();
     await page.getByRole('button', { name: /Corte/i }).click();
     await page.getByRole('button', { name: 'Continuar' }).click();
     await page.getByPlaceholder('Como quer ser chamado').fill('Joao QA');
@@ -251,8 +256,31 @@ test.describe('Fila digital v2 — smoke mobile', () => {
 
     await page.goto(`${BASE}/#/minha-area/barbearia-qa?tab=fila`, { waitUntil: 'domcontentloaded' });
     await expect(page.getByRole('heading', { name: 'O prazo para chegar acabou' })).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByText('Prazo esgotado')).toBeVisible();
+    await expect(page.getByText(/Fale com a equipe no balcão agora/)).toBeVisible();
     await expect(page.getByRole('heading', { name: /é a sua vez/i })).toHaveCount(0);
+  });
+
+  test('fila sem tolerância continua mostrando a ação de comparecer', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 740 });
+    const calledAt = new Date(Date.now() - 12 * 60 * 1000).toISOString();
+    await seedClientSession(page);
+    await mockQueuePublicApis(page, { entryStatus: 'calling', calledAt, lateMinutes: 2, allowLeave: false });
+
+    await page.goto(`${BASE}/#/minha-area/barbearia-qa?tab=fila`, { waitUntil: 'domcontentloaded' });
+    await expect(page.getByRole('heading', { name: /é a sua vez/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'O prazo para chegar acabou' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Sair da fila' })).toBeVisible();
+  });
+
+  test('posição desconhecida permite atualizar sem dizer que o cliente é o próximo', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 740 });
+    await seedClientSession(page);
+    await mockQueuePublicApis(page, { position: null, existingEntry: true });
+
+    await page.goto(`${BASE}/#/minha-area/barbearia-qa?tab=fila`, { waitUntil: 'domcontentloaded' });
+    await expect(page.getByText('Sua posição ainda está indisponível.')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Você é o próximo' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Atualizar fila' })).toBeEnabled();
   });
 
   test('atendimento concluído só oferece agendar, sem nova senha', async ({ page }) => {

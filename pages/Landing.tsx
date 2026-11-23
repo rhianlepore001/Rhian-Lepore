@@ -2,31 +2,39 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ArrowDown, ArrowRight, CalendarDays, Check, ChevronDown, Clock, LayoutDashboard, Menu, Scissors, Smartphone, Sparkles, Users, Wallet, X } from 'lucide-react';
 import { buildWhatsAppLink } from '../utils/whatsappTemplates';
+import { metaTracker } from '../lib/metaTracking';
+import {
+  trackLandingCta,
+  trackLandingDemoScreen,
+  useMetaDemoBridge,
+  useMetaLandingEngagement,
+  useMetaSectionViews,
+} from '../hooks/useMetaEngagement';
 import '../styles/landing.css';
 
 const questions = [
-  ['Preciso colocar cartão para testar?', 'Não. Você cria sua conta sem cadastrar cartão. O prazo e as condições do teste aparecem dentro da conta, conforme a oferta vigente. Depois, você decide se quer assinar um plano.'],
-  ['Funciona para quem trabalha sozinho ou só para quem tem equipe?', 'Para os dois. Você pode começar usando só a sua agenda e o seu financeiro, ou cadastrar sua equipe com controle de horários e comissões por profissional.'],
-  ['Meu cliente precisa baixar algum aplicativo?', 'Não. Ele abre o seu link direto no navegador do celular, escolhe o serviço, o profissional e o horário. A confirmação segue as regras que você definir.'],
-  ['Consigo usar tudo pelo celular na correria do dia?', 'Sim. O AgendiX funciona direto no navegador do celular ou do computador, sem precisar instalar nada — feito para consultar entre um atendimento e outro.'],
-  ['Os dados que eu testar na demonstração ficam salvos?', 'Não. Tudo o que você mexer na simulação fica apenas na memória do seu navegador e some ao recarregar. Nenhuma mensagem real é enviada.'],
+  { id: 'faq_card', question: 'Preciso colocar cartão para testar?', answer: 'Não. Você cria sua conta sem cadastrar cartão. O prazo e as condições do teste aparecem dentro da conta, conforme a oferta vigente. Depois, você decide se quer assinar um plano.' },
+  { id: 'faq_solo_team', question: 'Funciona para quem trabalha sozinho ou só para quem tem equipe?', answer: 'Para os dois. Você pode começar usando só a sua agenda e o seu financeiro, ou cadastrar sua equipe com controle de horários e comissões por profissional.' },
+  { id: 'faq_app', question: 'Meu cliente precisa baixar algum aplicativo?', answer: 'Não. Ele abre o seu link direto no navegador do celular, escolhe o serviço, o profissional e o horário. A confirmação segue as regras que você definir.' },
+  { id: 'faq_mobile', question: 'Consigo usar tudo pelo celular na correria do dia?', answer: 'Sim. O AgendiX funciona direto no navegador do celular ou do computador, sem precisar instalar nada — feito para consultar entre um atendimento e outro.' },
+  { id: 'faq_demo_data', question: 'Os dados que eu testar na demonstração ficam salvos?', answer: 'Não. Tudo o que você mexer na simulação fica apenas na memória do seu navegador e some ao recarregar. Nenhuma mensagem real é enviada.' },
 ] as const;
 
 const demoViews = [
-  { id: 'booking', label: 'Agendamento online', icon: Smartphone, route: 'book/simulacao', task: 'Veja como seu cliente escolhe o serviço, o profissional e pede um horário pelo link.', benefit: 'Mande seu link no Instagram ou WhatsApp. O cliente escolhe o horário sozinho, sem travar sua conversa.' },
-  { id: 'agenda', label: 'Agenda', icon: CalendarDays, route: 'agenda', task: 'Veja a agenda da equipe lado a lado, ache um horário livre e teste um encaixe.', benefit: 'Acompanhe cada profissional num só lugar e encaixe clientes sem perder o controle do dia.' },
-  { id: 'dashboard', label: 'Início', icon: LayoutDashboard, route: '', task: 'Bata o olho no próximo atendimento, no faturamento do dia e na fila em andamento.', benefit: null },
-  { id: 'finance', label: 'Financeiro', icon: Wallet, route: 'financeiro', task: 'Acompanhe receitas, despesas e o lucro real no movimento ilustrativo do período.', benefit: 'Veja o que entra, o que sai e o que realmente sobra — sem depender de caderno ou planilha.' },
-  { id: 'clientes', label: 'Clientes', icon: Users, route: 'clientes?filter=Inativo', task: 'Descubra quem não volta há mais de 35 dias e abra o histórico para puxar conversa.', benefit: 'Encontre clientes que sumiram há mais de 35 dias e chame de volta antes que esqueçam do seu espaço.' },
-  { id: 'fila', label: 'Fila', icon: Clock, route: 'fila', task: 'Organize quem chega sem hora marcada e acompanhe os atendimentos em andamento.', benefit: null },
+  { id: 'booking', label: 'Agendamento online', icon: Smartphone, route: 'book/simulacao', section: 'feature_booking', task: 'Veja como seu cliente escolhe o serviço, o profissional e pede um horário pelo link.', benefit: 'Mande seu link no Instagram ou WhatsApp. O cliente escolhe o horário sozinho, sem travar sua conversa.' },
+  { id: 'agenda', label: 'Agenda', icon: CalendarDays, route: 'agenda', section: 'feature_agenda', task: 'Veja a agenda da equipe lado a lado, ache um horário livre e teste um encaixe.', benefit: 'Acompanhe cada profissional num só lugar e encaixe clientes sem perder o controle do dia.' },
+  { id: 'dashboard', label: 'Início', icon: LayoutDashboard, route: '', section: null, task: 'Bata o olho no próximo atendimento, no faturamento do dia e na fila em andamento.', benefit: null },
+  { id: 'finance', label: 'Financeiro', icon: Wallet, route: 'financeiro', section: 'feature_financeiro', task: 'Acompanhe receitas, despesas e o lucro real no movimento ilustrativo do período.', benefit: 'Veja o que entra, o que sai e o que realmente sobra — sem depender de caderno ou planilha.' },
+  { id: 'clientes', label: 'Clientes', icon: Users, route: 'clientes?filter=Inativo', section: 'feature_clientes', task: 'Descubra quem não volta há mais de 35 dias e abra o histórico para puxar conversa.', benefit: 'Encontre clientes que sumiram há mais de 35 dias e chame de volta antes que esqueçam do seu espaço.' },
+  { id: 'fila', label: 'Fila', icon: Clock, route: 'fila', section: null, task: 'Organize quem chega sem hora marcada e acompanhe os atendimentos em andamento.', benefit: null },
 ] as const;
 
 const productViews = demoViews.filter(item => item.benefit);
 
 const teamViews = [
-  { label: 'Comissões', route: 'financeiro?tab=commissions', benefit: 'Calcule e acompanhe o que pagar para cada profissional, sem erro nem conta no papel.' },
-  { label: 'Fila de espera', route: 'fila', benefit: 'Organize quem chega sem marcar direto no celular, sem bagunçar a recepção.' },
-  { label: 'Resultados por hora', route: 'resultados-por-hora', benefit: 'Descubra quanto rende cada hora trabalhada e quanto sobra de verdade depois dos custos.' },
+  { label: 'Comissões', route: 'financeiro?tab=commissions', section: 'feature_comissoes', benefit: 'Calcule e acompanhe o que pagar para cada profissional, sem erro nem conta no papel.' },
+  { label: 'Fila de espera', route: 'fila', section: 'feature_fila', benefit: 'Organize quem chega sem marcar direto no celular, sem bagunçar a recepção.' },
+  { label: 'Resultados por hora', route: 'resultados-por-hora', section: 'feature_hora', benefit: 'Descubra quanto rende cada hora trabalhada e quanto sobra de verdade depois dos custos.' },
 ] as const;
 
 const setupSteps = [
@@ -84,6 +92,8 @@ export const Landing = () => {
   const selectedNiche = params.get('tipo');
   const niche: Niche = selectedNiche === 'beauty' ? 'beauty' : 'barber';
   const nicheChosen = selectedNiche === 'barber' || selectedNiche === 'beauty';
+  // Nicho sempre barber|beauty (default visual); ViewContent/engajamento usam o valor exibido.
+  const trackingNiche = niche;
   const returningFromDemo = params.get('origem') === 'demo';
   const [interactive, setInteractive] = useState(false);
   const menuTrigger = useRef<HTMLButtonElement>(null);
@@ -93,6 +103,10 @@ export const Landing = () => {
   const view = activeView.id;
   const signupHref = nicheChosen ? `/#/register?type=${niche}` : '/#/register';
   const demoHref = demoLink(niche, activeView.route);
+
+  useMetaLandingEngagement(trackingNiche);
+  useMetaSectionViews(trackingNiche);
+  useMetaDemoBridge(trackingNiche, interactive);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -154,7 +168,18 @@ export const Landing = () => {
     next.set(key, value);
     setParams(next, { replace: true });
   };
-  const chooseNiche = (next: Niche) => updateChoice('tipo', next);
+  const chooseNiche = (next: Niche) => {
+    if (next !== niche || !nicheChosen) metaTracker.nichoSwitch(next);
+    updateChoice('tipo', next);
+  };
+  // Só abre o iframe: DemoStart/ScreenView vêm da 1ª interação real dentro da demo.
+  const startEmbeddedDemo = () => { setInteractive(true); };
+  const onDemoTab = (id: (typeof demoViews)[number]['id']) => {
+    metaTracker.demoStart(trackingNiche);
+    trackLandingDemoScreen(id, trackingNiche);
+    updateChoice('tela', id);
+  };
+  const onWhatsApp = () => { metaTracker.whatsAppClick(trackingNiche); };
   return (
     <div className="landing">
       <a className="landing-skip" href="#landing-main" onClick={event => { event.preventDefault(); scrollTo('landing-main'); }}>Pular para o conteúdo</a>
@@ -167,11 +192,11 @@ export const Landing = () => {
             <button type="button" onClick={() => scrollTo('demonstracao')}>Demonstração</button>
             <button type="button" onClick={() => scrollTo('produto')}>Recursos</button>
             <button type="button" onClick={() => scrollTo('historia')}>Nossa história</button>
-            <a className="landing-salon-link" href="/#/register?type=beauty">Criar conta para salão</a>
+            <a className="landing-salon-link" href="/#/register?type=beauty" onClick={() => trackLandingCta('free_trial_salon', 'beauty', 'header')}>Criar conta para salão</a>
           </nav>
           <div className="landing-nav-actions">
             <a href="/#/login">Entrar</a>
-            <a className="landing-button landing-button-light" href={signupHref}>Criar conta <ArrowRight size={15} aria-hidden="true" /></a>
+            <a className="landing-button landing-button-light" href={signupHref} onClick={() => trackLandingCta('free_trial_header', trackingNiche, 'header')}>Criar conta <ArrowRight size={15} aria-hidden="true" /></a>
           </div>
           <button type="button" ref={menuTrigger} className="landing-menu" aria-label={menu ? 'Fechar menu' : 'Abrir menu'} aria-controls="landing-navigation" aria-expanded={menu} onClick={() => setMenu(!menu)}>
             {menu ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
@@ -180,20 +205,20 @@ export const Landing = () => {
       </header>
 
       <main id="landing-main" tabIndex={-1}>
-        <section className="landing-hero" aria-labelledby="landing-title">
+        <section className="landing-hero" data-meta-section="hero" aria-labelledby="landing-title">
           <div className="landing-wrap wrap landing-hero-layout">
             <div className="landing-hero-copy">
               <h1 id="landing-title">Mais que agenda. <span>Cresça com clareza.</span></h1>
               <p>Receba agendamentos e acompanhe quanto entrou, quanto saiu e quanto sobrou. Veja quais clientes deixaram de voltar.</p>
               <div className="landing-hero-actions">
-                <a href={signupHref} className="landing-button" aria-describedby="landing-trial-terms">Crie sua conta grátis <ArrowRight size={18} aria-hidden="true" /></a>
+                <a href={signupHref} className="landing-button" aria-describedby="landing-trial-terms" onClick={() => trackLandingCta('free_trial_hero', trackingNiche, 'hero')}>Crie sua conta grátis <ArrowRight size={18} aria-hidden="true" /></a>
                 <button type="button" className="landing-text-link landing-demo-jump" onClick={() => scrollTo('demonstracao')}>Testar demonstração <ArrowDown size={16} aria-hidden="true" /></button>
                 <span className="landing-no-card" id="landing-trial-terms"><Check size={15} aria-hidden="true" /> {trialTerms}</span>
               </div>
             </div>
             <div className="landing-hero-product" data-niche={niche}>
               <BusinessSelector niche={niche} label="Seu tipo de negócio" onChange={chooseNiche} />
-              <a href={demoLink(niche)} className="landing-product-stage" aria-description="Abre o painel inicial na demonstração do AgendiX.">
+              <a href={demoLink(niche)} className="landing-product-stage" aria-description="Abre o painel inicial na demonstração do AgendiX." onClick={() => { metaTracker.demoStart(trackingNiche); trackLandingDemoScreen('dashboard', trackingNiche); }}>
                 <div className="landing-hero-device">
                   <PhoneFrame niche={niche}><PhoneImage niche={niche} view="dashboard" eager alt="" /></PhoneFrame>
                 </div>
@@ -206,7 +231,7 @@ export const Landing = () => {
           </div>
         </section>
 
-        <section id="demonstracao" className="landing-demo-section" aria-labelledby="landing-demo-title" tabIndex={-1}>
+        <section id="demonstracao" className="landing-demo-section" data-meta-section="demo" aria-labelledby="landing-demo-title" tabIndex={-1}>
           <div className="landing-wrap wrap">
             <div className="landing-demo-stage">
               <div className="landing-demo-controls">
@@ -215,18 +240,18 @@ export const Landing = () => {
                 <BusinessSelector niche={niche} label="Negócio da demonstração" onChange={chooseNiche} />
                 <div className="landing-demo-view-tabs" role="group" aria-label="Tela da demonstração">
                   {demoViews.map(({ id, label, icon: Icon }) => (
-                    <button type="button" key={id} aria-pressed={view === id} onClick={() => updateChoice('tela', id)}>
+                    <button type="button" key={id} aria-pressed={view === id} onClick={() => onDemoTab(id)}>
                       <Icon size={17} aria-hidden="true" /> {label}
                     </button>
                   ))}
                 </div>
                 <p className="landing-demo-task" aria-live="polite">{activeView.task}</p>
                 <div className="landing-demo-start">
-                  <button type="button" className="landing-button landing-button-light landing-demo-embed-action" aria-expanded={interactive} aria-controls="landing-demo-screen" onClick={() => setInteractive(!interactive)}>
+                  <button type="button" className="landing-button landing-button-light landing-demo-embed-action" aria-expanded={interactive} aria-controls="landing-demo-screen" onClick={() => (interactive ? setInteractive(false) : startEmbeddedDemo())}>
                     {interactive ? 'Fechar a simulação' : 'Explorar a simulação'} {interactive ? <X size={18} aria-hidden="true" /> : <ArrowRight size={18} aria-hidden="true" />}
                   </button>
-                  <a className="landing-button landing-button-light landing-demo-mobile-action" href={demoHref}>Explorar a simulação <ArrowRight size={18} aria-hidden="true" /></a>
-                  <a className="landing-text-link landing-demo-fullscreen" href={demoHref}>Abrir em tela cheia <ArrowRight size={16} aria-hidden="true" /></a>
+                  <a className="landing-button landing-button-light landing-demo-mobile-action" href={demoHref} onClick={() => { metaTracker.demoStart(trackingNiche); trackLandingDemoScreen(view, trackingNiche); }}>Explorar a simulação <ArrowRight size={18} aria-hidden="true" /></a>
+                  <a className="landing-text-link landing-demo-fullscreen" href={demoHref} onClick={() => { metaTracker.demoStart(trackingNiche); trackLandingDemoScreen(view, trackingNiche); }}>Abrir em tela cheia <ArrowRight size={16} aria-hidden="true" /></a>
                 </div>
               </div>
               <figure className="landing-demo-preview" id="landing-demo-screen">
@@ -243,7 +268,7 @@ export const Landing = () => {
             </div>
             <div className="landing-demo-conversion">
               <p>Curtiu? Coloque seus serviços, horários e números reais em poucos minutos.</p>
-              <a className="landing-text-link" href={signupHref}>Crie sua conta grátis <ArrowRight size={18} aria-hidden="true" /></a>
+              <a className="landing-text-link" href={signupHref} onClick={() => trackLandingCta('free_trial_demo', trackingNiche, 'demo')}>Crie sua conta grátis <ArrowRight size={18} aria-hidden="true" /></a>
             </div>
           </div>
         </section>
@@ -255,9 +280,9 @@ export const Landing = () => {
                 <h2 id="landing-product-title">Mais do que marcar horários.</h2>
                 <p className="landing-product-intro">A agenda organiza o dia, mas o crescimento vem de enxergar o negócio inteiro. Clique em qualquer tela para testar na demo.</p>
                 <ul className="landing-product-list">
-                  {productViews.map(({ id, label, route, benefit }) => (
-                    <li key={id}>
-                      <a href={demoLink(niche, route)}>
+                  {productViews.map(({ id, label, route, benefit, section }) => (
+                    <li key={id} data-meta-section={section ?? undefined}>
+                      <a href={demoLink(niche, route)} onClick={() => { metaTracker.demoStart(trackingNiche); trackLandingDemoScreen(route.startsWith('/') ? route : '/' + route.split('?')[0], trackingNiche, route.includes('?') ? route.slice(route.indexOf('?')) : ''); }}>
                         <div><h3>{label}</h3><p>{benefit}</p></div>
                         <ArrowRight size={20} aria-hidden="true" />
                       </a>
@@ -270,9 +295,13 @@ export const Landing = () => {
             <div className="landing-team">
               <h3>Equipe, fila e o valor da sua hora</h3>
               <ul className="landing-product-list landing-team-list">
-                {teamViews.map(({ label, route, benefit }) => (
-                  <li key={route}>
-                    <a href={demoLink(niche, route)}>
+                {teamViews.map(({ label, route, benefit, section }) => (
+                  <li key={route} data-meta-section={section}>
+                    <a href={demoLink(niche, route)} onClick={() => {
+                      const [path, query] = route.split('?');
+                      metaTracker.demoStart(trackingNiche);
+                      trackLandingDemoScreen('/' + path, trackingNiche, query ? '?' + query : '');
+                    }}>
                       <div><h4>{label}</h4><p>{benefit}</p></div>
                       <ArrowRight size={18} aria-hidden="true" />
                     </a>
@@ -301,7 +330,7 @@ export const Landing = () => {
           </div>
         </section>
 
-        <section className="landing-onboarding" aria-labelledby="landing-setup-title">
+        <section className="landing-onboarding" data-meta-section="offer" aria-labelledby="landing-setup-title">
           <div className="landing-wrap wrap landing-onboarding-grid">
             <h2 id="landing-setup-title">Comece sem travar o seu dia</h2>
             <ol className="landing-steps">
@@ -315,15 +344,17 @@ export const Landing = () => {
           </div>
         </section>
 
-        <section className="landing-faq" aria-labelledby="landing-faq-title">
+        <section className="landing-faq" data-meta-section="faq" aria-labelledby="landing-faq-title">
           <div className="landing-wrap wrap landing-faq-grid">
             <div>
               <h2 id="landing-faq-title">Perguntas frequentes</h2>
-              <a className="landing-text-link" href={supportHref} target="_blank" rel="noopener noreferrer">Tirar dúvida no WhatsApp <ArrowRight size={16} aria-hidden="true" /></a>
+              <a className="landing-text-link" href={supportHref} target="_blank" rel="noopener noreferrer" onClick={onWhatsApp}>Tirar dúvida no WhatsApp <ArrowRight size={16} aria-hidden="true" /></a>
             </div>
             <div className="landing-questions">
-              {questions.map(([question, answer]) => (
-                <details key={question}>
+              {questions.map(({ id, question, answer }) => (
+                <details key={id} onToggle={event => {
+                  if ((event.currentTarget as HTMLDetailsElement).open) metaTracker.faqOpen(id, trackingNiche);
+                }}>
                   <summary>{question}<ChevronDown size={20} aria-hidden="true" /></summary>
                   <p>{answer}</p>
                 </details>
@@ -332,11 +363,11 @@ export const Landing = () => {
           </div>
         </section>
 
-        <section className="landing-close" aria-labelledby="landing-close-title">
+        <section className="landing-close" data-meta-section="cta_final" aria-labelledby="landing-close-title">
           <div className="landing-wrap wrap">
             <h2 id="landing-close-title">Faça o negócio trabalhar para você.</h2>
             <div className="landing-close-action">
-              <a className="landing-button landing-button-light" href={signupHref}>Crie sua conta grátis <ArrowRight size={18} aria-hidden="true" /></a>
+              <a className="landing-button landing-button-light" href={signupHref} onClick={() => trackLandingCta('free_trial_final', trackingNiche, 'final')}>Crie sua conta grátis <ArrowRight size={18} aria-hidden="true" /></a>
               <span className="landing-no-card"><Check size={15} aria-hidden="true" /> {trialTerms}</span>
             </div>
           </div>
@@ -347,7 +378,7 @@ export const Landing = () => {
         <div className="landing-wrap wrap landing-footer-row">
           <a className="landing-brand" href="/#/landing" aria-label="AgendiX, voltar ao início" onClick={() => window.scrollTo(0, 0)}><img src="/landing/agendix-logo-header.webp" width="640" height="215" alt="" loading="lazy" decoding="async" /></a>
           <nav aria-label="Links legais"><a href="/#/termos">Termos de uso</a><a href="/#/privacidade">Privacidade</a></nav>
-          <a href={supportHref} target="_blank" rel="noopener noreferrer">Suporte no WhatsApp <ArrowRight size={16} aria-hidden="true" /></a>
+          <a href={supportHref} target="_blank" rel="noopener noreferrer" onClick={onWhatsApp}>Suporte no WhatsApp <ArrowRight size={16} aria-hidden="true" /></a>
           <small>© {new Date().getFullYear()} AgendiX</small>
           <small>Fotos da demonstração · Pexels</small>
         </div>

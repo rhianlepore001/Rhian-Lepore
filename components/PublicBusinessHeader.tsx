@@ -1,21 +1,20 @@
-import React, { useRef } from 'react';
-import { Instagram, Phone, MapPin, Star, Scissors, Sparkles, ChevronLeft, ChevronRight, Sun, Moon } from 'lucide-react';
-import { useBrutalTheme, type ThemeVariant } from '../hooks/useBrutalTheme';
+import { useEffect, useRef, useState } from 'react';
+import { Instagram, Phone, MapPin, Star, Scissors, Sparkles, ChevronLeft, ChevronRight, ChevronDown, Sun, Moon, User } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
-import { getBusinessCopy, resolveBusinessTheme } from '../utils/businessCopy';
 import { publicRatingBadge } from '../utils/publicRating';
 import { buildWhatsAppLink, type WhatsAppRegion } from '../utils/whatsappTemplates';
+import { Modal } from './ui/Modal';
 
 interface PublicBusinessHeaderProps {
     businessName: string;
     logoUrl?: string | null;
     coverPhotoUrl?: string | null;
     instagramHandle?: string | null;
-    phone?: string;
+    phone?: string | null;
     region?: WhatsAppRegion;
     address?: string | null;
-    googleRating?: number;
-    totalReviews?: number;
+    reviewSummary?: { average?: number | null; total: number };
+    onOpenReviews?: () => void;
     userType?: string;
     gallery?: { id: string; image_url: string }[];
     clientSession?: { name: string; photo_url?: string | null } | null;
@@ -23,7 +22,13 @@ interface PublicBusinessHeaderProps {
     showThemeToggle?: boolean;
 }
 
-export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
+interface PhotoPreview {
+    source: string;
+    title: string;
+    unavailable?: boolean;
+}
+
+export function PublicBusinessHeader({
     businessName,
     logoUrl,
     coverPhotoUrl,
@@ -31,240 +36,235 @@ export const PublicBusinessHeader: React.FC<PublicBusinessHeaderProps> = ({
     phone,
     region = 'BR',
     address,
-    googleRating,
-    totalReviews,
+    reviewSummary,
+    onOpenReviews,
     userType,
     gallery = [],
     clientSession,
     businessSlug,
     showThemeToggle = true,
-}) => {
-    const galleryRef = useRef<HTMLDivElement>(null);
-    const isBeauty = userType === 'beauty';
-    const themeOverride: ThemeVariant = isBeauty ? 'beauty' : 'barber';
-    const { colors, accent, font, shadow } = useBrutalTheme({ override: themeOverride });
+}: PublicBusinessHeaderProps) {
+    const galleryRef = useRef<HTMLUListElement>(null);
+    const [galleryScroll, setGalleryScroll] = useState({ previous: false, next: false });
+    const [activePhoto, setActivePhoto] = useState<PhotoPreview | null>(null);
+    const [failedCover, setFailedCover] = useState<string | null>(null);
+    const [failedLogo, setFailedLogo] = useState<string | null>(null);
+    useEffect(() => {
+        const strip = galleryRef.current;
+        if (!strip) return;
+        const update = () => setGalleryScroll({
+            previous: strip.scrollLeft > 1,
+            next: strip.clientWidth > 0 && strip.scrollLeft + strip.clientWidth < strip.scrollWidth - 1,
+        });
+        const resize = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(update) : null;
+        resize?.observe(strip);
+        strip.addEventListener('scroll', update, { passive: true });
+        update();
+        return () => {
+            strip.removeEventListener('scroll', update);
+            resize?.disconnect();
+        };
+    }, [gallery.length]);
     const { mode, toggleMode } = useTheme();
-
-    // Links externos
-    const whatsappLink = phone ? buildWhatsAppLink(phone, region) : null;
-    const instagramLink = instagramHandle
-        ? `https://instagram.com/${instagramHandle.replace('@', '')}`
-        : null;
-    const mapsLink = address
-        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address + ' ' + businessName)}`
-        : null;
-
-    // Badge de segmento
-    const rating = publicRatingBadge(googleRating, totalReviews);
-
-    const segmentLabel = getBusinessCopy(resolveBusinessTheme(userType)).segmentLabel;
-    const SegmentIcon = isBeauty ? Sparkles : Scissors;
-
-    const scrollGallery = (dir: 'left' | 'right') => {
-        if (!galleryRef.current) return;
-        galleryRef.current.scrollBy({ left: dir === 'right' ? 260 : -260, behavior: 'smooth' });
-    };
+    const SegmentIcon = userType === 'beauty' ? Sparkles : Scissors;
+    const cover = coverPhotoUrl && coverPhotoUrl !== failedCover ? coverPhotoUrl : null;
+    const profile = logoUrl && logoUrl !== failedLogo ? logoUrl : null;
+    const rating = publicRatingBadge(reviewSummary?.average, reviewSummary?.total);
+    const links = [
+        { label: 'WhatsApp', icon: Phone, url: phone && buildWhatsAppLink(phone, region) },
+        { label: 'Instagram', icon: Instagram, url: instagramHandle && `https://instagram.com/${instagramHandle.replace('@', '')}` },
+        { label: 'Como chegar', icon: MapPin, url: address && `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${address} ${businessName}`)}` },
+    ];
 
     return (
-        <div className={`relative w-full overflow-hidden ${colors.bg}`}>
-            {/* Cover / Hero — Mobile-first height */}
-            <div className="relative h-[clamp(9rem,23svh,12rem)] md:h-[34vh] md:min-h-[230px] w-full overflow-hidden">
-                {coverPhotoUrl ? (
-                    <img
-                        src={coverPhotoUrl}
-                        decoding="async"
-                        alt={businessName}
-                        className="w-full h-full object-cover object-center"
-                    />
-                ) : (
-                    <div className={`w-full h-full ${isBeauty
-                        ? 'bg-gradient-to-br from-[var(--color-bg)] via-[var(--color-card)] to-[var(--color-surface)]'
-                        : 'bg-gradient-to-br from-neutral-900 via-neutral-800 to-black'
-                        }`}>
-                    </div>
-                )}
-
-                <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/55" />
-
-                {/* Badge de segmento + toggle dark/light */}
-                <div className="absolute top-[calc(0.75rem+var(--safe-top))] left-3 sm:left-5 z-20 flex items-center gap-2">
-                    <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-full border text-xs font-semibold ${colors.card} ${colors.border} ${colors.textSecondary}`}>
-                        <SegmentIcon className="w-3 h-3" />
-                        {segmentLabel}
-                    </div>
-                    {showThemeToggle && <button
-                        onClick={toggleMode}
-                        aria-label={mode === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'}
-                        title={mode === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
-                        className={`inline-flex h-11 w-11 items-center justify-center rounded-full border transition-colors ${colors.card} ${colors.border} ${colors.text} hover:brightness-110`}
+        <header className="relative z-10 mx-auto w-full max-w-5xl px-3 pt-3 md:px-6 md:pt-6">
+            <div className="overflow-hidden rounded-2xl border border-theme-border bg-theme-card sm:rounded-3xl">
+                {cover && (
+                    <button
+                        type="button"
+                        aria-label="Ampliar foto de capa"
+                        aria-haspopup="dialog"
+                        onClick={() => setActivePhoto({ source: cover, title: 'Foto de capa' })}
+                        className="relative block w-full cursor-zoom-in focus-visible:z-10 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-theme-accent"
                     >
-                        <span
-                            style={{
-                                display: 'block',
-                                transition: 'transform 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.2s',
-                                transform: mode === 'dark' ? 'rotate(0deg)' : 'rotate(180deg)',
-                            }}
-                        >
-                            {mode === 'dark'
-                                ? <Moon className="w-4 h-4" />
-                                : <Sun className="w-4 h-4" />}
-                        </span>
-                    </button>}
-                </div>
-
-                {/* Sessão do Cliente (Canto Superior Direito) */}
-                {clientSession && businessSlug && (
-                    <div className="fixed top-[calc(0.75rem+var(--safe-top))] right-3 sm:right-5 z-50">
-                        <a href={`/#/minha-area/${businessSlug}`} aria-label="Abrir Minha Área"
-                            className={`group flex min-h-11 items-center gap-1.5 px-2 rounded-full border transition-colors ${colors.card} ${colors.border} cursor-pointer hover:brightness-110`}>
-                            <div className="hidden sm:flex flex-col items-end">
-                                <span className={`text-xs uppercase font-black tracking-widest ${colors.textMuted}`}>Sessão Ativa</span>
-                                <span className={`text-xs font-bold truncate max-w-[100px] ${colors.text}`}>{clientSession.name.split(' ')[0]}</span>
-                            </div>
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center overflow-hidden border ${colors.surface} ${colors.border} ${colors.text}`}>
-                                {clientSession.photo_url ? (
-                                    <img src={clientSession.photo_url} alt="" className="w-full h-full object-cover" />
-                                ) : (
-                                    <span className="font-bold text-sm tracking-tighter">{clientSession.name.charAt(0).toUpperCase()}</span>
-                                )}
-                            </div>
-                        </a>
-                    </div>
+                        <img
+                            src={cover}
+                            alt=""
+                            fetchPriority="high"
+                            onError={() => setFailedCover(cover)}
+                            className="block h-auto max-h-56 w-full object-contain [aspect-ratio:auto_8/3] sm:max-h-72 lg:max-h-80"
+                        />
+                    </button>
                 )}
-            </div>
-
-            {/* Info Section */}
-            <div className="container mx-auto px-4 md:px-8 -mt-10 sm:-mt-12 md:-mt-20 relative z-20 pb-4 md:pb-6">
-                <div className="flex flex-col md:flex-row items-start md:items-end gap-3 md:gap-6">
-
-                    {/* Logo */}
-                    <div className="relative group flex-shrink-0">
-                        <div className={`w-20 h-20 md:w-28 md:h-28 rounded-2xl overflow-hidden ${colors.card} ${colors.border} border-2 ${shadow.elevated} relative`}>
-                            {logoUrl ? (
-                                <img src={logoUrl} alt={businessName} className="w-full h-full object-cover" />
-                            ) : (
-                                <div className={`w-full h-full flex items-center justify-center ${colors.surface}`}>
-                                    <span className={`font-black text-5xl md:text-6xl ${colors.textMuted}`}
-                                        style={{ fontFamily: 'Chivo, sans-serif' }}>
-                                        {businessName.charAt(0).toUpperCase()}
-                                    </span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Informações */}
-                    <div className="flex-1 flex flex-col items-start pb-0 md:pb-4 w-full min-w-0">
-                        {/* Nome do estabelecimento */}
-                        <h1 className={`${font.heading} ${colors.text} text-[clamp(1.625rem,6vw,3rem)] mb-1.5 leading-tight font-bold tracking-tight text-balance break-words`}>
-                            {businessName}
-                        </h1>
-
-                        {/* Rating badge: só com avaliações reais (sem nota inventada para negócio novo) */}
-                        {rating ? (
-                            <div className={`inline-flex items-center gap-2 px-3 py-1.5 mb-3 rounded-full border ${colors.card} ${colors.border} ${colors.text} backdrop-blur-xl`}>
-                                <Star className="w-3.5 h-3.5 text-[var(--color-warning)] fill-amber-400" />
-                                <span className="text-sm font-black tracking-tight">{rating.value}</span>
-                                <div className="w-px h-3 bg-current opacity-20" />
-                                <span className="text-xs uppercase font-medium">
-                                    {rating.countLabel}
-                                </span>
-                            </div>
-                        ) : null}
-
-                        {/* Endereço (se disponível) */}
-                        {address && (
-                            <p className={`text-xs font-medium mb-3 flex items-center gap-1.5 ${colors.textMuted}`}>
-                                <MapPin className="w-3 h-3 flex-shrink-0" />
-                                <span className="break-words max-w-full">{address}</span>
-                            </p>
+                <div className="space-y-2 p-3.5 sm:space-y-3 sm:p-5">
+                    <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+                        {profile ? (
+                            <button
+                                type="button"
+                                aria-label="Ampliar foto de perfil"
+                                aria-haspopup="dialog"
+                                onClick={() => setActivePhoto({ source: profile, title: 'Foto de perfil' })}
+                                className="size-20 shrink-0 cursor-zoom-in rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-theme-accent max-[359px]:size-18 sm:size-24"
+                            >
+                                <img
+                                    src={profile}
+                                    alt=""
+                                    decoding="async"
+                                    onError={() => setFailedLogo(profile)}
+                                    className="size-full object-contain"
+                                />
+                            </button>
+                        ) : (
+                            <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-theme-surface text-theme-accent sm:size-16">
+                                <SegmentIcon className="size-6 sm:size-7" aria-hidden="true" />
+                            </span>
                         )}
-
-                        {/* Links sociais */}
-                        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                            {instagramLink && (
-                                <a href={instagramLink} target="_blank" rel="noopener noreferrer"
-                                    className={`inline-flex min-h-11 items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-colors ${colors.card} ${colors.border} ${colors.textSecondary} hover:bg-[var(--color-card-hover)] hover:text-theme-text`}>
-                                    <Instagram className="w-4 h-4" />
-                                    <span className="text-xs font-semibold">Instagram</span>
-                                </a>
-                            )}
-                            {whatsappLink && (
-                                <a href={whatsappLink} target="_blank" rel="noopener noreferrer"
-                                    className={`inline-flex min-h-11 items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-colors ${colors.card} ${colors.border} ${colors.textSecondary} hover:bg-[var(--color-card-hover)] hover:text-theme-text`}>
-                                    <Phone className="w-4 h-4" />
-                                    <span className="text-xs font-semibold">WhatsApp</span>
-                                </a>
-                            )}
-                            {mapsLink && (
-                                <a href={mapsLink} target="_blank" rel="noopener noreferrer"
-                                    className={`inline-flex min-h-11 items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-colors ${colors.card} ${colors.border} ${colors.textSecondary} hover:bg-[var(--color-card-hover)] hover:text-theme-text`}>
-                                    <MapPin className="w-4 h-4" />
-                                    <span className="text-xs font-semibold">Como chegar</span>
-                                </a>
+                        <div className="min-w-0 flex-1">
+                            <h1 className="break-words text-xl font-bold leading-tight tracking-tight text-theme-text sm:text-3xl">
+                                {businessName}
+                            </h1>
+                            {onOpenReviews && (
+                                <button
+                                    type="button"
+                                    onClick={onOpenReviews}
+                                    aria-haspopup="dialog"
+                                    className="flex min-h-11 flex-wrap items-center gap-x-1.5 rounded-md text-left text-sm text-theme-textSecondary hover:text-theme-text hover:underline"
+                                >
+                                    <Star className="size-4 shrink-0 text-theme-accent" fill={rating ? 'currentColor' : 'none'} aria-hidden="true" />
+                                    {rating ? (
+                                        <>
+                                            <span className="font-semibold text-theme-text">{rating.value}<span className="sr-only"> de 5</span></span>
+                                            <span>{rating.countLabel}</span>
+                                        </>
+                                    ) : 'Avaliações de clientes'}
+                                </button>
                             )}
                         </div>
+                        {showThemeToggle && (
+                            <button
+                                type="button"
+                                onClick={toggleMode}
+                                aria-label={mode === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'}
+                                className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-theme-border text-theme-textSecondary hover:bg-theme-surface"
+                            >
+                                {mode === 'dark' ? <Moon className="size-4" aria-hidden="true" /> : <Sun className="size-4" aria-hidden="true" />}
+                            </button>
+                        )}
                     </div>
-                </div>
-            </div>
-
-            {/* Galeria de Fotos — visível em todos os tamanhos */}
-            {gallery.length > 0 && (
-                <div className={`border-t ${colors.divider}`}>
-                    <div className="px-4 pt-3 pb-1 flex items-center justify-between">
-                        <span
-                            data-testid="public-gallery-heading"
-                            className={`text-xs font-bold uppercase tracking-[0.2em] ${colors.textSecondary}`}
-                        >
-                            Portfólio
-                        </span>
-                    </div>
-
-                    <div className="relative">
-                        {/* Setas de navegação */}
-                        <button
-                            type="button"
-                            aria-label="Fotos anteriores do portfólio"
-                            onClick={() => scrollGallery('left')}
-                            className={`absolute left-2 top-1/2 -translate-y-1/2 z-10 w-11 h-11 flex items-center justify-center shadow-[var(--elevation-1)] transition-colors ${colors.card} ${colors.border} ${colors.text} rounded-full hover:brightness-110`}>
-                            <ChevronLeft className="w-4 h-4" />
-                        </button>
-                        <button
-                            type="button"
-                            aria-label="Próximas fotos do portfólio"
-                            onClick={() => scrollGallery('right')}
-                            className={`absolute right-2 top-1/2 -translate-y-1/2 z-10 w-11 h-11 flex items-center justify-center shadow-[var(--elevation-1)] transition-colors ${colors.card} ${colors.border} ${colors.text} rounded-full hover:brightness-110`}>
-                            <ChevronRight className="w-4 h-4" />
-                        </button>
-
-                        <div
-                            ref={galleryRef}
-                            data-testid="public-gallery-track"
-                            className="flex gap-1.5 overflow-x-auto scrollbar-hide px-4 pt-1 pb-3"
-                            style={{ scrollSnapType: 'x mandatory' }}>
-                            {gallery.map((item) => (
-                                <div
-                                    key={item.id}
-                                    className={`flex-shrink-0 w-[140px] md:w-[200px] h-[90px] md:h-[130px] overflow-hidden rounded-lg `}
-                                    style={{ scrollSnapAlign: 'start' }}>
-                                    <img
-                                        src={item.image_url}
-                                        loading="lazy"
-                                        decoding="async"
-                                        width={400}
-                                        height={400}
-                                        alt="Portfólio"
-                                        className="w-full h-full object-cover"
-                                    />
-                                </div>
+                    {address && <p className="text-sm leading-snug text-theme-textSecondary">{address}</p>}
+                    {(businessSlug || links.some(link => link.url)) && (
+                        <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                            {businessSlug && (
+                                <a
+                                    href={`/#/minha-area/${businessSlug}`}
+                                    className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-theme-border px-2 text-sm font-semibold text-theme-text hover:bg-theme-surface sm:px-3"
+                                >
+                                    {clientSession?.photo_url
+                                        ? <img src={clientSession.photo_url} alt="" className="size-5 rounded-full object-cover" />
+                                        : <User className="size-4" aria-hidden="true" />}
+                                    Minha Área
+                                </a>
+                            )}
+                            {links.map(({ label, icon: Icon, url }) => url && (
+                                <a
+                                    key={label}
+                                    href={url}
+                                    aria-label={label}
+                                    title={label}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-xl border border-theme-border text-sm font-medium text-theme-textSecondary hover:bg-theme-surface hover:text-theme-text sm:px-3"
+                                >
+                                    <Icon className="size-4" aria-hidden="true" />
+                                    <span className="hidden sm:inline">{label}</span>
+                                </a>
                             ))}
                         </div>
-                    </div>
+                    )}
                 </div>
-            )}
 
-            {/* Divisor final */}
-            <div className={`h-px w-full bg-gradient-to-r from-transparent ${isBeauty ? 'via-beauty-neon/20' : 'via-accent-gold/20'} to-transparent`} />
-        </div>
+                {gallery.length > 0 && (
+                    <details open className="group border-t border-theme-border px-3.5 sm:px-5">
+                        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 rounded-md text-sm font-semibold text-theme-text [&::-webkit-details-marker]:hidden">
+                            <span data-testid="public-gallery-heading">Fotos do espaço</span>
+                            <span className="flex items-center gap-1.5 text-sm font-medium text-theme-textSecondary">
+                                <span className="group-open:hidden">Mostrar</span>
+                                <span className="hidden group-open:inline">Ocultar</span>
+                                <ChevronDown className="size-4 group-open:rotate-180" aria-hidden="true" />
+                            </span>
+                        </summary>
+                        <div className="relative mb-3">
+                            <ul
+                                ref={galleryRef}
+                                data-testid="public-gallery-track"
+                                tabIndex={galleryScroll.next || galleryScroll.previous ? 0 : undefined}
+                                className="flex snap-x gap-2 overflow-x-auto rounded-xl scrollbar-hide"
+                                aria-label="Fotos do portfólio"
+                            >
+                                {gallery.map((item, index) => {
+                                    const title = `Foto ${index + 1} do espaço`;
+                                    return (
+                                        <li key={item.id} className="h-20 w-34 shrink-0 snap-start sm:h-28 sm:w-44">
+                                            <button
+                                                type="button"
+                                                aria-label={`Exibir ${title.toLowerCase()}`}
+                                                aria-haspopup="dialog"
+                                                onClick={() => setActivePhoto({ source: item.image_url, title })}
+                                                className="relative block size-full cursor-zoom-in overflow-hidden rounded-lg focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-theme-accent"
+                                            >
+                                                <img src={item.image_url} alt={`${title} de ${businessName}`} loading="lazy" decoding="async" className="size-full object-cover" />
+                                            </button>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                            {(galleryScroll.next || galleryScroll.previous) && (
+                                <div className="pointer-events-none absolute inset-x-1 top-1/2 flex -translate-y-1/2 justify-between">
+                                    <button
+                                        type="button"
+                                        aria-label="Fotos anteriores"
+                                        disabled={!galleryScroll.previous}
+                                        onClick={() => galleryRef.current?.scrollBy({ left: -(galleryRef.current.clientWidth - 54) })}
+                                        className="pointer-events-auto flex size-11 items-center justify-center rounded-full border border-theme-border bg-theme-card text-theme-text disabled:invisible"
+                                    >
+                                        <ChevronLeft className="size-5" aria-hidden="true" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        aria-label="Próximas fotos"
+                                        disabled={!galleryScroll.next}
+                                        onClick={() => galleryRef.current?.scrollBy({ left: galleryRef.current.clientWidth - 54 })}
+                                        className="pointer-events-auto flex size-11 items-center justify-center rounded-full border border-theme-border bg-theme-card text-theme-text disabled:invisible"
+                                    >
+                                        <ChevronRight className="size-5" aria-hidden="true" />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </details>
+                )}
+            </div>
+            {activePhoto && (
+                <Modal
+                    open
+                    size="2xl"
+                    title={activePhoto.title}
+                    subtitle={businessName}
+                    onClose={() => setActivePhoto(null)}
+                    bodyClassName="flex min-h-0 items-center justify-center overflow-hidden"
+                >
+                    {activePhoto.unavailable ? (
+                        <p role="status" className="p-4 text-sm text-theme-textSecondary">Não foi possível carregar esta foto.</p>
+                    ) : (
+                        <img
+                            src={activePhoto.source}
+                            alt={`${activePhoto.title} de ${businessName}`}
+                            onError={() => setActivePhoto({ ...activePhoto, unavailable: true })}
+                            className="max-h-[min(70dvh,calc(90dvh_-_7rem_-_var(--safe-bottom)))] max-w-full object-contain"
+                        />
+                    )}
+                </Modal>
+            )}
+        </header>
     );
-};
+}

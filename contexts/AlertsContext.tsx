@@ -261,15 +261,9 @@ export const AlertsProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             })
             .subscribe();
 
-        const notificationsFilter = user?.id ? `user_id=eq.${user.id}` : undefined;
         const notificationsChannel = supabase
-            .channel('notifications_bell')
-            .on('postgres_changes', {
-                event: '*',
-                schema: 'public',
-                table: 'notifications',
-                ...(notificationsFilter ? { filter: notificationsFilter } : {}),
-            }, () => {
+            .channel(`alerts:${user.id}`, { config: { private: true } })
+            .on('broadcast', { event: 'changed' }, () => {
                 void fetchNotifications().then(setNotifications);
             })
             .subscribe();

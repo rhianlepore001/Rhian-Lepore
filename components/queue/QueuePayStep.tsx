@@ -84,7 +84,7 @@ export const QueuePayStep: React.FC<QueuePayStepProps> = ({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className={`text-xl md:text-[22px] font-semibold tracking-tight ${font.heading} ${colors.text}`}>
+        <h2 tabIndex={-1} className={`text-xl md:text-[22px] font-semibold tracking-tight ${font.heading} ${colors.text}`}>
           Como prefere pagar?
         </h2>
         <p className={`text-sm mt-1.5 leading-relaxed ${colors.textMuted}`}>
@@ -94,7 +94,7 @@ export const QueuePayStep: React.FC<QueuePayStepProps> = ({
 
       {serviceName && (
         <div className={`flex items-center justify-between gap-3 px-4 py-3 ${radius.card} ${colors.card} ${colors.border} border`}>
-          <p className={`text-sm font-medium min-w-0 truncate ${colors.text}`}>{serviceName}</p>
+          <p className={`text-sm font-medium min-w-0 break-words ${colors.text}`}>{serviceName}</p>
           <p className={`text-sm font-semibold tabular-nums shrink-0 ${accent.text}`}>
             {formatCurrency(amountCents / 100, region)}
           </p>

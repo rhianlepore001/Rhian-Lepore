@@ -5,16 +5,18 @@ import { usePublicClient } from '../contexts/PublicClientContext';
 import { useBrutalTheme, ThemeVariant } from '../hooks/useBrutalTheme';
 import { ErrorState } from '../components/ui';
 import { PublicClubFlow } from '../components/membership/PublicClubFlow';
-import { Region } from '../utils/formatters';
+import { normalizeRegion } from '../utils/formatters';
 
 export const JoinClub: React.FC = () => {
     const { slug: slugParam } = useParams<{ slug: string }>();
     const [searchParams] = useSearchParams();
     const slug = slugParam || searchParams.get('slug') || '';
+    const initialPlanId = searchParams.get('plano');
+    const fromBooking = searchParams.get('origem') === 'agendamento';
     const { client, hydrateFromStorage } = usePublicClient();
     const { data: businessProfile, isLoading: profileLoading, isError, refetch } = useBusinessProfileBySlug(slug);
     const businessId = (businessProfile as { id?: string } | null)?.id ?? null;
-    const region = ((businessProfile as { region?: string } | null)?.region === 'PT' ? 'PT' : 'BR') as Region;
+    const region = normalizeRegion(businessProfile?.region);
     const themeOverride: ThemeVariant = (businessProfile as { user_type?: string } | null)?.user_type === 'beauty' ? 'beauty' : 'barber';
     const { colors } = useBrutalTheme({ override: themeOverride });
     const sessionMatches = Boolean(client && businessId && client.business_id === businessId);
@@ -54,12 +56,14 @@ export const JoinClub: React.FC = () => {
                     />
                 ) : (
                     <PublicClubFlow
+                        key={`${slug}:${initialPlanId ?? ''}`}
                         slug={slug}
+                        initialPlanId={initialPlanId}
                         businessId={businessId}
                         region={region}
                         themeOverride={themeOverride}
-                        backHref={sessionMatches ? `/minha-area/${slug}` : `/book/${slug}`}
-                        backLabel={sessionMatches ? 'Voltar para minha área' : 'Voltar ao agendamento'}
+                        backHref={fromBooking ? `/book/${slug}?agendar=1&secao=clube` : sessionMatches ? `/minha-area/${slug}?tab=clube` : `/book/${slug}`}
+                        backLabel={sessionMatches && !fromBooking ? 'Voltar para minha área' : 'Voltar ao agendamento'}
                         prefillName={sessionMatches ? client?.name ?? '' : ''}
                         prefillPhone={sessionMatches ? client?.phone ?? '' : ''}
                     />

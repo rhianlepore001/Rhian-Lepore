@@ -28,6 +28,7 @@ import { AgendaStatusLegend } from '../components/agenda/AgendaStatusLegend';
 import { AgendaPublicBookings } from '../components/agenda/AgendaPublicBookings';
 import { AgendaPublicLinkBar } from '../components/agenda/AgendaPublicLinkBar';
 import { AppointmentDetailsActions } from '../components/agenda/AppointmentDetailsActions';
+import { AppointmentReviewInvite } from '../components/reviews/AppointmentReviewInvite';
 import { RescheduleAppointmentModal } from '../components/agenda/RescheduleAppointmentModal';
 import { useStaffAppointmentPermission } from '../hooks/useStaffAppointmentPermission';
 import { isStaffEditForbiddenError, STAFF_EDIT_FORBIDDEN_MESSAGE, canActOnPublicBooking } from '../utils/staffAppointmentPermission';
@@ -1707,6 +1708,16 @@ export const Agenda: React.FC = () => {
                                         })}
                                     </span>
                                 </p>
+                            )}
+                            {detailsApt.status === 'Completed' && (
+                                role === 'owner' || (isStaff && teamMemberId && detailsApt.professional_id === teamMemberId)
+                            ) && (
+                                <AppointmentReviewInvite
+                                    key={detailsApt.id}
+                                    appointmentId={detailsApt.id}
+                                    clientPhone={detailsApt.clientPhone}
+                                    region={currencyRegion}
+                                />
                             )}
                         </div>
 

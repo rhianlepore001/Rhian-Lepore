@@ -185,6 +185,19 @@ export function createDemoClient() {
       case 'get_customer_review_invite': data = { status: 'unavailable' }; break;
       case 'get_public_categories_catalog': data = t.service_categories; break;
       case 'get_public_team_catalog': data = t.team_members; break;
+      case 'get_team_roster_v1': {
+        data = t.team_members
+          .filter(member => args.p_include_inactive || (member.active && !member.deleted_at))
+          .sort((a, b) => String(a.name).localeCompare(String(b.name)))
+          .map(member => ({
+            id: member.id,
+            name: member.name,
+            photo_url: member.photo_url ?? null,
+            staff_user_id: member.staff_user_id ?? null,
+            active: member.active ?? null,
+          }));
+        break;
+      }
       case 'get_public_gallery_catalog': data = t.business_galleries; break;
       case 'get_public_products_catalog': {
         const enabled = Boolean(t.business_settings[0]?.public_products_enabled);

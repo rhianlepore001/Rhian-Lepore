@@ -19,6 +19,24 @@ import {
 } from '@/utils/staffDelete';
 import { TERMINAL_APPOINTMENT_STATUSES, isOpenAppointmentStatus } from '@/utils/appointmentStatus';
 
+interface RosterMember {
+  id: string;
+  name: string;
+  photo_url: string | null;
+  staff_user_id: string | null;
+  active: boolean | null;
+}
+
+export async function fetchTeamRoster(companyId: string, includeInactive = false): Promise<RosterMember[]> {
+  const { data, error } = await supabase.rpc('get_team_roster_v1', {
+    p_company_id: companyId,
+    p_include_inactive: includeInactive,
+  });
+
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function fetchTeamMembers(companyId: string): Promise<TeamMember[]> {
   const { data, error } = await supabase
     .from('team_members')

@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { fetchTeamRoster } from './team';
 
 export interface BusinessHours {
   [day: string]: {
@@ -58,17 +59,13 @@ export async function fetchOccupancyData(
   const startIso = startDate.toISOString();
   const endIso = endDate.toISOString();
 
-  const [settingsRes, professionalsRes, appointmentsRes] = await Promise.all([
+  const [settingsRes, professionals, appointmentsRes] = await Promise.all([
     supabase
       .from('business_settings')
       .select('business_hours')
       .eq('user_id', companyId)
       .maybeSingle(),
-    supabase
-      .from('team_members')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', companyId)
-      .eq('active', true),
+    fetchTeamRoster(companyId),
     supabase
       .from('appointments')
       .select('appointment_time, duration_minutes, status')
@@ -79,12 +76,11 @@ export async function fetchOccupancyData(
   ]);
 
   if (settingsRes.error) throw settingsRes.error;
-  if (professionalsRes.error) throw professionalsRes.error;
   if (appointmentsRes.error) throw appointmentsRes.error;
 
   return {
     businessHours: (settingsRes.data?.business_hours as BusinessHours) || null,
-    activeProfessionalsCount: professionalsRes.count ?? 1,
+    activeProfessionalsCount: professionals.length,
     appointments: appointmentsRes.data || [],
   };
 }

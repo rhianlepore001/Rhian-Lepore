@@ -138,7 +138,7 @@ test.describe('Fila — entrada manual e link', () => {
     await page.goto(`${BASE}/#/minha-area/barbearia-qa?tab=fila`, { waitUntil: 'domcontentloaded' });
 
     await expect(page.getByRole('heading', { name: 'Acesse sua área' })).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByText(/WhatsApp usado ao entrar na fila/)).toBeVisible();
+    await expect(page.getByText(/WhatsApp informado ao entrar na fila/)).toBeVisible();
     const phone = page.locator('input[type="tel"], input[inputmode="numeric"]').first();
     await phone.fill('11939064172');
     await page.getByRole('button', { name: 'Continuar' }).click();

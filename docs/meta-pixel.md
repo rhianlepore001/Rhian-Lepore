@@ -28,11 +28,12 @@ O código usa Graph API v25.0. Revise a versão no ciclo de manutenção da inte
 
 ## Comportamento
 
-- A landing/entrada existente neste repositório é `/#/login` (`/` redireciona para ela);
-  não há outra landing separada.
-- PageView nas rotas públicas de aquisição: `/#/login`, `/#/register`, `/#/termos` e
-  `/#/privacidade`, uma vez por troca de rota do HashRouter (mudança só de query na mesma
-  rota e render duplicado do StrictMode não repetem). Só sem sessão e com consentimento.
+- A landing de marketing é `/#/landing`. `/#/login` permanece como gateway/login.
+  Visitantes sem sessão em `/` vão para a landing; quem tem sessão segue ao app.
+- PageView nas rotas públicas de aquisição: `/#/landing`, `/#/login`, `/#/register`,
+  `/#/termos` e `/#/privacidade`, uma vez por troca de rota do HashRouter (mudança só de
+  query na mesma rota e render duplicado do StrictMode não repetem). Só sem sessão e com
+  consentimento.
 - Ficam de fora, de propósito: rotas autenticadas do app (URLs com ids de clientes/agenda),
   `/update-password` (tokens), `/forgot-password`, convites com `company` ou
   `member` e páginas públicas dos clientes dos salões (`/book`, `/queue`, `/pro`,
@@ -81,31 +82,46 @@ O código usa Graph API v25.0. Revise a versão no ciclo de manutenção da inte
 
 Tudo abaixo exige consentimento, usa o mesmo `event_id` (UUID v4) no navegador e na CAPI
 e dispara no máximo uma vez por visita (aba), exceto onde indicado. Os disparos são passivos:
-não alteram telas, formulários, navegação nem o banco.
+não alteram telas, formulários, navegação nem o banco. A landing de marketing é `/#/landing`.
 
 | Página | Evento | Tipo | Parâmetros |
 | --- | --- | --- | --- |
-| `/#/login` (landing) | `PageView` | padrão | |
-| `/#/login` | `ViewContent` | padrão | `content_category` = nicho escolhido (`barber`/`beauty`...), `content_name=landing` |
-| `/#/login` | `Scroll75` | custom | 75% da página (só se a página rola) |
-| `/#/login` | `TimeOnPage30s` | custom | 30 s com a aba visível |
-| `/#/login` | `CTAClick` | custom | `cta_id` = `free_trial_gateway` ou `free_trial_login` (um por `cta_id`) |
+| `/#/landing` | `PageView` | padrão | |
+| `/#/landing` | `ViewContent` | padrão | `content_category` = `barber`\|`beauty`, `content_name=landing` (uma vez por nicho) |
+| `/#/landing` | `SectionView` | custom | `section` = `hero`\|`demo`\|`feature_*`\|`offer`\|`faq`\|`cta_final`; ≥50% visível por 1 s |
+| `/#/landing` | `Scroll25` / `Scroll50` / `Scroll75` / `Scroll90` | custom | marcos de rolagem; `content_category` = nicho |
+| `/#/landing` | `TimeOnPage15s` / `30s` / `60s` / `120s` | custom | permanência com aba visível; `content_category` = nicho |
+| `/#/landing` | `DemoStart` | custom | 1ª interação real na demo (pointer/key no iframe, troca de tela pelo usuário, ou tabs/links da landing) — **não** no mount do iframe |
+| `/#/landing` | `DemoScreenView` | custom | `screen` = `inicio`\|`agenda`\|`fila`\|`financeiro`\|`comissoes`\|`clientes`\|`hora_cadeira` |
+| `/#/landing` | `DemoComplete` | custom | ≥4 telas vistas **ou** `hora_cadeira` |
+| `/#/landing` | `NichoSwitch` | custom | `content_category` = nicho destino |
+| `/#/landing` | `CTAClick` | custom | `cta_id`, `cta_position` = `hero`\|`demo`\|`meio`\|`final`\|`header` |
+| `/#/landing` | `FAQOpen` | custom | `faq_id` = `faq_card`\|`faq_solo_team`\|`faq_app`\|`faq_mobile`\|`faq_demo_data` |
+| `/#/landing` | `WhatsAppClick` | custom | clique em link de suporte WhatsApp (uma vez) |
+| `/#/login` | `PageView` | padrão | gateway/login |
+| `/#/login` | `ViewContent` / `CTAClick` | padrão/custom | gateway legado (`free_trial_gateway`, `free_trial_login`) |
 | `/#/register` | `PageView` | padrão | |
 | `/#/register` | `StartRegistration` | custom | primeiro foco/digitação feito por pessoa em campo do formulário |
-| `/#/register` | `Lead`, `CompleteRegistration` | padrão | já existiam; agora também enviam nome/sobrenome/país |
+| `/#/register` | `Lead`, `CompleteRegistration` | padrão | conta criada + fluxo completo; Advanced Matching |
 | `/#/termos`, `/#/privacidade` | `PageView` | padrão | |
 | `/#/onboarding-wizard` (logado, dono) | `OnboardingStep` | custom | `step` 1..6, `total_steps` |
 
 - `StartTrial` não existe: o teste grátis começa no cadastro, já marcado por `CompleteRegistration`
   (evento de otimização recomendado). `OnboardingStep` mede ativação.
 - `InitiateCheckout` não é usado (não há checkout no cadastro).
-- Não há páginas separadas de home/preços no `main`; para incluir uma nova página de marketing,
-  adicione a rota em `META_PUBLIC_PATHS` (`lib/metaTracking.ts`) e em `EVENT_ROUTES` da Edge Function.
+- Demo embutida (`/demo-preview` em iframe): a demo **não** carrega o Pixel; avisa a landing via
+  `postMessage` (`agendix:meta-demo`) com checagem de origem. `action: start` só após interação
+  real; `action: screen` não implica DemoStart. A landing dispara os eventos Meta.
+- `/#/login` pode chamar `useMetaLandingEngagement` (ViewContent do nicho), mas `Scroll*` /
+  `TimeOnPage*` ficam bloqueados por rota no hook e em `metaTracker.landingEngagement`
+  (`LANDING_ONLY`); a CAPI só aceita esses eventos em `#/landing`.
+- Sem tabela de preços na landing: a seção de setup/trial usa `section=offer`.
+- `cta_position=meio` está na allow-list; hoje não há CTA no meio da página (reservado).
 - `OnboardingStep` usa o mesmo escopo transitório de `CompleteRegistration`: com consentimento,
   carrega o Pixel, envia e revoga o consentimento em seguida. Nenhum outro evento sai de rotas
   autenticadas.
 - `custom_data` só aceita tokens `[a-z][a-z0-9_-]{0,31}` e inteiros 1..20; qualquer outra coisa é
-  ignorada no navegador e rejeitada (400) na CAPI.
+  ignorada no navegador e rejeitada (400) na CAPI. Sem texto livre nem dados pessoais nos custom.
 
 ### Advanced Matching
 
@@ -166,12 +182,12 @@ Estes passos são instruções para validação futura; não foram executados em
    nem altera configuração global do Supabase.
    O frontend deve apontar para esse mesmo Supabase, com suas chaves públicas locais.
    Não execute deploy para realizar esta revisão.
-3. Inicie o Vite com o mesmo Pixel ID e abra `/#/login` em navegador limpo.
+3. Inicie o Vite com o mesmo Pixel ID e abra `/#/landing` em navegador limpo.
    Antes da escolha e após Recusar, a aba Network não deve mostrar fbevents.js,
    facebook.com/tr nem meta-capi.
 4. Abra Preferências de cookies e aceite. Confirme PageView. Navegue pelo próprio app
    ao cadastro, aos Termos e à Privacidade: um PageView por troca de rota e nenhum Lead.
-   Teste também `/?utm_id=1&ad_id=2&fbclid=teste#/login`: o PageView deve sair normalmente.
+   Teste também `/?utm_id=1&ad_id=2&fbclid=teste#/landing`: o PageView deve sair normalmente.
    Enviar o formulário com erro de validação não gera Lead; o Lead só sai quando a conta de
    teste é criada, uma vez por visita.
 5. Envie um cadastro inválido ou com e-mail já existente: nenhum CompleteRegistration.

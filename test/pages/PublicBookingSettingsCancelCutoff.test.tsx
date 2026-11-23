@@ -81,8 +81,8 @@ describe('PublicBookingSettings — prazo para o cliente cancelar', () => {
 
   it('mostra chips 1h · 2h · 6h · 12h · 24h · 48h · Não pode cancelar online, 2h marcado', () => {
     render(<PublicBookingSettings />);
-    expect(screen.getByRole('heading', { name: 'Política de cancelamento' })).toBeInTheDocument();
-    expect(screen.getByRole('group', { name: 'Cliente pode cancelar até' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Política de agendamento' })).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Prazo para cancelar pela Minha Área' })).toBeInTheDocument();
     expect(screen.getByTestId('cancel-cutoff-preset-2')).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByTestId('cancel-cutoff-preset-1')).toBeInTheDocument();
     expect(screen.getByTestId('cancel-cutoff-preset-6')).toBeInTheDocument();
@@ -90,9 +90,8 @@ describe('PublicBookingSettings — prazo para o cliente cancelar', () => {
     expect(screen.getByTestId('cancel-cutoff-preset-24')).toBeInTheDocument();
     expect(screen.getByTestId('cancel-cutoff-preset-48')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Não pode cancelar online' })).toBeInTheDocument();
-    expect(screen.getByTestId('client-cancel-policy-text')).toHaveValue(
-      'Você pode cancelar até 2h antes pela Minha Área',
-    );
+    expect(screen.getByRole('textbox', { name: 'Texto da sua política' })).toHaveValue('');
+    expect(screen.getByTestId('cancel-policy-preview')).toHaveTextContent('Você pode cancelar até 2h antes pela Minha Área');
     expect(screen.getByTestId('cancel-policy-default-badge')).toHaveTextContent('Texto padrão');
   });
 
@@ -113,17 +112,18 @@ describe('PublicBookingSettings — prazo para o cliente cancelar', () => {
   it('Não pode cancelar online gera a frase de falar com o negócio', () => {
     render(<PublicBookingSettings />);
     fireEvent.click(screen.getByTestId('cancel-cutoff-preset-0'));
-    expect(screen.getByTestId('client-cancel-policy-text')).toHaveValue(
+    expect(screen.getByTestId('cancel-policy-preview')).toHaveTextContent(
       'Para cancelar, fale com Barbearia São João.',
     );
   });
 
-  it('texto padrão acompanha o prazo e salva null (usa o gerado)', async () => {
+  it('texto padrão acompanha o prazo sem gravar texto personalizado', async () => {
     render(<PublicBookingSettings />);
     fireEvent.click(screen.getByTestId('cancel-cutoff-preset-24'));
-    expect(screen.getByTestId('client-cancel-policy-text')).toHaveValue('Você pode cancelar até 24h antes pela Minha Área');
+    expect(screen.getByTestId('cancel-policy-preview')).toHaveTextContent('Você pode cancelar até 24h antes pela Minha Área');
     fireEvent.click(screen.getByRole('button', { name: /Salvar Alterações/ }));
-    await waitFor(() => expect(updatePolicyText).toHaveBeenCalledWith(null));
+    await screen.findByRole('button', { name: 'Salvo!' });
+    expect(updatePolicyText).not.toHaveBeenCalled();
   });
 
   it('gestor edita o texto, salva aparado e pode restaurar o padrão', async () => {
@@ -132,12 +132,14 @@ describe('PublicBookingSettings — prazo para o cliente cancelar', () => {
     expect(field).toHaveAttribute('maxLength', '300');
     fireEvent.change(field, { target: { value: '  Cancele até 1 dia antes pela Minha Área.  ' } });
     expect(screen.getByTestId('cancel-policy-restore-default')).toBeInTheDocument();
-    expect(screen.getByTestId('cancel-policy-preview')).toHaveTextContent('Cancele até 1 dia antes pela Minha Área.');
+    const preview = screen.getByTestId('cancel-policy-preview');
+    expect(preview).toHaveTextContent('Cancele até 1 dia antes pela Minha Área.');
+    expect(preview).toHaveTextContent('Você pode cancelar até 2h antes pela Minha Área');
     fireEvent.click(screen.getByRole('button', { name: /Salvar Alterações/ }));
     await waitFor(() => expect(updatePolicyText).toHaveBeenCalledWith('Cancele até 1 dia antes pela Minha Área.'));
 
     fireEvent.click(screen.getByTestId('cancel-policy-restore-default'));
-    expect(screen.getByTestId('client-cancel-policy-text')).toHaveValue('Você pode cancelar até 2h antes pela Minha Área');
+    expect(field).toHaveValue('');
     expect(screen.queryByTestId('cancel-policy-restore-default')).not.toBeInTheDocument();
   });
 
@@ -146,6 +148,14 @@ describe('PublicBookingSettings — prazo para o cliente cancelar', () => {
     render(<PublicBookingSettings />);
     expect(screen.getByTestId('client-cancel-policy-text')).toHaveValue('Política da casa.');
     expect(screen.getByTestId('cancel-policy-restore-default')).toBeInTheDocument();
+  });
+
+  it('restaurar o padrão salva null quando havia uma política personalizada', async () => {
+    state.settings = { ...state.settings, client_cancel_policy_text: 'Política da casa.' };
+    render(<PublicBookingSettings />);
+    fireEvent.click(screen.getByTestId('cancel-policy-restore-default'));
+    fireEvent.click(screen.getByRole('button', { name: /Salvar Alterações/ }));
+    await waitFor(() => expect(updatePolicyText).toHaveBeenCalledWith(null));
   });
 
   it('prévia mostra as observações com o prefixo "Observações:", como texto puro', () => {

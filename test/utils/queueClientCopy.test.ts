@@ -3,19 +3,25 @@ import { formatQueueEstimatedWait, queueClientHeadline, queueClientPaymentBadge,
 
 describe('queueClientHeadline', () => {
   it('mostra posição ordinal e pessoas à frente', () => {
-    const headline = queueClientHeadline({ status: 'waiting', position: 3, etaMinutes: 25 });
+    const headline = queueClientHeadline({ status: 'waiting', position: 3 });
     expect(headline.title).toBe('Você é o 3º da fila');
     expect(headline.subtitle).toBe('2 pessoas na sua frente');
   });
 
-  it('singular para uma pessoa e sem estimativa quando ETA é nulo', () => {
-    const headline = queueClientHeadline({ status: 'waiting', position: 2, etaMinutes: null });
+  it('singular para uma pessoa à frente', () => {
+    const headline = queueClientHeadline({ status: 'waiting', position: 2 });
     expect(headline.subtitle).toBe('1 pessoa na sua frente');
   });
 
   it('primeiro da fila é o próximo', () => {
     expect(queueClientHeadline({ status: 'waiting', position: 1 }).title).toBe('Você é o próximo');
-    expect(queueClientHeadline({ status: 'waiting', position: null }).title).toBe('Você é o próximo');
+  });
+
+  it('distingue a posição desconhecida do primeiro lugar', () => {
+    expect(queueClientHeadline({ status: 'waiting', position: null })).toEqual({
+      title: 'Você está na fila', subtitle: 'Sua posição ainda está indisponível.',
+    });
+    expect(queueClientHeadline({ status: 'waiting', position: undefined }).subtitle).toBe('Atualizando sua posição…');
   });
 
   it('chamado usa o primeiro nome e o profissional', () => {
@@ -26,7 +32,7 @@ describe('queueClientHeadline', () => {
       professionalName: 'João',
     });
     expect(headline.title).toBe('Carlos, é a sua vez!');
-    expect(headline.subtitle).toBe('João está esperando por você.');
+    expect(headline.subtitle).toBe('Dirija-se ao atendimento de João.');
   });
 
   it('prazo esgotado deixa o aviso no título, não só no rodapé', () => {
@@ -82,9 +88,9 @@ describe('queueClientPaymentBadge', () => {
 });
 
 describe('formatQueueEstimatedWait', () => {
-  it('deixa explícito que o tempo é estimado', () => {
-    expect(formatQueueEstimatedWait(45)).toBe('Tempo estimado: cerca de 45 min');
-    expect(formatQueueEstimatedWait(0)).toBe('Tempo estimado: agora');
+  it('formata a espera em linguagem aproximada', () => {
+    expect(formatQueueEstimatedWait(45)).toBe('cerca de 45 min');
+    expect(formatQueueEstimatedWait(0)).toBe('A qualquer momento');
     expect(formatQueueEstimatedWait(null)).toBeNull();
   });
 });

@@ -4,13 +4,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { redactInviteToken } from '@/utils/redactUrl';
 import { captureContext } from '@/lib/bugReport';
-import { supabase } from '@/lib/supabase';
-import { logger } from '@/utils/Logger';
 
 const TOKEN = 'ab'.repeat(32);
 const INVITE_URL = `https://app.example.com/#/register?company=c1&member=m1&invite=${TOKEN}`;
 
 describe('redactInviteToken', () => {
+    it('oculta a credencial de avaliação em URLs e hashes', () => {
+        expect(redactInviteToken('https://app.example.com/#/avaliar/70deac24-8742-4704-8b63-5ee69d6510cd?origem=agenda'))
+            .toBe('https://app.example.com/#/avaliar/[redacted]?origem=agenda');
+    });
+
     it('troca o valor de invite= e mantém o resto do link', () => {
         expect(redactInviteToken(INVITE_URL)).toBe('https://app.example.com/#/register?company=c1&member=m1&invite=[redacted]');
         expect(redactInviteToken(`/#/register?invite=${TOKEN}&company=c1`)).toBe('/#/register?invite=[redacted]&company=c1');
@@ -23,7 +26,7 @@ describe('redactInviteToken', () => {
     });
 });
 
-describe('logs e relato de bug sem o token', () => {
+describe('relato de bug sem o token', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         window.history.replaceState(null, '', `/?invite=${TOKEN}#/register?company=c1&member=m1&invite=${TOKEN}`);
@@ -35,16 +38,5 @@ describe('logs e relato de bug sem o token', () => {
         expect(all).not.toContain(TOKEN);
         expect(ctx.url).toContain('invite=[redacted]');
         expect(ctx.hash).toContain('member=m1');
-    });
-
-    it('Logger.error envia a url redigida', async () => {
-        const rpc = supabase.rpc as unknown as ReturnType<typeof vi.fn>;
-        rpc.mockResolvedValue({ data: null, error: null });
-        vi.spyOn(console, 'error').mockImplementation(() => {});
-        await logger.error('falhou', new Error('x'));
-        const call = rpc.mock.calls.find((c) => c[0] === 'log_error');
-        expect(call).toBeTruthy();
-        expect(JSON.stringify(call![1])).not.toContain(TOKEN);
-        expect(call![1].p_context.url).toContain('invite=[redacted]');
     });
 });

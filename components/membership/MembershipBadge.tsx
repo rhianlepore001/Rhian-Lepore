@@ -11,8 +11,8 @@ interface MembershipBadgeProps {
 
 const COLORS: Record<MembershipBadgeColor, { bg: string; text: string; icon: React.ReactNode }> = {
     gold: { bg: 'bg-[var(--color-warning-bg)]', text: 'text-[var(--color-warning)]', icon: <Crown className="w-3 h-3" /> },
-    silver: { bg: 'bg-slate-400/20', text: 'text-slate-200', icon: <Sparkles className="w-3 h-3" /> },
-    bronze: { bg: 'bg-orange-700/20', text: 'text-orange-300', icon: <Sparkles className="w-3 h-3" /> },
+    silver: { bg: 'bg-slate-400/20', text: 'text-theme-text', icon: <Sparkles className="w-3 h-3" /> },
+    bronze: { bg: 'bg-orange-700/20', text: 'text-theme-text', icon: <Sparkles className="w-3 h-3" /> },
 };
 
 export const MembershipBadge: React.FC<MembershipBadgeProps> = ({

@@ -13,14 +13,21 @@ describe('A-04 vercel security headers', () => {
     expect(flat['Permissions-Policy']).toContain('camera=()');
   });
 
-  it('CSP é Report-Only (não enforce)', () => {
-    expect(flat['Content-Security-Policy-Report-Only']).toBeTruthy();
-    expect(flat['Content-Security-Policy']).toBeUndefined();
-    const csp = flat['Content-Security-Policy-Report-Only'];
-    expect(csp).toContain('https://*.supabase.co');
-    expect(csp).toContain('https://js.stripe.com');
-    expect(csp).toContain("frame-ancestors 'self'");
-    expect(csp).not.toContain("frame-ancestors 'none'");
+  it('aplica a CSP de scripts ao app e ao iframe da demonstração', () => {
+    const enforced = flat['Content-Security-Policy'];
+    const iframe = headers.find((entry) => entry.source === '/demo-preview');
+    expect(iframe?.headers.find((header) => header.key === 'Content-Security-Policy')?.value).toBe(enforced);
+    expect(enforced).toContain("script-src 'self' https://js.stripe.com https://connect.facebook.net");
+    expect(enforced).toContain("script-src-attr 'none'");
+    expect(enforced).toContain("frame-ancestors 'self'");
+    expect(enforced).not.toMatch(/unsafe-inline|unsafe-eval/);
+  });
+
+  it('mantém as origens de API autorizadas na política de observação', () => {
+    const report = flat['Content-Security-Policy-Report-Only'];
+    expect(report).toContain('https://*.supabase.co');
+    expect(report).toContain('https://api.stripe.com');
+    expect(report).not.toContain('unsafe-eval');
   });
 
   it('só a própria origem (e a Stripe) pode ser embutida; ninguém de fora embute o site', () => {

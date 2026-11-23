@@ -16,7 +16,7 @@ export function publicRatingBadge(
   if (!Number.isFinite(total) || total <= 0) return null;
   if (!Number.isFinite(score) || score <= 0) return null;
   return {
-    value: score.toFixed(1),
+    value: new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(score),
     countLabel: `${total} ${total === 1 ? 'avaliação' : 'avaliações'}`,
   };
 }

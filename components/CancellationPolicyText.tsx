@@ -2,7 +2,7 @@ import React from 'react';
 import { CANCELLATION_POLICY_NOTES_PREFIX, type CancellationPolicyParts } from '../utils/cancellationPolicyCopy';
 
 interface Props {
-    parts: Pick<CancellationPolicyParts, 'policy' | 'notes'>;
+    parts: Pick<CancellationPolicyParts, 'policy' | 'notes' | 'onlineCancellation'>;
     /** Classe do texto (cor/tamanho). */
     className?: string;
     /** Classe extra do rótulo "Observações:". */
@@ -19,6 +19,12 @@ export const CancellationPolicyText: React.FC<Props> = ({ parts, className = '',
         <p className={`whitespace-pre-wrap break-words ${className}`} data-testid={testId ? `${testId}-text` : undefined}>
             {parts.policy}
         </p>
+        {parts.onlineCancellation && (
+            <p className={`border-t border-theme-border pt-2 ${className}`}>
+                <span className={`block font-semibold ${labelClassName}`}>Regra de cancelamento da Minha Área</span>
+                {parts.onlineCancellation}
+            </p>
+        )}
         {parts.notes && (
             <p className={`whitespace-pre-wrap break-words ${className}`} data-testid={testId ? `${testId}-notes` : undefined}>
                 <span className={`font-semibold ${labelClassName}`}>{CANCELLATION_POLICY_NOTES_PREFIX}</span>{' '}

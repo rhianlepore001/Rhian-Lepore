@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fetchPublicServices, submitPublicGroupBooking } from '@/services/publicBooking';
 import { supabase } from '@/lib/supabase';
+import { getCustomerReviewReceipt } from '@/utils/customerReviewReceipt';
 
 vi.mock('@/lib/supabase', () => ({
   supabase: { rpc: vi.fn(), from: vi.fn() },
@@ -53,6 +54,19 @@ describe('submitPublicGroupBooking', () => {
       ],
     });
     expect(result).toHaveLength(2);
+  });
+
+  it('liga o comprovante à posição da pessoa mesmo se a resposta vier fora de ordem', async () => {
+    const reviewTokens = ['70deac24-8742-4704-8b63-5ee69d6510cd', '059d9e79-165c-4ea8-93cb-73bb5888873a'];
+    vi.mocked(supabase.rpc)
+      .mockResolvedValueOnce({ data: [{ id: 'b2', group_position: 1 }, { id: 'b1', group_position: 0 }], error: null } as never)
+      .mockResolvedValueOnce({ data: [{ id: 'pc-1' }], error: null } as never);
+    await submitPublicGroupBooking({ ...input, reviewTokens });
+    expect(supabase.rpc).toHaveBeenCalledWith('create_public_group_booking', expect.objectContaining({ p_review_tokens: reviewTokens }));
+    expect(getCustomerReviewReceipt(input.businessId, 'b1')).toBe(reviewTokens[0]);
+    expect(getCustomerReviewReceipt(input.businessId, 'b2')).toBe(reviewTokens[1]);
+    localStorage.removeItem('agendix-review:business-001:b1');
+    localStorage.removeItem('agendix-review:business-001:b2');
   });
 
   it('repassa o erro do servidor sem salvar parcialmente', async () => {

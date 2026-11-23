@@ -35,9 +35,17 @@ export function useUpdateBusinessSettings() {
   return useMutation({
     mutationFn: (updates: BusinessSettingsUpdate) =>
       updateBusinessSettings(companyId!, updates),
-    onSuccess: () => {
+    onSuccess: (_result, updates) => {
       queryClient.invalidateQueries({ queryKey: ['settings', companyId, 'business'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard', companyId] });
+      if (
+        updates.client_cancel_cutoff_hours !== undefined ||
+        updates.client_cancel_note !== undefined ||
+        updates.client_cancel_policy_text !== undefined ||
+        updates.cancellation_policy !== undefined
+      ) {
+        queryClient.invalidateQueries({ queryKey: ['public-booking', 'settings', companyId] });
+      }
     },
   });
 }

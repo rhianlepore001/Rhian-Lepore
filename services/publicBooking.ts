@@ -1,3 +1,4 @@
+import { saveCustomerReviewReceipt } from '@/utils/customerReviewReceipt';
 import { buildPublicClientPhotoPath } from '../utils/clientPhotoPath';
 import { supabase } from '@/lib/supabase';
 import type { PublicClient } from '@/types';
@@ -194,7 +195,14 @@ export async function submitPublicBooking(input: SubmitPublicBookingInput): Prom
     p_product_lines: parsed.productLines ?? [],
   };
 
-  const { data: rpcRows, error: rpcError } = await supabase.rpc('create_public_booking', rpcArgs);
+  let reviewToken = parsed.reviewToken;
+  let { data: rpcRows, error: rpcError } = await supabase.rpc('create_public_booking',
+    reviewToken ? { ...rpcArgs, p_review_token: reviewToken } : rpcArgs,
+  );
+  if (reviewToken && isMissingRpcError(rpcError)) {
+    reviewToken = undefined;
+    ({ data: rpcRows, error: rpcError } = await supabase.rpc('create_public_booking', rpcArgs));
+  }
   let created = firstRpcRow(rpcRows) as PublicBookingRecord | null;
 
   if (rpcError) {
@@ -218,6 +226,10 @@ export async function submitPublicBooking(input: SubmitPublicBookingInput): Prom
     if (insertError) throw insertError;
   }
 
+  if (created && reviewToken && !rpcError) {
+    saveCustomerReviewReceipt(parsed.businessId, created.id, reviewToken);
+  }
+
   try {
     await upsertPublicClientSession({
       businessId: parsed.businessId,
@@ -239,7 +251,7 @@ export async function submitPublicBooking(input: SubmitPublicBookingInput): Prom
 
 export async function submitPublicGroupBooking(input: SubmitPublicGroupBookingInput): Promise<PublicBookingRecord[]> {
   const parsed = submitPublicGroupBookingInputSchema.parse(input);
-  const { data, error } = await supabase.rpc('create_public_group_booking', {
+  const rpcArgs = {
     p_business_id: parsed.businessId,
     p_customer_name: parsed.customerName,
     p_customer_phone: parsed.customerPhone,
@@ -249,10 +261,25 @@ export async function submitPublicGroupBooking(input: SubmitPublicGroupBookingIn
       professional_id: person.professionalId,
       service_ids: person.serviceIds,
     })),
-  });
+  };
+  let reviewTokens = parsed.reviewTokens;
+  let { data, error } = await supabase.rpc('create_public_group_booking',
+    reviewTokens ? { ...rpcArgs, p_review_tokens: reviewTokens } : rpcArgs,
+  );
+  if (reviewTokens && isMissingRpcError(error)) {
+    reviewTokens = undefined;
+    ({ data, error } = await supabase.rpc('create_public_group_booking', rpcArgs));
+  }
   if (error) throw error;
   const rows = (data ?? []) as PublicBookingRecord[];
   if (rows.length !== parsed.people.length) throw new Error('Group booking returned an unexpected result');
+
+  if (reviewTokens) {
+    for (const row of rows) {
+      const token = row.group_position == null ? undefined : reviewTokens[row.group_position];
+      if (token) saveCustomerReviewReceipt(parsed.businessId, row.id, token);
+    }
+  }
 
   try {
     await upsertPublicClientSession({
@@ -579,6 +606,23 @@ export async function fetchPublicProfessionals(businessId: string) {
 
   if (error) throw error;
   return data ?? [];
+}
+
+interface PublicProfessionalPortfolio {
+  id: string;
+  name: string;
+  role: string | null;
+  bio: string | null;
+  photo_url: string | null;
+  business_name: string | null;
+  business_slug: string | null;
+  user_type: string | null;
+}
+
+export async function fetchPublicProfessionalPortfolio(slug: string): Promise<PublicProfessionalPortfolio | null> {
+  const { data, error } = await supabase.rpc('get_public_professional_portfolio', { p_slug: slug });
+  if (error) throw error;
+  return data ?? null;
 }
 
 export async function fetchPublicGallery(businessId: string) {

@@ -181,6 +181,8 @@ export function createDemoClient() {
       case 'get_public_profile_by_slug': data = t.profiles[0]; break;
       case 'get_public_business_settings_json': data = t.business_settings[0]; break;
       case 'get_public_services_catalog': data = t.services; break;
+      case 'get_public_customer_reviews': data = { average: null, total: 0, reviews: [] }; break;
+      case 'get_customer_review_invite': data = { status: 'unavailable' }; break;
       case 'get_public_categories_catalog': data = t.service_categories; break;
       case 'get_public_team_catalog': data = t.team_members; break;
       case 'get_public_gallery_catalog': data = t.business_galleries; break;

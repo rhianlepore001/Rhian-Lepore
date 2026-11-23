@@ -17,7 +17,6 @@ export interface QueueClientHeadlineInput {
   status: QueueStatus;
   position: number | null | undefined;
   firstName?: string | null;
-  etaMinutes?: number | null;
   professionalName?: string | null;
   remainingLateMinutes?: number | null;
 }
@@ -39,14 +38,14 @@ export function queueClientHeadline(input: QueueClientHeadlineInput): QueueClien
     if (input.remainingLateMinutes != null && input.remainingLateMinutes <= 0) {
       return {
         title: 'O prazo para chegar acabou',
-        subtitle: 'Fale com a equipe no balcão agora. Sua senha foi chamada, mas o tempo de tolerância esgotou.',
+        subtitle: 'Sua senha foi chamada. Fale com a equipe no balcão agora.',
       };
     }
     return {
       title: name ? `${name}, é a sua vez!` : 'É a sua vez!',
       subtitle: input.professionalName
-        ? `${input.professionalName} está esperando por você.`
-        : 'Pode vir. A equipe está esperando por você.',
+        ? `Dirija-se ao atendimento de ${input.professionalName}.`
+        : 'Dirija-se ao balcão para ser atendido.',
     };
   }
 
@@ -69,7 +68,7 @@ export function queueClientHeadline(input: QueueClientHeadlineInput): QueueClien
   if (input.status === 'no_show') {
     return {
       title: 'Sua senha foi encerrada',
-      subtitle: 'Você foi chamado e não compareceu. Para voltar à fila, escaneie o QR Code novamente.',
+      subtitle: 'A equipe registrou que você não compareceu. Para voltar à fila, escaneie o QR Code.',
     };
   }
 
@@ -86,10 +85,14 @@ export function queueClientHeadline(input: QueueClientHeadlineInput): QueueClien
   }
 
   const position = input.position;
-  if (position == null || position <= 1) {
+  if (position == null || position < 1) {
+    return { title: 'Você está na fila', subtitle: 'Sua posição ainda está indisponível.' };
+  }
+
+  if (position === 1) {
     return {
       title: 'Você é o próximo',
-      subtitle: 'Fique por perto. Vamos chamar você em instantes.',
+      subtitle: 'Acompanhe por aqui. Avisamos neste painel quando for a sua vez.',
     };
   }
 
@@ -100,11 +103,10 @@ export function queueClientHeadline(input: QueueClientHeadlineInput): QueueClien
   };
 }
 
-/** Rótulo explícito: espera estimada (soma de quem está à frente), nunca o tempo do próprio serviço. */
 export function formatQueueEstimatedWait(etaMinutes: number | null | undefined): string | null {
   if (etaMinutes == null) return null;
-  if (etaMinutes <= 0) return 'Tempo estimado: agora';
-  return `Tempo estimado: cerca de ${etaMinutes} min`;
+  if (etaMinutes <= 0) return 'A qualquer momento';
+  return `cerca de ${etaMinutes} min`;
 }
 
 export function queueClientRuleLine(input: {

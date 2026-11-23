@@ -80,7 +80,7 @@ describe('GeneralSettings — PR-1 política gerada da regra real (D3)', () => {
 
   it('mostra o texto gerado da regra real (cancelar até 2h antes)', () => {
     render(<GeneralSettings />);
-    expect(screen.getByTestId('cancellation-policy-generated')).toHaveValue('Você pode cancelar até 2h antes pela Minha Área');
+    expect(screen.getByText('Você pode cancelar até 2h antes pela Minha Área')).toBeVisible();
   });
 
   it('mostra a dica sob o campo de observações, sem prometer multa', () => {
@@ -91,7 +91,7 @@ describe('GeneralSettings — PR-1 política gerada da regra real (D3)', () => {
   it('salva prazo, texto e observações pelo formulário geral', async () => {
     render(<GeneralSettings />);
     fireEvent.change(screen.getByTestId('cancel-cutoff'), { target: { value: '24' } });
-    expect(screen.getByTestId('cancellation-policy-generated')).toHaveValue('Você pode cancelar até 24h antes pela Minha Área');
+    expect(screen.getByText('Você pode cancelar até 24h antes pela Minha Área')).toBeVisible();
     fireEvent.change(screen.getByTestId('cancellation-policy-generated'), { target: { value: 'Cancele até 24 horas antes.' } });
     fireEvent.change(screen.getByTestId('cancellation-policy-notes'), { target: { value: 'Avise a equipe.' } });
     fireEvent.click(screen.getByText('Salvar'));

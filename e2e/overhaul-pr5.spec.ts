@@ -312,7 +312,7 @@ test.describe('PR-5 prazo de cancelamento', () => {
       const guard = await installProdWriteGuard(page);
       await stubOwner(page);
       await page.goto(`${BASE}/#/configuracoes/agendamento`, { waitUntil: 'domcontentloaded' });
-      await expect(page.getByRole('heading', { name: 'Política de cancelamento' })).toBeVisible({ timeout: 20_000 });
+      await expect(page.getByRole('heading', { name: 'Política de agendamento' })).toBeVisible({ timeout: 20_000 });
       const section = page.getByTestId('cancel-cutoff-section');
       await section.evaluate((el) => el.scrollIntoView({ block: 'center' }));
       await expect(page.getByTestId('cancel-cutoff-preset-2')).toHaveAttribute('aria-pressed', 'true');
@@ -374,8 +374,8 @@ test.describe('PR-5 prazo de cancelamento', () => {
       await slot.waitFor({ timeout: 15_000 });
       await slot.click();
       await page.getByRole('button', { name: /^Continuar$/ }).click();
-      await expect(page.getByRole('button', { name: /política de cancelamento/i })).toBeVisible({ timeout: 15_000 });
-      await page.getByRole('button', { name: /política de cancelamento/i }).click();
+      await expect(page.getByRole('button', { name: /política de agendamento/i })).toBeVisible({ timeout: 15_000 });
+      await page.getByRole('button', { name: /política de agendamento/i }).click();
       await expect(page.getByTestId('public-cancellation-policy')).toHaveText(POLICY_TEXT);
       await expect(page.getByText(/cobrança de 50%/i)).toHaveCount(0);
       await shot(page, `politica-${vp.name}`);

@@ -3,34 +3,22 @@ import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Calendar, User } from 'lucide-react';
 import { Card, ErrorState } from '../components/ui';
-import { supabase } from '../lib/supabase';
+import { fetchPublicProfessionalPortfolio } from '../services/publicBooking';
 
 export const ProfessionalPortfolio: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
     const { data: professional, isLoading, isError, refetch } = useQuery({
         queryKey: ['public-professional-portfolio', slug],
         enabled: Boolean(slug),
-        queryFn: async () => {
-            const { data, error } = await supabase
-                .from('team_members')
-                .select('*, profiles:user_id(*)')
-                .eq('slug', slug!)
-                .eq('active', true)
-                .single();
-
-            if (error?.code === 'PGRST116') return null;
-            if (error) throw error;
-            return data;
-        },
+        queryFn: () => fetchPublicProfessionalPortfolio(slug!),
     });
-    const business = professional?.profiles;
-    const theme = business?.user_type === 'beauty' ? 'beauty' : 'barber';
-    const businessSlug = business?.business_slug;
+    const theme = professional?.user_type === 'beauty' ? 'beauty' : 'barber';
+    const businessSlug = professional?.business_slug;
 
     return (
         <main
-            data-theme={business ? theme : undefined}
-            data-mode={business ? (theme === 'beauty' ? 'light' : 'dark') : undefined}
+            data-theme={professional ? theme : undefined}
+            data-mode={professional ? (theme === 'beauty' ? 'light' : 'dark') : undefined}
             className="min-h-screen bg-theme-bg px-4 py-8 text-theme-text sm:py-16"
         >
             <div className="mx-auto max-w-xl">
@@ -42,7 +30,7 @@ export const ProfessionalPortfolio: React.FC = () => {
                         message="Confira a conexão e tente novamente."
                         onRetry={() => void refetch()}
                     />
-                ) : !professional || !business ? (
+                ) : !professional ? (
                     <Card className="space-y-2 text-center">
                         <h1 className="text-xl font-bold">Profissional não encontrado</h1>
                         <p className="text-sm text-theme-textSecondary">Confira o endereço ou peça um novo link ao estabelecimento.</p>
@@ -59,7 +47,7 @@ export const ProfessionalPortfolio: React.FC = () => {
                                 </div>
                             )}
                             <div className="min-w-0">
-                                <p className="break-words text-sm text-theme-textSecondary">{business.business_name}</p>
+                                <p className="break-words text-sm text-theme-textSecondary">{professional.business_name}</p>
                                 <h1 className="break-words font-heading text-2xl font-bold sm:text-3xl">{professional.name}</h1>
                                 {professional.role && <p className="break-words text-sm text-theme-textSecondary">{professional.role}</p>}
                             </div>

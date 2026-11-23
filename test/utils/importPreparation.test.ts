@@ -15,6 +15,12 @@ describe('preparação de dados para importação', () => {
     expect(normalizePhone('(11) 98765-4321', 'BR')).toBe('+5511987654321');
     expect(normalizePhone('912 345 678', 'PT')).toBe('+351912345678');
     expect(normalizePhone('+351 912 345 678', 'BR')).toBe('+351912345678');
+    expect(normalizePhone('00351 912 345 678', 'BR')).toBe('+351912345678');
+    expect(normalizePhone('351912345678', 'BR')).toBe('+351912345678');
+    expect(normalizePhone('+55 (11) 98765-4321', 'PT')).toBe('+5511987654321');
+    expect(normalizePhone('0055 (11) 98765-4321', 'PT')).toBe('+5511987654321');
+    expect(normalizePhone('(35) 1234-5678', 'BR')).toBe('+553512345678');
+    expect(normalizePhone('+55 912345678', 'BR')).toBeNull();
     expect(normalizePhone('123', 'BR')).toBeNull();
   });
 

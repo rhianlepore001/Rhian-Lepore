@@ -3,12 +3,10 @@ import { Link } from 'react-router-dom';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { Badge } from '@/components/ui';
 import { useQueueBoard } from '@/hooks/useQueueBoard';
-import { useQueueRealtime } from '@/hooks/useQueueRealtime';
 import {
   cancelQueueEntryPublic,
   clearQueueTicket,
   isActiveQueueStatus,
-  readQueueTicket,
   resolveClientQueueEntry,
 } from '@/services/queue';
 import { fetchPublicProfessionals } from '@/services/publicBooking';
@@ -65,18 +63,16 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
   const lookupPhone = phone || entry?.client_phone || null;
   const board = useQueueBoard(isActive ? entry?.id : null, lookupPhone, entry?.status);
 
-  useQueueRealtime(businessId, (event) => {
-    void queryClient.invalidateQueries({ queryKey: ['queue', 'client-active', businessId] });
-    void queryClient.invalidateQueries({ queryKey: ['queue', 'board'] });
-
-    const ticket = readQueueTicket(businessId);
-    const isMine = ticket?.entryId === event.entryId || entry?.id === event.entryId;
-    if (!isMine || event.status !== 'calling') return;
-    const stamp = `${event.entryId}:${event.calledAt ?? event.at ?? 'calling'}`;
+  const entryId = entry?.id;
+  const calledAt = entry?.called_at;
+  const isCallingNow = entry?.status === 'calling';
+  useEffect(() => {
+    if (!entryId || !isCallingNow) return;
+    const stamp = `${entryId}:${calledAt ?? 'calling'}`;
     if (lastCallAlertRef.current === stamp) return;
     lastCallAlertRef.current = stamp;
     playQueueCallAlert();
-  });
+  }, [calledAt, entryId, isCallingNow]);
 
   const professionalQuery = useQuery({
     queryKey: ['queue', 'public-professionals', businessId],
@@ -89,7 +85,6 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
       ?.find((pro) => pro.id === entry.professional_id)?.name?.split(' ')[0] ?? null
     : null;
 
-  const isCallingNow = entry?.status === 'calling';
   useEffect(() => {
     if (!isActive) return;
     const id = window.setInterval(() => setTick((value) => value + 1), isCallingNow ? 5_000 : 30_000);

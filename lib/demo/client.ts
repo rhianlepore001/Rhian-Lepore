@@ -185,6 +185,19 @@ export function createDemoClient() {
       case 'get_customer_review_invite': data = { status: 'unavailable' }; break;
       case 'get_public_categories_catalog': data = t.service_categories; break;
       case 'get_public_team_catalog': data = t.team_members; break;
+      case 'get_team_roster_v1': {
+        data = t.team_members
+          .filter(member => args.p_include_inactive || (member.active && !member.deleted_at))
+          .sort((a, b) => String(a.name).localeCompare(String(b.name)))
+          .map(member => ({
+            id: member.id,
+            name: member.name,
+            photo_url: member.photo_url ?? null,
+            staff_user_id: member.staff_user_id ?? null,
+            active: member.active ?? null,
+          }));
+        break;
+      }
       case 'get_public_gallery_catalog': data = t.business_galleries; break;
       case 'get_public_products_catalog': {
         const enabled = Boolean(t.business_settings[0]?.public_products_enabled);
@@ -250,6 +263,12 @@ export function createDemoClient() {
         data = { month: args.p_month, role: 'owner', professionals: t.team_members.filter(p => !args.p_professional_id || p.id === args.p_professional_id).map(p => ({ id: p.id, name: p.name, ...metric(p.id) })), total: metric(), services: [], services_pending_count: 0, history_estimated: false, unassigned_attendance_count: 0 }; break;
       }
       case 'get_staff_performance_v1': data = demoPerformance(t, args); break;
+      case 'get_my_unpaid_commissions_v1': {
+        data = t.finance_records
+          .filter(row => row.professional_id === args.p_professional_id && row.type === 'revenue' && row.commission_paid === false)
+          .reduce((sum, row) => sum + (Number(row.commission_value) || 0), 0);
+        break;
+      }
       case 'get_commission_cycle_v1': {
         const today = getDateStringInTimeZone(new Date(), 'America/Sao_Paulo');
         const start = today.slice(0, 8) + '01';

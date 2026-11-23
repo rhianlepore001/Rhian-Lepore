@@ -144,7 +144,8 @@ export async function installMocks(
         await respond(route, { success: true, booking_id: '00000000-0000-4000-8000-0000000000c1' });
         return;
       }
-      if (p.endsWith('/team_members')) {
+      if (p.endsWith('/team_members') || p.endsWith('/rpc/get_team_roster_v1')) {
+        // A equipe da Agenda vem da RPC get_team_roster_v1 (sem leitura direta da tabela).
         await respond(route, [{ id: '00000000-0000-4000-8000-0000000000d1', name: 'Dani', photo_url: null, staff_user_id: null, active: true }]);
         return;
       }

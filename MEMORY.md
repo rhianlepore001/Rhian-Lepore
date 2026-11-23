@@ -1,13 +1,17 @@
 # MEMORY.md — Estado do Projeto (memória compartilhada)
 
 > Memória de projeto compartilhada entre máquinas/sessões do Claude Code (local + VPS).
-> Mantenha atualizado conforme o trabalho avança. Datas em formato absoluto.
+> Mantenha-o atualizado conforme o trabalho avança. Datas em formato absoluto.
 >
 > ⚠️ **Repo PÚBLICO.** NUNCA coloque aqui segredos, chaves, tokens, connection strings,
 > nem detalhes exploráveis de segurança (vetores de RLS, vulnerabilidades específicas).
 > Detalhes sensíveis ficam fora do versionamento.
 
 ---
+
+## Meta Pixel — engajamento da landing (23 Nov 2026, draft)
+
+Branch `cursor/meta-landing-engajamento-a592`. Amplia remarketing em `/#/landing`: SectionView, Scroll25/50/75/90, TimeOnPage15/30/60/120s, DemoStart/ScreenView/Complete (iframe via postMessage), NichoSwitch, FAQOpen, WhatsAppClick, CTAClick com `cta_position`. Edge `meta-capi` atualizada na allow-list (sem deploy neste PR). Cadastro: StartRegistration + Lead + CompleteRegistration já existentes; sem StartTrial. Verificações: typecheck/lint/build + testes Meta + e2e meta-pixel. Docs: `docs/meta-pixel.md`.
 
 ## Acesso à vitrine do agendamento (21 Nov 2026)
 

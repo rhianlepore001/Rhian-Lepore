@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useId, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Check, Smartphone, Store } from 'lucide-react';
 import { usePublicMembershipPlans, usePublicPixConfig, useCreatePublicMembershipRequest, useCreatePublicPixPayment } from '../../hooks/useMemberships';
@@ -23,6 +23,7 @@ export interface PublicClubFlowProps {
   backLabel?: string;
   prefillName?: string;
   prefillPhone?: string;
+  initialPlanId?: string | null;
 }
 
 export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
@@ -35,8 +36,10 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
   backLabel = 'Voltar',
   prefillName = '',
   prefillPhone = '',
+  initialPlanId = null,
 }) => {
   const { showToast } = useToast();
+  const fieldId = useId();
   const { colors, classes, accent, font } = useBrutalTheme({ override: themeOverride });
   const { data: plans, isLoading: plansLoading, isError: plansError, refetch } = usePublicMembershipPlans(businessId);
   const { data: pixConfig, isLoading: pixLoading } = usePublicPixConfig(businessId);
@@ -44,9 +47,11 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
   const createPix = useCreatePublicPixPayment(businessId);
 
   const digitalMethod = clubDigitalMethod(region);
-  const [selectedPlan, setSelectedPlan] = useState<MembershipPlan | null>(null);
-  const [step, setStep] = useState<'choose' | 'pay' | 'confirmation'>('choose');
-  const [paymentMethod, setPaymentMethod] = useState<ClubCheckoutMethod>(digitalMethod);
+  const [pickedPlan, setPickedPlan] = useState<MembershipPlan | null>(null);
+  const [checkoutStep, setStep] = useState<'choose' | 'pay' | 'confirmation'>(initialPlanId ? 'pay' : 'choose');
+  const selectedPlan = pickedPlan ?? plans?.find(plan => plan.id === initialPlanId && plan.active);
+  const step = checkoutStep === 'pay' && !selectedPlan ? 'choose' : checkoutStep;
+  const [pickedPaymentMethod, setPaymentMethod] = useState<ClubCheckoutMethod | null>(null);
   const [clientName, setClientName] = useState(prefillName);
   const [clientPhone, setClientPhone] = useState(prefillPhone);
   const [submitting, setSubmitting] = useState(false);
@@ -58,7 +63,7 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
   }, [prefillName, prefillPhone]);
 
   useEffect(() => {
-    setPaymentMethod(digitalMethod);
+    setPaymentMethod(null);
   }, [digitalMethod]);
 
   const merchantName = pixConfig?.pix_holder_name || '';
@@ -66,9 +71,10 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
   const pixReady = !!(pixConfig?.pix_key_value && pixConfig?.pix_key_type);
   const mbwayReady = !!pixConfig?.mbway_phone;
   const digitalReady = digitalMethod === 'pix' ? pixReady : mbwayReady;
+  const paymentMethod = pickedPaymentMethod ?? (digitalReady ? digitalMethod : 'in_person');
 
   const handleSelectPlan = (plan: MembershipPlan) => {
-    setSelectedPlan(plan);
+    setPickedPlan(plan);
     setStep('pay');
   };
 
@@ -117,6 +123,7 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
       }
     }
 
+    setPaymentMethod(paymentMethod);
     setSubmitting(true);
     try {
       const membershipId = await createMembership.mutateAsync({
@@ -189,7 +196,7 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
         <header className="min-w-0">
           <h1 className={`text-xl ${font.heading} ${colors.text} leading-tight`}>Clube de assinatura</h1>
           <p className={`${colors.textSecondary} text-sm mt-1 leading-snug`}>
-            Vantagens exclusivas todo mês, pagando menos por cada serviço.
+            Escolha um plano mensal e confira os benefícios incluídos.
           </p>
         </header>
       )}
@@ -255,8 +262,10 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
 
             <div className="grid grid-cols-1 gap-3">
               <div>
-                <label className={`${classes.label} block mb-1.5`}>Seu nome</label>
+                <label htmlFor={`${fieldId}-name`} className={`${classes.label} block mb-1.5`}>Seu nome</label>
                 <input
+                  id={`${fieldId}-name`}
+                  autoComplete="name"
                   type="text"
                   value={clientName}
                   onChange={(e) => setClientName(e.target.value)}
@@ -265,8 +274,10 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
                 />
               </div>
               <div>
-                <label className={`${classes.label} block mb-1.5`}>Seu WhatsApp</label>
+                <label htmlFor={`${fieldId}-phone`} className={`${classes.label} block mb-1.5`}>Seu WhatsApp</label>
                 <input
+                  id={`${fieldId}-phone`}
+                  autoComplete="tel"
                   type="tel"
                   value={clientPhone}
                   onChange={(e) => setClientPhone(e.target.value)}
@@ -277,11 +288,13 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
             </div>
 
             <div className="mt-4">
-              <label className={`${classes.label} block mb-2`}>Como prefere pagar?</label>
-              <div className="grid grid-cols-2 gap-2">
+              <p id={`${fieldId}-payment`} className={`${classes.label} block mb-2`}>Como prefere pagar?</p>
+              <div role="group" aria-labelledby={`${fieldId}-payment`} className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => setPaymentMethod(digitalMethod)}
+                  aria-pressed={paymentMethod === digitalMethod}
+                  disabled={!digitalReady}
                   className={[
                     'p-3 rounded-xl border min-h-[44px] text-left',
                     paymentMethod === digitalMethod ? `${accent.bgDim} ${accent.border}` : `${colors.inputBg} ${colors.border}`,
@@ -306,6 +319,7 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
                 <button
                   type="button"
                   onClick={() => setPaymentMethod('in_person')}
+                  aria-pressed={paymentMethod === 'in_person'}
                   className={[
                     'p-3 rounded-xl border min-h-[44px] text-left',
                     paymentMethod === 'in_person' ? `${accent.bgDim} ${accent.border}` : `${colors.inputBg} ${colors.border}`,
@@ -352,7 +366,7 @@ export const PublicClubFlow: React.FC<PublicClubFlowProps> = ({
           <button
             type="button"
             onClick={() => void handleSubmit()}
-            disabled={submitting || !clientName.trim() || !clientPhone.trim()}
+            disabled={submitting || pixLoading || !clientName.trim() || !clientPhone.trim()}
             className={[
               'w-full py-3 rounded-xl font-bold min-h-[44px]',
               'bg-[var(--color-accent)] text-[var(--color-on-accent)]',

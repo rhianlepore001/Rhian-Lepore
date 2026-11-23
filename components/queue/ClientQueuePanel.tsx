@@ -20,7 +20,7 @@ import { playQueueCallAlert } from '@/utils/queueCallAlert';
 import { formatElapsedMinutes, minutesSince, remainingLateMinutes } from '@/utils/queueTime';
 import { formatFirstName } from '@/utils/formatters';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { CalendarPlus, LogOut, QrCode, RefreshCw } from 'lucide-react';
+import { CalendarPlus, ChevronDown, Clock, LogOut, Megaphone, QrCode, RefreshCw } from 'lucide-react';
 
 interface ClientQueuePanelProps {
   businessId: string;
@@ -29,8 +29,6 @@ interface ClientQueuePanelProps {
   clientName?: string | null;
   cameFromQr?: boolean;
 }
-
-const MAX_PEOPLE_VISIBLE = 8;
 
 export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
   businessId,
@@ -132,7 +130,7 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
           <h2 className="text-lg font-bold text-theme-text">Você não está na fila</h2>
           <p className="text-sm text-theme-textSecondary mt-1">
             {cameFromQr
-              ? 'Sua senha anterior foi encerrada. Para entrar de novo, escolha o serviço abaixo.'
+              ? 'Escolha um serviço para pegar sua senha.'
               : 'Para entrar na fila, escaneie o QR Code disponível no estabelecimento.'}
           </p>
         </div>
@@ -157,32 +155,35 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
 
   const position = board.data ? board.data.position ?? null : undefined;
   const settings = board.data?.settings;
-  const etaMinutes = board.data?.etaMinutes ?? null;
+  const estimatedWait = formatQueueEstimatedWait(board.data?.etaMinutes);
   const serviceName = board.data?.serviceName ?? null;
   const people = board.data?.people ?? [];
   const payBadge = queueClientPaymentBadge(board.data?.paymentStatus ?? entry.payment_status);
 
-  const lateLeft = isCalling ? remainingLateMinutes(board.data?.calledAt ?? entry.called_at, settings?.lateMinutes ?? 10) : null;
+  const lateLeft = isCalling && settings?.allowLeave
+    ? remainingLateMinutes(entry.called_at ?? board.data?.calledAt, settings.lateMinutes)
+    : null;
   const lateExpired = isCalling && lateLeft != null && lateLeft <= 0;
   const headline = queueClientHeadline({
     status,
-    position,
+    position: board.isError ? position ?? null : position,
     firstName,
-    etaMinutes,
     professionalName,
     remainingLateMinutes: lateLeft,
   });
-  const estimatedWaitLabel = isWaiting ? formatQueueEstimatedWait(etaMinutes) : null;
-
-  const ruleLine = queueClientRuleLine({
+  const ruleLine = settings && !lateExpired ? queueClientRuleLine({
     status,
-    allowLeave: settings?.allowLeave,
-    lateMinutes: settings?.lateMinutes,
+    allowLeave: settings.allowLeave,
+    lateMinutes: settings.lateMinutes,
     remainingLateMinutes: lateLeft,
-  });
+  }) : null;
 
   const waitedMin = isWaiting ? minutesSince(entry.joined_at) : null;
-  const peopleAhead = typeof position === 'number' && position > 1 ? position - 1 : 0;
+  const serviceDetails = [
+    entry.duration_minutes ? `${entry.duration_minutes} min de serviço` : null,
+    professionalName && isWaiting ? `com ${professionalName}` : null,
+    waitedMin != null && waitedMin > 0 ? `na fila há ${formatElapsedMinutes(waitedMin)}` : null,
+  ].filter(Boolean).join(' · ');
 
   const surfaceClass = lateExpired
     ? 'border-[var(--color-warning-border)] bg-[var(--color-warning-bg)]'
@@ -200,10 +201,6 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
         ? 'text-[var(--color-info)]'
         : 'text-theme-text';
 
-  const visiblePeople = people.slice(0, MAX_PEOPLE_VISIBLE);
-  const hiddenPeople = Math.max(0, people.length - visiblePeople.length);
-  const showPeople = isWaiting && people.length > 1;
-
   const handleLeave = async () => {
     if (!lookupPhone) return;
     setLeaving(true);
@@ -211,7 +208,7 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
     try {
       const ok = await cancelQueueEntryPublic(entry.id, lookupPhone);
       if (!ok) {
-        setLeaveError('Sua senha já foi chamada ou encerrada. Fale com a equipe no balcão.');
+        setLeaveError('Seu atendimento pode ter começado ou sua senha pode ter sido encerrada. Atualize a fila ou fale com a equipe no balcão.');
         return;
       }
       clearQueueTicket(businessId);
@@ -226,113 +223,83 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
 
   return (
     <article className={`rounded-3xl border overflow-hidden shadow-[var(--shadow-card)] ${surfaceClass}`}>
-      <div className="p-5 sm:p-6 space-y-5">
-        <div className="space-y-3" aria-live="polite" aria-atomic="true">
+      <div className="space-y-4 p-4 sm:p-6">
+        <div aria-live="polite" aria-atomic="true">
           {!isClosed && (
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-textMuted">
-                {lateExpired ? 'Prazo esgotado' : isCalling ? 'Chamada' : isServing ? 'Atendimento' : 'Sua senha'}
-              </p>
-              <Badge variant={payBadge.variant} className="shrink-0 text-xs px-2.5 py-1 rounded-full font-semibold">
-                {payBadge.label}
-              </Badge>
-            </div>
-          )}
-          <h2 className={`text-2xl sm:text-3xl font-black leading-tight tracking-tight ${titleClass}`}>
-            {headline.title}
-          </h2>
-          {headline.subtitle && (
-            <p className={`text-sm leading-relaxed ${lateExpired ? 'text-[var(--color-warning)] font-medium' : 'text-theme-textSecondary'}`}>
-              {headline.subtitle}
+            <p className={`mb-2 flex items-center gap-2 text-sm font-semibold ${titleClass}`}>
+              {isCalling && <Megaphone className="size-4 shrink-0" aria-hidden="true" />}
+              {isCalling ? 'Sua senha foi chamada' : isServing ? 'Sua senha' : 'Minha senha'}
             </p>
           )}
-          {lateExpired && (
-            <div
-              role="alert"
-              className="rounded-2xl border border-[var(--color-warning-border)] bg-theme-surface px-4 py-3 text-sm text-theme-text"
-            >
-              A chamada continua visível para a equipe, mas o seu prazo de chegar já acabou.
-              Não fique esperando neste ecrã — fale no balcão.
-            </div>
-          )}
+          <h2 className={`break-words text-2xl font-bold leading-tight tracking-tight sm:text-3xl ${titleClass}`}>
+            {headline.title}
+          </h2>
+          {headline.subtitle && <p className="mt-1.5 text-sm leading-relaxed text-theme-textSecondary">{headline.subtitle}</p>}
         </div>
 
-        {isWaiting && (
-          <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-2xl border border-theme-border bg-theme-surface px-3 py-3">
-              <p className="text-xs font-bold uppercase tracking-wide text-theme-textMuted">Posição</p>
-              <p className="mt-1 font-mono text-2xl font-black tabular-nums text-theme-text">
-                {position == null ? '—' : position === 1 ? 'Próximo' : `${position}º`}
-              </p>
-              {peopleAhead > 0 && (
-                <p className="mt-0.5 text-xs text-theme-textSecondary">
-                  {peopleAhead === 1 ? '1 à frente' : `${peopleAhead} à frente`}
-                </p>
-              )}
-            </div>
-            <div className="rounded-2xl border border-theme-border bg-theme-surface px-3 py-3">
-              <p className="text-xs font-bold uppercase tracking-wide text-theme-textMuted">Tempo estimado</p>
-              <p className="mt-1 text-lg font-black leading-tight text-theme-text">
-                {etaMinutes == null
-                  ? 'Calculando…'
-                  : etaMinutes <= 0
-                    ? 'Agora'
-                    : `cerca de ${etaMinutes} min`}
-              </p>
-              <p className="mt-0.5 text-xs text-theme-textSecondary">
-                Soma de quem está à frente. Não é horário exato.
-              </p>
-            </div>
-          </div>
+        {isCalling && ruleLine && settings?.allowLeave && (
+          <p className="flex items-center gap-2 rounded-xl border border-theme-border bg-theme-surface px-3 py-2.5 text-sm font-semibold text-theme-text">
+            <Clock className="size-4 shrink-0" aria-hidden="true" />
+            {ruleLine}
+          </p>
         )}
 
-        {estimatedWaitLabel && etaMinutes != null && etaMinutes > 0 && position != null && position <= 1 && (
-          <p className="text-sm font-semibold text-theme-text">{estimatedWaitLabel}</p>
+        {isActive && (activeQuery.isRefetchError || board.isRefetchError) && (
+          <p className="text-sm text-theme-textSecondary" role="status">
+            Falha na atualização. Exibindo os últimos dados recebidos.
+          </p>
+        )}
+
+        {isWaiting && (
+          <div className="rounded-xl border border-theme-border bg-theme-surface p-3.5">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+              <p className="flex items-center gap-2 text-sm font-medium text-theme-textSecondary">
+                <Clock className="size-4 shrink-0" aria-hidden="true" />
+                Espera estimada
+              </p>
+              <p className="text-lg font-bold tabular-nums text-theme-text">
+                {estimatedWait ?? (board.isFetching ? 'Calculando…' : 'Indisponível')}
+              </p>
+            </div>
+            {ruleLine && <p className="mt-2 border-t border-theme-border pt-2 text-sm leading-relaxed text-theme-textSecondary">{ruleLine}</p>}
+          </div>
         )}
 
         {!isClosed && (
-          <div className="rounded-2xl border border-theme-border/80 bg-theme-surface/80 px-4 py-3 space-y-1">
-            {serviceName && (
-              <p className="text-sm font-semibold text-theme-text">{serviceName}</p>
+          <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 border-t border-theme-border pt-3">
+            {(serviceName || serviceDetails) && (
+              <div className="min-w-0 break-words">
+                {serviceName && <p className="text-sm font-semibold text-theme-text">{serviceName}</p>}
+                {serviceDetails && <p className="text-xs leading-relaxed text-theme-textSecondary">{serviceDetails}</p>}
+              </div>
             )}
-            <p className="text-xs text-theme-textSecondary">
-              {[
-                entry.duration_minutes ? `Serviço · ${entry.duration_minutes} min` : null,
-                professionalName && !isCalling && !isServing ? `com ${professionalName}` : null,
-                waitedMin != null && waitedMin > 0 ? `na fila há ${formatElapsedMinutes(waitedMin)}` : null,
-              ].filter(Boolean).join(' · ')}
-            </p>
+            <Badge variant={payBadge.variant} className="text-xs font-semibold">{payBadge.label}</Badge>
           </div>
         )}
 
-        {showPeople && (
-          <div className="rounded-2xl border border-theme-border bg-theme-surface px-4 py-3">
-            <p className="text-xs font-bold uppercase tracking-wide text-theme-textMuted mb-2">Ordem da fila</p>
-            <ol className="space-y-1.5">
-              {visiblePeople.map((person) => (
+        {isWaiting && people.length > 1 && (
+          <details className="group rounded-xl border border-theme-border bg-theme-surface px-3.5">
+            <summary className="flex min-h-[44px] cursor-pointer list-none items-center justify-between gap-2 text-sm font-semibold text-theme-text marker:content-none [&::-webkit-details-marker]:hidden">
+              Ordem da fila
+              <ChevronDown className="size-4 shrink-0 group-open:rotate-180" aria-hidden="true" />
+            </summary>
+            <ol className="space-y-1.5 border-t border-theme-border py-2.5">
+              {people.map((person) => (
                 <li
-                  key={`${person.position}-${person.firstName}`}
+                  key={person.position}
+                  aria-current={person.isYou ? 'true' : undefined}
                   className={`flex items-center gap-3 text-sm ${person.isYou ? 'font-bold text-theme-text' : 'text-theme-textSecondary'}`}
                 >
-                  <span
-                    className={`inline-flex w-7 h-7 items-center justify-center rounded-full text-xs font-bold tabular-nums ${
-                      person.isYou
-                        ? 'bg-theme-accent text-[var(--color-on-accent)]'
-                        : 'bg-theme-card border border-theme-border text-theme-textMuted'
-                    }`}
-                  >
+                  <span className={`grid size-7 shrink-0 place-items-center rounded-full text-xs font-bold tabular-nums ${person.isYou
+                    ? 'bg-theme-accent text-[var(--color-on-accent)]'
+                    : 'bg-theme-card border border-theme-border text-theme-textMuted'}`}>
                     {person.position}
                   </span>
-                  <span className="truncate">{person.isYou ? 'Você' : person.firstName}</span>
+                  <span className="min-w-0 break-words">{person.isYou ? 'Você' : person.firstName}</span>
                 </li>
               ))}
-              {hiddenPeople > 0 && (
-                <li className="text-xs text-theme-textMuted pl-10">
-                  e mais {hiddenPeople} {hiddenPeople === 1 ? 'pessoa' : 'pessoas'}
-                </li>
-              )}
             </ol>
-          </div>
+          </details>
         )}
 
         {(status === 'no_show' || status === 'cancelled') && cameFromQr && joinHref && (
@@ -358,19 +325,28 @@ export const ClientQueuePanel: React.FC<ClientQueuePanelProps> = ({
         )}
       </div>
 
-      {(ruleLine || isWaiting || isCalling) && (
-        <div className="px-5 py-3.5 border-t border-theme-border flex items-center justify-between gap-3 bg-theme-surface/60">
-          <p className="text-xs text-theme-textMuted leading-snug min-w-0">{ruleLine}</p>
-          {(isWaiting || isCalling) && (
-            <button
-              type="button"
-              className="shrink-0 min-h-[44px] px-2 text-xs font-semibold text-theme-textMuted hover:text-[var(--color-danger)] inline-flex items-center gap-1.5"
-              onClick={() => { setLeaveError(''); setLeaveOpen(true); }}
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              Sair da fila
-            </button>
-          )}
+      {(isWaiting || isCalling) && (
+        <div className="flex flex-wrap items-center justify-between gap-x-3 border-t border-theme-border bg-theme-surface/60 px-4 py-1 sm:px-6">
+          <button
+            type="button"
+            className="inline-flex min-h-[44px] items-center gap-2 text-sm font-semibold text-theme-textSecondary hover:text-theme-text disabled:opacity-60"
+            disabled={activeQuery.isFetching || board.isFetching || !lookupPhone}
+            onClick={() => {
+              void activeQuery.refetch();
+              void board.refetch();
+            }}
+          >
+            <RefreshCw className="size-4" aria-hidden="true" />
+            Atualizar fila
+          </button>
+          <button
+            type="button"
+            className="inline-flex min-h-[44px] items-center gap-2 text-sm font-semibold text-theme-textSecondary hover:text-[var(--color-danger)]"
+            onClick={() => { setLeaveError(''); setLeaveOpen(true); }}
+          >
+            <LogOut className="size-4" aria-hidden="true" />
+            Sair da fila
+          </button>
         </div>
       )}
 

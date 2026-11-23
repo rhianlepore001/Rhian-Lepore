@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, useToast } from '../../components/ui';
 import { SettingsLayout } from '../../components/SettingsLayout';
-import { Save, HelpCircle } from 'lucide-react';
+import { Save, HelpCircle, ExternalLink } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { useBusinessSettings, useUpdateBusinessSettings, useProfileFields, useUpdateProfileFields, useUpdateOnlineBookingRequiresApproval, useUpdateBookingLeadTimeMinutes, useUpdateClientCancelPolicyText } from '../../hooks/useSettings';
@@ -10,6 +10,7 @@ import { PublicLinkCard } from '../../components/PublicLinkCard';
 import { SettingsSection } from '../../components/SettingsSection';
 import { SettingsSwitch } from '../../components/SettingsSwitch';
 import { SettingsRow } from '../../components/ui/SettingsRow';
+import { publicBookingProductsPath } from '../../utils/publicBookingLanding';
 import {
     LEAD_TIME_PRESETS,
     LEAD_TIME_CUSTOM_MINUTES_RANGE_HINT,
@@ -26,7 +27,7 @@ import {
     CANCELLATION_POLICY_NOTES_HINT,
     MAX_CLIENT_CANCEL_POLICY_TEXT_LENGTH,
     cancellationPolicyNotesForDisplay,
-    generatedCancellationPolicyText,
+    resolveCancellationPolicyParts,
     normalizeCustomCancellationPolicyText,
 } from '../../utils/cancellationPolicyCopy';
 import {
@@ -49,7 +50,7 @@ import {
 } from '../../utils/onlineBookingApproval';
 
 export const PublicBookingSettings: React.FC = () => {
-    const { user } = useAuth();
+    const { user, companyId } = useAuth();
     const { accent, colors, classes } = useBrutalTheme();
     const { data: settings } = useBusinessSettings();
     const { data: profile } = useProfileFields();
@@ -80,6 +81,11 @@ export const PublicBookingSettings: React.FC = () => {
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
     const businessSlug = profile?.business_slug ?? null;
+    const savedPolicyText = normalizeCustomCancellationPolicyText(settings?.client_cancel_policy_text);
+
+    useEffect(() => {
+        setCancelPolicyText(savedPolicyText);
+    }, [companyId, savedPolicyText]);
 
     useEffect(() => {
         if (settings) {
@@ -92,7 +98,6 @@ export const PublicBookingSettings: React.FC = () => {
                 settings.client_cancel_note,
                 settings.cancellation_policy,
             ));
-            setCancelPolicyText(normalizeCustomCancellationPolicyText(settings.client_cancel_policy_text));
         }
     }, [settings]);
 
@@ -154,11 +159,15 @@ export const PublicBookingSettings: React.FC = () => {
                 showToast(`Minutos ainda indisponíveis: a antecedência foi salva como ${formatLeadTimeDuration(leadTimeHoursForMinutes(minutesToSave) * 60)}.`, 'info');
             }
 
-            const policyTextResult = await updatePolicyTextMutation.mutateAsync(
-                normalizeCustomCancellationPolicyText(cancelPolicyText),
-            );
-            if (policyTextResult === 'unsupported' && normalizeCustomCancellationPolicyText(cancelPolicyText)) {
-                showToast('Texto personalizado da política ainda indisponível: o cliente vê o texto padrão.', 'info');
+            const policyText = normalizeCustomCancellationPolicyText(cancelPolicyText);
+            if (policyText !== savedPolicyText) {
+                const result = await updatePolicyTextMutation.mutateAsync(policyText);
+                if (result === 'unsupported') {
+                    showToast('As outras configurações foram salvas. O texto da política ainda está indisponível.', 'info');
+                    setSaveStatus('idle');
+                    return;
+                }
+                setCancelPolicyText(policyText);
             }
 
             window.dispatchEvent(new CustomEvent('setup-step-completed', { detail: { stepId: 'booking' } }));
@@ -183,7 +192,7 @@ export const PublicBookingSettings: React.FC = () => {
         onChange: (v: boolean) => void;
     }) => (
         <SettingsRow label={title} help={description}>
-            <SettingsSwitch checked={checked} onChange={onChange} />
+            <SettingsSwitch checked={checked} onChange={onChange} ariaLabel={title} />
         </SettingsRow>
     );
 
@@ -356,12 +365,48 @@ export const PublicBookingSettings: React.FC = () => {
                 </div>
 
                 <div data-testid="cancel-cutoff-section" className="scroll-mt-[14rem] md:scroll-mt-8">
-                <SettingsSection title="Política de cancelamento">
+                <SettingsSection title="Política de agendamento">
                     <div className="space-y-4">
+                        <div className="space-y-2" data-testid="cancel-cutoff-generated">
+                            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                                <label className={classes.label} htmlFor="client-cancel-policy-text">Texto da sua política</label>
+                                {cancelPolicyText ? (
+                                    <button
+                                        type="button"
+                                        data-testid="cancel-policy-restore-default"
+                                        disabled={saveStatus === 'saving'}
+                                        onClick={() => setCancelPolicyText(null)}
+                                        className={`min-h-[44px] text-sm font-semibold underline underline-offset-2 ${accent.text}`}
+                                    >
+                                        Usar texto padrão
+                                    </button>
+                                ) : (
+                                    <span className={`${colors.textMuted} text-xs`} data-testid="cancel-policy-default-badge">Texto padrão ativo</span>
+                                )}
+                            </div>
+                            <p id="client-cancel-policy-text-hint" className={`${colors.textSecondary} text-sm leading-relaxed`}>
+                                Escreva suas regras de chegada, atrasos e remarcações. O cliente lê este texto antes de confirmar o agendamento. Se deixar em branco, verá o texto padrão. Use o campo abaixo para definir o prazo de cancelamento online.
+                            </p>
+                            <textarea
+                                id="client-cancel-policy-text"
+                                data-testid="client-cancel-policy-text"
+                                disabled={saveStatus === 'saving'}
+                                value={cancelPolicyText ?? ''}
+                                maxLength={MAX_CLIENT_CANCEL_POLICY_TEXT_LENGTH}
+                                placeholder="Ex.: chegue 10 minutos antes do horário. Se precisar remarcar, avise pelo WhatsApp."
+                                aria-describedby="client-cancel-policy-text-hint client-cancel-policy-text-count"
+                                onChange={(e) => setCancelPolicyText(e.target.value)}
+                                rows={4}
+                                className={classes.input}
+                            />
+                            <p id="client-cancel-policy-text-count" className={`${colors.textMuted} text-right text-xs tabular-nums`} data-testid="client-cancel-policy-text-count">
+                                {(cancelPolicyText ?? '').length}/{MAX_CLIENT_CANCEL_POLICY_TEXT_LENGTH}
+                            </p>
+                        </div>
                         <p className={`${colors.textMuted} text-xs leading-relaxed`}>
-                            Até quando o cliente pode cancelar sozinho pela Minha Área, em relação ao horário marcado (padrão 2h). Pedido ainda em Aguardando pode cancelar até o horário.
+                            O prazo abaixo vale para horários confirmados. Pedidos aguardando aprovação podem ser cancelados até o horário marcado.
                         </p>
-                        <p className={`${classes.label}`} id="cancel-cutoff-label">Cliente pode cancelar até</p>
+                        <p className={`${classes.label}`} id="cancel-cutoff-label">Prazo para cancelar pela Minha Área</p>
                         <div className="grid grid-cols-3 gap-2 md:flex md:flex-wrap md:max-w-xl" role="group" aria-labelledby="cancel-cutoff-label">
                             {CLIENT_CANCEL_CUTOFF_PRESETS.map((hours) => {
                                 const pressed = cancelCutoffHours === hours;
@@ -384,50 +429,6 @@ export const PublicBookingSettings: React.FC = () => {
                                     </button>
                                 );
                             })}
-                        </div>
-                        <div className="space-y-1.5" data-testid="cancel-cutoff-generated">
-                            <div className="flex items-center justify-between gap-3">
-                                <label className={`${classes.label}`} htmlFor="client-cancel-policy-text">
-                                    O que o cliente lê
-                                </label>
-                                {cancelPolicyText != null ? (
-                                    <button
-                                        type="button"
-                                        data-testid="cancel-policy-restore-default"
-                                        onClick={() => setCancelPolicyText(null)}
-                                        className={`text-xs font-semibold underline underline-offset-2 ${accent.text}`}
-                                    >
-                                        Restaurar padrão
-                                    </button>
-                                ) : (
-                                    <span className={`${colors.textMuted} text-xs`} data-testid="cancel-policy-default-badge">Texto padrão</span>
-                                )}
-                            </div>
-                            <textarea
-                                id="client-cancel-policy-text"
-                                data-testid="client-cancel-policy-text"
-                                value={cancelPolicyText ?? generatedCancellationPolicyText(cancelCutoffHours, profile?.business_name)}
-                                maxLength={MAX_CLIENT_CANCEL_POLICY_TEXT_LENGTH}
-                                placeholder={generatedCancellationPolicyText(cancelCutoffHours, profile?.business_name)}
-                                aria-describedby="client-cancel-policy-text-hint"
-                                onChange={(e) => {
-                                    const next = e.target.value.slice(0, MAX_CLIENT_CANCEL_POLICY_TEXT_LENGTH);
-                                    const generated = generatedCancellationPolicyText(cancelCutoffHours, profile?.business_name);
-                                    setCancelPolicyText(next.trim() === generated.trim() ? null : next);
-                                }}
-                                rows={3}
-                                className={classes.input}
-                            />
-                            <div className="flex items-start justify-between gap-3">
-                                <p id="client-cancel-policy-text-hint" className={`${colors.textMuted} text-xs leading-relaxed`} data-testid="client-cancel-policy-text-hint">
-                                    {cancelPolicyText != null
-                                        ? 'Texto seu. Se mudar o prazo acima, revise o texto para não prometer outra regra. Deixe em branco para voltar ao padrão.'
-                                        : 'Gerado a partir do prazo acima. Edite se quiser escrever do seu jeito.'}
-                                </p>
-                                <span className={`${colors.textMuted} text-xs tabular-nums shrink-0`} data-testid="client-cancel-policy-text-count">
-                                    {(cancelPolicyText ?? generatedCancellationPolicyText(cancelCutoffHours, profile?.business_name)).length}/{MAX_CLIENT_CANCEL_POLICY_TEXT_LENGTH}
-                                </span>
-                            </div>
                         </div>
                         <label className={`${classes.label} block`} htmlFor="client-cancel-note">
                             Observações (opcional)
@@ -453,11 +454,12 @@ export const PublicBookingSettings: React.FC = () => {
                                 Prévia para o cliente
                             </p>
                             <CancellationPolicyText
-                                parts={{
-                                    policy: normalizeCustomCancellationPolicyText(cancelPolicyText)
-                                        ?? generatedCancellationPolicyText(cancelCutoffHours, profile?.business_name),
-                                    notes: cancelNote.trim(),
-                                }}
+                                parts={resolveCancellationPolicyParts({
+                                    cutoffHours: cancelCutoffHours,
+                                    businessName: profile?.business_name,
+                                    clientCancelPolicyText: cancelPolicyText,
+                                    clientCancelNote: cancelNote,
+                                })}
                                 className={`${colors.text} text-sm leading-relaxed`}
                             />
                         </div>
@@ -467,28 +469,32 @@ export const PublicBookingSettings: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <div data-testid="public-products-section">
-                    <SettingsSection
-                        title={
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm">Produtos no link público</span>
-                                <HelpCircle className="w-4 h-4 text-[var(--color-text-muted)]" />
+                        <SettingsSection title="Produtos no link público">
+                            <div className="space-y-4">
+                                <p className={`${colors.textSecondary} text-sm leading-relaxed`}>
+                                    A aba Produtos do agendamento online mostra os itens ativos, em estoque e marcados para exibição pública.
+                                </p>
+                                <div className="flex flex-wrap items-center justify-end gap-3">
+                                    {businessSlug && settings?.public_products_enabled && publicProductsEnabled && publicBookingEnabled && profile?.public_booking_enabled !== false && (
+                                        <a
+                                            href={`/#${publicBookingProductsPath(businessSlug)}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className={`mr-auto inline-flex min-h-11 items-center gap-1.5 rounded-lg text-sm font-semibold ${accent.text} hover:underline`}
+                                        >
+                                            <ExternalLink className="size-4" aria-hidden="true" />
+                                            Ver vitrine pública
+                                        </a>
+                                    )}
+                                    <SettingsSwitch
+                                        id="public-products-enabled"
+                                        ariaLabel="Produtos no link público"
+                                        checked={publicProductsEnabled}
+                                        onChange={setPublicProductsEnabled}
+                                    />
+                                </div>
                             </div>
-                        }
-                    >
-                        <div className="space-y-4">
-                            <p className={`${colors.textMuted} text-xs leading-relaxed`}>
-                                Exibe uma vitrine com seus produtos ativos e em estoque no agendamento online (foto, nome, preço e descrição). Padrão desligado.
-                            </p>
-                            <div className="flex justify-end pt-2">
-                                <SettingsSwitch
-                                    id="public-products-enabled"
-                                    ariaLabel="Produtos no link público"
-                                    checked={publicProductsEnabled}
-                                    onChange={setPublicProductsEnabled}
-                                />
-                            </div>
-                        </div>
-                    </SettingsSection>
+                        </SettingsSection>
                     </div>
 
                     <SettingsSection
@@ -499,16 +505,13 @@ export const PublicBookingSettings: React.FC = () => {
                             </div>
                         }
                     >
-                        <div className="space-y-4 opacity-60">
+                        <div className="space-y-4">
                             <p className={`${colors.textMuted} text-xs leading-relaxed`}>
                                 Permite que os clientes escolham com quem desejam realizar o procedimento.
                             </p>
                             <p className={`${colors.textMuted} text-xs`}>
                                 Em breve — esta opção ainda não está disponível para salvar.
                             </p>
-                            <div className="flex justify-end pt-2 pointer-events-none" aria-disabled="true">
-                                <SettingsSwitch checked={false} onChange={() => undefined} />
-                            </div>
                         </div>
                     </SettingsSection>
                 </div>
@@ -518,12 +521,8 @@ export const PublicBookingSettings: React.FC = () => {
                     <div className="space-y-2 divide-y divide-[var(--color-divider)]">
                         <SettingsRow
                             label="Lembretes por E-mail"
-                            help="Aviso automático 24h antes do serviço. Em breve — ainda não disponível para salvar."
-                        >
-                            <div className="opacity-60 pointer-events-none" aria-disabled="true">
-                                <SettingsSwitch checked={false} onChange={() => undefined} />
-                            </div>
-                        </SettingsRow>
+                            help="Aviso automático 24h antes do serviço. Em breve."
+                        />
                         <SettingsRow
                             label="Cliente pode editar na Minha Área"
                             help="Mostra o botão Editar nos agendamentos futuros da Minha Área."

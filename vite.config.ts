@@ -3,6 +3,7 @@ import { defineConfig, loadEnv, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { publicBrowserDefines } from './scripts/publicBrowserEnv';
 
 /**
  * Identificador único de cada build. Vai para o código (`__APP_BUILD_ID__`) e para
@@ -29,10 +30,12 @@ function versionFilePlugin(buildId: string): Plugin {
   };
 }
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, '.', '');
   const buildId = createBuildId();
+  const runningTests = command === 'serve' && mode === 'test';
   return {
+    envPrefix: runningTests ? 'VITE_' : [],
     server: {
       port: 3000,
       host: '0.0.0.0',
@@ -81,8 +84,7 @@ export default defineConfig(({ mode }) => {
     ],
     define: {
       __APP_BUILD_ID__: JSON.stringify(buildId),
-      'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+      ...(runningTests ? {} : publicBrowserDefines(env))
     },
     resolve: {
       alias: {

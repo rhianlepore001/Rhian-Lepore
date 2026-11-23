@@ -2,6 +2,7 @@ import React from 'react';
 import { Check, Pencil, Trash2 } from 'lucide-react';
 import { useBrutalTheme } from '../../hooks/useBrutalTheme';
 import { MembershipPlan } from '../../services/memberships';
+import { MembershipPlanPhoto } from './MembershipPlanPhoto';
 import { formatCurrency, Region } from '../../utils/formatters';
 
 interface PlanCardProps {
@@ -32,16 +33,22 @@ export const PlanCard: React.FC<PlanCardProps> = ({
         <article
             data-testid={`plan-card-${plan.id}`}
             className={[
-                'border min-w-0',
+                'border min-w-0 overflow-hidden',
                 radius.card,
                 colors.card,
                 colors.border,
                 className,
             ].join(' ')}
         >
+            {plan.photo_path && !hasOwnerActions && (
+                <MembershipPlanPhoto path={plan.photo_path} className="aspect-[2/1] w-full" />
+            )}
             <div className={compact ? 'p-3 space-y-2' : 'p-4 space-y-3'}>
                 <div className="flex items-start justify-between gap-2 min-w-0">
-                    <div className="min-w-0">
+                    {plan.photo_path && hasOwnerActions && (
+                        <MembershipPlanPhoto path={plan.photo_path} className="size-12 rounded-lg shrink-0" />
+                    )}
+                    <div className="min-w-0 flex-1">
                         <h3 className={`text-sm font-semibold leading-snug break-words ${font.heading} ${colors.text}`}>
                             {plan.name}
                         </h3>

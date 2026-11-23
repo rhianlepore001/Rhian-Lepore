@@ -3,9 +3,10 @@
  * gravar em logs ou relatos de bug. Vale para a query normal e para a query
  * dentro do hash (/#/register?...&invite=...).
  */
+const REVIEW_TOKEN_RE = /(\/avaliar\/)[^/?&#\s]+/gi;
 const INVITE_PARAM_RE = /([?&]invite=)[^&#\s]*/gi;
 
 export function redactInviteToken(value: string): string {
     if (!value) return value;
-    return value.replace(INVITE_PARAM_RE, '$1[redacted]');
+    return value.replace(INVITE_PARAM_RE, '$1[redacted]').replace(REVIEW_TOKEN_RE, '$1[redacted]');
 }

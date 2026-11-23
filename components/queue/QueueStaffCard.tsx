@@ -115,14 +115,14 @@ export const QueueStaffCard: React.FC<QueueStaffCardProps> = ({
         {position != null && isWaiting && (
           <span
             className="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--color-accent-dim)] text-theme-accent font-mono font-black text-sm shrink-0"
-            aria-label={`Posição ${position}`}
+            aria-label={`Posição ${position} entre os que aguardam`}
           >
             {position}
           </span>
         )}
         <div className="min-w-0 flex-1">
-          <h3 className="font-bold text-theme-text truncate text-base">{entry.client_name}</h3>
-          <p className="text-sm text-theme-textSecondary font-mono mt-0.5 whitespace-nowrap">
+          <h3 className="font-bold text-theme-text break-words text-base">{entry.client_name}</h3>
+          <p className="text-sm text-theme-textSecondary font-mono mt-0.5 break-words">
             {formatPhone(entry.client_phone, region)}
           </p>
         </div>
@@ -130,18 +130,58 @@ export const QueueStaffCard: React.FC<QueueStaffCardProps> = ({
 
       <div className="text-sm space-y-1">
         {detailParts.length > 0 && (
-          <p className="text-theme-text truncate">{detailParts.join(' · ')}</p>
+          <p className="text-theme-text break-words">{detailParts.join(' · ')}</p>
         )}
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
           {statusLine ? (
             <p className={`text-xs ${toneClass[statusLine.tone]}`}>{statusLine.text}</p>
           ) : <span />}
-          <Badge variant={badge.variant} className="shrink-0 whitespace-nowrap">{badge.label}</Badge>
+          <Badge variant={badge.variant} className="max-w-full whitespace-normal">{badge.label}</Badge>
         </div>
       </div>
 
+      <div className="flex flex-wrap gap-2 pt-1 sm:flex-nowrap">
+        {actions.primary?.id === 'call' && (
+          <Button
+            variant="primary"
+            size="sm"
+            className="min-h-[44px] flex-[1_1_9rem]"
+            disabled={busy}
+            onClick={() => onCall(entry.id)}
+            icon={<Megaphone className="size-4" />}
+          >
+            Chamar cliente
+          </Button>
+        )}
+        {(actions.primary?.id === 'start' || actions.secondary?.id === 'start') && (
+          <Button
+            variant={actions.primary?.id === 'start' ? 'primary' : 'secondary'}
+            size="sm"
+            className="min-h-[44px] flex-[1_1_9rem]"
+            disabled={busy}
+            onClick={() => onStart(entry.id)}
+            icon={<Play className="size-4" />}
+          >
+            Iniciar atendimento
+          </Button>
+        )}
+        {actions.primary?.id === 'close' && (
+          <Button
+            variant="primary"
+            size="sm"
+            fullWidth
+            className="min-h-[44px]"
+            disabled={busy}
+            onClick={() => onCloseTicket(entry)}
+            icon={<Receipt className="size-4" />}
+          >
+            Fechar comanda
+          </Button>
+        )}
+      </div>
+
       {actions.showConfirmPay && (
-        <div className="space-y-1 pt-1">
+        <div className="space-y-1 border-t border-theme-border pt-2">
           <Button
             variant="success"
             size="sm"
@@ -164,45 +204,6 @@ export const QueueStaffCard: React.FC<QueueStaffCardProps> = ({
           </button>
         </div>
       )}
-
-      <div className="flex gap-2 pt-1">
-        {actions.primary?.id === 'start' && (
-          <Button
-            variant="primary"
-            size="sm"
-            fullWidth
-            disabled={busy}
-            onClick={() => onStart(entry.id)}
-            icon={<Play className="w-4 h-4" />}
-          >
-            Iniciar atendimento
-          </Button>
-        )}
-        {actions.primary?.id === 'close' && (
-          <Button
-            variant="primary"
-            size="sm"
-            fullWidth
-            disabled={busy}
-            onClick={() => onCloseTicket(entry)}
-            icon={<Receipt className="w-4 h-4" />}
-          >
-            Fechar comanda
-          </Button>
-        )}
-        {actions.secondary?.id === 'call' && (
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={busy}
-            onClick={() => onCall(entry.id)}
-            icon={<Megaphone className="w-4 h-4" />}
-            aria-label="Chamar cliente"
-          >
-            Chamar
-          </Button>
-        )}
-      </div>
 
       {actions.tertiary.length > 0 && (onNoShow || onRequeue) && (
         <div className="flex items-center justify-end gap-1 -mb-1">

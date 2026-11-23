@@ -11,6 +11,7 @@ test.describe('simulação embutida na landing', () => {
       const response = await page.goto('/#/landing');
       const headers = response!.headers();
       expect(headers['x-frame-options']).toBe('SAMEORIGIN');
+      expect(headers['content-security-policy']).toContain("script-src 'self'");
       expect(headers['content-security-policy-report-only']).toContain("frame-ancestors 'self'");
 
       for (const niche of [{ tab: /Barbearia/i, title: /barbearia/i, path: 'barber' }, { tab: /Sal[aã]o/i, title: /sal[aã]o/i, path: 'beauty' }]) {

@@ -8,6 +8,7 @@
  */
 import { supabase } from '../lib/supabase';
 import { describeServerWeakPassword } from './passwordPolicy';
+import { safeErrorMetadata } from './errorTelemetry';
 
 export type SignupErrorCode =
   | 'invite_email_wrong_password'
@@ -183,12 +184,6 @@ export function newSupportRef(): string {
   return out;
 }
 
-function maskEmail(email: string | undefined): string | null {
-  if (!email || !email.includes('@')) return null;
-  const [user, domain] = email.trim().toLowerCase().split('@');
-  return `${user.slice(0, 2)}***@${domain}`;
-}
-
 export interface SignupErrorContext {
   flow: 'staff_invite' | 'owner';
   email?: string;
@@ -207,35 +202,21 @@ export async function reportUnexpectedSignupError(
   context: SignupErrorContext,
   ref: string,
 ): Promise<void> {
-  const raw = rawOf(error);
-  const details = {
-    ref,
-    flow: context.flow,
-    email: maskEmail(context.email),
-    company_id: context.companyId ?? null,
-    member_id: context.memberId ?? null,
-    error_name: typeof raw.name === 'string' ? raw.name : null,
-    error_code: String(raw.code ?? raw.error_code ?? '') || null,
-    error_status: typeof raw.status === 'number' ? raw.status : null,
-    error_message: String(raw.message ?? raw.msg ?? '').slice(0, 500),
-    url: typeof window !== 'undefined' ? window.location.href.split('?')[0] : null,
-    user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
-  };
-
-  console.error('[signup] erro inesperado', details, error);
-
   try {
+    const details = {
+      ref: /^[A-HJ-NP-Z2-9]{6}$/.test(ref) ? ref : undefined,
+      flow: context.flow,
+      ...safeErrorMetadata(error),
+    };
     const { error: logError } = await supabase.rpc('log_signup_error', { p_details: details });
     if (!logError) return;
     const { error: fallbackError } = await supabase.rpc('log_error', {
-      p_message: `signup_unexpected_error ${ref}`,
+      p_message: 'signup_unexpected_error',
       p_severity: 'error',
       p_context: details,
     });
-    if (fallbackError) {
-      console.error('[signup] não foi possível registrar o erro', fallbackError);
-    }
-  } catch (loggingError) {
-    console.error('[signup] não foi possível registrar o erro', loggingError);
+    if (fallbackError && import.meta.env.DEV) console.error('[signup] não foi possível registrar o erro');
+  } catch {
+    if (import.meta.env.DEV) console.error('[signup] não foi possível registrar o erro');
   }
 }

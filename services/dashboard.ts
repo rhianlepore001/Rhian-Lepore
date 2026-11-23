@@ -331,13 +331,11 @@ export async function fetchQueueWaitingCount(businessId: string): Promise<number
 }
 
 export async function fetchStaffUnpaidCommissions(professionalId: string): Promise<number> {
-    const { data, error } = await supabase
-        .from('finance_records')
-        .select('commission_value')
-        .eq('professional_id', professionalId)
-        .eq('commission_paid', false);
+    const { data, error } = await supabase.rpc('get_my_unpaid_commissions_v1', {
+        p_professional_id: professionalId,
+    });
 
     if (error) throw error;
 
-    return (data || []).reduce((sum, r) => sum + (Number(r.commission_value) || 0), 0);
+    return Number(data) || 0;
 }

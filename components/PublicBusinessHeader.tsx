@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Instagram, Phone, MapPin, Star, Scissors, Sparkles, ChevronLeft, ChevronRight, ChevronDown, Sun, Moon, User, Maximize2 } from 'lucide-react';
+import { Instagram, Phone, MapPin, Star, Scissors, Sparkles, ChevronLeft, ChevronRight, ChevronDown, Sun, Moon, User } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { publicRatingBadge } from '../utils/publicRating';
 import { buildWhatsAppLink, type WhatsAppRegion } from '../utils/whatsappTemplates';
@@ -22,6 +22,12 @@ interface PublicBusinessHeaderProps {
     showThemeToggle?: boolean;
 }
 
+interface PhotoPreview {
+    source: string;
+    title: string;
+    unavailable?: boolean;
+}
+
 export function PublicBusinessHeader({
     businessName,
     logoUrl,
@@ -40,7 +46,7 @@ export function PublicBusinessHeader({
 }: PublicBusinessHeaderProps) {
     const galleryRef = useRef<HTMLUListElement>(null);
     const [galleryScroll, setGalleryScroll] = useState({ previous: false, next: false });
-    const [activePhoto, setActivePhoto] = useState<'cover' | 'profile' | null>(null);
+    const [activePhoto, setActivePhoto] = useState<PhotoPreview | null>(null);
     const [failedCover, setFailedCover] = useState<string | null>(null);
     const [failedLogo, setFailedLogo] = useState<string | null>(null);
     useEffect(() => {
@@ -63,8 +69,6 @@ export function PublicBusinessHeader({
     const SegmentIcon = userType === 'beauty' ? Sparkles : Scissors;
     const cover = coverPhotoUrl && coverPhotoUrl !== failedCover ? coverPhotoUrl : null;
     const profile = logoUrl && logoUrl !== failedLogo ? logoUrl : null;
-    const photoSource = activePhoto === 'cover' ? cover : activePhoto === 'profile' ? profile : null;
-    const photoTitle = activePhoto === 'cover' ? 'Foto de capa' : 'Foto de perfil';
     const rating = publicRatingBadge(reviewSummary?.average, reviewSummary?.total);
     const links = [
         { label: 'WhatsApp', icon: Phone, url: phone && buildWhatsAppLink(phone, region) },
@@ -80,22 +84,16 @@ export function PublicBusinessHeader({
                         type="button"
                         aria-label="Ampliar foto de capa"
                         aria-haspopup="dialog"
-                        onClick={() => setActivePhoto('cover')}
-                        className="relative block aspect-[2/1] max-h-56 w-full cursor-zoom-in overflow-hidden border-b border-theme-border bg-theme-surface focus-visible:z-10 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-theme-accent sm:max-h-72 lg:max-h-80"
+                        onClick={() => setActivePhoto({ source: cover, title: 'Foto de capa' })}
+                        className="relative block w-full cursor-zoom-in focus-visible:z-10 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-theme-accent"
                     >
                         <img
                             src={cover}
                             alt=""
                             fetchPriority="high"
-                            onError={() => {
-                                setFailedCover(cover);
-                                if (activePhoto === 'cover') setActivePhoto(null);
-                            }}
-                            className="absolute inset-0 size-full object-contain"
+                            onError={() => setFailedCover(cover)}
+                            className="block h-auto max-h-56 w-full object-contain [aspect-ratio:auto_8/3] sm:max-h-72 lg:max-h-80"
                         />
-                        <span className="absolute bottom-2 right-2 grid size-11 place-items-center rounded-xl border border-theme-border bg-theme-card text-theme-text" aria-hidden="true">
-                            <Maximize2 className="size-4" />
-                        </span>
                     </button>
                 )}
                 <div className="space-y-2 p-3.5 sm:space-y-3 sm:p-5">
@@ -105,22 +103,16 @@ export function PublicBusinessHeader({
                                 type="button"
                                 aria-label="Ampliar foto de perfil"
                                 aria-haspopup="dialog"
-                                onClick={() => setActivePhoto('profile')}
-                                className="relative size-20 shrink-0 cursor-zoom-in rounded-2xl border border-theme-border bg-theme-surface p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-theme-accent max-[359px]:size-18 sm:size-24"
+                                onClick={() => setActivePhoto({ source: profile, title: 'Foto de perfil' })}
+                                className="size-20 shrink-0 cursor-zoom-in rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-theme-accent max-[359px]:size-18 sm:size-24"
                             >
                                 <img
                                     src={profile}
                                     alt=""
                                     decoding="async"
-                                    onError={() => {
-                                        setFailedLogo(profile);
-                                        if (activePhoto === 'profile') setActivePhoto(null);
-                                    }}
+                                    onError={() => setFailedLogo(profile)}
                                     className="size-full object-contain"
                                 />
-                                <span className="absolute -bottom-1 -right-1 grid size-6 place-items-center rounded-lg border border-theme-border bg-theme-card text-theme-text" aria-hidden="true">
-                                    <Maximize2 className="size-3" />
-                                </span>
                             </button>
                         ) : (
                             <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-theme-surface text-theme-accent sm:size-16">
@@ -209,11 +201,22 @@ export function PublicBusinessHeader({
                                 className="flex snap-x gap-2 overflow-x-auto rounded-xl scrollbar-hide"
                                 aria-label="Fotos do portfólio"
                             >
-                                {gallery.map((item, index) => (
-                                    <li key={item.id} className="h-20 w-34 shrink-0 snap-start overflow-hidden rounded-lg sm:h-28 sm:w-44">
-                                        <img src={item.image_url} alt={`Foto ${index + 1} do espaço de ${businessName}`} loading="lazy" decoding="async" className="size-full object-cover" />
-                                    </li>
-                                ))}
+                                {gallery.map((item, index) => {
+                                    const title = `Foto ${index + 1} do espaço`;
+                                    return (
+                                        <li key={item.id} className="h-20 w-34 shrink-0 snap-start sm:h-28 sm:w-44">
+                                            <button
+                                                type="button"
+                                                aria-label={`Exibir ${title.toLowerCase()}`}
+                                                aria-haspopup="dialog"
+                                                onClick={() => setActivePhoto({ source: item.image_url, title })}
+                                                className="relative block size-full cursor-zoom-in overflow-hidden rounded-lg focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-theme-accent"
+                                            >
+                                                <img src={item.image_url} alt={`${title} de ${businessName}`} loading="lazy" decoding="async" className="size-full object-cover" />
+                                            </button>
+                                        </li>
+                                    );
+                                })}
                             </ul>
                             {(galleryScroll.next || galleryScroll.previous) && (
                                 <div className="pointer-events-none absolute inset-x-1 top-1/2 flex -translate-y-1/2 justify-between">
@@ -241,20 +244,25 @@ export function PublicBusinessHeader({
                     </details>
                 )}
             </div>
-            {photoSource && (
+            {activePhoto && (
                 <Modal
                     open
                     size="2xl"
-                    title={photoTitle}
+                    title={activePhoto.title}
                     subtitle={businessName}
                     onClose={() => setActivePhoto(null)}
-                    bodyClassName="flex min-h-0 items-center justify-center overflow-hidden bg-theme-surface px-2 py-3 md:p-4"
+                    bodyClassName="flex min-h-0 items-center justify-center overflow-hidden"
                 >
-                    <img
-                        src={photoSource}
-                        alt={`${photoTitle} de ${businessName}`}
-                        className="max-h-[min(70dvh,calc(90dvh_-_7rem_-_var(--safe-bottom)))] max-w-full object-contain"
-                    />
+                    {activePhoto.unavailable ? (
+                        <p role="status" className="p-4 text-sm text-theme-textSecondary">Não foi possível carregar esta foto.</p>
+                    ) : (
+                        <img
+                            src={activePhoto.source}
+                            alt={`${activePhoto.title} de ${businessName}`}
+                            onError={() => setActivePhoto({ ...activePhoto, unavailable: true })}
+                            className="max-h-[min(70dvh,calc(90dvh_-_7rem_-_var(--safe-bottom)))] max-w-full object-contain"
+                        />
+                    )}
                 </Modal>
             )}
         </header>

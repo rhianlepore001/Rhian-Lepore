@@ -16,17 +16,40 @@ describe('PublicBusinessHeader — Portfólio', () => {
   it('abre a capa e a foto de perfil separadamente com os arquivos originais', () => {
     render(<PublicBusinessHeader businessName="Studio Aurora" coverPhotoUrl="/capa.webp" logoUrl="/perfil.webp" />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Ampliar foto de capa' }));
+    const coverButton = screen.getByRole('button', { name: 'Ampliar foto de capa' });
+    expect(coverButton.querySelector('svg')).toBeNull();
+    fireEvent.click(coverButton);
     const cover = screen.getByRole('dialog', { name: 'Foto de capa' });
     expect(within(cover).getByRole('img')).toHaveAttribute('src', '/capa.webp');
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(cover).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Ampliar foto de perfil' }));
+    const profileButton = screen.getByRole('button', { name: 'Ampliar foto de perfil' });
+    expect(profileButton.querySelector('svg')).toBeNull();
+    fireEvent.click(profileButton);
     const profile = screen.getByRole('dialog', { name: 'Foto de perfil' });
     expect(within(profile).getByRole('img')).toHaveAttribute('src', '/perfil.webp');
     fireEvent.click(within(profile).getByRole('button', { name: 'Fechar' }));
     expect(profile).not.toBeInTheDocument();
+  });
+
+  it('abre a miniatura escolhida no visualizador e trata uma foto indisponível', () => {
+    render(<PublicBusinessHeader businessName="Studio Aurora" gallery={[
+      { id: '1', image_url: '/espaco.webp' },
+      { id: '2', image_url: '/detalhe.webp' },
+    ]} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Exibir foto 2 do espaço' }));
+    const preview = screen.getByRole('dialog', { name: 'Foto 2 do espaço' });
+    const image = within(preview).getByRole('img');
+    expect(image).toHaveAttribute('src', '/detalhe.webp');
+    expect(image).toHaveAccessibleName('Foto 2 do espaço de Studio Aurora');
+    fireEvent.error(image);
+    expect(within(preview).getByRole('status')).toHaveTextContent('Não foi possível carregar esta foto.');
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Exibir foto 1 do espaço' }));
+    expect(within(screen.getByRole('dialog', { name: 'Foto 1 do espaço' })).getByRole('img')).toHaveAttribute('src', '/espaco.webp');
   });
 
   it('remove controles de ampliação quando a foto não carrega e aceita uma nova URL', () => {

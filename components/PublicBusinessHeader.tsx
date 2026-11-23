@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Instagram, Phone, MapPin, Star, Scissors, Sparkles, ChevronLeft, ChevronRight, ChevronDown, Sun, Moon, User } from 'lucide-react';
+import { Instagram, Phone, MapPin, Star, Scissors, Sparkles, ChevronLeft, ChevronRight, ChevronDown, Sun, Moon, User, Maximize2 } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { publicRatingBadge } from '../utils/publicRating';
 import { buildWhatsAppLink, type WhatsAppRegion } from '../utils/whatsappTemplates';
+import { Modal } from './ui/Modal';
 
 interface PublicBusinessHeaderProps {
     businessName: string;
@@ -39,6 +40,9 @@ export function PublicBusinessHeader({
 }: PublicBusinessHeaderProps) {
     const galleryRef = useRef<HTMLUListElement>(null);
     const [galleryScroll, setGalleryScroll] = useState({ previous: false, next: false });
+    const [activePhoto, setActivePhoto] = useState<'cover' | 'profile' | null>(null);
+    const [failedCover, setFailedCover] = useState<string | null>(null);
+    const [failedLogo, setFailedLogo] = useState<string | null>(null);
     useEffect(() => {
         const strip = galleryRef.current;
         if (!strip) return;
@@ -57,6 +61,10 @@ export function PublicBusinessHeader({
     }, [gallery.length]);
     const { mode, toggleMode } = useTheme();
     const SegmentIcon = userType === 'beauty' ? Sparkles : Scissors;
+    const cover = coverPhotoUrl && coverPhotoUrl !== failedCover ? coverPhotoUrl : null;
+    const profile = logoUrl && logoUrl !== failedLogo ? logoUrl : null;
+    const photoSource = activePhoto === 'cover' ? cover : activePhoto === 'profile' ? profile : null;
+    const photoTitle = activePhoto === 'cover' ? 'Foto de capa' : 'Foto de perfil';
     const rating = publicRatingBadge(reviewSummary?.average, reviewSummary?.total);
     const links = [
         { label: 'WhatsApp', icon: Phone, url: phone && buildWhatsAppLink(phone, region) },
@@ -67,45 +75,78 @@ export function PublicBusinessHeader({
     return (
         <header className="relative z-10 mx-auto w-full max-w-5xl px-3 pt-3 md:px-6 md:pt-6">
             <div className="overflow-hidden rounded-2xl border border-theme-border bg-theme-card sm:rounded-3xl">
-                {coverPhotoUrl && (
-                    <img
-                        src={coverPhotoUrl}
-                        alt=""
-                        fetchPriority="high"
-                        className="h-28 w-full object-cover sm:h-40 lg:h-48"
-                    />
+                {cover && (
+                    <button
+                        type="button"
+                        aria-label="Ampliar foto de capa"
+                        aria-haspopup="dialog"
+                        onClick={() => setActivePhoto('cover')}
+                        className="relative block aspect-[2/1] max-h-56 w-full cursor-zoom-in overflow-hidden border-b border-theme-border bg-theme-surface focus-visible:z-10 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-theme-accent sm:max-h-72 lg:max-h-80"
+                    >
+                        <img
+                            src={cover}
+                            alt=""
+                            fetchPriority="high"
+                            onError={() => {
+                                setFailedCover(cover);
+                                if (activePhoto === 'cover') setActivePhoto(null);
+                            }}
+                            className="absolute inset-0 size-full object-contain"
+                        />
+                        <span className="absolute bottom-2 right-2 grid size-11 place-items-center rounded-xl border border-theme-border bg-theme-card text-theme-text" aria-hidden="true">
+                            <Maximize2 className="size-4" />
+                        </span>
+                    </button>
                 )}
                 <div className="space-y-2 p-3.5 sm:space-y-3 sm:p-5">
-                    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-                        <div className="flex min-w-0 flex-1 items-center gap-3">
-                            {logoUrl ? (
-                                <img src={logoUrl} alt="" className="size-12 shrink-0 rounded-xl object-cover sm:size-16" />
-                            ) : (
-                                <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-theme-surface text-theme-accent sm:size-16">
-                                    <SegmentIcon className="size-6 sm:size-7" aria-hidden="true" />
+                    <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+                        {profile ? (
+                            <button
+                                type="button"
+                                aria-label="Ampliar foto de perfil"
+                                aria-haspopup="dialog"
+                                onClick={() => setActivePhoto('profile')}
+                                className="relative size-20 shrink-0 cursor-zoom-in rounded-2xl border border-theme-border bg-theme-surface p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-theme-accent max-[359px]:size-18 sm:size-24"
+                            >
+                                <img
+                                    src={profile}
+                                    alt=""
+                                    decoding="async"
+                                    onError={() => {
+                                        setFailedLogo(profile);
+                                        if (activePhoto === 'profile') setActivePhoto(null);
+                                    }}
+                                    className="size-full object-contain"
+                                />
+                                <span className="absolute -bottom-1 -right-1 grid size-6 place-items-center rounded-lg border border-theme-border bg-theme-card text-theme-text" aria-hidden="true">
+                                    <Maximize2 className="size-3" />
                                 </span>
+                            </button>
+                        ) : (
+                            <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-theme-surface text-theme-accent sm:size-16">
+                                <SegmentIcon className="size-6 sm:size-7" aria-hidden="true" />
+                            </span>
+                        )}
+                        <div className="min-w-0 flex-1">
+                            <h1 className="break-words text-xl font-bold leading-tight tracking-tight text-theme-text sm:text-3xl">
+                                {businessName}
+                            </h1>
+                            {onOpenReviews && (
+                                <button
+                                    type="button"
+                                    onClick={onOpenReviews}
+                                    aria-haspopup="dialog"
+                                    className="flex min-h-11 flex-wrap items-center gap-x-1.5 rounded-md text-left text-sm text-theme-textSecondary hover:text-theme-text hover:underline"
+                                >
+                                    <Star className="size-4 shrink-0 text-theme-accent" fill={rating ? 'currentColor' : 'none'} aria-hidden="true" />
+                                    {rating ? (
+                                        <>
+                                            <span className="font-semibold text-theme-text">{rating.value}<span className="sr-only"> de 5</span></span>
+                                            <span>{rating.countLabel}</span>
+                                        </>
+                                    ) : 'Avaliações de clientes'}
+                                </button>
                             )}
-                            <div className="min-w-0">
-                                <h1 className="break-words text-xl font-bold leading-tight tracking-tight text-theme-text sm:text-3xl">
-                                    {businessName}
-                                </h1>
-                                {onOpenReviews && (
-                                    <button
-                                        type="button"
-                                        onClick={onOpenReviews}
-                                        aria-haspopup="dialog"
-                                        className="flex min-h-11 flex-wrap items-center gap-x-1.5 rounded-md text-left text-sm text-theme-textSecondary hover:text-theme-text hover:underline"
-                                    >
-                                        <Star className="size-4 shrink-0 text-theme-accent" fill={rating ? 'currentColor' : 'none'} aria-hidden="true" />
-                                        {rating ? (
-                                            <>
-                                                <span className="font-semibold text-theme-text">{rating.value}<span className="sr-only"> de 5</span></span>
-                                                <span>{rating.countLabel}</span>
-                                            </>
-                                        ) : 'Avaliações de clientes'}
-                                    </button>
-                                )}
-                            </div>
                         </div>
                         {showThemeToggle && (
                             <button
@@ -200,6 +241,22 @@ export function PublicBusinessHeader({
                     </details>
                 )}
             </div>
+            {photoSource && (
+                <Modal
+                    open
+                    size="2xl"
+                    title={photoTitle}
+                    subtitle={businessName}
+                    onClose={() => setActivePhoto(null)}
+                    bodyClassName="flex min-h-0 items-center justify-center overflow-hidden bg-theme-surface px-2 py-3 md:p-4"
+                >
+                    <img
+                        src={photoSource}
+                        alt={`${photoTitle} de ${businessName}`}
+                        className="max-h-[min(70dvh,calc(90dvh_-_7rem_-_var(--safe-bottom)))] max-w-full object-contain"
+                    />
+                </Modal>
+            )}
         </header>
     );
 }

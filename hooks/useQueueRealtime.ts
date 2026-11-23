@@ -11,8 +11,7 @@ export type { QueueRealtimeEvent };
 export { parseQueueRealtimeEvent, QUEUE_REALTIME_EVENT, queueRealtimeTopic };
 
 /**
- * Assina o broadcast da fila de um estabelecimento. Funciona para o cliente anônimo
- * (área pública) e para o gestor. O polling das queries continua como fallback.
+ * Assina o broadcast da fila para a equipe autenticada do estabelecimento.
  */
 export function useQueueRealtime(
   businessId: string | null | undefined,

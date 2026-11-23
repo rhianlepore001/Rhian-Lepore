@@ -40,7 +40,7 @@ describe('Meta tracking', () => {
   it.each(['/book/demo', '/queue/demo', '/queue-status/1', '/pro/demo', '/minha-area/demo', '/clube/demo', '/', '/agenda', '/clientes/1', '/onboarding-wizard', '/staff-onboarding', '/update-password', '/forgot-password'])('excludes %s', path => {
     expect(isMetaRoute(path, '', false)).toBe(false);
   });
-  it.each(['/login', '/register', '/termos', '/privacidade'])('includes public acquisition route %s', path => {
+  it.each(['/landing', '/login', '/register', '/termos', '/privacidade'])('includes public acquisition route %s', path => {
     expect(isMetaRoute(path, '', false)).toBe(true);
     expect(isMetaRoute(path, '', true)).toBe(false);
   });

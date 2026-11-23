@@ -14,6 +14,7 @@ import {
   findNextDateWithSlots,
 } from '@/services/publicBooking';
 import { supabase } from '@/lib/supabase';
+import { getCustomerReviewReceipt } from '@/utils/customerReviewReceipt';
 
 const pendingBooking = {
   id: 'booking-001',
@@ -108,6 +109,37 @@ describe('public booking service', () => {
     expect(insertMock).not.toHaveBeenCalled();
     expect(result.status).toBe('pending');
     expect(result.id).toBe('booking-001');
+  });
+
+  it.each([true, false])('guarda o comprovante somente quando a assinatura nova está disponível (%s)', async (hasNewRpc) => {
+    const reviewToken = '70deac24-8742-4704-8b63-5ee69d6510cd';
+    const receiptKey = 'agendix-review:business-001:booking-001';
+    localStorage.removeItem(receiptKey);
+    const rpc = vi.mocked(supabase.rpc);
+    if (!hasNewRpc) {
+      rpc.mockResolvedValueOnce({ data: null, error: { code: 'PGRST202' } } as never);
+    }
+    rpc.mockResolvedValueOnce({ data: [pendingBooking], error: null } as never);
+    rpc.mockResolvedValueOnce({ data: [{ id: 'pc-1' }], error: null } as never);
+
+    await submitPublicBooking({
+      businessId: 'business-001',
+      customerName: 'Joao',
+      customerPhone: '11999999999',
+      serviceIds: ['service-001'],
+      professionalId: null,
+      appointmentTime: '2026-05-30T10:00:00-03:00',
+      totalPrice: 80,
+      durationMinutes: 30,
+      reviewToken,
+    });
+
+    expect(rpc).toHaveBeenNthCalledWith(1, 'create_public_booking', expect.objectContaining({ p_review_token: reviewToken }));
+    if (!hasNewRpc) {
+      expect(rpc).toHaveBeenNthCalledWith(2, 'create_public_booking', expect.not.objectContaining({ p_review_token: expect.anything() }));
+    }
+    expect(getCustomerReviewReceipt('business-001', 'booking-001')).toBe(hasNewRpc ? reviewToken : null);
+    localStorage.removeItem(receiptKey);
   });
 
   it('rejeita overlap quando a RPC retorna slot_unavailable (sem fallback INSERT)', async () => {

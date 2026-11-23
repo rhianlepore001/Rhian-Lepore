@@ -85,7 +85,7 @@ describe('PublicBookingMemberships', () => {
     expect(screen.queryByTestId('booking-memberships')).not.toBeInTheDocument();
   });
 
-  it('lista as assinaturas abaixo dos serviços com CTA para o clube', () => {
+  it('lista as assinaturas com um link direto para cada plano', () => {
     vi.mocked(usePublicMembershipPlans).mockReturnValue({
       data: plans,
       isLoading: false,
@@ -105,6 +105,7 @@ describe('PublicBookingMemberships', () => {
 
     const links = screen.getAllByRole('link', { name: /Quero assinar/i });
     expect(links).toHaveLength(2);
-    expect(links[0]).toHaveAttribute('href', '/clube/barbearia-silva');
+    expect(links[0]).toHaveAttribute('href', '/clube/barbearia-silva?plano=plan-gold&origem=agendamento');
+    expect(links[1]).toHaveAccessibleName('Quero assinar Barba Mensal');
   });
 });

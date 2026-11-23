@@ -50,10 +50,10 @@ vi.mock('../../contexts/AuthContext', () => ({
   useAuth: () => ({ userType: 'barber' }),
 }));
 
-function renderFlow(region: 'BR' | 'PT') {
+function renderFlow(region: 'BR' | 'PT', initialPlanId?: string) {
   return render(
     <MemoryRouter>
-      <PublicClubFlow slug="loja" businessId="biz-1" region={region} />
+      <PublicClubFlow slug="loja" businessId="biz-1" region={region} initialPlanId={initialPlanId} />
     </MemoryRouter>,
   );
 }
@@ -77,5 +77,22 @@ describe('PublicClubFlow — método por região', () => {
     expect(screen.getByText('MB WAY')).toBeInTheDocument();
     expect(screen.getByText('No balcão')).toBeInTheDocument();
     expect(screen.queryByText('Pix agora')).not.toBeInTheDocument();
+  });
+});
+
+describe('PublicClubFlow — link de plano', () => {
+  it('abre diretamente o plano ativo e permite escolher outro', async () => {
+    const user = userEvent.setup();
+    renderFlow('BR', plan.id);
+    expect(screen.getByRole('heading', { name: plan.name })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Seu nome' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Escolher outro plano' }));
+    expect(screen.getByRole('button', { name: 'Quero assinar' })).toBeInTheDocument();
+  });
+
+  it('volta ao catálogo quando o plano do link não pertence ao catálogo ativo', () => {
+    renderFlow('PT', 'outro-estabelecimento');
+    expect(screen.getByRole('button', { name: 'Quero assinar' })).toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'Seu nome' })).not.toBeInTheDocument();
   });
 });

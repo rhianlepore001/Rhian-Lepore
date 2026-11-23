@@ -1,13 +1,29 @@
 # MEMORY.md — Estado do Projeto (memória compartilhada)
 
 > Memória de projeto compartilhada entre máquinas/sessões do Claude Code (local + VPS).
-> Mantenha atualizado conforme o trabalho avança. Datas em formato absoluto.
+> Mantenha-o atualizado conforme o trabalho avança. Datas em formato absoluto.
 >
 > ⚠️ **Repo PÚBLICO.** NUNCA coloque aqui segredos, chaves, tokens, connection strings,
 > nem detalhes exploráveis de segurança (vetores de RLS, vulnerabilidades específicas).
 > Detalhes sensíveis ficam fora do versionamento.
 
 ---
+
+## Meta Pixel — engajamento da landing (23 Nov 2026, draft)
+
+Branch `cursor/meta-landing-engajamento-a592`. Amplia remarketing em `/#/landing`: SectionView, Scroll25/50/75/90, TimeOnPage15/30/60/120s, DemoStart/ScreenView/Complete (iframe via postMessage), NichoSwitch, FAQOpen, WhatsAppClick, CTAClick com `cta_position`. Edge `meta-capi` atualizada na allow-list (sem deploy neste PR). Cadastro: StartRegistration + Lead + CompleteRegistration já existentes; sem StartTrial. Verificações: typecheck/lint/build + testes Meta + e2e meta-pixel. Docs: `docs/meta-pixel.md`.
+
+## Acesso à vitrine do agendamento (21 Nov 2026)
+
+A aba Produtos tem link direto para visitantes e clientes com sessão. A busca da aba é independente da busca de serviços. Em Configurações → Agendamento, a vitrine publicada tem um atalho para conferir o que o cliente vê. A configuração de visibilidade e a disponibilidade em estoque controlam os itens exibidos.
+
+## Fotos do espaço e avaliações verificadas (21 Nov 2026)
+
+A galeria do agendamento abre expandida. A média, a contagem e os comentários do cabeçalho vêm das avaliações do Agendix. O cliente pode avaliar uma vez após o atendimento concluído no Histórico quando fez a reserva no mesmo navegador. A Agenda permite compartilhar um convite individual para atendimentos elegíveis, inclusive os anteriores à mudança. O formulário aceita nota de 1 a 5 e comentário opcional, com publicação sem nome ou telefone do cadastro. Migração de avaliações incluída em `20261121083646_verified_booking_reviews.sql`. A avaliação independente de UX deu 9,6/10. O validador técnico aprovou 57 verificações no banco isolado.
+
+## Agendamento online e Minha Área (21 Nov 2026)
+
+O cliente tem acesso ao catálogo de produtos nas duas telas, e o Clube ganha destaque quando há planos ativos. A versão de produção preserva a vitrine de consulta com fotos e descrições de produtos. Em Configurações → Clube, o dono pode adicionar, trocar ou remover a foto de um plano. A revisão independente aprovou a UX com 9,5/10 após verificar 24 estados de tela. A migration `20261121080445_membership_plan_photos.sql` passou em 18 verificações locais de SQL e RLS. A migração de fotos integra a mesma publicação das avaliações.
 
 ## Landing mobile 2.0 (17 Nov 2026)
 

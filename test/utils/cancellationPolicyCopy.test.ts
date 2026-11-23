@@ -109,6 +109,7 @@ describe('cancellationPolicyCopy — PR-5 gerada da regra real', () => {
   it('texto do gestor substitui a frase gerada; vazio volta ao padrão', () => {
     expect(resolveCancellationPolicyParts({ cutoffHours: 6, businessName: 'X', clientCancelPolicyText: '  Política da casa.  ' })).toEqual({
       policy: 'Política da casa.', notes: '', isCustom: true,
+      onlineCancellation: 'Você pode cancelar até 6h antes pela Minha Área',
     });
     expect(resolveCancellationPolicyParts({ cutoffHours: 6, businessName: 'X', clientCancelPolicyText: '   ' }).policy).toBe(
       'Você pode cancelar até 6h antes pela Minha Área',

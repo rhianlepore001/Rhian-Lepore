@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { ArrowRight, Check, Loader2, Ticket } from 'lucide-react';
 import { PhoneInput } from '../components/PhoneInput';
 import { Button, Input } from '../components/ui';
 import { QueuePayStep } from '../components/queue/QueuePayStep';
@@ -65,6 +65,9 @@ export const QueueJoin: React.FC = () => {
   const [proActive, setProActive] = useState<boolean | null>(preSelectedPro ? null : true);
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState<Step>('service');
+  const stepRegion = useRef<HTMLDivElement>(null);
+  const previousStep = useRef<Step>('service');
+  const payBackStep = useRef<'service' | 'identity'>('service');
   const [selectedServiceId, setSelectedServiceId] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -95,6 +98,13 @@ export const QueueJoin: React.FC = () => {
     usageLimit: membership?.usage_limit_per_month,
     usageThisPeriod: membership?.usage_this_period,
   });
+
+  useEffect(() => {
+    if (previousStep.current === step) return;
+    previousStep.current = step;
+    stepRegion.current?.querySelector('h2')?.focus({ preventScroll: true });
+    window.scrollTo(0, 0);
+  }, [step]);
 
   useEffect(() => {
     if (slug) markQueueQrVisit(slug);
@@ -203,16 +213,13 @@ export const QueueJoin: React.FC = () => {
   const handleIdentityContinue = async () => {
     if (!business) return;
     setIdentityError('');
-    if (sessionClient) {
-      setStep('pay');
-      return;
-    }
     if (!isQueueIdentityPhoneValid(phone, region)) {
       const message = 'Informe um número de WhatsApp válido.';
       setIdentityError(message);
       showToast(message, 'error');
       return;
     }
+    payBackStep.current = 'identity';
     setIdentitySubmitting(true);
     try {
       if (await redirectIfAlreadyInQueue(phone)) return;
@@ -332,124 +339,135 @@ export const QueueJoin: React.FC = () => {
   const stepIndex = STEPS.findIndex((item) => item.id === step);
 
   return (
-    <div className={`min-h-screen ${colors.bg} ${colors.text}`}>
-      <div className="mx-auto w-full max-w-lg md:max-w-xl px-4 py-6 md:py-12 pb-12">
-        <header className="space-y-2.5 mb-5 md:mb-7">
-          <h1 className={`text-[clamp(1.5rem,6vw,2.25rem)] font-bold tracking-tight leading-tight break-words ${font.heading}`}>
-            {business.business_name}
-          </h1>
-          <p className={`text-sm md:text-base leading-relaxed ${colors.textSecondary}`}>
-            {preSelectedPro && lockedProName
-              ? `Fila de ${lockedProName}. Escolha o serviço e acompanhe sua vez pelo celular.`
-              : 'Escolha o serviço, entre na fila e acompanhe sua vez pelo celular.'}
-          </p>
-          <ol className={`grid grid-cols-3 gap-2 rounded-xl border p-2.5 ${colors.card} ${colors.border}`} aria-label="Passos para entrar na fila">
+    <main className={`min-h-screen ${colors.bg} ${colors.text}`}>
+      <div className="mx-auto w-full max-w-xl px-4 pb-12 pt-4 sm:px-6 sm:pt-8">
+        <header className={`mb-5 overflow-hidden border ${radius.card} ${colors.card} ${colors.border}`}>
+          <div className="flex min-w-0 items-start gap-3 px-4 py-4 sm:p-5">
+            <span className={`grid size-10 shrink-0 place-items-center rounded-xl ${accent.bgDim} ${accent.text}`}>
+              <Ticket className="size-5" aria-hidden="true" />
+            </span>
+            <div className="min-w-0">
+              <p className={`break-words text-sm font-medium ${colors.textSecondary}`}>{business.business_name}</p>
+              <h1 className={`text-2xl font-bold leading-tight tracking-tight sm:text-3xl ${font.heading}`}>Fila digital</h1>
+              {preSelectedPro && lockedProName && <p className={`mt-1 break-words text-sm ${colors.textSecondary}`}>Fila de {lockedProName}</p>}
+            </div>
+          </div>
+          <ol className={`grid grid-cols-3 gap-1 border-t px-3 py-2.5 ${colors.border}`} aria-label="Passos para entrar na fila">
             {STEPS.map((item, index) => {
               const current = index === stepIndex;
               const done = index < stepIndex;
               return (
-                <li key={item.id} aria-current={current ? 'step' : undefined} className="flex-1 min-w-0">
-                  <span
-                    className={`block h-1 rounded-full ${
-                      current || done ? accent.bg : 'bg-[var(--color-border-strong)]'
-                    }`}
-                  />
-                  <span className={`mt-2 block text-xs font-medium ${current ? accent.text : colors.textSecondary}`}>
-                    {item.label}
+                <li key={item.id} aria-current={current ? 'step' : undefined} className={`flex min-w-0 items-center gap-1.5 rounded-lg px-1.5 py-1.5 text-xs font-semibold ${current ? `${accent.bgDim} ${accent.text}` : colors.textSecondary}`}>
+                  <span className={`grid size-5 shrink-0 place-items-center rounded-full border text-xs ${current ? `${accent.bg} border-transparent text-[var(--color-on-accent)]` : colors.border}`}>
+                    {done ? <Check className="size-3" aria-hidden="true" /> : <span aria-hidden="true">{index + 1}</span>}
                   </span>
+                  <span>{item.label}</span>
+                  {done && <span className="sr-only"> concluído</span>}
                 </li>
               );
             })}
           </ol>
         </header>
 
-        {step === 'service' && (
-          <QueueServiceStep
-            services={services}
-            categories={categories}
-            region={region}
-            themeOverride={themeOverride}
-            selectedServiceId={selectedServiceId}
-            onSelect={setSelectedServiceId}
-            onContinue={() => setStep(sessionClient ? 'pay' : 'identity')}
-          />
-        )}
+        <div ref={stepRegion}>
+          {step === 'service' && (
+            <QueueServiceStep
+              services={services}
+              categories={categories}
+              region={region}
+              themeOverride={themeOverride}
+              selectedServiceId={selectedServiceId}
+              onSelect={setSelectedServiceId}
+              onContinue={() => {
+                payBackStep.current = 'service';
+                setStep(sessionClient ? 'pay' : 'identity');
+              }}
+            />
+          )}
 
-        {step === 'identity' && (
-          <form
-            className="space-y-6"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void handleIdentityContinue();
-            }}
-          >
-            <div>
-              <h2 className={`text-xl md:text-[22px] font-semibold tracking-tight ${font.heading}`}>
-                Seus dados
-              </h2>
-              <p className={`text-sm mt-1.5 leading-relaxed ${colors.textMuted}`}>
-                Informe seu WhatsApp para entrar na fila e consultar sua posição depois. Se já for cliente, use o mesmo número.
-              </p>
-            </div>
-            <div className={`p-4 md:p-5 space-y-4 ${radius.card} border ${colors.card} ${colors.border}`}>
-              <div className="space-y-1.5">
-                <label htmlFor="queue-phone" className={`text-sm font-medium ${colors.textSecondary}`}>
-                  WhatsApp
-                </label>
-                <PhoneInput id="queue-phone" value={phone} onChange={setPhone} defaultRegion={region} forceTheme={themeOverride} />
+          {step === 'identity' && (
+            <form
+              className="space-y-6"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void handleIdentityContinue();
+              }}
+            >
+              <div>
+                <h2 tabIndex={-1} className={`text-xl md:text-[22px] font-semibold tracking-tight ${font.heading}`}>
+                  Seus dados
+                </h2>
+                <p className={`text-sm mt-1.5 leading-relaxed ${colors.textMuted}`}>
+                  Informe seu WhatsApp para entrar na fila e consultar sua posição depois. Se já for cliente, use o mesmo número.
+                </p>
               </div>
-              <Input
-                label="Nome"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                placeholder="Como quer ser chamado"
-                autoComplete="name"
-                hint="Obrigatório apenas na primeira visita."
-                forceTheme={themeOverride}
-              />
-              {identityError && (
-                <p role="alert" className="text-sm text-[var(--color-danger)]">{identityError}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Button
-                type="submit"
-                variant="primary"
-                className="w-full min-h-[48px]"
-                loading={identitySubmitting}
-              >
-                Continuar
-              </Button>
-              <button
-                type="button"
-                onClick={() => setStep('service')}
-                className={`w-full min-h-[44px] text-sm font-medium ${colors.textMuted}`}
-              >
-                Voltar
-              </button>
-            </div>
-          </form>
-        )}
+              <div className={`p-4 md:p-5 space-y-4 ${radius.card} border ${colors.card} ${colors.border}`}>
+                <div className="space-y-1.5">
+                  <label htmlFor="queue-phone" className={`text-sm font-medium ${colors.textSecondary}`}>
+                    WhatsApp
+                  </label>
+                  <PhoneInput id="queue-phone" value={phone} onChange={setPhone} defaultRegion={region} forceTheme={themeOverride} />
+                </div>
+                <Input
+                  label="Nome"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  placeholder="Como quer ser chamado"
+                  autoComplete="name"
+                  hint="Obrigatório apenas na primeira visita."
+                  forceTheme={themeOverride}
+                />
+                {identityError && (
+                  <p role="alert" className="text-sm text-[var(--color-danger)]">{identityError}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Button
+                  type="submit"
+                  variant="primary"
+                  className="w-full min-h-[48px]"
+                  loading={identitySubmitting}
+                >
+                  Continuar
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => setStep('service')}
+                  className={`w-full min-h-[44px] text-sm font-medium ${colors.textMuted}`}
+                >
+                  Voltar
+                </button>
+              </div>
+            </form>
+          )}
 
-        {step === 'pay' && selectedService && (
-          <QueuePayStep
-            region={region}
-            themeOverride={themeOverride}
-            canUseMembership={discount.canUseMembership}
-            selected={payMethod}
-            onSelect={setPayMethod}
-            onConfirm={handleJoin}
-            onBack={() => setStep(sessionClient ? 'service' : 'identity')}
-            submitting={submitting}
-            amountCents={Math.round(selectedService.price * 100)}
-            serviceName={selectedService.name}
-            joinError={joinError}
-            pixConfig={pixConfig}
-            pixTxid={pixTxid}
-            pixConfigLoading={pixConfigLoading}
-          />
+          {step === 'pay' && selectedService && (
+            <QueuePayStep
+              region={region}
+              themeOverride={themeOverride}
+              canUseMembership={discount.canUseMembership}
+              selected={payMethod}
+              onSelect={setPayMethod}
+              onConfirm={handleJoin}
+              onBack={() => setStep(payBackStep.current)}
+              submitting={submitting}
+              amountCents={Math.round(selectedService.price * 100)}
+              serviceName={selectedService.name}
+              joinError={joinError}
+              pixConfig={pixConfig}
+              pixTxid={pixTxid}
+              pixConfigLoading={pixConfigLoading}
+            />
+          )}
+        </div>
+
+        {step === 'service' && slug && (
+          <Link to={`/minha-area/${slug}?tab=fila`} className={`mt-3 flex min-h-[44px] items-center justify-center gap-2 rounded-xl text-sm font-semibold ${colors.textSecondary} hover:bg-theme-surface`}>
+            Acompanhar minha senha
+            <ArrowRight className="size-4" aria-hidden="true" />
+          </Link>
         )}
       </div>
-    </div>
+    </main>
   );
 };

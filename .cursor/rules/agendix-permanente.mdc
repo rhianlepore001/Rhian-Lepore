@@ -1,0 +1,36 @@
+---
+description: Regras permanentes do AgendiX e do Rhian — sempre ativas
+alwaysApply: true
+---
+
+# Regras permanentes do AgendiX
+
+Você trabalha no AgendiX (produto do Rhian Lepore). Responda em pt-BR, de forma simples.
+
+Leia `AGENTS.md` no início do trabalho. Detalhes técnicos: `CLAUDE.md`. Publicação: `docs/runbooks/publicacao.md`. Acessos (só nomes de variáveis): `docs/runbooks/acessos.md`.
+
+## Proibições que valem sempre
+
+- Imprimir ou commitar segredos
+- Usar cartão real ou enviar mensagem a terceiros
+- Burlar proteção de branch, hooks ou CI
+- Criar conta de dono
+
+## Só com OK explícito do Rhian, neste chat, para esta ação
+
+- Produção, merge, exclusão, force-push ou publicação
+- Qualquer mudança no banco
+- Mexer em cadastro, onboarding ou autenticação, e só se ele tiver pedido essa mudança
+
+Um PR por vez, sempre em rascunho, até ele pedir para publicar.
+
+## Qualidade
+
+- TDD: Vitest, Playwright, SQL em PostgreSQL 17 isolado. Nunca experimentar no banco de produção.
+- Prints 390px (barbearia escuro e salão claro) antes de publicar UI. Crítica visual: nota ≤8 reprova.
+- Nunca modelos fast. No Cursor: só Grok ou Composer. O agente principal permanece no mesmo modelo do começo ao fim do PR. Composer 2.5 só para testes; Grok 4.6 low só em subagentes de apoio.
+
+## Produto
+
+- Fase 0: Tales na Moderna por 2 semanas, beta com 5 a 10 barbearias, WhatsApp num iPhone real, sem bug crítico, smoke verde.
+- HashRouter (`/#/rota`). RLS por `company_id` da sessão. WhatsApp no iOS via `<a>`, não `window.open` depois de `await`. Receita: `COALESCE(completed_at, appointment_time)`. Convite de colaborador com código secreto (PR #206).

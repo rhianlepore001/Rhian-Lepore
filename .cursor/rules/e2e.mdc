@@ -1,0 +1,17 @@
+---
+description: Regras para Playwright, jornada e testes que tocam login ou banco
+globs: e2e/**,playwright*.ts,playwright*.config.ts,agendix-e2e-test/**
+alwaysApply: false
+---
+
+# Testes E2E
+
+- Credenciais só por variáveis de ambiente (`E2E_OWNER_EMAIL`, `E2E_OWNER_PASS`, `E2E_STAFF_EMAIL`, `E2E_STAFF_PASS`, `E2E_BASE_URL`). Nunca hardcode senha nova. Não imprima valores.
+- **Nunca** rode contra produção estes specs (eles escrevem no banco se a URL for a de verdade):
+  - `e2e/staff-invite-flow.spec.ts`
+  - `e2e/ciclo-de-receita.spec.ts`
+- O Playwright principal já ignora `ciclo-de-receita` e `journey-15d`. A jornada 15 dias tem config própria (`npm run e2e:journey-15d`). A variante ao vivo (`e2e:journey-15d:live`) se recusa a rodar contra produção. Não remova essas travas.
+- Preferir testes com backend falso quando o objetivo for UI. Teste ao vivo só em ambiente controlado, com conta de teste, nunca criando dono novo.
+- `e2e/.auth/` e `storageState` não se versionam (já estão no `.gitignore`).
+- Playwright no Ubuntu 24.04 já foi instável no CI (PRs #198 e #199). Antes de tratar um vermelho como bug do app, confira se foi instalação do browser ou timeout de infraestrutura.
+- Prints de crítica visual: skill `playwright-visual-critique`, viewport 390px (e desktop quando pedido), temas barbearia escuro e salão claro. Nota ≤8 reprova.

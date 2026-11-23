@@ -845,35 +845,7 @@
     }
   </style>
 
-  <!-- Anti-FOUC: aplica data-mode ANTES do React montar para evitar flash de cor errada.
-       Telas públicas de auth (gateway) NÃO herdam o modo claro/escuro da sessão. -->
-  <script>
-    (function () {
-      var hash = window.location.hash || '';
-      if (/^#\/(login|register|forgot-password)\/?(\?|$)/.test(hash)) {
-        document.documentElement.setAttribute('data-theme', 'barber');
-        document.documentElement.setAttribute('data-mode', 'dark');
-        return;
-      }
-      var mode = localStorage.getItem('agendix_color_mode') || 'dark';
-      document.documentElement.setAttribute('data-mode', mode);
-    })();
-  </script>
-
-  <!-- Detecção antecipada da rota de agendamento público: previne flash de fundo errado -->
-  <script>
-      (function () {
-        var hash = window.location.hash;
-        // Rotas públicas usam HashRouter: #/book/, #/queue/, #/pro/, #/minha-area/
-        if (/^#\/(book|queue|queue-status|pro|minha-area|avaliar)\//.test(hash)) {
-          document.documentElement.setAttribute('data-public-theme', 'obsidian');
-          document.documentElement.style.backgroundColor = '#12100E';
-          document.body && (document.body.style.backgroundColor = '#12100E');
-          // Em rotas públicas, não aplicar data-mode do usuário
-          document.documentElement.removeAttribute('data-mode');
-        }
-      })();
-  </script>
+  <script src="/theme-bootstrap.js"></script>
 
 </head>
 

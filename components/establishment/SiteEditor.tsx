@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, Check, Copy, ExternalLink, Monitor, Save, Smartphone } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowUp, Check, Copy, ExternalLink, Maximize2, Monitor, Save, Smartphone } from 'lucide-react';
 import { accessibleAccent, defaultBackground, FOCUS_PRESETS, isRecommendedBackground, photoObjectPosition, RECOMMENDED_BACKGROUNDS, resolvedBackground, siteSurface, type PhotoFocus, type SiteConfig, type SiteData, type SiteKind } from '../../lib/establishment/model';
 import { loadSiteDraft, saveSiteDraft, publishOwnerSite, unpublishOwnerSite } from '../../services/establishmentSite';
 import '../../styles/site-editor.css';
@@ -46,6 +46,7 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
   const [config, setConfig] = useState(() => loadSiteDraft(companyId, initial));
   const [saved, setSaved] = useState('');
   const [mode, setMode] = useState<'mobile' | 'desktop'>('mobile');
+  const [expanded, setExpanded] = useState(false);
   const frame = useRef<HTMLIFrameElement>(null);
   const [frameReady, setFrameReady] = useState(false);
   const [storage, setStorage] = useState<'local' | 'remote'>('local');
@@ -68,6 +69,12 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
     window.addEventListener('message', receive);
     return () => window.removeEventListener('message', receive);
   }, [config, data]);
+  useEffect(() => {
+    if (!expanded) return;
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') setExpanded(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [expanded]);
   useEffect(() => {
     if (demo) return;
     let active = true;
@@ -156,13 +163,23 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
         <details name="site-editor-sections"><summary>Contato e Google</summary><div className="se-detail-content">{field('WhatsApp do estabelecimento', config.contact?.phone ?? data.phone ?? '', phone => update({ contact: { ...config.contact, phone } }))}{field('Instagram', config.contact?.instagram ?? data.instagram ?? '', instagram => update({ contact: { ...config.contact, instagram } }))}{field('Título para o Google', config.seoTitle, seoTitle => update({ seoTitle }), false, 'Se vazio, usamos o nome e o endereço da casa.')}{field('Descrição para o Google', config.seoDescription, seoDescription => update({ seoDescription }), true)}<p className="se-help">Confira se nome, endereço e telefone são iguais aos do seu Perfil da Empresa no Google.</p></div></details>
         <section className="se-sharing"><h2>Seu endereço</h2>{published && <button className="se-link-button" onClick={() => void changePublication(true)} disabled={saving}>Despublicar site</button>}<p>{link}</p><button className="se-secondary" onClick={() => { void navigator.clipboard.writeText(link).then(() => setSaved('Link copiado.')).catch(() => setSaved('Não foi possível copiar automaticamente. Selecione o endereço acima.')); }}><Copy size={15} />Copiar link</button><button className="se-secondary" onClick={() => void downloadQr()}>Baixar QR Code</button><p className="se-help">O site real só estará disponível depois de publicado. A demonstração pode ser aberta agora.</p></section>
       </div>
-      <aside className="se-preview">
+      <aside className="se-preview" data-expanded={expanded || undefined}>
         <div className="se-preview-toolbar">
-          <div><span className="se-preview-live" />Prévia ao vivo</div>
-          <div>
-            <button type="button" aria-label="Prévia no celular" aria-pressed={mode === 'mobile'} onClick={() => setMode('mobile')}><Smartphone size={18} /></button>
-            <button type="button" aria-label="Prévia no computador" aria-pressed={mode === 'desktop'} onClick={() => setMode('desktop')}><Monitor size={18} /></button>
-          </div>
+          {expanded ? (
+            <>
+              <div><span className="se-preview-live" />Prévia em tela cheia</div>
+              <button type="button" className="se-preview-back" onClick={() => setExpanded(false)}><ArrowLeft size={18} />Voltar ao editor</button>
+            </>
+          ) : (
+            <>
+              <div><span className="se-preview-live" />Prévia ao vivo</div>
+              <div>
+                <button type="button" aria-label="Prévia no celular" aria-pressed={mode === 'mobile'} onClick={() => setMode('mobile')}><Smartphone size={18} /></button>
+                <button type="button" aria-label="Prévia no computador" aria-pressed={mode === 'desktop'} onClick={() => setMode('desktop')}><Monitor size={18} /></button>
+              </div>
+              <button type="button" className="se-preview-expand" onClick={() => setExpanded(true)}><Maximize2 size={16} />Ver em tela cheia</button>
+            </>
+          )}
         </div>
         <div className="se-preview-stage" data-mode={mode}>{previewFrame}</div>
         <p className="se-help">A mesma página que seus clientes vão ver. Celular e computador, enquanto você personaliza.</p>

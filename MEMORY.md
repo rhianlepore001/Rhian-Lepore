@@ -15,7 +15,9 @@ Branch `feat/site-estabelecimento`, PR #256. O fundador publicou uma direção m
 
 Rodada Bob: hero/Serviços alinhados ao header no desktop; oferta do salão sem repetir título+condição (`offerDisplay`); faixa de demo discreta (eval a ignora); CTA do header oculto no celular quando a barra fixa existe; wordmark numa linha com presença; dobra mobile mostra indício de Serviços. Prints em `/opt/cursor/artifacts/presenca/comparacao/`. Eval 9,5/10 (faixa de demo desconsiderada).
 
-Rodada Rhian 17:24: primeira versão aprovada. Painel Meu site ganhou cor de fundo (recomendadas AgendiX + personalizada, contraste avisado/ajustado) e prévia ao vivo com celular/computador, sem perder os controles no telefone. Prints em `/opt/cursor/artifacts/presenca/painel/`. Eval do painel 9,6/10. E2E 24/24. Migration **não aplicada**. Login/cadastro/onboarding/Stripe/tracking intocados.
+Rodada Rhian 17:24: primeira versão aprovada. Painel Meu site ganhou cor de fundo (recomendadas AgendiX + personalizada, contraste avisado/ajustado) e prévia ao vivo com celular/computador, sem perder os controles no telefone. Prints em `/opt/cursor/artifacts/presenca/painel/`. Eval do painel 9,6/10.
+
+Rodada Rhian 18:49: prévia no celular do dono maior (headline + lede visíveis, não mais faixa de ~150 px) e botão Ver em tela cheia com Voltar ao editor. Desktop intacto. Eval 9,6/10. E2E 24/24. Migration **não aplicada**. Login/cadastro/onboarding/Stripe/tracking intocados.
 
 ## Meta Pixel — engajamento da landing (23 Nov 2026, draft)
 

@@ -2,6 +2,28 @@
 
 Data: 24 Nov 2026. Branch `feat/site-estabelecimento`. PR #256 (draft). Referência do fundador: `rhianlepore001/Site-Agendix` (main). Prints: `/opt/cursor/artifacts/presenca/rhian-ref/` (dele), `/opt/cursor/artifacts/presenca/comparacao/` (dele vs mesclado) e `/opt/cursor/artifacts/presenca/painel/` (Meu site + prévia).
 
+## Rodada Rhian (18:49 Lisboa) — prévia maior no celular + tela cheia
+
+A faixa de ~150 px no topo do celular do dono era curta demais para julgar o site. A prévia agora ocupa uma porção significativa da dobra (headline e lede visíveis) e ganhou **Ver em tela cheia**: o template real em 1:1, com **Voltar ao editor** claro. Os controles continuam no painel; a iframe é a mesma, então a atualização ao vivo segue. Desktop: split intacto, só o atalho de tela cheia na barra da prévia.
+
+### Eval UI/UX (começando pelo mobile)
+
+| Superfície | Nota | Leitura |
+|---|---|---|
+| Meu site 390 — prévia maior + controles | **9,6/10** | Header, foto, frase e lede cabem na prévia. Ver em tela cheia à vista. Cores e controles embaixo. |
+| Meu site 390 — tela cheia | **9,7/10** | O site de verdade, dobra completa, botão Voltar ao editor no topo. |
+| Painel autenticado 390 | **9,5/10** | A prévia deixa de ser faixa: mostra a frase. O chrome do app ainda compete (título, salvar, aviso). |
+| Desktop 1280 | **9,5/10** | Split igual ao da rodada anterior; atalho de tela cheia na barra, sem reorganizar o layout. |
+
+**Média desta rodada: 9,6/10.**
+
+O que impede 10:
+
+- no celular autenticado o chrome do AgendiX (header + Ajustes) ainda come a dobra — a prévia cresceu dentro do editor, não substitui o shell
+- nome longo continua truncando no wordmark da prévia compacta
+
+Prints: `editor-390-preview.png`, `editor-390-fullscreen.png`, `editor-1280-preview.png`, `owner-editor-390-preview.png`, `owner-editor-1280-preview.png`.
+
 ## Rodada Rhian (17:24 Lisboa) — cor de fundo e prévia ao vivo
 
 Primeira versão do site aprovada. Pedidos no painel Meu site, mesmo PR, sem merge e sem migration aplicada.
@@ -70,5 +92,5 @@ Modelo em `lib/establishment/model.ts` (tudo configurável, seções vazias ocul
 
 - `npx playwright test --config e2e/establishment/playwright.config.ts` — 24/24 (390 e 1280), incluindo prévia ao vivo, cores recomendadas e contraste
 - typecheck, lint, build
-- Vitest 2785 testes
+- Vitest 2786 testes
 - migration **não aplicada**; login/cadastro/onboarding/Stripe/tracking intocados

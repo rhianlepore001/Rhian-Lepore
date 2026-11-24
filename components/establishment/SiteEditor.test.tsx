@@ -32,9 +32,23 @@ describe('SiteEditor panel', () => {
     expect(screen.getByTitle('Prévia ao vivo do meu site')).toBeVisible();
     expect(screen.getByLabelText(/^Frase principal/)).toBeVisible();
     expect(screen.getByRole('button', { name: 'Prévia no celular' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Ver em tela cheia' })).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Prévia no computador' }));
     expect(screen.getByRole('button', { name: 'Prévia no computador' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByLabelText(/^Frase principal/)).toBeVisible();
+  });
+
+  it('abre a prévia em tela cheia e volta ao editor sem perder os controles', async () => {
+    const user = userEvent.setup();
+    render(<SiteEditor data={data} initial={defaultConfig(data)} companyId="business" demo />);
+    await user.click(screen.getByRole('button', { name: 'Ver em tela cheia' }));
+    expect(screen.getByRole('button', { name: 'Voltar ao editor' })).toBeVisible();
+    expect(screen.getByTitle('Prévia ao vivo do meu site')).toBeVisible();
+    expect(document.querySelector('.se-preview')).toHaveAttribute('data-expanded', 'true');
+    await user.click(screen.getByRole('button', { name: 'Voltar ao editor' }));
+    expect(screen.queryByRole('button', { name: 'Voltar ao editor' })).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/^Frase principal/)).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Ver em tela cheia' })).toBeVisible();
   });
 
   it('avisa quando a cor personalizada exige ajuste de contraste', async () => {

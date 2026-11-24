@@ -224,7 +224,23 @@ test('editor: prévia ao vivo, estilo, seção e rascunho local', async ({ page 
   await expect(preview.locator('h1')).toBeVisible();
   await page.getByLabel(/^Frase principal/).fill('Um corte com a sua cara.');
   await expect(preview.locator('h1')).toHaveText('Um corte com a sua cara.');
+  if (testInfo.project.name.startsWith('mobile')) {
+    const dock = await page.locator('.se-preview-stage').boundingBox();
+    expect(dock?.height ?? 0).toBeGreaterThanOrEqual(300);
+    await expect(page.getByRole('button', { name: 'Ver em tela cheia' })).toBeVisible();
+  }
   await capture(page, `editor-${page.viewportSize()!.width}-preview`, false, true);
+  if (testInfo.project.name.startsWith('mobile')) {
+    await page.getByRole('button', { name: 'Ver em tela cheia' }).click();
+    await expect(page.getByRole('button', { name: 'Voltar ao editor' })).toBeVisible();
+    await expect(preview.locator('h1')).toHaveText('Um corte com a sua cara.');
+    const full = await page.locator('.se-preview-stage').boundingBox();
+    expect(full?.height ?? 0).toBeGreaterThanOrEqual(500);
+    await capture(page, `editor-${page.viewportSize()!.width}-fullscreen`, false, true);
+    await page.getByRole('button', { name: 'Voltar ao editor' }).click();
+    await expect(page.getByLabel(/^Frase principal/)).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Ver em tela cheia' })).toBeVisible();
+  }
   await scrollControlsTo(page, page.locator('.se-bg'));
   await expect(page.getByRole('radio', { name: /Urbano preciso, recomendada/i })).toBeVisible();
   await expect(page.getByRole('radio', { name: /Personalizada/i })).toBeVisible();

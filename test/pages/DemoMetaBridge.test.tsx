@@ -1,7 +1,8 @@
 import React from 'react';
 import { act, render } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
+import { Window } from 'happy-dom';
 
 const { postMetaDemoToParent } = vi.hoisted(() => ({ postMetaDemoToParent: vi.fn() }));
 
@@ -26,9 +27,13 @@ import { Demo } from '@/pages/Demo';
 
 describe('Demo embedded Meta bridge', () => {
   beforeEach(() => {
+    const browser = new Window();
+    vi.stubGlobal('Request', browser.Request);
+    vi.stubGlobal('AbortController', browser.AbortController);
     postMetaDemoToParent.mockClear();
     Object.defineProperty(window, 'scrollTo', { configurable: true, value: vi.fn() });
   });
+  afterEach(() => vi.unstubAllGlobals());
 
   it('does not post on mount; posts start+screen on first user screen navigation', async () => {
     const router = createMemoryRouter(

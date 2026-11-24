@@ -1,0 +1,12 @@
+create role anon nologin;
+create role authenticated nologin;
+create role service_role nologin bypassrls;
+create schema auth;
+create function auth.uid() returns text language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '') $$;
+create table public.profiles (id text primary key, business_slug text unique, company_id text, role text not null default 'owner');
+create function public.get_auth_company_id() returns text language sql stable security definer set search_path = '' as $$ select coalesce(company_id, id) from public.profiles where id = auth.uid() $$;
+create function public.get_auth_role() returns text language sql stable security definer set search_path = '' as $$ select role from public.profiles where id = auth.uid() $$;
+grant usage on schema public, auth to anon, authenticated, service_role;
+grant execute on function auth.uid(), public.get_auth_company_id(), public.get_auth_role() to authenticated;
+insert into public.profiles (id, business_slug) values ('owner-a', 'house-a'), ('owner-b', 'house-b');
+insert into public.profiles (id, business_slug, company_id, role) values ('staff-a', 'staff', 'owner-a', 'staff');

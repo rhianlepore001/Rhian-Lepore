@@ -37,6 +37,8 @@ const Agenda = React.lazy(() => import('./pages/Agenda').then(module => ({ defau
 const Clients = React.lazy(() => import('./pages/Clients').then(module => ({ default: module.Clients })));
 const PublicReview = React.lazy(() => import('./pages/PublicReview').then(module => ({ default: module.PublicReview })));
 const PublicBooking = React.lazy(() => import('./pages/PublicBooking').then(module => ({ default: module.PublicBooking })));
+const EstablishmentSite = React.lazy(() => import('./pages/EstablishmentSite').then(module => ({ default: module.EstablishmentSite })));
+const SiteSettings = React.lazy(() => import('./pages/settings/SiteSettings').then(module => ({ default: module.SiteSettings })));
 const ImportDataSettings = React.lazy(() => import('./pages/settings/ImportDataSettings').then(module => ({ default: module.ImportDataSettings })));
 const FinancialSettings = React.lazy(() => import('./pages/settings/FinancialSettings').then(module => ({ default: module.FinancialSettings })));
 const GeneralSettings = React.lazy(() => import('./pages/settings/GeneralSettings').then(module => ({ default: module.GeneralSettings })));
@@ -247,6 +249,8 @@ const AppRoutes: React.FC = () => {
         <Route path="/dashboard-cockpit-demo" element={<DashboardCockpitDemo />} />
         <Route path="/finance-chart-demo" element={<FinanceChartDemo />} />
         <Route path="/book/:slug" element={<PublicBooking />} />
+        <Route path="/site/:slug" element={<EstablishmentSite />} />
+        <Route path="/site/:slug/servico/:serviceId" element={<EstablishmentSite />} />
         <Route path="/avaliar/:token" element={<PublicReview />} />
         <Route path="/queue/:slug" element={<QueueJoin />} />
         <Route path="/queue-status/:id" element={<QueueStatus />} />
@@ -289,6 +293,7 @@ const AppRoutes: React.FC = () => {
           <Route path="/configuracoes/geral" element={<OwnerRouteGuard><GeneralSettings /></OwnerRouteGuard>} />
           <Route path="/configuracoes/whatsapp" element={<OwnerRouteGuard><WhatsAppMessagesSettings /></OwnerRouteGuard>} />
           <Route path="/configuracoes/agendamento" element={<OwnerRouteGuard><PublicBookingSettings /></OwnerRouteGuard>} />
+          <Route path="/configuracoes/meu-site" element={<OwnerRouteGuard><SiteSettings /></OwnerRouteGuard>} />
           <Route path="/configuracoes/equipe" element={<OwnerRouteGuard><TeamSettings /></OwnerRouteGuard>} />
           <Route path="/configuracoes/servicos" element={<OwnerRouteGuard><ServiceSettings /></OwnerRouteGuard>} />
           <Route path="/configuracoes/comissoes" element={<Navigate to="/configuracoes/equipe" replace />} />

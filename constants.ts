@@ -55,6 +55,7 @@ export const SETTINGS_ITEMS: SettingsItem[] = [
   { label: 'Geral', path: '/configuracoes/geral', icon: Settings, group: 'Negócio' },
   { label: 'Mensagens do WhatsApp', path: '/configuracoes/whatsapp', icon: MessageCircle, group: 'Negócio' },
   { label: 'Agendamento', path: '/configuracoes/agendamento', icon: Calendar, group: 'Negócio' },
+  { label: 'Meu site', path: '/configuracoes/meu-site', icon: LayoutDashboard, group: 'Negócio' },
   { label: 'Equipe e Comissões', path: '/configuracoes/equipe', icon: Users, group: 'Negócio' },
   { label: 'Serviços', path: '/configuracoes/servicos', icon: Scissors, group: 'Negócio' },
   { label: 'Trazer meus dados', path: '/configuracoes/importar', icon: FileInput, group: 'Negócio' },
@@ -72,6 +73,7 @@ export const SETTINGS_ITEMS: SettingsItem[] = [
 export const OWNER_SETTINGS_CARD_LABELS = [
   'Geral',
   'Agendamento',
+  'Meu site',
   'Mensagens do WhatsApp',
   'Equipe e Comissões',
   'Trazer meus dados',

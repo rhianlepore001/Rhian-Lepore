@@ -35,7 +35,7 @@ reset role;
 update public.establishment_sites set presence_enabled = true where company_id = 'owner-a';
 set role authenticated;
 select set_config('request.jwt.claim.sub', 'owner-a', false);
-update public.establishment_sites set published = true, published_config = '{"headline":"Published","private":"never public","style":"dark","offer":{"title":"Boas-vindas","private":"never public"},"contact":{"phone":{"customerEmail":"hidden"},"private":"hidden"},"gallery":[{"src":"https://example.com/photo.jpg","alt":"Photo","private":"hidden"}],"serviceDetails":{"cut":{"description":"Corte","private":"hidden","includes":["Consulta",{"customerPhone":"hidden"}]}}}' where company_id = 'owner-a';
+update public.establishment_sites set published = true, published_config = '{"headline":"Published","photoFocus":"top","private":"never public","style":"dark","offer":{"title":"Boas-vindas","private":"never public"},"contact":{"phone":{"customerEmail":"hidden"},"private":"hidden"},"gallery":[{"src":"https://example.com/photo.jpg","alt":"Photo","private":"hidden"}],"serviceDetails":{"cut":{"description":"Corte","private":"hidden","includes":["Consulta",{"customerPhone":"hidden"}]}}}' where company_id = 'owner-a';
 set role anon;
 do $$ begin
   assert public.get_public_establishment_site('house-a')->'config'->>'headline' = 'Published', 'published snapshot visible';
@@ -45,6 +45,7 @@ do $$ begin
   assert not (public.get_public_establishment_site('house-a')::text like '%hidden%'), 'nested private fields and malformed scalar values dropped';
   assert public.get_public_establishment_site('house-a')#>>'{config,serviceDetails,cut,description}' = 'Corte', 'service content retained';
   assert public.get_public_establishment_site('missing') is null, 'unknown slug empty';
+  assert public.get_public_establishment_site('house-a')#>>'{config,photoFocus}' = 'top', 'allowed photo focus retained';
 end $$;
 reset role;
 update public.establishment_sites set published = false, presence_enabled = false where company_id = 'owner-a';

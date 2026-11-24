@@ -8,7 +8,8 @@ cleanup() { "$PGBIN/pg_ctl" -D "$TASK_TMP/data" -m immediate stop >/dev/null 2>&
 trap cleanup EXIT
 "$PGBIN/initdb" -D "$TASK_TMP/data" -U postgres -A trust >/dev/null
 "$PGBIN/pg_ctl" -D "$TASK_TMP/data" -o "-p $TASK_PORT -k $TASK_TMP -c listen_addresses=''" -l "$TASK_TMP/log" start >/dev/null
-P() { "$PGBIN/psql" -h "$TASK_TMP" -p "$TASK_PORT" -U postgres -d postgres -v ON_ERROR_STOP=1 -q "$@"; }
+PSQL="${PSQL:-$PGBIN/psql}"
+P() { "$PSQL" -h "$TASK_TMP" -p "$TASK_PORT" -U postgres -d postgres -v ON_ERROR_STOP=1 -q "$@"; }
 P -f "$ROOT/supabase/tests/establishment_sites.harness.sql"
 P -f "$ROOT/supabase/migrations/20261124133813_establishment_sites.sql"
 P -f "$ROOT/supabase/tests/establishment_sites.verify.sql"

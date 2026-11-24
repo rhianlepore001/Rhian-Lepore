@@ -2,7 +2,26 @@ import { defaultConfig, type SiteConfig, type SiteData } from './model';
 
 const demoId = (beauty: boolean, n: number) => `d0000000-0000-4000-${beauty ? '8002' : '8001'}-${String(n).padStart(12, '0')}`;
 
+export const DEMO_SLUGS = ['demo-corte-fino', 'demo-studio-aurora', 'demo-barbearia-do-bairro'] as const;
+
+/** Casa fictícia com cadastro mínimo e fotos ruins de celular: prova de robustez do template. */
+function minimalDemo(): { data: SiteData; config: SiteConfig } {
+  const data: SiteData = {
+    id: 'demo-minimal', slug: 'demo-barbearia-do-bairro', name: 'Barbearia do Bairro', kind: 'barber', region: 'BR', demo: true,
+    cover: '/presenca/robustez/celular-escura.webp', address: 'Rua Exemplo, 100 — Vila Mariana, São Paulo',
+    hours: [{ day: 'Terça a sábado', hours: '10h às 19h' }, { day: 'Domingo e segunda', hours: 'Fechado' }],
+    services: [
+      { id: 'd0000000-0000-4000-8003-000000000001', name: 'Corte', includes: [], duration: 40, price: 40, image: '/presenca/robustez/celular-baixa-resolucao.webp' },
+      { id: 'd0000000-0000-4000-8003-000000000002', name: 'Barba', includes: [], duration: 30, price: 30 },
+    ],
+    team: [{ id: 'd0000000-0000-4000-8003-000000000010', name: 'Zé Almeida' }],
+    gallery: [], reviews: [], reviewCount: 0,
+  };
+  return { data, config: { ...defaultConfig(data), headline: 'Barbearia na Vila Mariana.' } };
+}
+
 export function getDemoSite(slug: string): { data: SiteData; config: SiteConfig } | null {
+  if (slug === 'demo-barbearia-do-bairro') return minimalDemo();
   if (!['demo-corte-fino', 'demo-studio-aurora'].includes(slug)) return null;
   const beauty = slug === 'demo-studio-aurora';
   const folder = beauty ? 'salao' : 'barbearia';
@@ -21,8 +40,8 @@ export function getDemoSite(slug: string): { data: SiteData; config: SiteConfig 
       { id: demoId(false, 22), name: 'Corte + barba', description: 'O cuidado completo, no seu tempo. Corte com acabamento preciso e barba desenhada para valorizar o seu rosto.', includes: ['Corte personalizado', 'Barba com toalha quente', 'Acabamento na navalha e balm'], audience: 'Para sair com cabelo e barba alinhados em uma única visita.', duration: 60, price: 75, image: photo('servico-corte-barba') },
       { id: demoId(false, 21), name: 'Barba', description: 'Desenho, alinhamento e cuidado com a pele. Toalha quente para preparar, navalha para definir e balm para finalizar.', includes: ['Desenho da barba', 'Toalha quente e navalha', 'Hidratação com balm'], audience: 'Para quem gosta de uma barba bem cuidada, curta ou cheia.', duration: 30, price: 35, image: photo('servico-barba') },
     ],
-    team: (beauty ? ['Marina Costa', 'Luiza Martins', 'Ana Ribeiro'] : ['Rafael Costa', 'Lucas Mendes', 'André Lima']).map((name, i) => ({ id: demoId(beauty, 30 + i), name, bio: beauty ? ['Cortes e movimento natural', 'Cor, mechas e iluminação', 'Tratamentos e finalização'][i] : ['Clássicos na tesoura e barba', 'Degradês e cortes modernos', 'Barba e acabamento na navalha'][i] })),
-    gallery: [1, 2, 6].map(n => ({ src: photo(`galeria-${String(n).padStart(2, '0')}`), alt: beauty ? 'Referência de cabelo e finalização — foto ilustrativa' : 'Referência de corte e acabamento — foto ilustrativa' })),
+    team: (beauty ? ['Marina Costa', 'Luiza Martins', 'Ana Ribeiro'] : ['Rafael Costa', 'Lucas Mendes', 'André Lima']).map((name, i) => ({ id: demoId(beauty, 30 + i), name, image: photo(beauty ? ['servico-escova', 'galeria-05', 'servico-corte-feminino'][i] : ['galeria-07', 'galeria-11', 'servico-corte-barba'][i]), bio: beauty ? ['Cortes e movimento natural', 'Cor, mechas e iluminação', 'Tratamentos e finalização'][i] : ['Clássicos na tesoura e barba', 'Degradês e cortes modernos', 'Barba e acabamento na navalha'][i] })),
+    gallery: (beauty ? [1, 4, 3, 7, 6, 8] : [10, 3, 4, 5, 9, 1]).map(n => ({ src: photo(`galeria-${String(n).padStart(2, '0')}`), alt: beauty ? 'Referência de cabelo e finalização — foto ilustrativa' : 'Referência de corte e acabamento — foto ilustrativa' })),
     rating: 4.9, reviewCount: beauty ? 128 : 214,
     reviews: [
       { id: 'demo-review-1', name: beauty ? 'Beatriz S.' : 'Bruno M.', rating: 5, comment: beauty ? 'A Marina ouviu o que eu queria e explicou cada etapa. Saí com um corte que consigo arrumar em casa.' : 'Primeira vez na casa e já acertei no lugar. O Rafael entendeu o corte e caprichou no acabamento.' },
@@ -33,8 +52,9 @@ export function getDemoSite(slug: string): { data: SiteData; config: SiteConfig 
   const config: SiteConfig = {
     ...defaultConfig(data), style: beauty ? 'light' : 'dark', accent: beauty ? '#294D40' : '#C89B79',
     headline: beauty ? 'Seu salão em Pinheiros.' : 'Barbearia em Pinheiros.',
-    about: beauty ? 'Corte, cor e cuidado para o cabelo que é só seu. A consulta vem antes da tesoura.' : 'Corte na conversa, barba no capricho. Seu horário reservado, sem correria.',
-    offer: { enabled: true, title: beauty ? 'Seu primeiro corte, com hidratação de presente.' : 'Primeira visita? Corte + barba por R$ 65.', condition: beauty ? 'Na primeira visita, ao agendar um corte. Não cumulativo.' : 'Para novos clientes. Valor habitual: R$ 75. Não cumulativo.', serviceId: data.services[beauty ? 0 : 1].id },
+    cover: photo(beauty ? 'servico-coloracao' : 'galeria-12'),
+    about: beauty ? 'Corte, cor e tratamento pensados para o seu cabelo. A consulta vem antes da tesoura, e o preço é combinado antes de começar.' : 'Corte preciso, barba com toalha quente e navalha. Seu horário é reservado: você chega e senta na cadeira.',
+    offer: { enabled: true, title: beauty ? 'Seu primeiro corte vem com hidratação.' : 'Corte + barba por R$ 65.', condition: beauty ? 'Para quem vem pela primeira vez e agenda um corte. Não cumulativo.' : 'Para clientes novos. Valor normal R$ 75. Não cumulativo.', serviceId: data.services[beauty ? 0 : 1].id },
     differences: beauty ? ['Seu cabelo tem voz. A consulta vem antes da tesoura.', 'Preço combinado antes de começar. Sem surpresas.', 'Cuidado que continua em casa, com orientação de verdade.'] : ['O corte começa na conversa. Sem receita pronta.', 'Seu horário é reservado. Atendimento com tempo para caprichar.', 'Acabamento de perto. Navalha, tesoura e atenção ao detalhe.'],
     faq: [
       { question: 'Preciso agendar antes de ir?', answer: 'Sim. Escolha o serviço, o profissional e um horário disponível aqui no site. Assim, a gente reserva um tempo só para você.' },

@@ -52,6 +52,7 @@ as $$
         'headline', jsonb_path_query_first(c, '$.headline ? (@.type() == "string")'),
         'about', jsonb_path_query_first(c, '$.about ? (@.type() == "string")'),
         'cover', jsonb_path_query_first(c, '$.cover ? (@.type() == "string")'),
+        'photoFocus', jsonb_path_query_first(c, '$.photoFocus ? (@ == "top" || @ == "bottom" || @ == "center")'),
         'seoTitle', jsonb_path_query_first(c, '$.seoTitle ? (@.type() == "string")'),
         'seoDescription', jsonb_path_query_first(c, '$.seoDescription ? (@.type() == "string")'),
         'offer', case when jsonb_typeof(c->'offer') = 'object' then jsonb_strip_nulls(jsonb_build_object('enabled', jsonb_path_query_first(c->'offer', '$.enabled ? (@.type() == "boolean")'), 'title', jsonb_path_query_first(c->'offer', '$.title ? (@.type() == "string")'), 'condition', jsonb_path_query_first(c->'offer', '$.condition ? (@.type() == "string")'), 'serviceId', jsonb_path_query_first(c->'offer', '$.serviceId ? (@.type() == "string")'), 'expires', jsonb_path_query_first(c->'offer', '$.expires ? (@.type() == "string")'))) end,

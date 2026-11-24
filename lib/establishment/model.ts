@@ -50,6 +50,8 @@ export interface SiteConfig {
   seoTitle: string;
   seoDescription: string;
   cover?: string;
+  /** Enquadramento da foto principal escolhido pelo dono. */
+  photoFocus?: 'center' | 'top' | 'bottom';
   gallery?: Array<{ src: string; alt: string }>;
   serviceDetails?: Record<string, { description?: string; includes?: string[]; audience?: string; priceFrom?: boolean; priceNote?: string; image?: string }>;
   contact?: { phone?: string; instagram?: string; addressNote?: string };
@@ -227,6 +229,7 @@ export function normalizeSiteConfig(input: unknown, fallback: SiteConfig): SiteC
     seoTitle: typeof source.seoTitle === 'string' ? text(source.seoTitle, 180) : fallback.seoTitle,
     seoDescription: typeof source.seoDescription === 'string' ? text(source.seoDescription, 320) : fallback.seoDescription,
     cover: safeImageUrl(source.cover),
+    photoFocus: source.photoFocus === 'top' || source.photoFocus === 'bottom' ? source.photoFocus : undefined,
     ...(Array.isArray(source.gallery) ? { gallery: rows(source.gallery).slice(0, 24).filter(photo => safeImageUrl(photo.src)).map(photo => ({ src: safeImageUrl(photo.src)!, alt: text(photo.alt, 200) })) } : {}),
     ...(source.serviceDetails ? { serviceDetails: normalizeServiceDetails(source.serviceDetails) } : {}),
     ...(source.teamDetails ? { teamDetails: Object.fromEntries(Object.entries(row(source.teamDetails)).slice(0, 40).map(([id, value]) => { const member = row(value); return [id, { ...(typeof member.bio === 'string' ? { bio: text(member.bio, 1000) } : {}), ...(safeImageUrl(member.image) ? { image: safeImageUrl(member.image) } : {}) }]; })) } : {}),

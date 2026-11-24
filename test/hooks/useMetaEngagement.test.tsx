@@ -57,6 +57,19 @@ describe('useMetaLandingEngagement', () => {
     expect(metaTracker.viewContent).not.toHaveBeenCalled();
   });
 
+  it('retries ViewContent until the tracker accepts the landing', () => {
+    accept();
+    vi.mocked(metaTracker.viewContent).mockReturnValueOnce(false).mockReturnValue(true);
+    renderHook(() => useMetaLandingEngagement('barber'));
+    expect(metaTracker.viewContent).toHaveBeenCalledTimes(1);
+    act(() => { vi.advanceTimersByTime(49); });
+    expect(metaTracker.viewContent).toHaveBeenCalledTimes(1);
+    act(() => { vi.advanceTimersByTime(1); });
+    expect(metaTracker.viewContent).toHaveBeenCalledTimes(2);
+    act(() => { vi.advanceTimersByTime(200); });
+    expect(metaTracker.viewContent).toHaveBeenCalledTimes(2);
+  });
+
   it('sends ViewContent and dwell marks after visible seconds, only once each', () => {
     accept();
     renderHook(() => useMetaLandingEngagement('beauty'));

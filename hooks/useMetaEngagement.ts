@@ -47,7 +47,15 @@ export function useMetaLandingEngagement(niche: string | null): void {
   const consent = useSyncExternalStore(subscribeConsent, readConsent, () => null);
 
   useEffect(() => {
-    if (consent === 'accepted' && niche) metaTracker.viewContent(niche);
+    if (consent !== 'accepted' || !niche) return undefined;
+    if (metaTracker.viewContent(niche)) return undefined;
+    // pageView trata Auth ainda em loading como autenticado, então a landing só fica
+    // elegível depois. Sem retry, ViewContent dispara uma vez e se perde.
+    let tries = 0;
+    const timer = window.setInterval(() => {
+      if (metaTracker.viewContent(niche) || ++tries > 60) window.clearInterval(timer);
+    }, 50);
+    return () => window.clearInterval(timer);
   }, [consent, niche]);
 
   useEffect(() => {

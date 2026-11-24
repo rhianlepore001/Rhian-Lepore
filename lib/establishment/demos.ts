@@ -79,12 +79,12 @@ export function getDemoSite(slug: string): { data: SiteData; config: SiteConfig 
     photoFocus: beauty ? 'space' : 'work',
     photoPosition: beauty ? { x: 58, y: 48 } : { x: 42, y: 38 },
     about: beauty
-      ? 'Um espaço sereno em Pinheiros onde cada horário começa com diagnóstico transparente e um plano de cuidado para os fios.'
-      : 'Na Rua Fradique Coutinho, unimos tesoura e navalha a um atendimento sem pressa, com agenda pontual até as 20h.',
+      ? 'Diagnóstico transparente e um plano de cuidado para os fios, em Pinheiros.'
+      : 'Tesoura, navalha e agenda pontual até as 20h na Fradique Coutinho.',
     offer: {
       enabled: true,
-      title: beauty ? 'Tratamento nutritivo de oferta na primeira visita de corte ou cor' : '15% de desconto na sua primeira visita',
-      condition: beauty ? 'Na primeira visita, ao marcar corte ou cor.' : 'Válido para novos clientes de terça a quinta-feira em qualquer corte ou combo.',
+      title: beauty ? 'Hidratação de presente na primeira visita' : '15% de desconto na sua primeira visita',
+      condition: beauty ? 'Ao agendar corte ou coloração.' : 'Válido para novos clientes de terça a quinta-feira em qualquer corte ou combo.',
       serviceId: data.services[beauty ? 0 : 1].id,
     },
     differences: beauty

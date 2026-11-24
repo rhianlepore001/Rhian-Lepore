@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { accessibleAccent, applySiteConfig, buildSeo, contrastRatio, defaultConfig, formatPrice, neighborhoodFromAddress, normalizeSiteConfig, photoObjectPosition, sanitizePublicData, serializeJsonLd, visibleSections, type SiteData } from './model';
+import { accessibleAccent, applySiteConfig, buildSeo, contrastRatio, defaultConfig, formatPrice, neighborhoodFromAddress, normalizeSiteConfig, offerDisplay, photoObjectPosition, sanitizePublicData, serializeJsonLd, visibleSections, type SiteData } from './model';
 
 const site: SiteData = { id: 'business', slug: 'navalha-fina', name: 'Navalha Fina', kind: 'barber', region: 'BR', demo: false, address: 'Rua dos Pinheiros, 100', hours: [], services: [{ id: 'cut', name: 'Corte', includes: [], duration: 30, price: 65 }], team: [], gallery: [], reviews: [], reviewCount: 0 };
 
@@ -112,6 +112,24 @@ describe('photo art direction', () => {
     const config = normalizeSiteConfig({ photoPosition: { x: 140, y: -8 } }, defaultConfig(site));
     expect(config.photoPosition).toEqual({ x: 100, y: 0 });
     expect(photoObjectPosition(config)).toBe('100% 0%');
+  });
+});
+
+describe('offer copy', () => {
+  it('keeps a distinct condition and drops one that repeats the title', () => {
+    expect(offerDisplay({
+      title: 'Tratamento nutritivo de oferta na primeira visita de corte ou cor',
+      condition: 'Na primeira visita, ao marcar corte ou cor.',
+    })).toEqual({ title: 'Tratamento nutritivo de oferta na primeira visita de corte ou cor' });
+    expect(offerDisplay({
+      title: 'Hidratação de presente na primeira visita',
+      condition: 'Ao agendar corte ou coloração.',
+    })).toEqual({ title: 'Hidratação de presente na primeira visita', detail: 'Ao agendar corte ou coloração.' });
+    expect(offerDisplay({
+      title: '15% de desconto na sua primeira visita',
+      condition: 'Válido para novos clientes de terça a quinta-feira em qualquer corte ou combo.',
+    }).detail).toMatch(/terça a quinta/);
+    expect(offerDisplay({ title: '  ', condition: 'Qualquer coisa' })).toEqual({ title: '' });
   });
 });
 

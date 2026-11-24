@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { accessibleAccent, applySiteConfig, defaultConfig, neighborhoodFromAddress, normalizeSiteConfig, photoObjectPosition, placeFromAddress, formatPrice, visibleSections, type SiteConfig, type SiteData, type SiteService } from '../../lib/establishment/model';
+import { accessibleAccent, applySiteConfig, defaultConfig, neighborhoodFromAddress, normalizeSiteConfig, offerDisplay, photoObjectPosition, placeFromAddress, formatPrice, visibleSections, type SiteConfig, type SiteData, type SiteService } from '../../lib/establishment/model';
 import { studioCopy } from '../../lib/establishment/copy';
 import { openingStatus, timezoneForRegion } from '../../lib/establishment/hours';
 import { buildWhatsAppLink } from '../../utils/formatters';
@@ -10,12 +10,6 @@ interface BookingContext { serviceId?: string; professionalId?: string; offer?: 
 
 function initials(name: string): string {
   return name.split(/\s+/).filter(Boolean).map(part => part[0]).slice(0, 2).join('').toUpperCase();
-}
-
-function splitBrandName(name: string): { prefix?: string; main: string } {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) return { prefix: parts[0], main: parts.slice(1).join(' ') };
-  return { main: name };
 }
 
 function Stars({ value }: { value: number }) {
@@ -36,7 +30,6 @@ export function SiteView({ data: sourceData, config: incoming, serviceId, previe
   const config = normalizeSiteConfig(incoming, defaultConfig(sourceData));
   const data = applySiteConfig(sourceData, config);
   const copy = studioCopy(data.kind, data.region);
-  const brand = splitBrandName(data.name);
   const [booking, setBooking] = useState<BookingContext | null>(null);
   const [notice, setNotice] = useState('');
   const dialog = useRef<HTMLDialogElement>(null);
@@ -48,7 +41,9 @@ export function SiteView({ data: sourceData, config: incoming, serviceId, previe
   const cover = config.cover || sourceData.cover;
   const place = placeFromAddress(data.address);
   const neighborhood = neighborhoodFromAddress(data.address);
-  const offerVisible = Boolean(config.offer.enabled && config.offer.title && (!config.offer.expires || new Date(`${config.offer.expires}T23:59:59`).getTime() >= Date.now()));
+  const offer = offerDisplay(config.offer);
+  const offerVisible = Boolean(config.offer.enabled && offer.title && (!config.offer.expires || new Date(`${config.offer.expires}T23:59:59`).getTime() >= Date.now()));
+  const showSticky = !preview && !serviceId;
   const offerService = offerVisible && config.offer.serviceId ? data.services.find(item => item.id === config.offer.serviceId) : undefined;
   const price = (value: number) => formatPrice(value, data.region);
   const hasRating = Boolean(data.rating && data.reviewCount > 0);
@@ -219,12 +214,12 @@ export function SiteView({ data: sourceData, config: incoming, serviceId, previe
     {data.demo && <div className="es-demo"><strong>{copy.demoBanner}</strong> <span>{copy.demoHint}</span></div>}
     <header className="es-header">
       <div className="es-wrap es-header-inner">
-        <a className="es-wordmark" href={home}>
-          {brand.prefix ? <><small>{brand.prefix}</small><b>{brand.main}</b></> : <b>{data.name}</b>}
+        <a className="es-wordmark" href={home} aria-label={data.name}>
+          <b>{data.name}</b>
           <i aria-hidden="true" />
         </a>
         {!serviceId && <nav className="es-header-nav" aria-label="Navegação do estabelecimento">{nav.map(item => <button key={item.id} onClick={item.onClick}>{item.label}</button>)}</nav>}
-        <div className="es-header-cta">{primary(copy.book, offerVisible ? { serviceId: config.offer.serviceId, offer: true } : {})}</div>
+        <div className="es-header-cta" data-sticky-twin={showSticky || undefined}>{primary(copy.book, offerVisible ? { serviceId: config.offer.serviceId, offer: true } : {})}</div>
       </div>
     </header>
 
@@ -252,13 +247,13 @@ export function SiteView({ data: sourceData, config: incoming, serviceId, previe
             <p className="es-kicker">{copy.kindLine}{neighborhood ? ` em ${neighborhood}` : ''}{place && neighborhood ? `, ${place.replace(neighborhood, '').replace(/^,\s*/, '') || 'São Paulo'}` : ''}</p>
             <h1>{config.headline}</h1>
             {config.about && <p className="es-lede">{config.about}</p>}
-            {offerVisible && <div className="es-offer">{config.offer.title}{config.offer.condition && <span> — {config.offer.condition}</span>}</div>}
+            {offerVisible && <div className="es-offer"><strong>{offer.title}</strong>{offer.detail && <span>{offer.detail}</span>}</div>}
             <div className="es-hero-actions">
               {primary(copy.book, offerVisible ? { serviceId: config.offer.serviceId, offer: true } : {})}
               {whatsapp && <a className="es-ghost" href={whatsapp} target="_blank" rel="noreferrer">{copy.whatsapp}</a>}
             </div>
             <div className="es-trust">
-              {hasRating && <strong>★ {data.rating!.toFixed(1).replace('.', ',')} · {data.reviewCount} {reviewWord}{data.demo ? ' fictícias' : ''}</strong>}
+              {hasRating && <strong>★ {data.rating!.toFixed(1).replace('.', ',')} · {data.reviewCount} {reviewWord}</strong>}
               {hasRating && (status || data.hours[0]) && <span aria-hidden="true">|</span>}
               {status && <em>{status.open ? status.label.replace('Aberto hoje até', 'Aberto hoje até') : status.label}</em>}
               {!status && data.hours[0] && <em>{copy.openToday(data.hours[0].hours)}</em>}
@@ -284,7 +279,7 @@ export function SiteView({ data: sourceData, config: incoming, serviceId, previe
         <section className="es-close">
           {cover && photo(cover, '', { className: 'es-close-photo', width: 1200, height: 800 })}
           <div className="es-wrap es-close-inner">
-            {offerVisible && <p className="es-kicker">{config.offer.title}</p>}
+            {offerVisible && <p className="es-kicker">{offer.title}</p>}
             <h2>{copy.closeTitle(data.name)}</h2>
             {primary(copy.book, offerVisible ? { serviceId: config.offer.serviceId, offer: true } : {})}
           </div>
@@ -292,13 +287,13 @@ export function SiteView({ data: sourceData, config: incoming, serviceId, previe
       </>}
     </main>
     <footer className="es-footer"><div className="es-wrap"><p><a className="es-footer-brand" href={home}>{data.name}</a>{neighborhood ? ` · ${neighborhood}` : ''}{data.demo ? ' · Demonstração. Nenhum agendamento ou cobrança real.' : ''}</p><div className="es-footer-links"><a href="/#/privacidade">Privacidade</a><a href="/#/termos">Termos</a><span>{copy.footerCredit}</span><span>{copy.footerFee}</span></div></div></footer>
-    {!preview && !serviceId && <div className="es-sticky">{primary(copy.book, offerVisible ? { serviceId: config.offer.serviceId, offer: true } : {})}</div>}
+    {showSticky && <div className="es-sticky">{primary(copy.book, offerVisible ? { serviceId: config.offer.serviceId, offer: true } : {})}</div>}
     {notice && <p className="es-preview-notice" role="status" onClick={() => setNotice('')}>{notice}</p>}
     <dialog className="es-booking-dialog" ref={dialog} onCancel={() => setBooking(null)} onClose={() => setBooking(null)} aria-labelledby="es-booking-title">
       <div className="es-booking-header">
         <div>
           <h2 id="es-booking-title">{copy.bookingTitle(data.name)}</h2>
-          {booking?.offer && <p>{config.offer.title} {config.offer.condition} {copy.offerDisclaimer}</p>}
+          {booking?.offer && <p>{[offer.title, offer.detail].filter(Boolean).join(' ')} {copy.offerDisclaimer}</p>}
           {data.demo && <small>{copy.demoBooking}</small>}
         </div>
         <button onClick={() => setBooking(null)} aria-label={copy.closeBooking}>×</button>

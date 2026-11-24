@@ -179,6 +179,27 @@ export function formatPrice(value: number, region: SiteData['region']): string {
   return new Intl.NumberFormat(region === 'PT' ? 'pt-PT' : 'pt-BR', { style: 'currency', currency: region === 'PT' ? 'EUR' : 'BRL', maximumFractionDigits: value % 1 ? 2 : 0 }).format(value);
 }
 
+function normalizeOfferText(value: string): string {
+  return value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+/** Título e condição da oferta sem repetir a mesma frase no banner. */
+export function offerDisplay(offer: Pick<SiteConfig['offer'], 'title' | 'condition'>): { title: string; detail?: string } {
+  const title = offer.title.trim();
+  const condition = offer.condition.trim();
+  if (!title) return { title: '' };
+  if (!condition) return { title };
+  const titleNorm = normalizeOfferText(title);
+  const conditionNorm = normalizeOfferText(condition);
+  if (!conditionNorm || titleNorm.includes(conditionNorm) || conditionNorm.includes(titleNorm)) return { title };
+  const words = (value: string) => value.split(' ').filter(word => word.length > 3);
+  const titleWords = new Set(words(titleNorm));
+  const conditionWords = words(conditionNorm);
+  const overlap = conditionWords.filter(word => titleWords.has(word)).length;
+  if (conditionWords.length > 0 && overlap / conditionWords.length >= 0.55) return { title };
+  return { title, detail: condition };
+}
+
 export function buildSeo(sourceData: SiteData, config: SiteConfig, origin: string) {
   const data = applySiteConfig(sourceData, config);
   const root = new URL(origin).origin;

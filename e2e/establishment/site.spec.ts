@@ -80,17 +80,30 @@ for (const [niche, slug, heading, style] of [
     await expect(page.locator('script[type="application/ld+json"]')).toHaveCount(1);
     await expect(page.locator('meta[property="og:title"]')).toHaveCount(1);
     const width = page.viewportSize()!.width;
+    const height = page.viewportSize()!.height;
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     if (testInfo.project.name.startsWith('mobile')) {
       await expect(page.locator('.es-hero-media')).toBeInViewport();
       await expect(page.locator('.es-sticky')).toBeVisible();
-      await expect(page.locator('.es-header-cta .es-button')).toBeVisible();
+      await expect(page.locator('.es-header-cta .es-button')).toBeHidden();
+      const services = await page.locator('#services h2').boundingBox();
+      expect(services, 'a dobra precisa mostrar um indício da seção Serviços').toBeTruthy();
+      expect(services!.y).toBeLessThan(height - 70);
     } else {
       await expect(page.locator('.es-sticky')).toBeHidden();
       await expect(page.locator('.es-header-nav')).toBeVisible();
+      await expect(page.locator('.es-header-cta .es-button')).toBeVisible();
+      const headerX = (await page.locator('.es-wordmark').boundingBox())!.x;
+      const heroX = (await page.locator('.es-hero-copy h1').boundingBox())!.x;
+      const servicesX = (await page.locator('#services h2').boundingBox())!.x;
+      expect(Math.abs(heroX - headerX)).toBeLessThan(3);
+      expect(Math.abs(servicesX - headerX)).toBeLessThan(3);
     }
     if (testInfo.project.name.startsWith('desktop')) await expect(page.locator('.es-hero-actions .es-button')).toBeInViewport();
     else await expect(page.locator('.es-sticky .es-button')).toBeInViewport();
+    await expect(page.locator('.es-wordmark')).toContainText(niche === 'barber' ? 'Corte Fino' : 'Studio Aurora');
+    await expect(page.locator('.es-offer')).not.toContainText(/oferta na primeira visita/i);
+    if (niche === 'beauty') await expect(page.locator('.es-offer')).toContainText('Hidratação de presente');
     await capture(page, `${niche}-${width}-fold`);
     await capture(page, `${niche}-${width}-full`, true);
     expect(requests).toHaveLength(0);
@@ -116,7 +129,7 @@ for (const [niche, slug, heading, style] of [
 
 test('oferta e profissional conservam contexto sem aplicar desconto fictício', async ({ page }) => {
   await page.goto('/#/site/demo-corte-fino');
-  await page.locator('.es-header-cta .es-button').click();
+  await page.locator('.es-sticky .es-button, .es-header-cta .es-button').filter({ visible: true }).click();
   await expect(page.locator('.es-booking-header')).toContainText('preço de tabela');
   await expect(page.locator('iframe[title="Agendamento do estabelecimento"]')).toHaveAttribute('src', /rebook=/);
   await page.getByRole('button', { name: 'Fechar agendamento' }).click();

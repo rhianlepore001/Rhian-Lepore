@@ -33,7 +33,7 @@ export function studioCopy(kind: SiteKind, region: 'BR' | 'PT' = 'BR') {
     firstVisit: pt ? '1.ª visita' : '1ª visita',
     hoursCaption: 'Atendimento com hora marcada.',
     demoBanner: 'Demonstração.',
-    demoHint: 'Casa, preços e avaliações fictícios',
+    demoHint: 'dados fictícios',
     footerCredit: 'Agendamento online integrado ao AgendiX',
     footerFee: 'Sem taxa adicional',
     whatsapp: pt ? 'Prefere falar pelo WhatsApp?' : 'Prefere falar?',

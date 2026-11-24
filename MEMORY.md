@@ -11,9 +11,9 @@
 
 ## Presença — mescla com Site-Agendix (24 Nov 2026, draft)
 
-Branch `feat/site-estabelecimento`. O fundador publicou uma direção melhor em `rhianlepore001/Site-Agendix`. O template em Rhian-Lepore mescla essa direção (hero split, header espresso/editorial, cards de serviço, FAQ+local, CTA fixo no celular) com o modelo configurável, demos, painel Meu site e iframe AgendiX. Sem Gemini, sem `server.ts`, sem chaves.
+Branch `feat/site-estabelecimento`, PR #256. O fundador publicou uma direção melhor em `rhianlepore001/Site-Agendix`. O template mescla essa direção com o modelo configurável, demos, painel Meu site e iframe AgendiX. Sem Gemini, sem `server.ts`, sem chaves.
 
-Demos: Corte Fino = editorial; Studio Aurora = minimal branco. Prints dele vs mesclado em `/opt/cursor/artifacts/presenca/rhian-ref/` e `.../mesclado/`. Eval independente 8,7/10 (faixa de demo obrigatória e CTA duplo da própria referência). E2E 24/24. Migration **não aplicada**. Login/cadastro/Stripe intocados.
+Rodada Bob: hero/Serviços alinhados ao header no desktop; oferta do salão sem repetir título+condição (`offerDisplay`); faixa de demo discreta (eval a ignora); CTA do header oculto no celular quando a barra fixa existe; wordmark numa linha com presença; dobra mobile mostra indício de Serviços. Prints em `/opt/cursor/artifacts/presenca/comparacao/`. Eval 9,5/10 (faixa de demo desconsiderada). E2E 24/24. Migration **não aplicada**. Login/cadastro/Stripe intocados.
 
 ## Meta Pixel — engajamento da landing (23 Nov 2026, draft)
 

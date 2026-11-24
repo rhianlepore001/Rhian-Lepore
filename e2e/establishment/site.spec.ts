@@ -1,7 +1,7 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
 import fs from 'node:fs';
 
-const shots = '/workspace/presenca-site/prints/rodada-1';
+const shots = '/opt/cursor/artifacts/presenca/mesclado';
 const owner = 'b0000000-0000-4000-8000-000000000001';
 const serviceId = 'b0000000-0000-4000-8000-000000000020';
 const teamId = 'b0000000-0000-4000-8000-000000000030';
@@ -60,10 +60,11 @@ async function capture(page: Page, name: string, fullPage = false, preserveScrol
 
 test.beforeEach(async ({ page }) => {
   await page.route('**/*.supabase.co/**', route => route.abort());
+  await page.route(/google\.com\/maps/, route => route.fulfill({ status: 200, contentType: 'text/html', body: '<html></html>' }));
 });
 
 for (const [niche, slug, heading, style] of [
-  ['barber', 'demo-corte-fino', /barbearia em Pinheiros/i, 'dark'],
+  ['barber', 'demo-corte-fino', /barbearia em Pinheiros/i, 'light'],
   ['beauty', 'demo-studio-aurora', /salão em Pinheiros/i, 'light'],
 ] as const) {
   test(`${niche}: público, conteúdo, SEO e screenshots`, async ({ page }, testInfo) => {
@@ -80,7 +81,16 @@ for (const [niche, slug, heading, style] of [
     await expect(page.locator('meta[property="og:title"]')).toHaveCount(1);
     const width = page.viewportSize()!.width;
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
-    if (testInfo.project.name.startsWith('mobile')) await expect(page.locator('.es-mobile-action')).toBeInViewport();
+    if (testInfo.project.name.startsWith('mobile')) {
+      await expect(page.locator('.es-hero-media')).toBeInViewport();
+      await expect(page.locator('.es-sticky')).toBeVisible();
+      await expect(page.locator('.es-header-cta .es-button')).toBeVisible();
+    } else {
+      await expect(page.locator('.es-sticky')).toBeHidden();
+      await expect(page.locator('.es-header-nav')).toBeVisible();
+    }
+    if (testInfo.project.name.startsWith('desktop')) await expect(page.locator('.es-hero-actions .es-button')).toBeInViewport();
+    else await expect(page.locator('.es-sticky .es-button')).toBeInViewport();
     await capture(page, `${niche}-${width}-fold`);
     await capture(page, `${niche}-${width}-full`, true);
     expect(requests).toHaveLength(0);
@@ -106,7 +116,7 @@ for (const [niche, slug, heading, style] of [
 
 test('oferta e profissional conservam contexto sem aplicar desconto fictício', async ({ page }) => {
   await page.goto('/#/site/demo-corte-fino');
-  await page.locator('.es-hero-actions .es-button').click();
+  await page.locator('.es-header-cta .es-button').click();
   await expect(page.locator('.es-booking-header')).toContainText('preço de tabela');
   await expect(page.locator('iframe[title="Agendamento do estabelecimento"]')).toHaveAttribute('src', /rebook=/);
   await page.getByRole('button', { name: 'Fechar agendamento' }).click();
@@ -116,6 +126,19 @@ test('oferta e profissional conservam contexto sem aplicar desconto fictício', 
   await expect(page.getByRole('dialog')).not.toBeVisible();
 });
 
+test('cadastro mínimo e fotos de celular continuam um site, não um app', async ({ page }, testInfo) => {
+  await page.goto('/#/site/demo-barbearia-do-bairro');
+  await expect(page.locator('h1')).toBeVisible();
+  await expect(page.locator('.es-demo')).toContainText('fictícios');
+  await expect(page.locator('#team')).toHaveCount(0);
+  await expect(page.locator('#gallery')).toHaveCount(0);
+  await expect(page.locator('#reviews')).toHaveCount(0);
+  const width = page.viewportSize()!.width;
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  await capture(page, `minimal-${width}-fold`);
+  await capture(page, `minimal-${width}-full`, true);
+});
+
 test('360–430px: sem rolagem horizontal nos dois estilos', async ({ page }) => {
   for (const slug of ['demo-corte-fino', 'demo-studio-aurora']) {
     for (const width of [360, 390, 430]) {
@@ -123,6 +146,7 @@ test('360–430px: sem rolagem horizontal nos dois estilos', async ({ page }) =>
       await page.goto(`/#/site/${slug}`);
       await expect(page.locator('h1')).toBeVisible();
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+      if (width === 360) await capture(page, `${slug}-360-fold`);
     }
   }
 });
@@ -169,12 +193,13 @@ test('editor: prévia ao vivo, estilo, seção e rascunho local', async ({ page 
   await page.goto('/#/site-demo/editor/barber');
   await expect(page.getByRole('heading', { name: 'Meu site', exact: true })).toBeVisible();
   await page.getByLabel(/^Frase principal/).fill('Um corte com a sua cara.');
+  await page.getByText('Estilo e identidade', { exact: true }).click();
   await page.getByRole('button', { name: 'Aa Editorial claro' }).click();
   if (testInfo.project.name.startsWith('mobile')) await page.getByRole('button', { name: 'Ver prévia ao vivo', exact: true }).click();
   const preview = page.frameLocator('iframe[title="Prévia ao vivo do meu site"]');
   await expect(preview.locator('h1')).toHaveText('Um corte com a sua cara.');
   await expect(preview.locator('.establishment')).toHaveAttribute('data-style', 'light');
-  await capture(page, `editor-${page.viewportSize()!.width}-preview`, testInfo.project.name.startsWith('mobile'));
+  await capture(page, `editor-${page.viewportSize()!.width}-preview`, false, true);
   if (testInfo.project.name.startsWith('mobile')) await page.getByRole('button', { name: 'Personalizar', exact: true }).click();
   await page.getByText('Seções e ordem da página', { exact: true }).click();
   await page.getByLabel('Galeria', { exact: true }).uncheck();

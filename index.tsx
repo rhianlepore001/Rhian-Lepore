@@ -2,11 +2,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { QueryClientProvider } from '@tanstack/react-query';
-import './design-system/tokens.css';
-import './styles/tailwind.css';
 import { initAutoBugCapture } from './lib/autoBugCapture';
 import { queryClient } from './lib/queryClient';
 import { captureFirstTouch } from './lib/signupAttribution';
+import './styles/establishment-entry.css';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -18,7 +17,16 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 const root = ReactDOM.createRoot(rootElement);
 const isSiteEntry = () => /^#\/site(?:\/|-demo\/|-preview(?:$|\?))/.test(window.location.hash) || (window.location.pathname.startsWith('/s/') && !window.location.hash);
 const isEstablishmentEntry = isSiteEntry();
-const ProductApp = React.lazy(() => import('./App'));
+if (isEstablishmentEntry) {
+  document.documentElement.dataset.establishment = 'dark';
+  document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]').forEach(link => {
+    if (/tokens\.css|fonts\.googleapis|fonts\.gstatic/.test(link.href)) link.disabled = true;
+  });
+}
+const ProductApp = React.lazy(async () => {
+  await Promise.all([import('./design-system/tokens.css'), import('./styles/tailwind.css')]);
+  return import('./App');
+});
 const PublicSiteApp = React.lazy(() => import('./PublicSiteApp'));
 function Entry() {
   const [site, setSite] = React.useState(isSiteEntry);

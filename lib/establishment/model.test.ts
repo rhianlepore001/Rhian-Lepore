@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { accessibleAccent, applySiteConfig, buildSeo, contrastRatio, defaultConfig, formatPrice, sanitizePublicData, serializeJsonLd, visibleSections, type SiteData } from './model';
+import { accessibleAccent, applySiteConfig, buildSeo, contrastRatio, defaultConfig, formatPrice, neighborhoodFromAddress, normalizeSiteConfig, photoObjectPosition, sanitizePublicData, serializeJsonLd, visibleSections, type SiteData } from './model';
 
 const site: SiteData = { id: 'business', slug: 'navalha-fina', name: 'Navalha Fina', kind: 'barber', region: 'BR', demo: false, address: 'Rua dos Pinheiros, 100', hours: [], services: [{ id: 'cut', name: 'Corte', includes: [], duration: 30, price: 65 }], team: [], gallery: [], reviews: [], reviewCount: 0 };
 
@@ -12,6 +12,8 @@ describe('establishment defaults', () => {
     expect(config.differences).toEqual([]);
     expect(defaultConfig({ ...site, kind: 'beauty', region: 'PT' }).style).toBe('light');
     expect(defaultConfig({ ...site, kind: 'studio' }).headline).toContain('Estúdio');
+    expect(neighborhoodFromAddress('Rua Fradique Coutinho, 420 — Pinheiros, São Paulo')).toBe('Pinheiros');
+    expect(defaultConfig({ ...site, address: 'Rua Fradique Coutinho, 420 — Pinheiros, São Paulo' }).headline).toMatch(/Barbearia em Pinheiros/);
   });
   it('hides empty sections and respects the owner order and toggles', () => {
     const config = defaultConfig(site);
@@ -33,7 +35,7 @@ describe('brand contrast', () => {
       it(`keeps the CTA legible for ${color} in ${style}`, () => {
         const pair = accessibleAccent(color, style);
         expect(contrastRatio(pair.background, pair.foreground)).toBeGreaterThanOrEqual(4.5);
-        for (const surface of style === 'dark' ? ['#161815', '#20231f', '#292c26'] : ['#f8f7f2', '#eeeee5', '#e3e7db']) expect(contrastRatio(pair.background, surface)).toBeGreaterThanOrEqual(4.5);
+        for (const surface of style === 'dark' ? ['#09090B', '#18181B', '#27272A'] : ['#FBF7F0', '#FDFBF7', '#FFFFFF']) expect(contrastRatio(pair.background, surface)).toBeGreaterThanOrEqual(4.5);
       });
     }
   }
@@ -102,6 +104,16 @@ describe('local SEO', () => {
   });
 });
 
+
+describe('photo art direction', () => {
+  it('clamps the focal point and maps named presets to object-position', () => {
+    expect(photoObjectPosition({ photoFocus: 'space' })).toBe('72% 42%');
+    expect(photoObjectPosition({ photoFocus: 'work', photoPosition: { x: 70, y: 40 } })).toBe('70% 40%');
+    const config = normalizeSiteConfig({ photoPosition: { x: 140, y: -8 } }, defaultConfig(site));
+    expect(config.photoPosition).toEqual({ x: 100, y: 0 });
+    expect(photoObjectPosition(config)).toBe('100% 0%');
+  });
+});
 
 describe('owner content overrides', () => {
   it('adds sales context without duplicating registered price, duration or roster', () => {

@@ -1,6 +1,29 @@
 export type SiteKind = 'barber' | 'beauty' | 'studio';
 export type SiteStyle = 'dark' | 'light';
-export type SectionId = 'services' | 'differences' | 'gallery' | 'team' | 'reviews' | 'faq' | 'location';
+export type SectionId = 'services' | 'differences' | 'gallery' | 'beforeAfter' | 'team' | 'reviews' | 'faq' | 'location';
+export type PhotoFocus = 'center' | 'top' | 'bottom' | 'work' | 'space';
+export interface PhotoPosition { x: number; y: number }
+
+export const FOCUS_PRESETS: Record<PhotoFocus, PhotoPosition> = {
+  center: { x: 50, y: 50 },
+  work: { x: 34, y: 38 },
+  space: { x: 72, y: 42 },
+  top: { x: 50, y: 18 },
+  bottom: { x: 50, y: 82 },
+};
+
+export function clampPercent(value: unknown): number | undefined {
+  const n = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(n)) return undefined;
+  return Math.min(100, Math.max(0, Math.round(n)));
+}
+
+export function photoObjectPosition(config: Pick<SiteConfig, 'photoFocus' | 'photoPosition'>): string {
+  const fallback = (config.photoFocus && FOCUS_PRESETS[config.photoFocus]) || FOCUS_PRESETS.center;
+  const x = config.photoPosition?.x ?? fallback.x;
+  const y = config.photoPosition?.y ?? fallback.y;
+  return `${x}% ${y}%`;
+}
 
 export interface SiteService {
   id: string;
@@ -13,6 +36,7 @@ export interface SiteService {
   priceFrom?: boolean;
   priceNote?: string;
   image?: string;
+  featured?: boolean;
 }
 
 export interface SiteData {
@@ -51,23 +75,51 @@ export interface SiteConfig {
   seoDescription: string;
   cover?: string;
   /** Enquadramento da foto principal escolhido pelo dono. */
-  photoFocus?: 'center' | 'top' | 'bottom';
+  photoFocus?: PhotoFocus;
+  photoPosition?: PhotoPosition;
   gallery?: Array<{ src: string; alt: string }>;
-  serviceDetails?: Record<string, { description?: string; includes?: string[]; audience?: string; priceFrom?: boolean; priceNote?: string; image?: string }>;
+  serviceDetails?: Record<string, { description?: string; includes?: string[]; audience?: string; priceFrom?: boolean; priceNote?: string; image?: string; featured?: boolean }>;
   contact?: { phone?: string; instagram?: string; addressNote?: string };
   teamDetails?: Record<string, { bio?: string; image?: string }>;
+  beforeAfter?: Array<{ before: string; after: string; caption?: string }>;
 }
 
-const sectionIds: SectionId[] = ['services', 'differences', 'gallery', 'team', 'reviews', 'faq', 'location'];
+const sectionIds: SectionId[] = ['services', 'differences', 'gallery', 'beforeAfter', 'team', 'reviews', 'faq', 'location'];
 const kinds: Record<SiteKind, string> = { barber: 'Barbearia', beauty: 'Salão de beleza', studio: 'Estúdio' };
+
+export function placeFromAddress(address: string): string {
+  return (address.split(/\s[—–]\s/).pop() || address).trim();
+}
+
+export function neighborhoodFromAddress(address: string): string | undefined {
+  const parts = address.split(/\s[—–]\s/);
+  if (parts.length < 2) return undefined;
+  const neighborhood = parts[parts.length - 1].split(',')[0]?.trim();
+  return neighborhood || undefined;
+}
+
+function defaultHeadline(data: SiteData): string {
+  const place = neighborhoodFromAddress(data.address);
+  if (data.kind === 'barber') return place ? `Barbearia em ${place} com corte preciso e horário respeitado` : 'Barbearia com corte preciso e horário respeitado';
+  if (data.kind === 'beauty') return place ? `Salão em ${place} dedicado à cor natural e ao cuidado do cabelo` : 'Salão dedicado à cor natural e ao cuidado do cabelo';
+  return place ? `Estúdio em ${place} com atendimento pontual` : 'Estúdio com atendimento pontual';
+}
+
+function defaultAbout(data: SiteData): string {
+  if (!data.services.length) return '';
+  const place = neighborhoodFromAddress(data.address);
+  if (data.kind === 'barber') return place ? `Corte, barba e acabamento em ${place}.` : 'Corte, barba e acabamento.';
+  if (data.kind === 'beauty') return place ? `Corte, cor e tratamento em ${place}.` : 'Corte, cor e tratamento.';
+  return place ? `Cuidado de beleza em ${place}.` : 'Cuidado de beleza, no seu tempo.';
+}
 
 export function defaultConfig(data: SiteData): SiteConfig {
   const style = data.kind === 'beauty' ? 'light' : 'dark';
   return {
     style,
-    accent: style === 'dark' ? '#C78E62' : '#36584A',
-    headline: `${kinds[data.kind]} com hora marcada.`,
-    about: data.services.length ? `Conheça os serviços de ${data.name}, escolha quem cuida de você e reserve seu horário.` : '',
+    accent: style === 'dark' ? '#9A5628' : '#3F4E41',
+    headline: defaultHeadline(data),
+    about: defaultAbout(data),
     offer: { enabled: false, title: '', condition: '' },
     differences: [],
     faq: data.cancellationPolicy ? [{ question: 'Como funciona o cancelamento?', answer: data.cancellationPolicy }] : [],
@@ -82,6 +134,7 @@ export function visibleSections(data: SiteData, config: SiteConfig): SiteConfig[
     services: data.services.length > 0,
     differences: config.differences.some(item => item.trim().length > 0),
     gallery: data.gallery.length > 0,
+    beforeAfter: (config.beforeAfter ?? []).some(pair => Boolean(pair.before && pair.after)),
     team: data.team.length > 1 || data.team.some(member => Boolean(member.image)),
     reviews: data.reviews.some(review => review.comment.trim().length > 0),
     faq: config.faq.some(item => Boolean(item.question.trim() && item.answer.trim())),
@@ -107,12 +160,14 @@ export function contrastRatio(first: string, second: string): number {
 }
 
 export function accessibleAccent(hex: string, style: SiteStyle): { background: string; foreground: string } {
-  let background = /^#[0-9a-f]{6}$/i.test(hex) ? hex : style === 'dark' ? '#C78E62' : '#36584A';
-  const surface = style === 'dark' ? '#292c26' : '#e3e7db';
-  for (let step = 0; contrastRatio(background, surface) < 4.5 && step < 24; step += 1) {
+  let background = /^#[0-9a-f]{6}$/i.test(hex) ? hex : style === 'dark' ? '#9A5628' : '#3F4E41';
+  const surfaces = style === 'dark' ? ['#09090B', '#18181B', '#27272A'] : ['#FBF7F0', '#FDFBF7', '#FFFFFF'];
+  const toward = style === 'dark' ? 255 : 0;
+  const weakest = (color: string) => Math.min(...surfaces.map(surface => contrastRatio(color, surface)));
+  for (let step = 0; weakest(background) < 4.5 && step < 36; step += 1) {
     background = '#' + [1, 3, 5].map(index => {
       const channel = parseInt(background.slice(index, index + 2), 16);
-      return Math.round(channel + ((style === 'dark' ? 255 : 0) - channel) * 0.1).toString(16).padStart(2, '0');
+      return Math.round(channel + (toward - channel) * 0.12).toString(16).padStart(2, '0');
     }).join('');
   }
   const darkContrast = contrastRatio(background, '#000000');
@@ -229,11 +284,19 @@ export function normalizeSiteConfig(input: unknown, fallback: SiteConfig): SiteC
     seoTitle: typeof source.seoTitle === 'string' ? text(source.seoTitle, 180) : fallback.seoTitle,
     seoDescription: typeof source.seoDescription === 'string' ? text(source.seoDescription, 320) : fallback.seoDescription,
     cover: safeImageUrl(source.cover),
-    photoFocus: source.photoFocus === 'top' || source.photoFocus === 'bottom' ? source.photoFocus : undefined,
+    photoFocus: source.photoFocus === 'top' || source.photoFocus === 'bottom' || source.photoFocus === 'work' || source.photoFocus === 'space' || source.photoFocus === 'center' ? source.photoFocus : fallback.photoFocus,
+    photoPosition: (() => {
+      const pos = row(source.photoPosition);
+      const x = clampPercent(pos.x);
+      const y = clampPercent(pos.y);
+      if (x === undefined && y === undefined) return fallback.photoPosition;
+      return { x: x ?? 50, y: y ?? 50 };
+    })(),
     ...(Array.isArray(source.gallery) ? { gallery: rows(source.gallery).slice(0, 24).filter(photo => safeImageUrl(photo.src)).map(photo => ({ src: safeImageUrl(photo.src)!, alt: text(photo.alt, 200) })) } : {}),
     ...(source.serviceDetails ? { serviceDetails: normalizeServiceDetails(source.serviceDetails) } : {}),
     ...(source.teamDetails ? { teamDetails: Object.fromEntries(Object.entries(row(source.teamDetails)).slice(0, 40).map(([id, value]) => { const member = row(value); return [id, { ...(typeof member.bio === 'string' ? { bio: text(member.bio, 1000) } : {}), ...(safeImageUrl(member.image) ? { image: safeImageUrl(member.image) } : {}) }]; })) } : {}),
     ...(source.contact ? { contact: normalizeContact(source.contact) } : {}),
+    ...(Array.isArray(source.beforeAfter) ? { beforeAfter: rows(source.beforeAfter).slice(0, 8).filter(pair => safeImageUrl(pair.before) && safeImageUrl(pair.after)).map(pair => ({ before: safeImageUrl(pair.before)!, after: safeImageUrl(pair.after)!, ...(text(pair.caption, 160) ? { caption: text(pair.caption, 160) } : {}) })) } : {}),
   };
 }
 
@@ -247,6 +310,7 @@ function normalizeServiceDetails(input: unknown): NonNullable<SiteConfig['servic
       ...(typeof service.audience === 'string' ? { audience: text(service.audience, 500) } : {}),
       ...(typeof service.priceNote === 'string' ? { priceNote: text(service.priceNote, 300) } : {}),
       ...(typeof service.priceFrom === 'boolean' ? { priceFrom: service.priceFrom } : {}),
+      ...(typeof service.featured === 'boolean' ? { featured: service.featured } : {}),
       ...(safeImageUrl(service.image) ? { image: safeImageUrl(service.image) } : {}),
     }];
   }));

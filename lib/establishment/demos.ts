@@ -29,7 +29,10 @@ export function getDemoSite(slug: string): { data: SiteData; config: SiteConfig 
   const data: SiteData = {
     id: beauty ? 'demo-beauty' : 'demo-barber', slug,
     name: beauty ? 'Studio Aurora' : 'Corte Fino', kind: beauty ? 'beauty' : 'barber', region: 'BR', demo: true,
-    cover: photo('capa'), address: beauty ? 'Rua dos Pinheiros, 870 — Pinheiros, São Paulo' : 'Rua Fradique Coutinho, 420 — Pinheiros, São Paulo',
+    cover: beauty ? '/presenca/rhian/salon-hero.jpg' : '/presenca/rhian/barber-hero.jpg',
+    phone: beauty ? '+55 (11) 3032-8810' : '+55 (11) 3062-4190',
+    instagram: beauty ? '@studioaurora.sp' : '@cortefino',
+    address: beauty ? 'Rua dos Pinheiros, 870 — Pinheiros, São Paulo' : 'Rua Fradique Coutinho, 420 — Pinheiros, São Paulo',
     hours: [{ day: 'Segunda a sexta', hours: '09h às 20h' }, { day: 'Sábado', hours: '09h às 18h' }, { day: 'Domingo', hours: 'Fechado' }],
     services: beauty ? [
       { id: demoId(true, 20), name: 'Corte feminino', description: 'Um corte que respeita a textura do seu cabelo e acompanha o seu dia a dia. A gente conversa, entende e só então corta.', includes: ['Conversa sobre o seu cabelo', 'Lavagem e corte personalizado', 'Finalização e dicas de cuidado'], audience: 'Para renovar o visual sem abrir mão de ser você.', duration: 60, price: 120, image: photo('servico-corte-feminino') },
@@ -40,22 +43,56 @@ export function getDemoSite(slug: string): { data: SiteData; config: SiteConfig 
       { id: demoId(false, 22), name: 'Corte + barba', description: 'O cuidado completo, no seu tempo. Corte com acabamento preciso e barba desenhada para valorizar o seu rosto.', includes: ['Corte personalizado', 'Barba com toalha quente', 'Acabamento na navalha e balm'], audience: 'Para sair com cabelo e barba alinhados em uma única visita.', duration: 60, price: 75, image: photo('servico-corte-barba') },
       { id: demoId(false, 21), name: 'Barba', description: 'Desenho, alinhamento e cuidado com a pele. Toalha quente para preparar, navalha para definir e balm para finalizar.', includes: ['Desenho da barba', 'Toalha quente e navalha', 'Hidratação com balm'], audience: 'Para quem gosta de uma barba bem cuidada, curta ou cheia.', duration: 30, price: 35, image: photo('servico-barba') },
     ],
-    team: (beauty ? ['Marina Costa', 'Luiza Martins', 'Ana Ribeiro'] : ['Rafael Costa', 'Lucas Mendes', 'André Lima']).map((name, i) => ({ id: demoId(beauty, 30 + i), name, image: photo(beauty ? ['servico-escova', 'galeria-05', 'servico-corte-feminino'][i] : ['galeria-07', 'galeria-11', 'servico-corte-barba'][i]), bio: beauty ? ['Cortes e movimento natural', 'Cor, mechas e iluminação', 'Tratamentos e finalização'][i] : ['Clássicos na tesoura e barba', 'Degradês e cortes modernos', 'Barba e acabamento na navalha'][i] })),
-    gallery: (beauty ? [1, 4, 3, 7, 6, 8] : [10, 3, 4, 5, 9, 1]).map(n => ({ src: photo(`galeria-${String(n).padStart(2, '0')}`), alt: beauty ? 'Referência de cabelo e finalização — foto ilustrativa' : 'Referência de corte e acabamento — foto ilustrativa' })),
+    team: (beauty ? ['Marina Costa', 'Luiza Martins', 'Ana Ribeiro'] : ['Rafael Costa', 'Lucas Mendes', 'André Lima']).map((name, i) => ({
+      id: demoId(beauty, 30 + i),
+      name,
+      image: beauty
+        ? [photo('servico-escova'), '/presenca/rhian/salon-balayage.jpg', photo('servico-corte-feminino')][i]
+        : ['/presenca/rhian/barber-portrait.jpg', '/presenca/rhian/barber-fade.jpg', photo('servico-corte-barba')][i],
+      bio: beauty ? ['Cortes e movimento natural', 'Cor, mechas e iluminação', 'Tratamentos e finalização'][i] : ['Degradê navalhado & visagismo', 'Corte na tesoura & barboterapia', 'Barba longa & alinhamento'][i],
+    })),
+    gallery: beauty
+      ? [
+          { src: '/presenca/rhian/salon-hero.jpg', alt: 'Espaço luminoso do Studio Aurora — foto ilustrativa' },
+          { src: '/presenca/rhian/salon-balayage.jpg', alt: 'Resultado de cor e balayage — foto ilustrativa' },
+          { src: photo('galeria-05'), alt: 'Finalização e movimento — foto ilustrativa' },
+        ]
+      : [
+          { src: '/presenca/rhian/barber-hero.jpg', alt: 'Bancadas e luz natural na casa — foto ilustrativa' },
+          { src: '/presenca/rhian/barber-fade.jpg', alt: 'Acabamento de degradê na navalha — foto ilustrativa' },
+          { src: '/presenca/rhian/barber-portrait.jpg', alt: 'Equipe pronta para atendimento com hora marcada — foto ilustrativa' },
+        ],
     rating: 4.9, reviewCount: beauty ? 128 : 214,
     reviews: [
-      { id: 'demo-review-1', name: beauty ? 'Beatriz S.' : 'Bruno M.', rating: 5, comment: beauty ? 'A Marina ouviu o que eu queria e explicou cada etapa. Saí com um corte que consigo arrumar em casa.' : 'Primeira vez na casa e já acertei no lugar. O Rafael entendeu o corte e caprichou no acabamento.' },
-      { id: 'demo-review-2', name: beauty ? 'Clara F.' : 'André R.', rating: 5, comment: beauty ? 'Adorei a cor e o cuidado com o meu cabelo. Atendimento tranquilo, sem correria.' : 'Marquei pelo celular, cheguei e fui atendido no horário. A barba com toalha quente vale a visita.' },
-      { id: 'demo-review-3', name: beauty ? 'Juliana A.' : 'Felipe C.', rating: 5, comment: beauty ? 'Lugar acolhedor, preço combinado antes e resultado lindo. Vou voltar.' : 'Ambiente bom, conversa boa e corte melhor ainda. Virou minha barbearia do bairro.' },
+      { id: 'demo-review-1', name: beauty ? 'Beatriz S.' : 'Bruno M.', rating: 5, comment: beauty ? 'A Marina perguntou como eu arrumo o cabelo em casa e cortou pensando nisso. Em Pinheiros, é o único lugar em que eu saio sabendo o que fazer no dia seguinte.' : 'Marquei com o Rafael às 18h, depois do trabalho. Entrou na hora, desenhou a barba e o degradê ficou no comprimento que eu pedi — não no que estava na moda.' },
+      { id: 'demo-review-2', name: beauty ? 'Clara F.' : 'André R.', rating: 5, comment: beauty ? 'Nas mechas, o valor só fechou depois do teste de mecha. Demorou, mas o loiro não quebrou o cabelo. Voltei em seis semanas.' : 'Barba com toalha quente e navalha, não só máquina. Saí às 19h e ainda deu para chegar em casa para o jantar.' },
+      { id: 'demo-review-3', name: beauty ? 'Juliana A.' : 'Felipe C.', rating: 5, comment: beauty ? 'Primeira visita: paguei o corte e a hidratação entrou, como estava no site. Sem letra miúda no caixa.' : 'Cadeira reservada, sem fila. O Lucas fez o clássico na tesoura em 30 minutos e o acabamento da nuca ficou limpo.' },
     ],
   };
+  data.services[beauty ? 0 : 1].featured = true;
   const config: SiteConfig = {
-    ...defaultConfig(data), style: beauty ? 'light' : 'dark', accent: beauty ? '#294D40' : '#C89B79',
-    headline: beauty ? 'Seu salão em Pinheiros.' : 'Barbearia em Pinheiros.',
-    cover: photo(beauty ? 'servico-coloracao' : 'galeria-12'),
-    about: beauty ? 'Corte, cor e tratamento pensados para o seu cabelo. A consulta vem antes da tesoura, e o preço é combinado antes de começar.' : 'Corte preciso, barba com toalha quente e navalha. Seu horário é reservado: você chega e senta na cadeira.',
-    offer: { enabled: true, title: beauty ? 'Seu primeiro corte vem com hidratação.' : 'Corte + barba por R$ 65.', condition: beauty ? 'Para quem vem pela primeira vez e agenda um corte. Não cumulativo.' : 'Para clientes novos. Valor normal R$ 75. Não cumulativo.', serviceId: data.services[beauty ? 0 : 1].id },
-    differences: beauty ? ['Seu cabelo tem voz. A consulta vem antes da tesoura.', 'Preço combinado antes de começar. Sem surpresas.', 'Cuidado que continua em casa, com orientação de verdade.'] : ['O corte começa na conversa. Sem receita pronta.', 'Seu horário é reservado. Atendimento com tempo para caprichar.', 'Acabamento de perto. Navalha, tesoura e atenção ao detalhe.'],
+    ...defaultConfig(data), style: 'light', accent: beauty ? '#3F4E41' : '#9A5628',
+    headline: beauty
+      ? 'Salão em Pinheiros dedicado à cor natural e ao cuidado do cabelo'
+      : 'Barbearia em Pinheiros com corte preciso e horário respeitado',
+    cover: beauty ? '/presenca/rhian/salon-hero.jpg' : '/presenca/rhian/barber-hero.jpg',
+    photoFocus: beauty ? 'space' : 'work',
+    photoPosition: beauty ? { x: 58, y: 48 } : { x: 42, y: 38 },
+    about: beauty
+      ? 'Um espaço sereno em Pinheiros onde cada horário começa com diagnóstico transparente e um plano de cuidado para os fios.'
+      : 'Na Rua Fradique Coutinho, unimos tesoura e navalha a um atendimento sem pressa, com agenda pontual até as 20h.',
+    offer: {
+      enabled: true,
+      title: beauty ? 'Tratamento nutritivo de oferta na primeira visita de corte ou cor' : '15% de desconto na sua primeira visita',
+      condition: beauty ? 'Na primeira visita, ao marcar corte ou cor.' : 'Válido para novos clientes de terça a quinta-feira em qualquer corte ou combo.',
+      serviceId: data.services[beauty ? 0 : 1].id,
+    },
+    differences: beauty
+      ? ['Orçamento transparente apresentado antes de iniciar qualquer coloração.', 'Atendimento individualizado com foco em crescimento suave da cor.', 'Consulta de 10 minutos antes de qualquer tesoura ou química.']
+      : ['Atendimento rigorosamente no horário marcado — sem fila de espera.', 'Lâminas descartáveis e toalhas esterilizadas a cada cliente.', 'Horário estendido até 20h de segunda a sexta.', 'Garantia de ajuste gratuito em até 7 dias caso precise retocar.'],
+    beforeAfter: beauty
+      ? [{ before: photo('servico-corte-feminino'), after: '/presenca/rhian/salon-balayage.jpg', caption: 'Cor e movimento — fotos ilustrativas.' }]
+      : [{ before: '/presenca/rhian/barber-hero.jpg', after: '/presenca/rhian/barber-fade.jpg', caption: 'Degradê e alinhamento — fotos ilustrativas.' }],
     faq: [
       { question: 'Preciso agendar antes de ir?', answer: 'Sim. Escolha o serviço, o profissional e um horário disponível aqui no site. Assim, a gente reserva um tempo só para você.' },
       { question: 'E se eu precisar remarcar?', answer: 'Use o link enviado na confirmação. Na demonstração, a política é de até 2 horas antes do atendimento.' },

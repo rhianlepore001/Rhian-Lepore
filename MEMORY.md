@@ -9,6 +9,12 @@
 
 ---
 
+## Presença — mescla com Site-Agendix (24 Nov 2026, draft)
+
+Branch `feat/site-estabelecimento`. O fundador publicou uma direção melhor em `rhianlepore001/Site-Agendix`. O template em Rhian-Lepore mescla essa direção (hero split, header espresso/editorial, cards de serviço, FAQ+local, CTA fixo no celular) com o modelo configurável, demos, painel Meu site e iframe AgendiX. Sem Gemini, sem `server.ts`, sem chaves.
+
+Demos: Corte Fino = editorial; Studio Aurora = minimal branco. Prints dele vs mesclado em `/opt/cursor/artifacts/presenca/rhian-ref/` e `.../mesclado/`. Eval independente 8,7/10 (faixa de demo obrigatória e CTA duplo da própria referência). E2E 24/24. Migration **não aplicada**. Login/cadastro/Stripe intocados.
+
 ## Meta Pixel — engajamento da landing (23 Nov 2026, draft)
 
 Branch `cursor/meta-landing-engajamento-a592`. Amplia remarketing em `/#/landing`: SectionView, Scroll25/50/75/90, TimeOnPage15/30/60/120s, DemoStart/ScreenView/Complete (iframe via postMessage), NichoSwitch, FAQOpen, WhatsAppClick, CTAClick com `cta_position`. Edge `meta-capi` atualizada na allow-list (sem deploy neste PR). Cadastro: StartRegistration + Lead + CompleteRegistration já existentes; sem StartTrial. Verificações: typecheck/lint/build + testes Meta + e2e meta-pixel. Docs: `docs/meta-pixel.md`.

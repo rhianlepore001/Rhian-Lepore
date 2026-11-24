@@ -9,15 +9,11 @@
 
 ---
 
-## Presença — mescla com Site-Agendix (24 Nov 2026, draft)
+## Presença — em produção (24 Nov 2026, 19:41 Lisboa)
 
-Branch `feat/site-estabelecimento`, PR #256. O fundador publicou uma direção melhor em `rhianlepore001/Site-Agendix`. O template mescla essa direção com o modelo configurável, demos, painel Meu site e iframe AgendiX. Sem Gemini, sem `server.ts`, sem chaves.
+PR #256 mesclado na `main` (`2563a7a5`, 19:41:35 UTC). Migration `establishment_sites` aplicada em produção (versão remota `20261124194011`). RLS ligada; policies só owner; RPC pública `get_public_establishment_site` com allowlist. Deploy Vercel Production sucesso 19:42:07 UTC. Smoke em https://www.agendixstudio.com/#/site/demo-corte-fino e `/#/site/demo-studio-aurora` (390 e 1280) e painel demo `/#/site-demo/editor/barber`: 0 erros de console. Login/cadastro/onboarding/Stripe intocados. Prints em `/opt/cursor/artifacts/presenca/producao/`.
 
-Rodada Bob: hero/Serviços alinhados ao header no desktop; oferta do salão sem repetir título+condição (`offerDisplay`); faixa de demo discreta (eval a ignora); CTA do header oculto no celular quando a barra fixa existe; wordmark numa linha com presença; dobra mobile mostra indício de Serviços. Prints em `/opt/cursor/artifacts/presenca/comparacao/`. Eval 9,5/10 (faixa de demo desconsiderada).
-
-Rodada Rhian 17:24: primeira versão aprovada. Painel Meu site ganhou cor de fundo (recomendadas AgendiX + personalizada, contraste avisado/ajustado) e prévia ao vivo com celular/computador, sem perder os controles no telefone. Prints em `/opt/cursor/artifacts/presenca/painel/`. Eval do painel 9,6/10.
-
-Rodada Rhian 18:49: prévia no celular do dono maior (headline + lede visíveis, não mais faixa de ~150 px) e botão Ver em tela cheia com Voltar ao editor. Desktop intacto. Eval 9,6/10. E2E 24/24. Migration **não aplicada**. Login/cadastro/onboarding/Stripe/tracking intocados.
+Antes do merge: template mesclado com Site-Agendix; cor de fundo e prévia ao vivo (maior no celular + tela cheia). Eval 9,6/10. E2E 24/24.
 
 ## Meta Pixel — engajamento da landing (23 Nov 2026, draft)
 

@@ -49,6 +49,7 @@ as $$
     select jsonb_build_object('config', jsonb_strip_nulls(jsonb_build_object(
         'style', jsonb_path_query_first(c, '$.style ? (@.type() == "string")'),
         'accent', jsonb_path_query_first(c, '$.accent ? (@.type() == "string")'),
+        'background', jsonb_path_query_first(c, '$.background ? (@.type() == "string")'),
         'headline', jsonb_path_query_first(c, '$.headline ? (@.type() == "string")'),
         'about', jsonb_path_query_first(c, '$.about ? (@.type() == "string")'),
         'cover', jsonb_path_query_first(c, '$.cover ? (@.type() == "string")'),

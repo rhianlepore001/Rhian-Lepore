@@ -62,9 +62,43 @@ export interface SiteData {
   config?: SiteConfig;
 }
 
+export interface RecommendedBackground {
+  id: 'urban' | 'editorial' | 'salon';
+  hex: string;
+  label: string;
+  style: SiteStyle;
+  recommended: true;
+}
+
+/** Padrões atuais de cada estilo, destacados como recomendados pelo AgendiX. */
+export const RECOMMENDED_BACKGROUNDS: RecommendedBackground[] = [
+  { id: 'urban', hex: '#09090B', label: 'Urbano preciso', style: 'dark', recommended: true },
+  { id: 'editorial', hex: '#FBF7F0', label: 'Editorial clássico', style: 'light', recommended: true },
+  { id: 'salon', hex: '#FFFFFF', label: 'Salão claro', style: 'light', recommended: true },
+];
+
+export function defaultBackground(style: SiteStyle, kind: SiteKind = 'barber'): string {
+  if (style === 'dark') return '#09090B';
+  return kind === 'beauty' ? '#FFFFFF' : '#FBF7F0';
+}
+
+export function isRecommendedBackground(hex: string): boolean {
+  return RECOMMENDED_BACKGROUNDS.some(item => item.hex.toLowerCase() === hex.toLowerCase());
+}
+
+function hexColor(value: unknown): string | undefined {
+  const raw = typeof value === 'string' ? value.trim() : '';
+  return /^#[0-9a-f]{6}$/i.test(raw) ? raw : undefined;
+}
+
+export function resolvedBackground(config: Pick<SiteConfig, 'style'> & { background?: string }, kind: SiteKind): string {
+  return hexColor(config.background) ?? defaultBackground(config.style, kind);
+}
+
 export interface SiteConfig {
   style: SiteStyle;
   accent: string;
+  background: string;
   headline: string;
   about: string;
   offer: { enabled: boolean; title: string; condition: string; serviceId?: string; expires?: string };
@@ -118,6 +152,7 @@ export function defaultConfig(data: SiteData): SiteConfig {
   return {
     style,
     accent: style === 'dark' ? '#9A5628' : '#3F4E41',
+    background: defaultBackground(style, data.kind),
     headline: defaultHeadline(data),
     about: defaultAbout(data),
     offer: { enabled: false, title: '', condition: '' },
@@ -153,22 +188,79 @@ function luminance(hex: string): number {
   return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
 }
 
+function mixHex(first: string, second: string, amount: number): string {
+  return '#' + [1, 3, 5].map(index => {
+    const a = parseInt(first.slice(index, index + 2), 16);
+    const b = parseInt(second.slice(index, index + 2), 16);
+    return Math.round(a + (b - a) * amount).toString(16).padStart(2, '0');
+  }).join('');
+}
+
+function nudgeHex(color: string, toward: number): string {
+  return '#' + [1, 3, 5].map(index => {
+    const channel = parseInt(color.slice(index, index + 2), 16);
+    return Math.round(channel + (toward - channel) * 0.12).toString(16).padStart(2, '0');
+  }).join('');
+}
+
 export function contrastRatio(first: string, second: string): number {
   const a = luminance(first);
   const b = luminance(second);
   return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
 }
 
-export function accessibleAccent(hex: string, style: SiteStyle): { background: string; foreground: string } {
-  let background = /^#[0-9a-f]{6}$/i.test(hex) ? hex : style === 'dark' ? '#9A5628' : '#3F4E41';
-  const surfaces = style === 'dark' ? ['#09090B', '#18181B', '#27272A'] : ['#FBF7F0', '#FDFBF7', '#FFFFFF'];
-  const toward = style === 'dark' ? 255 : 0;
+export interface SiteSurface {
+  background: string;
+  ink: string;
+  body: string;
+  muted: string;
+  line: string;
+  panel: string;
+  map: string;
+  adjusted: boolean;
+  warning?: string;
+}
+
+export function siteSurface(background: string, style: SiteStyle): SiteSurface {
+  const chosen = hexColor(background) ?? defaultBackground(style);
+  const styleInk = style === 'dark' ? '#F4F4F5' : '#1C1714';
+  const pickInk = (color: string) => {
+    if (contrastRatio(color, styleInk) >= 4.5) return styleInk;
+    return contrastRatio(color, '#000000') >= contrastRatio(color, '#FFFFFF') ? '#000000' : '#FFFFFF';
+  };
+  let page = chosen;
+  let ink = pickInk(page);
+  for (let step = 0; contrastRatio(page, ink) < 4.5 && step < 36; step += 1) {
+    page = nudgeHex(page, luminance(page) > 0.18 ? 0 : 255);
+    ink = pickInk(page);
+  }
+  const adjusted = page.toLowerCase() !== chosen.toLowerCase() || ink.toLowerCase() !== styleInk.toLowerCase() || contrastRatio(chosen, styleInk) < 4.5;
+  const body = mixHex(ink, page, 0.18);
+  const mutedCandidate = mixHex(ink, page, 0.38);
+  const muted = contrastRatio(page, mutedCandidate) >= 3 ? mutedCandidate : mixHex(ink, page, 0.22);
+  return {
+    background: page,
+    ink,
+    body: contrastRatio(page, body) >= 4.5 ? body : ink,
+    muted,
+    line: mixHex(page, ink, 0.16),
+    panel: mixHex(page, ink, 0.06),
+    map: mixHex(page, ink, 0.1),
+    adjusted,
+    ...(adjusted ? { warning: 'Ajustamos o texto para manter a leitura nesta cor de fundo.' } : {}),
+  };
+}
+
+export function accessibleAccent(hex: string, style: SiteStyle, pageBackground?: string): { background: string; foreground: string } {
+  let background = hexColor(hex) ?? (style === 'dark' ? '#9A5628' : '#3F4E41');
+  const page = hexColor(pageBackground);
+  const surfaces = page
+    ? [page, mixHex(page, contrastRatio(page, '#000000') >= contrastRatio(page, '#FFFFFF') ? '#000000' : '#FFFFFF', 0.08), mixHex(page, contrastRatio(page, '#000000') >= contrastRatio(page, '#FFFFFF') ? '#000000' : '#FFFFFF', 0.14)]
+    : style === 'dark' ? ['#09090B', '#18181B', '#27272A'] : ['#FBF7F0', '#FDFBF7', '#FFFFFF'];
+  const toward = luminance(surfaces[0]) > 0.4 ? 0 : 255;
   const weakest = (color: string) => Math.min(...surfaces.map(surface => contrastRatio(color, surface)));
   for (let step = 0; weakest(background) < 4.5 && step < 36; step += 1) {
-    background = '#' + [1, 3, 5].map(index => {
-      const channel = parseInt(background.slice(index, index + 2), 16);
-      return Math.round(channel + (toward - channel) * 0.12).toString(16).padStart(2, '0');
-    }).join('');
+    background = nudgeHex(background, toward);
   }
   const darkContrast = contrastRatio(background, '#000000');
   const lightContrast = contrastRatio(background, '#FFFFFF');
@@ -296,6 +388,7 @@ export function normalizeSiteConfig(input: unknown, fallback: SiteConfig): SiteC
   return {
     style: source.style === 'dark' || source.style === 'light' ? source.style : fallback.style,
     accent: /^#[0-9a-f]{6}$/i.test(text(source.accent)) ? text(source.accent) : fallback.accent,
+    background: hexColor(source.background) ?? fallback.background,
     headline: typeof source.headline === 'string' ? text(source.headline, 180) : fallback.headline,
     about: typeof source.about === 'string' ? text(source.about, 2000) : fallback.about,
     offer: typeof source.offer === 'object' && source.offer ? { enabled: offer.enabled === true, title: text(offer.title, 180), condition: text(offer.condition, 300), serviceId: text(offer.serviceId, 100) || undefined, expires: /^\d{4}-\d{2}-\d{2}$/.test(text(offer.expires)) ? text(offer.expires) : undefined } : fallback.offer,

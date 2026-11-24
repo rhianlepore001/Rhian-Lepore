@@ -71,7 +71,7 @@ export function getDemoSite(slug: string): { data: SiteData; config: SiteConfig 
   };
   data.services[beauty ? 0 : 1].featured = true;
   const config: SiteConfig = {
-    ...defaultConfig(data), style: 'light', accent: beauty ? '#3F4E41' : '#9A5628',
+    ...defaultConfig(data), style: 'light', background: beauty ? '#FFFFFF' : '#FBF7F0', accent: beauty ? '#3F4E41' : '#9A5628',
     headline: beauty
       ? 'Salão em Pinheiros dedicado à cor natural e ao cuidado do cabelo'
       : 'Barbearia em Pinheiros com corte preciso e horário respeitado',

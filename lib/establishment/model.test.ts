@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { accessibleAccent, applySiteConfig, buildSeo, contrastRatio, defaultConfig, formatPrice, neighborhoodFromAddress, normalizeSiteConfig, offerDisplay, photoObjectPosition, sanitizePublicData, serializeJsonLd, visibleSections, type SiteData } from './model';
+import { accessibleAccent, applySiteConfig, buildSeo, contrastRatio, defaultBackground, defaultConfig, formatPrice, isRecommendedBackground, neighborhoodFromAddress, normalizeSiteConfig, offerDisplay, photoObjectPosition, RECOMMENDED_BACKGROUNDS, resolvedBackground, sanitizePublicData, serializeJsonLd, siteSurface, visibleSections, type SiteData } from './model';
 
 const site: SiteData = { id: 'business', slug: 'navalha-fina', name: 'Navalha Fina', kind: 'barber', region: 'BR', demo: false, address: 'Rua dos Pinheiros, 100', hours: [], services: [{ id: 'cut', name: 'Corte', includes: [], duration: 30, price: 65 }], team: [], gallery: [], reviews: [], reviewCount: 0 };
 
@@ -26,6 +26,47 @@ describe('establishment defaults', () => {
     expect(visibleSections(data, defaultConfig(data)).map(section => section.id)).not.toContain('team');
     expect(visibleSections({ ...data, team: [{ id: 'a', name: 'Ana' }, { id: 'b', name: 'Bea' }] }, defaultConfig(data)).map(section => section.id)).toContain('team');
     expect(visibleSections(data, defaultConfig(data)).map(section => section.id)).not.toContain('reviews');
+  });
+});
+
+describe('site background', () => {
+  it('recommends the current default of each style and keeps a custom option distinct', () => {
+    expect(RECOMMENDED_BACKGROUNDS.map(item => item.hex)).toEqual(['#09090B', '#FBF7F0', '#FFFFFF']);
+    expect(RECOMMENDED_BACKGROUNDS.every(item => item.recommended)).toBe(true);
+    expect(defaultBackground('dark', 'barber')).toBe('#09090B');
+    expect(defaultBackground('light', 'barber')).toBe('#FBF7F0');
+    expect(defaultBackground('light', 'beauty')).toBe('#FFFFFF');
+    expect(defaultConfig(site).background).toBe('#09090B');
+    expect(defaultConfig({ ...site, kind: 'beauty' }).background).toBe('#FFFFFF');
+    expect(isRecommendedBackground('#fbf7f0')).toBe(true);
+    expect(isRecommendedBackground('#112233')).toBe(false);
+  });
+  it('keeps a valid custom background and falls back to the style default when missing or invalid', () => {
+    const custom = normalizeSiteConfig({ background: '#1A1410' }, defaultConfig(site));
+    expect(custom.background).toBe('#1A1410');
+    expect(normalizeSiteConfig({ background: 'red' }, defaultConfig(site)).background).toBe('#09090B');
+    expect(resolvedBackground({ style: 'light' }, 'beauty')).toBe('#FFFFFF');
+    expect(resolvedBackground({ style: 'dark', background: '#abc' }, 'barber')).toBe('#09090B');
+  });
+  it('keeps text readable on the chosen background and warns when it had to adjust', () => {
+    const urban = siteSurface('#09090B', 'dark');
+    expect(urban.adjusted).toBe(false);
+    expect(contrastRatio(urban.background, urban.ink)).toBeGreaterThanOrEqual(4.5);
+    const cream = siteSurface('#FBF7F0', 'light');
+    expect(cream.ink).toMatch(/^#1/i);
+    expect(cream.adjusted).toBe(false);
+    const yellow = siteSurface('#FFE14D', 'dark');
+    expect(contrastRatio(yellow.background, yellow.ink)).toBeGreaterThanOrEqual(4.5);
+    expect(yellow.ink).toBe('#000000');
+    expect(yellow.warning).toMatch(/contraste|leitura/i);
+    const mid = siteSurface('#777777', 'light');
+    expect(contrastRatio(mid.background, mid.ink)).toBeGreaterThanOrEqual(4.5);
+    expect(mid.adjusted).toBe(true);
+  });
+  it('uses the chosen page background when checking the brand accent contrast', () => {
+    const pair = accessibleAccent('#9A5628', 'dark', '#FBF7F0');
+    expect(contrastRatio(pair.background, '#FBF7F0')).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio(pair.background, pair.foreground)).toBeGreaterThanOrEqual(4.5);
   });
 });
 

@@ -1,6 +1,31 @@
 # Presença — avaliação da mescla com Site-Agendix
 
-Data: 24 Nov 2026. Branch `feat/site-estabelecimento`. PR #256 (draft). Referência do fundador: `rhianlepore001/Site-Agendix` (main). Prints: `/opt/cursor/artifacts/presenca/rhian-ref/` (dele) e `/opt/cursor/artifacts/presenca/comparacao/` (dele vs mesclado).
+Data: 24 Nov 2026. Branch `feat/site-estabelecimento`. PR #256 (draft). Referência do fundador: `rhianlepore001/Site-Agendix` (main). Prints: `/opt/cursor/artifacts/presenca/rhian-ref/` (dele), `/opt/cursor/artifacts/presenca/comparacao/` (dele vs mesclado) e `/opt/cursor/artifacts/presenca/painel/` (Meu site + prévia).
+
+## Rodada Rhian (17:24 Lisboa) — cor de fundo e prévia ao vivo
+
+Primeira versão do site aprovada. Pedidos no painel Meu site, mesmo PR, sem merge e sem migration aplicada.
+
+1. **Cor de fundo:** paleta recomendada pelo AgendiX com os padrões atuais de cada estilo (Urbano `#09090B`, Editorial `#FBF7F0`, Salão `#FFFFFF`) em destaque; opção personalizada com seletor e código. `siteSurface()` escolhe tinta legível (WCAG AA) e avisa quando precisa ajustar o texto.
+2. **Prévia ao vivo:** o template real atualiza enquanto o dono edita (cor, textos, fotos, oferta, seções). Alternar celular/computador no painel. No celular do dono a prévia fica no topo do espaço de trabalho e os controles rolam embaixo — sem modal que esconda o editor.
+3. **Visual:** painel embutido herda tokens do app; a prévia continua isolada no CSS do estabelecimento.
+
+### Eval UI/UX do painel (começando pelo mobile)
+
+| Superfície | Nota | Leitura |
+|---|---|---|
+| Meu site 390 — prévia + cores + controles | **9,6/10** | A prévia é o site de verdade. Amostras Recomendada aparecem na mesma tela, com celular/computador no topo. |
+| Meu site 1280 — split + cores recomendadas | **9,6/10** | Swatches em destaque à esquerda; o template à direita acompanha frase e fundo. |
+| Painel autenticado no DS do app | **9,5/10** | Header, sidebar e botões do AgendiX; a prévia não empresta o visual do produto. |
+
+**Média do painel: 9,6/10.**
+
+O que impede 10 (teto honesto, não bloqueador):
+
+- nome longo (`Casa Mock (fictícia)`) trunca no wordmark da prévia compacta — é o template real a 390 px, não um recorte do painel
+- a prévia compacta corta a lede no meio da frase — indício de continuação, não página inteira
+
+Prints: `editor-390-preview.png`, `editor-390-colors.png`, `editor-1280-preview.png`, `editor-1280-colors.png`, `owner-editor-390-preview.png`, `owner-editor-1280-preview.png`.
 
 ## Rodada Bob (16:49 Lisboa) — meta ≥9,5
 
@@ -43,7 +68,7 @@ Modelo em `lib/establishment/model.ts` (tudo configurável, seções vazias ocul
 
 ## Verificações
 
-- `npx playwright test --config e2e/establishment/playwright.config.ts` — 24/24 (390 e 1280), incluindo alinhamento do container, CTA único no celular e indício de Serviços
+- `npx playwright test --config e2e/establishment/playwright.config.ts` — 24/24 (390 e 1280), incluindo prévia ao vivo, cores recomendadas e contraste
 - typecheck, lint, build
-- Vitest 2777 testes
-- migration **não aplicada**; login/cadastro/onboarding/Stripe intocados
+- Vitest 2785 testes
+- migration **não aplicada**; login/cadastro/onboarding/Stripe/tracking intocados

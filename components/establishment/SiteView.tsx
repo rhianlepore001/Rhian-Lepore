@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { accessibleAccent, applySiteConfig, defaultConfig, neighborhoodFromAddress, normalizeSiteConfig, offerDisplay, photoObjectPosition, placeFromAddress, formatPrice, visibleSections, type SiteConfig, type SiteData, type SiteService } from '../../lib/establishment/model';
+import { accessibleAccent, applySiteConfig, defaultConfig, neighborhoodFromAddress, normalizeSiteConfig, offerDisplay, photoObjectPosition, placeFromAddress, formatPrice, resolvedBackground, siteSurface, visibleSections, type SiteConfig, type SiteData, type SiteService } from '../../lib/establishment/model';
 import { studioCopy } from '../../lib/establishment/copy';
 import { openingStatus, timezoneForRegion } from '../../lib/establishment/hours';
 import { buildWhatsAppLink } from '../../utils/formatters';
@@ -34,7 +34,8 @@ export function SiteView({ data: sourceData, config: incoming, serviceId, previe
   const [notice, setNotice] = useState('');
   const dialog = useRef<HTMLDialogElement>(null);
   const sections = visibleSections(data, config);
-  const accent = accessibleAccent(config.accent, config.style);
+  const surface = siteSurface(resolvedBackground(config, data.kind), config.style);
+  const accent = accessibleAccent(config.accent, config.style, surface.background);
   const service = serviceId ? data.services.find(item => item.id === serviceId) : undefined;
   const home = `/#/site/${data.slug}`;
   const beauty = data.kind === 'beauty';
@@ -55,7 +56,7 @@ export function SiteView({ data: sourceData, config: incoming, serviceId, previe
   const embedBefore = sections.some(section => section.id === 'beforeAfter') && sections.some(section => section.id === 'services') && pairs.length > 0;
   const topServices = embedBefore ? data.services.slice(0, 3) : data.services;
   const extraServices = embedBefore ? data.services.slice(3) : [];
-  const pageColor = config.style === 'dark' ? '#09090B' : beauty ? '#FFFFFF' : '#FBF7F0';
+  const pageColor = surface.background;
   const scrollTo = (id: string) => document.getElementById(`${preview ? 'preview-' : ''}${id}`)?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' });
   const openBooking = (context: BookingContext = {}) => {
     if (preview) { setNotice('A prévia não faz agendamentos. Abra o site para testar o fluxo.'); return; }
@@ -209,7 +210,7 @@ export function SiteView({ data: sourceData, config: incoming, serviceId, previe
 
   const pairFaqLocation = has('faq') && has('location') && !serviceId;
 
-  return <div className="establishment" data-style={config.style} data-kind={data.kind} data-preview={preview || undefined} style={{ '--es-accent': accent.background, '--es-on-accent': accent.foreground } as React.CSSProperties}>
+  return <div className="establishment" data-style={config.style} data-kind={data.kind} data-preview={preview || undefined} style={{ '--es-accent': accent.background, '--es-on-accent': accent.foreground, '--es-bg': surface.background, '--es-ink': surface.ink, '--es-body': surface.body, '--es-muted': surface.muted, '--es-line': surface.line, '--es-panel': surface.panel, '--es-map': surface.map } as React.CSSProperties}>
     <a className="es-skip" href="#es-content" onClick={event => { event.preventDefault(); document.getElementById('es-content')?.focus(); }}>{copy.skip}</a>
     {data.demo && <div className="es-demo"><strong>{copy.demoBanner}</strong> <span>{copy.demoHint}</span></div>}
     <header className="es-header">

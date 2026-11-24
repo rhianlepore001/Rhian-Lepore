@@ -51,6 +51,20 @@ async function finishImages(page: Page) {
   });
 }
 
+async function scrollControlsTo(page: Page, target: ReturnType<Page['locator']>) {
+  await target.evaluate(el => {
+    const pane = el.closest('.se-controls');
+    if (!(pane instanceof HTMLElement)) return;
+    pane.scrollTop += el.getBoundingClientRect().top - pane.getBoundingClientRect().top - 8;
+  });
+}
+
+async function openEditorSection(page: Page, name: string) {
+  const section = page.locator('.se-controls > details').filter({ has: page.locator('summary', { hasText: name }) });
+  await section.evaluate(el => { (el as HTMLDetailsElement).open = true; });
+  await scrollControlsTo(page, section.locator(':scope > summary'));
+}
+
 async function capture(page: Page, name: string, fullPage = false, preserveScroll = false) {
   fs.mkdirSync(shots, { recursive: true });
   if (!preserveScroll) await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
@@ -205,23 +219,39 @@ test('links legais do rodapé continuam funcionando entre as entradas pública e
 test('editor: prévia ao vivo, estilo, seção e rascunho local', async ({ page }, testInfo) => {
   await page.goto('/#/site-demo/editor/barber');
   await expect(page.getByRole('heading', { name: 'Meu site', exact: true })).toBeVisible();
-  await page.getByLabel(/^Frase principal/).fill('Um corte com a sua cara.');
-  await page.getByText('Estilo e identidade', { exact: true }).click();
-  await page.getByRole('button', { name: 'Aa Editorial claro' }).click();
-  if (testInfo.project.name.startsWith('mobile')) await page.getByRole('button', { name: 'Ver prévia ao vivo', exact: true }).click();
+  await expect(page.getByLabel(/^Frase principal/)).toBeVisible();
   const preview = page.frameLocator('iframe[title="Prévia ao vivo do meu site"]');
+  await expect(preview.locator('h1')).toBeVisible();
+  await page.getByLabel(/^Frase principal/).fill('Um corte com a sua cara.');
+  await expect(preview.locator('h1')).toHaveText('Um corte com a sua cara.');
+  await capture(page, `editor-${page.viewportSize()!.width}-preview`, false, true);
+  await scrollControlsTo(page, page.locator('.se-bg'));
+  await expect(page.getByRole('radio', { name: /Urbano preciso, recomendada/i })).toBeVisible();
+  await expect(page.getByRole('radio', { name: /Personalizada/i })).toBeVisible();
+  await openEditorSection(page, 'Estilo e identidade');
+  await page.getByRole('button', { name: 'Aa Editorial claro' }).click({ force: true });
   await expect(preview.locator('h1')).toHaveText('Um corte com a sua cara.');
   await expect(preview.locator('.establishment')).toHaveAttribute('data-style', 'light');
-  await capture(page, `editor-${page.viewportSize()!.width}-preview`, false, true);
-  if (testInfo.project.name.startsWith('mobile')) await page.getByRole('button', { name: 'Personalizar', exact: true }).click();
-  await page.getByText('Seções e ordem da página', { exact: true }).click();
-  await page.getByLabel('Galeria', { exact: true }).uncheck();
+  await page.getByRole('radio', { name: /Salão claro, recomendada/i }).evaluate(el => (el as HTMLButtonElement).click());
+  await expect(preview.locator('.establishment')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+  await scrollControlsTo(page, page.locator('.se-bg'));
+  await expect(page.getByRole('button', { name: 'Prévia no celular' })).toBeVisible();
+  await expect(page.getByLabel(/^Frase principal/)).toHaveCount(1);
+  await capture(page, `editor-${page.viewportSize()!.width}-colors`, false, true);
+  if (testInfo.project.name.startsWith('mobile')) {
+    await page.getByRole('button', { name: 'Prévia no computador' }).click();
+    await expect(page.getByRole('button', { name: 'Prévia no computador' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByText('Estilo e identidade', { exact: true })).toBeVisible();
+    await expect(page.locator('iframe[title="Prévia ao vivo do meu site"]')).toBeVisible();
+    await page.getByRole('button', { name: 'Prévia no celular' }).click();
+  }
+  await openEditorSection(page, 'Seções e ordem da página');
+  await page.getByLabel('Galeria', { exact: true }).evaluate(el => (el as HTMLInputElement).click());
   await page.getByRole('button', { name: 'Salvar rascunho', exact: true }).click();
-  await expect(page.getByRole('status')).toContainText('salvo neste navegador');
+  await expect(page.getByRole('status').filter({ hasText: 'salvo neste navegador' })).toBeVisible();
   await capture(page, `editor-${page.viewportSize()!.width}-controls`, true);
   await page.reload();
   await expect(page.getByLabel(/^Frase principal/)).toHaveValue('Um corte com a sua cara.');
-  if (testInfo.project.name.startsWith('mobile')) await page.getByRole('button', { name: 'Ver prévia ao vivo', exact: true }).click();
   await expect(preview.locator('#preview-gallery')).toHaveCount(0);
 });
 
@@ -236,7 +266,7 @@ test('painel autenticado: owner usa rascunho isolado por company_id e fallback i
   expect(calls).toContain('establishment_sites');
   const storage = await page.evaluate(() => Object.keys(localStorage).filter(key => key.startsWith('agendix:presence:')));
   expect(storage).toContain(`agendix:presence:draft:v1:${owner}`);
-  if (testInfo.project.name.startsWith('mobile')) await page.getByRole('button', { name: 'Ver prévia ao vivo', exact: true }).click();
+  await expect(page.getByLabel(/^Frase principal/)).toBeVisible();
   await expect(page.frameLocator('iframe[title="Prévia ao vivo do meu site"]').locator('h1')).toHaveText('Casa fictícia em Pinheiros.');
   await capture(page, `owner-editor-${page.viewportSize()!.width}-preview`, false, true);
   await capture(page, `owner-editor-${page.viewportSize()!.width}-full`, true);

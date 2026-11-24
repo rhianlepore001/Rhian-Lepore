@@ -63,6 +63,7 @@ describe('Ajustes do colaborador (conta staff nova)', () => {
       'Geral',
       'Mensagens do WhatsApp',
       'Agendamento',
+      'Meu site',
       'Equipe e Comissões',
       'Serviços',
       'Trazer meus dados',

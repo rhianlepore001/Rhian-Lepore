@@ -9,6 +9,16 @@
 
 ---
 
+## Presença — mescla com Site-Agendix (24 Nov 2026, draft)
+
+Branch `feat/site-estabelecimento`, PR #256. O fundador publicou uma direção melhor em `rhianlepore001/Site-Agendix`. O template mescla essa direção com o modelo configurável, demos, painel Meu site e iframe AgendiX. Sem Gemini, sem `server.ts`, sem chaves.
+
+Rodada Bob: hero/Serviços alinhados ao header no desktop; oferta do salão sem repetir título+condição (`offerDisplay`); faixa de demo discreta (eval a ignora); CTA do header oculto no celular quando a barra fixa existe; wordmark numa linha com presença; dobra mobile mostra indício de Serviços. Prints em `/opt/cursor/artifacts/presenca/comparacao/`. Eval 9,5/10 (faixa de demo desconsiderada).
+
+Rodada Rhian 17:24: primeira versão aprovada. Painel Meu site ganhou cor de fundo (recomendadas AgendiX + personalizada, contraste avisado/ajustado) e prévia ao vivo com celular/computador, sem perder os controles no telefone. Prints em `/opt/cursor/artifacts/presenca/painel/`. Eval do painel 9,6/10.
+
+Rodada Rhian 18:49: prévia no celular do dono maior (headline + lede visíveis, não mais faixa de ~150 px) e botão Ver em tela cheia com Voltar ao editor. Desktop intacto. Eval 9,6/10. E2E 24/24. Migration **não aplicada**. Login/cadastro/onboarding/Stripe/tracking intocados.
+
 ## Meta Pixel — engajamento da landing (23 Nov 2026, draft)
 
 Branch `cursor/meta-landing-engajamento-a592`. Amplia remarketing em `/#/landing`: SectionView, Scroll25/50/75/90, TimeOnPage15/30/60/120s, DemoStart/ScreenView/Complete (iframe via postMessage), NichoSwitch, FAQOpen, WhatsAppClick, CTAClick com `cta_position`. Edge `meta-capi` atualizada na allow-list (sem deploy neste PR). Cadastro: StartRegistration + Lead + CompleteRegistration já existentes; sem StartTrial. Verificações: typecheck/lint/build + testes Meta + e2e meta-pixel. Docs: `docs/meta-pixel.md`.
@@ -625,3 +635,8 @@ npm test             # Vitest
 *Para detalhes de segurança/auditoria sensíveis, consultar as notas privadas (fora do repo). Este arquivo é público.*
 
 - **Site oficial v2 + demo isolada (16 Nov 2026, PR rascunho #211):** branch nova `feat/site-oficial-v2`, base `ca252dea`; não continua #75. Raiz deslogada recebe landing, raiz autenticada preserva Dashboard/Layout. `/demo` usa facade Supabase em memória, dois tenants, sessão fictícia e páginas reais; cliente público também em memória. Login/Register intactos; callback de recuperação preservado; nenhuma migration/banco/produção. Verificações locais: typecheck, lint, build e pós-build passaram; 2.513 testes Vitest e 5 Playwright passaram. Revisão visual independente **reprovada**: landing 7,5/10, demo 8/10; Taste Gate FAIL 34. PR deve continuar rascunho até nova rodada visual autorizada. Arquitetura e limites em `docs/site-v2.md`; artefatos em `/workspace/artifacts/site-v2/`. PR: https://github.com/rhianlepore001/Rhian-Lepore/pull/211. O Git original está somente leitura, portanto os commits ficam na cópia `/workspace/artifacts/site-v2/git-submit`; os fontes permanecem em `/workspace/wt-site-v2`. Job E2E adicional de CI ficou em patch externo, pois a credencial OAuth não tem escopo workflow. `graphify update .` indisponível no ambiente.
+# Site do estabelecimento — Presença, rodada 1 (24 Nov 2026)
+
+MVP local na branch `feat/site-estabelecimento`, sem push, PR, deploy ou aplicação remota de migration. Demos fictícias: `/#/site/demo-corte-fino` (escuro), `/#/site/demo-studio-aurora` (claro); editor demonstrativo em `/#/site-demo/editor/barber` ou `beauty`. Ajustes → Meu site em `/#/configuracoes/meu-site`, somente dono. Site público com serviços detalhados e agendamento existente embutido; painel com prévia real, rascunho separado de publicação, fotos, oferta, seções, SEO e QR. Entitlement começa desativado; fallback local de rascunho permite conferir antes de aplicar SQL.
+
+Migration `20261124133813_establishment_sites.sql`, rollback e verify testados em PostgreSQL 17 isolado, incluindo RLS e allowlist pública. Não aplicar sem aprovação. SEO entregue no cliente e caminho isolado `/s/:slug`; HTML para crawler, OG no servidor, sitemap e provisionamento do Presença ainda exigem decisão. Documentação: `docs/presenca-site.md`. Typecheck/lint/build, 2.769 Vitest e 22 Playwright passaram; avaliação visual independente: 9,0 nas capturas. Limites: sem medição 4G real ou validação com fotos de celular muito ruins. Prints/relatório fora do repo em `/workspace/presenca-site/`. `graphify update .` indisponível neste ambiente.

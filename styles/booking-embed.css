@@ -1,0 +1,7 @@
+#booking-root[data-site-embed]{--color-bg:#161815;--color-card:#20231f;--color-surface:#292c26;--color-text:#f4f1e9;--color-text-secondary:#b8bcb2;--color-text-muted:#b8bcb2;--color-border:#3b3e37;--color-divider:#3b3e37;--color-input-bg:#20231f;--color-input-border:#3b3e37;--color-accent-dim:color-mix(in srgb,var(--color-accent) 12%,transparent);--color-card-hover:#292c26;--color-textSecondary:#b8bcb2;--color-textMuted:#b8bcb2;--safe-top:0px;min-height:100dvh}
+#booking-root[data-site-embed][data-appearance=light]{--color-bg:#f8f7f2;--color-card:#fff;--color-surface:#eeeee5;--color-text:#263e33;--color-text-secondary:#5d685e;--color-text-muted:#5d685e;--color-border:#c9cfc2;--color-divider:#c9cfc2;--color-input-bg:#fff;--color-input-border:#c9cfc2;--color-card-hover:#e3e7db;--color-textSecondary:#5d685e;--color-textMuted:#5d685e}
+#booking-root[data-site-embed]>div.fixed.inset-0{display:none}
+#booking-root[data-site-embed] main{padding-top:18px}
+#booking-root[data-site-embed] h2{font-size:1.5rem;line-height:1.25;text-transform:none;letter-spacing:-.02em}
+#booking-root[data-site-embed] ol{border-radius:6px}
+#booking-root[data-site-embed] button{box-shadow:none}

@@ -336,3 +336,27 @@ Componentes são **contidos e elegantes** — táteis o suficiente para o barbei
 - **Don't** animar width, height, top ou left. Apenas transform e opacity.
 - **Don't** usar hero-metric template: big number, small label, sparkline, gradient accent. SaaS cliché proibido pelo PRODUCT.md.
 - **Don't** usar `border-radius: 32px+` em cards, sections ou inputs. Cards: max 16–20px. Pills: full.
+
+## Presença — identidade do estabelecimento
+
+Superfície pública independente do sistema operacional, em modo de apresentação e venda. O dono escolhe a identidade da própria casa; os tokens do dashboard continuam nos componentes internos. O editor segue a organização de Ajustes, com campos progressivos e uma prévia real em iframe.
+
+Os dois estilos compartilham hierarquia e conteúdo: títulos em **Bodoni Moda 500** (`Presenca Display`, arquivo local) e texto em **Inter** (`Presenca Sans`, arquivo local). Títulos móveis de 32–39px, título desktop de 64px, texto principal de 16px; 12–14px para condições, metadados e controles. Marca em duas linhas: nome e tipo do estabelecimento. O menu só contém seções existentes.
+
+| Papel | Clássico escuro | Editorial claro |
+| --- | --- | --- |
+| Fundo | `#161815` | `#f8f7f2` |
+| Superfície | `#20231f` | `#eeeee5` |
+| Superfície secundária | `#292c26` | `#e3e7db` |
+| Texto | `#f4f1e9` | `#263e33` |
+| Texto secundário | `#b8bcb2` | `#5d685e` |
+| Borda | `#3b3e37` | `#c9cfc2` |
+| Acento de demonstração | `#C89B79` | `#294D40` |
+
+A cor do dono é ajustada automaticamente até atingir 4,5:1 contra todas as superfícies, pois também aparece em textos. O texto sobre botões é calculado entre preto e branco. O editor usa verde `#345c48`, papel `#f6f5f0`, texto `#283a30`, secundário `#626d64` e borda `#d7dcd2`.
+
+Fotos usam proporções fixas, `object-fit: cover`, saturação moderada e contraste consistente. O tratamento não altera o original. Gradiente só sobre as legendas para preservar leitura. Galeria e retratos ausentes não ganham fotos inventadas: uma equipe com vários nomes usa monogramas; equipe de uma pessoa sem foto fica oculta. Imagens que falham deixam a superfície de fundo estável, com informação e ações preservadas.
+
+O site tem cantos discretos: 3px nos botões, imagens retangulares, sem sombras decorativas. O editor usa 5–8px nos campos e grupos; o diálogo de agendamento usa 10px. Esse vocabulário pertence a esta superfície. A primeira dobra privilegia localização, oferta, preço e ação; permite o começo da seção de serviços aparecer cedo. Não exige um hero com altura de tela inteira.
+
+Entrada única de movimento no topo, desativada por `prefers-reduced-motion`. Nenhuma seção depende de animação para aparecer. Barra de agendamento fixa no celular, áreas seguras respeitadas. Agendamento em diálogo nativo com foco protegido, Escape e retorno de foco; o motor é o fluxo existente com contexto de serviço/profissional.

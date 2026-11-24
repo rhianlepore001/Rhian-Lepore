@@ -1,5 +1,7 @@
 import { useBookingStatusLive } from '../hooks/useBookingStatusLive';
 import { isDemoMode } from '../lib/demo/mode';
+import { accessibleAccent } from '../lib/establishment/model';
+import '../styles/booking-embed.css';
 import { matchesServiceSearch } from '../utils/serviceSearch';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useWhatsAppTemplates } from '../hooks/useWhatsAppTemplates';
@@ -118,6 +120,9 @@ export const PublicBooking: React.FC = () => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const proIdParam = searchParams.get('pro');
+    const embeddedSite = searchParams.get('embed') === 'site';
+    const embeddedAppearance = searchParams.get('appearance') === 'light' ? 'light' : 'dark';
+    const embeddedAccent = accessibleAccent(searchParams.get('brand') || '#C89B79', embeddedAppearance);
     const rebookParam = searchParams.get('rebook');
     const editParam = searchParams.get('edit');
 
@@ -223,10 +228,12 @@ export const PublicBooking: React.FC = () => {
         if (!business) return;
         const html = document.documentElement;
         html.setAttribute('data-theme', themeOverride);
-        if (!isDemoMode()) {
+        if (embeddedSite) {
+            html.setAttribute('data-mode', embeddedAppearance);
+        } else if (!isDemoMode()) {
             html.setAttribute('data-mode', themeOverride === 'beauty' ? 'light' : 'dark');
         }
-    }, [business, themeOverride]);
+    }, [business, themeOverride, embeddedSite, embeddedAppearance]);
 
     const accentTextOnAccent = 'text-[var(--color-on-accent)]';
     // Classes literais estáticas (variante interpolada não gera CSS no build estático do Tailwind)
@@ -973,7 +980,7 @@ export const PublicBooking: React.FC = () => {
     }
 
     return (
-        <div id="booking-root" className={`min-h-screen ${colors.bg} ${colors.text} ${selectionClasses} font-sans relative overflow-x-hidden pb-40 transition-colors duration-700`}>
+        <div id="booking-root" data-site-embed={embeddedSite || undefined} data-appearance={embeddedAppearance} style={embeddedSite ? { '--color-accent': embeddedAccent.background, '--color-on-accent': embeddedAccent.foreground } as React.CSSProperties : undefined} className={`min-h-screen ${colors.bg} ${colors.text} ${selectionClasses} font-sans relative overflow-x-hidden pb-40 transition-colors duration-700`}>
             {/* Background Texture Overlay */}
             <div className="fixed inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay bg-noise z-[1]" />
 
@@ -983,7 +990,7 @@ export const PublicBooking: React.FC = () => {
                 <div className={`absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full blur-[140px] bg-[var(--color-bg)]/40`}></div>
             </div>
 
-            <PublicBusinessHeader
+            {!embeddedSite && <PublicBusinessHeader
                 showThemeToggle={!isDemoMode()}
                 businessName={business.business_name}
                 logoUrl={business.logo_url}
@@ -998,13 +1005,13 @@ export const PublicBooking: React.FC = () => {
                 gallery={gallery}
                 clientSession={client}
                 businessSlug={slug}
-            />
+            />}
             {reviewsOpen && <PublicCustomerReviews open={reviewsOpen} onClose={() => setReviewsOpen(false)} query={customerReviews} />}
 
             {/* QUICK DIRECT FLOW */}
             {bookingMode === 'quick' && quickStep !== 'success' && !groupMode && (
                 <main ref={quickFlowRef} className="container relative z-10 mx-auto max-w-5xl px-3 pb-40 pt-4 md:px-6 md:pt-7">
-                    {quickStep === 'services' && bookingSections.length > 1 && (
+                    {!embeddedSite && quickStep === 'services' && bookingSections.length > 1 && (
                         <nav ref={catalogNavRef} aria-label="Explore o estabelecimento" className={`mb-5 flex gap-1 rounded-2xl border p-1 ${colors.card} ${colors.border}`}>
                             {bookingSections.map(({ id, label, icon: Icon }) => (
                                 <button

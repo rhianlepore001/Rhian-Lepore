@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { accessibleAccent, applySiteConfig, buildSeo, contrastRatio, defaultBackground, defaultConfig, formatPrice, isRecommendedBackground, neighborhoodFromAddress, normalizeSiteConfig, offerDisplay, photoObjectPosition, RECOMMENDED_BACKGROUNDS, resolvedBackground, sanitizePublicData, serializeJsonLd, siteSurface, visibleSections, type SiteData } from './model';
+import { accessibleAccent, applySiteConfig, buildSeo, contrastRatio, defaultBackground, defaultConfig, formatPrice, isRecommendedBackground, isReservedSiteSlug, neighborhoodFromAddress, normalizeSiteConfig, offerDisplay, photoObjectPosition, RECOMMENDED_BACKGROUNDS, resolvedBackground, sanitizePublicData, serializeJsonLd, siteSurface, visibleSections, type SiteData } from './model';
 
 const site: SiteData = { id: 'business', slug: 'navalha-fina', name: 'Navalha Fina', kind: 'barber', region: 'BR', demo: false, address: 'Rua dos Pinheiros, 100', hours: [], services: [{ id: 'cut', name: 'Corte', includes: [], duration: 30, price: 65 }], team: [], gallery: [], reviews: [], reviewCount: 0 };
 
@@ -117,11 +117,12 @@ describe('public allowlist', () => {
 
 describe('local SEO', () => {
   it('builds region-aware structured data without claiming Google ratings', () => {
-    const data = { ...site, rating: 4.8, reviewCount: 3 };
+    const data = { ...site, address: 'Rua Fradique Coutinho, 420 — Pinheiros, São Paulo', rating: 4.8, reviewCount: 3 };
     const seo = buildSeo(data, defaultConfig(data), 'https://example.com');
+    expect(seo.title).toBe('Navalha Fina — Barbearia em Pinheiros, São Paulo');
     expect(seo.url).toBe('https://example.com/#/site/navalha-fina');
     expect(seo.jsonLd['@type']).toBe('HairSalon');
-    expect(seo.jsonLd.address).toEqual({ '@type': 'PostalAddress', streetAddress: site.address, addressCountry: 'BR' });
+    expect(seo.jsonLd.address).toEqual({ '@type': 'PostalAddress', streetAddress: data.address, addressCountry: 'BR' });
     expect(seo.jsonLd.aggregateRating).toBeUndefined();
     expect(JSON.stringify(seo.jsonLd)).toContain('Corte');
     expect(buildSeo({ ...site, kind: 'beauty' }, defaultConfig(site), 'https://example.com').jsonLd['@type']).toBe('HairSalon');
@@ -186,5 +187,59 @@ describe('owner content overrides', () => {
     expect(result.instagram).toBe('minhacasa');
     expect(result.gallery).toEqual([{ src: 'https://example.com/work.jpg', alt: 'Meu trabalho' }]);
     expect(site.services[0].description).toBeUndefined();
+  });
+});
+
+describe('logo, visual presets, categories, club and CTA customization', () => {
+  it('supports custom logo, removal override, logoDisplay mode and rejects unsafe logo URLs', () => {
+    const withBaseLogo: SiteData = { ...site, logo: 'https://example.com/base-logo.png' };
+    const customConfig = normalizeSiteConfig({ logo: 'https://example.com/site-logo.webp', logoDisplay: 'logo' }, defaultConfig(withBaseLogo));
+    expect(customConfig.logo).toBe('https://example.com/site-logo.webp');
+    expect(customConfig.logoDisplay).toBe('logo');
+    expect(applySiteConfig(withBaseLogo, customConfig).logo).toBe('https://example.com/site-logo.webp');
+
+    const removedConfig = normalizeSiteConfig({ logoRemoved: true, logo: 'https://example.com/site-logo.webp' }, defaultConfig(withBaseLogo));
+    expect(removedConfig.logoRemoved).toBe(true);
+    expect(applySiteConfig(withBaseLogo, removedConfig).logo).toBeUndefined();
+
+    const unsafeLogo = normalizeSiteConfig({ logo: 'javascript:alert(1)' }, defaultConfig(withBaseLogo));
+    expect(unsafeLogo.logo).toBeUndefined();
+    expect(applySiteConfig(withBaseLogo, unsafeLogo).logo).toBe('https://example.com/base-logo.png');
+  });
+
+  it('supports 3 visual presets independent of business kind, CTA label and offer kind', () => {
+    const salonPreset = normalizeSiteConfig({ preset: 'salon', style: 'light', ctaLabel: 'Reservar meu horário', offer: { enabled: true, kind: 'combo', title: 'Combo Corte + Barba', condition: 'Terça a quinta' } }, defaultConfig(site));
+    expect(salonPreset.preset).toBe('salon');
+    expect(salonPreset.ctaLabel).toBe('Reservar meu horário');
+    expect(salonPreset.offer.kind).toBe('combo');
+    expect(defaultConfig(site).preset).toBe('urban');
+    expect(defaultConfig({ ...site, kind: 'beauty' }).preset).toBe('salon');
+  });
+
+  it('maps service categories and club plans via sanitizePublicData and hides empty club section', () => {
+    const data = sanitizePublicData({
+      profile: { id: 'a', business_slug: 'safe', business_name: 'Safe', instagram_handle: '@safe.barber' },
+      categories: [{ id: 'cat-1', name: 'Cabelo' }],
+      services: [{ id: 's1', name: 'Degradê', active: true, price: 50, duration_minutes: 30, category_id: 'cat-1' }],
+      clubPlans: [
+        { id: 'plan-1', name: 'Clube Mensal', description: 'Cortes ilimitados', price_cents: 12900, active: true, usage_limit_per_month: 4 },
+        { id: 'plan-off', name: 'Inativo', price_cents: 5000, active: false },
+      ],
+    });
+    expect(data.services[0].category).toBe('Cabelo');
+    expect(data.clubPlans).toHaveLength(1);
+    expect(data.clubPlans?.[0]).toMatchObject({ id: 'plan-1', name: 'Clube Mensal', priceCents: 12900, usageLimitPerMonth: 4 });
+    expect(visibleSections(data, defaultConfig(data)).map(s => s.id)).toContain('club');
+    expect(visibleSections({ ...data, clubPlans: [] }, defaultConfig(data)).map(s => s.id)).not.toContain('club');
+
+    const seo = buildSeo(data, defaultConfig(data), 'https://example.com');
+    expect(seo.jsonLd.sameAs).toEqual(['https://www.instagram.com/safe.barber/']);
+  });
+
+  it('blocks reserved product route slugs to prevent collisions', () => {
+    expect(isReservedSiteSlug('login')).toBe(true);
+    expect(isReservedSiteSlug('Configuracoes')).toBe(true);
+    expect(isReservedSiteSlug('minha-area')).toBe(true);
+    expect(isReservedSiteSlug('barbearia-corte-fino')).toBe(false);
   });
 });

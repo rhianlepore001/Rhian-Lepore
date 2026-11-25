@@ -173,19 +173,11 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({ children }) => {
                 {currentPageTitle}
               </h1>
             </div>
-            <NavLink
-              to="/"
-              className={`shrink-0 inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg ${colors.textSecondary} hover:text-theme-text hover:bg-[var(--color-card-hover)] active:animate-haptic-click`}
-              aria-label="Voltar ao início"
-              title="Voltar ao início"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </NavLink>
           </div>
           <MobileSettingsMenu key={location.pathname} menuItems={menuItems} activePath={currentPage?.path} />
         </div>
 
-        <div className="p-4 md:p-8 lg:px-10 flex-1 overflow-y-auto pb-28 md:pb-10 w-full">
+        <div className="p-4 md:p-8 lg:px-10 flex-1 pb-28 md:pb-10 w-full">
           <div className="w-full max-w-6xl xl:max-w-7xl">
             {children}
           </div>

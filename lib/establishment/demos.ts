@@ -4,20 +4,27 @@ const demoId = (beauty: boolean, n: number) => `d0000000-0000-4000-${beauty ? '8
 
 export const DEMO_SLUGS = ['demo-corte-fino', 'demo-studio-aurora', 'demo-barbearia-do-bairro'] as const;
 
-/** Casa fictícia com cadastro mínimo e fotos ruins de celular: prova de robustez do template. */
+/** Casa fictícia com cadastro mínimo e sem extras: prova de robustez do template. */
 function minimalDemo(): { data: SiteData; config: SiteConfig } {
   const data: SiteData = {
     id: 'demo-minimal', slug: 'demo-barbearia-do-bairro', name: 'Barbearia do Bairro', kind: 'barber', region: 'BR', demo: true,
-    cover: '/presenca/robustez/celular-escura.webp', address: 'Rua Exemplo, 100 — Vila Mariana, São Paulo',
+    cover: '/demo/barbearia/capa.webp', address: 'Rua Exemplo, 100 — Vila Mariana, São Paulo',
     hours: [{ day: 'Terça a sábado', hours: '10h às 19h' }, { day: 'Domingo e segunda', hours: 'Fechado' }],
     services: [
-      { id: 'd0000000-0000-4000-8003-000000000001', name: 'Corte', includes: [], duration: 40, price: 40, image: '/presenca/robustez/celular-baixa-resolucao.webp' },
+      { id: 'd0000000-0000-4000-8003-000000000001', name: 'Corte', includes: [], duration: 40, price: 40, image: '/demo/barbearia/servico-corte-masculino.webp' },
       { id: 'd0000000-0000-4000-8003-000000000002', name: 'Barba', includes: [], duration: 30, price: 30 },
     ],
     team: [{ id: 'd0000000-0000-4000-8003-000000000010', name: 'Zé Almeida' }],
     gallery: [], reviews: [], reviewCount: 0,
   };
-  return { data, config: { ...defaultConfig(data), headline: 'Barbearia na Vila Mariana.' } };
+  return {
+    data,
+    config: {
+      ...defaultConfig(data),
+      headline: 'Corte e barba com hora marcada',
+      about: 'Atendimento direto, sem fila e com preço transparente no seu horário.',
+    },
+  };
 }
 
 export function getDemoSite(slug: string): { data: SiteData; config: SiteConfig } | null {
@@ -29,19 +36,26 @@ export function getDemoSite(slug: string): { data: SiteData; config: SiteConfig 
   const data: SiteData = {
     id: beauty ? 'demo-beauty' : 'demo-barber', slug,
     name: beauty ? 'Studio Aurora' : 'Corte Fino', kind: beauty ? 'beauty' : 'barber', region: 'BR', demo: true,
+    logo: beauty ? '/presenca/demo-logo-salon.svg' : '/presenca/demo-logo-barber.svg',
     cover: beauty ? '/presenca/rhian/salon-hero.jpg' : '/presenca/rhian/barber-hero.jpg',
     phone: beauty ? '+55 (11) 3032-8810' : '+55 (11) 3062-4190',
     instagram: beauty ? '@studioaurora.sp' : '@cortefino',
     address: beauty ? 'Rua dos Pinheiros, 870 — Pinheiros, São Paulo' : 'Rua Fradique Coutinho, 420 — Pinheiros, São Paulo',
     hours: [{ day: 'Segunda a sexta', hours: '09h às 20h' }, { day: 'Sábado', hours: '09h às 18h' }, { day: 'Domingo', hours: 'Fechado' }],
     services: beauty ? [
-      { id: demoId(true, 20), name: 'Corte feminino', description: 'Um corte que respeita a textura do seu cabelo e acompanha o seu dia a dia. A gente conversa, entende e só então corta.', includes: ['Conversa sobre o seu cabelo', 'Lavagem e corte personalizado', 'Finalização e dicas de cuidado'], audience: 'Para renovar o visual sem abrir mão de ser você.', duration: 60, price: 120, image: photo('servico-corte-feminino') },
-      { id: demoId(true, 23), name: 'Mechas e luzes', description: 'Luminosidade na medida certa, com transições suaves e um plano de cuidado para manter os fios saudáveis.', includes: ['Diagnóstico e teste de mecha', 'Técnica de iluminação personalizada', 'Tonalização e finalização'], audience: 'Para quem quer iluminar os fios com um resultado natural.', duration: 120, price: 320, priceFrom: true, priceNote: 'O valor varia conforme comprimento e técnica. Confirmamos antes de começar.', image: photo('servico-mechas-luzes') },
-      { id: demoId(true, 24), name: 'Hidratação', description: 'Cuidado para devolver maciez, brilho e movimento aos fios. O tratamento é escolhido depois de avaliar seu cabelo.', includes: ['Avaliação dos fios', 'Tratamento de hidratação', 'Finalização'], audience: 'Para cabelos ressecados ou que precisam de uma pausa da química.', duration: 45, price: 90, image: photo('servico-hidratacao') },
+      { id: demoId(true, 20), name: 'Corte feminino', category: 'Corte', description: 'Um corte que respeita a textura do seu cabelo e acompanha o seu dia a dia. A gente conversa, entende e só então corta.', includes: ['Conversa sobre o seu cabelo', 'Lavagem e corte personalizado', 'Finalização e dicas de cuidado'], audience: 'Para renovar o visual sem abrir mão de ser você.', duration: 60, price: 120, image: photo('servico-corte-feminino') },
+      { id: demoId(true, 23), name: 'Mechas e luzes', category: 'Cor e mechas', description: 'Luminosidade na medida certa, com transições suaves e um plano de cuidado para manter os fios saudáveis.', includes: ['Diagnóstico e teste de mecha', 'Técnica de iluminação personalizada', 'Tonalização e finalização'], audience: 'Para quem quer iluminar os fios com um resultado natural.', duration: 120, price: 320, priceFrom: true, priceNote: 'O valor varia conforme comprimento e técnica. Confirmamos antes de começar.', image: photo('servico-mechas-luzes') },
+      { id: demoId(true, 24), name: 'Hidratação', category: 'Tratamento', description: 'Cuidado para devolver maciez, brilho e movimento aos fios. O tratamento é escolhido depois de avaliar seu cabelo.', includes: ['Avaliação dos fios', 'Tratamento de hidratação', 'Finalização'], audience: 'Para cabelos ressecados ou que precisam de uma pausa da química.', duration: 45, price: 90, image: photo('servico-hidratacao') },
     ] : [
-      { id: demoId(false, 20), name: 'Corte masculino', description: 'Do degradê ao clássico na tesoura. Um corte pensado para o seu rosto, seu cabelo e o jeito que você gosta de usar.', includes: ['Conversa sobre o corte', 'Corte na máquina e na tesoura', 'Acabamento e finalização'], audience: 'Para manter o corte em dia ou encontrar um novo estilo.', duration: 30, price: 45, image: photo('servico-corte-masculino') },
-      { id: demoId(false, 22), name: 'Corte + barba', description: 'O cuidado completo, no seu tempo. Corte com acabamento preciso e barba desenhada para valorizar o seu rosto.', includes: ['Corte personalizado', 'Barba com toalha quente', 'Acabamento na navalha e balm'], audience: 'Para sair com cabelo e barba alinhados em uma única visita.', duration: 60, price: 75, image: photo('servico-corte-barba') },
-      { id: demoId(false, 21), name: 'Barba', description: 'Desenho, alinhamento e cuidado com a pele. Toalha quente para preparar, navalha para definir e balm para finalizar.', includes: ['Desenho da barba', 'Toalha quente e navalha', 'Hidratação com balm'], audience: 'Para quem gosta de uma barba bem cuidada, curta ou cheia.', duration: 30, price: 35, image: photo('servico-barba') },
+      { id: demoId(false, 20), name: 'Corte masculino', category: 'Cabelo', description: 'Do degradê ao clássico na tesoura. Um corte pensado para o seu rosto, seu cabelo e o jeito que você gosta de usar.', includes: ['Conversa sobre o corte', 'Corte na máquina e na tesoura', 'Acabamento e finalização'], audience: 'Para manter o corte em dia ou encontrar um novo estilo.', duration: 30, price: 45, image: photo('servico-corte-masculino') },
+      { id: demoId(false, 22), name: 'Corte + barba', category: 'Combo', description: 'O cuidado completo, no seu tempo. Corte com acabamento preciso e barba desenhada para valorizar o seu rosto.', includes: ['Corte personalizado', 'Barba com toalha quente', 'Acabamento na navalha e balm'], audience: 'Para sair com cabelo e barba alinhados em uma única visita.', duration: 60, price: 75, image: photo('servico-corte-barba') },
+      { id: demoId(false, 21), name: 'Barba', category: 'Barba', description: 'Desenho, alinhamento e cuidado com a pele. Toalha quente para preparar, navalha para definir e balm para finalizar.', includes: ['Desenho da barba', 'Toalha quente e navalha', 'Hidratação com balm'], audience: 'Para quem gosta de uma barba bem cuidada, curta ou cheia.', duration: 30, price: 35, image: photo('servico-barba') },
+    ],
+    clubPlans: beauty ? [
+      { id: demoId(true, 90), name: 'Clube Aurora Cuidados', description: 'Para manter escova e hidratação em dia toda semana.', priceCents: 24900, usageLimitPerMonth: 4 },
+    ] : [
+      { id: demoId(false, 90), name: 'Clube Corte em Dia', description: 'Cortes semanais ou quinzenais com horário reservado (simulação).', priceCents: 13900, usageLimitPerMonth: 4 },
+      { id: demoId(false, 91), name: 'Clube Corte + Barba', description: 'Cabelo e barba sempre alinhados o mês inteiro (simulação).', priceCents: 21900, usageLimitPerMonth: 4 },
     ],
     team: (beauty ? ['Marina Costa', 'Luiza Martins', 'Ana Ribeiro'] : ['Rafael Costa', 'Lucas Mendes', 'André Lima']).map((name, i) => ({
       id: demoId(beauty, 30 + i),
@@ -71,7 +85,7 @@ export function getDemoSite(slug: string): { data: SiteData; config: SiteConfig 
   };
   data.services[beauty ? 0 : 1].featured = true;
   const config: SiteConfig = {
-    ...defaultConfig(data), style: 'light', background: beauty ? '#FFFFFF' : '#FBF7F0', accent: beauty ? '#3F4E41' : '#9A5628',
+    ...defaultConfig(data), preset: beauty ? 'salon' : 'editorial', style: 'light', background: beauty ? '#FFFFFF' : '#FBF7F0', accent: beauty ? '#3F4E41' : '#9A5628',
     headline: beauty
       ? 'Salão em Pinheiros dedicado à cor natural e ao cuidado do cabelo'
       : 'Barbearia em Pinheiros com corte preciso e horário respeitado',
@@ -83,16 +97,20 @@ export function getDemoSite(slug: string): { data: SiteData; config: SiteConfig 
       : 'Tesoura, navalha e agenda pontual até as 20h na Fradique Coutinho.',
     offer: {
       enabled: true,
+      kind: 'first_visit',
       title: beauty ? 'Hidratação de presente na primeira visita' : '15% de desconto na sua primeira visita',
       condition: beauty ? 'Ao agendar corte ou coloração.' : 'Válido para novos clientes de terça a quinta-feira em qualquer corte ou combo.',
       serviceId: data.services[beauty ? 0 : 1].id,
+    },
+    contact: {
+      addressNote: beauty ? 'Próximo à estação Faria Lima' : 'A 3 minutos do metrô Fradique Coutinho',
     },
     differences: beauty
       ? ['Orçamento transparente apresentado antes de iniciar qualquer coloração.', 'Atendimento individualizado com foco em crescimento suave da cor.', 'Consulta de 10 minutos antes de qualquer tesoura ou química.']
       : ['Atendimento rigorosamente no horário marcado — sem fila de espera.', 'Lâminas descartáveis e toalhas esterilizadas a cada cliente.', 'Horário estendido até 20h de segunda a sexta.', 'Garantia de ajuste gratuito em até 7 dias caso precise retocar.'],
     beforeAfter: beauty
       ? [{ before: photo('servico-corte-feminino'), after: '/presenca/rhian/salon-balayage.jpg', caption: 'Cor e movimento — fotos ilustrativas.' }]
-      : [{ before: '/presenca/rhian/barber-hero.jpg', after: '/presenca/rhian/barber-fade.jpg', caption: 'Degradê e alinhamento — fotos ilustrativas.' }],
+      : [{ before: photo('servico-corte-masculino'), after: '/presenca/rhian/barber-fade.jpg', caption: 'Degradê e alinhamento — fotos ilustrativas.' }],
     faq: [
       { question: 'Preciso agendar antes de ir?', answer: 'Sim. Escolha o serviço, o profissional e um horário disponível aqui no site. Assim, a gente reserva um tempo só para você.' },
       { question: 'E se eu precisar remarcar?', answer: 'Use o link enviado na confirmação. Na demonstração, a política é de até 2 horas antes do atendimento.' },

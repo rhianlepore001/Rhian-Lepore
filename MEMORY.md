@@ -9,6 +9,14 @@
 
 ---
 
+## Presença — site público completo e editor para leigos (25 Nov 2026, draft)
+
+Branch `feat/presenca-site-completo` (a partir da `main` `2563a7a5`). Entrega completa do módulo Presença alinhada ao PRD:
+- **Site público desconectado do AgendiX:** zero menções à marca no site, metadados e avisos legais próprios em diálogo nativo; suporte a **logo** (`Logo + nome`, `Só o logo`, fallback em erro e monograma sem logo), 3 presets independentes do nicho (`urban`, `editorial`, `salon`), filtro de categorias, lightbox na galeria, seção Clube com detalhes do plano, ponto de referência e cartão cartográfico de localização com link de rota (preservando CSP global em `vercel.json`) e embed de agendamento com paleta por preset/serviço.
+- **Painel Ajustes → Meu site para donos leigos:** gerenciador de **logo** (`LogoPicker` + `uploadSiteLogo` no bucket `logos` até 5 MB/512 px), prévia ao vivo celular/desktop/tela cheia sem travar o scroll mobile, checklist de completude, edição simplificada sem códigos técnicos expostos, prévia do Google, canais de compartilhamento e QR Code para baixar ou imprimir plaquinha.
+- **Qualidade e verificações:** revisões independentes de eficiência, segurança e eval visual aprovado com **9,6/10** em todas as 5 superfícies (320/390/768/1280, barber e beauty, claro e escuro); `typecheck`, `lint`, Vitest (365 arquivos / 2819 testes), `build`, Playwright E2E (26/26) e teste SQL em PostgreSQL 17 aprovados.
+- **Pendências para aprovação do Rhian:** aplicar migration `20261124133813_establishment_sites.sql` no ambiente remoto após revisão; decidir sobre Edge Function de SEO/meta tags para bots em `/s/:slug` e domínio próprio. Login, cadastro, onboarding e Stripe permaneceram intocados.
+
 ## Presença — mescla com Site-Agendix (24 Nov 2026, draft)
 
 Branch `feat/site-estabelecimento`, PR #256. O fundador publicou uma direção melhor em `rhianlepore001/Site-Agendix`. O template mescla essa direção com o modelo configurável, demos, painel Meu site e iframe AgendiX. Sem Gemini, sem `server.ts`, sem chaves.

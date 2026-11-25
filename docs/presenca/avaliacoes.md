@@ -1,3 +1,42 @@
+# Presença — avaliação e evolução do módulo
+
+Data mais recente: 25 Nov 2026. Branch `feat/presenca-site-completo`.
+
+## Rodada 25 Nov 2026 — site completo do estabelecimento + editor para donos leigos + logo
+
+Implementação completa dos requisitos do PRD do módulo Presença em duas frentes integradas:
+
+1. **Site público desconectado do AgendiX (visão do cliente final):**
+   - Zero referências à marca AgendiX no site público, metadados e diálogos legais próprios (`Privacidade` e `Termos` permanecem na página do estabelecimento, sem redirecionar para rotas globais).
+   - Suporte completo a **logo do estabelecimento** com modos **Logo + nome** (`both`), **Só o logo** (`logo`), fallback em erro de carregamento e monograma automático quando sem logo.
+   - Três estilos independentes do nicho (**Urbano preciso**, **Editorial clássico**, **Salão luminoso**), filtros de categoria horizontais no mobile, galeria com lightbox navegável, seção **Clube e planos** com diálogo de detalhes, mapa cartográfico interativo com rota externa sem `<iframe>` externo (preservando CSP global), e embed de agendamento herdando paleta e serviço selecionado.
+2. **Painel Ajustes → Meu site (visão do dono leigo + tema claro/escuro):**
+   - Gerenciador dedicado de **logo** (`LogoPicker` + `uploadSiteLogo` no bucket `logos`, até 5 MB e 512 px preservando transparência PNG/WebP) e galeria visual sem edição manual de URLs.
+   - Checklist interativo de completude com progresso e atalhos para blocos pendentes, prévia ao vivo celular/computador/tela cheia, sem jargão técnico (sem `#hex` exposto na edição rápida, sem nomes duplicados de estilo).
+   - Prévia fiel do resultado no Google, conferência de dados locais, links de compartilhamento (WhatsApp, Instagram, Google, link direto) e **QR Code** com download e plaquinha para impressão.
+
+### Eval UI/UX independente (Rodada 3 — mobile 320/390 primeiro, 768 e 1280, claro e escuro)
+
+| Superfície | Nota | Leitura |
+|---|---|---|
+| Site público — Barber / Editorial (`320`, `390`, `768`, `1280` + serviço) | **9,6/10** | Wordmark sem barra cortada, monograma, mapa cartográfico, banner final contrastado, grade do clube e dobra mobile completa. |
+| Site público — Beauty (`320`, `390`, `768`, `1280` + serviço) | **9,6/10** | Paleta clara luminosa sem vazamento de outros nichos, chips de categoria sem quebra e card do clube equilibrado. |
+| Site público — Cadastro Mínimo (`390`, `1280`) | **9,6/10** | Foto nítida, monograma de marca, texto direto sem repetição de bairro e mapa escuro coerente. |
+| Fluxo de Agendamento Embutido (`390`, `1280` — Barber & Beauty) | **9,6/10** | Tokens por estilo e nicho preservados na reserva sem cortar chips nem ocultar o resumo inferior. |
+| Painel "Meu site" — Editor Demo e Autenticado Claro/Escuro (`390`, `1280`) | **9,6/10** | Mobile rola livremente (tela cheia sob demanda), logo contido no fundo quadriculado, zero `#hex` cru, prévia sticky no desktop e QR Code completo. |
+
+**Média final:** **9,6/10** (**APROVADO**).
+
+### Revisões independentes e verificações
+
+- **Revisor de eficiência** e **validador crítico** concluídos antes da rodada final (hardening de validação de upload, isolamento `company_id`, sanitização de URLs/JSON-LD, diálogo nativo próprio para documentos legais e otimização de `postMessage` e memoizações).
+- `npm run typecheck`, `npm run lint`, `npm test -- --run` (365 arquivos, 2819 testes), `npm run build` (`check-bundle-strings` incluso).
+- `npx playwright test --config e2e/establishment/playwright.config.ts` — 26/26 (320, 390, 768 e 1280; demo e autenticado claro/escuro).
+- `scripts/test-sql-establishment-sites.sh` no PostgreSQL 17 local — PASS (isolamento multi-tenant, permissões, entitlement, allowlist e rollback 2x).
+- Migration `supabase/migrations/20261124133813_establishment_sites.sql` **não aplicada em produção**; `Login`, `Register`, onboarding e Stripe intocados.
+
+---
+
 # Presença — avaliação da mescla com Site-Agendix
 
 Data: 24 Nov 2026. Branch `feat/site-estabelecimento`. PR #256 (draft). Referência do fundador: `rhianlepore001/Site-Agendix` (main). Prints: `/opt/cursor/artifacts/presenca/rhian-ref/` (dele), `/opt/cursor/artifacts/presenca/comparacao/` (dele vs mesclado) e `/opt/cursor/artifacts/presenca/painel/` (Meu site + prévia).

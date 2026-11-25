@@ -30,12 +30,16 @@ describe('public site reads', () => {
       if (name === 'get_public_profile_by_slug') return { data: { id: 'company-a', business_slug: 'safe', business_name: 'Safe' }, error: null };
       if (name === 'get_public_establishment_site') return { data: { config: { style: 'light' } }, error: null };
       expect(args.p_business_id).toBe('company-a');
-      if (name === 'get_public_services_catalog') return { data: [{ id: 'cut', name: 'Corte', price: 50, duration_minutes: 30, active: true }], error: null };
+      if (name === 'get_public_categories_catalog') return { data: [{ id: 'cat-1', name: 'Cortes' }], error: null };
+      if (name === 'get_public_services_catalog') return { data: [{ id: 'cut', name: 'Corte', price: 50, duration_minutes: 30, category_id: 'cat-1', active: true }], error: null };
+      if (name === 'get_public_membership_plans') return { data: [{ id: 'plan-1', name: 'Plano Mensal', price_cents: 9900, active: true }], error: null };
       if (name === 'get_public_team_catalog') return { data: [], error: { message: 'offline' } };
       return { data: null, error: null };
     });
     const result = await loadSite('safe');
     expect(result?.services[0].name).toBe('Corte');
+    expect(result?.services[0].category).toBe('Cortes');
+    expect(result?.clubPlans?.[0].name).toBe('Plano Mensal');
     expect(result?.team).toEqual([]);
     expect(result?.config?.style).toBe('light');
     expect(rpc.mock.calls.map(call => call[0])).not.toContain('get_available_slots_v2');
@@ -84,6 +88,7 @@ describe('owner draft adapter', () => {
     expect(await saveOwnerSiteDraft('company-a', result.config)).toEqual({ storage: 'remote' });
     expect(table.update).toHaveBeenCalledWith({ draft_config: result.config });
     expect(table.update.mock.calls[0][0]).not.toHaveProperty('published');
+    expect(loadSiteDraft('company-a', defaultConfig(empty)).headline).toBe('Meu site');
   });
   it('falls back locally only when the unapplied schema is missing', async () => {
     table.maybeSingle.mockResolvedValue({ data: null, error: { code: 'PGRST205' } });
@@ -107,16 +112,17 @@ describe('owner draft adapter', () => {
 
 
 describe('owner publication adapter', () => {
-  it('publishes a separate snapshot for the authenticated tenant', async () => {
-    table.single.mockResolvedValue({ data: { company_id: 'company-a' }, error: null });
+  it('publishes a separate snapshot for the authenticated tenant and syncs draft', async () => {
+    table.maybeSingle.mockResolvedValue({ data: { company_id: 'company-a' }, error: null });
     const config = defaultConfig(empty);
     await publishOwnerSite('company-a', config);
-    expect(table.update).toHaveBeenCalledWith({ published_config: config, published: true });
+    expect(table.update).toHaveBeenCalledWith({ draft_config: config, published_config: config, published: true });
     expect(table.eq).toHaveBeenCalledWith('company_id', 'company-a');
     expect(table.update.mock.calls[0][0]).not.toHaveProperty('presence_enabled');
+    expect(loadSiteDraft('company-a', defaultConfig(empty)).headline).toBe(config.headline);
   });
   it('surfaces server entitlement denial instead of claiming publication', async () => {
-    table.single.mockResolvedValue({ data: null, error: { code: '23514', message: 'entitlement denied' } });
+    table.maybeSingle.mockResolvedValue({ data: null, error: { code: '23514', message: 'entitlement denied' } });
     await expect(publishOwnerSite('company-a', defaultConfig(empty))).rejects.toMatchObject({ code: '23514' });
     expect(localStorage.length).toBe(0);
   });

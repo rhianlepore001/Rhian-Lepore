@@ -38,8 +38,10 @@ export function EstablishmentSite() {
       element.content = content;
       cleanups.push(() => { if (created) element?.remove(); else if (element) element.content = previous || ''; });
     };
+    const ogImage = (!site.config.coverRemoved && (site.config.cover || site.data.cover)) || (!site.config.logoRemoved && (site.config.logo || site.data.logo));
     meta('description', seo.description); meta('og:title', document.title, true); meta('og:description', seo.description, true); meta('og:url', window.location.href, true); meta('og:type', 'website', true);
-    if (site.config.cover || site.data.cover) meta('og:image', new URL(site.config.cover || site.data.cover!, window.location.origin).href, true);
+    meta('twitter:card', 'summary_large_image'); meta('twitter:title', document.title); meta('twitter:description', seo.description);
+    if (ogImage) meta('og:image', new URL(ogImage, window.location.origin).href, true);
     if (site.data.demo) meta('robots', 'noindex, nofollow');
     const previousCanonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
     const canonical = document.createElement('link'); canonical.rel = 'canonical'; canonical.href = `${window.location.origin}/s/${encodeURIComponent(slug)}${serviceId ? `/servico/${encodeURIComponent(serviceId)}` : ''}`;
@@ -48,7 +50,7 @@ export function EstablishmentSite() {
     else document.head.append(canonical);
     const json = document.createElement('script'); json.type = 'application/ld+json'; json.textContent = serializeJsonLd(seo.jsonLd); document.head.append(json);
     return () => { document.title = previousTitle; json.remove(); cleanups.forEach(fn => fn()); if (previousCanonical) previousCanonical.href = previousHref || ''; else canonical.remove(); };
-  }, [site, serviceId]);
+  }, [site, serviceId, slug]);
   if (status !== 'ready' || !site) return <div className="es-load" role="status"><h1>{status === 'loading' ? 'Preparando sua visita…' : status === 'error' ? 'Não foi possível abrir o site.' : 'Este site ainda não está disponível.'}</h1>{status === 'error' && <button onClick={() => window.location.reload()}>Tentar novamente</button>}{status === 'missing' && <a href={`/#/book/${encodeURIComponent(slug)}`}>Ir para o agendamento</a>}</div>;
   return <SiteView data={site.data} config={site.config} serviceId={serviceId} />;
 }

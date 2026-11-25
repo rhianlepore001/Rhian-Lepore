@@ -1,8 +1,24 @@
 export type SiteKind = 'barber' | 'beauty' | 'studio';
 export type SiteStyle = 'dark' | 'light';
-export type SectionId = 'services' | 'differences' | 'gallery' | 'beforeAfter' | 'team' | 'reviews' | 'faq' | 'location';
+export type SitePreset = 'urban' | 'editorial' | 'salon';
+export type LogoDisplayMode = 'both' | 'logo';
+export type OfferKind = 'first_visit' | 'featured' | 'combo' | 'club';
+export type SectionId = 'services' | 'differences' | 'gallery' | 'beforeAfter' | 'team' | 'reviews' | 'club' | 'faq' | 'location';
 export type PhotoFocus = 'center' | 'top' | 'bottom' | 'work' | 'space';
 export interface PhotoPosition { x: number; y: number }
+
+export const RESERVED_SITE_SLUGS = new Set([
+  'login', 'register', 'landing', 'termos', 'privacidade', 'agenda', 'dashboard',
+  'configuracoes', 'book', 'site', 'site-preview', 'site-demo', 's', 'pro', 'clube',
+  'minha-area', 'queue', 'queue-status', 'avaliar', 'demo', 'demo-preview', 'api',
+  'assets', 'onboarding', 'onboarding-wizard', 'staff-onboarding', 'forgot-password',
+  'update-password', 'fila', 'clientes', 'produtos', 'financeiro', 'insights',
+  'meus-insights', 'resultados-por-hora', 'club-demo',
+]);
+
+export function isReservedSiteSlug(slug: string): boolean {
+  return RESERVED_SITE_SLUGS.has(slug.trim().toLowerCase());
+}
 
 export const FOCUS_PRESETS: Record<PhotoFocus, PhotoPosition> = {
   center: { x: 50, y: 50 },
@@ -28,6 +44,7 @@ export function photoObjectPosition(config: Pick<SiteConfig, 'photoFocus' | 'pho
 export interface SiteService {
   id: string;
   name: string;
+  category?: string;
   description?: string;
   includes: string[];
   audience?: string;
@@ -37,6 +54,16 @@ export interface SiteService {
   priceNote?: string;
   image?: string;
   featured?: boolean;
+}
+
+export interface SiteClubPlan {
+  id: string;
+  name: string;
+  description?: string;
+  priceCents: number;
+  usageLimitPerMonth?: number;
+  badgeColor?: string;
+  image?: string;
 }
 
 export interface SiteData {
@@ -54,6 +81,7 @@ export interface SiteData {
   cancellationPolicy?: string;
   hours: Array<{ day: string; hours: string }>;
   services: SiteService[];
+  clubPlans?: SiteClubPlan[];
   team: Array<{ id: string; name: string; bio?: string; image?: string }>;
   gallery: Array<{ src: string; alt: string }>;
   reviews: Array<{ id: string; name?: string; rating: number; comment: string }>;
@@ -95,13 +123,25 @@ export function resolvedBackground(config: Pick<SiteConfig, 'style'> & { backgro
   return hexColor(config.background) ?? defaultBackground(config.style, kind);
 }
 
+export function resolvedPreset(config: Pick<SiteConfig, 'style' | 'preset'>, kind: SiteKind): SitePreset {
+  if (config.preset === 'urban' || config.preset === 'editorial' || config.preset === 'salon') return config.preset;
+  if (config.style === 'dark') return 'urban';
+  return kind === 'beauty' ? 'salon' : 'editorial';
+}
+
 export interface SiteConfig {
   style: SiteStyle;
+  preset?: SitePreset;
   accent: string;
   background: string;
   headline: string;
   about: string;
-  offer: { enabled: boolean; title: string; condition: string; serviceId?: string; expires?: string };
+  ctaLabel?: string;
+  logo?: string;
+  logoRemoved?: boolean;
+  logoDisplay?: LogoDisplayMode;
+  coverRemoved?: boolean;
+  offer: { enabled: boolean; kind?: OfferKind; title: string; condition: string; serviceId?: string; expires?: string };
   differences: string[];
   faq: Array<{ question: string; answer: string }>;
   sections: Array<{ id: SectionId; enabled: boolean }>;
@@ -118,7 +158,7 @@ export interface SiteConfig {
   beforeAfter?: Array<{ before: string; after: string; caption?: string }>;
 }
 
-const sectionIds: SectionId[] = ['services', 'differences', 'gallery', 'beforeAfter', 'team', 'reviews', 'faq', 'location'];
+const sectionIds: SectionId[] = ['services', 'differences', 'gallery', 'beforeAfter', 'team', 'reviews', 'club', 'faq', 'location'];
 const kinds: Record<SiteKind, string> = { barber: 'Barbearia', beauty: 'Salão de beleza', studio: 'Estúdio' };
 
 export function placeFromAddress(address: string): string {
@@ -148,14 +188,16 @@ function defaultAbout(data: SiteData): string {
 }
 
 export function defaultConfig(data: SiteData): SiteConfig {
-  const style = data.kind === 'beauty' ? 'light' : 'dark';
+  const preset: SitePreset = data.kind === 'beauty' ? 'salon' : 'urban';
+  const style: SiteStyle = preset === 'urban' ? 'dark' : 'light';
   return {
     style,
+    preset,
     accent: style === 'dark' ? '#9A5628' : '#3F4E41',
     background: defaultBackground(style, data.kind),
     headline: defaultHeadline(data),
     about: defaultAbout(data),
-    offer: { enabled: false, title: '', condition: '' },
+    offer: { enabled: false, kind: 'first_visit', title: '', condition: '' },
     differences: [],
     faq: data.cancellationPolicy ? [{ question: 'Como funciona o cancelamento?', answer: data.cancellationPolicy }] : [],
     sections: sectionIds.map(id => ({ id, enabled: true })),
@@ -172,6 +214,7 @@ export function visibleSections(data: SiteData, config: SiteConfig): SiteConfig[
     beforeAfter: (config.beforeAfter ?? []).some(pair => Boolean(pair.before && pair.after)),
     team: data.team.length > 1 || data.team.some(member => Boolean(member.image)),
     reviews: data.reviews.some(review => review.comment.trim().length > 0),
+    club: (data.clubPlans ?? []).length > 0,
     faq: config.faq.some(item => Boolean(item.question.trim() && item.answer.trim())),
     location: Boolean(data.address.trim() || data.hours.length),
   };
@@ -236,8 +279,8 @@ export function siteSurface(background: string, style: SiteStyle): SiteSurface {
   }
   const adjusted = page.toLowerCase() !== chosen.toLowerCase() || ink.toLowerCase() !== styleInk.toLowerCase() || contrastRatio(chosen, styleInk) < 4.5;
   const body = mixHex(ink, page, 0.18);
-  const mutedCandidate = mixHex(ink, page, 0.38);
-  const muted = contrastRatio(page, mutedCandidate) >= 3 ? mutedCandidate : mixHex(ink, page, 0.22);
+  const mutedCandidate = mixHex(ink, page, 0.28);
+  const muted = contrastRatio(page, mutedCandidate) >= 4.5 ? mutedCandidate : (contrastRatio(page, body) >= 4.5 ? body : ink);
   return {
     background: page,
     ink,
@@ -293,20 +336,23 @@ export function offerDisplay(offer: Pick<SiteConfig['offer'], 'title' | 'conditi
 }
 
 export function buildSeo(sourceData: SiteData, config: SiteConfig, origin: string) {
-  const data = applySiteConfig(sourceData, config);
+  const normalized = normalizeSiteConfig(config, defaultConfig(sourceData));
+  const data = applyNormalizedSiteConfig(sourceData, normalized);
   const root = new URL(origin).origin;
   const url = `${root}/#/site/${encodeURIComponent(data.slug)}`;
-  const title = config.seoTitle.trim() || `${data.name} — ${kinds[data.kind]}${data.address ? ` em ${data.address}` : ''}`;
-  const description = config.seoDescription.trim() || `${config.headline} ${data.services.length ? `Conheça os serviços, preços e profissionais de ${data.name}. Agende seu horário online.` : `Conheça ${data.name} e reserve seu horário.`}`;
+  const place = placeFromAddress(data.address);
+  const title = normalized.seoTitle.trim() || `${data.name} — ${kinds[data.kind]}${place ? ` em ${place}` : ''}`;
+  const description = normalized.seoDescription.trim() || `${normalized.headline} ${data.services.length ? `Conheça os serviços, preços e profissionais de ${data.name}. Agende seu horário online.` : `Conheça ${data.name} e reserve seu horário.`}`;
   const jsonLd: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': data.kind === 'studio' ? 'LocalBusiness' : 'HairSalon',
     name: data.name,
     url,
     description,
-    ...(safeImageUrl(config.cover || data.cover) ? { image: safeImageUrl(config.cover || data.cover) } : {}),
+    ...(safeImageUrl(normalized.cover || data.cover) ? { image: safeImageUrl(normalized.cover || data.cover) } : {}),
     ...(data.phone ? { telephone: data.phone } : {}),
-    ...(data.logo ? { logo: data.logo } : {}),
+    ...(safeImageUrl(data.logo) ? { logo: safeImageUrl(data.logo) } : {}),
+    ...(data.instagram ? { sameAs: [`https://www.instagram.com/${data.instagram.replace(/^@/, '').replace(/[^a-z0-9._]/gi, '')}/`] } : {}),
     ...(data.services.length ? { priceRange: `${formatPrice(Math.min(...data.services.map(service => service.price)), data.region)}–${formatPrice(Math.max(...data.services.map(service => service.price)), data.region)}` } : {}),
     ...(data.hours.length ? { openingHours: structuredHours(data.hours) } : {}),
     ...(data.address ? { address: { '@type': 'PostalAddress', streetAddress: data.address, addressCountry: data.region } } : {}),
@@ -355,23 +401,41 @@ function normalizeHours(value: unknown): SiteData['hours'] {
   });
 }
 
-export function sanitizePublicData(input: { profile: unknown; settings?: unknown; services?: unknown; team?: unknown; gallery?: unknown; reviews?: unknown }): SiteData {
+export function sanitizePublicData(input: { profile: unknown; settings?: unknown; services?: unknown; categories?: unknown; team?: unknown; gallery?: unknown; reviews?: unknown; clubPlans?: unknown }): SiteData {
   const profile = row(Array.isArray(input.profile) ? input.profile[0] : input.profile);
   const settings = row(input.settings);
   const reviews = row(input.reviews);
   const name = text(profile.business_name, 120);
   const kind: SiteKind = profile.user_type === 'beauty' ? 'beauty' : profile.user_type === 'studio' ? 'studio' : 'barber';
+  const categoryNames = new Map<string, string>();
+  for (const cat of rows(input.categories)) {
+    const catId = text(cat.id, 100);
+    const catName = text(cat.name, 80);
+    if (catId && catName) categoryNames.set(catId, catName);
+  }
   return {
     id: text(profile.id, 100), slug: text(profile.business_slug, 100), name, kind,
     region: profile.region === 'PT' ? 'PT' : 'BR', demo: false,
     logo: safeImageUrl(profile.logo_url), cover: safeImageUrl(profile.cover_photo_url),
     address: text(profile.address_street, 300), phone: text(profile.phone, 40) || undefined,
-    instagram: text(profile.instagram_handle, 100).replace(/^@/, '') || undefined,
+    instagram: text(profile.instagram_handle, 100).replace(/^@/, '').replace(/[^a-z0-9._]/gi, '') || undefined,
     cancellationPolicy: text(settings.client_cancel_policy_text || settings.cancellation_policy) || undefined,
     hours: normalizeHours(settings.business_hours),
-    services: rows(input.services).filter(service => service.active !== false && text(service.id) && text(service.name) && number(service.price) !== undefined && (number(service.price) ?? -1) >= 0 && (number(service.duration_minutes) ?? 0) > 0).map(service => ({
-      id: text(service.id, 100), name: text(service.name, 160), description: text(service.description, 1500) || undefined,
-      includes: [], duration: number(service.duration_minutes)!, price: number(service.price)!, image: safeImageUrl(service.image_url),
+    services: rows(input.services).filter(service => service.active !== false && text(service.id) && text(service.name) && number(service.price) !== undefined && (number(service.price) ?? -1) >= 0 && (number(service.duration_minutes) ?? 0) > 0).map(service => {
+      const catId = text(service.category_id, 100);
+      return {
+        id: text(service.id, 100), name: text(service.name, 160), category: catId ? categoryNames.get(catId) : undefined, description: text(service.description, 1500) || undefined,
+        includes: [], duration: number(service.duration_minutes)!, price: number(service.price)!, image: safeImageUrl(service.image_url),
+      };
+    }),
+    clubPlans: rows(input.clubPlans).filter(plan => plan.active !== false && text(plan.id) && text(plan.name) && number(plan.price_cents) !== undefined && (number(plan.price_cents) ?? -1) >= 0).map(plan => ({
+      id: text(plan.id, 100),
+      name: text(plan.name, 120),
+      description: text(plan.description, 600) || undefined,
+      priceCents: number(plan.price_cents)!,
+      usageLimitPerMonth: number(plan.usage_limit_per_month),
+      badgeColor: text(plan.badge_color, 24) || undefined,
+      image: safeImageUrl(plan.photo_path),
     })),
     team: rows(input.team).filter(member => member.active === true && !member.deleted_at && text(member.id) && text(member.name || member.full_name)).map(member => ({ id: text(member.id, 100), name: text(member.name || member.full_name, 120), bio: text(member.bio, 500) || undefined, image: safeImageUrl(member.photo_url) })),
     gallery: rows(input.gallery).filter(photo => photo.active !== false && safeImageUrl(photo.image_url)).map(photo => ({ src: safeImageUrl(photo.image_url)!, alt: `Trabalho e espaço de ${name}` })),
@@ -385,13 +449,22 @@ export function normalizeSiteConfig(input: unknown, fallback: SiteConfig): SiteC
   const source = row(input);
   const offer = row(source.offer);
   const sections = rows(source.sections).filter(section => sectionIds.includes(section.id as SectionId) && typeof section.enabled === 'boolean').map(section => ({ id: section.id as SectionId, enabled: section.enabled as boolean }));
+  const preset: SitePreset | undefined = source.preset === 'urban' || source.preset === 'editorial' || source.preset === 'salon' ? source.preset : fallback.preset;
+  const style: SiteStyle = source.style === 'dark' || source.style === 'light' ? source.style : fallback.style;
+  const offerKind: OfferKind | undefined = offer.kind === 'first_visit' || offer.kind === 'featured' || offer.kind === 'combo' || offer.kind === 'club' ? offer.kind : fallback.offer.kind;
   return {
-    style: source.style === 'dark' || source.style === 'light' ? source.style : fallback.style,
+    style,
+    ...(preset ? { preset } : {}),
     accent: /^#[0-9a-f]{6}$/i.test(text(source.accent)) ? text(source.accent) : fallback.accent,
     background: hexColor(source.background) ?? fallback.background,
     headline: typeof source.headline === 'string' ? text(source.headline, 180) : fallback.headline,
     about: typeof source.about === 'string' ? text(source.about, 2000) : fallback.about,
-    offer: typeof source.offer === 'object' && source.offer ? { enabled: offer.enabled === true, title: text(offer.title, 180), condition: text(offer.condition, 300), serviceId: text(offer.serviceId, 100) || undefined, expires: /^\d{4}-\d{2}-\d{2}$/.test(text(offer.expires)) ? text(offer.expires) : undefined } : fallback.offer,
+    ...(typeof source.ctaLabel === 'string' && text(source.ctaLabel, 60) ? { ctaLabel: text(source.ctaLabel, 60) } : {}),
+    ...(safeImageUrl(source.logo) ? { logo: safeImageUrl(source.logo) } : {}),
+    ...(source.logoRemoved === true ? { logoRemoved: true } : {}),
+    ...(source.logoDisplay === 'logo' || source.logoDisplay === 'both' ? { logoDisplay: source.logoDisplay } : {}),
+    ...(source.coverRemoved === true ? { coverRemoved: true } : {}),
+    offer: typeof source.offer === 'object' && source.offer ? { enabled: offer.enabled === true, ...(offerKind ? { kind: offerKind } : {}), title: text(offer.title, 180), condition: text(offer.condition, 300), serviceId: text(offer.serviceId, 100) || undefined, expires: /^\d{4}-\d{2}-\d{2}$/.test(text(offer.expires)) ? text(offer.expires) : undefined } : fallback.offer,
     differences: Array.isArray(source.differences) ? source.differences.filter((value): value is string => typeof value === 'string').slice(0, 8).map(value => text(value, 250)) : fallback.differences,
     faq: Array.isArray(source.faq) ? rows(source.faq).slice(0, 12).map(item => ({ question: text(item.question, 200), answer: text(item.answer, 1500) })) : fallback.faq,
     sections: sections.length ? sections.filter((section, index) => sections.findIndex(item => item.id === section.id) === index).concat(sectionIds.flatMap(id => sections.some(section => section.id === id) ? [] : [{ id, enabled: true }])) : fallback.sections,
@@ -434,20 +507,24 @@ function normalizeContact(input: unknown): NonNullable<SiteConfig['contact']> {
   const contact = row(input);
   return {
     ...(typeof contact.phone === 'string' ? { phone: text(contact.phone, 40) } : {}),
-    ...(typeof contact.instagram === 'string' ? { instagram: text(contact.instagram, 100).replace(/^@/, '') } : {}),
+    ...(typeof contact.instagram === 'string' ? { instagram: text(contact.instagram, 100).replace(/^@/, '').replace(/[^a-z0-9._]/gi, '') } : {}),
     ...(typeof contact.addressNote === 'string' ? { addressNote: text(contact.addressNote, 300) } : {}),
   };
 }
 
-export function applySiteConfig(data: SiteData, config: SiteConfig): SiteData {
-  const normalized = normalizeSiteConfig(config, defaultConfig(data));
+export function applyNormalizedSiteConfig(data: SiteData, normalized: SiteConfig): SiteData {
   return {
     ...data,
-    cover: normalized.cover || data.cover,
+    logo: normalized.logoRemoved ? undefined : (normalized.logo || data.logo),
+    cover: normalized.coverRemoved ? undefined : (normalized.cover || data.cover),
     ...(normalized.contact?.phone !== undefined ? { phone: normalized.contact.phone || undefined } : {}),
     ...(normalized.contact?.instagram !== undefined ? { instagram: normalized.contact.instagram || undefined } : {}),
     gallery: normalized.gallery ?? data.gallery,
     services: data.services.map(service => ({ ...service, ...normalized.serviceDetails?.[service.id] })),
     team: data.team.map(member => ({ ...member, ...normalized.teamDetails?.[member.id] })),
   };
+}
+
+export function applySiteConfig(data: SiteData, config: SiteConfig): SiteData {
+  return applyNormalizedSiteConfig(data, normalizeSiteConfig(config, defaultConfig(data)));
 }

@@ -7,6 +7,7 @@
 export const DEFAULT_CHECKOUT_ORIGINS = [
   "https://www.agendixstudio.com",
   "https://agendixstudio.com",
+  "https://rhian-lepore.vercel.app",
   "http://localhost:5173",
   "http://localhost:3000",
   "http://127.0.0.1:5173",
@@ -32,16 +33,8 @@ export function isAllowedReturnUrl(url: unknown, allowedOrigins: Set<string>): b
   } catch {
     return false;
   }
-  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
-  if (allowedOrigins.has(parsed.origin)) return true;
-  if (
-    parsed.protocol === "https:" &&
-    parsed.origin.endsWith(".vercel.app") &&
-    parsed.origin.includes("rhian-lepore")
-  ) {
-    return true;
-  }
-  return false;
+  return (parsed.protocol === "http:" || parsed.protocol === "https:")
+    && !parsed.username && !parsed.password && allowedOrigins.has(parsed.origin);
 }
 
 export function isAllowedCheckoutMode(mode: unknown): boolean {

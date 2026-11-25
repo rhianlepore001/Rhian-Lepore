@@ -40,12 +40,15 @@ describe('checkoutAllowlist (A-06)', () => {
     expect(isAllowedReturnUrl('http://localhost:5173/#/settings', origins)).toBe(true);
     expect(isAllowedReturnUrl('https://evil.example/phish', origins)).toBe(false);
     expect(isAllowedReturnUrl('javascript:alert(1)', origins)).toBe(false);
-    expect(
-      isAllowedReturnUrl(
-        'https://rhian-lepore-git-fix-alto-a06-xxx-rhians-projects-df168429.vercel.app/#/',
-        origins,
-      ),
-    ).toBe(true);
+    expect(isAllowedReturnUrl('blob:https://agendixstudio.com/example', origins)).toBe(false);
+    expect(isAllowedReturnUrl('https://rhian-lepore.vercel.app/#/', origins)).toBe(true);
+    expect(isAllowedReturnUrl('https://login@agendixstudio.com/#/', origins)).toBe(false);
+  });
+
+  it('accepts a preview host only when its exact origin was configured', () => {
+    const preview = 'https://rhian-lepore-preview.vercel.app';
+    expect(isAllowedReturnUrl(`${preview}/#/`, origins)).toBe(false);
+    expect(isAllowedReturnUrl(`${preview}/#/`, collectAllowedOrigins(preview))).toBe(true);
   });
 
   it('only allows subscription mode', () => {

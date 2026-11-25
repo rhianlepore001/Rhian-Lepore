@@ -10,7 +10,6 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
     billingUpdateFromEvent,
     configuredPriceIds,
-    type ProfileMatch,
     type StripeEventLike,
 } from "../_shared/billing.ts";
 import { verifyStripeSignature } from "../_shared/stripeSignature.ts";
@@ -25,10 +24,15 @@ function serviceClient(): SupabaseClient {
     return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 
-async function findProfileId(sb: SupabaseClient, m: ProfileMatch): Promise<string | null> {
-    const { data, error } = await sb.from("profiles").select("id").eq(m.by, m.value).limit(1).maybeSingle();
-    if (error) throw error;
-    return data?.id ?? null;
+function isStripeEvent(event: unknown): event is StripeEventLike & { livemode: boolean } {
+    if (!event || typeof event !== "object") return false;
+    const value = event as Partial<StripeEventLike>;
+    return typeof value.id === "string" && /^evt_[A-Za-z0-9_]+$/.test(value.id)
+        && typeof value.type === "string" && value.type.length > 0 && value.type.length <= 128
+        && typeof value.livemode === "boolean"
+        && typeof value.created === "number" && Number.isSafeInteger(value.created)
+        && value.created > 0 && value.created < 8_640_000_000_000
+        && !!value.data?.object && typeof value.data.object === "object" && !Array.isArray(value.data.object);
 }
 
 serve(async (req) => {
@@ -40,59 +44,41 @@ serve(async (req) => {
         return json(500, { error: "misconfigured" });
     }
 
+    const signature = req.headers.get("stripe-signature");
+    if (!signature) return json(400, { error: "invalid_signature" });
     const payload = await req.text();
-    const ok = await verifyStripeSignature(payload, req.headers.get("stripe-signature"), secret);
+    const ok = await verifyStripeSignature(payload, signature, secret);
     if (!ok) return json(400, { error: "invalid_signature" });
 
-    let event: StripeEventLike;
+    let event: unknown;
     try {
         event = JSON.parse(payload);
     } catch {
         return json(400, { error: "invalid_payload" });
     }
-
-    const sb = serviceClient();
-
-    // Idempotency: claim the event id first; duplicates are acknowledged with 200.
-    const { error: claimError } = await sb.from("stripe_webhook_events").insert({
-        event_id: event.id,
-        event_type: event.type,
-        livemode: event.livemode ?? null,
-    });
-    if (claimError) {
-        if (claimError.code === "23505") return json(200, { received: true, duplicate: true });
-        console.error("claim failed", claimError.message);
-        return json(500, { error: "claim_failed" });
-    }
+    if (!isStripeEvent(event)) return json(400, { error: "invalid_payload" });
 
     try {
         const prices = configuredPriceIds((k) => Deno.env.get(k));
         const update = billingUpdateFromEvent(event, (id) => prices.get(id)?.planId ?? null);
         if (update.kind === "ignore") return json(200, { received: true, result: update.reason });
 
-        let profileId: string | null = null;
-        for (const m of [update.match, ...update.fallbackMatches]) {
-            profileId = await findProfileId(sb, m);
-            if (profileId) break;
-        }
-        if (!profileId) {
-            console.warn("profile_not_found", event.id, event.type);
-            return json(200, { received: true, result: "profile_not_found" });
-        }
-
-        // Only apply if this event is not older than the last one applied (out-of-order safety).
-        const { data: updated, error } = await sb
-            .from("profiles")
-            .update({ ...update.patch, stripe_billing_event_at: update.eventAt, updated_at: new Date().toISOString() })
-            .eq("id", profileId)
-            .or(`stripe_billing_event_at.is.null,stripe_billing_event_at.lte.${update.eventAt}`)
-            .select("id");
+        const matches = [update.match, ...update.fallbackMatches];
+        const { data: result, error } = await serviceClient().rpc("apply_stripe_billing_event", {
+            p_event_id: event.id,
+            p_event_type: event.type,
+            p_livemode: event.livemode,
+            p_event_at: update.eventAt,
+            p_profile_id: matches.find((match) => match.by === "id")?.value ?? null,
+            p_subscription_id: matches.find((match) => match.by === "stripe_subscription_id")?.value ?? null,
+            p_patch: update.patch,
+        });
         if (error) throw error;
-        return json(200, { received: true, result: updated?.length ? "ok" : "stale_event" });
-    } catch (err) {
-        console.error("handler_failed", event.id, err instanceof Error ? err.message : err);
-        // Release the claim so Stripe's retry can reprocess.
-        await sb.from("stripe_webhook_events").delete().eq("event_id", event.id);
+        if (result === "duplicate") return json(200, { received: true, duplicate: true });
+        if (result === "profile_not_found" || result === "profile_conflict") console.warn(result, event.id);
+        return json(200, { received: true, result });
+    } catch {
+        console.error("handler_failed", event.id);
         return json(500, { error: "handler_failed" });
     }
 });

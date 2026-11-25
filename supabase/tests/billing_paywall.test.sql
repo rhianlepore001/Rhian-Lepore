@@ -5,7 +5,7 @@ CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SEL
 CREATE OR REPLACE FUNCTION auth.role() RETURNS text LANGUAGE sql STABLE AS $$ SELECT COALESCE(NULLIF(current_setting('test.role', true), ''), 'authenticated') $$;
 DO $$ BEGIN CREATE ROLE anon; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 DO $$ BEGIN CREATE ROLE authenticated; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-DO $$ BEGIN CREATE ROLE service_role; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE ROLE service_role BYPASSRLS; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 CREATE TABLE public.profiles (
   id text PRIMARY KEY, role text, company_id text,
   subscription_status text DEFAULT 'trial', subscription_plan text,
@@ -16,6 +16,7 @@ CREATE FUNCTION public.protect_profile_identity() RETURNS trigger LANGUAGE plpgs
 CREATE TRIGGER protect_profile_identity BEFORE UPDATE ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION public.protect_profile_identity();
 
+\i supabase/migrations/20261013103427_protect_profile_billing.sql
 \i supabase/migrations/20261105100000_stripe_billing_webhook_paywall.sql
 
 INSERT INTO public.profiles (id, role, company_id, subscription_status, trial_ends_at) VALUES
@@ -62,6 +63,7 @@ EXCEPTION WHEN raise_exception THEN
 END $$;
 RESET ROLE;
 
+\i supabase/tests/secure_stripe_billing.test.sql
 \i docs/rollbacks/20261105100000_stripe_billing_webhook_paywall.rollback.sql
 DO $$ BEGIN
   ASSERT to_regclass('public.stripe_webhook_events') IS NULL;

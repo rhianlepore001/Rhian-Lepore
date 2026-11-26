@@ -251,6 +251,8 @@ const AppRoutes: React.FC = () => {
         <Route path="/book/:slug" element={<PublicBooking />} />
         <Route path="/site/:slug" element={<EstablishmentSite />} />
         <Route path="/site/:slug/servico/:serviceId" element={<EstablishmentSite />} />
+        <Route path="/s/:slug" element={<EstablishmentSite />} />
+        <Route path="/s/:slug/servico/:serviceId" element={<EstablishmentSite />} />
         <Route path="/avaliar/:token" element={<PublicReview />} />
         <Route path="/queue/:slug" element={<QueueJoin />} />
         <Route path="/queue-status/:id" element={<QueueStatus />} />

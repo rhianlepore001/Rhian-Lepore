@@ -9,6 +9,30 @@
 
 ---
 
+## Presença — entrega final pós-revisão do PR #258 (26 Nov 2026, draft)
+
+Branch `feat/presenca-site-completo`, PR #258 (draft). Fechamento completo da revisão técnica e visual:
+- **SEO/OG via Vercel (`api/site-seo.ts` + `vercel.json` autorizados nesta branch) e `supabase/config.toml`:** rewrites `/sitemap.xml`, `/s/:slug` e `/s/:slug/servico/:serviceId` servem o HTML/XML pré-renderizado com `Content-Type`, cache e headers de segurança preservando o SPA fallback `/((?!assets/)(?!api/).*)`. `instagram_handle` adicionado ao pré-renderizado; JWT explicitado em `supabase/config.toml` (`publish-establishment-site` com JWT; `serve-establishment-site` sem JWT).
+- **Segurança de mídia, Storage e rascunho:** validação travada exclusivamente no projeto `lcqwrngscsziysyfhpfj.supabase.co` e buckets reais (`galleries`, `membership_plan_photos`); limpeza segura de logos substituídos/removidos também ao salvar rascunho (protegendo eventual logo publicado até nova publicação) e aviso de alterações não salvas na navegação interna dentro do `<HashRouter>`.
+- **Polimento UX e fotos demo:** nova hero da barbearia sem letreiro deformado e pares antes/depois coerentes com a mesma pessoa em cada nicho (`public/presenca/rhian/*`); Passo 1 unificado em "Estilo e fundo do site", prévia clara do logo sobre o fundo real do topo e Passo 4 focado em publicar, link, QR Code e Google.
+- **Auditoria e notas finais:** auditoria de segurança **APROVADA** (0 P0/P1); eval visual independente (Rodada 7) **APROVADO** com **9,64/10** de média (Barber **9,7**, Beauty **9,7**, Cadastro Mínimo **9,6**, Agendamento **9,6**, Painel "Meu site" **9,6**). Migration v2 não aplicada em produção; `20261124133813_establishment_sites.sql`, `SettingsLayout.tsx`, login, cadastro, onboarding e Stripe intocados.
+
+## Presença — revisão pós-PR #258 e pré-render SEO `/s/:slug` (26 Nov 2026, draft)
+
+Branch `feat/presenca-site-completo`, PR #258 (draft). Rodada de correções sobre os 13 itens da revisão independente:
+- **Banco e Storage:** `20261124133813_establishment_sites.sql` e `components/SettingsLayout.tsx` restaurados exatamente como na `main`. Nova migration `20261125180000_establishment_sites_v2.sql` (+ rollback e testes SQL no PG17 local, **não aplicada em produção**): `get_public_establishment_site` completa, lista estendida de slugs reservados (`admin`, `app`, `www`, `blog` etc.), validação para uploads próprios no Storage (URL externa removida do editor; remoção segura de logos antigos após publicação), gravação da origem (`?origem=`) no agendamento online e RPC de sitemap.
+- **SEO pré-renderizado `/s/:slug`:** `lib/establishment/prerender.ts`, Edge Functions `publish-establishment-site` e `serve-establishment-site`, `public/presenca/site-boot.js` e canonical/compartilhamento em `/s/:slug`; `vercel.json` **não** foi alterado (proposta documentada em `docs/presenca/seo-prerender.md` aguardando OK explícito do Rhian). Guia operacional de liberação manual em `docs/presenca/ativacao-manual.md`.
+- **UI/UX e fotos demo:** fotos demo em `public/presenca/rhian/` convertidas para WebP (54–144 KB); barbearia com identidade urbana escura própria; antes/depois com fotos distintas; editor simplificado em 4 passos (`1. Visual`, `2. Textos`, `3. Fotos`, `4. Divulgar`), aviso de alterações não salvas e apenas 1 estilo marcado `Recomendada` por nicho; prévia ao vivo estabilizada com `transform: scale`.
+- **Auditoria e notas finais:** auditoria independente de segurança **APROVADA**; eval visual independente (Rodada 6, mobile 390/320 e desktop 1280, claro/escuro) **APROVADO** com **9,58/10** de média (**9,6/10** nas 4 superfícies públicas/agendamento e **9,5/10** no Painel "Meu site"). Login, cadastro, onboarding e Stripe permaneceram intocados.
+
+## Presença — site público completo e editor para leigos (25 Nov 2026, draft)
+
+Branch `feat/presenca-site-completo` (a partir da `main` `2563a7a5`). Entrega completa do módulo Presença alinhada ao PRD:
+- **Site público desconectado do AgendiX:** zero menções à marca no site, metadados e avisos legais próprios em diálogo nativo; suporte a **logo** (`Logo + nome`, `Só o logo`, fallback em erro e monograma sem logo), 3 presets independentes do nicho (`urban`, `editorial`, `salon`), filtro de categorias, lightbox na galeria, seção Clube com detalhes do plano, ponto de referência e cartão cartográfico de localização com link de rota (preservando CSP global em `vercel.json`) e embed de agendamento com paleta por preset/serviço.
+- **Painel Ajustes → Meu site para donos leigos:** gerenciador de **logo** (`LogoPicker` + `uploadSiteLogo` no bucket `logos` até 5 MB/512 px), prévia ao vivo celular/desktop/tela cheia sem travar o scroll mobile, checklist de completude, edição simplificada sem códigos técnicos expostos, prévia do Google, canais de compartilhamento e QR Code para baixar ou imprimir plaquinha.
+- **Qualidade e verificações:** revisões independentes de eficiência, segurança e eval visual aprovado com **9,6/10** em todas as 5 superfícies (320/390/768/1280, barber e beauty, claro e escuro); `typecheck`, `lint`, Vitest (365 arquivos / 2819 testes), `build`, Playwright E2E (26/26) e teste SQL em PostgreSQL 17 aprovados.
+- **Pendências para aprovação do Rhian:** aplicar migration `20261124133813_establishment_sites.sql` no ambiente remoto após revisão; decidir sobre Edge Function de SEO/meta tags para bots em `/s/:slug` e domínio próprio. Login, cadastro, onboarding e Stripe permaneceram intocados.
+
 ## Presença — mescla com Site-Agendix (24 Nov 2026, draft)
 
 Branch `feat/site-estabelecimento`, PR #256. O fundador publicou uma direção melhor em `rhianlepore001/Site-Agendix`. O template mescla essa direção com o modelo configurável, demos, painel Meu site e iframe AgendiX. Sem Gemini, sem `server.ts`, sem chaves.

@@ -122,9 +122,13 @@ export const PublicBooking: React.FC = () => {
     const proIdParam = searchParams.get('pro');
     const embeddedSite = searchParams.get('embed') === 'site';
     const embeddedAppearance = searchParams.get('appearance') === 'light' ? 'light' : 'dark';
+    const embeddedPreset = searchParams.get('preset');
     const embeddedAccent = accessibleAccent(searchParams.get('brand') || '#C89B79', embeddedAppearance);
-    const rebookParam = searchParams.get('rebook');
+    const rebookParam = searchParams.get('rebook') || searchParams.get('service');
     const editParam = searchParams.get('edit');
+    const rawOriginParam = (searchParams.get('origem') || '').trim().toLowerCase();
+    const referralSource = (['instagram', 'google', 'qr', 'site'] as const).find(item => item === rawOriginParam)
+        ?? (embeddedSite ? 'site' : undefined);
 
     const cancelBookingMutation = useCancelPublicBooking();
     const findActiveBookingMutation = useFindActivePublicBooking();
@@ -797,6 +801,7 @@ export const PublicBooking: React.FC = () => {
                 originalAppointmentTime: originalTimeISO,
                 productLines: [],
                 reviewToken: !editingBookingId && !isDemoMode() ? globalThis.crypto?.randomUUID?.() : undefined,
+                referralSource,
             });
 
             setActiveBooking(booking);
@@ -980,7 +985,7 @@ export const PublicBooking: React.FC = () => {
     }
 
     return (
-        <div id="booking-root" data-site-embed={embeddedSite || undefined} data-appearance={embeddedAppearance} style={embeddedSite ? { '--color-accent': embeddedAccent.background, '--color-on-accent': embeddedAccent.foreground } as React.CSSProperties : undefined} className={`min-h-screen ${colors.bg} ${colors.text} ${selectionClasses} font-sans relative overflow-x-hidden pb-40 transition-colors duration-700`}>
+        <div id="booking-root" data-site-embed={embeddedSite || undefined} data-appearance={embeddedAppearance} data-preset={embeddedSite ? embeddedPreset || undefined : undefined} style={embeddedSite ? { '--color-accent': embeddedAccent.background, '--color-on-accent': embeddedAccent.foreground } as React.CSSProperties : undefined} className={`min-h-screen ${colors.bg} ${colors.text} ${selectionClasses} font-sans relative overflow-x-hidden pb-40 transition-colors duration-700`}>
             {/* Background Texture Overlay */}
             <div className="fixed inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay bg-noise z-[1]" />
 
@@ -1105,7 +1110,7 @@ export const PublicBooking: React.FC = () => {
 
                             <div className="flex items-center gap-2">
                                 <div className="min-w-0 flex-1">
-                                    <input type="search" aria-label={publicProducts.length ? 'Buscar serviço ou produto' : 'Buscar serviço'} placeholder={publicProducts.length ? 'Buscar serviço ou produto' : 'Buscar serviço'} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className={classes.input} />
+                                    <input type="search" aria-label={publicProducts.length ? 'Buscar serviço ou produto' : 'Buscar serviço'} placeholder={embeddedSite || !publicProducts.length ? 'Buscar serviço…' : 'Buscar serviço ou produto'} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className={classes.input} />
                                 </div>
                                 {!editingBookingId && professionals.length > 0 && services.length > 0 && (
                                     <button
@@ -1123,18 +1128,18 @@ export const PublicBooking: React.FC = () => {
                             {/* Category Filters */}
                             {categories.length > 0 && (
                                 <div className={`p-1.5 ${colors.card} ${colors.border} border rounded-2xl backdrop-blur-xl`}>
-                                    <div className="w-full flex gap-2 overflow-x-auto pb-2 pt-1 px-1 scrollbar-thin">
+                                    <div className="w-full flex flex-wrap gap-2 p-1">
                                         <button type="button" aria-pressed={activeCategory === 'all'} onClick={() => setActiveCategory('all')}
-                                            className={`px-5 md:px-8 py-2.5 rounded-xl text-xs font-black uppercase tracking-[0.15em] transition-all duration-200 ${activeCategory === 'all'
-                                                    ? `${accent.bg} ${accentTextOnAccent} scale-105 ${shadow.button}`
+                                            className={`px-4 md:px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-[0.12em] transition-all duration-200 whitespace-nowrap ${activeCategory === 'all'
+                                                    ? `${accent.bg} ${accentTextOnAccent} ${shadow.button}`
                                                     : `${colors.textMuted} hover:bg-[var(--color-card-hover)]`
                                                 }`}>
                                             Todos
                                         </button>
                                         {categories.map(cat => (
                                             <button key={cat.id} type="button" aria-pressed={activeCategory === cat.id} onClick={() => setActiveCategory(cat.id)}
-                                                className={`px-5 md:px-8 py-2.5 rounded-xl border text-xs font-black uppercase tracking-[0.15em] transition-all duration-200 ${activeCategory === cat.id
-                                                        ? `${accent.bg} ${accentTextOnAccent} scale-105 ${shadow.button}`
+                                                className={`px-4 md:px-6 py-2.5 rounded-xl border text-xs font-bold uppercase tracking-[0.12em] transition-all duration-200 whitespace-nowrap ${activeCategory === cat.id
+                                                        ? `${accent.bg} ${accentTextOnAccent} ${shadow.button}`
                                                         : `${colors.textMuted} ${colors.border} hover:bg-[var(--color-card-hover)]`
                                                     }`}>
                                                 {cat.name}
@@ -2154,6 +2159,7 @@ export const PublicBooking: React.FC = () => {
             {groupMode && businessId && (
                 <PublicGroupBooking
                     businessId={businessId}
+                    referralSource={referralSource}
                     userType={business?.user_type}
                     isBeauty={isBeauty}
                     currencyRegion={currencyRegion}

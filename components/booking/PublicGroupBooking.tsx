@@ -63,6 +63,7 @@ interface Person {
 
 interface Props {
   businessId: string;
+  referralSource?: 'instagram' | 'google' | 'qr' | 'site';
   userType?: string | null;
   isBeauty: boolean;
   currencyRegion: Region;
@@ -97,7 +98,7 @@ type GroupStep = 'people' | 'schedule' | 'confirm' | 'success';
 const newPerson = (): Person => ({ key: crypto.randomUUID(), name: '', serviceIds: [], professionalId: '' });
 
 export const PublicGroupBooking: React.FC<Props> = ({
-  businessId, userType, isBeauty, currencyRegion, timezone, services, categories, professionals,
+  businessId, referralSource, userType, isBeauty, currencyRegion, timezone, services, categories, professionals,
   isLoggedIn, customerName, setCustomerName, customerPhone, setCustomerPhone,
   acceptedPolicy, setAcceptedPolicy, inlinePolicy, onOpenPolicy, autoConfirm, onBooked,
   onOpenClientArea, onExit, buildWhatsAppHref, maxPeople = 5,
@@ -217,6 +218,7 @@ export const PublicGroupBooking: React.FC<Props> = ({
         reviewTokens: typeof globalThis.crypto?.randomUUID === 'function' ? people.map(() => crypto.randomUUID()) : undefined,
         customerName: customerName.trim(),
         customerPhone,
+        referralSource,
         appointmentTime: zonedDateTimeToIso(dateStr, selectedTime, timezone),
         people: people.map((person, index) => ({
           attendeeName: index === 0 ? null : person.name.trim(),

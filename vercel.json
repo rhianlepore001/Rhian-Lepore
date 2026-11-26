@@ -13,7 +13,19 @@
     ],
     "rewrites": [
         {
-            "source": "/((?!assets/).*)",
+            "source": "/sitemap.xml",
+            "destination": "/api/site-seo?kind=sitemap"
+        },
+        {
+            "source": "/s/:slug/servico/:serviceId",
+            "destination": "/api/site-seo?kind=service&slug=:slug&serviceId=:serviceId"
+        },
+        {
+            "source": "/s/:slug",
+            "destination": "/api/site-seo?kind=site&slug=:slug"
+        },
+        {
+            "source": "/((?!assets/)(?!api/).*)",
             "destination": "/index.html"
         }
     ],

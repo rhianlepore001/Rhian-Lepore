@@ -46,6 +46,7 @@ export const submitPublicBookingInputSchema = z.object({
   originalAppointmentTime: z.string().nullish(),
   productLines: z.array(publicBookingProductLineSchema).optional().default([]),
   reviewToken: z.string().uuid().optional(),
+  referralSource: z.enum(['instagram', 'google', 'qr', 'site']).optional(),
 });
 
 export const submitPublicGroupBookingInputSchema = z.object({
@@ -54,6 +55,7 @@ export const submitPublicGroupBookingInputSchema = z.object({
   customerPhone: z.string().trim().min(1),
   appointmentTime: z.string().min(1),
   reviewTokens: z.array(z.string().uuid()).optional(),
+  referralSource: z.enum(['instagram', 'google', 'qr', 'site']).optional(),
   people: z.array(z.object({
     attendeeName: z.string().trim().min(1).max(80).nullable(),
     professionalId: z.string().min(1),

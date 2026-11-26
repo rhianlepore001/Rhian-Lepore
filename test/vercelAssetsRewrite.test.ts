@@ -3,7 +3,8 @@ import vercel from '../vercel.json';
 
 /** Espelha a intenção do rewrite: paths /assets/* NÃO devem casar. */
 function spaRewriteMatches(pathname: string): boolean {
-  const source = (vercel.rewrites?.[0]?.source ?? '') as string;
+  const spaRule = vercel.rewrites?.find((entry) => entry.destination === '/index.html');
+  const source = (spaRule?.source ?? '') as string;
   // Vercel usa path-to-regexp; aqui validamos a negativa (?!assets/)
   expect(source).toContain('(?!assets/)');
   if (pathname.startsWith('/assets/')) return false;

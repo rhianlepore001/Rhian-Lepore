@@ -1,8 +1,11 @@
 import { supabase } from '@/lib/supabase';
-import { defaultConfig, normalizeSiteConfig, sanitizePublicData, type SiteConfig, type SiteData } from '@/lib/establishment/model';
+import { loadSiteDraft, saveSiteDraft, siteDraftKey } from '@/lib/establishment/draft';
+import { defaultConfig, isReservedSiteSlug, normalizeSiteConfig, safeImageUrl, sanitizePublicData, type SiteConfig, type SiteData } from '@/lib/establishment/model';
+
+export { loadSiteDraft, saveSiteDraft };
 
 export async function loadSite(slug: string, options: { preview?: boolean } = {}): Promise<SiteData | null> {
-  if (!/^[a-z0-9][a-z0-9_-]{0,99}$/i.test(slug)) return null;
+  if (!/^[a-z0-9][a-z0-9_-]{0,99}$/i.test(slug) || (!options.preview && isReservedSiteSlug(slug))) return null;
   let publishedConfig: unknown;
   if (!options.preview) {
     const published = await supabase.rpc('get_public_establishment_site', { p_slug: slug });
@@ -21,32 +24,18 @@ export async function loadSite(slug: string, options: { preview?: boolean } = {}
   const results = await Promise.allSettled([
     supabase.rpc('get_public_business_settings_json', { p_business_id: businessId }),
     supabase.rpc('get_public_services_catalog', { p_business_id: businessId }),
+    supabase.rpc('get_public_categories_catalog', { p_business_id: businessId }),
     supabase.rpc('get_public_team_catalog', { p_business_id: businessId }),
     supabase.rpc('get_public_gallery_catalog', { p_business_id: businessId }),
     supabase.rpc('get_public_customer_reviews', { p_business_id: businessId, p_offset: 0 }),
+    supabase.rpc('get_public_membership_plans', { p_business_id: businessId }),
   ]);
   const publicValue = (index: number) => {
     const result = results[index];
     return result.status === 'fulfilled' && !result.value.error ? result.value.data : undefined;
   };
-  const data = sanitizePublicData({ profile, settings: publicValue(0), services: publicValue(1), team: publicValue(2), gallery: publicValue(3), reviews: publicValue(4) });
+  const data = sanitizePublicData({ profile, settings: publicValue(0), services: publicValue(1), categories: publicValue(2), team: publicValue(3), gallery: publicValue(4), reviews: publicValue(5), clubPlans: publicValue(6) });
   return { ...data, config: publishedConfig ? normalizeSiteConfig(publishedConfig, defaultConfig(data)) : undefined };
-}
-
-function draftKey(companyId: string): string {
-  if (!companyId.trim()) throw new Error('A empresa é necessária para salvar o rascunho.');
-  return `agendix:presence:draft:v1:${encodeURIComponent(companyId)}`;
-}
-
-export function loadSiteDraft(companyId: string, fallback: SiteConfig): SiteConfig {
-  try {
-    const stored = localStorage.getItem(draftKey(companyId));
-    return stored ? normalizeSiteConfig(JSON.parse(stored), fallback) : fallback;
-  } catch { return fallback; }
-}
-
-export function saveSiteDraft(companyId: string, config: SiteConfig): void {
-  localStorage.setItem(draftKey(companyId), JSON.stringify(config));
 }
 
 export interface OwnerSiteDraft {
@@ -54,22 +43,44 @@ export interface OwnerSiteDraft {
   storage: 'local' | 'remote';
   published: boolean;
   presenceEnabled: boolean;
+  publishedLogo?: string;
 }
 
 function missingSiteTable(error: { code?: string } | null): boolean {
   return error?.code === '42P01' || error?.code === 'PGRST205';
 }
 
+function activePublishedLogo(publishedConfig: unknown, fallbackLogo?: string): string | undefined {
+  if (!publishedConfig || typeof publishedConfig !== 'object' || Array.isArray(publishedConfig)) {
+    return safeImageUrl(fallbackLogo);
+  }
+  const record = publishedConfig as Record<string, unknown>;
+  if (record.logoRemoved === true) return undefined;
+  return safeImageUrl(record.logo) || safeImageUrl(fallbackLogo);
+}
+
 export async function loadOwnerSite(companyId: string, fallback: SiteConfig): Promise<OwnerSiteDraft> {
-  draftKey(companyId);
-  const { data, error } = await supabase.from('establishment_sites').select('draft_config,published,presence_enabled').eq('company_id', companyId).maybeSingle();
+  siteDraftKey(companyId);
+  const { data, error } = await supabase
+    .from('establishment_sites')
+    .select('draft_config,published_config,published,presence_enabled')
+    .eq('company_id', companyId)
+    .maybeSingle();
   if (missingSiteTable(error)) return { config: loadSiteDraft(companyId, fallback), storage: 'local', published: false, presenceEnabled: false };
   if (error) throw error;
-  return { config: data ? normalizeSiteConfig(data.draft_config, fallback) : fallback, storage: 'remote', published: data?.published === true, presenceEnabled: data?.presence_enabled === true };
+  if (!data) return { config: loadSiteDraft(companyId, fallback), storage: 'remote', published: false, presenceEnabled: false };
+  const published = data.published === true;
+  return {
+    config: normalizeSiteConfig(data.draft_config, fallback),
+    storage: 'remote',
+    published,
+    presenceEnabled: data.presence_enabled === true,
+    publishedLogo: published ? activePublishedLogo(data.published_config, fallback.logo) : undefined,
+  };
 }
 
 export async function saveOwnerSiteDraft(companyId: string, config: SiteConfig): Promise<{ storage: 'local' | 'remote' }> {
-  draftKey(companyId);
+  siteDraftKey(companyId);
   const existing = await supabase.from('establishment_sites').update({ draft_config: config }).eq('company_id', companyId).select('company_id').maybeSingle();
   if (missingSiteTable(existing.error)) {
     saveSiteDraft(companyId, config);
@@ -83,19 +94,62 @@ export async function saveOwnerSiteDraft(companyId: string, config: SiteConfig):
       if (retry.error) throw retry.error;
     } else if (inserted.error) throw inserted.error;
   }
+  saveSiteDraft(companyId, config);
   return { storage: 'remote' };
 }
 
-export async function publishOwnerSite(companyId: string, config: SiteConfig): Promise<void> {
-  draftKey(companyId);
-  const { data, error } = await supabase.from('establishment_sites').update({ published_config: config, published: true }).eq('company_id', companyId).select('company_id').single();
-  if (error) throw error;
-  if (!data) throw new Error('O site não foi publicado. Confira a liberação do plano Presença.');
+export interface PublicationResult {
+  published: boolean;
+  sharePageSynced: boolean;
 }
 
-export async function unpublishOwnerSite(companyId: string): Promise<void> {
-  draftKey(companyId);
+export async function publishOwnerSite(companyId: string, config: SiteConfig): Promise<PublicationResult> {
+  siteDraftKey(companyId);
+  const existing = await supabase
+    .from('establishment_sites')
+    .update({ draft_config: config, published_config: config, published: true })
+    .eq('company_id', companyId)
+    .select('company_id')
+    .maybeSingle();
+  if (existing.error) throw existing.error;
+  if (!existing.data) {
+    const inserted = await supabase
+      .from('establishment_sites')
+      .insert({ company_id: companyId, draft_config: config })
+      .select('company_id')
+      .single();
+    if (inserted.error) throw inserted.error;
+    const retry = await supabase
+      .from('establishment_sites')
+      .update({ draft_config: config, published_config: config, published: true })
+      .eq('company_id', companyId)
+      .select('company_id')
+      .single();
+    if (retry.error) throw retry.error;
+    if (!retry.data) throw new Error('O site não foi publicado. Confira a liberação do plano Presença.');
+  }
+  saveSiteDraft(companyId, config);
+  let sharePageSynced = true;
+  if (supabase.functions?.invoke) {
+    const refreshed = await Promise.resolve(
+      supabase.functions.invoke('publish-establishment-site', { body: { action: 'publish' } }),
+    ).catch(() => ({ error: true }));
+    if (refreshed?.error) sharePageSynced = false;
+  }
+  return { published: true, sharePageSynced };
+}
+
+export async function unpublishOwnerSite(companyId: string): Promise<PublicationResult> {
+  siteDraftKey(companyId);
   const { data, error } = await supabase.from('establishment_sites').update({ published: false }).eq('company_id', companyId).select('company_id').single();
   if (error) throw error;
   if (!data) throw new Error('Não foi possível despublicar o site. Tente novamente.');
+  let sharePageSynced = true;
+  if (supabase.functions?.invoke) {
+    const refreshed = await Promise.resolve(
+      supabase.functions.invoke('publish-establishment-site', { body: { action: 'unpublish' } }),
+    ).catch(() => ({ error: true }));
+    if (refreshed?.error) sharePageSynced = false;
+  }
+  return { published: false, sharePageSynced };
 }

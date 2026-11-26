@@ -1,0 +1,7 @@
+project_id = "lcqwrngscsziysyfhpfj"
+
+[functions.publish-establishment-site]
+verify_jwt = true
+
+[functions.serve-establishment-site]
+verify_jwt = false

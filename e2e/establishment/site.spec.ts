@@ -6,7 +6,7 @@ const owner = 'b0000000-0000-4000-8000-000000000001';
 const serviceId = 'b0000000-0000-4000-8000-000000000020';
 const teamId = 'b0000000-0000-4000-8000-000000000030';
 const profile = { id: owner, business_slug: 'mock-house', business_name: 'Casa Mock (fictícia)', user_type: 'barber', region: 'BR', address_street: 'Rua Teste, 20 — Pinheiros, São Paulo', phone: null, logo_url: '/presenca/demo-logo-barber.svg', cover_photo_url: '/demo/barbearia/capa.webp', role: 'owner', company_id: owner, full_name: 'Dono Fictício', tutorial_completed: true, subscription_status: 'active', trial_ends_at: null };
-const beautyProfile = { ...profile, user_type: 'beauty', business_name: 'Studio Mock (fictício)', logo_url: '/presenca/demo-logo-salon.svg', cover_photo_url: '/presenca/rhian/salon-hero.jpg' };
+const beautyProfile = { ...profile, user_type: 'beauty', business_name: 'Studio Mock (fictício)', logo_url: '/presenca/demo-logo-salon.svg', cover_photo_url: '/presenca/rhian/salon-hero.webp' };
 const config = { style: 'dark', preset: 'urban', headline: 'Barbearia em Pinheiros', about: 'Corte com hora marcada.', accent: '#C89B79', offer: { enabled: false, title: '', condition: '' }, differences: ['Atendimento reservado.'], faq: [], sections: [{ id: 'services', enabled: true }, { id: 'gallery', enabled: true }, { id: 'team', enabled: true }, { id: 'reviews', enabled: true }, { id: 'club', enabled: true }, { id: 'faq', enabled: true }, { id: 'location', enabled: true }], seoTitle: 'Casa Mock — barbearia em Pinheiros', seoDescription: 'Cortes com hora marcada em Pinheiros.' };
 const catalog = {
   get_public_establishment_site: { config },
@@ -47,22 +47,35 @@ async function mockPublic(page: Page, published = true, authenticated = false, t
   return calls;
 }
 
-async function finishImages(page: Page) {
-  await page.evaluate(async () => {
-    document.querySelectorAll('img').forEach(img => img.loading = 'eager');
-    await Promise.all([...document.images].map(img => img.decode().catch(() => undefined)));
+async function finishImages(page: Page, scanScroll = false) {
+  await page.evaluate(async shouldScan => {
+    document.querySelectorAll('img').forEach(img => { img.loading = 'eager'; });
+    if (shouldScan) {
+      const prevY = window.scrollY;
+      const step = Math.max(400, window.innerHeight - 100);
+      for (let y = 0; y < document.documentElement.scrollHeight; y += step) {
+        window.scrollTo(0, y);
+        await new Promise(resolve => setTimeout(resolve, 60));
+      }
+      window.scrollTo(0, prevY);
+    }
+    await Promise.all([...document.images].map(img => (img.complete && img.naturalWidth > 0 ? Promise.resolve() : img.decode().catch(() => undefined))));
     await document.fonts.ready;
-  });
+  }, scanScroll);
 }
 
 async function scrollControlsTo(page: Page, target: ReturnType<Page['locator']>) {
   await target.evaluate(el => {
     const pane = el.closest('.se-controls');
     if (pane instanceof HTMLElement && pane.scrollHeight > pane.clientHeight + 4) {
-      pane.scrollTop += el.getBoundingClientRect().top - pane.getBoundingClientRect().top - 12;
+      pane.scrollTop += el.getBoundingClientRect().top - pane.getBoundingClientRect().top - 10;
       return;
     }
-    el.scrollIntoView({ block: 'center', behavior: 'instant' });
+    const topOffset = el.closest('[data-embedded]') && window.innerWidth < 1000 ? 168 : 16;
+    window.scrollTo({
+      top: Math.max(0, el.getBoundingClientRect().top + window.scrollY - topOffset),
+      behavior: 'instant',
+    });
   });
 }
 
@@ -75,7 +88,7 @@ async function openEditorSection(page: Page, name: string) {
 async function capture(page: Page, name: string, fullPage = false, preserveScroll = false) {
   fs.mkdirSync(shots, { recursive: true });
   if (!preserveScroll) await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
-  await finishImages(page);
+  await finishImages(page, fullPage);
   await page.screenshot({ path: `${shots}/${name}.png`, fullPage, animations: 'disabled' });
 }
 
@@ -85,8 +98,8 @@ test.beforeEach(async ({ page }) => {
 });
 
 for (const [niche, slug, heading, preset] of [
-  ['barber', 'demo-corte-fino', /barbearia em Pinheiros/i, 'editorial'],
-  ['beauty', 'demo-studio-aurora', /salão em Pinheiros/i, 'salon'],
+  ['barber', 'demo-corte-fino', /Corte preciso, barba na navalha/i, 'urban'],
+  ['beauty', 'demo-studio-aurora', /Cor natural, corte com movimento/i, 'salon'],
 ] as const) {
   test(`${niche}: público, marca própria sem AgendiX, logo, SEO e screenshots`, async ({ page }, testInfo) => {
     const requests: string[] = [];
@@ -154,6 +167,11 @@ for (const [niche, slug, heading, preset] of [
     await expect(page.locator('h1')).toContainText(niche === 'barber' ? 'Corte masculino' : 'Corte feminino');
     await expect(page.getByRole('heading', { name: 'O que inclui' })).toBeVisible();
     await expect(page.locator('body')).not.toContainText(/agendix/i);
+    const crumbBox = await page.locator('.es-breadcrumb a').boundingBox();
+    expect(crumbBox?.x ?? 0).toBeGreaterThanOrEqual(16);
+    const beforeImgs = await page.locator('.es-before figure img').evaluateAll(imgs => imgs.map(img => img.getAttribute('src')));
+    expect(beforeImgs).toHaveLength(2);
+    expect(beforeImgs[0]).not.toBe(beforeImgs[1]);
     if (testInfo.project.name.startsWith('mobile')) {
       await expect(page.locator('.es-sticky .es-button')).toBeVisible();
     }
@@ -249,20 +267,24 @@ test('links legais do rodapé permanecem no próprio estabelecimento sem marca d
   await expect(page.getByRole('heading', { name: 'Termos de Uso', exact: true })).not.toBeVisible();
 });
 
-test('editor: prévia ao vivo, estilo, seção e rascunho local', async ({ page }, testInfo) => {
+test('editor: prévia ao vivo, passos para leigos, estilo, seção e rascunho local', async ({ page }, testInfo) => {
   await page.goto('/#/site-demo/editor/barber');
   await expect(page.getByRole('heading', { name: 'Meu site', exact: true })).toBeVisible();
-  await expect(page.getByLabel(/^Frase principal/)).toBeVisible();
   const preview = page.frameLocator('iframe[title="Prévia ao vivo do meu site"]');
   await expect(preview.locator('h1')).toBeVisible();
-  await page.getByLabel(/^Frase principal/).fill('Um corte com a sua cara.');
-  await expect(preview.locator('h1')).toHaveText('Um corte com a sua cara.');
   if (testInfo.project.name.startsWith('mobile')) {
     const dock = await page.locator('.se-preview-stage').boundingBox();
     expect(dock?.height ?? 0).toBeGreaterThanOrEqual(300);
     await expect(page.getByRole('button', { name: 'Ver em tela cheia' })).toBeVisible();
+    const docHeight = await page.evaluate(() => document.documentElement.scrollHeight);
+    expect(docHeight).toBeLessThan(3600);
   }
-  await capture(page, `editor-${page.viewportSize()!.width}-preview`, false, true);
+  await page.getByRole('tab', { name: '2. Textos' }).click();
+  await expect(page.getByLabel(/^Frase principal/)).toBeVisible();
+  await page.getByLabel(/^Frase principal/).fill('Um corte com a sua cara.');
+  await expect(preview.locator('h1')).toHaveText('Um corte com a sua cara.');
+  await expect(page.locator('.se-notice')).toContainText('Alterações não salvas');
+  await capture(page, `editor-${page.viewportSize()!.width}-preview`);
   if (testInfo.project.name.startsWith('mobile')) {
     await page.getByRole('button', { name: 'Ver em tela cheia' }).click();
     await expect(page.getByRole('button', { name: 'Voltar ao editor' })).toBeVisible();
@@ -271,13 +293,13 @@ test('editor: prévia ao vivo, estilo, seção e rascunho local', async ({ page 
     expect(full?.height ?? 0).toBeGreaterThanOrEqual(500);
     await capture(page, `editor-${page.viewportSize()!.width}-fullscreen`, false, true);
     await page.getByRole('button', { name: 'Voltar ao editor' }).click();
-    await expect(page.getByLabel(/^Frase principal/)).toBeVisible();
     await expect(page.getByRole('button', { name: 'Ver em tela cheia' })).toBeVisible();
   }
+  await page.getByRole('tab', { name: '1. Visual' }).click();
   await scrollControlsTo(page, page.locator('.se-bg'));
   await expect(page.getByRole('radio', { name: /Urbano preciso, recomendada/i })).toBeVisible();
+  await expect(page.locator('.se-swatch-badge')).toHaveCount(1);
   await expect(page.getByRole('radio', { name: /Personalizada/i })).toBeVisible();
-  await openEditorSection(page, 'Estilo e identidade');
   await page.getByRole('button', { name: 'Só o logo' }).click({ force: true });
   await expect(preview.locator('.es-brand-logo')).toBeVisible();
   await page.getByRole('button', { name: 'Logo + nome' }).click({ force: true });
@@ -286,32 +308,34 @@ test('editor: prévia ao vivo, estilo, seção e rascunho local', async ({ page 
   await page.getByRole('button', { name: 'Editorial clássico', exact: true }).click({ force: true });
   await expect(preview.locator('h1')).toHaveText('Um corte com a sua cara.');
   await expect(preview.locator('.establishment')).toHaveAttribute('data-style', 'light');
-  await page.getByRole('radio', { name: /Salão claro, recomendada/i }).evaluate(el => (el as HTMLButtonElement).click());
+  await page.getByRole('radio', { name: 'Salão claro' }).evaluate(el => (el as HTMLButtonElement).click());
   await expect(preview.locator('.establishment')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
-  await scrollControlsTo(page, page.locator('.se-styles'));
+  await scrollControlsTo(page, page.locator('.se-bg'));
   await expect(page.getByRole('button', { name: 'Prévia no celular' })).toBeVisible();
-  await expect(page.getByLabel(/^Frase principal/)).toHaveCount(1);
   await capture(page, `editor-${page.viewportSize()!.width}-colors`, false, true);
   if (testInfo.project.name.startsWith('mobile')) {
     await page.getByRole('button', { name: 'Prévia no computador' }).click();
     await expect(page.getByRole('button', { name: 'Prévia no computador' })).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.getByText('Estilo e identidade', { exact: true })).toBeVisible();
     await expect(page.locator('iframe[title="Prévia ao vivo do meu site"]')).toBeVisible();
     await page.getByRole('button', { name: 'Prévia no celular' }).click();
   }
+  await page.getByRole('tab', { name: '4. Divulgar' }).click();
   await openEditorSection(page, 'Seções e ordem da página');
   await page.getByLabel('Galeria', { exact: true }).evaluate(el => (el as HTMLInputElement).click());
-  await openEditorSection(page, 'Google e compartilhar');
+  await expect(preview.locator('h1')).toBeVisible();
+  await expect(preview.locator('h1')).toHaveText('Um corte com a sua cara.');
+  await expect(preview.locator('.establishment')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
   await expect(page.getByLabel('Prévia do resultado no Google')).toBeVisible();
-  await expect(page.getByLabel('Prévia do resultado no Google')).toContainText('agendixstudio.com › demo-corte-fino');
-  await expect(page.locator('.se-share-url')).toContainText('https://www.agendixstudio.com/#/site/demo-corte-fino');
+  await expect(page.getByLabel('Prévia do resultado no Google')).toContainText('agendixstudio.com/s/demo-corte-fino');
+  await expect(page.locator('.se-share-url')).toContainText('https://www.agendixstudio.com/s/demo-corte-fino');
   await expect(page.locator('.se-qr-image')).toBeVisible();
-  await scrollControlsTo(page, page.locator('.se-qr-card'));
+  await scrollControlsTo(page, page.locator('.se-share-block .se-label-title'));
   await capture(page, `editor-${page.viewportSize()!.width}-share`, false, true);
   await page.getByRole('button', { name: 'Salvar rascunho', exact: true }).click();
   await expect(page.getByRole('status').filter({ hasText: 'salvo neste navegador' })).toBeVisible();
   await capture(page, `editor-${page.viewportSize()!.width}-controls`, true);
   await page.reload();
+  await page.getByRole('tab', { name: '2. Textos' }).click();
   await expect(page.getByLabel(/^Frase principal/)).toHaveValue('Um corte com a sua cara.');
   await expect(preview.locator('#preview-gallery')).toHaveCount(0);
 });
@@ -320,7 +344,8 @@ test('painel autenticado: owner usa rascunho isolado por company_id e fallback i
   const calls = await mockPublic(page, true, true);
   await page.goto('/#/configuracoes/meu-site');
   await expect(page.locator('.site-editor h1')).toHaveText('Meu site');
-  await expect(page.locator('.se-notice')).toContainText('neste navegador');
+  await expect(page.locator('.se-notice')).toContainText('equipe AgendiX');
+  await page.getByRole('tab', { name: '2. Textos' }).click();
   await page.getByLabel(/^Frase principal/).fill('Casa fictícia em Pinheiros.');
   await page.getByRole('button', { name: 'Salvar rascunho', exact: true }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Rascunho salvo' })).toContainText('Nada foi publicado');
@@ -330,7 +355,7 @@ test('painel autenticado: owner usa rascunho isolado por company_id e fallback i
   await expect(page.getByLabel(/^Frase principal/)).toBeVisible();
   await expect(page.frameLocator('iframe[title="Prévia ao vivo do meu site"]').locator('h1')).toHaveText('Casa fictícia em Pinheiros.');
   await capture(page, `owner-editor-${page.viewportSize()!.width}-preview`, false, true);
-  await openEditorSection(page, 'Estilo e identidade');
+  await page.getByRole('tab', { name: '1. Visual' }).click();
   await scrollControlsTo(page, page.locator('.se-logo-picker'));
   await capture(page, `owner-editor-${page.viewportSize()!.width}-full`, false, true);
 });
@@ -343,11 +368,10 @@ test('painel autenticado (beauty claro): preserva contraste, logo e prévia', as
   await expect(page.locator('html')).toHaveAttribute('data-mode', 'light');
   await expect(page.frameLocator('iframe[title="Prévia ao vivo do meu site"]').locator('.es-brand-logo')).toBeVisible();
   await capture(page, `owner-beauty-light-${page.viewportSize()!.width}-preview`, false, true);
-  await openEditorSection(page, 'Estilo e identidade');
   await scrollControlsTo(page, page.locator('.se-logo-picker'));
   await capture(page, `owner-beauty-light-${page.viewportSize()!.width}-logo`, false, true);
-  await openEditorSection(page, 'Google e compartilhar');
+  await page.getByRole('tab', { name: '4. Divulgar' }).click();
   await expect(page.locator('.se-qr-image')).toBeVisible();
-  await scrollControlsTo(page, page.locator('.se-qr-card'));
+  await scrollControlsTo(page, page.locator('.se-share-block .se-label-title'));
   await capture(page, `owner-beauty-light-${page.viewportSize()!.width}-share`, false, true);
 });

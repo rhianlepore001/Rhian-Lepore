@@ -37,7 +37,7 @@ export function getDemoSite(slug: string): { data: SiteData; config: SiteConfig 
     id: beauty ? 'demo-beauty' : 'demo-barber', slug,
     name: beauty ? 'Studio Aurora' : 'Corte Fino', kind: beauty ? 'beauty' : 'barber', region: 'BR', demo: true,
     logo: beauty ? '/presenca/demo-logo-salon.svg' : '/presenca/demo-logo-barber.svg',
-    cover: beauty ? '/presenca/rhian/salon-hero.jpg' : '/presenca/rhian/barber-hero.jpg',
+    cover: beauty ? '/presenca/rhian/salon-hero.webp' : '/presenca/rhian/barber-hero.webp',
     phone: beauty ? '+55 (11) 3032-8810' : '+55 (11) 3062-4190',
     instagram: beauty ? '@studioaurora.sp' : '@cortefino',
     address: beauty ? 'Rua dos Pinheiros, 870 — Pinheiros, São Paulo' : 'Rua Fradique Coutinho, 420 — Pinheiros, São Paulo',
@@ -61,20 +61,20 @@ export function getDemoSite(slug: string): { data: SiteData; config: SiteConfig 
       id: demoId(beauty, 30 + i),
       name,
       image: beauty
-        ? [photo('servico-escova'), '/presenca/rhian/salon-balayage.jpg', photo('servico-corte-feminino')][i]
-        : ['/presenca/rhian/barber-portrait.jpg', '/presenca/rhian/barber-fade.jpg', photo('servico-corte-barba')][i],
+        ? [photo('servico-escova'), '/presenca/rhian/salon-balayage.webp', photo('servico-corte-feminino')][i]
+        : ['/presenca/rhian/barber-portrait.webp', '/presenca/rhian/barber-fade.webp', photo('servico-corte-barba')][i],
       bio: beauty ? ['Cortes e movimento natural', 'Cor, mechas e iluminação', 'Tratamentos e finalização'][i] : ['Degradê navalhado & visagismo', 'Corte na tesoura & barboterapia', 'Barba longa & alinhamento'][i],
     })),
     gallery: beauty
       ? [
-          { src: '/presenca/rhian/salon-hero.jpg', alt: 'Espaço luminoso do Studio Aurora — foto ilustrativa' },
-          { src: '/presenca/rhian/salon-balayage.jpg', alt: 'Resultado de cor e balayage — foto ilustrativa' },
+          { src: '/presenca/rhian/salon-hero.webp', alt: 'Espaço luminoso do Studio Aurora — foto ilustrativa' },
+          { src: '/presenca/rhian/salon-balayage.webp', alt: 'Resultado de cor e balayage — foto ilustrativa' },
           { src: photo('galeria-05'), alt: 'Finalização e movimento — foto ilustrativa' },
         ]
       : [
-          { src: '/presenca/rhian/barber-hero.jpg', alt: 'Bancadas e luz natural na casa — foto ilustrativa' },
-          { src: '/presenca/rhian/barber-fade.jpg', alt: 'Acabamento de degradê na navalha — foto ilustrativa' },
-          { src: '/presenca/rhian/barber-portrait.jpg', alt: 'Equipe pronta para atendimento com hora marcada — foto ilustrativa' },
+          { src: '/presenca/rhian/barber-hero.webp', alt: 'Bancadas e luz natural na casa — foto ilustrativa' },
+          { src: '/presenca/rhian/barber-fade.webp', alt: 'Acabamento de degradê na navalha — foto ilustrativa' },
+          { src: '/presenca/rhian/barber-portrait.webp', alt: 'Equipe pronta para atendimento com hora marcada — foto ilustrativa' },
         ],
     rating: 4.9, reviewCount: beauty ? 128 : 214,
     reviews: [
@@ -85,11 +85,15 @@ export function getDemoSite(slug: string): { data: SiteData; config: SiteConfig 
   };
   data.services[beauty ? 0 : 1].featured = true;
   const config: SiteConfig = {
-    ...defaultConfig(data), preset: beauty ? 'salon' : 'editorial', style: 'light', background: beauty ? '#FFFFFF' : '#FBF7F0', accent: beauty ? '#3F4E41' : '#9A5628',
+    ...defaultConfig(data),
+    preset: beauty ? 'salon' : 'urban',
+    style: beauty ? 'light' : 'dark',
+    background: beauty ? '#FFFFFF' : '#09090B',
+    accent: beauty ? '#3F4E41' : '#C89B79',
     headline: beauty
-      ? 'Salão em Pinheiros dedicado à cor natural e ao cuidado do cabelo'
-      : 'Barbearia em Pinheiros com corte preciso e horário respeitado',
-    cover: beauty ? '/presenca/rhian/salon-hero.jpg' : '/presenca/rhian/barber-hero.jpg',
+      ? 'Cor natural, corte com movimento e cuidado para seus fios'
+      : 'Corte preciso, barba na navalha e horário respeitado',
+    cover: beauty ? '/presenca/rhian/salon-hero.webp' : '/presenca/rhian/barber-hero.webp',
     photoFocus: beauty ? 'space' : 'work',
     photoPosition: beauty ? { x: 58, y: 48 } : { x: 42, y: 38 },
     about: beauty
@@ -109,8 +113,8 @@ export function getDemoSite(slug: string): { data: SiteData; config: SiteConfig 
       ? ['Orçamento transparente apresentado antes de iniciar qualquer coloração.', 'Atendimento individualizado com foco em crescimento suave da cor.', 'Consulta de 10 minutos antes de qualquer tesoura ou química.']
       : ['Atendimento rigorosamente no horário marcado — sem fila de espera.', 'Lâminas descartáveis e toalhas esterilizadas a cada cliente.', 'Horário estendido até 20h de segunda a sexta.', 'Garantia de ajuste gratuito em até 7 dias caso precise retocar.'],
     beforeAfter: beauty
-      ? [{ before: photo('servico-corte-feminino'), after: '/presenca/rhian/salon-balayage.jpg', caption: 'Cor e movimento — fotos ilustrativas.' }]
-      : [{ before: photo('servico-corte-masculino'), after: '/presenca/rhian/barber-fade.jpg', caption: 'Degradê e alinhamento — fotos ilustrativas.' }],
+      ? [{ before: photo('galeria-04'), after: photo('galeria-02'), caption: 'Cor e movimento — fotos ilustrativas.' }]
+      : [{ before: photo('galeria-04'), after: photo('galeria-01'), caption: 'Degradê e alinhamento — fotos ilustrativas.' }],
     faq: [
       { question: 'Preciso agendar antes de ir?', answer: 'Sim. Escolha o serviço, o profissional e um horário disponível aqui no site. Assim, a gente reserva um tempo só para você.' },
       { question: 'E se eu precisar remarcar?', answer: 'Use o link enviado na confirmação. Na demonstração, a política é de até 2 horas antes do atendimento.' },

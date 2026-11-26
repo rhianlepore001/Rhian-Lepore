@@ -37,10 +37,10 @@ describe('buildShareLinks', () => {
   it('normalizes origin, encodes slug, and generates tracked channel links', () => {
     const links = buildShareLinks('https://www.agendixstudio.com/painel?x=1', 'barbearia central');
     expect(links).toEqual({
-      direct: 'https://www.agendixstudio.com/#/site/barbearia%20central',
-      instagram: 'https://www.agendixstudio.com/#/site/barbearia%20central?origem=instagram',
-      google: 'https://www.agendixstudio.com/#/site/barbearia%20central?origem=google',
-      qr: 'https://www.agendixstudio.com/#/site/barbearia%20central?origem=qr',
+      direct: 'https://www.agendixstudio.com/s/barbearia%20central',
+      instagram: 'https://www.agendixstudio.com/s/barbearia%20central?origem=instagram',
+      google: 'https://www.agendixstudio.com/s/barbearia%20central?origem=google',
+      qr: 'https://www.agendixstudio.com/s/barbearia%20central?origem=qr',
     });
   });
 
@@ -101,14 +101,15 @@ describe('buildQrPrintHtml', () => {
     expect(html).toContain('&quot;1&quot;&amp;b=&lt;2&gt;');
   });
 
-  it('accepts safe https logos and rejects non-png qrDataUrl values', () => {
+  it('accepts safe storage logos and rejects non-png qrDataUrl values', () => {
+    const storageLogo = 'https://lcqwrngscsziysyfhpfj.supabase.co/storage/v1/object/public/logos/a/logo.webp';
     const html = buildQrPrintHtml({
       name: 'Corte Fino',
-      logo: 'https://cdn.example.com/logo.webp',
-      link: 'https://example.com/#/site/corte-fino',
+      logo: storageLogo,
+      link: 'https://example.com/s/corte-fino',
       qrDataUrl: validQr,
     });
-    expect(html).toContain('src="https://cdn.example.com/logo.webp"');
+    expect(html).toContain(`src="${storageLogo}"`);
 
     expect(() =>
       buildQrPrintHtml({

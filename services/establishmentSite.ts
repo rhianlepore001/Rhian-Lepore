@@ -103,6 +103,12 @@ export async function publishOwnerSite(companyId: string, config: SiteConfig): P
     if (!retry.data) throw new Error('O site não foi publicado. Confira a liberação do plano Presença.');
   }
   saveSiteDraft(companyId, config);
+  if (supabase.functions?.invoke) {
+    const refreshed = await Promise.resolve(
+      supabase.functions.invoke('publish-establishment-site', { body: { action: 'publish' } }),
+    ).catch(() => ({ error: true }));
+    if (refreshed?.error) throw new Error('As alterações foram salvas, mas a página de divulgação não foi atualizada. Tente novamente em instantes.');
+  }
 }
 
 export async function unpublishOwnerSite(companyId: string): Promise<void> {
@@ -110,4 +116,10 @@ export async function unpublishOwnerSite(companyId: string): Promise<void> {
   const { data, error } = await supabase.from('establishment_sites').update({ published: false }).eq('company_id', companyId).select('company_id').single();
   if (error) throw error;
   if (!data) throw new Error('Não foi possível despublicar o site. Tente novamente.');
+  if (supabase.functions?.invoke) {
+    const refreshed = await Promise.resolve(
+      supabase.functions.invoke('publish-establishment-site', { body: { action: 'unpublish' } }),
+    ).catch(() => ({ error: true }));
+    if (refreshed?.error) throw new Error('As alterações foram salvas, mas a página de divulgação não foi atualizada. Tente novamente em instantes.');
+  }
 }

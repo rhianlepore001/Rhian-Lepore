@@ -126,6 +126,9 @@ export const PublicBooking: React.FC = () => {
     const embeddedAccent = accessibleAccent(searchParams.get('brand') || '#C89B79', embeddedAppearance);
     const rebookParam = searchParams.get('rebook') || searchParams.get('service');
     const editParam = searchParams.get('edit');
+    const rawOriginParam = (searchParams.get('origem') || '').trim().toLowerCase();
+    const referralSource = (['instagram', 'google', 'qr', 'site'] as const).find(item => item === rawOriginParam)
+        ?? (embeddedSite ? 'site' : undefined);
 
     const cancelBookingMutation = useCancelPublicBooking();
     const findActiveBookingMutation = useFindActivePublicBooking();
@@ -798,6 +801,7 @@ export const PublicBooking: React.FC = () => {
                 originalAppointmentTime: originalTimeISO,
                 productLines: [],
                 reviewToken: !editingBookingId && !isDemoMode() ? globalThis.crypto?.randomUUID?.() : undefined,
+                referralSource,
             });
 
             setActiveBooking(booking);
@@ -2155,6 +2159,7 @@ export const PublicBooking: React.FC = () => {
             {groupMode && businessId && (
                 <PublicGroupBooking
                     businessId={businessId}
+                    referralSource={referralSource}
                     userType={business?.user_type}
                     isBeauty={isBeauty}
                     currencyRegion={currencyRegion}

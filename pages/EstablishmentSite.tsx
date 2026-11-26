@@ -39,12 +39,13 @@ export function EstablishmentSite() {
       cleanups.push(() => { if (created) element?.remove(); else if (element) element.content = previous || ''; });
     };
     const ogImage = (!site.config.coverRemoved && (site.config.cover || site.data.cover)) || (!site.config.logoRemoved && (site.config.logo || site.data.logo));
-    meta('description', seo.description); meta('og:title', document.title, true); meta('og:description', seo.description, true); meta('og:url', window.location.href, true); meta('og:type', 'website', true);
+    const canonicalHref = `${window.location.origin}/s/${encodeURIComponent(slug)}${serviceId ? `/servico/${encodeURIComponent(serviceId)}` : ''}`;
+    meta('description', seo.description); meta('og:title', document.title, true); meta('og:description', seo.description, true); meta('og:url', canonicalHref, true); meta('og:type', 'website', true);
     meta('twitter:card', 'summary_large_image'); meta('twitter:title', document.title); meta('twitter:description', seo.description);
     if (ogImage) meta('og:image', new URL(ogImage, window.location.origin).href, true);
     if (site.data.demo) meta('robots', 'noindex, nofollow');
     const previousCanonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
-    const canonical = document.createElement('link'); canonical.rel = 'canonical'; canonical.href = `${window.location.origin}/s/${encodeURIComponent(slug)}${serviceId ? `/servico/${encodeURIComponent(serviceId)}` : ''}`;
+    const canonical = document.createElement('link'); canonical.rel = 'canonical'; canonical.href = canonicalHref;
     const previousHref = previousCanonical?.href;
     if (previousCanonical) previousCanonical.href = canonical.href;
     else document.head.append(canonical);

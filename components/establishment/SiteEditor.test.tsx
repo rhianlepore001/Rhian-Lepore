@@ -5,14 +5,16 @@ import userEvent from '@testing-library/user-event';
 import { SiteEditor } from './SiteEditor';
 import { defaultConfig, type SiteData } from '../../lib/establishment/model';
 
-const { uploadSiteLogoMock, loadOwnerSiteMock, toDataUrlMock } = vi.hoisted(() => ({
+const { uploadSiteLogoMock, deleteSiteLogoMock, loadOwnerSiteMock, toDataUrlMock } = vi.hoisted(() => ({
   uploadSiteLogoMock: vi.fn(),
+  deleteSiteLogoMock: vi.fn(),
   loadOwnerSiteMock: vi.fn(),
   toDataUrlMock: vi.fn(),
 }));
 
 vi.mock('../../services/establishmentPhotos', () => ({
   uploadSiteLogo: uploadSiteLogoMock,
+  deleteSiteLogo: deleteSiteLogoMock,
   uploadSitePhoto: vi.fn(),
 }));
 
@@ -37,7 +39,7 @@ const data: SiteData = {
   region: 'BR',
   demo: true,
   logo: '/presenca/demo-logo-barber.svg',
-  cover: '/presenca/rhian/barber-hero.jpg',
+  cover: '/presenca/rhian/barber-hero.webp',
   address: 'Rua dos Pinheiros, 100 — Pinheiros, São Paulo',
   phone: '11999998888',
   hours: [{ day: 'Segunda', hours: '09:00–20:00' }],
@@ -45,17 +47,19 @@ const data: SiteData = {
   clubPlans: [{ id: 'club-1', name: 'Clube Navalha', priceCents: 13900, usageLimitPerMonth: 4 }],
   team: [{ id: 'pro-1', name: 'Rafael Costa', bio: 'Degradê' }],
   gallery: [
-    { src: '/presenca/rhian/barber-hero.jpg', alt: 'Salão principal' },
-    { src: '/presenca/rhian/barber-fade.jpg', alt: 'Acabamento degradê' },
+    { src: '/presenca/rhian/barber-hero.webp', alt: 'Salão principal' },
+    { src: '/presenca/rhian/barber-fade.webp', alt: 'Acabamento degradê' },
   ],
   reviews: [],
   reviewCount: 0,
 };
 
-beforeEach(() => {
-  localStorage.clear();
-  uploadSiteLogoMock.mockReset();
-  loadOwnerSiteMock.mockReset();
+  beforeEach(() => {
+    localStorage.clear();
+    uploadSiteLogoMock.mockReset();
+    deleteSiteLogoMock.mockReset();
+    deleteSiteLogoMock.mockResolvedValue(undefined);
+    loadOwnerSiteMock.mockReset();
   toDataUrlMock.mockReset();
   toDataUrlMock.mockResolvedValue(
     'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
@@ -63,14 +67,14 @@ beforeEach(() => {
 });
 
 describe('SiteEditor panel', () => {
-  it('mostra as cores recomendadas em destaque e uma opção personalizada', async () => {
+  it('mostra apenas uma cor recomendada para o nicho e uma opção personalizada', async () => {
     const user = userEvent.setup();
     render(<SiteEditor data={data} initial={defaultConfig(data)} companyId="business" demo />);
     expect(screen.getByRole('radio', { name: /Urbano preciso, recomendada/i })).toHaveAttribute('aria-checked', 'true');
     expect(screen.getByText('Recomendada', { selector: '.se-swatch[aria-checked=true] .se-swatch-badge' })).toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: /Editorial clássico, recomendada/i })).toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: /Salão claro, recomendada/i })).toBeInTheDocument();
-    expect(screen.getAllByText('Recomendada').length).toBeGreaterThanOrEqual(3);
+    expect(screen.getByRole('radio', { name: 'Editorial clássico' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Salão claro' })).toBeInTheDocument();
+    expect(screen.getAllByText('Recomendada')).toHaveLength(1);
     await user.click(screen.getByRole('radio', { name: /Personalizada/i }));
     expect(screen.getByLabelText('Cor personalizada')).toBeInTheDocument();
   });
@@ -79,12 +83,11 @@ describe('SiteEditor panel', () => {
     const user = userEvent.setup();
     render(<SiteEditor data={data} initial={defaultConfig(data)} companyId="business" demo />);
     expect(screen.getByTitle('Prévia ao vivo do meu site')).toBeVisible();
-    expect(screen.getByLabelText(/^Frase principal/)).toBeVisible();
+    expect(screen.getByRole('tab', { name: '1. Visual' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('button', { name: 'Prévia no celular' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('button', { name: 'Ver em tela cheia' })).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Prévia no computador' }));
     expect(screen.getByRole('button', { name: 'Prévia no computador' })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByLabelText(/^Frase principal/)).toBeVisible();
 
     await user.click(screen.getByRole('button', { name: 'Recolher prévia' }));
     expect(document.querySelector('.se-workspace')).toHaveAttribute('data-preview-collapsed', 'true');
@@ -100,7 +103,6 @@ describe('SiteEditor panel', () => {
     expect(document.querySelector('.se-preview')).toHaveAttribute('data-expanded', 'true');
     await user.click(screen.getByRole('button', { name: 'Voltar ao editor' }));
     expect(screen.queryByRole('button', { name: 'Voltar ao editor' })).not.toBeInTheDocument();
-    expect(screen.getByLabelText(/^Frase principal/)).toBeVisible();
     expect(screen.getByRole('button', { name: 'Ver em tela cheia' })).toBeVisible();
   });
 
@@ -113,11 +115,12 @@ describe('SiteEditor panel', () => {
     expect(await screen.findByRole('status')).toHaveTextContent(/contraste|leitura/i);
   });
 
-  it('gerencia logo, modo de exibição no topo e os 3 estilos prontos', async () => {
+  it('gerencia logo, modo de exibição no topo e os 3 estilos prontos sem endereço externo', async () => {
     const user = userEvent.setup();
     render(<SiteEditor data={data} initial={defaultConfig(data)} companyId="business" demo />);
 
-    await user.click(screen.getByText('Estilo e identidade'));
+    expect(screen.queryByText(/Usar o endereço de um logo/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Usar o endereço de uma foto/i)).not.toBeInTheDocument();
     expect(screen.getByAltText('Logo selecionado')).toHaveAttribute('src', '/presenca/demo-logo-barber.svg');
 
     await user.click(screen.getByRole('button', { name: 'Só o logo' }));
@@ -132,26 +135,29 @@ describe('SiteEditor panel', () => {
 
     await user.click(screen.getByRole('button', { name: 'Salão luminoso' }));
     expect(screen.getByRole('button', { name: 'Salão luminoso' })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('radio', { name: /Salão claro, recomendada/i })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('radio', { name: 'Salão claro' })).toHaveAttribute('aria-checked', 'true');
 
     await user.click(screen.getByRole('button', { name: 'Editorial clássico' }));
     expect(screen.getByRole('button', { name: 'Editorial clássico' })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('radio', { name: /Editorial clássico, recomendada/i })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('radio', { name: 'Editorial clássico' })).toHaveAttribute('aria-checked', 'true');
   });
 
-  it('envia logo personalizado no modo autenticado e exibe feedback', async () => {
+  it('envia logo personalizado no modo autenticado, remove o antigo do Storage e mostra aviso manual', async () => {
     const user = userEvent.setup();
     const initial = defaultConfig(data);
     loadOwnerSiteMock.mockResolvedValue({
       config: initial,
-      storage: 'local',
+      storage: 'remote',
       published: false,
       presenceEnabled: false,
     });
-    uploadSiteLogoMock.mockResolvedValue('https://cdn.example.com/logos/business/novo-logo.webp');
+    const uploadedUrl = 'https://lcqwrngscsziysyfhpfj.supabase.co/storage/v1/object/public/logos/business/presenca-logo-novo.webp';
+    uploadSiteLogoMock.mockResolvedValue(uploadedUrl);
 
     render(<SiteEditor data={{ ...data, demo: false }} initial={initial} companyId="business" embedded />);
-    await user.click(screen.getByText('Estilo e identidade'));
+    await waitFor(() => {
+      expect(screen.getByText(/liberação para colocar o site no ar é feita manualmente/i)).toBeInTheDocument();
+    });
 
     const fileInput = screen.getByLabelText(/Trocar logo|Enviar logo/i) as HTMLInputElement;
     const file = new File(['png-bytes'], 'logo.png', { type: 'image/png' });
@@ -159,19 +165,17 @@ describe('SiteEditor panel', () => {
 
     await waitFor(() => {
       expect(uploadSiteLogoMock).toHaveBeenCalledWith('business', file);
-      expect(screen.getByAltText('Logo selecionado')).toHaveAttribute(
-        'src',
-        'https://cdn.example.com/logos/business/novo-logo.webp',
-      );
+      expect(screen.getByAltText('Logo selecionado')).toHaveAttribute('src', uploadedUrl);
     });
 
     await user.click(screen.getByRole('button', { name: 'Remover logo' }));
     expect(screen.queryByAltText('Logo selecionado')).not.toBeInTheDocument();
+    expect(deleteSiteLogoMock).not.toHaveBeenCalled();
     await user.click(screen.getByRole('button', { name: 'Usar logo do cadastro' }));
     expect(screen.getByAltText('Logo selecionado')).toHaveAttribute('src', '/presenca/demo-logo-barber.svg');
   });
 
-  it('exibe checklist interativo com progresso e abre o bloco pendente ao clicar no chip', async () => {
+  it('exibe checklist interativo com progresso e abre o passo pendente ao clicar no chip', async () => {
     const user = userEvent.setup();
     const incompleteData: SiteData = {
       ...data,
@@ -188,18 +192,16 @@ describe('SiteEditor panel', () => {
     expect(screen.getByText(/Seu site está 0% pronto/i)).toBeInTheDocument();
     expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '0');
 
-    const photosSection = screen.getByText('Fotos, serviços e equipe').closest('details')!;
-    expect(photosSection.open).toBe(false);
-
     await user.click(screen.getByRole('button', { name: 'Adicionar fotos' }));
-    expect(photosSection.open).toBe(true);
+    expect(screen.getByRole('tab', { name: '3. Fotos' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByText('Galeria do espaço e trabalhos')).toBeVisible();
   });
 
   it('oferece galeria visual com miniaturas sem textarea de URLs', async () => {
     const user = userEvent.setup();
     render(<SiteEditor data={data} initial={defaultConfig(data)} companyId="business" demo />);
 
-    await user.click(screen.getByText('Fotos, serviços e equipe'));
+    await user.click(screen.getByRole('tab', { name: '3. Fotos' }));
     expect(screen.queryByLabelText(/uma URL por linha/i)).not.toBeInTheDocument();
 
     const firstAlt = screen.getByLabelText('Descrição da foto 1');
@@ -215,15 +217,19 @@ describe('SiteEditor panel', () => {
     expect(screen.queryByLabelText('Descrição da foto 2')).not.toBeInTheDocument();
   });
 
-  it('permite editar diferenciais item a item, ponto de referência, clube e sugestões de FAQ', async () => {
+  it('avisa sobre alterações não salvas e permite editar diferenciais, referência, clube e FAQ', async () => {
     const user = userEvent.setup();
     render(<SiteEditor data={data} initial={defaultConfig(data)} companyId="business" demo />);
 
+    await user.click(screen.getByRole('tab', { name: '2. Textos' }));
     await user.click(screen.getByRole('button', { name: 'Adicionar diferencial' }));
+    expect(screen.getByText(/Alterações não salvas/)).toBeInTheDocument();
+
     const diffInput = screen.getByLabelText('Diferencial 1');
     await user.type(diffInput, 'Café passado na hora');
     expect(diffInput).toHaveValue('Café passado na hora');
 
+    await user.click(screen.getByRole('tab', { name: '4. Divulgar' }));
     await user.click(screen.getByText('Seções e ordem da página'));
     expect(screen.getByLabelText('Clube e planos')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: '+ Formas de pagamento' }));
@@ -234,17 +240,18 @@ describe('SiteEditor panel', () => {
     expect(referenceInput).toHaveValue('Ao lado do metrô Fradique Coutinho');
   });
 
-  it('mostra prévia do Google, checklist, canais de compartilhamento e QR Code', async () => {
+  it('mostra prévia do Google em /s/:slug, canais de compartilhamento e QR Code', async () => {
     const user = userEvent.setup();
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
     const openSpy = vi.spyOn(window, 'open').mockReturnValue(null);
 
     render(<SiteEditor data={data} initial={defaultConfig(data)} companyId="business" demo />);
-    await user.click(screen.getByText('Google e compartilhar'));
+    await user.click(screen.getByRole('tab', { name: '4. Divulgar' }));
 
     const googlePreview = screen.getByLabelText('Prévia do resultado no Google');
     expect(googlePreview).toHaveTextContent('Navalha Fina');
+    expect(googlePreview).toHaveTextContent('agendixstudio.com/s/navalha-fina');
     expect(screen.getByText(/Confira com seu Perfil da Empresa no Google/i)).toBeInTheDocument();
     const googleCheck = screen.getByText(/Confira com seu Perfil da Empresa no Google/i).closest('.se-google-check')!;
     expect(googleCheck).toHaveTextContent('Rua dos Pinheiros, 100 — Pinheiros, São Paulo');
@@ -254,10 +261,10 @@ describe('SiteEditor panel', () => {
     });
 
     await user.click(screen.getByRole('button', { name: 'Copiar link para bio do Instagram' }));
-    expect(writeText).toHaveBeenCalledWith(expect.stringContaining('/#/site/navalha-fina?origem=instagram'));
+    expect(writeText).toHaveBeenCalledWith(expect.stringContaining('/s/navalha-fina?origem=instagram'));
 
     await user.click(screen.getByRole('button', { name: 'Copiar link para perfil do Google' }));
-    expect(writeText).toHaveBeenCalledWith(expect.stringContaining('/#/site/navalha-fina?origem=google'));
+    expect(writeText).toHaveBeenCalledWith(expect.stringContaining('/s/navalha-fina?origem=google'));
 
     const waLink = screen.getByRole('link', { name: 'Enviar no WhatsApp' });
     expect(waLink).toHaveAttribute('href', expect.stringMatching(/^https:\/\/wa\.me\/\?text=/));
@@ -278,16 +285,18 @@ describe('SiteEditor panel', () => {
     const confirmSpy = vi.spyOn(window, 'confirm');
     render(<SiteEditor data={data} initial={defaultConfig(data)} companyId="business" demo />);
 
+    await user.click(screen.getByRole('tab', { name: '2. Textos' }));
     await user.clear(screen.getByLabelText(/^Frase principal/));
     await user.type(screen.getByLabelText(/^Frase principal/), 'Texto alterado');
     expect(screen.getByLabelText(/^Frase principal/)).toHaveValue('Texto alterado');
 
-    await user.click(screen.getByText('Google e compartilhar'));
+    await user.click(screen.getByRole('tab', { name: '4. Divulgar' }));
     await user.click(screen.getByRole('button', { name: 'Restaurar padrão' }));
     expect(screen.getByText(/Voltar tudo ao padrão inicial/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Sim, restaurar' }));
     expect(confirmSpy).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('tab', { name: '2. Textos' }));
     expect(screen.getByLabelText(/^Frase principal/)).toHaveValue(defaultConfig(data).headline);
     confirmSpy.mockRestore();
   });

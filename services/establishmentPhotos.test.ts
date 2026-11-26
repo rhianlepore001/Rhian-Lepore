@@ -1,10 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { uploadSiteLogo } from './establishmentPhotos';
+import { deleteSiteLogo, extractSiteLogoPath, uploadSiteLogo } from './establishmentPhotos';
 
 const { storageFrom, bucket } = vi.hoisted(() => {
   const bucket = {
     upload: vi.fn(),
     getPublicUrl: vi.fn(),
+    remove: vi.fn(),
   };
   const storageFrom = vi.fn(() => bucket);
   return { storageFrom, bucket };
@@ -67,8 +68,12 @@ describe('uploadSiteLogo', () => {
     });
 
     bucket.upload.mockResolvedValue({ error: null });
+    bucket.remove.mockResolvedValue({ error: null });
     bucket.getPublicUrl.mockReturnValue({
-      data: { publicUrl: 'https://cdn.example.com/logos/comp-1/presenca-logo-11111111-2222-3333-4444-555555555555.webp' },
+      data: {
+        publicUrl:
+          'https://lcqwrngscsziysyfhpfj.supabase.co/storage/v1/object/public/logos/comp-1/presenca-logo-11111111-2222-3333-4444-555555555555.webp',
+      },
     });
   });
 
@@ -112,7 +117,9 @@ describe('uploadSiteLogo', () => {
       { contentType: 'image/webp', upsert: false },
     );
     expect(bucket.getPublicUrl).toHaveBeenCalledWith('comp-42/presenca-logo-11111111-2222-3333-4444-555555555555.webp');
-    expect(url).toBe('https://cdn.example.com/logos/comp-1/presenca-logo-11111111-2222-3333-4444-555555555555.webp');
+    expect(url).toBe(
+      'https://lcqwrngscsziysyfhpfj.supabase.co/storage/v1/object/public/logos/comp-1/presenca-logo-11111111-2222-3333-4444-555555555555.webp',
+    );
   });
 
   it('falls back to image/png when webp toBlob returns null', async () => {
@@ -136,5 +143,21 @@ describe('uploadSiteLogo', () => {
     bucket.upload.mockResolvedValue({ error: { message: 'Permission denied' } });
     const file = new File(['webp-content'], 'logo.webp', { type: 'image/webp' });
     await expect(uploadSiteLogo('comp-1', file)).rejects.toThrow('Não foi possível enviar o logo.');
+  });
+
+  it('extracts and deletes only scoped presenca-logo paths from Supabase logos bucket', async () => {
+    const valid =
+      'https://lcqwrngscsziysyfhpfj.supabase.co/storage/v1/object/public/logos/comp-1/presenca-logo-abc.webp';
+    expect(extractSiteLogoPath(valid, 'comp-1')).toBe('comp-1/presenca-logo-abc.webp');
+    expect(extractSiteLogoPath(valid, 'other-comp')).toBeNull();
+    expect(extractSiteLogoPath('/presenca/demo-logo-barber.svg', 'comp-1')).toBeNull();
+
+    await deleteSiteLogo('comp-1', valid);
+    expect(storageFrom).toHaveBeenCalledWith('logos');
+    expect(bucket.remove).toHaveBeenCalledWith(['comp-1/presenca-logo-abc.webp']);
+
+    bucket.remove.mockClear();
+    await deleteSiteLogo('comp-1', 'https://evil.example.com/logos/comp-1/presenca-logo-abc.webp');
+    expect(bucket.remove).not.toHaveBeenCalled();
   });
 });

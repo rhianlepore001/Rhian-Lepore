@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { isReservedSiteSlug } from '../lib/establishment/model';
 import { Card } from './ui/Card';
 import { Button } from './ui/Button';
 import { useToast } from './ui/Toast';
@@ -47,6 +48,7 @@ export const PublicLinkCard: React.FC<PublicLinkCardProps> = ({ businessSlug, pu
         if (!/^[a-z0-9-]+$/.test(slug)) return "Apenas letras minúsculas, números e hífens";
         if (slug.startsWith('-') || slug.endsWith('-')) return "Não pode começar ou terminar com hífen";
         if (slug.includes('--')) return "Não pode ter hífens consecutivos";
+        if (isReservedSiteSlug(slug)) return "Este endereço é reservado do sistema";
         return null;
     };
 

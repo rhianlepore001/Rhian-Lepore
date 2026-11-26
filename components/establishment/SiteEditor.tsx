@@ -31,6 +31,7 @@ import {
   neighborhoodFromAddress,
   photoObjectPosition,
   RECOMMENDED_BACKGROUNDS,
+  recommendedPresetForKind,
   resolvedBackground,
   resolvedPreset,
   siteSurface,
@@ -227,20 +228,23 @@ function BackgroundField({
 
   const customSelected = pickingCustom || !recommended;
 
+  const recommendedId = recommendedPresetForKind(kind);
+
   return (
     <fieldset className="se-bg">
       <legend>Cor de fundo</legend>
-      <p className="se-help">Padrões prontos recomendados para começar rápido, ou escolha uma cor sua.</p>
+      <p className="se-help">Escolha um padrão pronto ou ajuste uma cor sua.</p>
       <div className="se-swatches" role="radiogroup" aria-label="Cor de fundo do site">
         {RECOMMENDED_BACKGROUNDS.map(item => {
           const checked = !customSelected && item.hex.toLowerCase() === current.toLowerCase();
+          const isRecommended = item.id === recommendedId;
           return (
             <button
               key={item.id}
               type="button"
               role="radio"
               aria-checked={checked}
-              aria-label={`${item.label}, recomendada`}
+              aria-label={isRecommended ? `${item.label}, recomendada` : item.label}
               className="se-swatch"
               style={{ '--swatch': item.hex } as React.CSSProperties}
               onClick={() => {
@@ -250,7 +254,7 @@ function BackgroundField({
             >
               <i aria-hidden="true" />
               <span>{item.label}</span>
-              <small className="se-swatch-badge">Recomendada</small>
+              {isRecommended && <small className="se-swatch-badge">Recomendada</small>}
             </button>
           );
         })}
@@ -296,8 +300,19 @@ function BackgroundField({
   );
 }
 
+type EditorStep = 'brand' | 'intro' | 'photos' | 'share';
+
+const EDITOR_STEPS: Array<{ id: EditorStep; label: string }> = [
+  { id: 'brand', label: '1. Visual' },
+  { id: 'intro', label: '2. Textos' },
+  { id: 'photos', label: '3. Fotos' },
+  { id: 'share', label: '4. Divulgar' },
+];
+
 export function SiteEditor({ data, initial, companyId, demo = false, embedded = false }: SiteEditorProps) {
   const [config, setConfig] = useState(() => loadSiteDraft(companyId, initial));
+  const [savedJson, setSavedJson] = useState(() => JSON.stringify(loadSiteDraft(companyId, initial)));
+  const [step, setStep] = useState<EditorStep>('brand');
   const [saved, setSaved] = useState('');
   const [mode, setMode] = useState<'mobile' | 'desktop'>('mobile');
   const [expanded, setExpanded] = useState(false);
@@ -305,6 +320,9 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
   const [confirmReset, setConfirmReset] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState('');
 
+  const isDirty = useMemo(() => JSON.stringify(config) !== savedJson, [config, savedJson]);
+
+  const staleLogos = useRef<Set<string>>(new Set());
   const frame = useRef<HTMLIFrameElement>(null);
   const expandBtnRef = useRef<HTMLButtonElement>(null);
   const backBtnRef = useRef<HTMLButtonElement>(null);
@@ -380,6 +398,21 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
   }, []);
 
   useEffect(() => {
+    if (!frameReady) return;
+    const win = frame.current?.contentWindow;
+    if (!win) return;
+    win.postMessage(
+      { type: 'agendix:site-preview', data: dataRef.current, config: configRef.current },
+      window.location.origin,
+    );
+    try {
+      win.scrollTo?.(0, 0);
+    } catch {
+      // ignore cross-context scroll error
+    }
+  }, [mode, frameReady]);
+
+  useEffect(() => {
     if (expanded) {
       wasExpandedRef.current = true;
       backBtnRef.current?.focus();
@@ -405,7 +438,10 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
         setStorage(result.storage);
         setPresenceEnabled(result.presenceEnabled);
         setPublished(result.published);
-        if (result.config) setConfig(result.config);
+        if (result.config) {
+          setConfig(result.config);
+          setSavedJson(JSON.stringify(result.config));
+        }
       })
       .catch(() => {
         if (active) setSaved('Não foi possível ler o rascunho remoto. Sua cópia local continua disponível.');
@@ -414,6 +450,16 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
       active = false;
     };
   }, [companyId, demo]);
+
+  useEffect(() => {
+    if (!isDirty) return;
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [isDirty]);
 
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.agendixstudio.com';
   const shareOrigin =
@@ -440,6 +486,7 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
     setSaving(true);
     try {
       saveSiteDraft(companyId, config);
+      setSavedJson(JSON.stringify(config));
       if (!demo) {
         const m = await import('../../services/establishmentSite');
         const result = await m.saveOwnerSiteDraft(companyId, config);
@@ -466,6 +513,14 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
       const m = await import('../../services/establishmentSite');
       if (unpublish) await m.unpublishOwnerSite(companyId);
       else await m.publishOwnerSite(companyId, config);
+      if (!unpublish && staleLogos.current.size) {
+        const currentLogo = config.logoRemoved ? '' : config.logo || '';
+        const photos = await import('../../services/establishmentPhotos');
+        const pending = Array.from(staleLogos.current).filter(url => url !== currentLogo);
+        staleLogos.current.clear();
+        await Promise.all(pending.map(url => photos.deleteSiteLogo(companyId, url).catch(() => undefined)));
+      }
+      setSavedJson(JSON.stringify(config));
       setPublished(!unpublish);
       setSaved(
         unpublish
@@ -548,11 +603,15 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
   };
 
   const jumpToSection = (sectionKey: CompletenessSectionKey) => {
-    const target = sectionRefs.current[sectionKey];
-    if (!target) return;
-    target.open = true;
-    const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    target.scrollIntoView?.({ behavior: reduced ? 'instant' : 'smooth', block: 'start' });
+    const targetStep: EditorStep = sectionKey === 'contact' ? 'share' : sectionKey;
+    setStep(targetStep);
+    window.requestAnimationFrame(() => {
+      const target = sectionRefs.current[sectionKey];
+      if (!target) return;
+      target.open = true;
+      const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      target.scrollIntoView?.({ behavior: reduced ? 'instant' : 'smooth', block: 'start' });
+    });
   };
 
   const field = (label: string, value: string, onChange: (value: string) => void, multiline = false, hint?: string) => (
@@ -675,18 +734,23 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
         </div>
       </header>
 
-      <div className="se-notice">
+      <div className="se-notice" data-dirty={isDirty || undefined}>
         <span className="se-status-dot" />
         <div>
-          <strong>{published ? 'Site publicado' : 'Rascunho privado'}</strong>
+          <strong>
+            {published ? 'Site publicado' : 'Rascunho privado'}
+            {isDirty ? ' · Alterações não salvas' : ''}
+          </strong>
           <p>
-            {demo
-              ? 'Modo demonstração — alterações ficam salvas só neste navegador.'
-              : storage === 'local'
-                ? 'Salvo neste navegador. Para publicar online, ative o plano Presença.'
-                : presenceEnabled
-                  ? 'Suas alterações só entram no ar ao tocar em Publicar.'
-                  : 'O botão Publicar libera quando o plano Presença estiver ativo.'}
+            {isDirty
+              ? 'Você tem alterações não salvas. Toque em Salvar rascunho antes de sair desta página.'
+              : demo
+                ? 'Modo demonstração — alterações ficam salvas só neste navegador.'
+                : storage === 'local'
+                  ? 'Salvo neste navegador. Você já pode montar tudo com calma; a liberação para publicar é feita pela equipe AgendiX.'
+                  : presenceEnabled
+                    ? 'Suas alterações só entram no ar ao tocar em Publicar.'
+                    : 'Você já pode personalizar e salvar tudo aqui. A liberação para colocar o site no ar é feita manualmente pela equipe AgendiX.'}
           </p>
         </div>
       </div>
@@ -741,14 +805,32 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
             )}
           </section>
 
-          <BackgroundField config={config} kind={data.kind} onChange={update} />
+          <nav className="se-steps-nav" role="tablist" aria-label="Etapas de edição do site">
+            {EDITOR_STEPS.map(item => (
+              <button
+                key={item.id}
+                type="button"
+                role="tab"
+                aria-selected={step === item.id}
+                className="se-step-tab"
+                onClick={() => setStep(item.id)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
 
-          <details
-            ref={el => {
-              sectionRefs.current.brand = el;
-            }}
-          >
-            <summary>Estilo e identidade</summary>
+          {step === 'brand' && (
+            <>
+              <BackgroundField config={config} kind={data.kind} onChange={update} />
+
+              <details
+                ref={el => {
+                  sectionRefs.current.brand = el;
+                }}
+                open
+              >
+                <summary>Estilo e identidade</summary>
             <div className="se-detail-content">
               <LogoPicker
                 value={effectiveLogo}
@@ -759,6 +841,7 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
                 demo={demo}
                 demoLogo={data.logo}
                 onChange={update}
+                onLogoReplaced={url => staleLogos.current.add(url)}
               />
 
               <div className="se-block-group">
@@ -926,14 +1009,21 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
               </div>
             </div>
           </details>
+              <button type="button" className="se-step-next" onClick={() => setStep('intro')}>
+                Próximo: Textos da capa →
+              </button>
+            </>
+          )}
 
-          <details
-            ref={el => {
-              sectionRefs.current.intro = el;
-            }}
-            open
-          >
-            <summary>Capa e apresentação</summary>
+          {step === 'intro' && (
+            <>
+              <details
+                ref={el => {
+                  sectionRefs.current.intro = el;
+                }}
+                open
+              >
+                <summary>Capa e apresentação</summary>
             <div className="se-detail-content">
               {field(
                 'Frase principal',
@@ -1150,13 +1240,21 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
               </p>
             </div>
           </details>
+              <button type="button" className="se-step-next" onClick={() => setStep('photos')}>
+                Próximo: Fotos e serviços →
+              </button>
+            </>
+          )}
 
-          <details
-            ref={el => {
-              sectionRefs.current.photos = el;
-            }}
-          >
-            <summary>Fotos, serviços e equipe</summary>
+          {step === 'photos' && (
+            <>
+              <details
+                ref={el => {
+                  sectionRefs.current.photos = el;
+                }}
+                open
+              >
+                <summary>Fotos, serviços e equipe</summary>
             <div className="se-detail-content">
               <div className="se-block-group">
                 <span className="se-label-title">Galeria do espaço e trabalhos</span>
@@ -1437,25 +1535,32 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
               </div>
             </div>
           </details>
+              <button type="button" className="se-step-next" onClick={() => setStep('share')}>
+                Próximo: Google e divulgar →
+              </button>
+            </>
+          )}
 
-          <details
-            ref={el => {
-              sectionRefs.current.contact = el;
-            }}
-          >
-            <summary>
-              <span className="se-summary-stack">
-                <span>Seções e ordem da página</span>
-                <small>Dúvidas frequentes e contato</small>
-              </span>
-            </summary>
-            <div className="se-detail-content">
-              <div className="se-block-group">
-                <span className="se-label-title">Ordem e visibilidade das seções</span>
-                <p className="se-help se-help-tight">Seções sem conteúdo ficam ocultas automaticamente no site.</p>
-                {config.sections.map((section, index) => {
-                  const hasContent = sectionHasContent(section.id);
-                  return (
+          {step === 'share' && (
+            <>
+              <details
+                ref={el => {
+                  sectionRefs.current.contact = el;
+                }}
+              >
+                <summary>
+                  <span className="se-summary-stack">
+                    <span>Seções e ordem da página</span>
+                    <small>Dúvidas frequentes e contato</small>
+                  </span>
+                </summary>
+                <div className="se-detail-content">
+                  <div className="se-block-group">
+                    <span className="se-label-title">Ordem e visibilidade das seções</span>
+                    <p className="se-help se-help-tight">Seções sem conteúdo ficam ocultas automaticamente no site.</p>
+                    {config.sections.map((section, index) => {
+                      const hasContent = sectionHasContent(section.id);
+                      return (
                     <div className="se-section-row" key={section.id}>
                       <label>
                         <input
@@ -1571,14 +1676,14 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
             </div>
           </details>
 
-          <details>
+          <details open>
             <summary>Google e compartilhar</summary>
             <div className="se-detail-content">
               <div className="se-block-group">
                 <span className="se-label-title">Como seu site aparece no Google</span>
                 <div className="se-google-card" aria-label="Prévia do resultado no Google">
                   <span className="se-google-url">
-                    agendixstudio.com › {data.slug}
+                    agendixstudio.com/s/{data.slug}
                   </span>
                   <strong>{seoPreview.title}</strong>
                   <p>{seoPreview.description}</p>
@@ -1614,7 +1719,7 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
                 </ul>
               </div>
 
-              <div className="se-block-group">
+              <div className="se-block-group se-share-block">
                 <span className="se-label-title">Compartilhar agora</span>
                 <p className="se-share-url">{shareLinks.direct}</p>
                 <div className="se-share-buttons">
@@ -1715,6 +1820,8 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
               </p>
             </div>
           </details>
+            </>
+          )}
         </div>
 
         <aside

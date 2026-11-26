@@ -102,13 +102,6 @@ export function PhotoPicker({
           </button>
         )}
       </div>
-      <details className="se-photo-url">
-        <summary>Usar o endereço de uma foto</summary>
-        <label className="se-field">
-          <span>{label} (endereço da foto)</span>
-          <input type="url" value={value} onChange={e => onChange(e.target.value)} placeholder="https://…" />
-        </label>
-      </details>
       {helpCopy && <p className="se-help">{helpCopy}</p>}
       {status && (
         <p role="status" className="se-help">

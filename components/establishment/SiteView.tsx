@@ -77,13 +77,31 @@ function currentWeekdayIndex(timeZone: string): number {
   }
 }
 
-function readOriginParam(): string | undefined {
+function readOriginParam(slug?: string): string | undefined {
   if (typeof window === 'undefined') return undefined;
   const hashQuery = window.location.hash.includes('?') ? window.location.hash.split('?')[1] : '';
   const fromHash = new URLSearchParams(hashQuery).get('origem')?.trim().toLowerCase();
-  if (fromHash && ALLOWED_ORIGINS.has(fromHash)) return fromHash;
   const fromSearch = new URLSearchParams(window.location.search).get('origem')?.trim().toLowerCase();
-  if (fromSearch && ALLOWED_ORIGINS.has(fromSearch)) return fromSearch;
+  const found = [fromHash, fromSearch].find(val => val && ALLOWED_ORIGINS.has(val));
+  const key = slug ? `agendix:presence:origin:${slug}` : '';
+  if (found) {
+    if (key) {
+      try {
+        sessionStorage.setItem(key, found);
+      } catch {
+        // ignore storage errors
+      }
+    }
+    return found;
+  }
+  if (key) {
+    try {
+      const stored = sessionStorage.getItem(key)?.trim().toLowerCase();
+      if (stored && ALLOWED_ORIGINS.has(stored)) return stored;
+    } catch {
+      // ignore storage errors
+    }
+  }
   return undefined;
 }
 
@@ -212,7 +230,7 @@ export function SiteView({ data: sourceData, config: incoming, serviceId, previe
     ? data.services
     : data.services.filter(item => item.category?.trim() === activeCategory);
 
-  const pairs = (config.beforeAfter ?? []).filter(pair => pair.before && pair.after);
+  const pairs = (config.beforeAfter ?? []).filter(pair => pair.before && pair.after && pair.before !== pair.after);
   const embedBefore = activeCategory === 'all' && sections.some(section => section.id === 'beforeAfter') && sections.some(section => section.id === 'services') && pairs.length > 0;
   const topServices = embedBefore ? filteredServices.slice(0, 3) : filteredServices;
   const extraServices = embedBefore ? filteredServices.slice(3) : [];
@@ -294,8 +312,8 @@ export function SiteView({ data: sourceData, config: incoming, serviceId, previe
   });
   if (booking?.serviceId) params.set('rebook', booking.serviceId);
   if (booking?.professionalId) params.set('pro', booking.professionalId);
-  const originSource = readOriginParam();
-  if (originSource) params.set('origem', originSource);
+  const originSource = readOriginParam(data.slug);
+  params.set('origem', originSource || 'site');
 
   const bookingSlug = data.demo ? `simulacao-${beauty ? 'beauty' : 'barber'}` : data.slug;
   const bookingUrl = data.demo
@@ -646,7 +664,7 @@ export function SiteView({ data: sourceData, config: incoming, serviceId, previe
                           <img
                             src={person.image}
                             alt={person.name}
-                            loading="lazy"
+                            loading="eager"
                             decoding="async"
                             width={320}
                             height={400}
@@ -964,8 +982,9 @@ export function SiteView({ data: sourceData, config: incoming, serviceId, previe
               )}
               <div className="es-hero-copy">
                 <p className="es-kicker">
-                  {copy.kindLine}
-                  {heroLocation ? ` ${heroLocation}` : ''}
+                  {config.headline.toLowerCase().includes(copy.kindLine.toLowerCase())
+                    ? place || copy.kindLine
+                    : `${copy.kindLine}${heroLocation ? ` ${heroLocation}` : ''}`}
                 </p>
                 <h1>{config.headline}</h1>
                 {config.about && <p className="es-lede">{config.about}</p>}

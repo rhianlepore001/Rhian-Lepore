@@ -11,6 +11,7 @@ interface LogoPickerProps {
   demo: boolean;
   demoLogo?: string;
   onChange: (patch: Partial<Pick<SiteConfig, 'logo' | 'logoRemoved' | 'logoDisplay'>>) => void;
+  onLogoReplaced?: (url: string) => void;
 }
 
 export function LogoPicker({
@@ -22,6 +23,7 @@ export function LogoPicker({
   demo,
   demoLogo,
   onChange,
+  onLogoReplaced,
 }: LogoPickerProps) {
   const inputId = useId();
   const [status, setStatus] = useState('');
@@ -36,18 +38,26 @@ export function LogoPicker({
 
   const handleUpload = async (file?: File) => {
     if (!file || demo) return;
+    const previousLogo = effectiveLogo;
     setUploading(true);
     setStatus('Preparando e enviando o logo…');
     try {
       const { uploadSiteLogo } = await import('../../services/establishmentPhotos');
       const uploaded = await uploadSiteLogo(companyId, file);
       onChange({ logo: uploaded, logoRemoved: false });
+      if (previousLogo && previousLogo !== uploaded) onLogoReplaced?.(previousLogo);
       setStatus('Logo enviado. Salve o rascunho para guardar.');
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Não foi possível enviar o logo.');
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleRemoveLogo = () => {
+    const currentLogo = effectiveLogo;
+    onChange({ logo: undefined, logoRemoved: true });
+    if (!demo && currentLogo) onLogoReplaced?.(currentLogo);
   };
 
   return (
@@ -107,7 +117,7 @@ export function LogoPicker({
                 <button
                   type="button"
                   className="se-link-button se-inline-icon-btn"
-                  onClick={() => onChange({ logo: undefined, logoRemoved: true })}
+                  onClick={handleRemoveLogo}
                 >
                   <Trash2 size={14} aria-hidden="true" />
                   Remover logo
@@ -148,21 +158,6 @@ export function LogoPicker({
             </button>
           </div>
         </div>
-      )}
-
-      {!demo && (
-        <details className="se-photo-url">
-          <summary>Usar o endereço de um logo</summary>
-          <label className="se-field">
-            <span>Endereço da imagem do logo</span>
-            <input
-              type="url"
-              value={effectiveLogo}
-              onChange={event => onChange({ logo: event.target.value, logoRemoved: false })}
-              placeholder="https://…"
-            />
-          </label>
-        </details>
       )}
 
       <p className="se-help">

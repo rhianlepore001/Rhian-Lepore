@@ -9,6 +9,14 @@
 
 ---
 
+## Presença — revisão pós-PR #258 e pré-render SEO `/s/:slug` (26 Nov 2026, draft)
+
+Branch `feat/presenca-site-completo`, PR #258 (draft). Rodada de correções sobre os 13 itens da revisão independente:
+- **Banco e Storage:** `20261124133813_establishment_sites.sql` e `components/SettingsLayout.tsx` restaurados exatamente como na `main`. Nova migration `20261125180000_establishment_sites_v2.sql` (+ rollback e testes SQL no PG17 local, **não aplicada em produção**): `get_public_establishment_site` completa, lista estendida de slugs reservados (`admin`, `app`, `www`, `blog` etc.), validação para uploads próprios no Storage (URL externa removida do editor; remoção segura de logos antigos após publicação), gravação da origem (`?origem=`) no agendamento online e RPC de sitemap.
+- **SEO pré-renderizado `/s/:slug`:** `lib/establishment/prerender.ts`, Edge Functions `publish-establishment-site` e `serve-establishment-site`, `public/presenca/site-boot.js` e canonical/compartilhamento em `/s/:slug`; `vercel.json` **não** foi alterado (proposta documentada em `docs/presenca/seo-prerender.md` aguardando OK explícito do Rhian). Guia operacional de liberação manual em `docs/presenca/ativacao-manual.md`.
+- **UI/UX e fotos demo:** fotos demo em `public/presenca/rhian/` convertidas para WebP (54–144 KB); barbearia com identidade urbana escura própria; antes/depois com fotos distintas; editor simplificado em 4 passos (`1. Visual`, `2. Textos`, `3. Fotos`, `4. Divulgar`), aviso de alterações não salvas e apenas 1 estilo marcado `Recomendada` por nicho; prévia ao vivo estabilizada com `transform: scale`.
+- **Auditoria e notas finais:** auditoria independente de segurança **APROVADA**; eval visual independente (Rodada 6, mobile 390/320 e desktop 1280, claro/escuro) **APROVADO** com **9,58/10** de média (**9,6/10** nas 4 superfícies públicas/agendamento e **9,5/10** no Painel "Meu site"). Login, cadastro, onboarding e Stripe permaneceram intocados.
+
 ## Presença — site público completo e editor para leigos (25 Nov 2026, draft)
 
 Branch `feat/presenca-site-completo` (a partir da `main` `2563a7a5`). Entrega completa do módulo Presença alinhada ao PRD:

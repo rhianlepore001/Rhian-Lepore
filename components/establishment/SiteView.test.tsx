@@ -13,7 +13,7 @@ const baseData: SiteData = {
   region: 'BR',
   demo: false,
   logo: '/presenca/demo-logo-barber.svg',
-  cover: '/presenca/rhian/barber-hero.jpg',
+  cover: '/presenca/rhian/barber-hero.webp',
   address: 'Rua das Flores, 50 — Centro',
   phone: '11999998888',
   instagram: 'cortefino',
@@ -53,12 +53,12 @@ const baseData: SiteData = {
     },
   ],
   team: [
-    { id: 'pro-1', name: 'Rafael Costa', bio: 'Degradê', image: '/presenca/rhian/barber-portrait.jpg' },
-    { id: 'pro-2', name: 'Lucas Mendes', bio: 'Tesoura', image: '/presenca/rhian/barber-fade.jpg' },
+    { id: 'pro-1', name: 'Rafael Costa', bio: 'Degradê', image: '/presenca/rhian/barber-portrait.webp' },
+    { id: 'pro-2', name: 'Lucas Mendes', bio: 'Tesoura', image: '/presenca/rhian/barber-fade.webp' },
   ],
   gallery: [
-    { src: '/presenca/rhian/barber-hero.jpg', alt: 'Bancada iluminada' },
-    { src: '/presenca/rhian/barber-fade.jpg', alt: 'Acabamento na navalha' },
+    { src: '/presenca/rhian/barber-hero.webp', alt: 'Bancada iluminada' },
+    { src: '/presenca/rhian/barber-fade.webp', alt: 'Acabamento na navalha' },
   ],
   reviews: [{ id: 'rev-1', name: 'Bruno M.', rating: 5, comment: 'Pontual e ótimo acabamento.' }],
   rating: 4.9,
@@ -79,7 +79,8 @@ describe('SiteView public site', () => {
 
     expect(container.textContent?.toLowerCase()).not.toContain('agendix');
     const kicker = container.querySelector('.es-hero .es-kicker');
-    expect(kicker).toHaveTextContent('Barbearia em Centro');
+    expect(kicker).toHaveTextContent('Centro');
+    expect(kicker?.textContent).not.toContain('Barbearia');
     expect(kicker?.textContent).not.toContain('São Paulo');
 
     expect(screen.queryByRole('link', { name: 'Privacidade' })).toBeNull();
@@ -190,8 +191,8 @@ describe('SiteView public site', () => {
       ...defaultConfig(baseData),
       beforeAfter: [
         {
-          before: '/presenca/rhian/barber-hero.jpg',
-          after: '/presenca/rhian/barber-fade.jpg',
+          before: '/presenca/rhian/barber-hero.webp',
+          after: '/presenca/rhian/barber-fade.webp',
           caption: 'Corte e acabamento',
         },
       ],

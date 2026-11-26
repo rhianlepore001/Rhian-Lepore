@@ -196,9 +196,21 @@ export async function submitPublicBooking(input: SubmitPublicBookingInput): Prom
   };
 
   let reviewToken = parsed.reviewToken;
-  let { data: rpcRows, error: rpcError } = await supabase.rpc('create_public_booking',
-    reviewToken ? { ...rpcArgs, p_review_token: reviewToken } : rpcArgs,
+  const referralSource = parsed.referralSource;
+  let { data: rpcRows, error: rpcError } = await supabase.rpc(
+    'create_public_booking',
+    referralSource
+      ? { ...rpcArgs, p_review_token: reviewToken ?? null, p_referral_source: referralSource }
+      : reviewToken
+        ? { ...rpcArgs, p_review_token: reviewToken }
+        : rpcArgs,
   );
+  if (referralSource && isMissingRpcError(rpcError)) {
+    ({ data: rpcRows, error: rpcError } = await supabase.rpc(
+      'create_public_booking',
+      reviewToken ? { ...rpcArgs, p_review_token: reviewToken } : rpcArgs,
+    ));
+  }
   if (reviewToken && isMissingRpcError(rpcError)) {
     reviewToken = undefined;
     ({ data: rpcRows, error: rpcError } = await supabase.rpc('create_public_booking', rpcArgs));
@@ -263,9 +275,21 @@ export async function submitPublicGroupBooking(input: SubmitPublicGroupBookingIn
     })),
   };
   let reviewTokens = parsed.reviewTokens;
-  let { data, error } = await supabase.rpc('create_public_group_booking',
-    reviewTokens ? { ...rpcArgs, p_review_tokens: reviewTokens } : rpcArgs,
+  const referralSource = parsed.referralSource;
+  let { data, error } = await supabase.rpc(
+    'create_public_group_booking',
+    referralSource
+      ? { ...rpcArgs, p_review_tokens: reviewTokens ?? null, p_referral_source: referralSource }
+      : reviewTokens
+        ? { ...rpcArgs, p_review_tokens: reviewTokens }
+        : rpcArgs,
   );
+  if (referralSource && isMissingRpcError(error)) {
+    ({ data, error } = await supabase.rpc(
+      'create_public_group_booking',
+      reviewTokens ? { ...rpcArgs, p_review_tokens: reviewTokens } : rpcArgs,
+    ));
+  }
   if (reviewTokens && isMissingRpcError(error)) {
     reviewTokens = undefined;
     ({ data, error } = await supabase.rpc('create_public_group_booking', rpcArgs));

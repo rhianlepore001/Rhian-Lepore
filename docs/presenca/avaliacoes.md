@@ -1,6 +1,41 @@
 # Presença — avaliação e evolução do módulo
 
-Data mais recente: 25 Nov 2026. Branch `feat/presenca-site-completo`.
+Data mais recente: 26 Nov 2026. Branch `feat/presenca-site-completo` (PR #258).
+
+## Rodada 26 Nov 2026 — ajustes pós-revisão do PR #258
+
+Conclusão dos 13 itens solicitados na revisão independente do PR #258, preservando `components/SettingsLayout.tsx`, `supabase/migrations/20261124133813_establishment_sites.sql`, `vercel.json`, login, cadastro, onboarding e Stripe intactos em relação à `main`:
+
+1. **Banco e migration nova (`20261125180000_establishment_sites_v2.sql` + rollback):**
+   - Arquivo `20261124133813_establishment_sites.sql` mantido igual à `main`; nova migration cria/atualiza `get_public_establishment_site` com todos os campos do editor, lista estendida de 46 slugs reservados (`admin`, `app`, `www`, `blog`, etc.), validação de URLs para uploads próprios no Storage, bucket `published-sites`, `list_published_site_slugs()` e gravação da origem (`referral_source`: `instagram`, `google`, `qr`, `site`) nos agendamentos online.
+2. **Ativação manual, Storage e origem:**
+   - Upload exclusivo pelo app (removida entrada de URL externa em `LogoPicker` e `PhotoPicker`); remoção segura de logos antigos no Storage somente após publicação confirmada; bloqueio de slugs reservados em `PublicLinkCard`; aviso de alterações não salvas + `beforeunload` no editor; mensagem amigável sobre ativação manual pela equipe AgendiX e guia operacional em `docs/presenca/ativacao-manual.md`.
+   - Fotos de demonstração convertidas para WebP em `public/presenca/rhian/` (54–144 KB cada).
+3. **Pré-renderização SEO em `/s/:slug` + Sitemap (sem editar `vercel.json`):**
+   - Helper `lib/establishment/prerender.ts`, Edge Functions `publish-establishment-site` e `serve-establishment-site`, `public/presenca/site-boot.js`, alinhamento de canonical/links compartilhados para `/s/:slug` e documentação da proposta de `vercel.json` em `docs/presenca/seo-prerender.md` aguardando aprovação explícita do Rhian.
+4. **Design do site público e do painel "Meu site":**
+   - Barbearia demo com identidade urbana própria (fundo escuro `#09090B`, acento cobre ajustado para contraste no dark), remoção de repetição no topo/título, botão do cabeçalho alinhado ao CTA principal, oferta na mesma largura das seções, breadcrumb da página de serviço alinhado e antes/depois com fotos distintas.
+   - Editor reorganizado em 4 passos (`1. Visual`, `2. Textos`, `3. Fotos`, `4. Divulgar`), apenas 1 estilo marcado `Recomendada` por nicho, prévia ao vivo estável com `transform: scale` (sem tela branca na alternância celular/computador e sem cortes na coluna rolável desktop).
+
+### Eval UI/UX independente (Rodada 6 — mobile 390/320 primeiro, 768 e 1280, claro e escuro)
+
+| Superfície | Nota | Leitura |
+|---|---|---|
+| Site público — Barber / Editorial (`320`, `390`, `768`, `1280` + serviço) | **9,6/10** | Identidade urbana escura coerente, cabeçalho e CTAs consistentes, oferta alinhada e antes/depois distinto. |
+| Site público — Beauty (`320`, `390`, `768`, `1280` + serviço) | **9,6/10** | Paleta clara luminosa sem vazamentos, filtros horizontais sem quebra e serviço alinhado. |
+| Site público — Cadastro Mínimo (`390`, `1280`) | **9,6/10** | Hierarquia clara sem seções vazias expostas. |
+| Fluxo de Agendamento Embutido (`390`, `1280` — Barber & Beauty) | **9,6/10** | Herança de estilo/cor, contexto preservado e sem corte em telas estreitas. |
+| Painel "Meu site" — Editor Demo e Autenticado Claro/Escuro (`390`, `1280`) | **9,5/10** | Abas em 4 passos, apenas 1 opção recomendada por nicho, prévia ao vivo íntegra, logo, Google e QR Code visíveis sem cortes. |
+
+**Média final:** **9,58/10** (**APROVADO**).
+
+### Revisões independentes e verificações
+
+- **Validador Crítico de Segurança:** **APROVADO** (0 pendências bloqueantes).
+- Verificações finais executadas após as últimas edições: `npm run typecheck`, `npm run lint`, `npm test -- --run`, `npm run build` (`check-bundle-strings`), `npx playwright test --config e2e/establishment/playwright.config.ts` (26/26) e `scripts/test-sql-establishment-sites.sh` no PostgreSQL 17 local (v1 + v2 + rollback 2x + reapply).
+- Migrations não aplicadas em produção; `vercel.json`, `SettingsLayout.tsx`, login, cadastro, onboarding e Stripe mantidos intactos.
+
+---
 
 ## Rodada 25 Nov 2026 — site completo do estabelecimento + editor para donos leigos + logo
 

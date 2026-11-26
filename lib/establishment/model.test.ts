@@ -84,15 +84,17 @@ describe('brand contrast', () => {
 
 describe('public allowlist', () => {
   it('drops private fields, removed staff and unsafe image URLs', () => {
+    const storageTeamUrl = 'https://lcqwrngscsziysyfhpfj.supabase.co/storage/v1/object/public/team_photos/a/pro.jpg';
+    const storageGalleryUrl = 'https://lcqwrngscsziysyfhpfj.supabase.co/storage/v1/object/public/gallery/a/real.jpg';
     const data = sanitizePublicData({
       profile: { id: 'a', business_slug: 'safe', business_name: 'Safe', phone: '+55 11 1111 1111', customer_email: 'secret@example.com', logo_url: 'javascript:alert(1)' },
-      team: [{ id: 'a', name: 'Active', active: true, photo_url: 'https://example.com/a.jpg', phone: 'private' }, { id: 'b', name: 'Gone', active: false }, { id: 'c', name: 'Deleted', active: true, deleted_at: '2026-01-01' }],
+      team: [{ id: 'a', name: 'Active', active: true, photo_url: storageTeamUrl, phone: 'private' }, { id: 'b', name: 'Gone', active: false }, { id: 'c', name: 'Deleted', active: true, deleted_at: '2026-01-01' }],
       services: [{ id: 's', name: 'Corte', active: true, price: 0, duration_minutes: 30, image_url: 'data:text/html,no' }, { id: 'x', name: 'Inactive', active: false, price: 50, duration_minutes: 30 }],
-      gallery: [{ image_url: 'https://example.com/real.jpg' }, { image_url: 'javascript:alert(1)' }],
+      gallery: [{ image_url: storageGalleryUrl }, { image_url: 'https://evil.example.com/outside.jpg' }, { image_url: 'javascript:alert(1)' }],
       reviews: { average: 4.9, total: 2, reviews: [{ id: 'r', rating: 5, comment: 'Contato: teste@example.com, +55 (11) 99999-9999', name: 'Maria Sobrenome Completo', phone: 'secret' }] },
     });
     expect(data.team).toHaveLength(1);
-    expect(data.team[0]).toEqual({ id: 'a', name: 'Active', bio: undefined, image: 'https://example.com/a.jpg' });
+    expect(data.team[0]).toEqual({ id: 'a', name: 'Active', bio: undefined, image: storageTeamUrl });
     expect(data.logo).toBeUndefined();
     expect(data.services).toHaveLength(1);
     expect(data.services[0].image).toBeUndefined();
@@ -120,7 +122,7 @@ describe('local SEO', () => {
     const data = { ...site, address: 'Rua Fradique Coutinho, 420 — Pinheiros, São Paulo', rating: 4.8, reviewCount: 3 };
     const seo = buildSeo(data, defaultConfig(data), 'https://example.com');
     expect(seo.title).toBe('Navalha Fina — Barbearia em Pinheiros, São Paulo');
-    expect(seo.url).toBe('https://example.com/#/site/navalha-fina');
+    expect(seo.url).toBe('https://example.com/s/navalha-fina');
     expect(seo.jsonLd['@type']).toBe('HairSalon');
     expect(seo.jsonLd.address).toEqual({ '@type': 'PostalAddress', streetAddress: data.address, addressCountry: 'BR' });
     expect(seo.jsonLd.aggregateRating).toBeUndefined();
@@ -138,7 +140,7 @@ describe('local SEO', () => {
     const seo = buildSeo(site, config, 'https://example.com');
     expect(seo.jsonLd.telephone).toBe('+55 11 1234 5678');
     expect(JSON.stringify(seo.jsonLd)).toContain('Descrição publicada');
-    expect(seo.url).toBe('https://example.com/#/site/navalha-fina');
+    expect(seo.url).toBe('https://example.com/s/navalha-fina');
   });
   it('formats prices for Brazil and Portugal', () => {
     expect(formatPrice(65, 'BR')).toContain('65');
@@ -177,7 +179,8 @@ describe('offer copy', () => {
 
 describe('owner content overrides', () => {
   it('adds sales context without duplicating registered price, duration or roster', () => {
-    const config = { ...defaultConfig(site), serviceDetails: { cut: { description: 'Corte com acabamento', includes: ['Consulta', 'Finalização'], priceFrom: true, image: 'javascript:secret' }, removed: { description: 'Não aparece' } }, teamDetails: { former: { bio: 'Ex-membro' } }, contact: { phone: '123', instagram: '@minhacasa' }, gallery: [{ src: 'https://example.com/work.jpg', alt: 'Meu trabalho' }] };
+    const workImg = 'https://lcqwrngscsziysyfhpfj.supabase.co/storage/v1/object/public/covers/a/work.jpg';
+    const config = { ...defaultConfig(site), serviceDetails: { cut: { description: 'Corte com acabamento', includes: ['Consulta', 'Finalização'], priceFrom: true, image: 'javascript:secret' }, removed: { description: 'Não aparece' } }, teamDetails: { former: { bio: 'Ex-membro' } }, contact: { phone: '123', instagram: '@minhacasa' }, gallery: [{ src: workImg, alt: 'Meu trabalho' }] };
     const result = applySiteConfig(site, config);
     expect(result.services).toHaveLength(1);
     expect(result.services[0]).toMatchObject({ price: 65, duration: 30, description: 'Corte com acabamento', includes: ['Consulta', 'Finalização'], priceFrom: true });
@@ -185,26 +188,28 @@ describe('owner content overrides', () => {
     expect(result.team).toEqual([]);
     expect(result.phone).toBe('123');
     expect(result.instagram).toBe('minhacasa');
-    expect(result.gallery).toEqual([{ src: 'https://example.com/work.jpg', alt: 'Meu trabalho' }]);
+    expect(result.gallery).toEqual([{ src: workImg, alt: 'Meu trabalho' }]);
     expect(site.services[0].description).toBeUndefined();
   });
 });
 
 describe('logo, visual presets, categories, club and CTA customization', () => {
   it('supports custom logo, removal override, logoDisplay mode and rejects unsafe logo URLs', () => {
-    const withBaseLogo: SiteData = { ...site, logo: 'https://example.com/base-logo.png' };
-    const customConfig = normalizeSiteConfig({ logo: 'https://example.com/site-logo.webp', logoDisplay: 'logo' }, defaultConfig(withBaseLogo));
-    expect(customConfig.logo).toBe('https://example.com/site-logo.webp');
+    const baseLogo = 'https://lcqwrngscsziysyfhpfj.supabase.co/storage/v1/object/public/logos/a/base-logo.png';
+    const siteLogo = 'https://lcqwrngscsziysyfhpfj.supabase.co/storage/v1/object/public/logos/a/site-logo.webp';
+    const withBaseLogo: SiteData = { ...site, logo: baseLogo };
+    const customConfig = normalizeSiteConfig({ logo: siteLogo, logoDisplay: 'logo' }, defaultConfig(withBaseLogo));
+    expect(customConfig.logo).toBe(siteLogo);
     expect(customConfig.logoDisplay).toBe('logo');
-    expect(applySiteConfig(withBaseLogo, customConfig).logo).toBe('https://example.com/site-logo.webp');
+    expect(applySiteConfig(withBaseLogo, customConfig).logo).toBe(siteLogo);
 
-    const removedConfig = normalizeSiteConfig({ logoRemoved: true, logo: 'https://example.com/site-logo.webp' }, defaultConfig(withBaseLogo));
+    const removedConfig = normalizeSiteConfig({ logoRemoved: true, logo: siteLogo }, defaultConfig(withBaseLogo));
     expect(removedConfig.logoRemoved).toBe(true);
     expect(applySiteConfig(withBaseLogo, removedConfig).logo).toBeUndefined();
 
-    const unsafeLogo = normalizeSiteConfig({ logo: 'javascript:alert(1)' }, defaultConfig(withBaseLogo));
+    const unsafeLogo = normalizeSiteConfig({ logo: 'https://evil.example.com/logo.png' }, defaultConfig(withBaseLogo));
     expect(unsafeLogo.logo).toBeUndefined();
-    expect(applySiteConfig(withBaseLogo, unsafeLogo).logo).toBe('https://example.com/base-logo.png');
+    expect(applySiteConfig(withBaseLogo, unsafeLogo).logo).toBe(baseLogo);
   });
 
   it('supports 3 visual presets independent of business kind, CTA label and offer kind', () => {

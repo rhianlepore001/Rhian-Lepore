@@ -8,10 +8,12 @@ export type PhotoFocus = 'center' | 'top' | 'bottom' | 'work' | 'space';
 export interface PhotoPosition { x: number; y: number }
 
 export const RESERVED_SITE_SLUGS = new Set([
-  'login', 'register', 'landing', 'termos', 'privacidade', 'agenda', 'dashboard',
-  'configuracoes', 'book', 'site', 'site-preview', 'site-demo', 's', 'pro', 'clube',
-  'minha-area', 'queue', 'queue-status', 'avaliar', 'demo', 'demo-preview', 'api',
-  'assets', 'onboarding', 'onboarding-wizard', 'staff-onboarding', 'forgot-password',
+  'admin', 'app', 'www', 'blog', 'suporte', 'ajuda', 'status', 'cdn', 'static',
+  'mail', 'sitemap', 'robots', 'login', 'register', 'landing', 'termos',
+  'privacidade', 'agenda', 'dashboard', 'configuracoes', 'book', 'site',
+  'site-preview', 'site-demo', 's', 'pro', 'clube', 'minha-area', 'queue',
+  'queue-status', 'avaliar', 'demo', 'demo-preview', 'api', 'assets',
+  'onboarding', 'onboarding-wizard', 'staff-onboarding', 'forgot-password',
   'update-password', 'fila', 'clientes', 'produtos', 'financeiro', 'insights',
   'meus-insights', 'resultados-por-hora', 'club-demo',
 ]);
@@ -121,6 +123,10 @@ function hexColor(value: unknown): string | undefined {
 
 export function resolvedBackground(config: Pick<SiteConfig, 'style'> & { background?: string }, kind: SiteKind): string {
   return hexColor(config.background) ?? defaultBackground(config.style, kind);
+}
+
+export function recommendedPresetForKind(kind: SiteKind): SitePreset {
+  return kind === 'beauty' ? 'salon' : 'urban';
 }
 
 export function resolvedPreset(config: Pick<SiteConfig, 'style' | 'preset'>, kind: SiteKind): SitePreset {
@@ -339,7 +345,7 @@ export function buildSeo(sourceData: SiteData, config: SiteConfig, origin: strin
   const normalized = normalizeSiteConfig(config, defaultConfig(sourceData));
   const data = applyNormalizedSiteConfig(sourceData, normalized);
   const root = new URL(origin).origin;
-  const url = `${root}/#/site/${encodeURIComponent(data.slug)}`;
+  const url = `${root}/s/${encodeURIComponent(data.slug)}`;
   const place = placeFromAddress(data.address);
   const title = normalized.seoTitle.trim() || `${data.name} — ${kinds[data.kind]}${place ? ` em ${place}` : ''}`;
   const description = normalized.seoDescription.trim() || `${normalized.headline} ${data.services.length ? `Conheça os serviços, preços e profissionais de ${data.name}. Agende seu horário online.` : `Conheça ${data.name} e reserve seu horário.`}`;
@@ -380,9 +386,21 @@ function text(value: unknown, limit = 1000): string { return typeof value === 's
 function number(value: unknown): number | undefined { return typeof value === 'number' && Number.isFinite(value) ? value : undefined; }
 
 export function safeImageUrl(value: unknown): string | undefined {
-  if (typeof value !== 'string' || !value.trim()) return undefined;
-  if (/^\/(?!\/)/.test(value) && !Array.from(value).some(character => character.charCodeAt(0) <= 32 || character === '\\')) return value;
-  try { const parsed = new URL(value); return parsed.protocol === 'https:' && !parsed.username && !parsed.password ? parsed.href : undefined; } catch { return undefined; }
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.includes('..') || trimmed.includes('\\') || /%2e|%5c/i.test(trimmed)) return undefined;
+  if (/^\/(demo|presenca)\/[A-Za-z0-9._/-]+$/.test(trimmed)) return trimmed;
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol !== 'https:' || parsed.username || parsed.password) return undefined;
+    if (!/^[a-z0-9-]+\.supabase\.co$/i.test(parsed.hostname)) return undefined;
+    if (!/^\/storage\/v1\/object\/public\/(logos|covers|service_images|team_photos|gallery|membership_plans)\/[^?#]+$/i.test(parsed.pathname)) {
+      return undefined;
+    }
+    return parsed.href;
+  } catch {
+    return undefined;
+  }
 }
 
 function publicComment(value: unknown): string {
@@ -483,7 +501,7 @@ export function normalizeSiteConfig(input: unknown, fallback: SiteConfig): SiteC
     ...(source.serviceDetails ? { serviceDetails: normalizeServiceDetails(source.serviceDetails) } : {}),
     ...(source.teamDetails ? { teamDetails: Object.fromEntries(Object.entries(row(source.teamDetails)).slice(0, 40).map(([id, value]) => { const member = row(value); return [id, { ...(typeof member.bio === 'string' ? { bio: text(member.bio, 1000) } : {}), ...(safeImageUrl(member.image) ? { image: safeImageUrl(member.image) } : {}) }]; })) } : {}),
     ...(source.contact ? { contact: normalizeContact(source.contact) } : {}),
-    ...(Array.isArray(source.beforeAfter) ? { beforeAfter: rows(source.beforeAfter).slice(0, 8).filter(pair => safeImageUrl(pair.before) && safeImageUrl(pair.after)).map(pair => ({ before: safeImageUrl(pair.before)!, after: safeImageUrl(pair.after)!, ...(text(pair.caption, 160) ? { caption: text(pair.caption, 160) } : {}) })) } : {}),
+    ...(Array.isArray(source.beforeAfter) ? { beforeAfter: rows(source.beforeAfter).slice(0, 8).filter(pair => safeImageUrl(pair.before) && safeImageUrl(pair.after) && safeImageUrl(pair.before) !== safeImageUrl(pair.after)).map(pair => ({ before: safeImageUrl(pair.before)!, after: safeImageUrl(pair.after)!, ...(text(pair.caption, 160) ? { caption: text(pair.caption, 160) } : {}) })) } : {}),
   };
 }
 

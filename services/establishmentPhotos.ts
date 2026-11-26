@@ -74,3 +74,26 @@ export async function uploadSiteLogo(companyId: string, file: File): Promise<str
   const { data } = supabase.storage.from('logos').getPublicUrl(path);
   return data.publicUrl;
 }
+
+export function extractSiteLogoPath(publicUrl: string, companyId: string): string | null {
+  const folder = companyId.trim();
+  if (!validCompanyFolder(folder)) return null;
+  try {
+    const parsed = new URL(publicUrl);
+    if (parsed.protocol !== 'https:' || !/^[a-z0-9-]+\.supabase\.co$/i.test(parsed.hostname)) return null;
+    const prefix = '/storage/v1/object/public/logos/';
+    if (!parsed.pathname.startsWith(prefix)) return null;
+    const path = decodeURIComponent(parsed.pathname.slice(prefix.length));
+    if (!path.startsWith(`${folder}/presenca-logo-`) || path.includes('..') || path.includes('\\')) return null;
+    return path;
+  } catch {
+    return null;
+  }
+}
+
+export async function deleteSiteLogo(companyId: string, logoUrl?: string): Promise<void> {
+  if (!logoUrl) return;
+  const path = extractSiteLogoPath(logoUrl, companyId);
+  if (!path) return;
+  await supabase.storage.from('logos').remove([path]);
+}

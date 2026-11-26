@@ -60,7 +60,7 @@ export function buildShareLinks(origin: string, slug: string): ShareLinks {
   if (!cleanSlug) {
     throw new Error('Slug do estabelecimento inválido.');
   }
-  const base = `${cleanOrigin}/#/site/${encodeURIComponent(cleanSlug)}`;
+  const base = `${cleanOrigin}/s/${encodeURIComponent(cleanSlug)}`;
   return {
     direct: base,
     instagram: `${base}?origem=instagram`,

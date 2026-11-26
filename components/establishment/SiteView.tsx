@@ -21,6 +21,7 @@ import {
 } from '../../lib/establishment/model';
 import { studioCopy } from '../../lib/establishment/copy';
 import { openingStatus, timezoneForRegion, weekdayNumbers } from '../../lib/establishment/hours';
+import { buildGoogleMapsDirectionsUrl, buildSafeMapEmbedUrl } from '../../lib/establishment/location';
 import { buildWhatsAppLink } from '../../utils/formatters';
 import '../../styles/establishment.css';
 
@@ -149,6 +150,112 @@ function MapSketch({ accent, label }: { accent: string; label?: string }) {
         <path d="M0 44 L420 48 M0 144 L420 140 M76 0 L72 200 M344 0 L348 200" stroke="currentColor" strokeOpacity="0.09" strokeWidth="3" fill="none" />
         <path d="M68 164 Q142 124 210 98" stroke={accent} strokeWidth="3" strokeDasharray="5 4" fill="none" strokeLinecap="round" />
       </svg>
+      {label && <span className="es-map-label">{label}</span>}
+    </div>
+  );
+}
+
+const mapPinSvg = (
+  <span className="es-map-pin" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+      <path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z" />
+    </svg>
+  </span>
+);
+
+function LocationMap({
+  accent,
+  name,
+  address,
+  label,
+  lat,
+  lng,
+  region,
+  demo,
+  preview,
+  directionsUrl,
+}: {
+  accent: string;
+  name: string;
+  address: string;
+  label?: string;
+  lat?: number;
+  lng?: number;
+  region: 'BR' | 'PT';
+  demo: boolean;
+  preview?: boolean;
+  directionsUrl?: string;
+}) {
+  const [loaded, setLoaded] = useState(false);
+  const [interactive, setInteractive] = useState(false);
+  const rawEmbedUrl = useMemo(
+    () => (demo ? undefined : buildSafeMapEmbedUrl({ address, lat, lng, region })),
+    [demo, address, lat, lng, region],
+  );
+  const [debouncedPreviewUrl, setDebouncedPreviewUrl] = useState(rawEmbedUrl);
+  const debouncedPreviewUrlRef = useRef(debouncedPreviewUrl);
+  debouncedPreviewUrlRef.current = debouncedPreviewUrl;
+  useEffect(() => {
+    if (!preview || !rawEmbedUrl) {
+      if (debouncedPreviewUrlRef.current !== rawEmbedUrl) setDebouncedPreviewUrl(rawEmbedUrl);
+      return;
+    }
+    if (rawEmbedUrl === debouncedPreviewUrlRef.current) return;
+    const timer = window.setTimeout(() => setDebouncedPreviewUrl(rawEmbedUrl), 750);
+    return () => window.clearTimeout(timer);
+  }, [preview, rawEmbedUrl]);
+  const embedUrl = preview ? debouncedPreviewUrl : rawEmbedUrl;
+
+  useEffect(() => {
+    setLoaded(false);
+    setInteractive(false);
+  }, [embedUrl]);
+
+  if (!embedUrl) {
+    if (!demo && directionsUrl) {
+      return (
+        <a
+          className="es-map es-map-link"
+          href={directionsUrl}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={`Abrir localização de ${name} no mapa`}
+        >
+          <MapSketch accent={accent} label={label} />
+          {mapPinSvg}
+        </a>
+      );
+    }
+    return (
+      <div className="es-map" role="img" aria-label={`Mapa ilustrativo de ${label || name}`}>
+        <MapSketch accent={accent} label={label} />
+        {mapPinSvg}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="es-map es-map-embed"
+      data-loaded={loaded || undefined}
+      data-interactive={interactive || undefined}
+    >
+      <MapSketch accent={accent} />
+      <iframe
+        title={`Mapa com a localização de ${name}`}
+        src={embedUrl}
+        loading="lazy"
+        referrerPolicy="strict-origin-when-cross-origin"
+        onLoad={() => setLoaded(true)}
+      />
+      <button
+        type="button"
+        className="es-map-toggle"
+        aria-pressed={interactive}
+        onClick={() => setInteractive(prev => !prev)}
+      >
+        {interactive ? 'Bloquear mapa' : 'Explorar mapa'}
+      </button>
       {label && <span className="es-map-label">{label}</span>}
     </div>
   );
@@ -332,7 +439,14 @@ export function SiteView({ data: sourceData, config: incoming, serviceId, previe
   );
 
   const whatsapp = data.phone ? buildWhatsAppLink(data.phone, data.region) : undefined;
-  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${data.name} ${data.address}`)}`;
+  const directionsUrl = buildGoogleMapsDirectionsUrl({
+    name: data.name,
+    address: data.address,
+    mapsUrl: data.mapsUrl,
+    lat: data.lat,
+    lng: data.lng,
+  });
+  const hasLocationTarget = Boolean(data.address || directionsUrl || (data.lat !== undefined && data.lng !== undefined));
   const id = (section: string) => `${preview ? 'preview-' : ''}${section}`;
   const has = (key: (typeof sections)[number]['id']) => sections.some(section => section.id === key);
 
@@ -467,34 +581,21 @@ export function SiteView({ data: sourceData, config: incoming, serviceId, previe
 
   const addressNote = config.contact?.addressNote?.trim();
 
-  const mapVisual = (
-    <>
-      <MapSketch accent={accent.background} label={neighborhood || place} />
-      <span className="es-map-pin" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
-          <path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z" />
-        </svg>
-      </span>
-    </>
-  );
-
   const locationBlock = (
     <div className="es-location">
-      {data.address && !data.demo && (
-        <a
-          className="es-map es-map-link"
-          href={mapsUrl}
-          target="_blank"
-          rel="noreferrer"
-          aria-label={`Abrir localização de ${data.name} no mapa`}
-        >
-          {mapVisual}
-        </a>
-      )}
-      {data.demo && data.address && (
-        <div className="es-map" role="img" aria-label={`Mapa ilustrativo de ${place}`}>
-          {mapVisual}
-        </div>
+      {hasLocationTarget && (
+        <LocationMap
+          accent={accent.background}
+          name={data.name}
+          address={data.address}
+          label={neighborhood || place || data.name}
+          lat={data.lat}
+          lng={data.lng}
+          region={data.region}
+          demo={data.demo}
+          preview={preview}
+          directionsUrl={directionsUrl}
+        />
       )}
       <div className="es-location-info">
         {data.address && <p className="es-address">{data.address}</p>}
@@ -531,8 +632,8 @@ export function SiteView({ data: sourceData, config: incoming, serviceId, previe
           </div>
         )}
         <div className="es-location-actions">
-          {data.address && !data.demo && (
-            <a className="es-button" href={mapsUrl} target="_blank" rel="noreferrer">
+          {directionsUrl && !data.demo && (
+            <a className="es-button" href={directionsUrl} target="_blank" rel="noreferrer">
               {copy.directions}
             </a>
           )}
@@ -1012,7 +1113,9 @@ export function SiteView({ data: sourceData, config: incoming, serviceId, previe
                       ★ {data.rating!.toFixed(1).replace('.', ',')} · {data.reviewCount} {reviewWord}
                     </strong>
                   )}
-                  {hasRating && (status || data.hours[0]) && <span aria-hidden="true">|</span>}
+                  {hasRating && (status || data.hours[0]) && (
+                    <span className="es-trust-sep" aria-hidden="true">|</span>
+                  )}
                   {status && <em>{status.label}</em>}
                   {!status && data.hours[0] && <em>{copy.openToday(data.hours[0].hours)}</em>}
                 </div>

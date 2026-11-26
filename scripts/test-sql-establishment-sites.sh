@@ -14,8 +14,15 @@ P() { "$PSQL" -h "$TASK_TMP" -p "$TASK_PORT" -U postgres -d postgres -v ON_ERROR
 P -f "$ROOT/supabase/tests/establishment_sites.harness.sql"
 P -f "$ROOT/supabase/migrations/20261124133813_establishment_sites.sql"
 P -f "$ROOT/supabase/migrations/20261125180000_establishment_sites_v2.sql"
+P -f "$ROOT/supabase/migrations/20261126120000_establishment_sites_v3_location.sql"
 P -f "$ROOT/supabase/tests/establishment_sites.verify.sql"
 P -f "$ROOT/supabase/tests/establishment_sites.test.sql"
+
+# Rollback v3 2x -> v2 ainda presente e sem validador do Maps
+P -f "$ROOT/docs/rollbacks/20261126120000_establishment_sites_v3_location.rollback.sql"
+P -f "$ROOT/docs/rollbacks/20261126120000_establishment_sites_v3_location.rollback.sql"
+P -At -c "select case when to_regprocedure('public.is_safe_google_maps_url(text)') is null and to_regprocedure('public.get_public_establishment_site(text)') is not null and pg_get_functiondef('public.get_public_establishment_site(text)'::regprocedure) not like '%mapsUrl%' then 'PASS: rollback v3 restored v2 RPC' else 'FAIL' end" | tee "$TASK_TMP/rollback-v3-result"
+! rg -q '^FAIL$' "$TASK_TMP/rollback-v3-result"
 
 # Rollback v2 2x -> rollback v1 2x -> verify clean
 P -f "$ROOT/docs/rollbacks/20261125180000_establishment_sites_v2.rollback.sql"
@@ -25,8 +32,9 @@ P -f "$ROOT/docs/rollbacks/20261124133813_establishment_sites.rollback.sql"
 P -At -c "select case when to_regclass('public.establishment_sites') is null and to_regprocedure('public.get_public_establishment_site(text)') is null and to_regprocedure('public.list_published_site_slugs()') is null then 'PASS: rollback 2x removed only feature objects' else 'FAIL' end" | tee "$TASK_TMP/rollback-result"
 ! rg -q '^FAIL$' "$TASK_TMP/rollback-result"
 
-# Reapply v1 + v2 -> verify
+# Reapply v1 + v2 + v3 -> verify
 P -f "$ROOT/supabase/migrations/20261124133813_establishment_sites.sql"
 P -f "$ROOT/supabase/migrations/20261125180000_establishment_sites_v2.sql"
+P -f "$ROOT/supabase/migrations/20261126120000_establishment_sites_v3_location.sql"
 P -f "$ROOT/supabase/tests/establishment_sites.verify.sql"
-echo 'PASS: PostgreSQL 17 migration v1+v2, verify, behavior, rollback 2x and reapply'
+echo 'PASS: PostgreSQL 17 migration v1+v2+v3, verify, behavior, rollback 2x and reapply'

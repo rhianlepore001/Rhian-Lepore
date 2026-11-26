@@ -30,11 +30,11 @@ describe('A-04 vercel security headers', () => {
     expect(report).not.toContain('unsafe-eval');
   });
 
-  it('só a própria origem (e a Stripe) pode ser embutida; ninguém de fora embute o site', () => {
+  it('só a própria origem, a Stripe e o mapa do Google podem ser embutidos; ninguém de fora embute o site', () => {
     const csp = flat['Content-Security-Policy-Report-Only'];
     const directive = (name: string) => csp.split(';').map((d) => d.trim()).find((d) => d.startsWith(`${name} `)) ?? '';
     expect(directive('frame-ancestors')).toBe("frame-ancestors 'self'");
-    expect(directive('frame-src').split(/\s+/).slice(1).sort()).toEqual(["'self'", 'https://hooks.stripe.com', 'https://js.stripe.com'].sort());
+    expect(directive('frame-src').split(/\s+/).slice(1).sort()).toEqual(["'self'", 'https://hooks.stripe.com', 'https://js.stripe.com', 'https://www.google.com'].sort());
     expect(flat['X-Frame-Options']).not.toMatch(/ALLOW|\*/i);
   });
 });

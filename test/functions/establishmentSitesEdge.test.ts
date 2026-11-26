@@ -129,6 +129,39 @@ describe('establishment site edge handlers', () => {
     expect(fallbackRes.headers.get('Cache-Control')).toBe('no-store');
   });
 
+  it('pré-renderiza endereço, ponto de referência, Como chegar e geo só com dados validados', async () => {
+    const files = new Map<string, string>();
+    const build = (contact: Record<string, unknown>) => createPublishEstablishmentSiteHandler({
+      siteOrigin: 'https://www.agendixstudio.com',
+      getUserFromToken: async () => ({ id: 'u1' }),
+      getOwnerSiteByUser: async () => ({
+        companyId: 'u1', role: 'owner', slug: 'corte-fino', name: 'Corte Fino', kind: 'barber', region: 'BR',
+        address: 'Rua Antiga, 1', presenceEnabled: true, published: true, publishedConfig: { contact }, services: [],
+      }),
+      listPublishedSlugs: async () => [],
+      uploadPublishedFile: async (path, content) => { files.set(path, content); },
+      removePublishedPrefix: vi.fn(),
+    });
+    const call = () => new Request('https://edge.local', { method: 'POST', headers: { Authorization: 'Bearer t' }, body: JSON.stringify({ action: 'publish' }) });
+
+    await build({ address: 'Rua Nova, 10 — Pinheiros', addressNote: 'Em frente à praça', mapsUrl: 'https://maps.app.goo.gl/Abc123', lat: -23.5614, lng: -46.682 })(call());
+    const good = files.get('sites/corte-fino.html') || '';
+    expect(good).toContain('Rua Nova, 10 — Pinheiros');
+    expect(good).not.toContain('Rua Antiga');
+    expect(good).toContain('Ponto de referência: Em frente à praça');
+    expect(good).toContain('<a href="https://maps.app.goo.gl/Abc123" rel="noreferrer">Como chegar</a>');
+    expect(good).toContain('"geo":{"@type":"GeoCoordinates","latitude":-23.5614,"longitude":-46.682}');
+    expect(good).not.toContain('<iframe');
+    expect(good.replace(/https?:\/\/\S+/g, '').toLowerCase()).not.toContain('agendix');
+
+    await build({ mapsUrl: 'https://evil.example.com/maps', lat: 999, lng: 1 })(call());
+    const bad = files.get('sites/corte-fino.html') || '';
+    expect(bad).not.toContain('evil.example.com');
+    expect(bad).not.toContain('"geo"');
+    expect(bad).toContain('Rua Antiga, 1');
+    expect(bad).toContain('query=Corte%20Fino%20Rua%20Antiga%2C%201');
+  });
+
   it('retorna CORS, rejeita slug malformado e exige companyId igual ao usuário', async () => {
     const base = {
       siteOrigin: 'https://www.agendixstudio.com',

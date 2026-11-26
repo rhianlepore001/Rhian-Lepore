@@ -125,6 +125,47 @@ describe('public allowlist', () => {
   });
 });
 
+describe('localização exata do estabelecimento', () => {
+  it('normaliza endereço, link do Maps e coordenadas e descarta valores inseguros', () => {
+    const config = normalizeSiteConfig({
+      contact: { address: '  Rua Nova, 10 — Pinheiros  ', mapsUrl: 'https://maps.app.goo.gl/Abc123', lat: -23.5614149999, lng: -46.682033, addressNote: 'Em frente à praça' },
+    }, defaultConfig(site));
+    expect(config.contact).toMatchObject({ address: 'Rua Nova, 10 — Pinheiros', mapsUrl: 'https://maps.app.goo.gl/Abc123', lat: -23.561415, lng: -46.682033, addressNote: 'Em frente à praça' });
+
+    const unsafe = normalizeSiteConfig({ contact: { mapsUrl: 'javascript:alert(1)', lat: 200, lng: 10, address: '<b>Rua</b> X' } }, defaultConfig(site));
+    expect(unsafe.contact?.mapsUrl).toBeUndefined();
+    expect(unsafe.contact?.lat).toBeUndefined();
+    expect(unsafe.contact?.address).toBe('Rua X');
+
+    const partial = normalizeSiteConfig({ contact: { lat: 10 } }, defaultConfig(site));
+    expect(partial.contact?.lat).toBeUndefined();
+    expect(partial.contact?.lng).toBeUndefined();
+    expect(normalizeSiteConfig({ contact: { lat: 0, lng: 0 } }, defaultConfig(site)).contact?.lat).toBeUndefined();
+  });
+
+  it('aplica a localização confirmada pelo dono sobre o cadastro geral', () => {
+    const config = normalizeSiteConfig({ contact: { address: 'Av. Brasil, 500', lat: 38.7223, lng: -9.1393, mapsUrl: 'https://www.google.com/maps/place/X/@38.7223,-9.1393,17z' } }, defaultConfig(site));
+    const applied = applySiteConfig(site, config);
+    expect(applied.address).toBe('Av. Brasil, 500');
+    expect(applied.lat).toBe(38.7223);
+    expect(applied.lng).toBe(-9.1393);
+    expect(applied.mapsUrl).toContain('google.com/maps');
+    expect(site.address).toBe('Rua dos Pinheiros, 100');
+    expect(applySiteConfig(site, defaultConfig(site)).address).toBe('Rua dos Pinheiros, 100');
+  });
+
+  it('mantém a seção de localização visível só com coordenadas e expõe geo e hasMap no SEO', () => {
+    const noAddress = { ...site, address: '', lat: 38.7223, lng: -9.1393 };
+    expect(visibleSections(noAddress, defaultConfig(noAddress)).map(section => section.id)).toContain('location');
+    const seo = buildSeo(site, { ...defaultConfig(site), contact: { lat: 38.7223, lng: -9.1393 } }, 'https://example.com');
+    expect(seo.jsonLd.geo).toEqual({ '@type': 'GeoCoordinates', latitude: 38.7223, longitude: -9.1393 });
+    expect(seo.jsonLd.hasMap).toBe('https://www.google.com/maps/search/?api=1&query=38.7223,-9.1393');
+    const byAddress = buildSeo(site, defaultConfig(site), 'https://example.com');
+    expect(byAddress.jsonLd.geo).toBeUndefined();
+    expect(String(byAddress.jsonLd.hasMap)).toContain('query=Navalha%20Fina%20Rua%20dos%20Pinheiros');
+  });
+});
+
 describe('local SEO', () => {
   it('builds region-aware structured data without claiming Google ratings', () => {
     const data = { ...site, address: 'Rua Fradique Coutinho, 420 — Pinheiros, São Paulo', rating: 4.8, reviewCount: 3 };

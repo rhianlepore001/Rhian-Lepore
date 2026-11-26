@@ -1,3 +1,5 @@
+import { SUPPORT_WHATSAPP_NUMBER } from '../support';
+import { normalizeCoordinates } from './location';
 import { safeImageUrl, type SiteConfig, type SiteData } from './model';
 
 export interface ShareLinks {
@@ -75,6 +77,22 @@ export function buildWhatsAppShareUrl(siteName: string, link: string): string {
     ? `Conheça o site de ${cleanName} e agende seu horário online: ${link}`
     : `Conheça nosso site e agende seu horário online: ${link}`;
   return `https://wa.me/?text=${encodeURIComponent(message)}`;
+}
+
+/** Link do WhatsApp da equipe para pedir a liberação da publicação do site. */
+export function buildPresenceActivationUrl(params: {
+  name: string;
+  slug: string;
+  region?: 'BR' | 'PT';
+}): string {
+  const name = params.name.trim() || 'meu estabelecimento';
+  const slug = params.slug.trim();
+  const reference = slug ? ` (endereço ${slug})` : '';
+  const message =
+    params.region === 'PT'
+      ? `Olá! O rascunho do site de ${name}${reference} já está pronto. Podem libertar a publicação, por favor?`
+      : `Olá! O rascunho do site de ${name}${reference} já está pronto. Podem liberar a publicação, por favor?`;
+  return `https://wa.me/${SUPPORT_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 }
 
 export function buildQrPrintHtml(params: {
@@ -206,7 +224,9 @@ export function computeSiteCompleteness(
       Boolean((config.serviceDetails?.[service.id]?.description ?? service.description)?.trim()),
     );
   const hasGallery = data.gallery.length > 0;
-  const hasLocation = Boolean(data.address.trim());
+  const hasLocation =
+    Boolean((config.contact?.address ?? data.address).trim()) ||
+    Boolean(normalizeCoordinates(config.contact?.lat, config.contact?.lng));
   const hasWhatsApp = Boolean((config.contact?.phone ?? data.phone)?.trim());
 
   const items: SiteCompletenessItem[] = [

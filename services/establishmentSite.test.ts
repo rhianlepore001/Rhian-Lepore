@@ -7,7 +7,7 @@ const { rpc, from, table, invoke } = vi.hoisted(() => {
   for (const method of ['select', 'eq', 'update', 'insert']) table[method] = vi.fn(() => table);
   table.maybeSingle = vi.fn();
   table.single = vi.fn();
-  return { rpc: vi.fn(), from: vi.fn(() => table), table, invoke: vi.fn() };
+  return { rpc: vi.fn(), from: vi.fn<(name?: string) => typeof table>(() => table), table, invoke: vi.fn() };
 });
 vi.mock('@/lib/supabase', () => ({ supabase: { rpc, from, functions: { invoke } } }));
 const empty: SiteData = { id: 'a', slug: 'safe', name: 'Safe', kind: 'barber', region: 'BR', demo: false, address: '', hours: [], services: [], team: [], gallery: [], reviews: [], reviewCount: 0 };
@@ -117,6 +117,13 @@ describe('owner draft adapter', () => {
     expect(await saveOwnerSiteDraft('company-a', config)).toEqual({ storage: 'remote' });
     expect(table.insert).toHaveBeenCalledWith({ company_id: 'company-a', draft_config: config });
   });
+  it('never alters profiles while saving a private draft', async () => {
+    table.maybeSingle.mockResolvedValue({ data: { company_id: 'company-a' }, error: null });
+    const config = { ...defaultConfig(empty), contact: { address: 'Rua Rascunho, 99' } };
+    await saveOwnerSiteDraft('company-a', config);
+    expect(from).toHaveBeenCalledWith('establishment_sites');
+    expect(from).not.toHaveBeenCalledWith('profiles');
+  });
 });
 
 
@@ -155,5 +162,24 @@ describe('owner publication adapter', () => {
 
     invoke.mockResolvedValueOnce({ data: null, error: new Error('unavailable') });
     await expect(unpublishOwnerSite('company-a')).resolves.toEqual({ published: false, sharePageSynced: false });
+  });
+  it('syncs profiles.address_street on publish without failing if profile sync errors', async () => {
+    table.maybeSingle.mockResolvedValue({ data: { company_id: 'company-a' }, error: null });
+    const profileTable: any = {
+      update: vi.fn(() => profileTable),
+      eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+    };
+    from.mockImplementation((name: string) => (name === 'profiles' ? profileTable : table));
+
+    const config = { ...defaultConfig(empty), contact: { address: '  Rua Nova, 120 — Pinheiros  ' } };
+    await expect(publishOwnerSite('company-a', config)).resolves.toEqual({ published: true, sharePageSynced: true });
+    expect(from).toHaveBeenCalledWith('profiles');
+    expect(profileTable.update).toHaveBeenCalledWith({ address_street: 'Rua Nova, 120 — Pinheiros' });
+    expect(profileTable.eq).toHaveBeenCalledWith('id', 'company-a');
+
+    profileTable.eq.mockRejectedValueOnce(new Error('profile permission error'));
+    await expect(publishOwnerSite('company-a', config)).resolves.toEqual({ published: true, sharePageSynced: true });
+
+    from.mockImplementation(() => table);
   });
 });

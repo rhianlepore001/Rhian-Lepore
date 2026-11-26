@@ -5,10 +5,12 @@ import userEvent from '@testing-library/user-event';
 import { SiteEditor } from './SiteEditor';
 import { defaultConfig, type SiteData } from '../../lib/establishment/model';
 
-const { uploadSiteLogoMock, deleteSiteLogoMock, loadOwnerSiteMock, toDataUrlMock } = vi.hoisted(() => ({
+const { uploadSiteLogoMock, deleteSiteLogoMock, loadOwnerSiteMock, publishOwnerSiteMock, unpublishOwnerSiteMock, toDataUrlMock } = vi.hoisted(() => ({
   uploadSiteLogoMock: vi.fn(),
   deleteSiteLogoMock: vi.fn(),
   loadOwnerSiteMock: vi.fn(),
+  publishOwnerSiteMock: vi.fn(),
+  unpublishOwnerSiteMock: vi.fn(),
   toDataUrlMock: vi.fn(),
 }));
 
@@ -24,6 +26,8 @@ vi.mock('../../services/establishmentSite', async () => {
     ...actual,
     loadOwnerSite: loadOwnerSiteMock,
     saveOwnerSiteDraft: vi.fn(async () => ({ storage: 'remote' as const })),
+    publishOwnerSite: publishOwnerSiteMock,
+    unpublishOwnerSite: unpublishOwnerSiteMock,
   };
 });
 
@@ -61,6 +65,10 @@ const data: SiteData = {
     deleteSiteLogoMock.mockReset();
     deleteSiteLogoMock.mockResolvedValue(undefined);
     loadOwnerSiteMock.mockReset();
+    publishOwnerSiteMock.mockReset();
+    publishOwnerSiteMock.mockResolvedValue({ published: true, sharePageSynced: true });
+    unpublishOwnerSiteMock.mockReset();
+    unpublishOwnerSiteMock.mockResolvedValue({ published: false, sharePageSynced: true });
   toDataUrlMock.mockReset();
   toDataUrlMock.mockResolvedValue(
     'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
@@ -178,6 +186,32 @@ describe('SiteEditor panel', () => {
     });
     expect(deleteSiteLogoMock).not.toHaveBeenCalledWith('business', publishedLogo);
     expect(localStorage.getItem('agendix:presence:stale-logos:v1:business')).toContain(publishedLogo);
+  });
+
+  it('mostra aviso coerente quando o site publica no banco mas a prévia de compartilhamento falha', async () => {
+    const user = userEvent.setup();
+    const initial = defaultConfig(data);
+    loadOwnerSiteMock.mockResolvedValue({
+      config: initial,
+      storage: 'remote',
+      published: false,
+      presenceEnabled: true,
+    });
+    publishOwnerSiteMock.mockResolvedValueOnce({ published: true, sharePageSynced: false });
+
+    render(<SiteEditor data={{ ...data, demo: false }} initial={initial} companyId="business" embedded />);
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Publicar' })).toBeEnabled();
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Publicar' }));
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Publicar alterações' })).toBeInTheDocument();
+    });
+
+    expect(screen.getByText(/Site publicado com esta versão/i)).toBeInTheDocument();
+    expect(screen.getByText(/Google e WhatsApp não pôde ser atualizada agora/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Não foi possível alterar a publicação/i)).not.toBeInTheDocument();
   });
 
   it('dispara aviso de alterações não salvas ao navegar para outra tela dentro do app', async () => {

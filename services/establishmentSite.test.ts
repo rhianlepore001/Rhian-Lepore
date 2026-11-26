@@ -2,17 +2,26 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { defaultConfig, type SiteData } from '@/lib/establishment/model';
 import { loadSite, loadSiteDraft, saveSiteDraft, loadOwnerSite, saveOwnerSiteDraft, publishOwnerSite, unpublishOwnerSite } from './establishmentSite';
 
-const { rpc, from, table } = vi.hoisted(() => {
+const { rpc, from, table, invoke } = vi.hoisted(() => {
   const table: any = {};
   for (const method of ['select', 'eq', 'update', 'insert']) table[method] = vi.fn(() => table);
   table.maybeSingle = vi.fn();
   table.single = vi.fn();
-  return { rpc: vi.fn(), from: vi.fn(() => table), table };
+  return { rpc: vi.fn(), from: vi.fn(() => table), table, invoke: vi.fn() };
 });
-vi.mock('@/lib/supabase', () => ({ supabase: { rpc, from } }));
+vi.mock('@/lib/supabase', () => ({ supabase: { rpc, from, functions: { invoke } } }));
 const empty: SiteData = { id: 'a', slug: 'safe', name: 'Safe', kind: 'barber', region: 'BR', demo: false, address: '', hours: [], services: [], team: [], gallery: [], reviews: [], reviewCount: 0 };
 
-beforeEach(() => { rpc.mockReset(); from.mockClear(); table.maybeSingle.mockReset(); table.single.mockReset(); for (const method of ['select', 'eq', 'update', 'insert']) table[method].mockClear(); localStorage.clear(); });
+beforeEach(() => {
+  rpc.mockReset();
+  from.mockClear();
+  invoke.mockReset();
+  invoke.mockResolvedValue({ data: { ok: true }, error: null });
+  table.maybeSingle.mockReset();
+  table.single.mockReset();
+  for (const method of ['select', 'eq', 'update', 'insert']) table[method].mockClear();
+  localStorage.clear();
+});
 
 describe('public site reads', () => {
   it('does not show an unpublished site or silently upgrade a plan', async () => {
@@ -115,11 +124,23 @@ describe('owner publication adapter', () => {
   it('publishes a separate snapshot for the authenticated tenant and syncs draft', async () => {
     table.maybeSingle.mockResolvedValue({ data: { company_id: 'company-a' }, error: null });
     const config = defaultConfig(empty);
-    await publishOwnerSite('company-a', config);
+    const result = await publishOwnerSite('company-a', config);
+    expect(result).toEqual({ published: true, sharePageSynced: true });
     expect(table.update).toHaveBeenCalledWith({ draft_config: config, published_config: config, published: true });
     expect(table.eq).toHaveBeenCalledWith('company_id', 'company-a');
     expect(table.update.mock.calls[0][0]).not.toHaveProperty('presence_enabled');
+    expect(invoke).toHaveBeenCalledWith('publish-establishment-site', { body: { action: 'publish' } });
     expect(loadSiteDraft('company-a', defaultConfig(empty)).headline).toBe(config.headline);
+  });
+  it('keeps publication saved when the edge function fails or is unavailable', async () => {
+    table.maybeSingle.mockResolvedValue({ data: { company_id: 'company-a' }, error: null });
+    invoke.mockResolvedValueOnce({ data: null, error: new Error('FunctionsFetchError') });
+    const config = defaultConfig(empty);
+    await expect(publishOwnerSite('company-a', config)).resolves.toEqual({ published: true, sharePageSynced: false });
+    expect(loadSiteDraft('company-a', defaultConfig(empty)).headline).toBe(config.headline);
+
+    invoke.mockRejectedValueOnce(new Error('network down'));
+    await expect(publishOwnerSite('company-a', config)).resolves.toEqual({ published: true, sharePageSynced: false });
   });
   it('surfaces server entitlement denial instead of claiming publication', async () => {
     table.maybeSingle.mockResolvedValue({ data: null, error: { code: '23514', message: 'entitlement denied' } });
@@ -128,8 +149,11 @@ describe('owner publication adapter', () => {
   });
   it('unpublishes without deleting drafts or the published snapshot', async () => {
     table.single.mockResolvedValue({ data: { company_id: 'company-a' }, error: null });
-    await unpublishOwnerSite('company-a');
+    await expect(unpublishOwnerSite('company-a')).resolves.toEqual({ published: false, sharePageSynced: true });
     expect(table.update).toHaveBeenCalledWith({ published: false });
     expect(table.eq).toHaveBeenCalledWith('company_id', 'company-a');
+
+    invoke.mockResolvedValueOnce({ data: null, error: new Error('unavailable') });
+    await expect(unpublishOwnerSite('company-a')).resolves.toEqual({ published: false, sharePageSynced: false });
   });
 });

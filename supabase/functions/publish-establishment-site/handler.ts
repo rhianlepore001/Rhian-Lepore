@@ -79,7 +79,7 @@ function safeAsset(value: unknown, origin: string): string | undefined {
       !parsed.username &&
       !parsed.password &&
       parsed.hostname.toLowerCase() === 'lcqwrngscsziysyfhpfj.supabase.co' &&
-      /^\/storage\/v1\/object\/public\/(logos|covers|service_images|team_photos|galleries|membership_plan_photos)\/[^?#]+$/i.test(
+      /^\/storage\/v1\/object\/public\/(avatars|logos|covers|service_images|team_photos|galleries|membership_plan_photos)\/[^?#]+$/i.test(
         parsed.pathname,
       )
     ) {

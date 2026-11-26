@@ -9,4 +9,5 @@
    - `/s/:slug` → `/api/site-seo?kind=site&slug=:slug` (`Content-Type: text/html; charset=utf-8`)
    - `/s/:slug/servico/:serviceId` → `/api/site-seo?kind=service&slug=:slug&serviceId=:serviceId` (`Content-Type: text/html; charset=utf-8`)
    - Todo o restante fora de `/assets/` e `/api/` continua indo para `/index.html` (SPA intacto).
-5. Caso a Edge Function `serve-establishment-site` permaneça publicada no Supabase como utilitário de leitura, ela fica configurada em [supabase/config.toml](../../supabase/config.toml) com `verify_jwt = false`.
+5. Quando não houver HTML pré-renderizado no bucket para um slug válido e não reservado (site ainda não publicado, despublicado ou aguardando geração), `/s/:slug` e `/s/:slug/servico/:serviceId` redirecionam via `302` (`Cache-Control: no-store`) para `/#/book/<slug>` (preservando `?origem=`), evitando links mortos (RF-04). Slugs reservados ou malformados continuam retornando `404`.
+6. Caso a Edge Function `serve-establishment-site` permaneça publicada no Supabase como utilitário de leitura, ela fica configurada em [supabase/config.toml](../../supabase/config.toml) com `verify_jwt = false` e compartilha o mesmo fallback `302`.

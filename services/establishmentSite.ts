@@ -98,7 +98,12 @@ export async function saveOwnerSiteDraft(companyId: string, config: SiteConfig):
   return { storage: 'remote' };
 }
 
-export async function publishOwnerSite(companyId: string, config: SiteConfig): Promise<void> {
+export interface PublicationResult {
+  published: boolean;
+  sharePageSynced: boolean;
+}
+
+export async function publishOwnerSite(companyId: string, config: SiteConfig): Promise<PublicationResult> {
   siteDraftKey(companyId);
   const existing = await supabase
     .from('establishment_sites')
@@ -124,23 +129,27 @@ export async function publishOwnerSite(companyId: string, config: SiteConfig): P
     if (!retry.data) throw new Error('O site não foi publicado. Confira a liberação do plano Presença.');
   }
   saveSiteDraft(companyId, config);
+  let sharePageSynced = true;
   if (supabase.functions?.invoke) {
     const refreshed = await Promise.resolve(
       supabase.functions.invoke('publish-establishment-site', { body: { action: 'publish' } }),
     ).catch(() => ({ error: true }));
-    if (refreshed?.error) throw new Error('As alterações foram salvas, mas a página de divulgação não foi atualizada. Tente novamente em instantes.');
+    if (refreshed?.error) sharePageSynced = false;
   }
+  return { published: true, sharePageSynced };
 }
 
-export async function unpublishOwnerSite(companyId: string): Promise<void> {
+export async function unpublishOwnerSite(companyId: string): Promise<PublicationResult> {
   siteDraftKey(companyId);
   const { data, error } = await supabase.from('establishment_sites').update({ published: false }).eq('company_id', companyId).select('company_id').single();
   if (error) throw error;
   if (!data) throw new Error('Não foi possível despublicar o site. Tente novamente.');
+  let sharePageSynced = true;
   if (supabase.functions?.invoke) {
     const refreshed = await Promise.resolve(
       supabase.functions.invoke('publish-establishment-site', { body: { action: 'unpublish' } }),
     ).catch(() => ({ error: true }));
-    if (refreshed?.error) throw new Error('As alterações foram salvas, mas a página de divulgação não foi atualizada. Tente novamente em instantes.');
+    if (refreshed?.error) sharePageSynced = false;
   }
+  return { published: false, sharePageSynced };
 }

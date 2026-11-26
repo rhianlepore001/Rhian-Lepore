@@ -63,7 +63,22 @@ describe('establishment site edge handlers', () => {
         presenceEnabled: true,
         published: true,
         publishedConfig: { headline: 'Corte preciso' },
-        services: [{ id: 'srv-1', name: 'Corte', price: 50, duration: 30, image: 'https://outro.supabase.co/storage/v1/object/public/service_images/u1/bad.webp' }],
+        services: [
+          {
+            id: 'srv-1',
+            name: 'Corte',
+            price: 50,
+            duration: 30,
+            image: 'https://lcqwrngscsziysyfhpfj.supabase.co/storage/v1/object/public/avatars/u1/barbeiro.webp',
+          },
+          {
+            id: 'srv-2',
+            name: 'Barba',
+            price: 35,
+            duration: 20,
+            image: 'https://outro.supabase.co/storage/v1/object/public/service_images/u1/bad.webp',
+          },
+        ],
       }),
       listPublishedSlugs: async () => [{ slug: 'corte-fino', updated_at: '2026-11-25T18:00:00Z' }],
       uploadPublishedFile: async (path, content) => {
@@ -96,8 +111,10 @@ describe('establishment site edge handlers', () => {
     expect(homeHtml).toContain('https://www.instagram.com/cortefino.sp/');
     expect(homeHtml).toContain('@cortefino.sp');
     expect(homeHtml).toContain('lcqwrngscsziysyfhpfj.supabase.co/storage/v1/object/public/galleries/u1/hero.webp');
-    const serviceHtml = files.get('sites/corte-fino/servico/srv-1.html') || '';
-    expect(serviceHtml).not.toContain('outro.supabase.co');
+    const avatarServiceHtml = files.get('sites/corte-fino/servico/srv-1.html') || '';
+    expect(avatarServiceHtml).toContain('lcqwrngscsziysyfhpfj.supabase.co/storage/v1/object/public/avatars/u1/barbeiro.webp');
+    const badServiceHtml = files.get('sites/corte-fino/servico/srv-2.html') || '';
+    expect(badServiceHtml).not.toContain('outro.supabase.co');
 
     const mapRes = await serve(new Request('https://www.agendixstudio.com/sitemap.xml'));
     expect(mapRes.status).toBe(200);
@@ -105,6 +122,11 @@ describe('establishment site edge handlers', () => {
 
     const adminRes = await serve(new Request('https://www.agendixstudio.com/s/admin'));
     expect(adminRes.status).toBe(404);
+
+    const fallbackRes = await serve(new Request('https://www.agendixstudio.com/s/ainda-nao-publicado?origem=google'));
+    expect(fallbackRes.status).toBe(302);
+    expect(fallbackRes.headers.get('Location')).toBe('/#/book/ainda-nao-publicado?origem=google');
+    expect(fallbackRes.headers.get('Cache-Control')).toBe('no-store');
   });
 
   it('retorna CORS, rejeita slug malformado e exige companyId igual ao usuário', async () => {

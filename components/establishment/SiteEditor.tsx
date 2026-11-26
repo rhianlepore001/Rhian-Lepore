@@ -684,18 +684,28 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
     setSaving(true);
     try {
       const m = await import('../../services/establishmentSite');
-      if (unpublish) await m.unpublishOwnerSite(companyId);
-      else await m.publishOwnerSite(companyId, config);
+      const result = unpublish ? await m.unpublishOwnerSite(companyId) : await m.publishOwnerSite(companyId, config);
       const currentLogo = unpublish ? '' : config.logoRemoved ? '' : config.logo || '';
       publishedLogoRef.current = currentLogo;
       await flushStaleLogos({ includePublishedLogo: true, keepLogo: currentLogo });
-      setSavedJson(JSON.stringify(config));
+      if (!unpublish) {
+        setSavedJson(JSON.stringify(config));
+      }
       setPublished(!unpublish);
-      setSaved(
-        unpublish
-          ? 'Site despublicado. O link de agendamento continua funcionando.'
-          : 'Site publicado com esta versão.',
-      );
+      const shareSynced = result?.sharePageSynced !== false;
+      if (unpublish) {
+        setSaved(
+          shareSynced
+            ? 'Site despublicado. O link de agendamento continua funcionando.'
+            : 'Site despublicado. A página de compartilhamento pode levar alguns instantes para refletir a mudança, e o link de agendamento continua funcionando.',
+        );
+      } else {
+        setSaved(
+          shareSynced
+            ? 'Site publicado com esta versão.'
+            : 'Site publicado com esta versão. A prévia para Google e WhatsApp não pôde ser atualizada agora — tente publicar novamente em instantes.',
+        );
+      }
     } catch {
       setSaved('Não foi possível alterar a publicação. Confira a liberação do plano e tente novamente.');
     } finally {

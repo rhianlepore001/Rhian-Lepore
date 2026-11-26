@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { createVercelSiteSeoHandler, publishedStorageUrl, resolveSupabaseOrigin } from './_lib/siteSeo';
+import { createVercelSiteSeoHandler, publishedStorageUrl, resolveSupabaseOrigin } from './_lib/siteSeo.js';
 
 const supabaseOrigin = resolveSupabaseOrigin(process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL);
 

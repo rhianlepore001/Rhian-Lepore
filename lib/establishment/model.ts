@@ -398,7 +398,7 @@ export function safeImageUrl(value: unknown): string | undefined {
     const parsed = new URL(trimmed);
     if (parsed.protocol !== 'https:' || parsed.username || parsed.password) return undefined;
     if (parsed.hostname.toLowerCase() !== 'lcqwrngscsziysyfhpfj.supabase.co') return undefined;
-    if (!/^\/storage\/v1\/object\/public\/(logos|covers|service_images|team_photos|galleries|membership_plan_photos)\/[^?#]+$/i.test(parsed.pathname)) {
+    if (!/^\/storage\/v1\/object\/public\/(avatars|logos|covers|service_images|team_photos|galleries|membership_plan_photos)\/[^?#]+$/i.test(parsed.pathname)) {
       return undefined;
     }
     return parsed.href;

@@ -61,8 +61,16 @@ describe('Vercel SEO endpoint (/s/:slug & /sitemap.xml)', () => {
     expect(headRes.status).toBe(200);
     expect(await headRes.text()).toBe('');
 
-    const reservedRes = await handler(new Request('https://www.agendixstudio.com/api/site-seo?kind=site&slug=admin'));
-    expect(reservedRes.status).toBe(404);
+    const adminRes = await handler(new Request('https://www.agendixstudio.com/api/site-seo?kind=site&slug=admin'));
+    expect(adminRes.status).toBe(404);
+
+    for (const reservedSlug of ['app', 'www', 'blog']) {
+      const res = await handler(new Request(`https://www.agendixstudio.com/api/site-seo?kind=site&slug=${reservedSlug}`));
+      expect(res.status).toBe(404);
+    }
+
+    const malformedRes = await handler(new Request('https://www.agendixstudio.com/api/site-seo?kind=site&slug=%ZZ'));
+    expect(malformedRes.status).toBe(404);
 
     const traversalRes = await handler(new Request('https://www.agendixstudio.com/api/site-seo?kind=site&slug=../sitemap'));
     expect(traversalRes.status).toBe(404);
@@ -72,5 +80,41 @@ describe('Vercel SEO endpoint (/s/:slug & /sitemap.xml)', () => {
 
     const entrySource = fs.readFileSync(path.resolve(process.cwd(), 'api/site-seo.ts'), 'utf8');
     expect(entrySource).toContain('createVercelSiteSeoHandler');
+  });
+
+  it('uses .js extensions on relative ESM imports in api/site-seo.ts and api/_lib/siteSeo.ts', () => {
+    for (const relFile of ['api/site-seo.ts', 'api/_lib/siteSeo.ts']) {
+      const source = fs.readFileSync(path.resolve(process.cwd(), relFile), 'utf8');
+      const relativeImports = Array.from(source.matchAll(/from\s+['"](\.[^'"]+)['"]/g), match => match[1]);
+      expect(relativeImports.length).toBeGreaterThan(0);
+      for (const specifier of relativeImports) {
+        expect(specifier).toMatch(/\.js$/);
+      }
+    }
+  });
+
+  it('redirects valid non-reserved slugs without published HTML (302) to /#/book/<slug>', async () => {
+    const handler = createVercelSiteSeoHandler({
+      readPublishedFile: async () => null,
+    });
+
+    const missingHome = await handler(
+      new Request('https://www.agendixstudio.com/api/site-seo?kind=site&slug=salao-nao-publicado'),
+    );
+    expect(missingHome.status).toBe(302);
+    expect(missingHome.headers.get('Location')).toBe('/#/book/salao-nao-publicado');
+    expect(missingHome.headers.get('Cache-Control')).toBe('no-store');
+
+    const withOrigem = await handler(
+      new Request('https://www.agendixstudio.com/api/site-seo?kind=site&slug=salao-nao-publicado&origem=instagram'),
+    );
+    expect(withOrigem.status).toBe(302);
+    expect(withOrigem.headers.get('Location')).toBe('/#/book/salao-nao-publicado?origem=instagram');
+
+    const missingService = await handler(
+      new Request('https://www.agendixstudio.com/api/site-seo?kind=service&slug=salao-nao-publicado&serviceId=srv-1'),
+    );
+    expect(missingService.status).toBe(302);
+    expect(missingService.headers.get('Location')).toBe('/#/book/salao-nao-publicado');
   });
 });

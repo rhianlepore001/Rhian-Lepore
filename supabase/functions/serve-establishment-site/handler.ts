@@ -49,7 +49,20 @@ export function createServeEstablishmentSiteHandler(deps: ServeSiteDeps) {
       : `sites/${slug}.html`;
     const html = await deps.readPublishedFile(storagePath);
     if (!html) {
-      return new Response('Not Found', { status: 404 });
+      const origem = (url.searchParams.get('origem') || '').trim();
+      const slugLower = slug.toLowerCase();
+      const location = /^[a-z0-9_-]{1,40}$/i.test(origem)
+        ? `/#/book/${encodeURIComponent(slugLower)}?origem=${encodeURIComponent(origem)}`
+        : `/#/book/${encodeURIComponent(slugLower)}`;
+      return new Response(null, {
+        status: 302,
+        headers: {
+          Location: location,
+          'Cache-Control': 'no-store',
+          'X-Content-Type-Options': 'nosniff',
+          'Referrer-Policy': 'strict-origin-when-cross-origin',
+        },
+      });
     }
 
     return new Response(request.method === 'HEAD' ? null : html, {

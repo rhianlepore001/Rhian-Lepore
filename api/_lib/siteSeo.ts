@@ -1,4 +1,4 @@
-import { isReservedSiteSlug } from '../../lib/establishment/model';
+import { isReservedSiteSlug } from '../../lib/establishment/model.js';
 
 export const PROJECT_SUPABASE_ORIGIN = 'https://lcqwrngscsziysyfhpfj.supabase.co';
 
@@ -116,11 +116,17 @@ export function createVercelSiteSeoHandler(deps: VercelSiteSeoDeps) {
 
     const html = await deps.readPublishedFile(storagePath);
     if (!html) {
-      return new Response('Not Found', {
-        status: 404,
+      const origem = (url.searchParams.get('origem') || '').trim();
+      const location = /^[a-z0-9_-]{1,40}$/i.test(origem)
+        ? `/#/book/${encodeURIComponent(decodedSlug)}?origem=${encodeURIComponent(origem)}`
+        : `/#/book/${encodeURIComponent(decodedSlug)}`;
+      return new Response(null, {
+        status: 302,
         headers: {
-          'Content-Type': 'text/plain; charset=utf-8',
-          'Cache-Control': 'public, max-age=30',
+          Location: location,
+          'Cache-Control': 'no-store',
+          'X-Content-Type-Options': 'nosniff',
+          'Referrer-Policy': 'strict-origin-when-cross-origin',
         },
       });
     }

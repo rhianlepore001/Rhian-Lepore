@@ -106,7 +106,7 @@ as $$
        and p_url !~* '%2e|%5c'
        and (
            p_url ~ '^/(demo|presenca)/[A-Za-z0-9._/-]+$'
-           or p_url ~ '^https://lcqwrngscsziysyfhpfj\.supabase\.co/storage/v1/object/public/(logos|covers|service_images|team_photos|galleries|membership_plan_photos)/[^?#\\ ]+$'
+           or p_url ~ '^https://lcqwrngscsziysyfhpfj\.supabase\.co/storage/v1/object/public/(avatars|logos|covers|service_images|team_photos|galleries|membership_plan_photos)/[^?#\\ ]+$'
        );
 $$;
 

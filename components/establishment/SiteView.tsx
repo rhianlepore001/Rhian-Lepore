@@ -932,7 +932,7 @@ export function SiteView({ data: sourceData, config: incoming, serviceId, previe
                   <div className="es-wrap">
                     <div className="es-section-heading">
                       <h2>{copy.beforeTitle}</h2>
-                      {data.demo && <p>Fotos ilustrativas. Não são resultados de um único atendimento.</p>}
+                      {data.demo && <p>Fotos ilustrativas de demonstração — não representam clientes reais.</p>}
                     </div>
                     {pairs.map(pair => (
                       <div key={`${pair.before}-${pair.after}`}>{beforeBlock(pair)}</div>

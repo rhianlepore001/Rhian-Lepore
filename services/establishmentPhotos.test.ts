@@ -150,11 +150,18 @@ describe('uploadSiteLogo', () => {
       'https://lcqwrngscsziysyfhpfj.supabase.co/storage/v1/object/public/logos/comp-1/presenca-logo-abc.webp';
     expect(extractSiteLogoPath(valid, 'comp-1')).toBe('comp-1/presenca-logo-abc.webp');
     expect(extractSiteLogoPath(valid, 'other-comp')).toBeNull();
+    expect(
+      extractSiteLogoPath('https://outro.supabase.co/storage/v1/object/public/logos/comp-1/presenca-logo-abc.webp', 'comp-1'),
+    ).toBeNull();
     expect(extractSiteLogoPath('/presenca/demo-logo-barber.svg', 'comp-1')).toBeNull();
 
     await deleteSiteLogo('comp-1', valid);
     expect(storageFrom).toHaveBeenCalledWith('logos');
     expect(bucket.remove).toHaveBeenCalledWith(['comp-1/presenca-logo-abc.webp']);
+
+    bucket.remove.mockClear();
+    bucket.remove.mockResolvedValueOnce({ error: { message: 'storage unavailable' } });
+    await expect(deleteSiteLogo('comp-1', valid)).rejects.toMatchObject({ message: 'storage unavailable' });
 
     bucket.remove.mockClear();
     await deleteSiteLogo('comp-1', 'https://evil.example.com/logos/comp-1/presenca-logo-abc.webp');

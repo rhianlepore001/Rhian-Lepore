@@ -23,6 +23,7 @@ vi.mock('../../services/establishmentSite', async () => {
   return {
     ...actual,
     loadOwnerSite: loadOwnerSiteMock,
+    saveOwnerSiteDraft: vi.fn(async () => ({ storage: 'remote' as const })),
   };
 });
 
@@ -71,11 +72,11 @@ describe('SiteEditor panel', () => {
     const user = userEvent.setup();
     render(<SiteEditor data={data} initial={defaultConfig(data)} companyId="business" demo />);
     expect(screen.getByRole('radio', { name: /Urbano preciso, recomendada/i })).toHaveAttribute('aria-checked', 'true');
-    expect(screen.getByText('Recomendada', { selector: '.se-swatch[aria-checked=true] .se-swatch-badge' })).toBeInTheDocument();
+    expect(screen.getByText('Recomendada', { selector: '.se-style-card[aria-checked=true] .se-swatch-badge' })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: 'Editorial clássico' })).toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: 'Salão claro' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Salão luminoso' })).toBeInTheDocument();
     expect(screen.getAllByText('Recomendada')).toHaveLength(1);
-    await user.click(screen.getByRole('radio', { name: /Personalizada/i }));
+    await user.click(screen.getByRole('button', { name: /Personalizar cor de fundo/i }));
     expect(screen.getByLabelText('Cor personalizada')).toBeInTheDocument();
   });
 
@@ -109,7 +110,7 @@ describe('SiteEditor panel', () => {
   it('avisa quando a cor personalizada exige ajuste de contraste', async () => {
     const user = userEvent.setup();
     render(<SiteEditor data={data} initial={defaultConfig(data)} companyId="business" demo />);
-    await user.click(screen.getByRole('radio', { name: /Personalizada/i }));
+    await user.click(screen.getByRole('button', { name: /Personalizar cor de fundo/i }));
     await user.clear(screen.getByLabelText('Cor personalizada'));
     await user.type(screen.getByLabelText('Cor personalizada'), '#777777');
     expect(await screen.findByRole('status')).toHaveTextContent(/contraste|leitura/i);
@@ -133,26 +134,27 @@ describe('SiteEditor panel', () => {
     await user.click(screen.getByRole('button', { name: 'Logo ilustrativo da casa' }));
     expect(screen.getByAltText('Logo selecionado')).toHaveAttribute('src', '/presenca/demo-logo-barber.svg');
 
-    await user.click(screen.getByRole('button', { name: 'Salão luminoso' }));
-    expect(screen.getByRole('button', { name: 'Salão luminoso' })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('radio', { name: 'Salão claro' })).toHaveAttribute('aria-checked', 'true');
+    await user.click(screen.getByRole('radio', { name: 'Salão luminoso' }));
+    expect(screen.getByRole('radio', { name: 'Salão luminoso' })).toHaveAttribute('aria-checked', 'true');
 
-    await user.click(screen.getByRole('button', { name: 'Editorial clássico' }));
-    expect(screen.getByRole('button', { name: 'Editorial clássico' })).toHaveAttribute('aria-pressed', 'true');
+    await user.click(screen.getByRole('radio', { name: 'Editorial clássico' }));
     expect(screen.getByRole('radio', { name: 'Editorial clássico' })).toHaveAttribute('aria-checked', 'true');
   });
 
-  it('envia logo personalizado no modo autenticado, remove o antigo do Storage e mostra aviso manual', async () => {
+  it('envia logo personalizado no modo autenticado, remove o antigo do Storage ao salvar rascunho e mostra aviso manual', async () => {
     const user = userEvent.setup();
-    const initial = defaultConfig(data);
+    const publishedLogo = 'https://lcqwrngscsziysyfhpfj.supabase.co/storage/v1/object/public/logos/business/presenca-logo-publicado.webp';
+    const draftLogo1 = 'https://lcqwrngscsziysyfhpfj.supabase.co/storage/v1/object/public/logos/business/presenca-logo-1.webp';
+    const draftLogo2 = 'https://lcqwrngscsziysyfhpfj.supabase.co/storage/v1/object/public/logos/business/presenca-logo-2.webp';
+    const initial = { ...defaultConfig(data), logo: publishedLogo };
     loadOwnerSiteMock.mockResolvedValue({
       config: initial,
       storage: 'remote',
-      published: false,
+      published: true,
       presenceEnabled: false,
+      publishedLogo,
     });
-    const uploadedUrl = 'https://lcqwrngscsziysyfhpfj.supabase.co/storage/v1/object/public/logos/business/presenca-logo-novo.webp';
-    uploadSiteLogoMock.mockResolvedValue(uploadedUrl);
+    uploadSiteLogoMock.mockResolvedValueOnce(draftLogo1).mockResolvedValueOnce(draftLogo2);
 
     render(<SiteEditor data={{ ...data, demo: false }} initial={initial} companyId="business" embedded />);
     await waitFor(() => {
@@ -160,19 +162,52 @@ describe('SiteEditor panel', () => {
     });
 
     const fileInput = screen.getByLabelText(/Trocar logo|Enviar logo/i) as HTMLInputElement;
-    const file = new File(['png-bytes'], 'logo.png', { type: 'image/png' });
-    await user.upload(fileInput, file);
-
+    await user.upload(fileInput, new File(['png-1'], 'logo1.png', { type: 'image/png' }));
     await waitFor(() => {
-      expect(uploadSiteLogoMock).toHaveBeenCalledWith('business', file);
-      expect(screen.getByAltText('Logo selecionado')).toHaveAttribute('src', uploadedUrl);
+      expect(screen.getByAltText('Logo selecionado')).toHaveAttribute('src', draftLogo1);
     });
 
-    await user.click(screen.getByRole('button', { name: 'Remover logo' }));
-    expect(screen.queryByAltText('Logo selecionado')).not.toBeInTheDocument();
-    expect(deleteSiteLogoMock).not.toHaveBeenCalled();
-    await user.click(screen.getByRole('button', { name: 'Usar logo do cadastro' }));
-    expect(screen.getByAltText('Logo selecionado')).toHaveAttribute('src', '/presenca/demo-logo-barber.svg');
+    await user.upload(fileInput, new File(['png-2'], 'logo2.png', { type: 'image/png' }));
+    await waitFor(() => {
+      expect(screen.getByAltText('Logo selecionado')).toHaveAttribute('src', draftLogo2);
+    });
+
+    await user.click(screen.getAllByRole('button', { name: 'Salvar rascunho' })[0]);
+    await waitFor(() => {
+      expect(deleteSiteLogoMock).toHaveBeenCalledWith('business', draftLogo1);
+    });
+    expect(deleteSiteLogoMock).not.toHaveBeenCalledWith('business', publishedLogo);
+    expect(localStorage.getItem('agendix:presence:stale-logos:v1:business')).toContain(publishedLogo);
+  });
+
+  it('dispara aviso de alterações não salvas ao navegar para outra tela dentro do app', async () => {
+    const user = userEvent.setup();
+    window.location.hash = '#/configuracoes/meu-site';
+    render(
+      <div>
+        <a href="#/configuracoes/geral">Ir para Geral</a>
+        <SiteEditor data={data} initial={defaultConfig(data)} companyId="business" demo />
+      </div>,
+    );
+
+    await user.click(screen.getByRole('tab', { name: '2. Textos' }));
+    await user.clear(screen.getByLabelText(/^Frase principal/));
+    await user.type(screen.getByLabelText(/^Frase principal/), 'Alteração pendente');
+
+    await user.click(screen.getByRole('link', { name: 'Ir para Geral' }));
+    const dialog = await screen.findByRole('alertdialog');
+    expect(dialog).toHaveTextContent('Sair sem salvar?');
+    expect(window.location.hash).toBe('#/configuracoes/meu-site');
+
+    await user.click(screen.getByRole('button', { name: 'Continuar editando' }));
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('link', { name: 'Ir para Geral' }));
+    await screen.findByRole('alertdialog');
+    await user.click(screen.getByRole('button', { name: 'Sair sem salvar' }));
+    await waitFor(() => {
+      expect(window.location.hash).toBe('#/configuracoes/geral');
+    });
   });
 
   it('exibe checklist interativo com progresso e abre o passo pendente ao clicar no chip', async () => {
@@ -229,15 +264,17 @@ describe('SiteEditor panel', () => {
     await user.type(diffInput, 'Café passado na hora');
     expect(diffInput).toHaveValue('Café passado na hora');
 
-    await user.click(screen.getByRole('tab', { name: '4. Divulgar' }));
-    await user.click(screen.getByText('Seções e ordem da página'));
-    expect(screen.getByLabelText('Clube e planos')).toBeInTheDocument();
+    await user.click(screen.getByText('Dúvidas frequentes e contato'));
     await user.click(screen.getByRole('button', { name: '+ Formas de pagamento' }));
     expect(screen.getByDisplayValue('Quais formas de pagamento vocês aceitam?')).toBeInTheDocument();
 
     const referenceInput = screen.getByLabelText('Ponto de referência');
     await user.type(referenceInput, 'Ao lado do metrô Fradique Coutinho');
     expect(referenceInput).toHaveValue('Ao lado do metrô Fradique Coutinho');
+
+    await user.click(screen.getByRole('tab', { name: '3. Fotos' }));
+    await user.click(screen.getByText('Seções e ordem da página'));
+    expect(screen.getByLabelText('Clube e planos')).toBeInTheDocument();
   });
 
   it('mostra prévia do Google em /s/:slug, canais de compartilhamento e QR Code', async () => {

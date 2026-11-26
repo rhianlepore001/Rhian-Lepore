@@ -59,6 +59,7 @@ export function renderPublicSiteHtml(params: {
     (!normalized.logoRemoved ? normalized.logo || data.logo : undefined);
   const ogImage = absoluteAssetUrl(root, rawOgImage);
 
+  const cleanInstagram = (data.instagram || '').trim().replace(/^@/, '').replace(/[^a-z0-9._]/gi, '');
   const lang = data.region === 'PT' ? 'pt-PT' : 'pt-BR';
   const serviceSummary = data.services
     .slice(0, 12)
@@ -96,6 +97,9 @@ export function renderPublicSiteHtml(params: {
     `    <h1>${escapeHtml(selectedService ? selectedService.name : normalized.headline || data.name)}</h1>`,
     `    <p>${escapeHtml(description)}</p>`,
     data.address ? `    <p>${escapeHtml(data.address)}</p>` : '',
+    cleanInstagram
+      ? `    <p>Instagram: <a href="https://www.instagram.com/${escapeHtml(cleanInstagram)}/" rel="noreferrer">@${escapeHtml(cleanInstagram)}</a></p>`
+      : '',
     serviceSummary ? `    <ul>${serviceSummary}</ul>` : '',
     `    <p><a href="${escapeHtml(`${root}${hashTarget}`)}">${escapeHtml(normalized.ctaLabel || 'Agendar agora')}</a></p>`,
     '  </main>',

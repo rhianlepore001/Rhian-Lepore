@@ -30,7 +30,6 @@ import {
   isRecommendedBackground,
   neighborhoodFromAddress,
   photoObjectPosition,
-  RECOMMENDED_BACKGROUNDS,
   recommendedPresetForKind,
   resolvedBackground,
   resolvedPreset,
@@ -41,9 +40,13 @@ import {
   type SiteConfig,
   type SiteData,
   type SiteKind,
-  type SitePreset,
 } from '../../lib/establishment/model';
-import { loadSiteDraft, saveSiteDraft } from '../../lib/establishment/draft';
+import {
+  loadSiteDraft,
+  loadStaleLogos,
+  saveSiteDraft,
+  saveStaleLogos,
+} from '../../lib/establishment/draft';
 import {
   buildQrPrintHtml,
   buildShareLinks,
@@ -200,7 +203,41 @@ async function renderQrDataUrl(url: string, width: number, margin: number): Prom
   });
 }
 
-function BackgroundField({
+const STYLE_CHOICES: Array<{
+  id: 'urban' | 'editorial' | 'salon';
+  label: string;
+  subtitle: string;
+  hex: string;
+  style: SiteConfig['style'];
+  className: string;
+}> = [
+  {
+    id: 'urban',
+    label: 'Urbano preciso',
+    subtitle: 'Fundo escuro',
+    hex: '#09090B',
+    style: 'dark',
+    className: 'se-style-dark',
+  },
+  {
+    id: 'editorial',
+    label: 'Editorial clássico',
+    subtitle: 'Fundo creme',
+    hex: '#FBF7F0',
+    style: 'light',
+    className: 'se-style-light',
+  },
+  {
+    id: 'salon',
+    label: 'Salão luminoso',
+    subtitle: 'Fundo branco',
+    hex: '#FFFFFF',
+    style: 'light',
+    className: 'se-style-salon',
+  },
+];
+
+function StyleAndBackgroundField({
   config,
   kind,
   onChange,
@@ -210,10 +247,11 @@ function BackgroundField({
   onChange: (patch: Partial<SiteConfig>) => void;
 }) {
   const current = resolvedBackground(config, kind);
-  const recommended = RECOMMENDED_BACKGROUNDS.some(item => item.hex.toLowerCase() === current.toLowerCase());
+  const currentPreset = resolvedPreset(config, kind);
+  const isStandardBg = isRecommendedBackground(current);
   const surface = siteSurface(current, config.style);
   const [customHex, setCustomHex] = useState(current);
-  const [pickingCustom, setPickingCustom] = useState(!recommended);
+  const [pickingCustom, setPickingCustom] = useState(!isStandardBg);
 
   useEffect(() => {
     setCustomHex(current);
@@ -226,17 +264,16 @@ function BackgroundField({
     }
   };
 
-  const customSelected = pickingCustom || !recommended;
-
+  const customOpen = pickingCustom || !isStandardBg;
   const recommendedId = recommendedPresetForKind(kind);
 
   return (
-    <fieldset className="se-bg">
-      <legend>Cor de fundo</legend>
-      <p className="se-help">Escolha um padrão pronto ou ajuste uma cor sua.</p>
-      <div className="se-swatches" role="radiogroup" aria-label="Cor de fundo do site">
-        {RECOMMENDED_BACKGROUNDS.map(item => {
-          const checked = !customSelected && item.hex.toLowerCase() === current.toLowerCase();
+    <fieldset className="se-bg se-style-fieldset">
+      <legend>Estilo e fundo do site</legend>
+      <p className="se-help">Escolha o visual da sua página ou ajuste uma cor de fundo sua.</p>
+      <div className="se-style-choices" role="radiogroup" aria-label="Estilo e fundo do site">
+        {STYLE_CHOICES.map(item => {
+          const checked = currentPreset === item.id && isStandardBg;
           const isRecommended = item.id === recommendedId;
           return (
             <button
@@ -245,34 +282,31 @@ function BackgroundField({
               role="radio"
               aria-checked={checked}
               aria-label={isRecommended ? `${item.label}, recomendada` : item.label}
-              className="se-swatch"
-              style={{ '--swatch': item.hex } as React.CSSProperties}
+              className={`se-style-card ${item.className}`}
               onClick={() => {
                 setPickingCustom(false);
                 onChange({ preset: item.id, style: item.style, background: item.hex });
               }}
             >
-              <i aria-hidden="true" />
-              <span>{item.label}</span>
+              <span className="se-style-sample">
+                <span>{item.subtitle}</span>
+                <strong>{item.label}</strong>
+              </span>
               {isRecommended && <small className="se-swatch-badge">Recomendada</small>}
             </button>
           );
         })}
-        <button
-          type="button"
-          role="radio"
-          aria-checked={customSelected}
-          aria-label="Personalizada"
-          className="se-swatch se-swatch-custom"
-          onClick={() => setPickingCustom(true)}
-        >
-          <i aria-hidden="true">
-            <Palette size={16} aria-hidden="true" />
-          </i>
-          <span>Personalizada</span>
-        </button>
       </div>
-      {customSelected && (
+      <button
+        type="button"
+        className="se-secondary se-custom-bg-toggle"
+        aria-expanded={customOpen}
+        onClick={() => setPickingCustom(open => !open)}
+      >
+        <Palette size={15} aria-hidden="true" />
+        {customOpen ? 'Ocultar cor personalizada' : 'Personalizar cor de fundo'}
+      </button>
+      {customOpen && (
         <div className="se-color">
           <span>Cor personalizada</span>
           <input
@@ -309,6 +343,10 @@ const EDITOR_STEPS: Array<{ id: EditorStep; label: string }> = [
   { id: 'share', label: '4. Divulgar' },
 ];
 
+type PendingLeave =
+  | { type: 'hash'; hash: string }
+  | { type: 'history'; url: string; state: unknown };
+
 export function SiteEditor({ data, initial, companyId, demo = false, embedded = false }: SiteEditorProps) {
   const [config, setConfig] = useState(() => loadSiteDraft(companyId, initial));
   const [savedJson, setSavedJson] = useState(() => JSON.stringify(loadSiteDraft(companyId, initial)));
@@ -319,10 +357,16 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
   const [previewCollapsed, setPreviewCollapsed] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState('');
+  const [pendingLeave, setPendingLeave] = useState<PendingLeave | null>(null);
 
   const isDirty = useMemo(() => JSON.stringify(config) !== savedJson, [config, savedJson]);
 
-  const staleLogos = useRef<Set<string>>(new Set());
+  const staleLogos = useRef<Set<string>>(new Set(loadStaleLogos(companyId)));
+  const publishedLogoRef = useRef<string>('');
+  const bypassNavGuardRef = useRef(false);
+  const lastHashRef = useRef(typeof window !== 'undefined' ? window.location.hash : '');
+  const originalPushStateRef = useRef<History['pushState'] | null>(null);
+  const stayBtnRef = useRef<HTMLButtonElement>(null);
   const frame = useRef<HTMLIFrameElement>(null);
   const expandBtnRef = useRef<HTMLButtonElement>(null);
   const backBtnRef = useRef<HTMLButtonElement>(null);
@@ -340,19 +384,46 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
   const [presenceEnabled, setPresenceEnabled] = useState(false);
   const [published, setPublished] = useState(false);
 
+  useEffect(() => {
+    staleLogos.current = new Set(loadStaleLogos(companyId));
+  }, [companyId]);
+
+  const queueStaleLogo = (url: string) => {
+    const trimmed = url.trim();
+    if (!trimmed || demo) return;
+    staleLogos.current.add(trimmed);
+    saveStaleLogos(companyId, Array.from(staleLogos.current));
+  };
+
+  const flushStaleLogos = async ({
+    includePublishedLogo,
+    keepLogo,
+  }: {
+    includePublishedLogo: boolean;
+    keepLogo: string;
+  }) => {
+    if (demo) return;
+    const candidates = Array.from(staleLogos.current).filter(
+      url => url !== keepLogo && (includePublishedLogo || url !== publishedLogoRef.current),
+    );
+    if (!candidates.length) return;
+    const photos = await import('../../services/establishmentPhotos');
+    await Promise.all(
+      candidates.map(async url => {
+        try {
+          await photos.deleteSiteLogo(companyId, url);
+          staleLogos.current.delete(url);
+        } catch {
+          // Mantém na fila persistida para remover na próxima tentativa
+        }
+      }),
+    );
+    saveStaleLogos(companyId, Array.from(staleLogos.current));
+  };
+
   const update = (patch: Partial<SiteConfig>) => {
     setConfig(current => ({ ...current, ...patch }));
     setSaved('');
-  };
-
-  const applyPreset = (preset: SitePreset, style: SiteConfig['style']) => {
-    const current = resolvedBackground(config, data.kind);
-    const presetBg = preset === 'urban' ? '#09090B' : preset === 'editorial' ? '#FBF7F0' : '#FFFFFF';
-    update({
-      preset,
-      style,
-      background: isRecommendedBackground(current) ? presetBg : current,
-    });
   };
 
   const configRef = useRef(config);
@@ -438,6 +509,7 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
         setStorage(result.storage);
         setPresenceEnabled(result.presenceEnabled);
         setPublished(result.published);
+        publishedLogoRef.current = result.publishedLogo || '';
         if (result.config) {
           setConfig(result.config);
           setSavedJson(JSON.stringify(result.config));
@@ -452,13 +524,110 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
   }, [companyId, demo]);
 
   useEffect(() => {
+    if (pendingLeave) {
+      stayBtnRef.current?.focus();
+    }
+  }, [pendingLeave]);
+
+  useEffect(() => {
+    if (!pendingLeave) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setPendingLeave(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [pendingLeave]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    lastHashRef.current = window.location.hash;
     if (!isDirty) return;
+
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
       event.preventDefault();
       event.returnValue = '';
     };
+
+    const onDocClick = (event: MouseEvent) => {
+      if (
+        bypassNavGuardRef.current ||
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      ) {
+        return;
+      }
+      const target = event.target as HTMLElement | null;
+      const anchor = target?.closest?.('a[href]') as HTMLAnchorElement | null;
+      if (!anchor || anchor.target === '_blank' || anchor.hasAttribute('download')) return;
+      const rawHref = anchor.getAttribute('href') || '';
+      if (!rawHref || rawHref.startsWith('mailto:') || rawHref.startsWith('tel:')) return;
+      let resolved: URL;
+      try {
+        resolved = new URL(anchor.href, window.location.href);
+      } catch {
+        return;
+      }
+      if (resolved.origin !== window.location.origin || !resolved.hash.startsWith('#/')) return;
+      const currentHash = window.location.hash || '#/';
+      if (resolved.hash === currentHash) return;
+      event.preventDefault();
+      event.stopPropagation();
+      setPendingLeave({ type: 'hash', hash: resolved.hash });
+    };
+
+    const onHashChange = () => {
+      if (bypassNavGuardRef.current) {
+        lastHashRef.current = window.location.hash;
+        return;
+      }
+      const nextHash = window.location.hash;
+      const prevHash = lastHashRef.current;
+      if (nextHash === prevHash) return;
+      bypassNavGuardRef.current = true;
+      window.location.hash = prevHash;
+      window.setTimeout(() => {
+        bypassNavGuardRef.current = false;
+      }, 0);
+      setPendingLeave({ type: 'hash', hash: nextHash });
+    };
+
+    const originalPushState = window.history.pushState.bind(window.history);
+    originalPushStateRef.current = originalPushState;
+    window.history.pushState = (state, unused, url) => {
+      if (bypassNavGuardRef.current || !url) {
+        originalPushState(state, unused, url);
+        lastHashRef.current = window.location.hash;
+        return;
+      }
+      try {
+        const nextUrl = new URL(String(url), window.location.href);
+        if (nextUrl.origin === window.location.origin && nextUrl.hash && nextUrl.hash !== lastHashRef.current) {
+          setPendingLeave({ type: 'history', url: nextUrl.href, state });
+          return;
+        }
+      } catch {
+        // fallback para comportamento nativo
+      }
+      originalPushState(state, unused, url);
+      lastHashRef.current = window.location.hash;
+    };
+
     window.addEventListener('beforeunload', onBeforeUnload);
-    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+    document.addEventListener('click', onDocClick, true);
+    window.addEventListener('hashchange', onHashChange);
+    return () => {
+      window.removeEventListener('beforeunload', onBeforeUnload);
+      document.removeEventListener('click', onDocClick, true);
+      window.removeEventListener('hashchange', onHashChange);
+      if (originalPushStateRef.current) {
+        window.history.pushState = originalPushStateRef.current;
+        originalPushStateRef.current = null;
+      }
+    };
   }, [isDirty]);
 
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.agendixstudio.com';
@@ -482,15 +651,17 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
     };
   }, [shareLinks.qr]);
 
-  const save = async () => {
+  const save = async (): Promise<boolean> => {
     setSaving(true);
     try {
       saveSiteDraft(companyId, config);
       setSavedJson(JSON.stringify(config));
+      const currentLogo = config.logoRemoved ? '' : config.logo || '';
       if (!demo) {
         const m = await import('../../services/establishmentSite');
         const result = await m.saveOwnerSiteDraft(companyId, config);
         setStorage(result.storage);
+        await flushStaleLogos({ includePublishedLogo: false, keepLogo: currentLogo });
         setSaved(
           result.storage === 'remote'
             ? 'Rascunho salvo. Seu site público não mudou.'
@@ -499,8 +670,10 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
       } else {
         setSaved('Rascunho de demonstração salvo neste navegador.');
       }
+      return true;
     } catch {
       setSaved('Não foi possível salvar. Confira o espaço e as permissões do navegador e tente novamente.');
+      return false;
     } finally {
       setSaving(false);
     }
@@ -513,13 +686,9 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
       const m = await import('../../services/establishmentSite');
       if (unpublish) await m.unpublishOwnerSite(companyId);
       else await m.publishOwnerSite(companyId, config);
-      if (!unpublish && staleLogos.current.size) {
-        const currentLogo = config.logoRemoved ? '' : config.logo || '';
-        const photos = await import('../../services/establishmentPhotos');
-        const pending = Array.from(staleLogos.current).filter(url => url !== currentLogo);
-        staleLogos.current.clear();
-        await Promise.all(pending.map(url => photos.deleteSiteLogo(companyId, url).catch(() => undefined)));
-      }
+      const currentLogo = unpublish ? '' : config.logoRemoved ? '' : config.logo || '';
+      publishedLogoRef.current = currentLogo;
+      await flushStaleLogos({ includePublishedLogo: true, keepLogo: currentLogo });
       setSavedJson(JSON.stringify(config));
       setPublished(!unpublish);
       setSaved(
@@ -532,6 +701,28 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
     } finally {
       setSaving(false);
     }
+  };
+
+  const proceedLeave = (leave: PendingLeave) => {
+    setPendingLeave(null);
+    bypassNavGuardRef.current = true;
+    window.setTimeout(() => {
+      if (leave.type === 'hash') {
+        lastHashRef.current = leave.hash;
+        window.location.hash = leave.hash;
+      } else {
+        if (originalPushStateRef.current) {
+          originalPushStateRef.current(leave.state, '', leave.url);
+        } else {
+          window.history.pushState(leave.state, '', leave.url);
+        }
+        lastHashRef.current = new URL(leave.url).hash;
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      }
+      window.setTimeout(() => {
+        bypassNavGuardRef.current = false;
+      }, 0);
+    }, 0);
   };
 
   const copyText = (value: string, message: string) => {
@@ -603,7 +794,7 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
   };
 
   const jumpToSection = (sectionKey: CompletenessSectionKey) => {
-    const targetStep: EditorStep = sectionKey === 'contact' ? 'share' : sectionKey;
+    const targetStep: EditorStep = sectionKey === 'contact' ? 'intro' : sectionKey;
     setStep(targetStep);
     window.requestAnimationFrame(() => {
       const target = sectionRefs.current[sectionKey];
@@ -654,8 +845,11 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
 
   const effectiveLogo = config.logoRemoved ? '' : config.logo || data.logo || '';
   const activeCover = config.coverRemoved ? '' : config.cover || data.cover || '';
-  const currentPreset = resolvedPreset(config, data.kind);
   const pageBackground = resolvedBackground(config, data.kind);
+  const pageSurface = useMemo(
+    () => siteSurface(pageBackground, config.style),
+    [pageBackground, config.style],
+  );
   const safeAccent = useMemo(
     () => accessibleAccent(config.accent, config.style, pageBackground),
     [config.accent, config.style, pageBackground],
@@ -763,7 +957,11 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
       )}
 
       <div className="se-workspace" data-preview-collapsed={previewCollapsed || undefined}>
-        <div className="se-controls" aria-hidden={expanded || undefined} {...(expanded ? { inert: true } : {})}>
+        <div
+          className="se-controls"
+          aria-hidden={expanded || Boolean(pendingLeave) || undefined}
+          {...(expanded || pendingLeave ? { inert: true } : {})}
+        >
           <section className="se-checklist" aria-label="Progresso do site">
             <div className="se-checklist-top">
               <strong>Seu site está {completeness.percent}% pronto</strong>
@@ -822,7 +1020,7 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
 
           {step === 'brand' && (
             <>
-              <BackgroundField config={config} kind={data.kind} onChange={update} />
+              <StyleAndBackgroundField config={config} kind={data.kind} onChange={update} />
 
               <details
                 ref={el => {
@@ -830,7 +1028,7 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
                 }}
                 open
               >
-                <summary>Estilo e identidade</summary>
+                <summary>Identidade e capa</summary>
             <div className="se-detail-content">
               <LogoPicker
                 value={effectiveLogo}
@@ -840,64 +1038,12 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
                 companyId={companyId}
                 demo={demo}
                 demoLogo={data.logo}
+                siteName={data.name}
+                surfaceBackground={pageSurface.background}
+                surfaceInk={pageSurface.ink}
                 onChange={update}
-                onLogoReplaced={url => staleLogos.current.add(url)}
+                onLogoReplaced={queueStaleLogo}
               />
-
-              <div className="se-block-group">
-                <span className="se-label-title">Estilo visual do site</span>
-                <p className="se-help se-help-tight">Escolha o clima que mais combina com a sua casa.</p>
-                <div className="se-styles">
-                  <button
-                    type="button"
-                    aria-label="Urbano preciso"
-                    className="se-style-dark"
-                    aria-pressed={currentPreset === 'urban'}
-                    onClick={() => applyPreset('urban', 'dark')}
-                  >
-                    <span className="se-style-sample">
-                      <span>Fundo escuro</span>
-                      <strong>
-                        Urbano
-                        <br />
-                        preciso
-                      </strong>
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Editorial clássico"
-                    className="se-style-light"
-                    aria-pressed={currentPreset === 'editorial'}
-                    onClick={() => applyPreset('editorial', 'light')}
-                  >
-                    <span className="se-style-sample">
-                      <span>Fundo creme</span>
-                      <strong>
-                        Editorial
-                        <br />
-                        clássico
-                      </strong>
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Salão luminoso"
-                    className="se-style-salon"
-                    aria-pressed={currentPreset === 'salon'}
-                    onClick={() => applyPreset('salon', 'light')}
-                  >
-                    <span className="se-style-sample">
-                      <span>Fundo branco</span>
-                      <strong>
-                        Salão
-                        <br />
-                        luminoso
-                      </strong>
-                    </span>
-                  </button>
-                </div>
-              </div>
 
               <div className="se-block-group">
                 <span className="se-label-title">Cor dos botões e destaques</span>
@@ -1240,6 +1386,97 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
               </p>
             </div>
           </details>
+
+              <details
+                ref={el => {
+                  sectionRefs.current.contact = el;
+                }}
+              >
+                <summary>
+                  <span className="se-summary-stack">
+                    <span>Dúvidas frequentes e contato</span>
+                    <small>Perguntas comuns, WhatsApp, Instagram e referência</small>
+                  </span>
+                </summary>
+                <div className="se-detail-content">
+                  <div className="se-block-group">
+                    <span className="se-label-title">Perguntas frequentes</span>
+                    <div className="se-suggestions">
+                      <span>Adicionar dúvida comum:</span>
+                      <div className="se-chip-row">
+                        {FAQ_SUGGESTIONS.map(item => (
+                          <button
+                            key={item.label}
+                            type="button"
+                            className="se-chip"
+                            onClick={() => {
+                              if (!config.faq.some(existing => existing.question === item.question)) {
+                                update({
+                                  faq: [...config.faq, { question: item.question, answer: item.answer }],
+                                });
+                              }
+                            }}
+                          >
+                            {item.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    {config.faq.map((faq, i) => (
+                      <fieldset key={i}>
+                        <legend>Pergunta {i + 1}</legend>
+                        {field('Pergunta', faq.question, question =>
+                          update({
+                            faq: config.faq.map((f, n) => (n === i ? { ...f, question } : f)),
+                          }),
+                        )}
+                        {field(
+                          'Resposta',
+                          faq.answer,
+                          answer =>
+                            update({
+                              faq: config.faq.map((f, n) => (n === i ? { ...f, answer } : f)),
+                            }),
+                          true,
+                        )}
+                        <button
+                          type="button"
+                          className="se-link-button"
+                          onClick={() => update({ faq: config.faq.filter((_, n) => n !== i) })}
+                        >
+                          Remover pergunta
+                        </button>
+                      </fieldset>
+                    ))}
+                    <button
+                      type="button"
+                      className="se-secondary"
+                      onClick={() => update({ faq: [...config.faq, { question: '', answer: '' }] })}
+                    >
+                      <Plus size={15} aria-hidden="true" />
+                      Adicionar pergunta
+                    </button>
+                  </div>
+
+                  <div className="se-block-group">
+                    <span className="se-label-title">Contato e endereço</span>
+                    {field('WhatsApp do estabelecimento', config.contact?.phone ?? data.phone ?? '', phone =>
+                      update({ contact: { ...config.contact, phone } }),
+                    )}
+                    {field('Instagram', config.contact?.instagram ?? data.instagram ?? '', instagram =>
+                      update({ contact: { ...config.contact, instagram } }),
+                    )}
+                    {field(
+                      'Ponto de referência',
+                      config.contact?.addressNote ?? '',
+                      addressNote => update({ contact: { ...config.contact, addressNote } }),
+                      false,
+                      'Ex.: Ao lado do metrô Fradique Coutinho. Aparece logo abaixo do endereço.',
+                    )}
+                  </div>
+                </div>
+              </details>
+
               <button type="button" className="se-step-next" onClick={() => setStep('photos')}>
                 Próximo: Fotos e serviços →
               </button>
@@ -1535,23 +1772,12 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
               </div>
             </div>
           </details>
-              <button type="button" className="se-step-next" onClick={() => setStep('share')}>
-                Próximo: Google e divulgar →
-              </button>
-            </>
-          )}
 
-          {step === 'share' && (
-            <>
-              <details
-                ref={el => {
-                  sectionRefs.current.contact = el;
-                }}
-              >
+              <details>
                 <summary>
                   <span className="se-summary-stack">
                     <span>Seções e ordem da página</span>
-                    <small>Dúvidas frequentes e contato</small>
+                    <small>Escolha o que aparece e em qual ordem</small>
                   </span>
                 </summary>
                 <div className="se-detail-content">
@@ -1561,265 +1787,237 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
                     {config.sections.map((section, index) => {
                       const hasContent = sectionHasContent(section.id);
                       return (
-                    <div className="se-section-row" key={section.id}>
-                      <label>
-                        <input
-                          type="checkbox"
-                          checked={section.enabled}
-                          onChange={e =>
-                            update({
-                              sections: config.sections.map(s =>
-                                s.id === section.id ? { ...s, enabled: e.target.checked } : s,
-                              ),
-                            })
-                          }
-                        />
-                        {sectionLabels[section.id]}
-                      </label>
-                      {!hasContent && <span className="se-empty-badge">Sem conteúdo ainda</span>}
-                      <button
-                        type="button"
-                        aria-label={`Mover ${sectionLabels[section.id]} para cima`}
-                        disabled={index === 0}
-                        onClick={() => moveSection(index, -1)}
-                      >
-                        <ArrowUp size={16} />
-                      </button>
-                      <button
-                        type="button"
-                        aria-label={`Mover ${sectionLabels[section.id]} para baixo`}
-                        disabled={index === config.sections.length - 1}
-                        onClick={() => moveSection(index, 1)}
-                      >
-                        <ArrowDown size={16} />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="se-block-group">
-                <span className="se-label-title">Perguntas frequentes</span>
-                <div className="se-suggestions">
-                  <span>Adicionar dúvida comum:</span>
-                  <div className="se-chip-row">
-                    {FAQ_SUGGESTIONS.map(item => (
-                      <button
-                        key={item.label}
-                        type="button"
-                        className="se-chip"
-                        onClick={() => {
-                          if (!config.faq.some(existing => existing.question === item.question)) {
-                            update({
-                              faq: [...config.faq, { question: item.question, answer: item.answer }],
-                            });
-                          }
-                        }}
-                      >
-                        {item.label}
-                      </button>
-                    ))}
+                        <div className="se-section-row" key={section.id}>
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={section.enabled}
+                              onChange={e =>
+                                update({
+                                  sections: config.sections.map(s =>
+                                    s.id === section.id ? { ...s, enabled: e.target.checked } : s,
+                                  ),
+                                })
+                              }
+                            />
+                            {sectionLabels[section.id]}
+                          </label>
+                          {!hasContent && <span className="se-empty-badge">Sem conteúdo ainda</span>}
+                          <button
+                            type="button"
+                            aria-label={`Mover ${sectionLabels[section.id]} para cima`}
+                            disabled={index === 0}
+                            onClick={() => moveSection(index, -1)}
+                          >
+                            <ArrowUp size={16} />
+                          </button>
+                          <button
+                            type="button"
+                            aria-label={`Mover ${sectionLabels[section.id]} para baixo`}
+                            disabled={index === config.sections.length - 1}
+                            onClick={() => moveSection(index, 1)}
+                          >
+                            <ArrowDown size={16} />
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-                {config.faq.map((faq, i) => (
-                  <fieldset key={i}>
-                    <legend>Pergunta {i + 1}</legend>
-                    {field('Pergunta', faq.question, question =>
-                      update({
-                        faq: config.faq.map((f, n) => (n === i ? { ...f, question } : f)),
-                      }),
-                    )}
-                    {field(
-                      'Resposta',
-                      faq.answer,
-                      answer =>
-                        update({
-                          faq: config.faq.map((f, n) => (n === i ? { ...f, answer } : f)),
-                        }),
-                      true,
-                    )}
-                    <button
-                      type="button"
-                      className="se-link-button"
-                      onClick={() => update({ faq: config.faq.filter((_, n) => n !== i) })}
-                    >
-                      Remover pergunta
-                    </button>
-                  </fieldset>
-                ))}
-                <button
-                  type="button"
-                  className="se-secondary"
-                  onClick={() => update({ faq: [...config.faq, { question: '', answer: '' }] })}
-                >
-                  <Plus size={15} aria-hidden="true" />
-                  Adicionar pergunta
-                </button>
-              </div>
+              </details>
 
-              <div className="se-block-group">
-                <span className="se-label-title">Contato e endereço</span>
-                {field('WhatsApp do estabelecimento', config.contact?.phone ?? data.phone ?? '', phone =>
-                  update({ contact: { ...config.contact, phone } }),
-                )}
-                {field('Instagram', config.contact?.instagram ?? data.instagram ?? '', instagram =>
-                  update({ contact: { ...config.contact, instagram } }),
-                )}
-                {field(
-                  'Ponto de referência',
-                  config.contact?.addressNote ?? '',
-                  addressNote => update({ contact: { ...config.contact, addressNote } }),
-                  false,
-                  'Ex.: Ao lado do metrô Fradique Coutinho. Aparece logo abaixo do endereço.',
-                )}
-              </div>
-            </div>
-          </details>
+              <button type="button" className="se-step-next" onClick={() => setStep('share')}>
+                Próximo: Google e divulgar →
+              </button>
+            </>
+          )}
 
-          <details open>
-            <summary>Google e compartilhar</summary>
-            <div className="se-detail-content">
-              <div className="se-block-group">
-                <span className="se-label-title">Como seu site aparece no Google</span>
-                <div className="se-google-card" aria-label="Prévia do resultado no Google">
-                  <span className="se-google-url">
-                    agendixstudio.com/s/{data.slug}
-                  </span>
-                  <strong>{seoPreview.title}</strong>
-                  <p>{seoPreview.description}</p>
-                </div>
-                {field(
-                  'Título para o Google',
-                  config.seoTitle,
-                  seoTitle => update({ seoTitle }),
-                  false,
-                  'Se deixar vazio, montamos automaticamente com o nome e o endereço da casa.',
-                )}
-                {field('Descrição para o Google', config.seoDescription, seoDescription =>
-                  update({ seoDescription }),
-                true,
-                )}
-              </div>
-
-              <div className="se-google-check">
-                <strong>Confira com seu Perfil da Empresa no Google</strong>
+          {step === 'share' && (
+            <>
+              <section className="se-publish-card" aria-label="Publicação do site">
+                <strong>
+                  {demo
+                    ? 'Site pronto na demonstração'
+                    : published
+                      ? 'Seu site está no ar'
+                      : presenceEnabled
+                        ? 'Tudo pronto para publicar'
+                        : 'Personalize à vontade antes de publicar'}
+                </strong>
                 <p className="se-help se-help-tight">
-                  Nome, endereço e telefone idênticos aos do perfil no Google ajudam clientes próximos a encontrar sua casa.
+                  {demo
+                    ? 'A demonstração já pode ser aberta para conferir o visual final.'
+                    : published
+                      ? 'Sempre que alterar textos ou fotos, salve o rascunho e toque em Publicar alterações para atualizar o endereço público.'
+                      : presenceEnabled
+                        ? 'Quando terminar seus ajustes, toque em Publicar para liberar o link para seus clientes.'
+                        : 'Você já pode personalizar e salvar tudo por aqui. A liberação para colocar o site no ar é feita manualmente pela equipe AgendiX.'}
                 </p>
-                <ul>
-                  <li>
-                    <span>Nome:</span> {data.name}
-                  </li>
-                  <li>
-                    <span>Endereço:</span> {data.address || 'Não informado (complete em Ajustes → Geral)'}
-                  </li>
-                  <li>
-                    <span>Telefone / WhatsApp:</span> {effectivePhone || 'Não informado'}
-                  </li>
-                </ul>
-              </div>
-
-              <div className="se-block-group se-share-block">
-                <span className="se-label-title">Compartilhar agora</span>
-                <p className="se-share-url">{shareLinks.direct}</p>
-                <div className="se-share-buttons">
+                <div className="se-publish-card-actions">
                   <button
                     type="button"
-                    className="se-secondary"
-                    onClick={() => copyText(shareLinks.direct, 'Link do site copiado.')}
+                    className="se-save"
+                    onClick={() => void changePublication()}
+                    disabled={saving || demo || storage !== 'remote' || !presenceEnabled}
                   >
-                    <Copy size={15} aria-hidden="true" />
-                    Copiar link
+                    {published ? 'Publicar alterações' : 'Publicar site'}
                   </button>
-                  <a className="se-secondary" href={whatsappShareUrl} target="_blank" rel="noreferrer">
-                    <MessageCircle size={15} aria-hidden="true" />
-                    Enviar no WhatsApp
+                  <a
+                    className="se-secondary"
+                    href={`/#/site/${data.slug || 'site'}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <ExternalLink size={15} aria-hidden="true" />
+                    Abrir prévia em nova aba
                   </a>
-                  <button
-                    type="button"
-                    className="se-secondary"
-                    onClick={() => copyText(shareLinks.instagram, 'Link para bio do Instagram copiado.')}
-                  >
-                    <Copy size={15} aria-hidden="true" />
-                    Copiar link para bio do Instagram
-                  </button>
-                  <button
-                    type="button"
-                    className="se-secondary"
-                    onClick={() => copyText(shareLinks.google, 'Link para perfil do Google copiado.')}
-                  >
-                    <Copy size={15} aria-hidden="true" />
-                    Copiar link para perfil do Google
-                  </button>
                 </div>
-              </div>
+              </section>
 
-              <div className="se-qr-card">
-                {qrDataUrl && <img className="se-qr-image" src={qrDataUrl} alt={`QR Code de ${data.name}`} />}
-                <div className="se-qr-info">
-                  <strong>QR Code para balcão e espelho</strong>
-                  <p className="se-help se-help-tight">
-                    O cliente aponta a câmera do celular e cai direto no seu site com serviços e horários.
-                  </p>
-                  <div className="se-share-buttons">
-                    <button type="button" className="se-secondary" onClick={() => void downloadQr()}>
-                      <Download size={15} aria-hidden="true" />
-                      Baixar QR Code
-                    </button>
-                    <button type="button" className="se-secondary" onClick={() => void printQrPlaque()}>
-                      <Printer size={15} aria-hidden="true" />
-                      Imprimir plaquinha
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="se-danger-zone">
-                {published && (
-                  <button
-                    type="button"
-                    className="se-link-button"
-                    onClick={() => void changePublication(true)}
-                    disabled={saving}
-                  >
-                    Despublicar site
-                  </button>
-                )}
-                {!confirmReset ? (
-                  <button
-                    type="button"
-                    className="se-link-button"
-                    onClick={() => setConfirmReset(true)}
-                  >
-                    Restaurar padrão
-                  </button>
-                ) : (
-                  <div className="se-reset-confirm">
-                    <span>Voltar tudo ao padrão inicial do cadastro?</span>
-                    <div className="se-chip-row">
+              <details open>
+                <summary>Compartilhar, QR Code e Google</summary>
+                <div className="se-detail-content">
+                  <div className="se-block-group se-share-block">
+                    <span className="se-label-title">Compartilhar agora</span>
+                    <p className="se-share-url">{shareLinks.direct}</p>
+                    <div className="se-share-buttons">
                       <button
                         type="button"
-                        className="se-chip se-chip-danger"
-                        onClick={() => {
-                          setConfig(defaultConfig(data));
-                          setConfirmReset(false);
-                          setSaved('Configurações restauradas ao padrão. Salve para manter.');
-                        }}
+                        className="se-secondary"
+                        onClick={() => copyText(shareLinks.direct, 'Link do site copiado.')}
                       >
-                        Sim, restaurar
+                        <Copy size={15} aria-hidden="true" />
+                        Copiar link
                       </button>
-                      <button type="button" className="se-chip" onClick={() => setConfirmReset(false)}>
-                        Cancelar
+                      <a className="se-secondary" href={whatsappShareUrl} target="_blank" rel="noreferrer">
+                        <MessageCircle size={15} aria-hidden="true" />
+                        Enviar no WhatsApp
+                      </a>
+                      <button
+                        type="button"
+                        className="se-secondary"
+                        onClick={() => copyText(shareLinks.instagram, 'Link para bio do Instagram copiado.')}
+                      >
+                        <Copy size={15} aria-hidden="true" />
+                        Copiar link para bio do Instagram
+                      </button>
+                      <button
+                        type="button"
+                        className="se-secondary"
+                        onClick={() => copyText(shareLinks.google, 'Link para perfil do Google copiado.')}
+                      >
+                        <Copy size={15} aria-hidden="true" />
+                        Copiar link para perfil do Google
                       </button>
                     </div>
                   </div>
-                )}
-              </div>
-              <p className="se-help">
-                O site real só fica disponível depois de publicado. A demonstração pode ser aberta agora.
-              </p>
-            </div>
-          </details>
+
+                  <div className="se-qr-card">
+                    {qrDataUrl && <img className="se-qr-image" src={qrDataUrl} alt={`QR Code de ${data.name}`} />}
+                    <div className="se-qr-info">
+                      <strong>QR Code para balcão e espelho</strong>
+                      <p className="se-help se-help-tight">
+                        O cliente aponta a câmera do celular e cai direto no seu site com serviços e horários.
+                      </p>
+                      <div className="se-share-buttons">
+                        <button type="button" className="se-secondary" onClick={() => void downloadQr()}>
+                          <Download size={15} aria-hidden="true" />
+                          Baixar QR Code
+                        </button>
+                        <button type="button" className="se-secondary" onClick={() => void printQrPlaque()}>
+                          <Printer size={15} aria-hidden="true" />
+                          Imprimir plaquinha
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="se-block-group">
+                    <span className="se-label-title">Como seu site aparece no Google</span>
+                    <div className="se-google-card" aria-label="Prévia do resultado no Google">
+                      <span className="se-google-url">
+                        agendixstudio.com/s/{data.slug}
+                      </span>
+                      <strong>{seoPreview.title}</strong>
+                      <p>{seoPreview.description}</p>
+                    </div>
+                    {field(
+                      'Título para o Google',
+                      config.seoTitle,
+                      seoTitle => update({ seoTitle }),
+                      false,
+                      'Se deixar vazio, montamos automaticamente com o nome e o endereço da casa.',
+                    )}
+                    {field('Descrição para o Google', config.seoDescription, seoDescription =>
+                      update({ seoDescription }),
+                    true,
+                    )}
+                  </div>
+
+                  <div className="se-google-check">
+                    <strong>Confira com seu Perfil da Empresa no Google</strong>
+                    <p className="se-help se-help-tight">
+                      Nome, endereço e telefone idênticos aos do perfil no Google ajudam clientes próximos a encontrar sua casa.
+                    </p>
+                    <ul>
+                      <li>
+                        <span>Nome:</span> {data.name}
+                      </li>
+                      <li>
+                        <span>Endereço:</span> {data.address || 'Não informado (complete em Ajustes → Geral)'}
+                      </li>
+                      <li>
+                        <span>Telefone / WhatsApp:</span> {effectivePhone || 'Não informado'}
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="se-danger-zone">
+                    {published && (
+                      <button
+                        type="button"
+                        className="se-link-button"
+                        onClick={() => void changePublication(true)}
+                        disabled={saving}
+                      >
+                        Despublicar site
+                      </button>
+                    )}
+                    {!confirmReset ? (
+                      <button
+                        type="button"
+                        className="se-link-button"
+                        onClick={() => setConfirmReset(true)}
+                      >
+                        Restaurar padrão
+                      </button>
+                    ) : (
+                      <div className="se-reset-confirm">
+                        <span>Voltar tudo ao padrão inicial do cadastro?</span>
+                        <div className="se-chip-row">
+                          <button
+                            type="button"
+                            className="se-chip se-chip-danger"
+                            onClick={() => {
+                              setConfig(defaultConfig(data));
+                              setConfirmReset(false);
+                              setSaved('Configurações restauradas ao padrão. Salve para manter.');
+                            }}
+                          >
+                            Sim, restaurar
+                          </button>
+                          <button type="button" className="se-chip" onClick={() => setConfirmReset(false)}>
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <p className="se-help">
+                    O site real só fica disponível depois de publicado. A demonstração pode ser aberta agora.
+                  </p>
+                </div>
+              </details>
             </>
           )}
         </div>
@@ -1893,6 +2091,52 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
           </p>
         </aside>
       </div>
+
+      {pendingLeave && (
+        <div className="se-leave-backdrop">
+          <div
+            className="se-leave-dialog"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="se-leave-title"
+          >
+            <h2 id="se-leave-title">Sair sem salvar?</h2>
+            <p>
+              Você tem alterações não salvas no seu site. Se sair agora, o que ainda não foi salvo pode se perder.
+            </p>
+            <div className="se-leave-actions">
+              <button
+                ref={stayBtnRef}
+                type="button"
+                className="se-secondary"
+                onClick={() => setPendingLeave(null)}
+              >
+                Continuar editando
+              </button>
+              <button
+                type="button"
+                className="se-save"
+                disabled={saving}
+                onClick={() => {
+                  const target = pendingLeave;
+                  void save().then(ok => {
+                    if (ok && target) proceedLeave(target);
+                  });
+                }}
+              >
+                Salvar rascunho e sair
+              </button>
+              <button
+                type="button"
+                className="se-chip se-chip-danger"
+                onClick={() => proceedLeave(pendingLeave)}
+              >
+                Sair sem salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

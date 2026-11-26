@@ -17,7 +17,7 @@ const handler = createPublishEstablishmentSiteHandler({
   async getOwnerSiteByUser(userId) {
     const { data: profile } = await admin
       .from('profiles')
-      .select('id, company_id, role, business_slug, business_name, user_type, region, address_street, phone, logo_url, cover_photo_url')
+      .select('id, company_id, role, business_slug, business_name, user_type, region, address_street, phone, instagram_handle, logo_url, cover_photo_url')
       .eq('id', userId)
       .maybeSingle();
     if (!profile || profile.role !== 'owner') return null;
@@ -43,6 +43,7 @@ const handler = createPublishEstablishmentSiteHandler({
       region: profile.region === 'PT' ? 'PT' : 'BR',
       address: profile.address_street || '',
       phone: profile.phone || undefined,
+      instagram: profile.instagram_handle || undefined,
       logo: profile.logo_url || undefined,
       cover: profile.cover_photo_url || undefined,
       presenceEnabled: site?.presence_enabled === true,

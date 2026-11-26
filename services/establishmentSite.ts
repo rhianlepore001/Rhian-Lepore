@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { loadSiteDraft, saveSiteDraft, siteDraftKey } from '@/lib/establishment/draft';
-import { defaultConfig, isReservedSiteSlug, normalizeSiteConfig, sanitizePublicData, type SiteConfig, type SiteData } from '@/lib/establishment/model';
+import { defaultConfig, isReservedSiteSlug, normalizeSiteConfig, safeImageUrl, sanitizePublicData, type SiteConfig, type SiteData } from '@/lib/establishment/model';
 
 export { loadSiteDraft, saveSiteDraft };
 
@@ -43,19 +43,40 @@ export interface OwnerSiteDraft {
   storage: 'local' | 'remote';
   published: boolean;
   presenceEnabled: boolean;
+  publishedLogo?: string;
 }
 
 function missingSiteTable(error: { code?: string } | null): boolean {
   return error?.code === '42P01' || error?.code === 'PGRST205';
 }
 
+function activePublishedLogo(publishedConfig: unknown, fallbackLogo?: string): string | undefined {
+  if (!publishedConfig || typeof publishedConfig !== 'object' || Array.isArray(publishedConfig)) {
+    return safeImageUrl(fallbackLogo);
+  }
+  const record = publishedConfig as Record<string, unknown>;
+  if (record.logoRemoved === true) return undefined;
+  return safeImageUrl(record.logo) || safeImageUrl(fallbackLogo);
+}
+
 export async function loadOwnerSite(companyId: string, fallback: SiteConfig): Promise<OwnerSiteDraft> {
   siteDraftKey(companyId);
-  const { data, error } = await supabase.from('establishment_sites').select('draft_config,published,presence_enabled').eq('company_id', companyId).maybeSingle();
+  const { data, error } = await supabase
+    .from('establishment_sites')
+    .select('draft_config,published_config,published,presence_enabled')
+    .eq('company_id', companyId)
+    .maybeSingle();
   if (missingSiteTable(error)) return { config: loadSiteDraft(companyId, fallback), storage: 'local', published: false, presenceEnabled: false };
   if (error) throw error;
   if (!data) return { config: loadSiteDraft(companyId, fallback), storage: 'remote', published: false, presenceEnabled: false };
-  return { config: normalizeSiteConfig(data.draft_config, fallback), storage: 'remote', published: data.published === true, presenceEnabled: data.presence_enabled === true };
+  const published = data.published === true;
+  return {
+    config: normalizeSiteConfig(data.draft_config, fallback),
+    storage: 'remote',
+    published,
+    presenceEnabled: data.presence_enabled === true,
+    publishedLogo: published ? activePublishedLogo(data.published_config, fallback.logo) : undefined,
+  };
 }
 
 export async function saveOwnerSiteDraft(companyId: string, config: SiteConfig): Promise<{ storage: 'local' | 'remote' }> {

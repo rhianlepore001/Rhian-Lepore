@@ -113,8 +113,8 @@ export function getDemoSite(slug: string): { data: SiteData; config: SiteConfig 
       ? ['Orçamento transparente apresentado antes de iniciar qualquer coloração.', 'Atendimento individualizado com foco em crescimento suave da cor.', 'Consulta de 10 minutos antes de qualquer tesoura ou química.']
       : ['Atendimento rigorosamente no horário marcado — sem fila de espera.', 'Lâminas descartáveis e toalhas esterilizadas a cada cliente.', 'Horário estendido até 20h de segunda a sexta.', 'Garantia de ajuste gratuito em até 7 dias caso precise retocar.'],
     beforeAfter: beauty
-      ? [{ before: photo('galeria-04'), after: photo('galeria-02'), caption: 'Cor e movimento — fotos ilustrativas.' }]
-      : [{ before: photo('galeria-04'), after: photo('galeria-01'), caption: 'Degradê e alinhamento — fotos ilustrativas.' }],
+      ? [{ before: '/presenca/rhian/salon-before.webp', after: '/presenca/rhian/salon-after.webp', caption: 'Cor e movimento — fotos ilustrativas.' }]
+      : [{ before: '/presenca/rhian/barber-before.webp', after: '/presenca/rhian/barber-after.webp', caption: 'Degradê e alinhamento — fotos ilustrativas.' }],
     faq: [
       { question: 'Preciso agendar antes de ir?', answer: 'Sim. Escolha o serviço, o profissional e um horário disponível aqui no site. Assim, a gente reserva um tempo só para você.' },
       { question: 'E se eu precisar remarcar?', answer: 'Use o link enviado na confirmação. Na demonstração, a política é de até 2 horas antes do atendimento.' },

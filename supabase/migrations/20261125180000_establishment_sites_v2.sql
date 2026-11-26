@@ -103,9 +103,10 @@ set search_path = ''
 as $$
     select coalesce(p_url, '') <> ''
        and p_url !~ '\.\.'
+       and p_url !~* '%2e|%5c'
        and (
            p_url ~ '^/(demo|presenca)/[A-Za-z0-9._/-]+$'
-           or p_url ~ '^https://[a-z0-9-]+\.supabase\.co/storage/v1/object/public/(logos|covers|service_images|team_photos|gallery|membership_plans)/[^?#\\ ]+$'
+           or p_url ~ '^https://lcqwrngscsziysyfhpfj\.supabase\.co/storage/v1/object/public/(logos|covers|service_images|team_photos|galleries|membership_plan_photos)/[^?#\\ ]+$'
        );
 $$;
 

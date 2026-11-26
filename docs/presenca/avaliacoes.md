@@ -2,6 +2,45 @@
 
 Data mais recente: 26 Nov 2026. Branch `feat/presenca-site-completo` (PR #258).
 
+## Rodada 26 Nov 2026 (final) — API Vercel SEO, buckets de produção, limpeza no rascunho e polimento UX
+
+Fechamento dos 4 ajustes finais após re-revisão do commit `76fa8edd` no PR #258:
+
+1. **SEO/OG via função serverless na Vercel (`api/site-seo.ts` + `vercel.json`) e `supabase/config.toml`:**
+   - Função leve em `api/site-seo.ts` / `api/_lib/siteSeo.ts` lê o HTML/XML pré-renderizado de `published-sites` com `Content-Type: text/html; charset=utf-8` e `application/xml; charset=utf-8` (contornando conversão para `text/plain` em respostas diretas do Storage `supabase.co`), CSP e cache headers configurados.
+   - Rewrites adicionados em `vercel.json` (`/sitemap.xml`, `/s/:slug/servico/:serviceId`, `/s/:slug`) mantendo integralmente os headers de segurança e o catch-all SPA `/((?!assets/)(?!api/).*)`.
+   - `instagram_handle` incluído no JSON-LD (`sameAs`) e HTML estático da Edge Function `publish-establishment-site` e em `lib/establishment/prerender.ts`.
+   - `supabase/config.toml` criado explicitando `verify_jwt = true` para `publish-establishment-site` e `verify_jwt = false` para `serve-establishment-site`.
+2. **Validação estrita de URLs de mídia:**
+   - Host travado exclusivamente em `lcqwrngscsziysyfhpfj.supabase.co` e buckets corrigidos para `galleries` e `membership_plan_photos` no front-end, serviço de Storage, Edge Function e SQL.
+3. **Limpeza de logo no rascunho + aviso na navegação interna:**
+   - Logos antigos substituídos/removidos são apagados do Storage também ao salvar rascunho (`save()`), mantendo persistência em `localStorage` e preservando qualquer logo publicado até a publicação seguinte.
+   - Guard de navegação interna (`alertdialog` `"Sair sem salvar?"`) intercepta saída dentro do app (`<HashRouter>`) quando há alterações pendentes.
+4. **Polimento de UI/UX e fotos demo:**
+   - Nova foto `barber-hero.webp` sem nenhum letreiro/texto deformado; novos pares de antes e depois (`barber-before/after.webp` e `salon-before/after.webp`) coerentes com a mesma pessoa.
+   - Passo `1. Visual` unificado em um único cartão **"Estilo e fundo do site"**; prévia do logo simulando **Topo do site** sobre a cor de fundo real da casa.
+   - Passo `4. Divulgar` focado em publicar, link compartilhável, QR Code e prévia no Google (com ponto final automático na descrição).
+
+### Eval UI/UX independente (Rodada 7 — mobile 320/390 primeiro, 768 e 1280, claro e escuro)
+
+| Superfície | Nota | Leitura |
+|---|---|---|
+| Site público — Barber / Editorial (`320`, `390`, `768`, `1280` + serviço) | **9,7/10** | Hero sem texto deformado, identidade urbana escura coerente e antes/depois com a mesma pessoa. |
+| Site público — Beauty (`320`, `390`, `768`, `1280` + serviço) | **9,7/10** | Paleta clara luminosa, filtros responsivos e antes/depois coerente com a mesma cliente. |
+| Site público — Cadastro Mínimo (`390`, `1280`) | **9,6/10** | Estrutura sólida sem seções vazias. |
+| Fluxo de Agendamento Embutido (`390`, `1280` — Barber & Beauty) | **9,6/10** | Herança fiel de estilo/cor e contexto preservado. |
+| Painel "Meu site" — Editor Demo e Autenticado Claro/Escuro (`390`, `1280`) | **9,6/10** | Passo 1 unificado sem repetição, logo sobre o fundo real no topo e passo 4 direto para divulgação/Google. |
+
+**Média final:** **9,64/10** (**APROVADO**).
+
+### Revisões independentes e verificações
+
+- **Validador Crítico de Segurança:** **APROVADO** (0 P0, 0 P1; P2 residuais aplicados).
+- Verificações finais após a última edição: `npm run typecheck`, `npm run lint`, `npm test -- --run`, `npm run build` (`check-bundle-strings`), `npx playwright test --config e2e/establishment/playwright.config.ts` (26/26) e `scripts/test-sql-establishment-sites.sh` no PostgreSQL 17 local.
+- Migrations não aplicadas em produção; `20261124133813_establishment_sites.sql`, `SettingsLayout.tsx`, login, cadastro, onboarding e Stripe mantidos intactos.
+
+---
+
 ## Rodada 26 Nov 2026 — ajustes pós-revisão do PR #258
 
 Conclusão dos 13 itens solicitados na revisão independente do PR #258, preservando `components/SettingsLayout.tsx`, `supabase/migrations/20261124133813_establishment_sites.sql`, `vercel.json`, login, cadastro, onboarding e Stripe intactos em relação à `main`:

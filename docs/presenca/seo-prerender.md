@@ -1,25 +1,12 @@
 # Presença — Pré-renderização estática, `/s/:slug` e `sitemap.xml`
 
 ## Arquitetura
-1. No momento de publicar ou despublicar em **Ajustes → Meu site**, `publishOwnerSite` / `unpublishOwnerSite` ([services/establishmentSite.ts](../../services/establishmentSite.ts)) invocam a Edge Function `publish-establishment-site`.
-2. A Edge Function gera HTML estático completo (título, descrição, `canonical`, Open Graph, Twitter Cards, JSON-LD `HairSalon`/`LocalBusiness` e resumo semântico sem nenhuma menção ao AgendiX) e grava no bucket público `published-sites` (`sites/<slug>.html` e `sites/<slug>/servico/<id>.html`), além de atualizar `sitemap.xml` via `public.list_published_site_slugs()`.
-3. Navegadores humanos recebem o boot leve `/presenca/site-boot.js` (compatível com CSP `script-src 'self'`, sem script inline) que redireciona imediatamente para `/#/site/<slug>` preservando `?origem=`. Rastreadores (Google, WhatsApp, Instagram) leem diretamente as meta tags e o JSON-LD da resposta HTTP 200.
-4. A Edge Function `serve-establishment-site` entrega `GET /s/:slug`, `GET /s/:slug/servico/:serviceId` e `GET /sitemap.xml` direto do bucket `published-sites` com cache curto (`max-age=60, s-maxage=300`) e 404 para slugs reservados ou não publicados.
-
-## Alteração proposta no `vercel.json` (aguardando aprovação explícita do Rhian)
-Conforme instrução do PR #258, **`vercel.json` não foi alterado neste PR**. Para servir `/s/:slug` e `/sitemap.xml` diretamente na borda da Vercel quando as Edge Functions forem publicadas, inclua estes rewrites **antes** da regra catch-all `/((?!assets/).*)`:
-
-```json
-{
-  "source": "/sitemap.xml",
-  "destination": "https://lcqwrngscsziysyfhpfj.supabase.co/functions/v1/serve-establishment-site/sitemap.xml"
-},
-{
-  "source": "/s/:slug",
-  "destination": "https://lcqwrngscsziysyfhpfj.supabase.co/functions/v1/serve-establishment-site/s/:slug"
-},
-{
-  "source": "/s/:slug/servico/:serviceId",
-  "destination": "https://lcqwrngscsziysyfhpfj.supabase.co/functions/v1/serve-establishment-site/s/:slug/servico/:serviceId"
-}
-```
+1. No momento de publicar ou despublicar em **Ajustes → Meu site**, `publishOwnerSite` / `unpublishOwnerSite` ([services/establishmentSite.ts](../../services/establishmentSite.ts)) invocam a Edge Function `publish-establishment-site` (`verify_jwt = true` em [supabase/config.toml](../../supabase/config.toml)).
+2. A Edge Function gera HTML estático completo (título, descrição, `canonical`, Open Graph, Twitter Cards, Instagram, JSON-LD `HairSalon`/`LocalBusiness` e resumo semântico sem nenhuma menção ao AgendiX) e grava no bucket público `published-sites` (`sites/<slug>.html` e `sites/<slug>/servico/<id>.html`), além de atualizar `sitemap.xml` via `public.list_published_site_slugs()`.
+3. Navegadores humanos recebem o boot leve `/presenca/site-boot.js` (compatível com CSP `script-src 'self'`, sem script inline) que redireciona imediatamente para `/#/site/<slug>` preservando `?origem=`. Rastreadores (Google, WhatsApp, Instagram) leem diretamente as meta tags, links e JSON-LD da resposta HTTP 200.
+4. Como o domínio `supabase.co` converte respostas HTML/XML em `text/plain`, a entrega pública é feita pela função serverless da Vercel [`api/site-seo.ts`](../../api/site-seo.ts) (via [`api/_lib/siteSeo.ts`](../../api/_lib/siteSeo.ts)), roteada por [vercel.json](../../vercel.json):
+   - `/sitemap.xml` → `/api/site-seo?kind=sitemap` (`Content-Type: application/xml; charset=utf-8`)
+   - `/s/:slug` → `/api/site-seo?kind=site&slug=:slug` (`Content-Type: text/html; charset=utf-8`)
+   - `/s/:slug/servico/:serviceId` → `/api/site-seo?kind=service&slug=:slug&serviceId=:serviceId` (`Content-Type: text/html; charset=utf-8`)
+   - Todo o restante fora de `/assets/` e `/api/` continua indo para `/index.html` (SPA intacto).
+5. Caso a Edge Function `serve-establishment-site` permaneça publicada no Supabase como utilitário de leitura, ela fica configurada em [supabase/config.toml](../../supabase/config.toml) com `verify_jwt = false`.

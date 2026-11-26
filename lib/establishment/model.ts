@@ -348,7 +348,11 @@ export function buildSeo(sourceData: SiteData, config: SiteConfig, origin: strin
   const url = `${root}/s/${encodeURIComponent(data.slug)}`;
   const place = placeFromAddress(data.address);
   const title = normalized.seoTitle.trim() || `${data.name} — ${kinds[data.kind]}${place ? ` em ${place}` : ''}`;
-  const description = normalized.seoDescription.trim() || `${normalized.headline} ${data.services.length ? `Conheça os serviços, preços e profissionais de ${data.name}. Agende seu horário online.` : `Conheça ${data.name} e reserve seu horário.`}`;
+  const headlineLead = normalized.headline.trim();
+  const headlineSentence = headlineLead ? (/[.!?…]$/.test(headlineLead) ? headlineLead : `${headlineLead}.`) : '';
+  const description =
+    normalized.seoDescription.trim() ||
+    `${headlineSentence} ${data.services.length ? `Conheça os serviços, preços e profissionais de ${data.name}. Agende seu horário online.` : `Conheça ${data.name} e reserve seu horário.`}`.trim();
   const jsonLd: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': data.kind === 'studio' ? 'LocalBusiness' : 'HairSalon',
@@ -393,8 +397,8 @@ export function safeImageUrl(value: unknown): string | undefined {
   try {
     const parsed = new URL(trimmed);
     if (parsed.protocol !== 'https:' || parsed.username || parsed.password) return undefined;
-    if (!/^[a-z0-9-]+\.supabase\.co$/i.test(parsed.hostname)) return undefined;
-    if (!/^\/storage\/v1\/object\/public\/(logos|covers|service_images|team_photos|gallery|membership_plans)\/[^?#]+$/i.test(parsed.pathname)) {
+    if (parsed.hostname.toLowerCase() !== 'lcqwrngscsziysyfhpfj.supabase.co') return undefined;
+    if (!/^\/storage\/v1\/object\/public\/(logos|covers|service_images|team_photos|galleries|membership_plan_photos)\/[^?#]+$/i.test(parsed.pathname)) {
       return undefined;
     }
     return parsed.href;

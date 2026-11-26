@@ -9,6 +9,14 @@
 
 ---
 
+## Presença — entrega final pós-revisão do PR #258 (26 Nov 2026, draft)
+
+Branch `feat/presenca-site-completo`, PR #258 (draft). Fechamento completo da revisão técnica e visual:
+- **SEO/OG via Vercel (`api/site-seo.ts` + `vercel.json` autorizados nesta branch) e `supabase/config.toml`:** rewrites `/sitemap.xml`, `/s/:slug` e `/s/:slug/servico/:serviceId` servem o HTML/XML pré-renderizado com `Content-Type`, cache e headers de segurança preservando o SPA fallback `/((?!assets/)(?!api/).*)`. `instagram_handle` adicionado ao pré-renderizado; JWT explicitado em `supabase/config.toml` (`publish-establishment-site` com JWT; `serve-establishment-site` sem JWT).
+- **Segurança de mídia, Storage e rascunho:** validação travada exclusivamente no projeto `lcqwrngscsziysyfhpfj.supabase.co` e buckets reais (`galleries`, `membership_plan_photos`); limpeza segura de logos substituídos/removidos também ao salvar rascunho (protegendo eventual logo publicado até nova publicação) e aviso de alterações não salvas na navegação interna dentro do `<HashRouter>`.
+- **Polimento UX e fotos demo:** nova hero da barbearia sem letreiro deformado e pares antes/depois coerentes com a mesma pessoa em cada nicho (`public/presenca/rhian/*`); Passo 1 unificado em "Estilo e fundo do site", prévia clara do logo sobre o fundo real do topo e Passo 4 focado em publicar, link, QR Code e Google.
+- **Auditoria e notas finais:** auditoria de segurança **APROVADA** (0 P0/P1); eval visual independente (Rodada 7) **APROVADO** com **9,64/10** de média (Barber **9,7**, Beauty **9,7**, Cadastro Mínimo **9,6**, Agendamento **9,6**, Painel "Meu site" **9,6**). Migration v2 não aplicada em produção; `20261124133813_establishment_sites.sql`, `SettingsLayout.tsx`, login, cadastro, onboarding e Stripe intocados.
+
 ## Presença — revisão pós-PR #258 e pré-render SEO `/s/:slug` (26 Nov 2026, draft)
 
 Branch `feat/presenca-site-completo`, PR #258 (draft). Rodada de correções sobre os 13 itens da revisão independente:

@@ -85,12 +85,16 @@ describe('brand contrast', () => {
 describe('public allowlist', () => {
   it('drops private fields, removed staff and unsafe image URLs', () => {
     const storageTeamUrl = 'https://lcqwrngscsziysyfhpfj.supabase.co/storage/v1/object/public/team_photos/a/pro.jpg';
-    const storageGalleryUrl = 'https://lcqwrngscsziysyfhpfj.supabase.co/storage/v1/object/public/gallery/a/real.jpg';
+    const storageGalleryUrl = 'https://lcqwrngscsziysyfhpfj.supabase.co/storage/v1/object/public/galleries/a/real.jpg';
+    const storageClubUrl = 'https://lcqwrngscsziysyfhpfj.supabase.co/storage/v1/object/public/membership_plan_photos/a/club.webp';
+    const otherSupabaseGallery = 'https://outro-projeto.supabase.co/storage/v1/object/public/galleries/a/fake.jpg';
+    const legacyBucketGallery = 'https://lcqwrngscsziysyfhpfj.supabase.co/storage/v1/object/public/gallery/a/legacy.jpg';
     const data = sanitizePublicData({
       profile: { id: 'a', business_slug: 'safe', business_name: 'Safe', phone: '+55 11 1111 1111', customer_email: 'secret@example.com', logo_url: 'javascript:alert(1)' },
       team: [{ id: 'a', name: 'Active', active: true, photo_url: storageTeamUrl, phone: 'private' }, { id: 'b', name: 'Gone', active: false }, { id: 'c', name: 'Deleted', active: true, deleted_at: '2026-01-01' }],
       services: [{ id: 's', name: 'Corte', active: true, price: 0, duration_minutes: 30, image_url: 'data:text/html,no' }, { id: 'x', name: 'Inactive', active: false, price: 50, duration_minutes: 30 }],
-      gallery: [{ image_url: storageGalleryUrl }, { image_url: 'https://evil.example.com/outside.jpg' }, { image_url: 'javascript:alert(1)' }],
+      gallery: [{ image_url: storageGalleryUrl }, { image_url: otherSupabaseGallery }, { image_url: legacyBucketGallery }, { image_url: 'https://evil.example.com/outside.jpg' }, { image_url: 'javascript:alert(1)' }],
+      clubPlans: [{ id: 'plan-1', name: 'Plano', price_cents: 9900, active: true, photo_path: storageClubUrl }],
       reviews: { average: 4.9, total: 2, reviews: [{ id: 'r', rating: 5, comment: 'Contato: teste@example.com, +55 (11) 99999-9999', name: 'Maria Sobrenome Completo', phone: 'secret' }] },
     });
     expect(data.team).toHaveLength(1);
@@ -99,6 +103,8 @@ describe('public allowlist', () => {
     expect(data.services).toHaveLength(1);
     expect(data.services[0].image).toBeUndefined();
     expect(data.gallery).toHaveLength(1);
+    expect(data.gallery[0].src).toBe(storageGalleryUrl);
+    expect(data.clubPlans?.[0].image).toBe(storageClubUrl);
     expect(data.reviews[0].name).toBeUndefined();
     expect(data.reviews[0].comment).not.toContain('teste@example.com');
     expect(data.reviews[0].comment).not.toContain('99999');

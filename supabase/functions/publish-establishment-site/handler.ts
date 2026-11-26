@@ -61,6 +61,12 @@ function serializeJsonLd(value: Record<string, unknown>): string {
     .replace(/\u2029/g, '\\u2029');
 }
 
+function normalizeInstagramHandle(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const clean = value.trim().replace(/^@/, '').replace(/[^a-z0-9._]/gi, '');
+  return clean || undefined;
+}
+
 function safeAsset(value: unknown, origin: string): string | undefined {
   if (typeof value !== 'string') return undefined;
   const trimmed = value.trim();
@@ -72,8 +78,8 @@ function safeAsset(value: unknown, origin: string): string | undefined {
       parsed.protocol === 'https:' &&
       !parsed.username &&
       !parsed.password &&
-      /^[a-z0-9-]+\.supabase\.co$/i.test(parsed.hostname) &&
-      /^\/storage\/v1\/object\/public\/(logos|covers|service_images|team_photos|gallery|membership_plans)\/[^?#]+$/i.test(
+      parsed.hostname.toLowerCase() === 'lcqwrngscsziysyfhpfj.supabase.co' &&
+      /^\/storage\/v1\/object\/public\/(logos|covers|service_images|team_photos|galleries|membership_plan_photos)\/[^?#]+$/i.test(
         parsed.pathname,
       )
     ) {
@@ -110,6 +116,7 @@ function renderHtmlPage(params: {
   const hashTarget = params.service
     ? `/#/site/${slugEncoded}/servico/${encodeURIComponent(params.service.id)}`
     : `/#/site/${slugEncoded}`;
+  const cleanInstagram = normalizeInstagramHandle(params.instagram);
   const jsonLd: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': params.kind === 'studio' ? 'LocalBusiness' : 'HairSalon',
@@ -119,9 +126,7 @@ function renderHtmlPage(params: {
     ...(params.ogImage ? { image: params.ogImage } : {}),
     ...(params.logo ? { logo: params.logo } : {}),
     ...(params.phone ? { telephone: params.phone } : {}),
-    ...(params.instagram
-      ? { sameAs: [`https://www.instagram.com/${params.instagram.replace(/^@/, '').replace(/[^a-z0-9._]/gi, '')}/`] }
-      : {}),
+    ...(cleanInstagram ? { sameAs: [`https://www.instagram.com/${cleanInstagram}/`] } : {}),
     ...(params.address
       ? { address: { '@type': 'PostalAddress', streetAddress: params.address, addressCountry: params.region } }
       : {}),
@@ -154,6 +159,9 @@ function renderHtmlPage(params: {
     `    <h1>${escapeHtml(params.service ? params.service.name : params.headline || params.name)}</h1>`,
     `    <p>${escapeHtml(params.description)}</p>`,
     params.address ? `    <p>${escapeHtml(params.address)}</p>` : '',
+    cleanInstagram
+      ? `    <p>Instagram: <a href="https://www.instagram.com/${escapeHtml(cleanInstagram)}/" rel="noreferrer">@${escapeHtml(cleanInstagram)}</a></p>`
+      : '',
     `    <p><a href="${escapeHtml(`${params.origin}${hashTarget}`)}">${escapeHtml(params.ctaLabel)}</a></p>`,
     '  </main>',
     '</body>',
@@ -239,16 +247,25 @@ export function createPublishEstablishmentSiteHandler(deps: PublishSiteDeps) {
     }
 
     const cfg = site.publishedConfig || {};
+    const cfgContact =
+      cfg.contact && typeof cfg.contact === 'object' && !Array.isArray(cfg.contact)
+        ? (cfg.contact as Record<string, unknown>)
+        : {};
+    const effectivePhone =
+      typeof cfgContact.phone === 'string' && cfgContact.phone.trim() ? cfgContact.phone.trim() : site.phone;
+    const effectiveInstagram =
+      normalizeInstagramHandle(cfgContact.instagram) || normalizeInstagramHandle(site.instagram);
     const headline = typeof cfg.headline === 'string' && cfg.headline.trim() ? cfg.headline.trim() : site.name;
     const kindLabel = site.kind === 'beauty' ? 'Salão de beleza' : site.kind === 'studio' ? 'Estúdio' : 'Barbearia';
     const title =
       typeof cfg.seoTitle === 'string' && cfg.seoTitle.trim()
         ? cfg.seoTitle.trim()
         : `${site.name} — ${kindLabel}`;
+    const headlineWithDot = headline ? (/[.!?…]$/.test(headline) ? headline : `${headline}.`) : '';
     const description =
       typeof cfg.seoDescription === 'string' && cfg.seoDescription.trim()
         ? cfg.seoDescription.trim()
-        : `${headline}. Agende seu horário online em ${site.name}.`;
+        : `${headlineWithDot} Agende seu horário online em ${site.name}.`.trim();
     const ctaLabel =
       typeof cfg.ctaLabel === 'string' && cfg.ctaLabel.trim() ? cfg.ctaLabel.trim() : 'Agendar agora';
     const coverRemoved = cfg.coverRemoved === true;
@@ -265,8 +282,8 @@ export function createPublishEstablishmentSiteHandler(deps: PublishSiteDeps) {
       kind: site.kind,
       region: site.region,
       address: site.address,
-      phone: site.phone,
-      instagram: site.instagram,
+      phone: effectivePhone,
+      instagram: effectiveInstagram,
       headline,
       title,
       description,
@@ -285,8 +302,8 @@ export function createPublishEstablishmentSiteHandler(deps: PublishSiteDeps) {
         kind: site.kind,
         region: site.region,
         address: site.address,
-        phone: site.phone,
-        instagram: site.instagram,
+        phone: effectivePhone,
+        instagram: effectiveInstagram,
         headline,
         title: `${service.name} — ${site.name}`,
         description: service.description?.trim() || description,

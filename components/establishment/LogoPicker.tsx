@@ -10,6 +10,9 @@ interface LogoPickerProps {
   companyId: string;
   demo: boolean;
   demoLogo?: string;
+  siteName?: string;
+  surfaceBackground?: string;
+  surfaceInk?: string;
   onChange: (patch: Partial<Pick<SiteConfig, 'logo' | 'logoRemoved' | 'logoDisplay'>>) => void;
   onLogoReplaced?: (url: string) => void;
 }
@@ -22,6 +25,9 @@ export function LogoPicker({
   companyId,
   demo,
   demoLogo,
+  siteName = 'Minha casa',
+  surfaceBackground = '#FFFFFF',
+  surfaceInk = '#1C1714',
   onChange,
   onLogoReplaced,
 }: LogoPickerProps) {
@@ -64,12 +70,22 @@ export function LogoPicker({
     <div className="se-logo-picker">
       <span className="se-label-title">Logo do estabelecimento</span>
       <div className="se-logo-box">
-        <div className="se-logo-checker" aria-label={effectiveLogo ? 'Prévia do logo' : 'Sem logo selecionado'}>
-          {effectiveLogo && !broken ? (
-            <img src={effectiveLogo} alt="Logo selecionado" onError={() => setBroken(true)} />
-          ) : (
-            <span className="se-logo-empty">Sem logo</span>
-          )}
+        <div
+          className="se-logo-stage"
+          style={{ background: surfaceBackground, color: surfaceInk }}
+          aria-label={effectiveLogo ? 'Prévia do logo no topo do site' : 'Sem logo selecionado'}
+        >
+          <span className="se-logo-stage-caption">Topo do site</span>
+          <div className="se-logo-stage-brand">
+            {effectiveLogo && !broken ? (
+              <>
+                <img src={effectiveLogo} alt="Logo selecionado" onError={() => setBroken(true)} />
+                {logoDisplay !== 'logo' && <span className="se-logo-stage-name">{siteName}</span>}
+              </>
+            ) : (
+              <span className="se-logo-empty">Sem logo</span>
+            )}
+          </div>
         </div>
         <div className="se-logo-actions">
           {demo ? (

@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
+import fs from 'node:fs';
+import path from 'node:path';
 import { createPublishEstablishmentSiteHandler } from '../../supabase/functions/publish-establishment-site/handler';
 import { createServeEstablishmentSiteHandler } from '../../supabase/functions/serve-establishment-site/handler';
 
@@ -56,11 +58,12 @@ describe('establishment site edge handlers', () => {
         kind: 'barber',
         region: 'BR',
         address: 'Rua A, 10 — Pinheiros',
-        cover: '/presenca/rhian/barber-hero.webp',
+        instagram: '@cortefino.sp',
+        cover: 'https://lcqwrngscsziysyfhpfj.supabase.co/storage/v1/object/public/galleries/u1/hero.webp',
         presenceEnabled: true,
         published: true,
         publishedConfig: { headline: 'Corte preciso' },
-        services: [{ id: 'srv-1', name: 'Corte', price: 50, duration: 30 }],
+        services: [{ id: 'srv-1', name: 'Corte', price: 50, duration: 30, image: 'https://outro.supabase.co/storage/v1/object/public/service_images/u1/bad.webp' }],
       }),
       listPublishedSlugs: async () => [{ slug: 'corte-fino', updated_at: '2026-11-25T18:00:00Z' }],
       uploadPublishedFile: async (path, content) => {
@@ -88,7 +91,13 @@ describe('establishment site edge handlers', () => {
     const homeRes = await serve(new Request('https://www.agendixstudio.com/s/corte-fino'));
     expect(homeRes.status).toBe(200);
     expect(homeRes.headers.get('Content-Type')).toContain('text/html');
-    expect(await homeRes.text()).toContain('Corte preciso');
+    const homeHtml = await homeRes.text();
+    expect(homeHtml).toContain('Corte preciso');
+    expect(homeHtml).toContain('https://www.instagram.com/cortefino.sp/');
+    expect(homeHtml).toContain('@cortefino.sp');
+    expect(homeHtml).toContain('lcqwrngscsziysyfhpfj.supabase.co/storage/v1/object/public/galleries/u1/hero.webp');
+    const serviceHtml = files.get('sites/corte-fino/servico/srv-1.html') || '';
+    expect(serviceHtml).not.toContain('outro.supabase.co');
 
     const mapRes = await serve(new Request('https://www.agendixstudio.com/sitemap.xml'));
     expect(mapRes.status).toBe(200);
@@ -122,5 +131,17 @@ describe('establishment site edge handlers', () => {
     const pre = await bad(new Request('https://edge.local', { method: 'OPTIONS' }));
     expect(pre.status).toBe(204);
     expect(pre.headers.get('Access-Control-Allow-Methods')).toContain('POST');
+  });
+
+  it('configura verify_jwt explicitamente no supabase/config.toml e seleciona instagram_handle', () => {
+    const configToml = fs.readFileSync(path.resolve(process.cwd(), 'supabase/config.toml'), 'utf8');
+    expect(configToml).toMatch(/\[functions\.publish-establishment-site\][\s\S]*verify_jwt\s*=\s*true/);
+    expect(configToml).toMatch(/\[functions\.serve-establishment-site\][\s\S]*verify_jwt\s*=\s*false/);
+
+    const edgeEntry = fs.readFileSync(
+      path.resolve(process.cwd(), 'supabase/functions/publish-establishment-site/index.ts'),
+      'utf8',
+    );
+    expect(edgeEntry).toContain('instagram_handle');
   });
 });

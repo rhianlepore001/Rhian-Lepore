@@ -13,6 +13,7 @@ const baseData: SiteData = {
   cover: '/presenca/rhian/barber-hero.webp',
   address: 'Rua Fradique Coutinho, 420 — Pinheiros, São Paulo',
   phone: '+55 (11) 3062-4190',
+  instagram: '@cortefino.sp',
   hours: [{ day: 'Segunda', hours: '09:00–20:00' }],
   services: [
     {
@@ -45,6 +46,8 @@ describe('prerender SEO HTML & sitemap', () => {
     expect(html).toContain('<meta property="og:site_name" content="Corte Fino">');
     expect(html).toContain('<meta property="og:image" content="https://www.agendixstudio.com/presenca/rhian/barber-hero.webp">');
     expect(html).toContain('<script type="application/ld+json">');
+    expect(html).toContain('https://www.instagram.com/cortefino.sp/');
+    expect(html).toContain('@cortefino.sp');
     expect(html).toContain('<script defer src="https://www.agendixstudio.com/presenca/site-boot.js" data-site-target="/#/site/corte-fino"></script>');
     expect(html.replace(/https?:\/\/\S+/g, '').toLowerCase()).not.toContain('agendix');
   });

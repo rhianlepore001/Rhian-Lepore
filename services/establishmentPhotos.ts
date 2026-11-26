@@ -80,7 +80,7 @@ export function extractSiteLogoPath(publicUrl: string, companyId: string): strin
   if (!validCompanyFolder(folder)) return null;
   try {
     const parsed = new URL(publicUrl);
-    if (parsed.protocol !== 'https:' || !/^[a-z0-9-]+\.supabase\.co$/i.test(parsed.hostname)) return null;
+    if (parsed.protocol !== 'https:' || parsed.hostname.toLowerCase() !== 'lcqwrngscsziysyfhpfj.supabase.co') return null;
     const prefix = '/storage/v1/object/public/logos/';
     if (!parsed.pathname.startsWith(prefix)) return null;
     const path = decodeURIComponent(parsed.pathname.slice(prefix.length));
@@ -95,5 +95,6 @@ export async function deleteSiteLogo(companyId: string, logoUrl?: string): Promi
   if (!logoUrl) return;
   const path = extractSiteLogoPath(logoUrl, companyId);
   if (!path) return;
-  await supabase.storage.from('logos').remove([path]);
+  const { error } = await supabase.storage.from('logos').remove([path]);
+  if (error) throw error;
 }

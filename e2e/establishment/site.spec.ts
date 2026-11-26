@@ -299,16 +299,16 @@ test('editor: prévia ao vivo, passos para leigos, estilo, seção e rascunho lo
   await scrollControlsTo(page, page.locator('.se-bg'));
   await expect(page.getByRole('radio', { name: /Urbano preciso, recomendada/i })).toBeVisible();
   await expect(page.locator('.se-swatch-badge')).toHaveCount(1);
-  await expect(page.getByRole('radio', { name: /Personalizada/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Personalizar cor de fundo/i })).toBeVisible();
   await page.getByRole('button', { name: 'Só o logo' }).click({ force: true });
   await expect(preview.locator('.es-brand-logo')).toBeVisible();
   await page.getByRole('button', { name: 'Logo + nome' }).click({ force: true });
   await scrollControlsTo(page, page.locator('.se-logo-picker'));
   await capture(page, `editor-${page.viewportSize()!.width}-logo`, false, true);
-  await page.getByRole('button', { name: 'Editorial clássico', exact: true }).click({ force: true });
+  await page.getByRole('radio', { name: 'Editorial clássico' }).click({ force: true });
   await expect(preview.locator('h1')).toHaveText('Um corte com a sua cara.');
   await expect(preview.locator('.establishment')).toHaveAttribute('data-style', 'light');
-  await page.getByRole('radio', { name: 'Salão claro' }).evaluate(el => (el as HTMLButtonElement).click());
+  await page.getByRole('radio', { name: 'Salão luminoso' }).evaluate(el => (el as HTMLButtonElement).click());
   await expect(preview.locator('.establishment')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
   await scrollControlsTo(page, page.locator('.se-bg'));
   await expect(page.getByRole('button', { name: 'Prévia no celular' })).toBeVisible();
@@ -319,9 +319,10 @@ test('editor: prévia ao vivo, passos para leigos, estilo, seção e rascunho lo
     await expect(page.locator('iframe[title="Prévia ao vivo do meu site"]')).toBeVisible();
     await page.getByRole('button', { name: 'Prévia no celular' }).click();
   }
-  await page.getByRole('tab', { name: '4. Divulgar' }).click();
+  await page.getByRole('tab', { name: '3. Fotos' }).click();
   await openEditorSection(page, 'Seções e ordem da página');
   await page.getByLabel('Galeria', { exact: true }).evaluate(el => (el as HTMLInputElement).click());
+  await page.getByRole('tab', { name: '4. Divulgar' }).click();
   await expect(preview.locator('h1')).toBeVisible();
   await expect(preview.locator('h1')).toHaveText('Um corte com a sua cara.');
   await expect(preview.locator('.establishment')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
@@ -347,6 +348,12 @@ test('painel autenticado: owner usa rascunho isolado por company_id e fallback i
   await expect(page.locator('.se-notice')).toContainText('equipe AgendiX');
   await page.getByRole('tab', { name: '2. Textos' }).click();
   await page.getByLabel(/^Frase principal/).fill('Casa fictícia em Pinheiros.');
+  if (page.viewportSize()!.width >= 1000) {
+    await page.getByRole('link', { name: 'Geral' }).click();
+    await expect(page.getByRole('alertdialog')).toContainText('Sair sem salvar?');
+    await page.getByRole('button', { name: 'Continuar editando' }).click();
+    await expect(page.getByRole('alertdialog')).toHaveCount(0);
+  }
   await page.getByRole('button', { name: 'Salvar rascunho', exact: true }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Rascunho salvo' })).toContainText('Nada foi publicado');
   expect(calls).toContain('establishment_sites');

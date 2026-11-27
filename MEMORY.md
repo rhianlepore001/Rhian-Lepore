@@ -9,6 +9,10 @@
 
 ---
 
+## Presença — visita pública em torno da foto da casa (27 Nov 2026)
+
+Branch `cursor/presenca-experiencia-casa-634c`. Só o site público (`SiteView` + `styles/establishment.css`). A foto fica limpa no topo; nome, bairro, um Agendar e a oferta ficam na faixa sólida embaixo. Serviço com foto e preço, equipe em retrato cheio no celular, avaliação com a frase em destaque. O aviso de demonstração foi para o rodapé. Uma animação na foto do topo, parada com `prefers-reduced-motion`. Login, cadastro, Stripe, banco e o fluxo de agendamento ficaram intocados. Verificações: typecheck, lint, build, Vitest (371 arquivos / 2.872 testes) e Playwright do estabelecimento (28/28).
+
 ## Presença — localização exata com mini mapa, autosave e Passo 4 acionável (26 Nov 2026, draft)
 
 Branch `feat/presenca-mapa-autosave-ux` (a partir da `main` `20adeec9`), novo PR em **draft**:

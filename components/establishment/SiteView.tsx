@@ -56,6 +56,11 @@ function heroLocationText(address: string): string {
   return city ? `em ${neighborhood}, ${city}` : `em ${neighborhood}`;
 }
 
+function visibleGalleryCaption(alt: string): string {
+  const cleaned = alt.replace(/\s*(?:[—–-]\s*)?fotos?\s+ilustrativas?\.?$/i, '').trim();
+  return cleaned || alt;
+}
+
 function formatOfferDate(expires: string | undefined, region: 'BR' | 'PT'): string {
   if (!expires || !/^\d{4}-\d{2}-\d{2}$/.test(expires)) return '';
   try {
@@ -139,12 +144,6 @@ const arrowLeftSvg = (
   <svg className="es-arrow-back" viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M12.5 8h-9" />
     <path d="M7.25 4.25 3.5 8l3.75 3.75" />
-  </svg>
-);
-
-const expandSvg = (
-  <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M12.5 3.5h4v4M7.5 16.5h-4v-4M16.5 3.5l-5 5M3.5 16.5l5-5" />
   </svg>
 );
 
@@ -824,9 +823,9 @@ export function SiteView({ data: sourceData, config: incoming, serviceId, previe
       <article
         className="es-service"
         data-featured={isFeatured || undefined}
-        style={{ '--es-stagger': `${Math.min(index, 4) * 55}ms` } as React.CSSProperties}
         key={item.id}
       >
+        {item.image && photo(item.image, item.name, { className: 'es-service-shot', width: 720, height: 900 })}
         <div className="es-service-head">
           {(isFeatured || (categories.length >= 2 && item.category)) && (
             <div className="es-service-meta">
@@ -1141,11 +1140,8 @@ export function SiteView({ data: sourceData, config: incoming, serviceId, previe
                       aria-label={`Ampliar foto: ${item.alt}`}
                     >
                       {photo(item.src, item.alt, { width: 800, height: 600 })}
-                      <span className="es-gallery-zoom" aria-hidden="true">
-                        {expandSvg}
-                      </span>
                     </button>
-                    <figcaption>{item.alt}</figcaption>
+                    <figcaption>{visibleGalleryCaption(item.alt)}</figcaption>
                   </figure>
                 ))}
               </div>
@@ -1212,13 +1208,13 @@ export function SiteView({ data: sourceData, config: incoming, serviceId, previe
                 <div className="es-reviews" data-count={visibleReviews.length}>
                   {visibleReviews.map(review => (
                     <figure key={review.id}>
-                      <div className="es-review-top">
-                        <Stars value={review.rating} size={14} />
-                        <blockquote>“{review.comment}”</blockquote>
-                      </div>
+                      <blockquote>“{review.comment}”</blockquote>
                       <figcaption>
-                        {review.name || copy.verifiedReview}
-                        {data.demo ? ` · ${copy.fictionalReview}` : ''}
+                        <Stars value={review.rating} size={12} />
+                        <span>
+                          {review.name || copy.verifiedReview}
+                          {data.demo ? ` · ${copy.fictionalReview}` : ''}
+                        </span>
                       </figcaption>
                     </figure>
                   ))}
@@ -1342,11 +1338,6 @@ export function SiteView({ data: sourceData, config: incoming, serviceId, previe
       >
         {copy.skip}
       </a>
-      {data.demo && (
-        <div className="es-demo">
-          <strong>{copy.demoBanner}</strong> <span>{copy.demoHint}</span>
-        </div>
-      )}
       <header ref={headerRef} className="es-header">
         <div className="es-wrap es-header-inner">
           <a
@@ -1538,28 +1529,18 @@ export function SiteView({ data: sourceData, config: incoming, serviceId, previe
                 </div>
               )}
               <div className="es-hero-copy">
+                <h1 className="es-hero-enter es-hero-lead" style={{ '--es-delay': '40ms' } as React.CSSProperties}>
+                  {config.headline}
+                </h1>
                 <p className="es-kicker es-hero-enter" style={{ '--es-delay': '0ms' } as React.CSSProperties}>
                   {config.headline.toLowerCase().includes(copy.kindLine.toLowerCase())
                     ? place || copy.kindLine
                     : `${copy.kindLine}${heroLocation ? ` ${heroLocation}` : ''}`}
                 </p>
-                <h1 className="es-hero-enter es-hero-lead" style={{ '--es-delay': '40ms' } as React.CSSProperties}>
-                  {config.headline}
-                </h1>
                 {config.about && (
                   <p className="es-lede es-hero-enter" style={{ '--es-delay': '105ms' } as React.CSSProperties}>
                     {config.about}
                   </p>
-                )}
-                {offerVisible && (
-                  <div className="es-offer es-hero-enter" style={{ '--es-delay': '155ms' } as React.CSSProperties}>
-                    <div className="es-offer-top">
-                      <span className="es-offer-badge">{copy.offerKinds[offerKind]}</span>
-                      {offerExpiryText && <span className="es-offer-expires">{offerExpiryText}</span>}
-                    </div>
-                    <strong>{offer.title}</strong>
-                    {offer.detail && <span className="es-offer-detail">{offer.detail}</span>}
-                  </div>
                 )}
                 <div className="es-hero-actions es-hero-enter" style={{ '--es-delay': '195ms' } as React.CSSProperties}>
                   {primary(ctaLabel, offerVisible ? { serviceId: config.offer.serviceId, offer: true } : {})}
@@ -1569,6 +1550,24 @@ export function SiteView({ data: sourceData, config: incoming, serviceId, previe
                     </a>
                   )}
                 </div>
+                {offerVisible && (
+                  <p className="es-offer es-hero-enter" style={{ '--es-delay': '155ms' } as React.CSSProperties}>
+                    <span className="es-offer-badge">{copy.offerKinds[offerKind]}</span>
+                    <strong>{offer.title}</strong>
+                    {offer.detail && (
+                      <>
+                        {' '}
+                        <span className="es-offer-detail">{offer.detail}</span>
+                      </>
+                    )}
+                    {offerExpiryText && (
+                      <>
+                        {' '}
+                        <span className="es-offer-expires">{offerExpiryText}</span>
+                      </>
+                    )}
+                  </p>
+                )}
                 {(hasRating || status || data.hours[0]) && (
                   <div className="es-trust es-hero-enter-fade" style={{ '--es-delay': '230ms' } as React.CSSProperties}>
                     {hasRating && (
@@ -1671,7 +1670,14 @@ export function SiteView({ data: sourceData, config: incoming, serviceId, previe
               </a>
               {neighborhood && <span className="es-footer-neighborhood">· {neighborhood}</span>}
             </div>
-            {data.demo && <span className="es-footer-demo">Demonstração. Nenhum agendamento ou cobrança real.</span>}
+            {data.demo && (
+              <p className="es-footer-legal">
+                <span className="es-demo">
+                  <strong>{copy.demoBanner}</strong> <span>{copy.demoHint}</span>
+                </span>
+                <span className="es-footer-demo">Demonstração. Nenhum agendamento ou cobrança real.</span>
+              </p>
+            )}
           </div>
           <div className="es-footer-links">
             {!serviceId &&
@@ -1801,7 +1807,7 @@ export function SiteView({ data: sourceData, config: incoming, serviceId, previe
               )}
             </div>
             <div className="es-lightbox-bottom">
-              <p className="es-lightbox-caption">{activePhoto.alt}</p>
+              <p className="es-lightbox-caption">{visibleGalleryCaption(activePhoto.alt)}</p>
               {data.gallery.length > 1 && (
                 <div className="es-lightbox-controls">
                   <button

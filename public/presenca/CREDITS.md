@@ -15,6 +15,6 @@ Fontes do site público (subconjunto latino em WOFF2, SIL Open Font License 1.1,
 
 Manrope e Gelasio da rodada 1 permanecem na pasta por compatibilidade, mas o template atual não as carrega.
 
-Fotos em `public/presenca/rhian/` (`barber-hero.webp`, `barber-fade.webp`, `barber-portrait.webp`, `barber-before.webp`, `barber-after.webp`, `salon-hero.webp`, `salon-balayage.webp`, `salon-before.webp`, `salon-after.webp`) são imagens ilustrativas em WebP leve (< 150 KB cada) usadas nas demonstrações do módulo Presença — não são fotografias de clientes reais nem do espaço de uma casa cadastrada.
+Fotos em `public/presenca/rhian/` (`barber-hero.webp`, `barber-fade.webp`, `barber-portrait.webp`, `barber-portrait-lucas.webp`, `barber-before.webp`, `barber-after.webp`, `salon-hero.webp`, `salon-balayage.webp`, `salon-portrait-marina.webp`, `salon-portrait-luiza.webp`, `salon-before.webp`, `salon-after.webp`) são imagens ilustrativas em WebP leve (< 150 KB cada) usadas nas demonstrações do módulo Presença — não são fotografias de clientes reais nem do espaço de uma casa cadastrada.
 
 `demo-logo-barber.svg` e `demo-logo-salon.svg` são emblemas fictícios ilustrativos das casas de demonstração.

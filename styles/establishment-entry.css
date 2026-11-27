@@ -1,12 +1,12 @@
 html[data-establishment] {
   background: var(--es-page, #09090B) !important;
   color-scheme: dark;
-  font-family: 'Atelier Sans', system-ui, sans-serif;
+  font-family: 'Studio Sans', system-ui, sans-serif;
 }
 html[data-establishment='light'] {
   color-scheme: light;
   --es-page: #FBF7F0;
-  font-family: 'Atelier Serif', Georgia, serif;
+  font-family: 'Studio Sans', system-ui, sans-serif;
 }
 html[data-establishment] body {
   margin: 0;

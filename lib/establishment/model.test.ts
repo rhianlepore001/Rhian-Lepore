@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { accessibleAccent, applySiteConfig, buildSeo, contrastRatio, defaultBackground, defaultConfig, formatPrice, isRecommendedBackground, isReservedSiteSlug, neighborhoodFromAddress, normalizeSiteConfig, offerDisplay, photoObjectPosition, RECOMMENDED_BACKGROUNDS, resolvedBackground, sanitizePublicData, serializeJsonLd, siteSurface, visibleSections, type SiteData } from './model';
+import { accessibleAccent, applySiteConfig, buildSeo, contrastRatio, defaultBackground, defaultConfig, formatPrice, headerSurface, isDarkSurfaceColor, isRecommendedBackground, isReservedSiteSlug, neighborhoodFromAddress, normalizeSiteConfig, offerDisplay, photoObjectPosition, RECOMMENDED_BACKGROUNDS, resolvedBackground, sanitizePublicData, serializeJsonLd, siteSurface, visibleSections, type SiteData } from './model';
 
 const site: SiteData = { id: 'business', slug: 'navalha-fina', name: 'Navalha Fina', kind: 'barber', region: 'BR', demo: false, address: 'Rua dos Pinheiros, 100', hours: [], services: [{ id: 'cut', name: 'Corte', includes: [], duration: 30, price: 65 }], team: [], gallery: [], reviews: [], reviewCount: 0 };
 
@@ -67,6 +67,22 @@ describe('site background', () => {
     const pair = accessibleAccent('#9A5628', 'dark', '#FBF7F0');
     expect(contrastRatio(pair.background, '#FBF7F0')).toBeGreaterThanOrEqual(4.5);
     expect(contrastRatio(pair.background, pair.foreground)).toBeGreaterThanOrEqual(4.5);
+  });
+  it('detecta luminosidade real da superfície e deriva header consistente por preset', () => {
+    expect(isDarkSurfaceColor('#09090B')).toBe(true);
+    expect(isDarkSurfaceColor('#FBF7F0')).toBe(false);
+    expect(isDarkSurfaceColor('#FFFFFF')).toBe(false);
+    expect(headerSurface('editorial', siteSurface('#FBF7F0', 'light'))).toEqual({
+      background: '#1C1714',
+      ink: '#FBF7F0',
+      dark: true,
+    });
+    expect(headerSurface('salon', siteSurface('#FFFFFF', 'light'))).toEqual({
+      background: '#FFFFFF',
+      ink: '#1C1714',
+      dark: false,
+    });
+    expect(headerSurface('urban', siteSurface('#FBF7F0', 'dark')).dark).toBe(false);
   });
 });
 

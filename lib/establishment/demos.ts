@@ -43,12 +43,12 @@ export function getDemoSite(slug: string): { data: SiteData; config: SiteConfig 
     address: beauty ? 'Rua dos Pinheiros, 870 — Pinheiros, São Paulo' : 'Rua Fradique Coutinho, 420 — Pinheiros, São Paulo',
     hours: [{ day: 'Segunda a sexta', hours: '09h às 20h' }, { day: 'Sábado', hours: '09h às 18h' }, { day: 'Domingo', hours: 'Fechado' }],
     services: beauty ? [
-      { id: demoId(true, 20), name: 'Corte feminino', category: 'Corte', description: 'Um corte que respeita a textura do seu cabelo e acompanha o seu dia a dia. A gente conversa, entende e só então corta.', includes: ['Conversa sobre o seu cabelo', 'Lavagem e corte personalizado', 'Finalização e dicas de cuidado'], audience: 'Para renovar o visual sem abrir mão de ser você.', duration: 60, price: 120, image: photo('servico-corte-feminino') },
+      { id: demoId(true, 20), name: 'Corte feminino', category: 'Corte', description: 'Um corte que respeita a textura do seu cabelo e acompanha o seu dia a dia. A gente conversa, entende e só então corta.', includes: ['Conversa sobre o seu cabelo', 'Lavagem e corte personalizado', 'Finalização e dicas de cuidado'], audience: 'Para renovar o visual sem abrir mão de ser você.', duration: 60, price: 120, image: photo('galeria-04') },
       { id: demoId(true, 23), name: 'Mechas e luzes', category: 'Cor e mechas', description: 'Luminosidade na medida certa, com transições suaves e um plano de cuidado para manter os fios saudáveis.', includes: ['Diagnóstico e teste de mecha', 'Técnica de iluminação personalizada', 'Tonalização e finalização'], audience: 'Para quem quer iluminar os fios com um resultado natural.', duration: 120, price: 320, priceFrom: true, priceNote: 'O valor varia conforme comprimento e técnica. Confirmamos antes de começar.', image: photo('servico-mechas-luzes') },
       { id: demoId(true, 24), name: 'Hidratação', category: 'Tratamento', description: 'Cuidado para devolver maciez, brilho e movimento aos fios. O tratamento é escolhido depois de avaliar seu cabelo.', includes: ['Avaliação dos fios', 'Tratamento de hidratação', 'Finalização'], audience: 'Para cabelos ressecados ou que precisam de uma pausa da química.', duration: 45, price: 90, image: photo('servico-hidratacao') },
     ] : [
       { id: demoId(false, 20), name: 'Corte masculino', category: 'Cabelo', description: 'Do degradê ao clássico na tesoura. Um corte pensado para o seu rosto, seu cabelo e o jeito que você gosta de usar.', includes: ['Conversa sobre o corte', 'Corte na máquina e na tesoura', 'Acabamento e finalização'], audience: 'Para manter o corte em dia ou encontrar um novo estilo.', duration: 30, price: 45, image: photo('servico-corte-masculino') },
-      { id: demoId(false, 22), name: 'Corte + barba', category: 'Combo', description: 'O cuidado completo, no seu tempo. Corte com acabamento preciso e barba desenhada para valorizar o seu rosto.', includes: ['Corte personalizado', 'Barba com toalha quente', 'Acabamento na navalha e balm'], audience: 'Para sair com cabelo e barba alinhados em uma única visita.', duration: 60, price: 75, image: photo('servico-corte-barba') },
+      { id: demoId(false, 22), name: 'Corte + barba', category: 'Combo', description: 'O cuidado completo, no seu tempo. Corte com acabamento preciso e barba desenhada para valorizar o seu rosto.', includes: ['Corte personalizado', 'Barba com toalha quente', 'Acabamento na navalha e balm'], audience: 'Para sair com cabelo e barba alinhados em uma única visita.', duration: 60, price: 75, image: photo('galeria-07') },
       { id: demoId(false, 21), name: 'Barba', category: 'Barba', description: 'Desenho, alinhamento e cuidado com a pele. Toalha quente para preparar, navalha para definir e balm para finalizar.', includes: ['Desenho da barba', 'Toalha quente e navalha', 'Hidratação com balm'], audience: 'Para quem gosta de uma barba bem cuidada, curta ou cheia.', duration: 30, price: 35, image: photo('servico-barba') },
     ],
     clubPlans: beauty ? [
@@ -61,20 +61,20 @@ export function getDemoSite(slug: string): { data: SiteData; config: SiteConfig 
       id: demoId(beauty, 30 + i),
       name,
       image: beauty
-        ? [photo('servico-escova'), '/presenca/rhian/salon-balayage.webp', photo('servico-corte-feminino')][i]
-        : ['/presenca/rhian/barber-portrait.webp', '/presenca/rhian/barber-fade.webp', photo('servico-corte-barba')][i],
+        ? [photo('galeria-03'), '/presenca/rhian/salon-balayage.webp', photo('servico-escova')][i]
+        : ['/presenca/rhian/barber-portrait.webp', '/presenca/rhian/barber-fade.webp', photo('servico-barba')][i],
       bio: beauty ? ['Cortes e movimento natural', 'Cor, mechas e iluminação', 'Tratamentos e finalização'][i] : ['Degradê navalhado & visagismo', 'Corte na tesoura & barboterapia', 'Barba longa & alinhamento'][i],
     })),
     gallery: beauty
       ? [
-          { src: '/presenca/rhian/salon-hero.webp', alt: 'Espaço luminoso do Studio Aurora — foto ilustrativa' },
-          { src: '/presenca/rhian/salon-balayage.webp', alt: 'Resultado de cor e balayage — foto ilustrativa' },
-          { src: photo('galeria-05'), alt: 'Finalização e movimento — foto ilustrativa' },
+          { src: photo('capa'), alt: 'Espaço e bancadas iluminadas — foto ilustrativa' },
+          { src: photo('galeria-02'), alt: 'Ondas macias e cor natural — foto ilustrativa' },
+          { src: photo('galeria-06'), alt: 'Textura e acabamento em estúdio — foto ilustrativa' },
         ]
       : [
-          { src: '/presenca/rhian/barber-hero.webp', alt: 'Bancadas e luz natural na casa — foto ilustrativa' },
-          { src: '/presenca/rhian/barber-fade.webp', alt: 'Acabamento de degradê na navalha — foto ilustrativa' },
-          { src: '/presenca/rhian/barber-portrait.webp', alt: 'Equipe pronta para atendimento com hora marcada — foto ilustrativa' },
+          { src: photo('capa'), alt: 'Bancadas e cadeiras na casa — foto ilustrativa' },
+          { src: photo('galeria-05'), alt: 'Acabamento preciso na navalha — foto ilustrativa' },
+          { src: photo('galeria-04'), alt: 'Corte estruturado na tesoura e máquina — foto ilustrativa' },
         ],
     rating: 4.9, reviewCount: beauty ? 128 : 214,
     reviews: [

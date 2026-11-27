@@ -1,8 +1,104 @@
-#booking-root[data-site-embed]{--color-bg:#161815;--color-card:#20231f;--color-surface:#292c26;--color-text:#f4f1e9;--color-text-secondary:#b8bcb2;--color-text-muted:#b8bcb2;--color-border:#3b3e37;--color-divider:#3b3e37;--color-input-bg:#20231f;--color-input-border:#3b3e37;--color-accent-dim:color-mix(in srgb,var(--color-accent) 12%,transparent);--color-card-hover:#292c26;--color-textSecondary:#b8bcb2;--color-textMuted:#b8bcb2;--safe-top:0px;min-height:100dvh;padding-bottom:136px}
-#booking-root[data-site-embed][data-appearance=light]{--color-bg:#FBF7F0;--color-card:#FDFBF7;--color-surface:#F3ECE0;--color-text:#1C1714;--color-text-secondary:#574D43;--color-text-muted:#665C52;--color-border:#E2D9CB;--color-divider:#E2D9CB;--color-input-bg:#FFFFFF;--color-input-border:#D6CBB8;--color-card-hover:#F3ECE0;--color-textSecondary:#574D43;--color-textMuted:#665C52}
-#booking-root[data-site-embed][data-preset=salon]{--color-bg:#FFFFFF;--color-card:#FAFAF9;--color-surface:#F5F5F4;--color-text:#1C1917;--color-text-secondary:#57534E;--color-text-muted:#78716C;--color-border:#E7E5E4;--color-divider:#E7E5E4;--color-input-bg:#FFFFFF;--color-input-border:#D6D3D1;--color-card-hover:#F5F5F4;--color-textSecondary:#57534E;--color-textMuted:#78716C}
+@import './establishment-fonts.css';
+
+#booking-root[data-site-embed]{
+  --color-bg:#09090B;
+  --color-card:#131316;
+  --color-surface:#232329;
+  --color-text:#F4F4F5;
+  --color-text-secondary:#D4D4D8;
+  --color-text-muted:#B4B4BC;
+  --color-border:#2A2A30;
+  --color-divider:#2A2A30;
+  --color-input-bg:#131316;
+  --color-input-border:#323239;
+  --color-accent-dim:color-mix(in srgb,var(--color-accent) 14%,transparent);
+  --color-card-hover:#1C1C22;
+  --color-textSecondary:#D4D4D8;
+  --color-textMuted:#B4B4BC;
+  --safe-top:0px;
+  font-family:'Studio Sans',system-ui,sans-serif;
+  min-height:100dvh;
+  padding-bottom:136px;
+}
+#booking-root[data-site-embed][data-appearance=light]{
+  --color-bg:#FBF7F0;
+  --color-card:#FDFBF7;
+  --color-surface:#EFE7D8;
+  --color-text:#1C1714;
+  --color-text-secondary:#574D43;
+  --color-text-muted:#60564C;
+  --color-border:#E2D9CB;
+  --color-divider:#E2D9CB;
+  --color-input-bg:#FFFFFF;
+  --color-input-border:#D6CBB8;
+  --color-card-hover:#F3ECE0;
+  --color-textSecondary:#574D43;
+  --color-textMuted:#60564C;
+}
+#booking-root[data-site-embed][data-preset=salon]{
+  --color-bg:#FFFFFF;
+  --color-card:#FAFAF9;
+  --color-surface:#F0EFED;
+  --color-text:#1C1917;
+  --color-text-secondary:#57534E;
+  --color-text-muted:#605A56;
+  --color-border:#E7E5E4;
+  --color-divider:#E7E5E4;
+  --color-input-bg:#FFFFFF;
+  --color-input-border:#D6D3D1;
+  --color-card-hover:#F5F5F4;
+  --color-textSecondary:#57534E;
+  --color-textMuted:#605A56;
+}
 #booking-root[data-site-embed]>div.fixed.inset-0{display:none}
 #booking-root[data-site-embed] main{padding-top:16px}
-#booking-root[data-site-embed] h2{font-size:1.5rem;line-height:1.25;text-transform:none;letter-spacing:-.02em}
-#booking-root[data-site-embed] ol{border-radius:6px}
+#booking-root[data-site-embed] h2{
+  font-family:'Atelier Sans','Studio Sans',system-ui,sans-serif;
+  font-size:1.5rem;line-height:1.18;text-transform:none;letter-spacing:-.025em;
+}
+#booking-root[data-site-embed][data-appearance=light] h2{
+  font-family:'Atelier Editorial',Georgia,serif;
+  font-weight:500;font-size:1.6rem;
+}
+#booking-root[data-site-embed][data-preset=salon] h2{
+  font-family:'Atelier Serif',Georgia,serif;
+  font-style:italic;font-weight:500;font-size:1.85rem;letter-spacing:-.02em;
+}
+#booking-root[data-site-embed] ol{border-radius:12px}
+#booking-root[data-site-embed] .backdrop-blur-xl{
+  background:transparent!important;
+  border-color:transparent!important;
+  padding:0!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+#booking-root[data-site-embed] .backdrop-blur-xl>div{padding:0!important}
+#booking-root[data-site-embed] .backdrop-blur-xl button[aria-pressed=false]{
+  background:var(--color-card);
+  border:1px solid var(--color-border);
+  color:var(--color-text-secondary);
+}
+#booking-root[data-site-embed][data-preset=salon] .backdrop-blur-xl button,
+#booking-root[data-site-embed][data-preset=salon] [data-testid="group-booking-entry"],
+#booking-root[data-site-embed][data-preset=salon] .fixed.bottom-0 button{
+  border-radius:999px;
+}
+#booking-root[data-site-embed] .fixed.bottom-0{
+  background:color-mix(in srgb,var(--color-bg) 94%,transparent)!important;
+  border-top:1px solid var(--color-border)!important;
+  box-shadow:0 -12px 28px -10px rgb(0 0 0 / .28);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+}
 #booking-root[data-site-embed] button{box-shadow:none}
+@media(max-width:639px){
+  #booking-root[data-site-embed] .backdrop-blur-xl>div{
+    flex-wrap:nowrap!important;
+    overflow-x:auto;
+    scrollbar-width:none;
+    padding:0 32px 2px 0!important;
+    -webkit-mask-image:linear-gradient(to right,#000 0%,#000 calc(100% - 44px),transparent 100%);
+    mask-image:linear-gradient(to right,#000 0%,#000 calc(100% - 44px),transparent 100%);
+  }
+  #booking-root[data-site-embed] .backdrop-blur-xl>div::-webkit-scrollbar{display:none}
+}

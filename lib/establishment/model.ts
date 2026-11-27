@@ -263,6 +263,23 @@ export function contrastRatio(first: string, second: string): number {
   return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
 }
 
+export function isDarkSurfaceColor(hex: string): boolean {
+  const valid = hexColor(hex);
+  if (!valid) return true;
+  return contrastRatio(valid, '#FFFFFF') > contrastRatio(valid, '#000000');
+}
+
+export function headerSurface(preset: SitePreset, surface: Pick<SiteSurface, 'background' | 'ink'>): { background: string; ink: string; dark: boolean } {
+  if (preset === 'editorial') {
+    return { background: '#1C1714', ink: '#FBF7F0', dark: true };
+  }
+  return {
+    background: surface.background,
+    ink: surface.ink,
+    dark: isDarkSurfaceColor(surface.background),
+  };
+}
+
 export interface SiteSurface {
   background: string;
   ink: string;

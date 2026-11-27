@@ -29,6 +29,7 @@ import {
   defaultConfig,
   FOCUS_PRESETS,
   formatPrice,
+  headerSurface,
   isRecommendedBackground,
   neighborhoodFromAddress,
   photoObjectPosition,
@@ -223,7 +224,7 @@ const STYLE_CHOICES: Array<{
   {
     id: 'urban',
     label: 'Urbano preciso',
-    subtitle: 'Fundo escuro',
+    subtitle: 'Escuro',
     hex: '#09090B',
     style: 'dark',
     className: 'se-style-dark',
@@ -231,7 +232,7 @@ const STYLE_CHOICES: Array<{
   {
     id: 'editorial',
     label: 'Editorial clássico',
-    subtitle: 'Fundo creme',
+    subtitle: 'Creme',
     hex: '#FBF7F0',
     style: 'light',
     className: 'se-style-light',
@@ -239,7 +240,7 @@ const STYLE_CHOICES: Array<{
   {
     id: 'salon',
     label: 'Salão luminoso',
-    subtitle: 'Fundo branco',
+    subtitle: 'Branco',
     hex: '#FFFFFF',
     style: 'light',
     className: 'se-style-salon',
@@ -1203,6 +1204,11 @@ export function SiteEditor({
     () => siteSurface(pageBackground, config.style),
     [pageBackground, config.style],
   );
+  const currentPreset = resolvedPreset(config, data.kind);
+  const headerPreview = useMemo(
+    () => headerSurface(currentPreset, pageSurface),
+    [currentPreset, pageSurface],
+  );
   const safeAccent = useMemo(
     () => accessibleAccent(config.accent, config.style, pageBackground),
     [config.accent, config.style, pageBackground],
@@ -1506,8 +1512,8 @@ export function SiteEditor({
                 demo={demo}
                 demoLogo={data.logo}
                 siteName={data.name}
-                surfaceBackground={pageSurface.background}
-                surfaceInk={pageSurface.ink}
+                surfaceBackground={headerPreview.background}
+                surfaceInk={headerPreview.ink}
                 onChange={update}
                 onLogoReplaced={queueStaleLogo}
               />
@@ -2476,7 +2482,14 @@ export function SiteEditor({
                 <summary>Compartilhar, QR Code e Google</summary>
                 <div className="se-detail-content">
                   <div className="se-block-group se-share-block">
-                    <span className="se-label-title">Compartilhar agora</span>
+                    <span className="se-label-title">
+                      {!demo && !isSiteLive ? 'Link e QR Code do site (ativos após publicação)' : 'Compartilhar agora'}
+                    </span>
+                    {!demo && !isSiteLive && (
+                      <p className="se-help se-help-tight">
+                        Seu endereço e QR Code já ficam prontos para conferência e passam a funcionar assim que a publicação for liberada.
+                      </p>
+                    )}
                     <p className="se-share-url">{shareLinks.direct}</p>
                     <div className="se-share-buttons">
                       <button

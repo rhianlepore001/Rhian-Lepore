@@ -174,6 +174,21 @@ for (const [niche, slug, heading, preset] of [
     await page.keyboard.press('Escape');
     await expect(page.locator('dialog.es-lightbox')).not.toBeVisible();
 
+    // Comparador interativo Antes e Depois (teclado + controle acessível)
+    const slider = page.locator('#beforeAfter [role="slider"]').first();
+    await expect(slider).toHaveAttribute('aria-valuenow', '50');
+    await slider.focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(slider).toHaveAttribute('aria-valuenow', '55');
+
+    // Acordeão FAQ acessível
+    const firstFaq = page.locator('#faq .es-faq-trigger').first();
+    await expect(firstFaq).toHaveAttribute('aria-expanded', 'false');
+    await firstFaq.click();
+    await expect(firstFaq).toHaveAttribute('aria-expanded', 'true');
+    await firstFaq.click();
+    await expect(firstFaq).toHaveAttribute('aria-expanded', 'false');
+
     // Página de serviço
     await page.locator('.es-service-more').first().click();
     await expect(page.locator('h1')).toContainText(niche === 'barber' ? 'Corte masculino' : 'Corte feminino');
@@ -235,6 +250,12 @@ test('320–430px e 768px: sem rolagem horizontal nos estilos e com logo', async
       if (width === 320 || width === 768) await capture(page, `${slug}-${width}-fold`);
     }
   }
+  await page.setViewportSize({ width: 320, height: 740 });
+  await page.goto('/#/site/demo-studio-aurora/servico/d0000000-0000-4000-8002-000000000023');
+  await expect(page.locator('h1')).toContainText('Mechas e luzes');
+  await expect(page.locator('.es-sticky')).toContainText('A partir de');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  await capture(page, 'beauty-320-service');
 });
 
 test('RPCs públicas: publicação, sanitização, equipe vigente, mini mapa seguro e seções vazias', async ({ page }) => {
@@ -266,6 +287,49 @@ test('RPCs públicas: publicação, sanitização, equipe vigente, mini mapa seg
   await expect(page.locator('#location')).toContainText('Ao lado do metrô Fradique Coutinho');
   await scrollControlsTo(page, page.locator('#location'));
   await capture(page, `public-map-${page.viewportSize()!.width}`, false, true);
+});
+
+test('preset editorial clássico: identidade pergaminho, Fraunces e zero overflow', async ({ page }) => {
+  await mockPublic(page);
+  await page.route('**/get_public_team_catalog*', route =>
+    json(route, [{ id: teamId, name: 'Rafael Costa', active: true, deleted_at: null, photo_url: '/presenca/rhian/barber-portrait.webp' }]),
+  );
+  await page.route('**/get_public_customer_reviews*', route =>
+    json(route, {
+      average: 4.9,
+      total: 42,
+      reviews: [
+        {
+          id: 'editorial-review-1',
+          rating: 5,
+          comment: 'Atendimento pontual, toalha quente de verdade e acabamento limpo na navalha.',
+          customer_name: 'Carlos M.',
+        },
+      ],
+    }),
+  );
+  await page.route('**/get_public_establishment_site*', async route => {
+    const editorialConfig = {
+      ...config,
+      style: 'light',
+      preset: 'editorial',
+      background: '#FBF7F0',
+      accent: '#8B4513',
+      headline: 'Barbearia clássica em Pinheiros com navalha e tesoura',
+      about: 'Atendimento individualizado, toalha quente e horário pontual no coração de Pinheiros.',
+      offer: { enabled: true, kind: 'first_visit', title: 'Toalha quente de cortesia na 1ª visita', condition: 'Ao agendar qualquer corte.' },
+      differences: ['Horário respeitado sem fila.', 'Lâminas descartáveis e toalhas esterilizadas.', 'Acabamento detalhado na navalha.'],
+      faq: [{ question: 'Preciso marcar antes?', answer: 'Sim, reserve seu horário direto por aqui.' }],
+    };
+    return json(route, { config: editorialConfig });
+  });
+  await page.goto('/#/site/mock-house');
+  await expect(page.locator('.establishment')).toHaveAttribute('data-preset', 'editorial');
+  await expect(page.locator('h1')).toContainText('Barbearia clássica em Pinheiros');
+  const width = page.viewportSize()!.width;
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  await capture(page, `editorial-${width}-fold`);
+  await capture(page, `editorial-${width}-full`, true);
 });
 
 test('site não publicado mantém acesso ao agendamento legado', async ({ page }) => {

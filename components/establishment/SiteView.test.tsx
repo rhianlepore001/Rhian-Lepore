@@ -261,4 +261,139 @@ describe('SiteView public site', () => {
     expect(screen.queryByTitle(/Mapa com a localização/i)).not.toBeInTheDocument();
     expect(screen.getByRole('img', { name: /Mapa ilustrativo/i })).toBeInTheDocument();
   });
+
+  it('oferece comparador interativo Antes e Depois acessível por teclado na sua própria seção', () => {
+    const config: SiteConfig = {
+      ...defaultConfig(baseData),
+      beforeAfter: [
+        {
+          before: '/presenca/rhian/barber-before.webp',
+          after: '/presenca/rhian/barber-after.webp',
+          caption: 'Degradê e acabamento',
+        },
+      ],
+    };
+    const { container } = render(<SiteView data={baseData} config={config} />);
+
+    const section = container.querySelector('#beforeAfter');
+    expect(section).not.toBeNull();
+    expect(section?.querySelectorAll('.es-before figure img')).toHaveLength(2);
+
+    const slider = screen.getByRole('slider', { name: /comparar antes e depois/i });
+    expect(slider).toHaveAttribute('aria-valuemin', '5');
+    expect(slider).toHaveAttribute('aria-valuemax', '95');
+    expect(slider).toHaveAttribute('aria-valuenow', '50');
+
+    fireEvent.keyDown(slider, { key: 'ArrowRight' });
+    expect(slider).toHaveAttribute('aria-valuenow', '55');
+    fireEvent.keyDown(slider, { key: 'ArrowUp' });
+    expect(slider).toHaveAttribute('aria-valuenow', '60');
+    fireEvent.keyDown(slider, { key: 'PageDown' });
+    expect(slider).toHaveAttribute('aria-valuenow', '45');
+    fireEvent.keyDown(slider, { key: 'ArrowLeft' });
+    expect(slider).toHaveAttribute('aria-valuenow', '40');
+    fireEvent.keyDown(slider, { key: 'ArrowDown' });
+    expect(slider).toHaveAttribute('aria-valuenow', '35');
+    fireEvent.keyDown(slider, { key: 'PageUp' });
+    expect(slider).toHaveAttribute('aria-valuenow', '50');
+    fireEvent.keyDown(slider, { key: 'Home' });
+    expect(slider).toHaveAttribute('aria-valuenow', '5');
+    fireEvent.keyDown(slider, { key: 'End' });
+    expect(slider).toHaveAttribute('aria-valuenow', '95');
+    expect(slider).toHaveAttribute('aria-valuetext', '95% antes, 5% depois');
+  });
+
+  it('renderiza FAQ como acordeão acessível com aria-expanded, aria-controls e aria-hidden', async () => {
+    const user = userEvent.setup();
+    const config: SiteConfig = {
+      ...defaultConfig(baseData),
+      faq: [
+        { question: 'Preciso agendar antes?', answer: 'Sim, reserve seu horário online.' },
+        { question: 'Aceitam cartão?', answer: 'Sim, crédito, débito e Pix.' },
+      ],
+    };
+    render(<SiteView data={baseData} config={config} />);
+
+    const trigger = screen.getByRole('button', { name: 'Preciso agendar antes?' });
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    const panelId = trigger.getAttribute('aria-controls');
+    expect(panelId).toBeTruthy();
+    const panel = document.getElementById(panelId!);
+    expect(panel).not.toHaveAttribute('data-open', 'true');
+    expect(panel).toHaveAttribute('aria-hidden', 'true');
+
+    await user.click(trigger);
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    expect(panel).toHaveAttribute('data-open', 'true');
+    expect(panel).toHaveAttribute('aria-hidden', 'false');
+
+    await user.click(trigger);
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    expect(panel).not.toHaveAttribute('data-open', 'true');
+    expect(panel).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('exibe nome completo na equipe sem duplicar especialidade e expõe data-count na galeria', () => {
+    const { container } = render(<SiteView data={baseData} config={defaultConfig(baseData)} />);
+
+    const teamHeadings = Array.from(container.querySelectorAll('#team article h3')).map(el => el.textContent);
+    expect(teamHeadings).toEqual(['Rafael Costa', 'Lucas Mendes']);
+    expect(container.querySelector('.es-gallery')).toHaveAttribute('data-count', '2');
+  });
+
+  it('sincroniza theme-color no modo público e mantém prévia imediata sem estados ocultos', () => {
+    let meta = document.head.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = 'theme-color';
+      meta.content = '#121212';
+      document.head.appendChild(meta);
+    }
+
+    const { unmount } = render(
+      <SiteView data={baseData} config={{ ...defaultConfig(baseData), preset: 'salon', style: 'light', background: '#FFFFFF' }} />,
+    );
+    expect(meta.content.toLowerCase()).toBe('#ffffff');
+    unmount();
+    expect(meta.content.toLowerCase()).toBe('#121212');
+
+    const { container } = render(<SiteView data={baseData} config={defaultConfig(baseData)} preview />);
+    expect(container.querySelector('[data-reveal="pending"]')).toBeNull();
+  });
+
+  it('marca data-dark-surface pela luminosidade real, omite barra de confiança vazia e esconde capa quebrada no fechamento', () => {
+    const emptyTrustData: SiteData = {
+      ...baseData,
+      rating: undefined,
+      reviewCount: 0,
+      hours: [],
+    };
+    const { container } = render(
+      <SiteView
+        data={emptyTrustData}
+        config={{ ...defaultConfig(emptyTrustData), style: 'dark', background: '#F5EFE6' }}
+      />,
+    );
+    expect(container.querySelector('.establishment')).toHaveAttribute('data-dark-surface', 'false');
+    expect(container.querySelector('.es-trust')).toBeNull();
+
+    const heroImg = container.querySelector('.es-hero-photo img')!;
+    expect(container.querySelector('.es-close-photo')).not.toBeNull();
+    fireEvent.error(heroImg);
+    expect(container.querySelector('.es-close-photo')).toBeNull();
+  });
+
+  it('mantém fallback textual de imagem quebrada no lightbox mesmo após término da transição', async () => {
+    const user = userEvent.setup();
+    render(<SiteView data={baseData} config={defaultConfig(baseData)} />);
+
+    await user.click(screen.getByRole('button', { name: 'Ampliar foto: Bancada iluminada' }));
+    await user.click(screen.getByRole('button', { name: 'Próxima foto' }));
+    const lightboxImg = document.querySelector('dialog.es-lightbox img')!;
+    fireEvent.error(lightboxImg);
+    expect(screen.getByText('Não foi possível carregar esta imagem.')).toBeInTheDocument();
+
+    await new Promise(resolve => setTimeout(resolve, 220));
+    expect(screen.getByText('Não foi possível carregar esta imagem.')).toBeInTheDocument();
+  });
 });

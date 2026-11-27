@@ -1,4 +1,4 @@
-import { buildGoogleMapsDirectionsUrl, normalizeCoordinates, sanitizeGoogleMapsUrl } from './location';
+import { buildGoogleMapsDirectionsUrl, normalizeCoordinates, sanitizeGoogleMapsUrl } from './location.js';
 
 export type SiteKind = 'barber' | 'beauty' | 'studio';
 export type SiteStyle = 'dark' | 'light';

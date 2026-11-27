@@ -69,4 +69,20 @@ describe('prerender SEO HTML & sitemap', () => {
     expect(xml).toContain('<loc>https://www.agendixstudio.com/s/corte-fino</loc>');
     expect(xml).toContain('<lastmod>2026-11-25</lastmod>');
   });
+
+  it('inclui endereço, ponto de referência e Como chegar seguro, sem iframe nem link inseguro', () => {
+    const html = renderPublicSiteHtml({
+      data: baseData,
+      config: {
+        ...defaultConfig(baseData),
+        contact: { addressNote: 'Ao lado do metrô', lat: -23.5614, lng: -46.682, mapsUrl: 'javascript:alert(1)' },
+      },
+      origin: 'https://www.agendixstudio.com',
+    });
+    expect(html).toContain('Ponto de referência: Ao lado do metrô');
+    expect(html).toContain('<a href="https://www.google.com/maps/search/?api=1&amp;query=-23.5614,-46.682" rel="noreferrer">Como chegar</a>');
+    expect(html).toContain('"geo"');
+    expect(html).not.toMatch(/<iframe|javascript:/i);
+    expect(html.replace(/https?:\/\/\S+/g, '').toLowerCase()).not.toContain('agendix');
+  });
 });

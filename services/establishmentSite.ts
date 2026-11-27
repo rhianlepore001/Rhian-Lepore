@@ -129,6 +129,27 @@ export async function publishOwnerSite(companyId: string, config: SiteConfig): P
     if (!retry.data) throw new Error('O site não foi publicado. Confira a liberação do plano Presença.');
   }
   saveSiteDraft(companyId, config);
+  const rawAddress = config.contact?.address?.replace(/<[^>]*>/g, '');
+  const publishedAddress = rawAddress
+    ? Array.from(rawAddress)
+        .filter(char => {
+          const code = char.charCodeAt(0);
+          return code > 31 && code !== 127;
+        })
+        .join('')
+        .trim()
+        .slice(0, 300)
+    : undefined;
+  if (publishedAddress) {
+    try {
+      await supabase
+        .from('profiles')
+        .update({ address_street: publishedAddress })
+        .eq('id', companyId);
+    } catch {
+      // Sincronização secundária do cadastro geral não deve impedir a publicação do site
+    }
+  }
   let sharePageSynced = true;
   if (supabase.functions?.invoke) {
     const refreshed = await Promise.resolve(

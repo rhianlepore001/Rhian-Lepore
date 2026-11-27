@@ -9,6 +9,15 @@
 
 ---
 
+## Presença — localização exata com mini mapa, autosave e Passo 4 acionável (26 Nov 2026, draft)
+
+Branch `feat/presenca-mapa-autosave-ux` (a partir da `main` `20adeec9`), novo PR em **draft**:
+- **Localização exata no editor + mini mapa público (`lib/establishment/location.ts`, `SiteEditor`, `SiteView`, `prerender.ts`, `publish-establishment-site`):** em "Contato e endereço", o gestor edita o endereço completo (sincronizado ao cadastro na publicação, nunca no rascunho), ponto de referência e link/coordenadas opcionais do Google Maps com parser tolerante e cartão de confirmação. No site público e em `/s/:slug`, exibe mini mapa em `<iframe>` seguro gerado exclusivamente por coordenadas/endereço sanitizados (inicia bloqueado contra scroll trap, com alternância `Explorar mapa` / `Bloquear mapa`), ponto de referência e botão `Como chegar`. `vercel.json` inclui `https://www.google.com` em `frame-src` apenas dentro de `Content-Security-Policy-Report-Only`.
+- **Autosave automático em rascunho (`SiteEditor`):** salvamento automático com debounce + single-flight + flush ao trocar de passo, ocultar aba (`visibilitychange`/`pagehide`) e desmontar, com pílula discreta de status (`Salvando rascunho…`, `Salvo automaticamente`, ou erro com `Tentar novamente`). Proteção de saída armada somente quando há envio em andamento ou erro, respeitando cancelamento e descarte explícito (`Sair sem salvar`).
+- **Passo 4 acionável com liberação pendente:** substitui botões desabilitados por orientação clara de que o rascunho já está salvo automaticamente e oferece CTA direto `Solicitar liberação no WhatsApp` (linguagem direta e sem termos técnicos) ao lado de `Ver prévia em tela cheia`.
+- **Banco (SQL v3 + rollback):** nova migration aditiva `supabase/migrations/20261126120000_establishment_sites_v3_location.sql` + rollback `docs/rollbacks/20261126120000_establishment_sites_v3_location.rollback.sql`, testados em PostgreSQL 17 local (**não aplicada em produção**).
+- **Verificações e revisões independentes:** `typecheck`, `lint` (`check-design-debt` ok), Vitest (**370 arquivos / 2.863 testes**), `build` (`check-bundle-strings` ok), PostgreSQL 17 (v1+v2+v3 + rollback 2x + reaplicação), `deno check` e Playwright (**26/26** em 390px/1280px, cobrindo também 320px/768px). Validação crítica, segurança, eficiência (0 P0/P1) e crítica visual (**9,7/10** geral, superfícies entre **9,6 e 9,8/10**) aprovadas. Login, cadastro, onboarding, Stripe e migrations v1/v2 intocados.
+
 ## Presença — entrega final pós-revisão do PR #258 (26 Nov 2026, draft)
 
 Branch `feat/presenca-site-completo`, PR #258 (draft). Fechamento completo da revisão técnica e visual:

@@ -76,6 +76,44 @@ do $$ begin
   assert (select count(*) = 1 and min(slug) = 'house-a' from public.list_published_site_slugs()), 'sitemap lists published slug';
 end $$;
 
+-- Testa localização exata (endereço, link do Maps e coordenadas) no snapshot público
+reset role;
+do $$
+declare
+  v_bad text;
+  v_cfg jsonb;
+  v_contact jsonb;
+begin
+  update public.establishment_sites set published_config = '{"headline":"Loc","contact":{"address":"Rua Nova, 10","addressNote":"Perto da praça","mapsUrl":"https://maps.app.goo.gl/Abc123","lat":-23.5614,"lng":-46.682,"phone":"1199"}}' where company_id = 'owner-a';
+  v_contact := public.get_public_establishment_site('house-a')->'config'->'contact';
+  assert v_contact->>'address' = 'Rua Nova, 10', 'contact address retained';
+  assert v_contact->>'addressNote' = 'Perto da praça', 'address note retained';
+  assert v_contact->>'mapsUrl' = 'https://maps.app.goo.gl/Abc123', 'safe maps url retained';
+  assert (v_contact->>'lat')::numeric = -23.5614 and (v_contact->>'lng')::numeric = -46.682, 'valid coordinates retained';
+
+  foreach v_bad in array array['javascript:alert(1)', 'https://evil.example.com/maps', 'http://www.google.com/maps', 'https://user@www.google.com/maps', 'https://www.google.com.evil.com/maps', 'https://www.google.com@evil.com/maps', 'https://www.google.com/search?q=x', 'https://maps.app.goo.gl/', 'https://goo.gl/maps/?q=1', 'https://www.google.com/maps/../url?q=https://evil.com', 'https://www.google.com/maps/%2e%2e/url?q=https://evil.com', 'https://goo.gl/maps/%2E%2E/EvilHash', 'https://maps.app.goo.gl/%2e', 'https://goo.gl/maps/../EvilHash', 'https://maps.app.goo.gl/./', '<iframe src="https://www.google.com/maps">'] loop
+    update public.establishment_sites set published_config = jsonb_build_object('contact', jsonb_build_object('mapsUrl', v_bad)) where company_id = 'owner-a';
+    assert not ((public.get_public_establishment_site('house-a')->'config'->'contact') ? 'mapsUrl'), 'unsafe maps url dropped: ' || v_bad;
+  end loop;
+  update public.establishment_sites set published_config = '{"contact":{"mapsUrl":123,"address":123}}' where company_id = 'owner-a';
+  v_contact := public.get_public_establishment_site('house-a')->'config'->'contact';
+  assert not (v_contact ? 'mapsUrl') and not (v_contact ? 'address'), 'non-string maps url and address dropped';
+
+  foreach v_cfg in array array['{"lat":10}'::jsonb, '{"lng":10}'::jsonb, '{"lat":91,"lng":10}'::jsonb, '{"lat":10,"lng":181}'::jsonb, '{"lat":0,"lng":0}'::jsonb, '{"lat":"10","lng":"20"}'::jsonb, '{"lat":"abc","lng":20}'::jsonb, '{"lat":1e999,"lng":1}'::jsonb, '{"lat":null,"lng":null}'::jsonb] loop
+    update public.establishment_sites set published_config = jsonb_build_object('contact', v_cfg) where company_id = 'owner-a';
+    v_contact := public.get_public_establishment_site('house-a')->'config'->'contact';
+    assert not (v_contact ? 'lat') and not (v_contact ? 'lng'), 'invalid coordinates dropped: ' || v_cfg::text;
+  end loop;
+
+  update public.establishment_sites set published_config = '{"contact":{"lat":38.7223,"lng":-9.1393}}' where company_id = 'owner-a';
+  v_contact := public.get_public_establishment_site('house-a')->'config'->'contact';
+  assert (v_contact->>'lat')::numeric = 38.7223 and (v_contact->>'lng')::numeric = -9.1393, 'coordinates without maps url retained';
+end $$;
+set role anon;
+do $$ begin
+  assert public.get_public_establishment_site('house-a')->'config'->'contact' ? 'lat', 'anon reads public coordinates';
+end $$;
+
 -- Testa registro de referral_source (?origem=) em public_bookings e appointments
 do $$
 declare
@@ -101,4 +139,4 @@ do $$ begin
   assert (select count(*) = 0 from public.list_published_site_slugs()), 'unpublished site removed from sitemap';
 end $$;
 reset role;
-select 'PASS: tenant isolation, owner permissions, entitlement, publication, reserved slugs, storage url allowlist and referral_source';
+select 'PASS: tenant isolation, owner permissions, entitlement, publication, reserved slugs, storage url allowlist, location allowlist and referral_source';

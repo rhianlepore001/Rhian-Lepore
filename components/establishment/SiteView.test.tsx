@@ -221,4 +221,44 @@ describe('SiteView public site', () => {
     const iframe = screen.getByTitle('Agendamento do estabelecimento');
     expect(iframe).toHaveAttribute('src', expect.stringContaining('origem=instagram'));
   });
+
+  it('exibe mini mapa interativo seguro para site real, inicia travado contra scroll trap e limpa link malicioso', async () => {
+    const user = userEvent.setup();
+    const config: SiteConfig = {
+      ...defaultConfig(baseData),
+      contact: {
+        address: 'Av. Paulista, 1000 — Bela Vista, São Paulo',
+        addressNote: 'Próximo ao metrô Trianon-Masp',
+        lat: -23.5649,
+        lng: -46.6519,
+        mapsUrl: 'javascript:alert(1)',
+      },
+    };
+    const { container } = render(<SiteView data={baseData} config={config} />);
+
+    const mapIframe = screen.getByTitle('Mapa com a localização de Corte Fino');
+    expect(mapIframe).toHaveAttribute('src', 'https://www.google.com/maps?q=-23.5649%2C-46.6519&hl=pt-BR&z=16&output=embed');
+    expect(mapIframe).toHaveAttribute('loading', 'lazy');
+    expect(mapIframe).toHaveAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+
+    const mapBox = container.querySelector('.es-map-embed')!;
+    expect(mapBox).not.toHaveAttribute('data-interactive', 'true');
+    const toggleBtn = screen.getByRole('button', { name: 'Explorar mapa' });
+    expect(toggleBtn).toHaveAttribute('aria-pressed', 'false');
+    await user.click(toggleBtn);
+    expect(mapBox).toHaveAttribute('data-interactive', 'true');
+    expect(screen.getByRole('button', { name: 'Bloquear mapa' })).toHaveAttribute('aria-pressed', 'true');
+
+    expect(screen.getByText('Av. Paulista, 1000 — Bela Vista, São Paulo')).toBeInTheDocument();
+    expect(screen.getByText(/Próximo ao metrô Trianon-Masp/)).toBeInTheDocument();
+    const directions = screen.getByRole('link', { name: 'Como chegar' });
+    expect(directions).toHaveAttribute('href', 'https://www.google.com/maps/search/?api=1&query=-23.5649,-46.6519');
+    expect(container.textContent?.toLowerCase()).not.toContain('agendix');
+  });
+
+  it('mantém mapa ilustrativo sem iframe externo no modo demonstração', () => {
+    render(<SiteView data={{ ...baseData, demo: true }} config={defaultConfig(baseData)} />);
+    expect(screen.queryByTitle(/Mapa com a localização/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /Mapa ilustrativo/i })).toBeInTheDocument();
+  });
 });

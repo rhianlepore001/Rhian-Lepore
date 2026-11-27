@@ -67,6 +67,66 @@ function normalizeInstagramHandle(value: unknown): string | undefined {
   return clean || undefined;
 }
 
+function hasControlChars(value: string): boolean {
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index);
+    if (code <= 31 || code === 127) return true;
+  }
+  return false;
+}
+
+function plainText(value: unknown, limit: number): string {
+  if (typeof value !== 'string') return '';
+  return Array.from(value.replace(/<[^>]*>/g, ''))
+    .map(char => {
+      const code = char.charCodeAt(0);
+      return code <= 31 || code === 127 ? ' ' : char;
+    })
+    .join('')
+    .trim()
+    .slice(0, limit);
+}
+
+const GOOGLE_MAPS_HOSTS = new Set(['www.google.com', 'google.com', 'www.google.com.br', 'google.com.br', 'www.google.pt', 'google.pt']);
+
+function safeMapsUrl(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const raw = value.trim();
+  if (!raw || raw.length > 500 || hasControlChars(raw) || /[\s\u200B\uFEFF<>"'`\\]/.test(raw)) return undefined;
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    return undefined;
+  }
+  if (url.protocol !== 'https:' || url.username || url.password || url.port) return undefined;
+  const host = url.hostname.toLowerCase();
+  let allowed = false;
+  if (GOOGLE_MAPS_HOSTS.has(host)) allowed = /^\/maps(\/|$)/.test(url.pathname);
+  else if (host === 'maps.google.com') allowed = true;
+  else if (host === 'maps.app.goo.gl') allowed = /^\/[^/]+/.test(url.pathname);
+  else if (host === 'goo.gl') allowed = /^\/maps\/[^/]+/.test(url.pathname);
+  return allowed && url.href.length <= 500 ? url.href : undefined;
+}
+
+function safeCoordinates(lat: unknown, lng: unknown): { lat: number; lng: number } | undefined {
+  if (typeof lat !== 'number' || typeof lng !== 'number' || !Number.isFinite(lat) || !Number.isFinite(lng)) return undefined;
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return undefined;
+  const round = (value: number) => Math.round(value * 1e6) / 1e6;
+  const result = { lat: round(lat), lng: round(lng) };
+  return result.lat === 0 && result.lng === 0 ? undefined : result;
+}
+
+function directionsLink(params: { name: string; address: string; mapsUrl?: string; lat?: number; lng?: number }): string | undefined {
+  const url = safeMapsUrl(params.mapsUrl);
+  if (url) return url;
+  const coords = safeCoordinates(params.lat, params.lng);
+  if (coords) return `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}`;
+  const address = params.address.trim();
+  if (!address) return undefined;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${params.name.trim()} ${address}`.trim())}`;
+}
+
 function safeAsset(value: unknown, origin: string): string | undefined {
   if (typeof value !== 'string') return undefined;
   const trimmed = value.trim();
@@ -98,6 +158,10 @@ function renderHtmlPage(params: {
   kind: string;
   region: 'BR' | 'PT';
   address: string;
+  addressNote?: string;
+  mapsLink?: string;
+  lat?: number;
+  lng?: number;
   phone?: string;
   instagram?: string;
   headline: string;
@@ -117,6 +181,7 @@ function renderHtmlPage(params: {
     ? `/#/site/${slugEncoded}/servico/${encodeURIComponent(params.service.id)}`
     : `/#/site/${slugEncoded}`;
   const cleanInstagram = normalizeInstagramHandle(params.instagram);
+  const geo = safeCoordinates(params.lat, params.lng);
   const jsonLd: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': params.kind === 'studio' ? 'LocalBusiness' : 'HairSalon',
@@ -130,6 +195,8 @@ function renderHtmlPage(params: {
     ...(params.address
       ? { address: { '@type': 'PostalAddress', streetAddress: params.address, addressCountry: params.region } }
       : {}),
+    ...(params.mapsLink ? { hasMap: params.mapsLink } : {}),
+    ...(geo ? { geo: { '@type': 'GeoCoordinates', latitude: geo.lat, longitude: geo.lng } } : {}),
   };
 
   return [
@@ -156,9 +223,11 @@ function renderHtmlPage(params: {
     '</head>',
     '<body>',
     '  <main>',
-    `    <h1>${escapeHtml(params.service ? params.service.name : params.headline || params.name)}</h1>`,
+    `    <h1>${escapeHtml(params.service ? plainText(params.service.name, 120) : params.headline || params.name)}</h1>`,
     `    <p>${escapeHtml(params.description)}</p>`,
     params.address ? `    <p>${escapeHtml(params.address)}</p>` : '',
+    params.addressNote ? `    <p>Ponto de referência: ${escapeHtml(params.addressNote)}</p>` : '',
+    params.mapsLink ? `    <p><a href="${escapeHtml(params.mapsLink)}" rel="noreferrer">Como chegar</a></p>` : '',
     cleanInstagram
       ? `    <p>Instagram: <a href="https://www.instagram.com/${escapeHtml(cleanInstagram)}/" rel="noreferrer">@${escapeHtml(cleanInstagram)}</a></p>`
       : '',
@@ -251,23 +320,30 @@ export function createPublishEstablishmentSiteHandler(deps: PublishSiteDeps) {
       cfg.contact && typeof cfg.contact === 'object' && !Array.isArray(cfg.contact)
         ? (cfg.contact as Record<string, unknown>)
         : {};
-    const effectivePhone =
-      typeof cfgContact.phone === 'string' && cfgContact.phone.trim() ? cfgContact.phone.trim() : site.phone;
+    const effectivePhone = plainText(cfgContact.phone, 40) || plainText(site.phone, 40);
     const effectiveInstagram =
       normalizeInstagramHandle(cfgContact.instagram) || normalizeInstagramHandle(site.instagram);
-    const headline = typeof cfg.headline === 'string' && cfg.headline.trim() ? cfg.headline.trim() : site.name;
+    const hasExplicitAddress = typeof cfgContact.address === 'string';
+    const cfgAddress = plainText(cfgContact.address, 300);
+    const effectiveAddress = (hasExplicitAddress ? cfgAddress : plainText(site.address, 300)) || '';
+    const addressNote = plainText(cfgContact.addressNote, 300) || undefined;
+    const coords = safeCoordinates(cfgContact.lat, cfgContact.lng);
+    const safeSiteName = plainText(site.name, 140);
+    const mapsLink = directionsLink({
+      name: safeSiteName,
+      address: effectiveAddress,
+      mapsUrl: typeof cfgContact.mapsUrl === 'string' ? cfgContact.mapsUrl : undefined,
+      lat: coords?.lat,
+      lng: coords?.lng,
+    });
+    const headline = plainText(cfg.headline, 180) || safeSiteName;
     const kindLabel = site.kind === 'beauty' ? 'Salão de beleza' : site.kind === 'studio' ? 'Estúdio' : 'Barbearia';
-    const title =
-      typeof cfg.seoTitle === 'string' && cfg.seoTitle.trim()
-        ? cfg.seoTitle.trim()
-        : `${site.name} — ${kindLabel}`;
+    const title = plainText(cfg.seoTitle, 140) || `${safeSiteName} — ${kindLabel}`;
     const headlineWithDot = headline ? (/[.!?…]$/.test(headline) ? headline : `${headline}.`) : '';
     const description =
-      typeof cfg.seoDescription === 'string' && cfg.seoDescription.trim()
-        ? cfg.seoDescription.trim()
-        : `${headlineWithDot} Agende seu horário online em ${site.name}.`.trim();
-    const ctaLabel =
-      typeof cfg.ctaLabel === 'string' && cfg.ctaLabel.trim() ? cfg.ctaLabel.trim() : 'Agendar agora';
+      plainText(cfg.seoDescription, 280) ||
+      `${headlineWithDot} Agende seu horário online em ${safeSiteName}.`.trim();
+    const ctaLabel = plainText(cfg.ctaLabel, 60) || 'Agendar agora';
     const coverRemoved = cfg.coverRemoved === true;
     const logoRemoved = cfg.logoRemoved === true;
     const ogImage =
@@ -278,10 +354,14 @@ export function createPublishEstablishmentSiteHandler(deps: PublishSiteDeps) {
     const homeHtml = renderHtmlPage({
       origin,
       slug: slugLower,
-      name: site.name,
+      name: safeSiteName,
       kind: site.kind,
       region: site.region,
-      address: site.address,
+      address: effectiveAddress,
+      addressNote,
+      mapsLink,
+      lat: coords?.lat,
+      lng: coords?.lng,
       phone: effectivePhone,
       instagram: effectiveInstagram,
       headline,
@@ -295,18 +375,23 @@ export function createPublishEstablishmentSiteHandler(deps: PublishSiteDeps) {
     await deps.uploadPublishedFile(`sites/${slugLower}.html`, homeHtml, 'text/html; charset=utf-8');
 
     for (const service of site.services.filter(item => /^[a-z0-9_-]{1,120}$/i.test(item.id)).slice(0, 60)) {
+      const safeServiceName = plainText(service.name, 120);
       const serviceHtml = renderHtmlPage({
         origin,
         slug: slugLower,
-        name: site.name,
+        name: safeSiteName,
         kind: site.kind,
         region: site.region,
-        address: site.address,
+        address: effectiveAddress,
+        addressNote,
+        mapsLink,
+        lat: coords?.lat,
+        lng: coords?.lng,
         phone: effectivePhone,
         instagram: effectiveInstagram,
         headline,
-        title: `${service.name} — ${site.name}`,
-        description: service.description?.trim() || description,
+        title: `${safeServiceName} — ${safeSiteName}`,
+        description: plainText(service.description, 280) || description,
         ctaLabel,
         ogImage: safeAsset(service.image, origin) || ogImage,
         logo,

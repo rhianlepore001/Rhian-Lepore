@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { defaultConfig, type SiteData } from './model';
 import {
+  buildPresenceActivationUrl,
   buildQrPrintHtml,
   buildShareLinks,
   buildWhatsAppShareUrl,
@@ -192,5 +193,29 @@ describe('computeSiteCompleteness', () => {
     expect(result.items.find(i => i.id === 'location')?.done).toBe(false);
     expect(result.completed).toBe(2);
     expect(result.percent).toBe(29);
+  });
+});
+
+describe('buildPresenceActivationUrl', () => {
+  it('abre o WhatsApp da equipe com pedido humano de liberação, sem termos técnicos', () => {
+    const url = buildPresenceActivationUrl({ name: 'Corte Fino', slug: 'corte-fino', region: 'BR' });
+    expect(url.startsWith('https://wa.me/351927688674?text=')).toBe(true);
+    const text = decodeURIComponent(url.split('?text=')[1]);
+    expect(text).toContain('Corte Fino');
+    expect(text).toContain('corte-fino');
+    expect(text).toMatch(/liberar a publicação/);
+    expect(text).not.toMatch(/presence_enabled|RLS|API|Meta/i);
+    expect(decodeURIComponent(buildPresenceActivationUrl({ name: 'Casa', slug: '', region: 'PT' }).split('?text=')[1])).toMatch(/libertar a publicação/);
+  });
+});
+
+describe('completude da localização', () => {
+  it('considera o endereço informado no editor ou coordenadas confirmadas', () => {
+    const noAddress: SiteData = { ...baseData, address: '' };
+    const find = (config: Parameters<typeof computeSiteCompleteness>[1]) => computeSiteCompleteness(noAddress, config).items.find(item => item.id === 'location')?.done;
+    expect(find(defaultConfig(noAddress))).toBe(false);
+    expect(find({ ...defaultConfig(noAddress), contact: { address: 'Rua B, 20' } })).toBe(true);
+    expect(find({ ...defaultConfig(noAddress), contact: { lat: 38.7223, lng: -9.1393 } })).toBe(true);
+    expect(computeSiteCompleteness(baseData, { ...defaultConfig(baseData), contact: { address: '  ' } }).items.find(item => item.id === 'location')?.done).toBe(false);
   });
 });

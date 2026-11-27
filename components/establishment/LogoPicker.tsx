@@ -52,7 +52,7 @@ export function LogoPicker({
       const uploaded = await uploadSiteLogo(companyId, file);
       onChange({ logo: uploaded, logoRemoved: false });
       if (previousLogo && previousLogo !== uploaded) onLogoReplaced?.(previousLogo);
-      setStatus('Logo enviado. Salve o rascunho para guardar.');
+      setStatus('Logo enviado. Salvando no rascunho…');
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Não foi possível enviar o logo.');
     } finally {

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AlertCircle,
   ArrowDown,
   ArrowLeft,
   ArrowUp,
@@ -9,6 +10,8 @@ import {
   Copy,
   Download,
   ExternalLink,
+  Loader2,
+  MapPin,
   Maximize2,
   MessageCircle,
   Monitor,
@@ -16,7 +19,6 @@ import {
   Plus,
   Printer,
   RotateCcw,
-  Save,
   Smartphone,
   Trash2,
 } from 'lucide-react';
@@ -42,12 +44,18 @@ import {
   type SiteKind,
 } from '../../lib/establishment/model';
 import {
+  buildGoogleMapsDirectionsUrl,
+  normalizeCoordinates,
+  parseGoogleMapsLocationInput,
+} from '../../lib/establishment/location';
+import {
   loadSiteDraft,
   loadStaleLogos,
   saveSiteDraft,
   saveStaleLogos,
 } from '../../lib/establishment/draft';
 import {
+  buildPresenceActivationUrl,
   buildQrPrintHtml,
   buildShareLinks,
   buildWhatsAppShareUrl,
@@ -64,6 +72,7 @@ interface SiteEditorProps {
   companyId: string;
   demo?: boolean;
   embedded?: boolean;
+  autosaveDelayMs?: number;
 }
 
 const sectionLabels: Record<SectionId, string> = {
@@ -347,11 +356,32 @@ type PendingLeave =
   | { type: 'hash'; hash: string }
   | { type: 'history'; url: string; state: unknown };
 
-export function SiteEditor({ data, initial, companyId, demo = false, embedded = false }: SiteEditorProps) {
-  const [config, setConfig] = useState(() => loadSiteDraft(companyId, initial));
-  const [savedJson, setSavedJson] = useState(() => JSON.stringify(loadSiteDraft(companyId, initial)));
+type AutosaveStatus = 'idle' | 'pending' | 'saving' | 'saved' | 'error';
+
+function initialLocationText(cfg: SiteConfig): string {
+  if (cfg.contact?.mapsUrl) return cfg.contact.mapsUrl;
+  const coords = normalizeCoordinates(cfg.contact?.lat, cfg.contact?.lng);
+  return coords ? `${coords.lat}, ${coords.lng}` : '';
+}
+
+export function SiteEditor({
+  data,
+  initial,
+  companyId,
+  demo = false,
+  embedded = false,
+  autosaveDelayMs = 900,
+}: SiteEditorProps) {
+  const [initialDraft] = useState(() => loadSiteDraft(companyId, initial));
+  const [config, setConfig] = useState<SiteConfig>(initialDraft);
+  const [savedJson, setSavedJson] = useState(() => JSON.stringify(initialDraft));
+  const [hydrated, setHydrated] = useState(demo);
   const [step, setStep] = useState<EditorStep>('brand');
   const [saved, setSaved] = useState('');
+  const [autosaveStatus, setAutosaveStatus] = useState<AutosaveStatus>('idle');
+  const [autosaveError, setAutosaveError] = useState('');
+  const [locationInput, setLocationInput] = useState(() => initialLocationText(initialDraft));
+  const [locationError, setLocationError] = useState('');
   const [mode, setMode] = useState<'mobile' | 'desktop'>('mobile');
   const [expanded, setExpanded] = useState(false);
   const [previewCollapsed, setPreviewCollapsed] = useState(false);
@@ -359,10 +389,28 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
   const [qrDataUrl, setQrDataUrl] = useState('');
   const [pendingLeave, setPendingLeave] = useState<PendingLeave | null>(null);
 
-  const isDirty = useMemo(() => JSON.stringify(config) !== savedJson, [config, savedJson]);
+  const currentConfigJson = useMemo(() => JSON.stringify(config), [config]);
+  const isDirty = currentConfigJson !== savedJson;
 
   const staleLogos = useRef<Set<string>>(new Set(loadStaleLogos(companyId)));
   const publishedLogoRef = useRef<string>('');
+  const hydratedRef = useRef(demo);
+  hydratedRef.current = hydrated;
+  const userEditedRef = useRef(false);
+  const isSavingRef = useRef(false);
+  const queuedAfterFlightRef = useRef(false);
+  const inFlightPromiseRef = useRef<Promise<boolean> | null>(null);
+  const lastSavedJsonRef = useRef(JSON.stringify(initialDraft));
+  const debounceTimerRef = useRef<number | null>(null);
+  const unmountedRef = useRef(false);
+  const discardOnLeaveRef = useRef(false);
+  const hasSavedOnceRef = useRef(false);
+  const publishingRef = useRef(false);
+  const publishPromiseRef = useRef<Promise<void> | null>(null);
+  const leaveRequestTokenRef = useRef(0);
+  const frameReadyRef = useRef(false);
+  const autosaveStatusRef = useRef<AutosaveStatus>(autosaveStatus);
+  autosaveStatusRef.current = autosaveStatus;
   const bypassNavGuardRef = useRef(false);
   const lastHashRef = useRef(typeof window !== 'undefined' ? window.location.hash : '');
   const originalPushStateRef = useRef<History['pushState'] | null>(null);
@@ -379,6 +427,7 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
   });
 
   const [frameReady, setFrameReady] = useState(false);
+  frameReadyRef.current = frameReady;
   const [storage, setStorage] = useState<'local' | 'remote'>('local');
   const [saving, setSaving] = useState(false);
   const [presenceEnabled, setPresenceEnabled] = useState(false);
@@ -422,6 +471,7 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
   };
 
   const update = (patch: Partial<SiteConfig>) => {
+    userEditedRef.current = true;
     setConfig(current => ({ ...current, ...patch }));
     setSaved('');
   };
@@ -429,10 +479,189 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
   const configRef = useRef(config);
   const dataRef = useRef(data);
   const initialRef = useRef(initial);
+  const storageRef = useRef(storage);
   const skipNextEffectSync = useRef(false);
   configRef.current = config;
   dataRef.current = data;
   initialRef.current = initial;
+  storageRef.current = storage;
+
+  const persistDraft = async (reason: 'auto' | 'manual' | 'flush' = 'auto'): Promise<boolean> => {
+    if (debounceTimerRef.current !== null) {
+      window.clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+    if (publishPromiseRef.current) {
+      saveSiteDraft(companyId, configRef.current);
+      if (reason === 'auto') return false;
+      await publishPromiseRef.current.catch(() => undefined);
+    }
+    const currentJson = JSON.stringify(configRef.current);
+    if (
+      (reason === 'auto' || reason === 'flush') &&
+      !inFlightPromiseRef.current &&
+      currentJson === lastSavedJsonRef.current &&
+      autosaveStatusRef.current !== 'error'
+    ) {
+      return true;
+    }
+    if (inFlightPromiseRef.current) {
+      if (reason === 'flush' || reason === 'manual') {
+        queuedAfterFlightRef.current = true;
+      }
+      return inFlightPromiseRef.current;
+    }
+
+    const run = (async (): Promise<boolean> => {
+      isSavingRef.current = true;
+      if (!unmountedRef.current) {
+        setAutosaveStatus('saving');
+        setAutosaveError('');
+      }
+      try {
+        let storageMode = storageRef.current;
+        do {
+          if (debounceTimerRef.current !== null) {
+            window.clearTimeout(debounceTimerRef.current);
+            debounceTimerRef.current = null;
+          }
+          queuedAfterFlightRef.current = false;
+          const snapshot = configRef.current;
+          const snapshotJson = JSON.stringify(snapshot);
+          saveSiteDraft(companyId, snapshot);
+          const currentLogo = snapshot.logoRemoved ? '' : snapshot.logo || '';
+          if (!demo) {
+            const m = await import('../../services/establishmentSite');
+            const result = await m.saveOwnerSiteDraft(companyId, snapshot);
+            storageMode = result.storage;
+            if (!unmountedRef.current) setStorage(result.storage);
+            await flushStaleLogos({ includePublishedLogo: false, keepLogo: currentLogo });
+          }
+          lastSavedJsonRef.current = snapshotJson;
+          if (!unmountedRef.current) setSavedJson(snapshotJson);
+        } while (
+          queuedAfterFlightRef.current &&
+          JSON.stringify(configRef.current) !== lastSavedJsonRef.current
+        );
+
+        hasSavedOnceRef.current = true;
+        if (!unmountedRef.current) {
+          const stillDirty = JSON.stringify(configRef.current) !== lastSavedJsonRef.current;
+          setAutosaveStatus(stillDirty ? 'pending' : 'saved');
+          setAutosaveError('');
+          if (reason === 'manual') {
+            setSaved(
+              demo
+                ? 'Rascunho de demonstração salvo neste navegador.'
+                : storageMode === 'remote'
+                  ? 'Rascunho salvo. Seu site público não mudou.'
+                  : 'Rascunho salvo neste navegador. Nada foi publicado.',
+            );
+          }
+        }
+        return true;
+      } catch {
+        if (debounceTimerRef.current !== null) {
+          window.clearTimeout(debounceTimerRef.current);
+          debounceTimerRef.current = null;
+        }
+        if (!unmountedRef.current) {
+          if (JSON.stringify(configRef.current) === lastSavedJsonRef.current) {
+            setAutosaveStatus(hasSavedOnceRef.current ? 'saved' : 'idle');
+            setAutosaveError('');
+          } else {
+            setAutosaveStatus('error');
+            setAutosaveError('Não foi possível salvar automaticamente. Confira sua conexão e tente novamente.');
+          }
+        }
+        return false;
+      }
+    })();
+
+    inFlightPromiseRef.current = run;
+    void run.then(succeeded => {
+      isSavingRef.current = false;
+      if (inFlightPromiseRef.current === run) {
+        inFlightPromiseRef.current = null;
+      }
+      if (succeeded && !unmountedRef.current && hydratedRef.current) {
+        const hasUnsaved = JSON.stringify(configRef.current) !== lastSavedJsonRef.current;
+        if (queuedAfterFlightRef.current && hasUnsaved) {
+          queuedAfterFlightRef.current = false;
+          void persistDraft('flush');
+        } else if (hasUnsaved && debounceTimerRef.current === null) {
+          queuedAfterFlightRef.current = false;
+          debounceTimerRef.current = window.setTimeout(() => {
+            debounceTimerRef.current = null;
+            void persistDraft('auto');
+          }, autosaveDelayMs);
+        } else {
+          queuedAfterFlightRef.current = false;
+        }
+      } else if (!succeeded) {
+        queuedAfterFlightRef.current = false;
+      }
+    });
+    return run;
+  };
+
+  useEffect(() => {
+    if (!hydrated) return;
+    if (currentConfigJson === lastSavedJsonRef.current) {
+      if (debounceTimerRef.current !== null) {
+        window.clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+      if (!isSavingRef.current && (autosaveStatusRef.current === 'pending' || autosaveStatusRef.current === 'error')) {
+        setAutosaveStatus(hasSavedOnceRef.current ? 'saved' : 'idle');
+        setAutosaveError('');
+      }
+      return;
+    }
+    if (!isSavingRef.current && autosaveStatusRef.current !== 'pending') {
+      setAutosaveStatus('pending');
+      setAutosaveError('');
+    }
+    if (debounceTimerRef.current !== null) {
+      window.clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = window.setTimeout(() => {
+      debounceTimerRef.current = null;
+      void persistDraft('auto');
+    }, autosaveDelayMs);
+    return () => {
+      if (debounceTimerRef.current !== null) {
+        window.clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+    };
+  }, [hydrated, currentConfigJson, autosaveDelayMs]);
+
+  useEffect(() => {
+    unmountedRef.current = false;
+    discardOnLeaveRef.current = false;
+    const flushIfDirty = () => {
+      if (discardOnLeaveRef.current) return;
+      if (hydratedRef.current && JSON.stringify(configRef.current) !== lastSavedJsonRef.current) {
+        void persistDraft('flush');
+      }
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') flushIfDirty();
+    };
+    window.addEventListener('pagehide', flushIfDirty);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      unmountedRef.current = true;
+      window.removeEventListener('pagehide', flushIfDirty);
+      document.removeEventListener('visibilitychange', onVisibility);
+      if (debounceTimerRef.current !== null) {
+        window.clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+      flushIfDirty();
+    };
+  }, [companyId]);
 
   useEffect(() => {
     if (!frameReady) return;
@@ -450,13 +679,21 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
   }, [config, data, frameReady]);
 
   useEffect(() => {
+    if (previewCollapsed && !expanded) {
+      setFrameReady(false);
+    }
+  }, [previewCollapsed, expanded]);
+
+  useEffect(() => {
     const receive = (event: MessageEvent) => {
       if (
         event.origin === window.location.origin &&
         event.source === frame.current?.contentWindow &&
         event.data?.type === 'agendix:site-preview-ready'
       ) {
-        skipNextEffectSync.current = true;
+        if (!frameReadyRef.current) {
+          skipNextEffectSync.current = true;
+        }
         setFrameReady(true);
         frame.current?.contentWindow?.postMessage(
           { type: 'agendix:site-preview', data: dataRef.current, config: configRef.current },
@@ -468,8 +705,11 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
     return () => window.removeEventListener('message', receive);
   }, []);
 
+  const lastSentModeRef = useRef(mode);
   useEffect(() => {
     if (!frameReady) return;
+    if (mode === lastSentModeRef.current) return;
+    lastSentModeRef.current = mode;
     const win = frame.current?.contentWindow;
     if (!win) return;
     win.postMessage(
@@ -500,7 +740,10 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
   }, [expanded]);
 
   useEffect(() => {
-    if (demo) return;
+    if (demo) {
+      setHydrated(true);
+      return;
+    }
     let active = true;
     void import('../../services/establishmentSite')
       .then(m => m.loadOwnerSite(companyId, initialRef.current))
@@ -510,13 +753,22 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
         setPresenceEnabled(result.presenceEnabled);
         setPublished(result.published);
         publishedLogoRef.current = result.publishedLogo || '';
-        if (result.config) {
+        if (result.config && !userEditedRef.current) {
+          const nextJson = JSON.stringify(result.config);
+          lastSavedJsonRef.current = nextJson;
+          hasSavedOnceRef.current = false;
           setConfig(result.config);
-          setSavedJson(JSON.stringify(result.config));
+          setSavedJson(nextJson);
+          setLocationInput(initialLocationText(result.config));
+          setLocationError('');
         }
+        setHydrated(true);
       })
       .catch(() => {
-        if (active) setSaved('Não foi possível ler o rascunho remoto. Sua cópia local continua disponível.');
+        if (active) {
+          setHydrated(true);
+          setSaved('Não foi possível ler o rascunho remoto. Sua cópia local continua disponível.');
+        }
       });
     return () => {
       active = false;
@@ -529,19 +781,65 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
     }
   }, [pendingLeave]);
 
+  const cancelPendingLeave = () => {
+    leaveRequestTokenRef.current += 1;
+    setPendingLeave(null);
+  };
+
   useEffect(() => {
     if (!pendingLeave) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setPendingLeave(null);
+      if (event.key === 'Escape') cancelPendingLeave();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [pendingLeave]);
 
   useEffect(() => {
+    if (!pendingLeave || isDirty || autosaveStatus !== 'saved') return;
+    const target = pendingLeave;
+    leaveRequestTokenRef.current += 1;
+    if (!unmountedRef.current) {
+      proceedLeave(target);
+    }
+  }, [pendingLeave, isDirty, autosaveStatus]);
+
+  const shouldProtectLeave = isDirty || autosaveStatus === 'saving' || autosaveStatus === 'error';
+
+  useEffect(() => {
     if (typeof window === 'undefined') return;
     lastHashRef.current = window.location.hash;
-    if (!isDirty) return;
+    if (!shouldProtectLeave) return;
+
+    const requestLeave = (leave: PendingLeave) => {
+      const token = ++leaveRequestTokenRef.current;
+      if (autosaveStatusRef.current === 'saving' || autosaveStatusRef.current === 'error') {
+        setPendingLeave(leave);
+        return;
+      }
+      const flushAndLeave = () => {
+        void persistDraft('flush').then(ok => {
+          if (token !== leaveRequestTokenRef.current || unmountedRef.current) return;
+          if (!ok) {
+            if (
+              JSON.stringify(configRef.current) === lastSavedJsonRef.current &&
+              autosaveStatusRef.current !== 'error'
+            ) {
+              proceedLeave(leave);
+              return;
+            }
+            setPendingLeave(leave);
+            return;
+          }
+          if (JSON.stringify(configRef.current) !== lastSavedJsonRef.current) {
+            flushAndLeave();
+            return;
+          }
+          proceedLeave(leave);
+        });
+      };
+      flushAndLeave();
+    };
 
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
       event.preventDefault();
@@ -576,7 +874,7 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
       if (resolved.hash === currentHash) return;
       event.preventDefault();
       event.stopPropagation();
-      setPendingLeave({ type: 'hash', hash: resolved.hash });
+      requestLeave({ type: 'hash', hash: resolved.hash });
     };
 
     const onHashChange = () => {
@@ -592,7 +890,7 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
       window.setTimeout(() => {
         bypassNavGuardRef.current = false;
       }, 0);
-      setPendingLeave({ type: 'hash', hash: nextHash });
+      requestLeave({ type: 'hash', hash: nextHash });
     };
 
     const originalPushState = window.history.pushState.bind(window.history);
@@ -606,7 +904,7 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
       try {
         const nextUrl = new URL(String(url), window.location.href);
         if (nextUrl.origin === window.location.origin && nextUrl.hash && nextUrl.hash !== lastHashRef.current) {
-          setPendingLeave({ type: 'history', url: nextUrl.href, state });
+          requestLeave({ type: 'history', url: nextUrl.href, state });
           return;
         }
       } catch {
@@ -628,7 +926,7 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
         originalPushStateRef.current = null;
       }
     };
-  }, [isDirty]);
+  }, [shouldProtectLeave]);
 
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.agendixstudio.com';
   const shareOrigin =
@@ -638,6 +936,7 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
   const shareLinks = useMemo(() => buildShareLinks(shareOrigin, data.slug || 'site'), [shareOrigin, data.slug]);
 
   useEffect(() => {
+    if (step !== 'share') return;
     let active = true;
     void renderQrDataUrl(shareLinks.qr, 420, 2)
       .then(url => {
@@ -649,68 +948,83 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
     return () => {
       active = false;
     };
-  }, [shareLinks.qr]);
-
-  const save = async (): Promise<boolean> => {
-    setSaving(true);
-    try {
-      saveSiteDraft(companyId, config);
-      setSavedJson(JSON.stringify(config));
-      const currentLogo = config.logoRemoved ? '' : config.logo || '';
-      if (!demo) {
-        const m = await import('../../services/establishmentSite');
-        const result = await m.saveOwnerSiteDraft(companyId, config);
-        setStorage(result.storage);
-        await flushStaleLogos({ includePublishedLogo: false, keepLogo: currentLogo });
-        setSaved(
-          result.storage === 'remote'
-            ? 'Rascunho salvo. Seu site público não mudou.'
-            : 'Rascunho salvo neste navegador. Nada foi publicado.',
-        );
-      } else {
-        setSaved('Rascunho de demonstração salvo neste navegador.');
-      }
-      return true;
-    } catch {
-      setSaved('Não foi possível salvar. Confira o espaço e as permissões do navegador e tente novamente.');
-      return false;
-    } finally {
-      setSaving(false);
-    }
-  };
+  }, [step, shareLinks.qr]);
 
   const changePublication = async (unpublish = false) => {
-    if (demo || storage !== 'remote' || !presenceEnabled) return;
-    setSaving(true);
-    try {
-      const m = await import('../../services/establishmentSite');
-      const result = unpublish ? await m.unpublishOwnerSite(companyId) : await m.publishOwnerSite(companyId, config);
-      const currentLogo = unpublish ? '' : config.logoRemoved ? '' : config.logo || '';
-      publishedLogoRef.current = currentLogo;
-      await flushStaleLogos({ includePublishedLogo: true, keepLogo: currentLogo });
-      if (!unpublish) {
-        setSavedJson(JSON.stringify(config));
-      }
-      setPublished(!unpublish);
-      const shareSynced = result?.sharePageSynced !== false;
-      if (unpublish) {
-        setSaved(
-          shareSynced
-            ? 'Site despublicado. O link de agendamento continua funcionando.'
-            : 'Site despublicado. A página de compartilhamento pode levar alguns instantes para refletir a mudança, e o link de agendamento continua funcionando.',
-        );
-      } else {
-        setSaved(
-          shareSynced
-            ? 'Site publicado com esta versão.'
-            : 'Site publicado com esta versão. A prévia para Google e WhatsApp não pôde ser atualizada agora — tente publicar novamente em instantes.',
-        );
-      }
-    } catch {
-      setSaved('Não foi possível alterar a publicação. Confira a liberação do plano e tente novamente.');
-    } finally {
-      setSaving(false);
+    if (demo || storage !== 'remote' || !presenceEnabled || publishingRef.current) return;
+    publishingRef.current = true;
+    if (debounceTimerRef.current !== null) {
+      window.clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
     }
+    setSaving(true);
+    const runPublish = (async () => {
+      try {
+        while (inFlightPromiseRef.current) {
+          await inFlightPromiseRef.current.catch(() => false);
+        }
+        if (unmountedRef.current) return;
+        const snapshot = configRef.current;
+        const m = await import('../../services/establishmentSite');
+        const result = unpublish ? await m.unpublishOwnerSite(companyId) : await m.publishOwnerSite(companyId, snapshot);
+        if (unmountedRef.current) return;
+        const currentLogo = unpublish ? '' : snapshot.logoRemoved ? '' : snapshot.logo || '';
+        publishedLogoRef.current = currentLogo;
+        await flushStaleLogos({ includePublishedLogo: true, keepLogo: currentLogo });
+        if (unmountedRef.current) return;
+        if (!unpublish) {
+          const nextJson = JSON.stringify(snapshot);
+          lastSavedJsonRef.current = nextJson;
+          hasSavedOnceRef.current = true;
+          setSavedJson(nextJson);
+          const stillDirty = JSON.stringify(configRef.current) !== nextJson;
+          setAutosaveStatus(stillDirty ? 'pending' : 'saved');
+          setAutosaveError('');
+        }
+        setPublished(!unpublish);
+        const shareSynced = result?.sharePageSynced !== false;
+        if (unpublish) {
+          setSaved(
+            shareSynced
+              ? 'Site despublicado. O link de agendamento continua funcionando.'
+              : 'Site despublicado. A página de compartilhamento pode levar alguns instantes para refletir a mudança, e o link de agendamento continua funcionando.',
+          );
+        } else {
+          setSaved(
+            shareSynced
+              ? 'Site publicado com esta versão.'
+              : 'Site publicado com esta versão. A prévia para Google e WhatsApp não pôde ser atualizada agora — tente publicar novamente em instantes.',
+          );
+        }
+      } catch {
+        if (!unmountedRef.current) {
+          setSaved('Não foi possível alterar a publicação. Confira a liberação do plano e tente novamente.');
+        }
+      } finally {
+        publishingRef.current = false;
+        if (publishPromiseRef.current === runPublish) {
+          publishPromiseRef.current = null;
+        }
+        if (!unmountedRef.current) {
+          setSaving(false);
+        }
+        if (
+          !unmountedRef.current &&
+          hydratedRef.current &&
+          JSON.stringify(configRef.current) !== lastSavedJsonRef.current &&
+          !inFlightPromiseRef.current &&
+          debounceTimerRef.current === null &&
+          autosaveStatusRef.current !== 'error'
+        ) {
+          debounceTimerRef.current = window.setTimeout(() => {
+            debounceTimerRef.current = null;
+            void persistDraft('auto');
+          }, autosaveDelayMs);
+        }
+      }
+    })();
+    publishPromiseRef.current = runPublish;
+    return runPublish;
   };
 
   const proceedLeave = (leave: PendingLeave) => {
@@ -803,9 +1117,16 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
     update({ gallery: next });
   };
 
+  const changeStep = (nextStep: EditorStep) => {
+    setStep(nextStep);
+    if (hydratedRef.current && JSON.stringify(configRef.current) !== lastSavedJsonRef.current) {
+      void persistDraft('flush');
+    }
+  };
+
   const jumpToSection = (sectionKey: CompletenessSectionKey) => {
     const targetStep: EditorStep = sectionKey === 'contact' ? 'intro' : sectionKey;
-    setStep(targetStep);
+    changeStep(targetStep);
     window.requestAnimationFrame(() => {
       const target = sectionRefs.current[sectionKey];
       if (!target) return;
@@ -815,14 +1136,36 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
     });
   };
 
-  const field = (label: string, value: string, onChange: (value: string) => void, multiline = false, hint?: string) => (
+  const field = (
+    label: string,
+    value: string,
+    onChange: (value: string) => void,
+    multiline = false,
+    hint?: string,
+    inputOpts?: {
+      type?: string;
+      inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
+      placeholder?: string;
+      autoCapitalize?: string;
+      autoCorrect?: string;
+    },
+  ) => (
     <div className="se-field-group">
       <label className="se-field">
         <span>{label}</span>
         {multiline ? (
-          <textarea value={value} onChange={e => onChange(e.target.value)} rows={3} maxLength={2000} />
+          <textarea value={value} onChange={e => onChange(e.target.value)} rows={3} maxLength={2000} placeholder={inputOpts?.placeholder} />
         ) : (
-          <input value={value} onChange={e => onChange(e.target.value)} maxLength={400} />
+          <input
+            type={inputOpts?.type ?? 'text'}
+            inputMode={inputOpts?.inputMode}
+            placeholder={inputOpts?.placeholder}
+            autoCapitalize={inputOpts?.autoCapitalize}
+            autoCorrect={inputOpts?.autoCorrect}
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            maxLength={400}
+          />
         )}
       </label>
       {hint && <small className="se-field-hint">{hint}</small>}
@@ -870,14 +1213,74 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
   );
   const pendingItems = completeness.items.filter(item => !item.done);
   const seoPreview = useMemo(
-    () => buildSeo({ ...data, gallery: galleryItems }, config, origin),
-    [data, galleryItems, config, origin],
+    () => (step === 'share' ? buildSeo({ ...data, gallery: galleryItems }, config, origin) : null),
+    [step, data, galleryItems, config, origin],
   );
   const whatsappShareUrl = useMemo(
     () => buildWhatsAppShareUrl(data.name, shareLinks.direct),
     [data.name, shareLinks.direct],
   );
+  const activationUrl = useMemo(
+    () => buildPresenceActivationUrl({ name: data.name, slug: data.slug || '', region: data.region }),
+    [data.name, data.slug, data.region],
+  );
+  const effectiveAddress = (config.contact?.address ?? data.address).trim();
+  const confirmedCoordinates = normalizeCoordinates(config.contact?.lat, config.contact?.lng);
+  const effectiveDirectionsUrl = useMemo(
+    () =>
+      buildGoogleMapsDirectionsUrl({
+        name: data.name,
+        address: effectiveAddress,
+        mapsUrl: config.contact?.mapsUrl,
+        lat: config.contact?.lat,
+        lng: config.contact?.lng,
+      }),
+    [data.name, effectiveAddress, config.contact?.mapsUrl, config.contact?.lat, config.contact?.lng],
+  );
   const effectivePhone = (config.contact?.phone ?? data.phone)?.trim();
+
+  const handleLocationInputChange = (raw: string) => {
+    setLocationInput(raw);
+    const parsed = parseGoogleMapsLocationInput(raw);
+    if (parsed.kind === 'empty') {
+      setLocationError('');
+      update({
+        contact: {
+          ...config.contact,
+          mapsUrl: undefined,
+          lat: undefined,
+          lng: undefined,
+        },
+      });
+      return;
+    }
+    if (parsed.kind === 'invalid') {
+      setLocationError(parsed.error);
+      return;
+    }
+    setLocationError('');
+    update({
+      contact: {
+        ...config.contact,
+        mapsUrl: parsed.mapsUrl,
+        lat: parsed.lat,
+        lng: parsed.lng,
+      },
+    });
+  };
+
+  const clearLocationPin = () => {
+    setLocationInput('');
+    setLocationError('');
+    update({
+      contact: {
+        ...config.contact,
+        mapsUrl: undefined,
+        lat: undefined,
+        lng: undefined,
+      },
+    });
+  };
 
   const sectionHasContent = (sectionId: SectionId): boolean => {
     if (sectionId === 'services') return data.services.length > 0;
@@ -893,7 +1296,7 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
     if (sectionId === 'reviews') return data.reviews.some(review => review.comment.trim().length > 0);
     if (sectionId === 'club') return (data.clubPlans ?? []).length > 0;
     if (sectionId === 'faq') return config.faq.some(item => Boolean(item.question.trim() && item.answer.trim()));
-    return Boolean(data.address.trim() || data.hours.length > 0);
+    return Boolean(effectiveAddress || confirmedCoordinates || config.contact?.mapsUrl || data.hours.length > 0);
   };
 
   const previewFrame = (
@@ -904,6 +1307,26 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
     />
   );
 
+  const autosaveLabel =
+    autosaveStatus === 'error'
+      ? 'Erro ao salvar'
+      : autosaveStatus === 'saving' || autosaveStatus === 'pending'
+        ? 'Salvando rascunho…'
+        : autosaveStatus === 'saved'
+          ? 'Salvo automaticamente'
+          : 'Rascunho salvo';
+
+  const isSiteLive = published && (demo || presenceEnabled);
+  const noticeState =
+    autosaveStatus === 'error'
+      ? 'error'
+      : isSiteLive
+        ? 'live'
+        : !demo && !presenceEnabled
+          ? 'pending'
+          : 'draft';
+  const showNoticeBanner = autosaveStatus === 'error' || demo || presenceEnabled || step !== 'share';
+
   return (
     <div className="site-editor" data-embedded={embedded || undefined}>
       {demo && <div className="se-demo">Demonstração do editor · dados fictícios · nenhuma publicação real</div>}
@@ -911,53 +1334,87 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
         <div className="se-title">
           <span className="se-breadcrumb">Ajustes / Presença</span>
           <h1>Meu site</h1>
-          <p>Personalize sua casa sem complicação. Confira ao lado antes de publicar.</p>
+          <p>Personalize sua casa sem complicação. Tudo é salvo automaticamente em rascunho.</p>
         </div>
         <div className="se-header-actions">
-          <button type="button" className="se-save" onClick={() => void save()} disabled={saving}>
-            <Save size={17} />
-            {saving ? 'Salvando…' : 'Salvar rascunho'}
-          </button>
-          <button
-            type="button"
-            className="se-publish"
-            onClick={() => void changePublication()}
-            disabled={saving || demo || storage !== 'remote' || !presenceEnabled}
-            title={!presenceEnabled ? 'Aguardando aprovação e liberação do Presença' : undefined}
-          >
-            {published ? 'Publicar alterações' : 'Publicar'}
-          </button>
-          <a
-            href={`/#/site/${data.slug || 'site'}`}
-            target="_blank"
-            rel="noreferrer"
-            aria-label="Abrir site em nova aba"
-          >
-            <ExternalLink size={18} />
-          </a>
+          <div className="se-autosave-pill" data-state={autosaveStatus} aria-live="polite" aria-atomic="true">
+            {autosaveStatus === 'error' ? (
+              <AlertCircle size={13} aria-hidden="true" />
+            ) : autosaveStatus === 'saving' || autosaveStatus === 'pending' ? (
+              <Loader2 size={13} className="se-spin" aria-hidden="true" />
+            ) : (
+              <Check size={13} aria-hidden="true" />
+            )}
+            <span>{autosaveLabel}</span>
+            {autosaveStatus === 'error' && (
+              <button type="button" className="se-autosave-retry" onClick={() => void persistDraft('manual')}>
+                Tentar novamente
+              </button>
+            )}
+          </div>
+          {!demo && !presenceEnabled && step !== 'share' ? (
+            <button
+              type="button"
+              className="se-publish"
+              onClick={() => changeStep('share')}
+            >
+              Liberar publicação
+            </button>
+          ) : !demo && presenceEnabled ? (
+            <button
+              type="button"
+              className="se-publish se-save"
+              onClick={() => void changePublication()}
+              disabled={saving || storage !== 'remote'}
+            >
+              {isSiteLive ? 'Publicar alterações' : 'Publicar'}
+            </button>
+          ) : null}
+          {(isSiteLive || demo) && (
+            <a
+              href={`/#/site/${data.slug || 'site'}`}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Abrir site em nova aba"
+            >
+              <ExternalLink size={18} />
+            </a>
+          )}
         </div>
       </header>
 
-      <div className="se-notice" data-dirty={isDirty || undefined}>
-        <span className="se-status-dot" />
-        <div>
-          <strong>
-            {published ? 'Site publicado' : 'Rascunho privado'}
-            {isDirty ? ' · Alterações não salvas' : ''}
-          </strong>
-          <p>
-            {isDirty
-              ? 'Você tem alterações não salvas. Toque em Salvar rascunho antes de sair desta página.'
-              : demo
-                ? 'Modo demonstração — alterações ficam salvas só neste navegador.'
-                : storage === 'local'
-                  ? 'Salvo neste navegador. Você já pode montar tudo com calma; a liberação para publicar é feita pela equipe AgendiX.'
-                  : presenceEnabled
-                    ? 'Suas alterações só entram no ar ao tocar em Publicar.'
-                    : 'Você já pode personalizar e salvar tudo aqui. A liberação para colocar o site no ar é feita manualmente pela equipe AgendiX.'}
-          </p>
+      {showNoticeBanner && (
+        <div className="se-notice" data-state={noticeState}>
+          <span className="se-status-dot" />
+          <div>
+            <strong>
+              {autosaveStatus === 'error'
+                ? 'Não foi possível salvar suas últimas alterações'
+                : isSiteLive
+                  ? 'Site publicado'
+                  : !demo && !presenceEnabled
+                    ? 'Rascunho salvo · Liberação pendente'
+                    : 'Rascunho privado'}
+            </strong>
+            <p>
+              {autosaveStatus === 'error'
+                ? autosaveError || 'Confira sua conexão e toque em Tentar novamente.'
+                : demo
+                  ? 'Modo demonstração — alterações ficam salvas automaticamente só neste navegador.'
+                  : !presenceEnabled
+                    ? 'Suas edições são salvas automaticamente aqui. Falta apenas liberar a publicação com a equipe AgendiX.'
+                    : isSiteLive
+                      ? 'Suas edições são salvas no rascunho automático e só vão para o site público quando você publicar.'
+                      : 'Suas alterações são salvas automaticamente. Quando quiser colocar no ar, publique no passo 4.'}
+            </p>
+            {!demo && !presenceEnabled && step !== 'share' && autosaveStatus !== 'error' && (
+              <button type="button" className="se-link-button se-notice-action" onClick={() => changeStep('share')}>
+                Como liberar publicação →
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {saved && (
         <p role="status" className="se-feedback">
@@ -994,7 +1451,7 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
               {data.team.length > 0 ? ` · ${pluralize(data.team.length, 'profissional', 'profissionais')}` : ''}
               {galleryItems.length > 0 ? ` · ${pluralize(galleryItems.length, 'foto', 'fotos')}` : ''}.
             </p>
-            {pendingItems.length > 0 && (
+            {pendingItems.length > 0 && step !== 'share' && (
               <div className="se-checklist-actions">
                 <small>Complete quando quiser (não impede publicar):</small>
                 <div className="se-chip-row">
@@ -1021,7 +1478,7 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
                 role="tab"
                 aria-selected={step === item.id}
                 className="se-step-tab"
-                onClick={() => setStep(item.id)}
+                onClick={() => changeStep(item.id)}
               >
                 {item.label}
               </button>
@@ -1165,7 +1622,7 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
               </div>
             </div>
           </details>
-              <button type="button" className="se-step-next" onClick={() => setStep('intro')}>
+              <button type="button" className="se-step-next" onClick={() => changeStep('intro')}>
                 Próximo: Textos da capa →
               </button>
             </>
@@ -1186,7 +1643,11 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
                 config.headline,
                 headline => update({ headline }),
                 true,
-                'Bom: Barbearia em Pinheiros com hora marcada · Evite: A melhor barbearia',
+                data.kind === 'beauty'
+                  ? 'Bom: Salão em Pinheiros com hora marcada · Evite: O melhor salão'
+                  : data.kind === 'studio'
+                    ? 'Bom: Estúdio em Pinheiros com hora marcada · Evite: O melhor estúdio'
+                    : 'Bom: Barbearia em Pinheiros com hora marcada · Evite: A melhor barbearia',
               )}
               <div className="se-suggestions">
                 <span>Ideias prontas (toque para usar):</span>
@@ -1405,7 +1866,7 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
                 <summary>
                   <span className="se-summary-stack">
                     <span>Dúvidas frequentes e contato</span>
-                    <small>Perguntas comuns, WhatsApp, Instagram e referência</small>
+                    <small>Perguntas comuns, endereço, mapa, WhatsApp e Instagram</small>
                   </span>
                 </summary>
                 <div className="se-detail-content">
@@ -1470,11 +1931,13 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
 
                   <div className="se-block-group">
                     <span className="se-label-title">Contato e endereço</span>
-                    {field('WhatsApp do estabelecimento', config.contact?.phone ?? data.phone ?? '', phone =>
-                      update({ contact: { ...config.contact, phone } }),
-                    )}
-                    {field('Instagram', config.contact?.instagram ?? data.instagram ?? '', instagram =>
-                      update({ contact: { ...config.contact, instagram } }),
+                    {field(
+                      'Endereço completo',
+                      config.contact?.address ?? data.address,
+                      address => update({ contact: { ...config.contact, address } }),
+                      false,
+                      'Usado no site, no mini mapa e no Google. Informe rua, número, bairro e cidade.',
+                      { placeholder: 'Ex.: Rua Fradique Coutinho, 420 — Pinheiros, São Paulo' },
                     )}
                     {field(
                       'Ponto de referência',
@@ -1482,12 +1945,91 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
                       addressNote => update({ contact: { ...config.contact, addressNote } }),
                       false,
                       'Ex.: Ao lado do metrô Fradique Coutinho. Aparece logo abaixo do endereço.',
+                      { placeholder: 'Ex.: Ao lado do metrô' },
+                    )}
+                    <div className="se-field-group">
+                      <label className="se-field">
+                        <span>Link do Google Maps ou coordenadas (opcional)</span>
+                        <input
+                          type="text"
+                          value={locationInput}
+                          placeholder="Maps ou -23.56, -46.68"
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          spellCheck={false}
+                          aria-invalid={Boolean(locationError)}
+                          aria-describedby={locationError ? 'se-location-error' : 'se-location-hint'}
+                          onChange={e => handleLocationInputChange(e.target.value)}
+                          maxLength={1000}
+                        />
+                      </label>
+                      {locationError ? (
+                        <p id="se-location-error" role="alert" className="se-location-error">
+                          {locationError}
+                        </p>
+                      ) : (
+                        <small id="se-location-hint" className="se-field-hint">
+                          Se quiser travar o pino exato no mapa, cole aqui o link de Compartilhar do Google Maps ou as coordenadas.
+                        </small>
+                      )}
+                    </div>
+                    {(effectiveAddress || ((confirmedCoordinates || config.contact?.mapsUrl) && !locationError)) && (
+                      <div className="se-location-summary">
+                        <div className="se-location-summary-head">
+                          <MapPin size={15} aria-hidden="true" />
+                          <strong>{effectiveAddress || 'Pino confirmado no mapa'}</strong>
+                        </div>
+                        {config.contact?.addressNote?.trim() && (
+                          <p className="se-help se-help-tight">
+                            Referência: {config.contact.addressNote.trim()}
+                          </p>
+                        )}
+                        {(confirmedCoordinates || config.contact?.mapsUrl) && !locationError && (
+                          <div className="se-location-pin-row">
+                            <span>
+                              {confirmedCoordinates
+                                ? `Localização exata confirmada (${confirmedCoordinates.lat}, ${confirmedCoordinates.lng})`
+                                : 'Link do Google Maps confirmado para "Como chegar"'}
+                            </span>
+                            <button type="button" className="se-link-button se-location-clear" onClick={clearLocationPin}>
+                              Limpar
+                            </button>
+                          </div>
+                        )}
+                        {!locationError && effectiveDirectionsUrl && (
+                          <a
+                            className="se-location-check-link"
+                            href={effectiveDirectionsUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            Conferir no Google Maps
+                            <ExternalLink size={13} aria-hidden="true" />
+                          </a>
+                        )}
+                      </div>
+                    )}
+                    {field(
+                      'WhatsApp do estabelecimento',
+                      config.contact?.phone ?? data.phone ?? '',
+                      phone => update({ contact: { ...config.contact, phone } }),
+                      false,
+                      undefined,
+                      { type: 'tel', inputMode: 'tel', placeholder: 'Ex.: (11) 99999-8888' },
+                    )}
+                    {field(
+                      'Instagram',
+                      config.contact?.instagram ?? data.instagram ?? '',
+                      instagram => update({ contact: { ...config.contact, instagram } }),
+                      false,
+                      undefined,
+                      { autoCapitalize: 'none', autoCorrect: 'off', placeholder: 'Ex.: @minhacasa' },
                     )}
                   </div>
                 </div>
               </details>
 
-              <button type="button" className="se-step-next" onClick={() => setStep('photos')}>
+              <button type="button" className="se-step-next" onClick={() => changeStep('photos')}>
                 Próximo: Fotos e serviços →
               </button>
             </>
@@ -1836,7 +2378,7 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
                 </div>
               </details>
 
-              <button type="button" className="se-step-next" onClick={() => setStep('share')}>
+              <button type="button" className="se-step-next" onClick={() => changeStep('share')}>
                 Próximo: Google e divulgar →
               </button>
             </>
@@ -1844,45 +2386,91 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
 
           {step === 'share' && (
             <>
-              <section className="se-publish-card" aria-label="Publicação do site">
-                <strong>
-                  {demo
-                    ? 'Site pronto na demonstração'
-                    : published
-                      ? 'Seu site está no ar'
-                      : presenceEnabled
-                        ? 'Tudo pronto para publicar'
-                        : 'Personalize à vontade antes de publicar'}
-                </strong>
-                <p className="se-help se-help-tight">
-                  {demo
-                    ? 'A demonstração já pode ser aberta para conferir o visual final.'
-                    : published
-                      ? 'Sempre que alterar textos ou fotos, salve o rascunho e toque em Publicar alterações para atualizar o endereço público.'
-                      : presenceEnabled
-                        ? 'Quando terminar seus ajustes, toque em Publicar para liberar o link para seus clientes.'
-                        : 'Você já pode personalizar e salvar tudo por aqui. A liberação para colocar o site no ar é feita manualmente pela equipe AgendiX.'}
-                </p>
-                <div className="se-publish-card-actions">
-                  <button
-                    type="button"
-                    className="se-save"
-                    onClick={() => void changePublication()}
-                    disabled={saving || demo || storage !== 'remote' || !presenceEnabled}
-                  >
-                    {published ? 'Publicar alterações' : 'Publicar site'}
-                  </button>
-                  <a
-                    className="se-secondary"
-                    href={`/#/site/${data.slug || 'site'}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <ExternalLink size={15} aria-hidden="true" />
-                    Abrir prévia em nova aba
-                  </a>
-                </div>
-              </section>
+              {demo ? (
+                <section className="se-publish-card" data-state="demo" aria-label="Publicação do site">
+                  <span className="se-status-badge">Demonstração interativa</span>
+                  <strong>Site pronto na demonstração</strong>
+                  <p className="se-help se-help-tight">
+                    Suas edições já estão salvas neste navegador. Abra a demonstração para testar a página como um cliente.
+                  </p>
+                  <div className="se-publish-card-actions">
+                    <a
+                      className="se-save"
+                      href={`/#/site/${data.slug || 'site'}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <ExternalLink size={15} aria-hidden="true" />
+                      Abrir demonstração
+                    </a>
+                    <button type="button" className="se-secondary" onClick={() => setExpanded(true)}>
+                      <Maximize2 size={15} aria-hidden="true" />
+                      Ver prévia em tela cheia
+                    </button>
+                  </div>
+                </section>
+              ) : !presenceEnabled ? (
+                <section className="se-publish-card" data-state="pending" aria-label="Publicação do site">
+                  <span className="se-status-badge">Rascunho salvo · Liberação pendente</span>
+                  <strong>Seu site já está salvo. Falta liberar a publicação</strong>
+                  <p className="se-help se-help-tight">
+                    Tudo o que você personalizou já fica guardado automaticamente. Para colocar seu site no ar para clientes, peça a liberação para a equipe AgendiX.
+                  </p>
+                  <div className="se-publish-card-actions">
+                    <a
+                      className="se-save"
+                      href={activationUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <MessageCircle size={16} aria-hidden="true" />
+                      Solicitar liberação no WhatsApp
+                    </a>
+                    <button type="button" className="se-secondary" onClick={() => setExpanded(true)}>
+                      <Maximize2 size={15} aria-hidden="true" />
+                      Ver prévia em tela cheia
+                    </button>
+                  </div>
+                </section>
+              ) : (
+                <section className="se-publish-card" data-state={isSiteLive ? 'live' : 'ready'} aria-label="Publicação do site">
+                  <span className="se-status-badge" data-live={isSiteLive || undefined}>
+                    {isSiteLive ? 'Site no ar' : 'Pronto para publicar'}
+                  </span>
+                  <strong>{isSiteLive ? 'Seu site está no ar' : 'Tudo pronto para publicar'}</strong>
+                  <p className="se-help se-help-tight">
+                    {isSiteLive
+                      ? 'Suas edições já ficam salvas no rascunho automático. Toque abaixo quando quiser atualizar o endereço público.'
+                      : 'Seu rascunho já está salvo e liberado. Toque em Publicar site para colocar seu endereço no ar para clientes.'}
+                  </p>
+                  <div className="se-publish-card-actions">
+                    <button
+                      type="button"
+                      className="se-save"
+                      onClick={() => void changePublication()}
+                      disabled={saving || storage !== 'remote'}
+                    >
+                      {isSiteLive ? 'Publicar alterações' : 'Publicar site'}
+                    </button>
+                    {isSiteLive ? (
+                      <a
+                        className="se-secondary"
+                        href={`/#/site/${data.slug || 'site'}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        <ExternalLink size={15} aria-hidden="true" />
+                        Abrir site publicado
+                      </a>
+                    ) : (
+                      <button type="button" className="se-secondary" onClick={() => setExpanded(true)}>
+                        <Maximize2 size={15} aria-hidden="true" />
+                        Ver prévia em tela cheia
+                      </button>
+                    )}
+                  </div>
+                </section>
+              )}
 
               <details open>
                 <summary>Compartilhar, QR Code e Google</summary>
@@ -1948,8 +2536,8 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
                       <span className="se-google-url">
                         agendixstudio.com/s/{data.slug}
                       </span>
-                      <strong>{seoPreview.title}</strong>
-                      <p>{seoPreview.description}</p>
+                      <strong>{seoPreview?.title}</strong>
+                      <p>{seoPreview?.description}</p>
                     </div>
                     {field(
                       'Título para o Google',
@@ -1974,7 +2562,16 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
                         <span>Nome:</span> {data.name}
                       </li>
                       <li>
-                        <span>Endereço:</span> {data.address || 'Não informado (complete em Ajustes → Geral)'}
+                        <span>Endereço:</span> {effectiveAddress || 'Não informado'}{' '}
+                        {!effectiveAddress && (
+                          <button
+                            type="button"
+                            className="se-link-button se-inline-jump"
+                            onClick={() => jumpToSection('contact')}
+                          >
+                            Informar endereço
+                          </button>
+                        )}
                       </li>
                       <li>
                         <span>Telefone / WhatsApp:</span> {effectivePhone || 'Não informado'}
@@ -1983,7 +2580,7 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
                   </div>
 
                   <div className="se-danger-zone">
-                    {published && (
+                    {isSiteLive && (
                       <button
                         type="button"
                         className="se-link-button"
@@ -2009,9 +2606,13 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
                             type="button"
                             className="se-chip se-chip-danger"
                             onClick={() => {
-                              setConfig(defaultConfig(data));
+                              userEditedRef.current = true;
+                              const next = defaultConfig(data);
+                              setConfig(next);
+                              setLocationInput(initialLocationText(next));
+                              setLocationError('');
                               setConfirmReset(false);
-                              setSaved('Configurações restauradas ao padrão. Salve para manter.');
+                              setSaved('Configurações restauradas ao padrão. Salvando automaticamente…');
                             }}
                           >
                             Sim, restaurar
@@ -2110,36 +2711,40 @@ export function SiteEditor({ data, initial, companyId, demo = false, embedded = 
             aria-modal="true"
             aria-labelledby="se-leave-title"
           >
-            <h2 id="se-leave-title">Sair sem salvar?</h2>
+            <h2 id="se-leave-title">
+              {autosaveStatus === 'error' ? 'Não foi possível salvar suas alterações' : 'Salvamento em andamento'}
+            </h2>
             <p>
-              Você tem alterações não salvas no seu site. Se sair agora, o que ainda não foi salvo pode se perder.
+              {autosaveStatus === 'error'
+                ? 'Houve uma falha ao salvar o rascunho. Você pode tentar salvar novamente ou sair descartando o que não foi enviado.'
+                : 'Suas alterações ainda estão sendo salvas. Aguarde concluir ou tente finalizar antes de sair.'}
             </p>
             <div className="se-leave-actions">
               <button
                 ref={stayBtnRef}
                 type="button"
                 className="se-secondary"
-                onClick={() => setPendingLeave(null)}
+                onClick={cancelPendingLeave}
               >
                 Continuar editando
               </button>
               <button
                 type="button"
                 className="se-save"
-                disabled={saving}
+                disabled={autosaveStatus === 'saving'}
                 onClick={() => {
-                  const target = pendingLeave;
-                  void save().then(ok => {
-                    if (ok && target) proceedLeave(target);
-                  });
+                  void persistDraft('manual');
                 }}
               >
-                Salvar rascunho e sair
+                Tentar salvar e sair
               </button>
               <button
                 type="button"
                 className="se-chip se-chip-danger"
-                onClick={() => proceedLeave(pendingLeave)}
+                onClick={() => {
+                  discardOnLeaveRef.current = true;
+                  proceedLeave(pendingLeave);
+                }}
               >
                 Sair sem salvar
               </button>

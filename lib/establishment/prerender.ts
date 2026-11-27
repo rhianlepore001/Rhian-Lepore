@@ -1,3 +1,4 @@
+import { buildGoogleMapsDirectionsUrl } from './location';
 import {
   applyNormalizedSiteConfig,
   buildSeo,
@@ -59,6 +60,13 @@ export function renderPublicSiteHtml(params: {
     (!normalized.logoRemoved ? normalized.logo || data.logo : undefined);
   const ogImage = absoluteAssetUrl(root, rawOgImage);
 
+  const directionsUrl = buildGoogleMapsDirectionsUrl({
+    name: data.name,
+    address: data.address,
+    mapsUrl: data.mapsUrl,
+    lat: data.lat,
+    lng: data.lng,
+  });
   const cleanInstagram = (data.instagram || '').trim().replace(/^@/, '').replace(/[^a-z0-9._]/gi, '');
   const lang = data.region === 'PT' ? 'pt-PT' : 'pt-BR';
   const serviceSummary = data.services
@@ -97,6 +105,8 @@ export function renderPublicSiteHtml(params: {
     `    <h1>${escapeHtml(selectedService ? selectedService.name : normalized.headline || data.name)}</h1>`,
     `    <p>${escapeHtml(description)}</p>`,
     data.address ? `    <p>${escapeHtml(data.address)}</p>` : '',
+    normalized.contact?.addressNote ? `    <p>Ponto de referência: ${escapeHtml(normalized.contact.addressNote)}</p>` : '',
+    directionsUrl ? `    <p><a href="${escapeHtml(directionsUrl)}" rel="noreferrer">Como chegar</a></p>` : '',
     cleanInstagram
       ? `    <p>Instagram: <a href="https://www.instagram.com/${escapeHtml(cleanInstagram)}/" rel="noreferrer">@${escapeHtml(cleanInstagram)}</a></p>`
       : '',

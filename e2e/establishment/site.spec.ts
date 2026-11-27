@@ -7,7 +7,7 @@ const serviceId = 'b0000000-0000-4000-8000-000000000020';
 const teamId = 'b0000000-0000-4000-8000-000000000030';
 const profile = { id: owner, business_slug: 'mock-house', business_name: 'Casa Mock (fictícia)', user_type: 'barber', region: 'BR', address_street: 'Rua Teste, 20 — Pinheiros, São Paulo', phone: null, logo_url: '/presenca/demo-logo-barber.svg', cover_photo_url: '/demo/barbearia/capa.webp', role: 'owner', company_id: owner, full_name: 'Dono Fictício', tutorial_completed: true, subscription_status: 'active', trial_ends_at: null };
 const beautyProfile = { ...profile, user_type: 'beauty', business_name: 'Studio Mock (fictício)', logo_url: '/presenca/demo-logo-salon.svg', cover_photo_url: '/presenca/rhian/salon-hero.webp' };
-const config = { style: 'dark', preset: 'urban', headline: 'Barbearia em Pinheiros', about: 'Corte com hora marcada.', accent: '#C89B79', offer: { enabled: false, title: '', condition: '' }, differences: ['Atendimento reservado.'], faq: [], sections: [{ id: 'services', enabled: true }, { id: 'gallery', enabled: true }, { id: 'team', enabled: true }, { id: 'reviews', enabled: true }, { id: 'club', enabled: true }, { id: 'faq', enabled: true }, { id: 'location', enabled: true }], seoTitle: 'Casa Mock — barbearia em Pinheiros', seoDescription: 'Cortes com hora marcada em Pinheiros.' };
+const config = { style: 'dark', preset: 'urban', headline: 'Barbearia em Pinheiros', about: 'Corte com hora marcada.', accent: '#C89B79', offer: { enabled: false, title: '', condition: '' }, contact: { addressNote: 'Ao lado do metrô Fradique Coutinho' }, differences: ['Atendimento reservado.'], faq: [], sections: [{ id: 'services', enabled: true }, { id: 'gallery', enabled: true }, { id: 'team', enabled: true }, { id: 'reviews', enabled: true }, { id: 'club', enabled: true }, { id: 'faq', enabled: true }, { id: 'location', enabled: true }], seoTitle: 'Casa Mock — barbearia em Pinheiros', seoDescription: 'Cortes com hora marcada em Pinheiros.' };
 const catalog = {
   get_public_establishment_site: { config },
   get_public_profile_by_slug: profile,
@@ -66,12 +66,21 @@ async function finishImages(page: Page, scanScroll = false) {
 
 async function scrollControlsTo(page: Page, target: ReturnType<Page['locator']>) {
   await target.evaluate(el => {
-    const pane = el.closest('.se-controls');
-    if (pane instanceof HTMLElement && pane.scrollHeight > pane.clientHeight + 4) {
-      pane.scrollTop += el.getBoundingClientRect().top - pane.getBoundingClientRect().top - 10;
-      return;
+    const isEmbeddedMobile = Boolean(el.closest('[data-embedded]')) && window.innerWidth < 1000;
+    const isPublicDesktop = Boolean(el.closest('.establishment')) && window.innerWidth >= 768;
+    const isPublicMobile = Boolean(el.closest('.establishment')) && window.innerWidth < 768;
+    let cur: HTMLElement | null = el.parentElement;
+    while (cur && cur !== document.documentElement) {
+      const style = window.getComputedStyle(cur);
+      if (/(auto|scroll)/.test(style.overflowY) && cur.scrollHeight > cur.clientHeight + 4) {
+        const isControlsPane = cur.classList.contains('se-controls');
+        const offset = isControlsPane ? 24 : isEmbeddedMobile ? 200 : 16;
+        cur.scrollTop += el.getBoundingClientRect().top - cur.getBoundingClientRect().top - offset;
+        return;
+      }
+      cur = cur.parentElement;
     }
-    const topOffset = el.closest('[data-embedded]') && window.innerWidth < 1000 ? 168 : 16;
+    const topOffset = isEmbeddedMobile ? 200 : isPublicDesktop ? 96 : isPublicMobile ? 76 : 16;
     window.scrollTo({
       top: Math.max(0, el.getBoundingClientRect().top + window.scrollY - topOffset),
       behavior: 'instant',
@@ -94,7 +103,10 @@ async function capture(page: Page, name: string, fullPage = false, preserveScrol
 
 test.beforeEach(async ({ page }) => {
   await page.route('**/*.supabase.co/**', route => route.abort());
-  await page.route(/google\.com\/maps/, route => route.fulfill({ status: 200, contentType: 'text/html', body: '<html></html>' }));
+  await page.route(/google\.com\/maps/, route => {
+    const body = `<!doctype html><html><body style="margin:0;height:100vh;background:#e8ecef;font-family:sans-serif;overflow:hidden;position:relative"><svg viewBox="0 0 400 240" width="100%" height="100%" preserveAspectRatio="xMidYMid slice"><rect width="400" height="240" fill="#eef1f4"/><path d="M0 70 H400 M0 160 H400 M90 0 V240 M230 0 V240 M330 0 V240" stroke="#ffffff" stroke-width="10"/><path d="M0 115 L400 95" stroke="#fcd34d" stroke-width="6"/><rect x="115" y="80" width="90" height="60" rx="6" fill="#dce7d6"/></svg><div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-100%);width:26px;height:26px;border-radius:50% 50% 50% 0;background:#dc2626;transform-origin:center;rotate:-45deg;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)"></div></body></html>`;
+    return route.fulfill({ status: 200, contentType: 'text/html', body });
+  });
 });
 
 for (const [niche, slug, heading, preset] of [
@@ -225,7 +237,7 @@ test('320–430px e 768px: sem rolagem horizontal nos estilos e com logo', async
   }
 });
 
-test('RPCs públicas: publicação, sanitização, equipe vigente e seções vazias', async ({ page }) => {
+test('RPCs públicas: publicação, sanitização, equipe vigente, mini mapa seguro e seções vazias', async ({ page }) => {
   const calls = await mockPublic(page);
   await page.goto('/#/site/mock-house');
   await expect(page.locator('h1')).toHaveText('Barbearia em Pinheiros');
@@ -243,6 +255,17 @@ test('RPCs públicas: publicação, sanitização, equipe vigente e seções vaz
   expect(schema['@type']).toBe('HairSalon');
   expect(schema.address.streetAddress).toContain('Pinheiros');
   expect(schema.hasOfferCatalog.itemListElement[0].price).toBe(50);
+
+  const mapIframe = page.locator('iframe[title="Mapa com a localização de Casa Mock (fictícia)"]');
+  await expect(mapIframe).toHaveAttribute('src', /^https:\/\/www\.google\.com\/maps\?q=.*&output=embed$/);
+  await expect(page.locator('.es-map-embed')).not.toHaveAttribute('data-interactive', 'true');
+  await page.getByRole('button', { name: 'Explorar mapa' }).click();
+  await expect(page.locator('.es-map-embed')).toHaveAttribute('data-interactive', 'true');
+  await expect(page.getByRole('button', { name: 'Bloquear mapa' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('link', { name: 'Como chegar' })).toHaveAttribute('href', /^https:\/\/www\.google\.com\/maps/);
+  await expect(page.locator('#location')).toContainText('Ao lado do metrô Fradique Coutinho');
+  await scrollControlsTo(page, page.locator('#location'));
+  await capture(page, `public-map-${page.viewportSize()!.width}`, false, true);
 });
 
 test('site não publicado mantém acesso ao agendamento legado', async ({ page }) => {
@@ -267,7 +290,7 @@ test('links legais do rodapé permanecem no próprio estabelecimento sem marca d
   await expect(page.getByRole('heading', { name: 'Termos de Uso', exact: true })).not.toBeVisible();
 });
 
-test('editor: prévia ao vivo, passos para leigos, estilo, seção e rascunho local', async ({ page }, testInfo) => {
+test('editor: prévia ao vivo, passos para leigos, localização, autosave e rascunho local', async ({ page }, testInfo) => {
   await page.goto('/#/site-demo/editor/barber');
   await expect(page.getByRole('heading', { name: 'Meu site', exact: true })).toBeVisible();
   const preview = page.frameLocator('iframe[title="Prévia ao vivo do meu site"]');
@@ -283,8 +306,17 @@ test('editor: prévia ao vivo, passos para leigos, estilo, seção e rascunho lo
   await expect(page.getByLabel(/^Frase principal/)).toBeVisible();
   await page.getByLabel(/^Frase principal/).fill('Um corte com a sua cara.');
   await expect(preview.locator('h1')).toHaveText('Um corte com a sua cara.');
-  await expect(page.locator('.se-notice')).toContainText('Alterações não salvas');
+  await expect(page.locator('.se-autosave-pill')).toContainText('Salvo automaticamente');
   await capture(page, `editor-${page.viewportSize()!.width}-preview`);
+
+  await openEditorSection(page, 'Dúvidas frequentes e contato');
+  await page.getByLabel('Endereço completo').fill('Av. Paulista, 1000 — Bela Vista, São Paulo');
+  await page.getByLabel(/Link do Google Maps ou coordenadas/i).fill('-23.5649, -46.6519');
+  await expect(page.getByText(/Localização exata confirmada \(-23\.5649, -46\.6519\)/i)).toBeVisible();
+  await expect(page.locator('.se-autosave-pill')).toContainText('Salvo automaticamente');
+  await scrollControlsTo(page, page.locator('.se-block-group').filter({ hasText: 'Contato e endereço' }));
+  await capture(page, `editor-${page.viewportSize()!.width}-location`, false, true);
+
   if (testInfo.project.name.startsWith('mobile')) {
     await page.getByRole('button', { name: 'Ver em tela cheia' }).click();
     await expect(page.getByRole('button', { name: 'Voltar ao editor' })).toBeVisible();
@@ -332,42 +364,53 @@ test('editor: prévia ao vivo, passos para leigos, estilo, seção e rascunho lo
   await expect(page.locator('.se-qr-image')).toBeVisible();
   await scrollControlsTo(page, page.locator('.se-share-block .se-label-title'));
   await capture(page, `editor-${page.viewportSize()!.width}-share`, false, true);
-  await page.getByRole('button', { name: 'Salvar rascunho', exact: true }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'salvo neste navegador' })).toBeVisible();
+  await expect(page.locator('.se-autosave-pill')).toContainText('Salvo automaticamente');
   await capture(page, `editor-${page.viewportSize()!.width}-controls`, true);
   await page.reload();
   await page.getByRole('tab', { name: '2. Textos' }).click();
   await expect(page.getByLabel(/^Frase principal/)).toHaveValue('Um corte com a sua cara.');
+  await openEditorSection(page, 'Dúvidas frequentes e contato');
+  await expect(page.getByLabel('Endereço completo')).toHaveValue('Av. Paulista, 1000 — Bela Vista, São Paulo');
   await expect(preview.locator('#preview-gallery')).toHaveCount(0);
 });
 
-test('painel autenticado: owner usa rascunho isolado por company_id e fallback identificado', async ({ page }) => {
+test('painel autenticado: autosave isolado por company_id e Passo 4 acionável quando pendente', async ({ page }) => {
   const calls = await mockPublic(page, true, true);
   await page.goto('/#/configuracoes/meu-site');
   await expect(page.locator('.site-editor h1')).toHaveText('Meu site');
-  await expect(page.locator('.se-notice')).toContainText('equipe AgendiX');
+  await expect(page.locator('.se-notice')).toContainText('Liberação pendente');
   await page.getByRole('tab', { name: '2. Textos' }).click();
   await page.getByLabel(/^Frase principal/).fill('Casa fictícia em Pinheiros.');
-  if (page.viewportSize()!.width >= 1000) {
-    await page.getByRole('link', { name: 'Geral' }).click();
-    await expect(page.getByRole('alertdialog')).toContainText('Sair sem salvar?');
-    await page.getByRole('button', { name: 'Continuar editando' }).click();
-    await expect(page.getByRole('alertdialog')).toHaveCount(0);
-  }
-  await page.getByRole('button', { name: 'Salvar rascunho', exact: true }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'Rascunho salvo' })).toContainText('Nada foi publicado');
+  await expect(page.locator('.se-autosave-pill')).toContainText('Salvo automaticamente');
   expect(calls).toContain('establishment_sites');
   const storage = await page.evaluate(() => Object.keys(localStorage).filter(key => key.startsWith('agendix:presence:')));
   expect(storage).toContain(`agendix:presence:draft:v1:${owner}`);
-  await expect(page.getByLabel(/^Frase principal/)).toBeVisible();
   await expect(page.frameLocator('iframe[title="Prévia ao vivo do meu site"]').locator('h1')).toHaveText('Casa fictícia em Pinheiros.');
   await capture(page, `owner-editor-${page.viewportSize()!.width}-preview`, false, true);
-  await page.getByRole('tab', { name: '1. Visual' }).click();
-  await scrollControlsTo(page, page.locator('.se-logo-picker'));
-  await capture(page, `owner-editor-${page.viewportSize()!.width}-full`, false, true);
+
+  await page.getByRole('tab', { name: '4. Divulgar' }).click();
+  await expect(page.getByRole('button', { name: /Publicar site/i })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: /Solicitar liberação no WhatsApp/i })).toHaveAttribute('href', /^https:\/\/wa\.me\/351927688674\?text=/);
+  await expect(page.getByRole('button', { name: /Ver prévia em tela cheia/i })).toBeEnabled();
+  await capture(page, `owner-editor-${page.viewportSize()!.width}-share-pending`, false, true);
+
+  if (page.viewportSize()!.width < 500) {
+    await page.setViewportSize({ width: 320, height: 740 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+    await capture(page, 'owner-editor-320-share-pending', false, true);
+    await page.getByRole('tab', { name: '2. Textos' }).click();
+    await openEditorSection(page, 'Dúvidas frequentes e contato');
+    await scrollControlsTo(page, page.locator('.se-block-group').filter({ hasText: 'Contato e endereço' }));
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+    await capture(page, 'owner-editor-320-location', false, true);
+  } else {
+    await page.getByRole('link', { name: 'Geral' }).click();
+    await expect(page.getByRole('alertdialog')).toHaveCount(0);
+    await expect(page).toHaveURL(/#\/configuracoes\/geral/);
+  }
 });
 
-test('painel autenticado (beauty claro): preserva contraste, logo e prévia', async ({ page }) => {
+test('painel autenticado (beauty claro): preserva contraste, logo, localização e Passo 4', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('agendix_color_mode', 'light'));
   await mockPublic(page, true, true, beautyProfile);
   await page.goto('/#/configuracoes/meu-site');
@@ -377,8 +420,14 @@ test('painel autenticado (beauty claro): preserva contraste, logo e prévia', as
   await capture(page, `owner-beauty-light-${page.viewportSize()!.width}-preview`, false, true);
   await scrollControlsTo(page, page.locator('.se-logo-picker'));
   await capture(page, `owner-beauty-light-${page.viewportSize()!.width}-logo`, false, true);
+  await page.getByRole('tab', { name: '2. Textos' }).click();
+  await openEditorSection(page, 'Dúvidas frequentes e contato');
+  await scrollControlsTo(page, page.locator('.se-block-group').filter({ hasText: 'Contato e endereço' }));
+  await capture(page, `owner-beauty-light-${page.viewportSize()!.width}-location`, false, true);
   await page.getByRole('tab', { name: '4. Divulgar' }).click();
+  await expect(page.getByRole('link', { name: /Solicitar liberação no WhatsApp/i })).toBeVisible();
   await expect(page.locator('.se-qr-image')).toBeVisible();
+  await capture(page, `owner-beauty-light-${page.viewportSize()!.width}-share-pending`, false, true);
   await scrollControlsTo(page, page.locator('.se-share-block .se-label-title'));
   await capture(page, `owner-beauty-light-${page.viewportSize()!.width}-share`, false, true);
 });

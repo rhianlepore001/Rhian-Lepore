@@ -1,3 +1,5 @@
+import { buildGoogleMapsDirectionsUrl, normalizeCoordinates, sanitizeGoogleMapsUrl } from './location';
+
 export type SiteKind = 'barber' | 'beauty' | 'studio';
 export type SiteStyle = 'dark' | 'light';
 export type SitePreset = 'urban' | 'editorial' | 'salon';
@@ -80,6 +82,9 @@ export interface SiteData {
   address: string;
   phone?: string;
   instagram?: string;
+  mapsUrl?: string;
+  lat?: number;
+  lng?: number;
   cancellationPolicy?: string;
   hours: Array<{ day: string; hours: string }>;
   services: SiteService[];
@@ -159,7 +164,7 @@ export interface SiteConfig {
   photoPosition?: PhotoPosition;
   gallery?: Array<{ src: string; alt: string }>;
   serviceDetails?: Record<string, { description?: string; includes?: string[]; audience?: string; priceFrom?: boolean; priceNote?: string; image?: string; featured?: boolean }>;
-  contact?: { phone?: string; instagram?: string; addressNote?: string };
+  contact?: { phone?: string; instagram?: string; addressNote?: string; address?: string; mapsUrl?: string; lat?: number; lng?: number };
   teamDetails?: Record<string, { bio?: string; image?: string }>;
   beforeAfter?: Array<{ before: string; after: string; caption?: string }>;
 }
@@ -222,7 +227,7 @@ export function visibleSections(data: SiteData, config: SiteConfig): SiteConfig[
     reviews: data.reviews.some(review => review.comment.trim().length > 0),
     club: (data.clubPlans ?? []).length > 0,
     faq: config.faq.some(item => Boolean(item.question.trim() && item.answer.trim())),
-    location: Boolean(data.address.trim() || data.hours.length),
+    location: Boolean(data.address.trim() || data.hours.length || data.mapsUrl || normalizeCoordinates(data.lat, data.lng)),
   };
   const seen = new Set<SectionId>();
   return config.sections.filter(section => {
@@ -353,6 +358,8 @@ export function buildSeo(sourceData: SiteData, config: SiteConfig, origin: strin
   const description =
     normalized.seoDescription.trim() ||
     `${headlineSentence} ${data.services.length ? `Conheça os serviços, preços e profissionais de ${data.name}. Agende seu horário online.` : `Conheça ${data.name} e reserve seu horário.`}`.trim();
+  const geo = normalizeCoordinates(data.lat, data.lng);
+  const mapLink = buildGoogleMapsDirectionsUrl({ name: data.name, address: data.address, mapsUrl: data.mapsUrl, lat: data.lat, lng: data.lng });
   const jsonLd: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': data.kind === 'studio' ? 'LocalBusiness' : 'HairSalon',
@@ -366,6 +373,8 @@ export function buildSeo(sourceData: SiteData, config: SiteConfig, origin: strin
     ...(data.services.length ? { priceRange: `${formatPrice(Math.min(...data.services.map(service => service.price)), data.region)}–${formatPrice(Math.max(...data.services.map(service => service.price)), data.region)}` } : {}),
     ...(data.hours.length ? { openingHours: structuredHours(data.hours) } : {}),
     ...(data.address ? { address: { '@type': 'PostalAddress', streetAddress: data.address, addressCountry: data.region } } : {}),
+    ...(mapLink ? { hasMap: mapLink } : {}),
+    ...(geo ? { geo: { '@type': 'GeoCoordinates', latitude: geo.lat, longitude: geo.lng } } : {}),
     ...(data.services.length ? { hasOfferCatalog: { '@type': 'OfferCatalog', name: 'Serviços', itemListElement: data.services.map(service => ({ '@type': 'Offer', price: service.price, priceCurrency: data.region === 'PT' ? 'EUR' : 'BRL', itemOffered: { '@type': 'Service', name: service.name, ...(service.description ? { description: service.description } : {}) } })) } } : {}),
   };
   return { title, description, url, jsonLd };
@@ -527,10 +536,15 @@ function normalizeServiceDetails(input: unknown): NonNullable<SiteConfig['servic
 
 function normalizeContact(input: unknown): NonNullable<SiteConfig['contact']> {
   const contact = row(input);
+  const mapsUrl = sanitizeGoogleMapsUrl(contact.mapsUrl);
+  const coords = normalizeCoordinates(contact.lat, contact.lng);
   return {
     ...(typeof contact.phone === 'string' ? { phone: text(contact.phone, 40) } : {}),
     ...(typeof contact.instagram === 'string' ? { instagram: text(contact.instagram, 100).replace(/^@/, '').replace(/[^a-z0-9._]/gi, '') } : {}),
     ...(typeof contact.addressNote === 'string' ? { addressNote: text(contact.addressNote, 300) } : {}),
+    ...(typeof contact.address === 'string' ? { address: text(contact.address, 300) } : {}),
+    ...(mapsUrl ? { mapsUrl } : {}),
+    ...(coords ? { lat: coords.lat, lng: coords.lng } : {}),
   };
 }
 
@@ -541,6 +555,9 @@ export function applyNormalizedSiteConfig(data: SiteData, normalized: SiteConfig
     cover: normalized.coverRemoved ? undefined : (normalized.cover || data.cover),
     ...(normalized.contact?.phone !== undefined ? { phone: normalized.contact.phone || undefined } : {}),
     ...(normalized.contact?.instagram !== undefined ? { instagram: normalized.contact.instagram || undefined } : {}),
+    ...(normalized.contact?.address !== undefined ? { address: normalized.contact.address } : {}),
+    ...(normalized.contact?.mapsUrl ? { mapsUrl: normalized.contact.mapsUrl } : {}),
+    ...(normalized.contact?.lat !== undefined && normalized.contact?.lng !== undefined ? { lat: normalized.contact.lat, lng: normalized.contact.lng } : {}),
     gallery: normalized.gallery ?? data.gallery,
     services: data.services.map(service => ({ ...service, ...normalized.serviceDetails?.[service.id] })),
     team: data.team.map(member => ({ ...member, ...normalized.teamDetails?.[member.id] })),

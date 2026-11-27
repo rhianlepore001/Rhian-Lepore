@@ -5,10 +5,11 @@ import userEvent from '@testing-library/user-event';
 import { SiteEditor } from './SiteEditor';
 import { defaultConfig, type SiteData } from '../../lib/establishment/model';
 
-const { uploadSiteLogoMock, deleteSiteLogoMock, loadOwnerSiteMock, publishOwnerSiteMock, unpublishOwnerSiteMock, toDataUrlMock } = vi.hoisted(() => ({
+const { uploadSiteLogoMock, deleteSiteLogoMock, loadOwnerSiteMock, saveOwnerSiteDraftMock, publishOwnerSiteMock, unpublishOwnerSiteMock, toDataUrlMock } = vi.hoisted(() => ({
   uploadSiteLogoMock: vi.fn(),
   deleteSiteLogoMock: vi.fn(),
   loadOwnerSiteMock: vi.fn(),
+  saveOwnerSiteDraftMock: vi.fn(),
   publishOwnerSiteMock: vi.fn(),
   unpublishOwnerSiteMock: vi.fn(),
   toDataUrlMock: vi.fn(),
@@ -25,7 +26,7 @@ vi.mock('../../services/establishmentSite', async () => {
   return {
     ...actual,
     loadOwnerSite: loadOwnerSiteMock,
-    saveOwnerSiteDraft: vi.fn(async () => ({ storage: 'remote' as const })),
+    saveOwnerSiteDraft: saveOwnerSiteDraftMock,
     publishOwnerSite: publishOwnerSiteMock,
     unpublishOwnerSite: unpublishOwnerSiteMock,
   };
@@ -65,6 +66,8 @@ const data: SiteData = {
     deleteSiteLogoMock.mockReset();
     deleteSiteLogoMock.mockResolvedValue(undefined);
     loadOwnerSiteMock.mockReset();
+    saveOwnerSiteDraftMock.mockReset();
+    saveOwnerSiteDraftMock.mockResolvedValue({ storage: 'remote' });
     publishOwnerSiteMock.mockReset();
     publishOwnerSiteMock.mockResolvedValue({ published: true, sharePageSynced: true });
     unpublishOwnerSiteMock.mockReset();
@@ -149,7 +152,7 @@ describe('SiteEditor panel', () => {
     expect(screen.getByRole('radio', { name: 'Editorial clássico' })).toHaveAttribute('aria-checked', 'true');
   });
 
-  it('envia logo personalizado no modo autenticado, remove o antigo do Storage ao salvar rascunho e mostra aviso manual', async () => {
+  it('envia logo personalizado no modo autenticado, remove o antigo do Storage via autosave e mostra passo 4 acionável', async () => {
     const user = userEvent.setup();
     const publishedLogo = 'https://lcqwrngscsziysyfhpfj.supabase.co/storage/v1/object/public/logos/business/presenca-logo-publicado.webp';
     const draftLogo1 = 'https://lcqwrngscsziysyfhpfj.supabase.co/storage/v1/object/public/logos/business/presenca-logo-1.webp';
@@ -164,9 +167,9 @@ describe('SiteEditor panel', () => {
     });
     uploadSiteLogoMock.mockResolvedValueOnce(draftLogo1).mockResolvedValueOnce(draftLogo2);
 
-    render(<SiteEditor data={{ ...data, demo: false }} initial={initial} companyId="business" embedded />);
+    render(<SiteEditor data={{ ...data, demo: false }} initial={initial} companyId="business" embedded autosaveDelayMs={25} />);
     await waitFor(() => {
-      expect(screen.getByText(/liberação para colocar o site no ar é feita manualmente/i)).toBeInTheDocument();
+      expect(screen.getByText(/Liberação pendente/i)).toBeInTheDocument();
     });
 
     const fileInput = screen.getByLabelText(/Trocar logo|Enviar logo/i) as HTMLInputElement;
@@ -180,12 +183,13 @@ describe('SiteEditor panel', () => {
       expect(screen.getByAltText('Logo selecionado')).toHaveAttribute('src', draftLogo2);
     });
 
-    await user.click(screen.getAllByRole('button', { name: 'Salvar rascunho' })[0]);
     await waitFor(() => {
+      expect(saveOwnerSiteDraftMock).toHaveBeenCalled();
       expect(deleteSiteLogoMock).toHaveBeenCalledWith('business', draftLogo1);
     });
     expect(deleteSiteLogoMock).not.toHaveBeenCalledWith('business', publishedLogo);
     expect(localStorage.getItem('agendix:presence:stale-logos:v1:business')).toContain(publishedLogo);
+    expect(screen.getByText('Salvo automaticamente')).toBeInTheDocument();
   });
 
   it('mostra aviso coerente quando o site publica no banco mas a prévia de compartilhamento falha', async () => {
@@ -214,34 +218,132 @@ describe('SiteEditor panel', () => {
     expect(screen.queryByText(/Não foi possível alterar a publicação/i)).not.toBeInTheDocument();
   });
 
-  it('dispara aviso de alterações não salvas ao navegar para outra tela dentro do app', async () => {
+  it('salva automaticamente com debounce, faz flush ao trocar de passo, recupera de erro e só bloqueia saída em envio/erro', async () => {
     const user = userEvent.setup();
     window.location.hash = '#/configuracoes/meu-site';
+    const initial = defaultConfig(data);
+    loadOwnerSiteMock.mockResolvedValue({
+      config: initial,
+      storage: 'remote',
+      published: false,
+      presenceEnabled: true,
+    });
+
+    let resolveSlowSave: ((val: { storage: 'remote' }) => void) | null = null;
+    saveOwnerSiteDraftMock
+      .mockRejectedValueOnce(new Error('network'))
+      .mockResolvedValueOnce({ storage: 'remote' })
+      .mockImplementationOnce(
+        () => new Promise(resolve => { resolveSlowSave = resolve; }),
+      )
+      .mockResolvedValue({ storage: 'remote' });
+
     render(
       <div>
         <a href="#/configuracoes/geral">Ir para Geral</a>
-        <SiteEditor data={data} initial={defaultConfig(data)} companyId="business" demo />
+        <SiteEditor data={{ ...data, demo: false }} initial={initial} companyId="business" embedded autosaveDelayMs={250} />
       </div>,
     );
 
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Publicar' })).toBeEnabled());
     await user.click(screen.getByRole('tab', { name: '2. Textos' }));
-    await user.clear(screen.getByLabelText(/^Frase principal/));
-    await user.type(screen.getByLabelText(/^Frase principal/), 'Alteração pendente');
+    const headlineField = screen.getByLabelText(/^Frase principal/);
+    await user.click(headlineField);
+    await user.clear(headlineField);
+    await user.paste('Texto com erro inicial');
 
+    // 1. Erro no autosave mostra Tentar novamente e bloqueia saída ao navegar
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Tentar novamente' })).toBeInTheDocument());
     await user.click(screen.getByRole('link', { name: 'Ir para Geral' }));
-    const dialog = await screen.findByRole('alertdialog');
-    expect(dialog).toHaveTextContent('Sair sem salvar?');
+    const errorDialog = await screen.findByRole('alertdialog');
+    expect(errorDialog).toHaveTextContent(/Não foi possível salvar/i);
     expect(window.location.hash).toBe('#/configuracoes/meu-site');
-
     await user.click(screen.getByRole('button', { name: 'Continuar editando' }));
-    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
 
+    // 2. Recupera ao clicar em Tentar novamente e navega livremente depois de salvo
+    await user.click(screen.getByRole('button', { name: 'Tentar novamente' }));
+    await waitFor(() => expect(screen.getByText('Salvo automaticamente')).toBeInTheDocument());
+
+    // 3. Flush imediato ao trocar de passo durante debounce (sem esperar delay)
+    await user.click(screen.getByLabelText(/^Frase principal/));
+    await user.paste(' + flush');
+    await user.click(screen.getByRole('tab', { name: '3. Fotos' }));
+    await waitFor(() => expect(saveOwnerSiteDraftMock).toHaveBeenCalledTimes(3));
+    expect(screen.getByText('Salvando rascunho…')).toBeInTheDocument();
+
+    // 4. Envio em andamento mantém proteção de saída; após finalizar, sai livremente
     await user.click(screen.getByRole('link', { name: 'Ir para Geral' }));
     await screen.findByRole('alertdialog');
-    await user.click(screen.getByRole('button', { name: 'Sair sem salvar' }));
+    await user.click(screen.getByRole('button', { name: 'Continuar editando' }));
+
+    resolveSlowSave?.({ storage: 'remote' });
+    await waitFor(() => expect(screen.getByText('Salvo automaticamente')).toBeInTheDocument());
+    await user.click(screen.getByRole('link', { name: 'Ir para Geral' }));
     await waitFor(() => {
       expect(window.location.hash).toBe('#/configuracoes/geral');
     });
+  });
+
+  it('permite editar endereço completo, ponto de referência e link/coordenadas do Google Maps em Contato e endereço', async () => {
+    const user = userEvent.setup();
+    render(<SiteEditor data={data} initial={defaultConfig(data)} companyId="business" demo autosaveDelayMs={50} />);
+
+    await user.click(screen.getByRole('tab', { name: '2. Textos' }));
+    await user.click(screen.getByText('Dúvidas frequentes e contato'));
+
+    const addressInput = screen.getByLabelText('Endereço completo');
+    expect(addressInput).toHaveValue('Rua dos Pinheiros, 100 — Pinheiros, São Paulo');
+    await user.click(addressInput);
+    await user.clear(addressInput);
+    await user.paste('Av. Paulista, 1000 — Bela Vista, São Paulo');
+
+    const referenceInput = screen.getByLabelText('Ponto de referência');
+    await user.click(referenceInput);
+    await user.paste('Em frente ao MASP');
+
+    const mapsInput = screen.getByLabelText(/Link do Google Maps ou coordenadas/i);
+    await user.click(mapsInput);
+    await user.paste('https://evil.com/maps');
+    expect(screen.getByRole('alert')).toHaveTextContent(/Google Maps ou coordenadas/i);
+
+    await user.click(mapsInput);
+    await user.clear(mapsInput);
+    await user.paste('Veja aqui: https://www.google.com/maps/place/Casa/@-23.5614,-46.6559,17z');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getByText(/Localização exata confirmada \(-23\.5614, -46\.6559\)/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Conferir no Google Maps/i })).toHaveAttribute('href', expect.stringContaining('google.com/maps'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Salvo automaticamente')).toBeInTheDocument();
+    });
+    const saved = JSON.parse(localStorage.getItem('agendix:presence:draft:v1:business') || '{}');
+    expect(saved.contact.address).toBe('Av. Paulista, 1000 — Bela Vista, São Paulo');
+    expect(saved.contact.addressNote).toBe('Em frente ao MASP');
+    expect(saved.contact.lat).toBe(-23.5614);
+    expect(saved.contact.lng).toBe(-46.6559);
+  });
+
+  it('mostra Passo 4 acionável com WhatsApp quando a liberação está pendente, sem botão desabilitado', async () => {
+    const user = userEvent.setup();
+    const initial = defaultConfig(data);
+    loadOwnerSiteMock.mockResolvedValue({
+      config: initial,
+      storage: 'remote',
+      published: false,
+      presenceEnabled: false,
+    });
+
+    render(<SiteEditor data={{ ...data, demo: false }} initial={initial} companyId="business" embedded autosaveDelayMs={25} />);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Liberar publicação' })).toBeInTheDocument());
+
+    await user.click(screen.getByRole('button', { name: 'Liberar publicação' }));
+    expect(screen.getByRole('tab', { name: '4. Divulgar' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.queryByRole('button', { name: /Publicar site/i })).not.toBeInTheDocument();
+    expect(screen.getByText('Rascunho salvo · Liberação pendente', { selector: '.se-status-badge' })).toBeInTheDocument();
+
+    const waBtn = screen.getByRole('link', { name: /Solicitar liberação no WhatsApp/i });
+    expect(waBtn).toHaveAttribute('href', expect.stringMatching(/^https:\/\/wa\.me\/351927688674\?text=/));
+    expect(screen.getByRole('button', { name: /Ver prévia em tela cheia/i })).toBeEnabled();
   });
 
   it('exibe checklist interativo com progresso e abre o passo pendente ao clicar no chip', async () => {
@@ -275,8 +377,9 @@ describe('SiteEditor panel', () => {
 
     const firstAlt = screen.getByLabelText('Descrição da foto 1');
     expect(firstAlt).toHaveValue('Salão principal');
+    await user.click(firstAlt);
     await user.clear(firstAlt);
-    await user.type(firstAlt, 'Cadeira clássica na janela');
+    await user.paste('Cadeira clássica na janela');
     expect(firstAlt).toHaveValue('Cadeira clássica na janela');
 
     await user.click(screen.getByRole('button', { name: 'Mover foto 2 para cima' }));
@@ -286,16 +389,17 @@ describe('SiteEditor panel', () => {
     expect(screen.queryByLabelText('Descrição da foto 2')).not.toBeInTheDocument();
   });
 
-  it('avisa sobre alterações não salvas e permite editar diferenciais, referência, clube e FAQ', async () => {
+  it('salva automaticamente ao editar diferenciais, referência, clube e FAQ', async () => {
     const user = userEvent.setup();
-    render(<SiteEditor data={data} initial={defaultConfig(data)} companyId="business" demo />);
+    render(<SiteEditor data={data} initial={defaultConfig(data)} companyId="business" demo autosaveDelayMs={150} />);
 
     await user.click(screen.getByRole('tab', { name: '2. Textos' }));
     await user.click(screen.getByRole('button', { name: 'Adicionar diferencial' }));
-    expect(screen.getByText(/Alterações não salvas/)).toBeInTheDocument();
+    expect(screen.getByText(/Salvando rascunho…/)).toBeInTheDocument();
 
     const diffInput = screen.getByLabelText('Diferencial 1');
-    await user.type(diffInput, 'Café passado na hora');
+    await user.click(diffInput);
+    await user.paste('Café passado na hora');
     expect(diffInput).toHaveValue('Café passado na hora');
 
     await user.click(screen.getByText('Dúvidas frequentes e contato'));
@@ -303,7 +407,8 @@ describe('SiteEditor panel', () => {
     expect(screen.getByDisplayValue('Quais formas de pagamento vocês aceitam?')).toBeInTheDocument();
 
     const referenceInput = screen.getByLabelText('Ponto de referência');
-    await user.type(referenceInput, 'Ao lado do metrô Fradique Coutinho');
+    await user.click(referenceInput);
+    await user.paste('Ao lado do metrô Fradique Coutinho');
     expect(referenceInput).toHaveValue('Ao lado do metrô Fradique Coutinho');
 
     await user.click(screen.getByRole('tab', { name: '3. Fotos' }));
@@ -357,9 +462,11 @@ describe('SiteEditor panel', () => {
     render(<SiteEditor data={data} initial={defaultConfig(data)} companyId="business" demo />);
 
     await user.click(screen.getByRole('tab', { name: '2. Textos' }));
-    await user.clear(screen.getByLabelText(/^Frase principal/));
-    await user.type(screen.getByLabelText(/^Frase principal/), 'Texto alterado');
-    expect(screen.getByLabelText(/^Frase principal/)).toHaveValue('Texto alterado');
+    const headlineCtrl = screen.getByLabelText(/^Frase principal/);
+    await user.click(headlineCtrl);
+    await user.clear(headlineCtrl);
+    await user.paste('Texto alterado');
+    expect(headlineCtrl).toHaveValue('Texto alterado');
 
     await user.click(screen.getByRole('tab', { name: '4. Divulgar' }));
     await user.click(screen.getByRole('button', { name: 'Restaurar padrão' }));
@@ -370,5 +477,152 @@ describe('SiteEditor panel', () => {
     await user.click(screen.getByRole('tab', { name: '2. Textos' }));
     expect(screen.getByLabelText(/^Frase principal/)).toHaveValue(defaultConfig(data).headline);
     confirmSpy.mockRestore();
+  });
+
+  it('restaura estado estável ao reverter edição antes do debounce e não grava ao sair sem salvar', async () => {
+    const user = userEvent.setup();
+    window.location.hash = '#/configuracoes/meu-site';
+    const initial = defaultConfig(data);
+    loadOwnerSiteMock.mockResolvedValue({
+      config: initial,
+      storage: 'remote',
+      published: false,
+      presenceEnabled: true,
+    });
+    saveOwnerSiteDraftMock.mockRejectedValue(new Error('network'));
+
+    const { unmount } = render(
+      <div>
+        <a href="#/configuracoes/geral">Ir para Geral</a>
+        <SiteEditor data={{ ...data, demo: false }} initial={initial} companyId="business" embedded autosaveDelayMs={150} />
+      </div>,
+    );
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Publicar' })).toBeEnabled());
+    await user.click(screen.getByRole('tab', { name: '2. Textos' }));
+    const headlineInput = screen.getByLabelText(/^Frase principal/);
+    await user.type(headlineInput, '!');
+    expect(screen.getByText('Salvando rascunho…')).toBeInTheDocument();
+
+    // Reverte dentro do debounce: volta a ficar estável sem enviar ao servidor
+    await user.type(headlineInput, '{backspace}');
+    await waitFor(() => expect(screen.getByText('Rascunho salvo')).toBeInTheDocument());
+    await new Promise(resolve => setTimeout(resolve, 180));
+    expect(saveOwnerSiteDraftMock).not.toHaveBeenCalled();
+
+    // Edita e falha -> clica Sair sem salvar -> unmount não dispara flush
+    await user.type(headlineInput, ' Novo');
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Tentar novamente' })).toBeInTheDocument());
+    expect(saveOwnerSiteDraftMock).toHaveBeenCalledTimes(1);
+
+    await user.click(screen.getByRole('link', { name: 'Ir para Geral' }));
+    await screen.findByRole('alertdialog');
+    await user.click(screen.getByRole('button', { name: 'Sair sem salvar' }));
+    unmount();
+    expect(saveOwnerSiteDraftMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('oculta resumo do pino antigo enquanto link do Google Maps está inválido', async () => {
+    const user = userEvent.setup();
+    render(<SiteEditor data={data} initial={defaultConfig(data)} companyId="business" demo autosaveDelayMs={25} />);
+    await user.click(screen.getByRole('tab', { name: '2. Textos' }));
+    await user.click(screen.getByText('Dúvidas frequentes e contato'));
+
+    const mapsInput = screen.getByLabelText(/Link do Google Maps ou coordenadas/i);
+    await user.type(mapsInput, '-23.5614, -46.6559');
+    expect(screen.getByText(/Localização exata confirmada \(-23\.5614, -46\.6559\)/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Conferir no Google Maps/i })).toBeInTheDocument();
+
+    await user.clear(mapsInput);
+    await user.type(mapsInput, 'https://evil.com/maps');
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(screen.queryByText(/Localização exata confirmada/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Conferir no Google Maps/i })).not.toBeInTheDocument();
+  });
+
+  it('limpa estado error ao reverter edição e respeita Continuar editando se flush estava em curso', async () => {
+    const user = userEvent.setup();
+    window.location.hash = '#/configuracoes/meu-site';
+    const initial = defaultConfig(data);
+    loadOwnerSiteMock.mockResolvedValue({
+      config: initial,
+      storage: 'remote',
+      published: false,
+      presenceEnabled: true,
+    });
+
+    let resolveFlush: ((val: { storage: 'remote' }) => void) | null = null;
+    saveOwnerSiteDraftMock
+      .mockRejectedValueOnce(new Error('network'))
+      .mockImplementationOnce(() => new Promise(resolve => { resolveFlush = resolve; }));
+
+    render(
+      <div>
+        <a href="#/configuracoes/geral">Ir para Geral</a>
+        <SiteEditor data={{ ...data, demo: false }} initial={initial} companyId="business" embedded autosaveDelayMs={150} />
+      </div>,
+    );
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Publicar' })).toBeEnabled());
+    await user.click(screen.getByRole('tab', { name: '2. Textos' }));
+    const headlineInput = screen.getByLabelText(/^Frase principal/);
+
+    // Provoca erro e depois reverte para o último salvo
+    await user.type(headlineInput, '!');
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Tentar novamente' })).toBeInTheDocument());
+    await user.type(headlineInput, '{backspace}');
+    await waitFor(() => expect(screen.getByText('Rascunho salvo')).toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: 'Tentar novamente' })).not.toBeInTheDocument();
+
+    // Inicia navegação durante debounce (dispara flush lento), clica novamente para abrir diálogo e escolhe Continuar editando
+    await user.click(headlineInput);
+    await user.paste(' Edit');
+    await user.click(screen.getByRole('link', { name: 'Ir para Geral' }));
+    await waitFor(() => expect(saveOwnerSiteDraftMock).toHaveBeenCalledTimes(2));
+    await user.click(screen.getByRole('link', { name: 'Ir para Geral' }));
+    await screen.findByRole('alertdialog');
+    await user.click(screen.getByRole('button', { name: 'Continuar editando' }));
+
+    resolveFlush?.({ storage: 'remote' });
+    await waitFor(() => expect(screen.getByText('Salvo automaticamente')).toBeInTheDocument());
+    expect(window.location.hash).toBe('#/configuracoes/meu-site');
+  });
+
+  it('encadeia flush se houver nova edição durante flush iniciado por clique de saída', async () => {
+    const user = userEvent.setup();
+    window.location.hash = '#/configuracoes/meu-site';
+    const initial = defaultConfig(data);
+    loadOwnerSiteMock.mockResolvedValue({
+      config: initial,
+      storage: 'remote',
+      published: false,
+      presenceEnabled: true,
+    });
+
+    let resolveFirstFlush: ((val: { storage: 'remote' }) => void) | null = null;
+    saveOwnerSiteDraftMock
+      .mockImplementationOnce(() => new Promise(resolve => { resolveFirstFlush = resolve; }))
+      .mockResolvedValue({ storage: 'remote' });
+
+    render(
+      <div>
+        <a href="#/configuracoes/geral">Ir para Geral</a>
+        <SiteEditor data={{ ...data, demo: false }} initial={initial} companyId="business" embedded autosaveDelayMs={250} />
+      </div>,
+    );
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Publicar' })).toBeEnabled());
+    await user.click(screen.getByRole('tab', { name: '2. Textos' }));
+    const headlineInput = screen.getByLabelText(/^Frase principal/);
+    await user.type(headlineInput, ' A');
+    await user.click(screen.getByRole('link', { name: 'Ir para Geral' }));
+    await waitFor(() => expect(saveOwnerSiteDraftMock).toHaveBeenCalledTimes(1));
+
+    // Edita novamente enquanto o flush anterior está em voo
+    await user.type(headlineInput, ' B');
+    resolveFirstFlush?.({ storage: 'remote' });
+
+    await waitFor(() => expect(saveOwnerSiteDraftMock).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(window.location.hash).toBe('#/configuracoes/geral'));
   });
 });

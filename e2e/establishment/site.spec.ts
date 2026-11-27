@@ -5,7 +5,7 @@ const shots = 'artifacts/visual-critique/presenca';
 const owner = 'b0000000-0000-4000-8000-000000000001';
 const serviceId = 'b0000000-0000-4000-8000-000000000020';
 const teamId = 'b0000000-0000-4000-8000-000000000030';
-const profile = { id: owner, business_slug: 'mock-house', business_name: 'Casa Mock (fictícia)', user_type: 'barber', region: 'BR', address_street: 'Rua Teste, 20 — Pinheiros, São Paulo', phone: null, logo_url: '/presenca/demo-logo-barber.svg', cover_photo_url: '/demo/barbearia/capa.webp', role: 'owner', company_id: owner, full_name: 'Dono Fictício', tutorial_completed: true, subscription_status: 'active', trial_ends_at: null };
+const profile = { id: owner, business_slug: 'mock-house', business_name: 'Casa Mock (fictícia)', user_type: 'barber', region: 'BR', address_street: 'Rua Teste, 20 — Pinheiros, São Paulo', phone: null, logo_url: '/presenca/demo-logo-barber.svg', cover_photo_url: '/presenca/rhian/barber-fade.webp', role: 'owner', company_id: owner, full_name: 'Dono Fictício', tutorial_completed: true, subscription_status: 'active', trial_ends_at: null };
 const beautyProfile = { ...profile, user_type: 'beauty', business_name: 'Studio Mock (fictício)', logo_url: '/presenca/demo-logo-salon.svg', cover_photo_url: '/presenca/rhian/salon-hero.webp' };
 const config = { style: 'dark', preset: 'urban', headline: 'Barbearia em Pinheiros', about: 'Corte com hora marcada.', accent: '#C89B79', offer: { enabled: false, title: '', condition: '' }, contact: { addressNote: 'Ao lado do metrô Fradique Coutinho' }, differences: ['Atendimento reservado.'], faq: [], sections: [{ id: 'services', enabled: true }, { id: 'gallery', enabled: true }, { id: 'team', enabled: true }, { id: 'reviews', enabled: true }, { id: 'club', enabled: true }, { id: 'faq', enabled: true }, { id: 'location', enabled: true }], seoTitle: 'Casa Mock — barbearia em Pinheiros', seoDescription: 'Cortes com hora marcada em Pinheiros.' };
 const catalog = {
@@ -110,10 +110,10 @@ test.beforeEach(async ({ page }) => {
 });
 
 for (const [niche, slug, heading, preset] of [
-  ['barber', 'demo-corte-fino', /Corte preciso, barba na navalha/i, 'urban'],
-  ['beauty', 'demo-studio-aurora', /Cor natural, corte com movimento/i, 'salon'],
+  ['barber', 'demo-corte-fino', /Barbearia em Pinheiros/i, 'urban'],
+  ['beauty', 'demo-studio-aurora', /Salão em Pinheiros/i, 'salon'],
 ] as const) {
-  test(`${niche}: público, marca própria sem AgendiX, logo, SEO e screenshots`, async ({ page }, testInfo) => {
+  test(`${niche}: visita editorial sem AgendiX, logo, SEO e screenshots`, async ({ page }, testInfo) => {
     const requests: string[] = [];
     page.on('request', request => { if (request.url().includes('.supabase.co/')) requests.push(request.url()); });
     await page.goto(`/#/site/${slug}`);
@@ -121,52 +121,56 @@ for (const [niche, slug, heading, preset] of [
     await expect(page.locator('.establishment')).toHaveAttribute('data-preset', preset);
     await expect(page.locator('.es-demo')).toContainText('fictícios');
     await expect(page.locator('body')).not.toContainText(/agendix/i);
-    await expect(page.locator('.es-header .es-brand-logo')).toBeVisible();
+    await expect(page.locator('.es-hero .es-brand-logo')).toBeVisible();
     await expect(page.locator('.es-services article')).toHaveCount(3);
-    await expect(page.locator('.es-team article')).toHaveCount(3);
-    await expect(page.locator('#club')).toBeVisible();
+    await expect(page.locator('.es-team article')).toHaveCount(2);
+
+    // Ordem exata da visita: O trabalho -> Antes e depois -> Preço -> A pessoa -> A prova -> Onde e quando
+    const sectionOrder = await page.locator('main > section[id]').evaluateAll(els => els.map(el => el.id));
+    expect(sectionOrder).toEqual(['gallery', 'beforeAfter', 'services', 'team', 'reviews', 'location']);
+
+    // Teste do Lixo: zero chips, contadores, pontos pulsando ou scroll reveal pendente
+    await expect(page.locator('.es-category-chip')).toHaveCount(0);
+    await expect(page.locator('.es-live-dot')).toHaveCount(0);
+    await expect(page.locator('.es-scroll-progress')).toHaveCount(0);
+    await expect(page.locator('.es-num')).toHaveCount(0);
+    await expect(page.locator('[data-reveal="pending"]')).toHaveCount(0);
+
     await expect(page.locator('meta[name=robots]')).toHaveAttribute('content', 'noindex, nofollow');
     await expect(page.locator('script[type="application/ld+json"]')).toHaveCount(1);
     await expect(page.locator('meta[property="og:title"]')).toHaveCount(1);
     const width = page.viewportSize()!.width;
-    const height = page.viewportSize()!.height;
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
-    if (testInfo.project.name.startsWith('mobile')) {
-      await expect(page.locator('.es-hero-media')).toBeInViewport();
-      await expect(page.locator('.es-sticky')).toBeVisible();
-      await expect(page.locator('.es-header-cta .es-button')).toBeHidden();
-      const services = await page.locator('#services h2').boundingBox();
-      expect(services, 'a dobra precisa mostrar um indício da seção Serviços').toBeTruthy();
-      expect(services!.y).toBeLessThan(height - 70);
-    } else {
-      await expect(page.locator('.es-sticky')).toBeHidden();
-      await expect(page.locator('.es-header-nav')).toBeVisible();
-      await expect(page.locator('.es-header-cta .es-button')).toBeVisible();
-      const headerX = (await page.locator('.es-wordmark').boundingBox())!.x;
-      const heroX = (await page.locator('.es-hero-copy h1').boundingBox())!.x;
-      const servicesX = (await page.locator('#services h2').boundingBox())!.x;
-      expect(Math.abs(heroX - headerX)).toBeLessThan(3);
-      expect(Math.abs(servicesX - headerX)).toBeLessThan(3);
-    }
-    if (testInfo.project.name.startsWith('desktop')) await expect(page.locator('.es-hero-actions .es-button')).toBeInViewport();
-    else await expect(page.locator('.es-sticky .es-button')).toBeInViewport();
+
+    // Dobra 1 (50ms + Instagram): foto, título e botão Agendar visíveis no viewport sem barra fixa ou FAB flutuante
+    await expect(page.locator('.es-hero-media')).toBeInViewport();
+    await expect(page.locator('.es-hero h1')).toBeInViewport();
+    await expect(page.locator('.es-hero .es-button')).toBeInViewport();
+    await expect(page.locator('.es-sticky')).toHaveCount(0);
+    await expect(page.locator('.es-float-cta')).toHaveCount(0);
     await expect(page.locator('.es-wordmark')).toContainText(niche === 'barber' ? 'Corte Fino' : 'Studio Aurora');
-    await expect(page.locator('.es-offer')).not.toContainText(/oferta na primeira visita/i);
-    if (niche === 'beauty') await expect(page.locator('.es-offer')).toContainText('Hidratação de presente');
+    if (niche === 'beauty') {
+      await expect(page.locator('.es-hero .es-offer-line')).toContainText(/hidratação de presente/i);
+    } else {
+      await expect(page.locator('.es-hero .es-offer-line')).toContainText(/15% de desconto/i);
+    }
+
     await capture(page, `${niche}-${width}-fold`);
     await capture(page, `${niche}-${width}-full`, true);
+
+    if (testInfo.project.name.startsWith('mobile')) {
+      await scrollControlsTo(page, page.locator('#services'));
+      await capture(page, `${niche}-${width}-services`, false, true);
+    }
     expect(requests).toHaveLength(0);
   });
 
-  test(`${niche}: categorias, lightbox, detalhes e agendamento contextual`, async ({ page }, testInfo) => {
+  test(`${niche}: lightbox, antes/depois, página de serviço e agendamento contextual`, async ({ page }) => {
     await page.goto(`/#/site/${slug}`);
-    // Categorias de serviços
-    const filterButtons = page.locator('.es-category-chip');
-    await expect(filterButtons).toHaveCount(4);
-    await filterButtons.nth(1).click();
-    await expect(page.locator('.es-services article')).toHaveCount(1);
-    await filterButtons.first().click();
-    await expect(page.locator('.es-services article')).toHaveCount(3);
+
+    // Cardápio sem chips de categoria
+    await expect(page.locator('.es-category-chip')).toHaveCount(0);
+    await expect(page.locator('.es-menu-item')).toHaveCount(3);
 
     // Lightbox da galeria
     await page.locator('.es-gallery-trigger').first().click();
@@ -174,36 +178,28 @@ for (const [niche, slug, heading, preset] of [
     await page.keyboard.press('Escape');
     await expect(page.locator('dialog.es-lightbox')).not.toBeVisible();
 
-    // Comparador interativo Antes e Depois (teclado + controle acessível)
+    // Comparador interativo Antes e Depois (teclado + controle acessível, sem pills sobre a foto)
+    await expect(page.locator('.es-before-hint')).toHaveCount(0);
     const slider = page.locator('#beforeAfter [role="slider"]').first();
     await expect(slider).toHaveAttribute('aria-valuenow', '50');
     await slider.focus();
     await page.keyboard.press('ArrowRight');
     await expect(slider).toHaveAttribute('aria-valuenow', '55');
 
-    // Acordeão FAQ acessível
-    const firstFaq = page.locator('#faq .es-faq-trigger').first();
-    await expect(firstFaq).toHaveAttribute('aria-expanded', 'false');
-    await firstFaq.click();
-    await expect(firstFaq).toHaveAttribute('aria-expanded', 'true');
-    await firstFaq.click();
-    await expect(firstFaq).toHaveAttribute('aria-expanded', 'false');
-
     // Página de serviço
-    await page.locator('.es-service-more').first().click();
+    await page.locator('.es-service-link').first().click();
     await expect(page.locator('h1')).toContainText(niche === 'barber' ? 'Corte masculino' : 'Corte feminino');
     await expect(page.getByRole('heading', { name: 'O que inclui' })).toBeVisible();
     await expect(page.locator('body')).not.toContainText(/agendix/i);
-    const crumbBox = await page.locator('.es-breadcrumb a').boundingBox();
-    expect(crumbBox?.x ?? 0).toBeGreaterThanOrEqual(16);
+    await expect(page.locator('.es-sticky')).toHaveCount(0);
+    const backBox = await page.locator('.es-back-link').boundingBox();
+    expect(backBox?.x ?? 0).toBeGreaterThanOrEqual(16);
     const beforeImgs = await page.locator('.es-before figure img').evaluateAll(imgs => imgs.map(img => img.getAttribute('src')));
     expect(beforeImgs).toHaveLength(2);
     expect(beforeImgs[0]).not.toBe(beforeImgs[1]);
-    if (testInfo.project.name.startsWith('mobile')) {
-      await expect(page.locator('.es-sticky .es-button')).toBeVisible();
-    }
+    await expect(page.locator('.es-detail-actions .es-button')).toBeVisible();
     await capture(page, `${niche}-${page.viewportSize()!.width}-service`, true);
-    await page.locator('.es-sticky .es-button, .es-detail-actions .es-button').filter({ visible: true }).click();
+    await page.locator('.es-detail-actions .es-button').click();
     await expect(page.getByRole('dialog')).toBeVisible();
     const frame = page.frameLocator('iframe[title="Agendamento do estabelecimento"]');
     const selected = frame.getByRole('button', { name: niche === 'barber' ? /Corte masculino/ : /Corte feminino/ });
@@ -217,7 +213,7 @@ for (const [niche, slug, heading, preset] of [
 
 test('oferta e profissional conservam contexto sem aplicar desconto fictício', async ({ page }) => {
   await page.goto('/#/site/demo-corte-fino');
-  await page.locator('.es-sticky .es-button, .es-header-cta .es-button').filter({ visible: true }).click();
+  await page.locator('.es-hero .es-button').click();
   await expect(page.locator('.es-booking-header')).toContainText('preço de tabela');
   await expect(page.locator('iframe[title="Agendamento do estabelecimento"]')).toHaveAttribute('src', /rebook=/);
   await page.getByRole('button', { name: 'Fechar agendamento' }).click();
@@ -227,7 +223,7 @@ test('oferta e profissional conservam contexto sem aplicar desconto fictício', 
   await expect(page.getByRole('dialog')).not.toBeVisible();
 });
 
-test('cadastro mínimo e fotos de celular continuam um site, não um app', async ({ page }, testInfo) => {
+test('cadastro mínimo e fotos de celular continuam um site, não um app', async ({ page }) => {
   await page.goto('/#/site/demo-barbearia-do-bairro');
   await expect(page.locator('h1')).toBeVisible();
   await expect(page.locator('.es-demo')).toContainText('fictícios');
@@ -253,7 +249,8 @@ test('320–430px e 768px: sem rolagem horizontal nos estilos e com logo', async
   await page.setViewportSize({ width: 320, height: 740 });
   await page.goto('/#/site/demo-studio-aurora/servico/d0000000-0000-4000-8002-000000000023');
   await expect(page.locator('h1')).toContainText('Mechas e luzes');
-  await expect(page.locator('.es-sticky')).toContainText('A partir de');
+  await expect(page.locator('.es-decision')).toContainText('A partir de');
+  await expect(page.locator('.es-detail-actions .es-button')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
   await capture(page, 'beauty-320-service');
 });
@@ -289,10 +286,13 @@ test('RPCs públicas: publicação, sanitização, equipe vigente, mini mapa seg
   await capture(page, `public-map-${page.viewportSize()!.width}`, false, true);
 });
 
-test('preset editorial clássico: identidade pergaminho, Fraunces e zero overflow', async ({ page }) => {
+test('preset editorial clássico: identidade pergaminho, Fraunces, FAQ, clube e zero overflow', async ({ page }) => {
   await mockPublic(page);
   await page.route('**/get_public_team_catalog*', route =>
     json(route, [{ id: teamId, name: 'Rafael Costa', active: true, deleted_at: null, photo_url: '/presenca/rhian/barber-portrait.webp' }]),
+  );
+  await page.route('**/get_public_membership_plans*', route =>
+    json(route, [{ id: 'plan-1', name: 'Clube Corte em Dia', description: 'Cortes semanais com hora marcada.', price_cents: 13900, active: true, usage_limit_per_month: 4 }]),
   );
   await page.route('**/get_public_customer_reviews*', route =>
     json(route, {
@@ -315,9 +315,9 @@ test('preset editorial clássico: identidade pergaminho, Fraunces e zero overflo
       preset: 'editorial',
       background: '#FBF7F0',
       accent: '#8B4513',
-      headline: 'Barbearia clássica em Pinheiros com navalha e tesoura',
+      headline: 'Barbearia clássica em Pinheiros',
       about: 'Atendimento individualizado, toalha quente e horário pontual no coração de Pinheiros.',
-      offer: { enabled: true, kind: 'first_visit', title: 'Toalha quente de cortesia na 1ª visita', condition: 'Ao agendar qualquer corte.' },
+      offer: { enabled: true, kind: 'first_visit', title: '1ª visita: toalha quente de cortesia', condition: 'Ao agendar qualquer corte.' },
       differences: ['Horário respeitado sem fila.', 'Lâminas descartáveis e toalhas esterilizadas.', 'Acabamento detalhado na navalha.'],
       faq: [{ question: 'Preciso marcar antes?', answer: 'Sim, reserve seu horário direto por aqui.' }],
     };
@@ -326,6 +326,14 @@ test('preset editorial clássico: identidade pergaminho, Fraunces e zero overflo
   await page.goto('/#/site/mock-house');
   await expect(page.locator('.establishment')).toHaveAttribute('data-preset', 'editorial');
   await expect(page.locator('h1')).toContainText('Barbearia clássica em Pinheiros');
+  await expect(page.locator('#club')).toBeVisible();
+  await expect(page.locator('#club')).toContainText('Clube Corte em Dia');
+  const firstFaq = page.locator('#faq .es-faq-trigger').first();
+  await expect(firstFaq).toHaveAttribute('aria-expanded', 'false');
+  await firstFaq.click();
+  await expect(firstFaq).toHaveAttribute('aria-expanded', 'true');
+  await firstFaq.click();
+  await expect(firstFaq).toHaveAttribute('aria-expanded', 'false');
   const width = page.viewportSize()!.width;
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   await capture(page, `editorial-${width}-fold`);

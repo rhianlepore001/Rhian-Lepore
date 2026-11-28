@@ -10,11 +10,14 @@ import {
   useMetaLandingEngagement,
   useMetaSectionViews,
 } from '../hooks/useMetaEngagement';
+import { LandingPresencaShowcase } from '../components/landing/LandingPresencaShowcase';
 import '../styles/landing.css';
+import '../styles/landing-presenca.css';
 
 const questions = [
   { id: 'faq_card', question: 'Preciso colocar cartão para testar?', answer: 'Não. Você cria sua conta sem cadastrar cartão. O prazo e as condições do teste aparecem dentro da conta, conforme a oferta vigente. Depois, você decide se quer assinar um plano.' },
   { id: 'faq_solo_team', question: 'Funciona para quem trabalha sozinho ou só para quem tem equipe?', answer: 'Para os dois. Você pode começar usando só a sua agenda e o seu financeiro, ou cadastrar sua equipe com controle de horários e comissões por profissional.' },
+  { id: 'faq_presenca', question: 'Como funciona o site próprio da minha barbearia ou salão?', answer: 'O Site Presença é montado com o que você já cadastrou no AgendiX — serviços, preços, horários, equipe e endereço. Você personaliza cores, textos e fotos direto pelo celular em Ajustes → Meu site e publica quando estiver pronto, conforme o plano ativo na sua conta. Sempre que atualizar um serviço ou horário no sistema, o site acompanha automaticamente.' },
   { id: 'faq_app', question: 'Meu cliente precisa baixar algum aplicativo?', answer: 'Não. Ele abre o seu link direto no navegador do celular, escolhe o serviço, o profissional e o horário. A confirmação segue as regras que você definir.' },
   { id: 'faq_mobile', question: 'Consigo usar tudo pelo celular na correria do dia?', answer: 'Sim. O AgendiX funciona direto no navegador do celular ou do computador, sem precisar instalar nada — feito para consultar entre um atendimento e outro.' },
   { id: 'faq_demo_data', question: 'Os dados que eu testar na demonstração ficam salvos?', answer: 'Não. Tudo o que você mexer na simulação fica apenas na memória do seu navegador e some ao recarregar. Nenhuma mensagem real é enviada.' },
@@ -191,6 +194,7 @@ export const Landing = () => {
           <nav id="landing-navigation" ref={navigation} className={menu ? 'landing-links is-open' : 'landing-links'} aria-label="Navegação principal">
             <button type="button" onClick={() => scrollTo('demonstracao')}>Demonstração</button>
             <button type="button" onClick={() => scrollTo('produto')}>Recursos</button>
+            <button type="button" onClick={() => scrollTo('presenca')}>Site próprio</button>
             <button type="button" onClick={() => scrollTo('historia')}>Nossa história</button>
             <a className="landing-salon-link" href="/#/register?type=beauty" onClick={() => trackLandingCta('free_trial_salon', 'beauty', 'header')}>Criar conta para salão</a>
           </nav>
@@ -311,6 +315,13 @@ export const Landing = () => {
             </div>
           </div>
         </section>
+
+        <LandingPresencaShowcase
+          niche={niche}
+          onNicheChange={chooseNiche}
+          signupHref={signupHref}
+          trackingNiche={trackingNiche}
+        />
 
         <section id="historia" className="landing-story" aria-labelledby="landing-story-title" tabIndex={-1}>
           <div className="landing-wrap wrap landing-story-grid">

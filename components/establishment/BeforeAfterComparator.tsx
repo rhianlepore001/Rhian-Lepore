@@ -28,6 +28,8 @@ export function BeforeAfterComparator({
   const beforePhotoRef = useRef<HTMLDivElement>(null);
   const railRef = useRef<HTMLDivElement>(null);
   const sliderRef = useRef<HTMLDivElement>(null);
+  const beforeCaptionRef = useRef<HTMLElement>(null);
+  const afterCaptionRef = useRef<HTMLElement>(null);
   const livePositionRef = useRef(INITIAL_POSITION);
   const dragRef = useRef<{
     pointerId: number;
@@ -49,6 +51,12 @@ export function BeforeAfterComparator({
     }
     if (railRef.current) {
       railRef.current.style.transform = `translate3d(${clamped.toFixed(3)}%, 0, 0)`;
+    }
+    if (beforeCaptionRef.current) {
+      beforeCaptionRef.current.style.opacity = clamped < 18 ? '0' : '1';
+    }
+    if (afterCaptionRef.current) {
+      afterCaptionRef.current.style.opacity = clamped > 82 ? '0' : '1';
     }
     if (sliderRef.current) {
       sliderRef.current.setAttribute('aria-valuenow', String(rounded));
@@ -204,11 +212,12 @@ export function BeforeAfterComparator({
               loading="lazy"
               decoding="async"
               draggable={false}
-              width={800}
-              height={1067}
+              width={960}
+              height={720}
               onError={handleImageError}
             />
           </div>
+          <figcaption ref={afterCaptionRef}>Depois</figcaption>
         </figure>
 
         <figure className="es-before-layer es-before-original">
@@ -223,11 +232,12 @@ export function BeforeAfterComparator({
               loading="lazy"
               decoding="async"
               draggable={false}
-              width={800}
-              height={1067}
+              width={960}
+              height={720}
               onError={handleImageError}
             />
           </div>
+          <figcaption ref={beforeCaptionRef}>Antes</figcaption>
         </figure>
 
         <div
@@ -256,10 +266,10 @@ export function BeforeAfterComparator({
             </span>
           </div>
         </div>
-      </div>
-      <div className="es-before-legend" aria-hidden="true">
-        <span>Antes</span>
-        <span>Depois</span>
+
+        <span className="es-before-hint" aria-hidden="true">
+          Deslize
+        </span>
       </div>
       {caption && showCaption && <p className="es-before-caption">{caption}</p>}
     </div>

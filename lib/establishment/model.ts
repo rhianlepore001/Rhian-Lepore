@@ -169,7 +169,7 @@ export interface SiteConfig {
   beforeAfter?: Array<{ before: string; after: string; caption?: string }>;
 }
 
-const sectionIds: SectionId[] = ['gallery', 'beforeAfter', 'services', 'team', 'reviews', 'location', 'club', 'differences', 'faq'];
+const sectionIds: SectionId[] = ['services', 'differences', 'gallery', 'beforeAfter', 'team', 'reviews', 'club', 'faq', 'location'];
 const kinds: Record<SiteKind, string> = { barber: 'Barbearia', beauty: 'Salão de beleza', studio: 'Estúdio' };
 
 export function placeFromAddress(address: string): string {
@@ -185,9 +185,9 @@ export function neighborhoodFromAddress(address: string): string | undefined {
 
 function defaultHeadline(data: SiteData): string {
   const place = neighborhoodFromAddress(data.address);
-  if (data.kind === 'barber') return place ? `Barbearia em ${place}` : 'Barbearia com hora marcada';
-  if (data.kind === 'beauty') return place ? `Salão em ${place}` : 'Salão de beleza';
-  return place ? `Estúdio em ${place}` : 'Estúdio de beleza';
+  if (data.kind === 'barber') return place ? `Barbearia em ${place} com corte preciso e horário respeitado` : 'Barbearia com corte preciso e horário respeitado';
+  if (data.kind === 'beauty') return place ? `Salão em ${place} dedicado à cor natural e ao cuidado do cabelo` : 'Salão dedicado à cor natural e ao cuidado do cabelo';
+  return place ? `Estúdio em ${place} com atendimento pontual` : 'Estúdio com atendimento pontual';
 }
 
 function defaultAbout(data: SiteData): string {
@@ -269,7 +269,10 @@ export function isDarkSurfaceColor(hex: string): boolean {
   return contrastRatio(valid, '#FFFFFF') > contrastRatio(valid, '#000000');
 }
 
-export function headerSurface(_preset: SitePreset, surface: Pick<SiteSurface, 'background' | 'ink'>): { background: string; ink: string; dark: boolean } {
+export function headerSurface(preset: SitePreset, surface: Pick<SiteSurface, 'background' | 'ink'>): { background: string; ink: string; dark: boolean } {
+  if (preset === 'editorial') {
+    return { background: '#1C1714', ink: '#FBF7F0', dark: true };
+  }
   return {
     background: surface.background,
     ink: surface.ink,

@@ -78,8 +78,10 @@ describe('SiteView public site', () => {
     const { container } = render(<SiteView data={baseData} config={config} />);
 
     expect(container.textContent?.toLowerCase()).not.toContain('agendix');
-    expect(container.textContent).not.toContain('São Paulo');
-    expect(container.querySelector('.es-hero h1')).toHaveTextContent('Barbearia no Centro com hora marcada');
+    const kicker = container.querySelector('.es-hero .es-kicker');
+    expect(kicker).toHaveTextContent('Centro');
+    expect(kicker?.textContent).not.toContain('Barbearia');
+    expect(kicker?.textContent).not.toContain('São Paulo');
 
     expect(screen.queryByRole('link', { name: 'Privacidade' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Termos' })).toBeNull();
@@ -91,6 +93,7 @@ describe('SiteView public site', () => {
     expect(screen.getByText('Termos de Uso')).toBeInTheDocument();
     expect(container.textContent?.toLowerCase()).not.toContain('agendix');
     fireEvent.click(screen.getByRole('button', { name: 'Entendi' }));
+    expect(screen.getByText('Agendamento online com confirmação rápida')).toBeInTheDocument();
   });
 
   it('renderiza logo nos modos both e logo, com fallback quando a imagem falha', () => {
@@ -112,7 +115,7 @@ describe('SiteView public site', () => {
     expect(wordmark.querySelector('.es-wordmark-text b')).toHaveTextContent('Corte Fino');
   });
 
-  it('respeita presets independentes do kind, coverRemoved, ctaLabel e oferta em uma linha com validade', () => {
+  it('respeita presets independentes do kind, coverRemoved, ctaLabel e oferta com validade', () => {
     const config: SiteConfig = {
       ...defaultConfig(baseData),
       preset: 'salon',
@@ -133,33 +136,22 @@ describe('SiteView public site', () => {
     expect(container.querySelector('.es-hero')).toHaveClass('es-no-cover');
     expect(container.querySelector('.es-hero-media')).toBeNull();
     expect(screen.getAllByRole('button', { name: 'Reservar meu horário' }).length).toBeGreaterThanOrEqual(1);
-    const offerLine = container.querySelector('.es-hero .es-offer-line');
-    expect(offerLine).toHaveTextContent('Combo corte + barba');
-    expect(offerLine).toHaveTextContent('Válido até 31/12/2099');
+    expect(screen.getByText('Combo especial')).toBeInTheDocument();
+    expect(screen.getByText('Válido até 31/12/2099')).toBeInTheDocument();
   });
 
-  it('exibe cardápio direto sem chips para poucos serviços e agrupa tipograficamente quando há mais de 6 serviços', () => {
-    const { container, rerender } = render(<SiteView data={baseData} config={defaultConfig(baseData)} />);
+  it('filtra serviços por categoria quando há 2 ou mais categorias', async () => {
+    const user = userEvent.setup();
+    render(<SiteView data={baseData} config={defaultConfig(baseData)} />);
 
-    expect(container.querySelector('.es-category-chip')).toBeNull();
-    expect(container.querySelectorAll('.es-menu-item')).toHaveLength(2);
+    expect(screen.getByRole('button', { name: 'Todos' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByText('Corte masculino')).toBeInTheDocument();
     expect(screen.getByText('Barba completa')).toBeInTheDocument();
 
-    const manyServices: SiteData = {
-      ...baseData,
-      services: [
-        ...baseData.services,
-        { id: 'srv-3', name: 'Degradê', category: 'Cabelo', includes: [], duration: 40, price: 60 },
-        { id: 'srv-4', name: 'Sobrancelha', category: 'Acabamento', includes: [], duration: 15, price: 25 },
-        { id: 'srv-5', name: 'Hidratação', category: 'Cabelo', includes: [], duration: 30, price: 50 },
-        { id: 'srv-6', name: 'Barboterapia', category: 'Barba', includes: [], duration: 40, price: 55 },
-        { id: 'srv-7', name: 'Pigmentação', category: 'Acabamento', includes: [], duration: 30, price: 45 },
-      ],
-    };
-    rerender(<SiteView data={manyServices} config={defaultConfig(manyServices)} />);
-    expect(container.querySelectorAll('.es-menu-group-title')).toHaveLength(3);
-    expect(container.querySelector('.es-category-chip')).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Barba' }));
+    expect(screen.getByRole('button', { name: 'Barba' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.queryByText('Corte masculino')).not.toBeInTheDocument();
+    expect(screen.getByText('Barba completa')).toBeInTheDocument();
   });
 
   it('abre lightbox acessível na galeria com navegação entre fotos', async () => {
@@ -179,23 +171,22 @@ describe('SiteView public site', () => {
     expect(lightbox).not.toHaveAttribute('open');
   });
 
-  it('exibe clube, nota com total de avaliações sem citar Google e ponto de referência na localização', () => {
+  it('exibe clube, avaliações verificadas e ponto de referência na localização', () => {
     const config: SiteConfig = {
       ...defaultConfig(baseData),
       contact: { addressNote: 'Ao lado do metrô Centro' },
     };
     const { container } = render(<SiteView data={baseData} config={config} />);
 
-    expect(screen.getByRole('heading', { name: 'Clube' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Clube e planos mensais' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Quero assinar' })).toHaveAttribute('href', '/#/clube/corte-fino');
-    expect(container.querySelector('.es-rating-line')).toHaveTextContent('4,9');
-    expect(container.querySelector('.es-rating-line')).toHaveTextContent('42 avaliações');
+    expect(screen.getByText('Avaliações verificadas')).toBeInTheDocument();
     expect(screen.queryByText('Avaliações do Google')).not.toBeInTheDocument();
     expect(screen.getByText(/Ao lado do metrô Centro/)).toBeInTheDocument();
     expect(container.querySelector('.es-hours-today')).not.toBeNull();
   });
 
-  it('exibe página de serviço com antes/depois, WhatsApp e agendamento no fluxo natural sem barra fixa', () => {
+  it('exibe página de serviço com antes/depois, WhatsApp e barra fixa com preço', () => {
     const config: SiteConfig = {
       ...defaultConfig(baseData),
       beforeAfter: [
@@ -210,9 +201,10 @@ describe('SiteView public site', () => {
 
     expect(screen.getByRole('heading', { name: 'Antes e depois' })).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: 'Tirar dúvida no WhatsApp' }).length).toBeGreaterThanOrEqual(1);
-    expect(container.querySelector('.es-sticky')).toBeNull();
-    expect(container.querySelector('.es-decision')).toHaveTextContent('R$ 65');
-    expect(within(container.querySelector('.es-detail-actions') as HTMLElement).getByRole('button', { name: 'Agendar este serviço' })).toBeInTheDocument();
+    const sticky = container.querySelector('.es-sticky')!;
+    expect(sticky).toHaveAttribute('data-has-price', 'true');
+    expect(sticky).toHaveTextContent('R$ 65');
+    expect(within(sticky as HTMLElement).getByRole('button', { name: 'Agendar este serviço' })).toBeInTheDocument();
   });
 
   it('repassa origem válida e mostra saída para WhatsApp no diálogo de agendamento', async () => {
@@ -220,7 +212,7 @@ describe('SiteView public site', () => {
     window.location.hash = '#/site/corte-fino?origem=instagram';
     render(<SiteView data={baseData} config={defaultConfig(baseData)} />);
 
-    const cta = document.querySelector('.es-hero .es-button') as HTMLButtonElement;
+    const cta = document.querySelector('.es-sticky .es-button') as HTMLButtonElement;
     await user.click(cta);
 
     const dialog = document.querySelector('dialog.es-booking-dialog')!;
@@ -369,7 +361,7 @@ describe('SiteView public site', () => {
     expect(container.querySelector('[data-reveal="pending"]')).toBeNull();
   });
 
-  it('marca data-dark-surface pela luminosidade real e cai para cartaz tipográfico se a capa quebrar', () => {
+  it('marca data-dark-surface pela luminosidade real, omite barra de confiança vazia e esconde capa quebrada no fechamento', () => {
     const emptyTrustData: SiteData = {
       ...baseData,
       rating: undefined,
@@ -383,13 +375,12 @@ describe('SiteView public site', () => {
       />,
     );
     expect(container.querySelector('.establishment')).toHaveAttribute('data-dark-surface', 'false');
-    expect(container.querySelector('.es-rating-line')).toBeNull();
+    expect(container.querySelector('.es-trust')).toBeNull();
 
     const heroImg = container.querySelector('.es-hero-photo img')!;
-    expect(container.querySelector('.es-hero')).not.toHaveClass('es-no-cover');
+    expect(container.querySelector('.es-close-photo')).not.toBeNull();
     fireEvent.error(heroImg);
-    expect(container.querySelector('.es-hero')).toHaveClass('es-no-cover');
-    expect(container.querySelector('.es-hero-media')).toBeNull();
+    expect(container.querySelector('.es-close-photo')).toBeNull();
   });
 
   it('mantém fallback textual de imagem quebrada no lightbox mesmo após término da transição', async () => {

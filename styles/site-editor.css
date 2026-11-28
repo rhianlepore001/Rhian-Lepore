@@ -338,6 +338,7 @@
   .se-preview-expand,.se-preview-back{grid-column:1/-1;width:100%}
   .se-preview-stage{flex:none;height:420px;min-height:300px;padding:0;border-radius:8px;overflow:hidden;background:var(--se-card);border:1px solid var(--se-line)}
   .se-preview-stage iframe{position:static;width:100%;height:100%;background:transparent;border-radius:0;box-shadow:none;transform:none}
+  .se-preview:not([data-expanded]) .se-preview-stage iframe{-webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 calc(100% - 28px),transparent 100%);mask-image:linear-gradient(to bottom,#000 0%,#000 calc(100% - 28px),transparent 100%)}
   .se-preview-stage[data-mode=desktop]{display:block;overflow:hidden}
   .se-preview-stage[data-mode=desktop] iframe{position:absolute;top:0;left:50%;width:1280px;height:1240px;max-width:none;transform:translateX(-50%) scale(.27);transform-origin:top center}
   .se-controls{min-height:0;overflow:visible;padding-bottom:16px}

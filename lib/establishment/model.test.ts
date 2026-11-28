@@ -73,9 +73,9 @@ describe('site background', () => {
     expect(isDarkSurfaceColor('#FBF7F0')).toBe(false);
     expect(isDarkSurfaceColor('#FFFFFF')).toBe(false);
     expect(headerSurface('editorial', siteSurface('#FBF7F0', 'light'))).toEqual({
-      background: '#FBF7F0',
-      ink: '#1C1714',
-      dark: false,
+      background: '#1C1714',
+      ink: '#FBF7F0',
+      dark: true,
     });
     expect(headerSurface('salon', siteSurface('#FFFFFF', 'light'))).toEqual({
       background: '#FFFFFF',

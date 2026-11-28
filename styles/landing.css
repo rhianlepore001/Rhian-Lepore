@@ -537,8 +537,35 @@ html[data-surface=marketing] {
   .landing-close h2 { max-width: 20ch; }
 }
 
+@media (max-width: 900px) {
+  .landing-nav-row { grid-template-columns: 1fr auto auto; gap: 12px; }
+  .landing-menu {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border: 1px solid #8291a4;
+    border-radius: 8px;
+    background: transparent;
+    color: #fff;
+  }
+  .landing-menu:hover { background: #364354; }
+  .landing-links { display: none; }
+  .landing-links.is-open {
+    position: absolute;
+    inset: 100% 0 auto;
+    display: grid;
+    gap: 4px;
+    padding: 12px 32px 20px;
+    border-top: 1px solid #68788b;
+    background: var(--lp-ink);
+  }
+  .landing-links.is-open :is(a, button) { display: flex; justify-content: start; font-size: 1rem; }
+}
+
 @media (min-width: 761px) and (max-width: 900px) {
-  .landing-nav-row, .landing-links, .landing-nav-actions { gap: 16px; }
+  .landing-nav-actions { gap: 16px; }
   .landing-nav .landing-brand { width: 132px; }
   .landing-hero-actions .landing-button { min-height: 48px; padding-inline: 12px; gap: 8px; font-size: .875rem; }
   .landing .landing-demo-jump { font-size: .8125rem; }
@@ -555,36 +582,13 @@ html[data-surface=marketing] {
 @media (max-width: 760px) {
   html[data-surface=marketing] { scroll-padding-top: 80px; }
   .landing-wrap { width: calc(100% - 40px); }
-  .landing-nav-row { grid-template-columns: 1fr auto auto; gap: 8px; min-height: 64px; }
+  .landing-nav-row { gap: 8px; min-height: 64px; }
   .landing-nav .landing-brand { width: clamp(104px, 28vw, 136px); }
   .landing-nav-actions { gap: 8px; }
   .landing-nav-actions > a:first-child, .landing-nav .landing-button { font-size: .8125rem; }
   .landing-nav .landing-button { padding-inline: 12px; }
   .landing-nav .landing-button svg { display: none; }
-  .landing-menu {
-    display: grid;
-    place-items: center;
-    width: 48px;
-    height: 48px;
-    padding: 0;
-    border: 1px solid #8291a4;
-    border-radius: 8px;
-    background: transparent;
-    color: #fff;
-  }
-
-  .landing-menu:hover { background: #364354; }
-  .landing-links { display: none; }
-  .landing-links.is-open {
-    position: absolute;
-    inset: 100% 0 auto;
-    display: grid;
-    gap: 4px;
-    padding: 12px 20px 20px;
-    border-top: 1px solid #68788b;
-    background: var(--lp-ink);
-  }
-  .landing-links.is-open :is(a, button) { display: flex; justify-content: start; font-size: 1rem; }
+  .landing-links.is-open { padding-inline: 20px; }
 
   .landing-hero-layout, .landing-demo-stage, .landing-product-grid, .landing-story-grid, .landing-onboarding-grid, .landing-faq-grid {
     grid-template-columns: minmax(0, 1fr);

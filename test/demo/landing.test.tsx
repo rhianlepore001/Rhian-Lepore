@@ -84,4 +84,38 @@ describe('site oficial', () => {
     expect(container.querySelector('iframe')).toBeNull();
     expect(container.querySelector('.landing-demo-poster img')).toHaveAttribute('src', '/landing/phone-beauty-booking.webp');
   });
+  it('apresenta o Site Presença com troca de segmento, 4 capítulos interativos e links reais sem iframe', async () => {
+    const { container } = renderLanding();
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+    expect(container.querySelector('iframe')).toBeNull();
+
+    const presenca = container.querySelector<HTMLElement>('#presenca');
+    expect(presenca).not.toBeNull();
+    expect(within(presenca!).getByRole('link', { name: /Ver site completo/i })).toHaveAttribute('href', '/#/site/demo-corte-fino');
+    expect(within(presenca!).getByRole('link', { name: /Testar o editor do site/i })).toHaveAttribute('href', '/#/site-demo/editor/barber');
+
+    const nicheGroup = within(presenca!).getByRole('group', { name: 'Negócio da prévia do site' });
+    await userEvent.click(within(nicheGroup).getByRole('button', { name: 'Salão de beleza' }));
+    expect(within(presenca!).getByRole('link', { name: /Ver site completo/i })).toHaveAttribute('href', '/#/site/demo-studio-aurora');
+    expect(within(presenca!).getByRole('link', { name: /Testar o editor do site/i })).toHaveAttribute('href', '/#/site-demo/editor/beauty');
+    expect(within(presenca!).getByRole('link', { name: /Crie sua conta grátis/i })).toHaveAttribute('href', '/#/register?type=beauty');
+
+    const chapters = within(presenca!).getByRole('group', { name: 'O que o cliente vê no Site Presença' });
+    await userEvent.click(within(chapters).getByRole('button', { name: /Serviços/i }));
+    await userEvent.click(within(presenca!).getByRole('button', { name: /Mechas e luzes/i }));
+    expect(within(presenca!).getByText(/Diagnóstico e teste de mecha/i)).toBeVisible();
+
+    await userEvent.click(within(chapters).getByRole('button', { name: /Antes e depois/i }));
+    expect(within(presenca!).getByRole('slider', { name: /Comparar antes e depois/i })).toBeVisible();
+
+    await userEvent.click(within(chapters).getByRole('button', { name: /Google e WhatsApp/i }));
+    expect(within(presenca!).getByText(/Studio Aurora — Salão de beleza em Pinheiros, São Paulo/i)).toBeVisible();
+
+    const viewportGroup = within(presenca!).getByRole('group', { name: 'Formato da prévia do site' });
+    await userEvent.click(within(viewportGroup).getByRole('button', { name: /Celular/i }));
+    expect(presenca!.querySelector('.lp-pr-device')).toHaveAttribute('data-viewport', 'mobile');
+    expect(container.querySelector('iframe')).toBeNull();
+    expect(screen.getByText('Como funciona o site próprio da minha barbearia ou salão?')).toBeVisible();
+  });
 });
+

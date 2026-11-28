@@ -211,7 +211,7 @@ export const LandingPresencaShowcase: React.FC<LandingPresencaShowcaseProps> = (
 
                   <div className="lp-site-nav-mock" role="group" aria-label="Navegação interna da prévia">
                     <button type="button" aria-current={chapter === 'hero' ? 'true' : undefined} onClick={() => setChapter('hero')}>
-                      Início
+                      Capa
                     </button>
                     <button type="button" aria-current={chapter === 'services' ? 'true' : undefined} onClick={() => setChapter('services')}>
                       Serviços

@@ -164,7 +164,7 @@ for (const width of [320, 390, 768, 1440]) {
     await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
     await expect(page.locator('.landing-hero .landing-button').first()).toBeInViewport();
     await expect(page.locator('.landing-hero .landing-phone')).toBeInViewport();
-    await expect(page.locator('.landing-demo-poster img')).toHaveAttribute('src', '/landing/phone-barber-booking.webp');
+    await expect(page.locator('.landing-demo-poster img')).toHaveAttribute('src', '/landing/phone-presence-studio-aurora.webp');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     expect(await page.locator('meta[name="viewport"]').getAttribute('content')).not.toContain('user-scalable=no');
 
@@ -225,6 +225,7 @@ for (const width of [320, 390, 768, 1440]) {
 test('explora a demonstração embutida mantendo segmento e tarefa sem integrações externas', async ({ page }) => {
   const verify = await isolate(page);
   await page.goto('/#/landing');
+  await page.getByRole('button', { name: 'Recusar' }).click();
   const business = page.getByRole('group', { name: 'Negócio da demonstração' });
   const views = page.getByRole('group', { name: 'Tela da demonstração' });
   await business.getByRole('button', { name: 'Salão de beleza', exact: true }).click();

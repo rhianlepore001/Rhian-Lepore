@@ -362,7 +362,9 @@ export function SiteView({ data: sourceData, config: incoming, serviceId, previe
   }, [config.accent, preset]);
 
   const service = serviceId ? data.services.find(item => item.id === serviceId) : undefined;
-  const home = `/#/site/${encodeURIComponent(data.slug)}`;
+  const embeddedVisit = typeof window !== 'undefined' && /[?&]embed=1(?:&|$)/.test(window.location.hash);
+  const withEmbed = (path: string) => embeddedVisit ? `${path}?embed=1` : path;
+  const home = withEmbed(`/#/site/${encodeURIComponent(data.slug)}`);
   const beauty = data.kind === 'beauty';
   const cover = data.cover;
   const logo = data.logo;
@@ -714,7 +716,7 @@ export function SiteView({ data: sourceData, config: incoming, serviceId, previe
     ? `/demo-preview#/demo/${beauty ? 'beauty' : 'barber'}/book/${bookingSlug}?${params}`
     : `/#/book/${bookingSlug}?${params}`;
 
-  const serviceLink = (targetId: string) => `${home}/servico/${encodeURIComponent(targetId)}`;
+  const serviceLink = (targetId: string) => withEmbed(`/#/site/${encodeURIComponent(data.slug)}/servico/${encodeURIComponent(targetId)}`);
   const imageError = (event: React.SyntheticEvent<HTMLImageElement>) => {
     event.currentTarget.closest('.es-photo')?.setAttribute('data-broken', 'true');
   };
@@ -1304,6 +1306,7 @@ export function SiteView({ data: sourceData, config: incoming, serviceId, previe
     <div
       ref={rootRef}
       className="establishment"
+      data-embed={embeddedVisit ? 'true' : undefined}
       data-style={config.style}
       data-dark-surface={isDarkSurface ? 'true' : 'false'}
       data-preset={preset}

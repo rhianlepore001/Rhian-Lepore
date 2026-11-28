@@ -165,6 +165,7 @@ export function landingViewToDemoScreen(viewId: string): MetaDemoScreen | null {
     case 'fila': return 'fila';
     case 'finance': return 'financeiro';
     case 'clientes': return 'clientes';
+    case 'presence': return 'presenca';
     default: return null;
   }
 }

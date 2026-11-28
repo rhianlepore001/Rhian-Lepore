@@ -10,14 +10,15 @@ export type MetaDemoScreen =
   | 'financeiro'
   | 'comissoes'
   | 'clientes'
-  | 'hora_cadeira';
+  | 'hora_cadeira'
+  | 'presenca';
 
 export type MetaDemoMessage =
   | { type: typeof META_DEMO_MESSAGE_TYPE; action: 'start' }
   | { type: typeof META_DEMO_MESSAGE_TYPE; action: 'screen'; screen: MetaDemoScreen };
 
 const SCREENS = new Set<string>([
-  'inicio', 'agenda', 'fila', 'financeiro', 'comissoes', 'clientes', 'hora_cadeira',
+  'inicio', 'agenda', 'fila', 'financeiro', 'comissoes', 'clientes', 'hora_cadeira', 'presenca',
 ]);
 
 /** Mapeia a rota interna da demo para o token de tela rastreável (ou null se fora da lista). */

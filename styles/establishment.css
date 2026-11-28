@@ -1334,6 +1334,7 @@
 .establishment .es-live-dot::after,
 .establishment .es-map-pin::after{display:none}
 .establishment .es-gallery-zoom{display:none}
+.establishment[data-embed=true] .es-sticky{display:none}
 
 .establishment .es-hero-actions{display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;padding-top:0}
 .establishment .es-hero .es-ghost{

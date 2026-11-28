@@ -1,5 +1,9 @@
 # Assets da landing v2
 
+## Presença na demonstração — 28 Nov 2026
+
+`phone-presence-studio-aurora.webp` é a captura do site público fictício do Studio Aurora (`/#/site/demo-studio-aurora?embed=1`), 780×1560, WebP qualidade 82. A prévia da aba Presença usa essa imagem nos dois nichos da landing e tem a mesma janela da moldura. A simulação interativa abre o mesmo site.
+
 ## Prévias mobile com os temas do produto — 17 Nov 2026
 
 Os 12 arquivos `phone-{barber,beauty}-{agenda,booking,finance,performance,team,queue}.webp` foram capturados das telas reais da simulação em `/demo-preview#/demo/`. As imagens têm 390 × 640 px, WebP com qualidade 90 e dados fictícios. O tema Barber usa fundo escuro e dourado. O tema Beauty usa fundo claro e lilás. A moldura azul ardósia vem do CSS da landing e os pixels das telas mantêm as cores do aplicativo.

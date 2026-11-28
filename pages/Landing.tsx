@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ArrowDown, ArrowRight, CalendarDays, Check, ChevronDown, Clock, LayoutDashboard, Menu, Scissors, Smartphone, Sparkles, Users, Wallet, X } from 'lucide-react';
+import { ArrowDown, ArrowRight, CalendarDays, Check, ChevronDown, Clock, LayoutDashboard, Menu, Scissors, Smartphone, Sparkles, Store, Users, Wallet, X } from 'lucide-react';
 import { buildWhatsAppLink } from '../utils/whatsappTemplates';
 import { metaTracker } from '../lib/metaTracking';
 import {
@@ -20,7 +20,11 @@ const questions = [
   { id: 'faq_demo_data', question: 'Os dados que eu testar na demonstração ficam salvos?', answer: 'Não. Tudo o que você mexer na simulação fica apenas na memória do seu navegador e some ao recarregar. Nenhuma mensagem real é enviada.' },
 ] as const;
 
+const PRESENCE_SITE = '/#/site/demo-studio-aurora';
+const PRESENCE_POSTER = '/landing/phone-presence-studio-aurora.webp';
+
 const demoViews = [
+  { id: 'presence', label: 'Presença', icon: Store, route: '', section: 'feature_presenca', task: 'Abra o site do Studio Aurora, o salão fictício: a casa, o horário e o caminho para marcar.', benefit: 'Seu cliente chega pelo Google ou pelo Instagram e reconhece a casa antes de escolher o horário.' },
   { id: 'booking', label: 'Agendamento online', icon: Smartphone, route: 'book/simulacao', section: 'feature_booking', task: 'Veja como seu cliente escolhe o serviço, o profissional e pede um horário pelo link.', benefit: 'Mande seu link no Instagram ou WhatsApp. O cliente escolhe o horário sozinho, sem travar sua conversa.' },
   { id: 'agenda', label: 'Agenda', icon: CalendarDays, route: 'agenda', section: 'feature_agenda', task: 'Veja a agenda da equipe lado a lado, ache um horário livre e teste um encaixe.', benefit: 'Acompanhe cada profissional num só lugar e encaixe clientes sem perder o controle do dia.' },
   { id: 'dashboard', label: 'Início', icon: LayoutDashboard, route: '', section: null, task: 'Bata o olho no próximo atendimento, no faturamento do dia e na fila em andamento.', benefit: null },
@@ -82,7 +86,7 @@ const PhoneFrame = ({ niche, children }: { niche: Niche; children: React.ReactNo
 );
 
 const PhoneImage = ({ niche, view, alt, eager }: { niche: Niche; view: ProductView; alt: string; eager?: boolean }) => (
-  <img src={`/landing/phone-${niche}-${view}.webp`} alt={alt} width="780" height="1588"
+  <img src={view === 'presence' ? PRESENCE_POSTER : `/landing/phone-${niche}-${view}.webp`} alt={alt} width="780" height={view === 'presence' ? 1560 : 1588}
     decoding="async" loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : undefined} />
 );
 
@@ -102,7 +106,9 @@ export const Landing = () => {
   const activeView = demoViews.find(item => item.id === params.get('tela')) ?? demoViews[0];
   const view = activeView.id;
   const signupHref = nicheChosen ? `/#/register?type=${niche}` : '/#/register';
-  const demoHref = demoLink(niche, activeView.route);
+  const presence = activeView.id === 'presence';
+  const demoHref = presence ? PRESENCE_SITE : demoLink(niche, activeView.route);
+  const embedSrc = presence ? `${PRESENCE_SITE}?embed=1` : `/demo-preview${demoHref.slice(1)}`;
 
   useMetaLandingEngagement(trackingNiche);
   useMetaSectionViews(trackingNiche);
@@ -248,22 +254,22 @@ export const Landing = () => {
                 <p className="landing-demo-task" aria-live="polite">{activeView.task}</p>
                 <div className="landing-demo-start">
                   <button type="button" className="landing-button landing-button-light landing-demo-embed-action" aria-expanded={interactive} aria-controls="landing-demo-screen" onClick={() => (interactive ? setInteractive(false) : startEmbeddedDemo())}>
-                    {interactive ? 'Fechar a simulação' : 'Explorar a simulação'} {interactive ? <X size={18} aria-hidden="true" /> : <ArrowRight size={18} aria-hidden="true" />}
+                    {interactive ? 'Fechar a simulação' : (presence ? 'Ver o site' : 'Explorar a simulação')} {interactive ? <X size={18} aria-hidden="true" /> : <ArrowRight size={18} aria-hidden="true" />}
                   </button>
-                  <a className="landing-button landing-button-light landing-demo-mobile-action" href={demoHref} onClick={() => { metaTracker.demoStart(trackingNiche); trackLandingDemoScreen(view, trackingNiche); }}>Explorar a simulação <ArrowRight size={18} aria-hidden="true" /></a>
+                  <a className="landing-button landing-button-light landing-demo-mobile-action" href={demoHref} onClick={() => { metaTracker.demoStart(trackingNiche); trackLandingDemoScreen(view, trackingNiche); }}>{presence ? 'Ver o site' : 'Explorar a simulação'} <ArrowRight size={18} aria-hidden="true" /></a>
                   <a className="landing-text-link landing-demo-fullscreen" href={demoHref} onClick={() => { metaTracker.demoStart(trackingNiche); trackLandingDemoScreen(view, trackingNiche); }}>Abrir em tela cheia <ArrowRight size={16} aria-hidden="true" /></a>
                 </div>
               </div>
               <figure className="landing-demo-preview" id="landing-demo-screen">
                 <div className="landing-demo-frame" data-view={view} data-interactive={interactive}>
                   <div className="landing-demo-poster">
-                    <PhoneImage niche={niche} view={view} alt={`${activeView.label} do AgendiX com dados fictícios de ${businesses[niche]}`} />
+                    <PhoneImage niche={niche} view={view} alt={presence ? 'Site do Studio Aurora, salão fictício' : `${activeView.label} do AgendiX com dados fictícios de ${businesses[niche]}`} />
                   </div>
                   {interactive && (
-                    <iframe key={demoHref} title={`Simulação interativa ${niche === 'barber' ? 'da barbearia' : 'do salão'}: ${activeView.label}`} src={`/demo-preview${demoHref.slice(1)}`} sandbox="allow-scripts allow-same-origin allow-forms" />
+                    <iframe key={embedSrc} title={presence ? 'Site do Studio Aurora, salão fictício do Presença' : `Simulação interativa ${niche === 'barber' ? 'da barbearia' : 'do salão'}: ${activeView.label}`} src={embedSrc} sandbox={presence ? 'allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox' : 'allow-scripts allow-same-origin allow-forms'} />
                   )}
                 </div>
-                <figcaption>{activeView.label} · {businesses[niche]}</figcaption>
+                <figcaption>{activeView.label} · {presence ? 'Studio Aurora' : businesses[niche]}</figcaption>
               </figure>
             </div>
             <div className="landing-demo-conversion">
@@ -282,7 +288,7 @@ export const Landing = () => {
                 <ul className="landing-product-list">
                   {productViews.map(({ id, label, route, benefit, section }) => (
                     <li key={id} data-meta-section={section ?? undefined}>
-                      <a href={demoLink(niche, route)} onClick={() => { metaTracker.demoStart(trackingNiche); trackLandingDemoScreen(route.startsWith('/') ? route : '/' + route.split('?')[0], trackingNiche, route.includes('?') ? route.slice(route.indexOf('?')) : ''); }}>
+                      <a href={id === 'presence' ? PRESENCE_SITE : demoLink(niche, route)} onClick={() => { metaTracker.demoStart(trackingNiche); trackLandingDemoScreen(id === 'presence' ? 'presence' : (route.startsWith('/') ? route : '/' + route.split('?')[0]), trackingNiche, route.includes('?') ? route.slice(route.indexOf('?')) : ''); }}>
                         <div><h3>{label}</h3><p>{benefit}</p></div>
                         <ArrowRight size={20} aria-hidden="true" />
                       </a>

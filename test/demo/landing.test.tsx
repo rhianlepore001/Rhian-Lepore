@@ -56,7 +56,7 @@ describe('site oficial', () => {
     const { container } = renderLanding();
     const heroChoices = screen.getByRole('group', { name: 'Seu tipo de negócio' });
     await userEvent.click(within(heroChoices).getByRole('button', { name: 'Salão de beleza' }));
-    expect(container.querySelector('.landing-demo-poster img')).toHaveAttribute('src', '/landing/phone-beauty-booking.webp');
+    expect(container.querySelector('.landing-demo-poster img')).toHaveAttribute('src', '/landing/phone-presence-studio-aurora.webp');
     expect(container.querySelector('.landing-demo-conversion a')).toHaveAttribute('href', '/#/register?type=beauty');
     const views = screen.getByRole('group', { name: 'Tela da demonstração' });
     await userEvent.click(within(views).getByRole('button', { name: 'Financeiro' }));
@@ -80,8 +80,11 @@ describe('site oficial', () => {
     expect(screen.getByTitle('Simulação interativa do salão: Financeiro')).toHaveAttribute('src', '/demo-preview#/demo/beauty/financeiro');
     await userEvent.click(within(views).getByRole('button', { name: 'Agendamento online' }));
     expect(screen.getByTitle('Simulação interativa do salão: Agendamento online')).toHaveAttribute('src', '/demo-preview#/demo/beauty/book/simulacao');
+    await userEvent.click(within(views).getByRole('button', { name: 'Presença' }));
+    expect(screen.getByRole('link', { name: 'Abrir em tela cheia' })).toHaveAttribute('href', '/#/site/demo-studio-aurora');
+    expect(screen.getByTitle('Site do Studio Aurora, salão fictício do Presença')).toHaveAttribute('src', '/#/site/demo-studio-aurora?embed=1');
     await userEvent.click(screen.getByRole('button', { name: 'Fechar a simulação' }));
     expect(container.querySelector('iframe')).toBeNull();
-    expect(container.querySelector('.landing-demo-poster img')).toHaveAttribute('src', '/landing/phone-beauty-booking.webp');
+    expect(container.querySelector('.landing-demo-poster img')).toHaveAttribute('src', '/landing/phone-presence-studio-aurora.webp');
   });
 });

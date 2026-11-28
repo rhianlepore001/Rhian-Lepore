@@ -9,6 +9,10 @@
 
 ---
 
+## Landing — Presença com o Studio Aurora (28 Nov 2026)
+
+Branch `cursor/landing-presenca-salao-634c`. A demonstração da landing abre na aba Presença com o site real do salão fictício Studio Aurora (`/#/site/demo-studio-aurora`). O pôster e a moldura mostram a mesma janela. "Ver o site" no computador abre o site dentro da moldura; no celular e em tela cheia abre o site completo. Trocar barbearia/salão não troca esse exemplo. As outras abas seguem iguais.
+
 ## Presença — visita pública em torno da foto da casa (27 Nov 2026)
 
 Branch `cursor/presenca-experiencia-casa-634c`. Só o site público (`SiteView` + `styles/establishment.css`). A foto fica limpa no topo; nome, bairro, um Agendar e a oferta ficam na faixa sólida embaixo. Serviço com foto e preço, equipe em retrato cheio no celular, avaliação com a frase em destaque. O aviso de demonstração foi para o rodapé. Uma animação na foto do topo, parada com `prefers-reduced-motion`. Login, cadastro, Stripe, banco e o fluxo de agendamento ficaram intocados. Verificações: typecheck, lint, build, Vitest (371 arquivos / 2.872 testes) e Playwright do estabelecimento (28/28).
